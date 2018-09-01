@@ -192,6 +192,12 @@ struct LedgerEntryIdCmp
                 auto const& bcon = b.contract();
                 return acon.contractID < bcon.contractID;
             }
+            case LedgerEntryType::ATOMIC_SWAP_BID:
+            {
+                auto const& abid = a.atomicSwapBid();
+                auto const& bbid = b.atomicSwapBid();
+                return abid.bidID < bbid.bidID;
+            }
             default:
             {
                 throw std::runtime_error("Unexpected state. LedgerCmp cannot compare structures. Unknown ledger entry type");

@@ -56,6 +56,7 @@
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/SaleAnteHelper.h"
+#include "ledger/AtomicSwapBidHelper.h"
 
 extern "C" void register_factory_sqlite3();
 
@@ -94,10 +95,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CONTRACTS = 18,
     REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 19,
     REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 20,
-    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 21
+    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 21,
+    ADD_ATOMIC_SWAP_BID = 22
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ATOMIC_SWAP_BID;
 
 static void
 setSerializable(soci::session& sess)
@@ -213,6 +215,9 @@ Database::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
             ContractHelper::Instance()->addCustomerDetails(*this);
+            break;
+        case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
+            AtomicSwapBidHelper::Instance()->dropAll(*this);
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");
