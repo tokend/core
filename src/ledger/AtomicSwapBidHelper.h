@@ -61,7 +61,7 @@ namespace stellar
         void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert,
                                LedgerEntry const& entry);
 
-        void loadAtomicSwapBids(StatementContext& prep,
+        void loadAtomicSwapBids(Database& db, StatementContext& prep,
                                 std::function<void(LedgerEntry const&)>
                                         atomicSwapBidProcessor);
     };
