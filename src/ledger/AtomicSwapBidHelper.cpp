@@ -13,6 +13,7 @@ using xdr::operator<;
 static const char* atomicSwapBidColumnSelector = "SELECT bid_id, owner_id, "
                                                  "base_asset_code, "
                                                  "base_balance_id, base_amount, "
+                                                 "locked_amount, "
                                                  "fee, percent_fee, details, "
                                                  "created_at, "
                                                  "lastmodified, version "
@@ -29,6 +30,7 @@ AtomicSwapBidHelper::dropAll(Database &db)
                        "base_asset_code     VARCHAR(16) NOT NULL,"
                        "base_balance_id     VARCHAR(56) NOT NULL,"
                        "base_amount         BIGINT      NOT NULL CHECK (base_amount > 0),"
+                       "locked_amount       BIGINT      NOT NULL CHECK (locked_amount > 0)"
                        "fee                 BIGINT      NOT NULL CHECK (fee >= 0),"
                        "percent_fee         BIGINT      NOT NULL CHECK (percent_fee >= 0),"
                        "details             TEXT        NOT NULL,"
@@ -206,16 +208,16 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     if (insert)
     {
         sql = "INSERT INTO atomic_swap_bid (bid_id, owner_id, "
-              "base_asset_code, base_balance_id, base_amount, fee, percent_fee, "
-              "details, created_at, lastmodified, version) "
+              "base_asset_code, base_balance_id, base_amount, locked_amount, "
+              "fee, percent_fee, details, created_at, lastmodified, version) "
               "VALUES "
-              "(:id, :oid, :bac, :bbi, :ba, :f, :pf, :d, :ca, :lm, :v)";
+              "(:id, :oid, :bac, :bbi, :ba, :la, :f, :pf, :d, :ca, :lm, :v)";
     }
     else
     {
         sql = "UPDATE atomic_swap_bid "
               "SET base_asset_code = :bac, "
-              "base_balance_id = :bbi, base_amount = :ba, "
+              "base_balance_id = :bbi, base_amount = :ba, locked_amount = :la, "
               "fee = :f, percent_fee = :pf, details = :d, "
               "created_at = :ca, lastmodified = :lm, version = :v "
               "WHERE bid_id = :id";
@@ -236,6 +238,7 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     auto baseBalanceID = BalanceKeyUtils::toStrKey(bidEntry.baseBalance);
     st.exchange(use(baseBalanceID, "bbi"));
     st.exchange(use(bidEntry.amount, "ba"));
+    st.exchange(use(bidEntry.lockedAmount, "la"));
     st.exchange(use(bidEntry.fee, "f"));
     st.exchange(use(bidEntry.percentFee, "pf"));
     st.exchange(use(bidEntry.details, "d"));
@@ -244,7 +247,10 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     st.exchange(use(bidVersion, "v"));
     st.define_and_bind();
 
-    auto timer = insert ? db.getInsertTimer("atomic-swap-bid") : db.getUpdateTimer("atomic-swap-bid");
+    auto timer = insert
+                 ? db.getInsertTimer("atomic-swap-bid")
+                 : db.getUpdateTimer("atomic-swap-bid");
+
     st.execute(true);
 
     if (st.get_affected_rows() != 1)
@@ -281,6 +287,7 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
     st.exchange(into(be.baseAsset));
     st.exchange(into(be.baseBalance));
     st.exchange(into(be.amount));
+    st.exchange(into(be.lockedAmount));
     st.exchange(into(be.fee));
     st.exchange(into(be.percentFee));
     st.exchange(into(be.details));
