@@ -28,9 +28,9 @@ public:
 
     AccountID getOwner() const;
 
-    uint64_t getPrice() const;
-
     bool isInQuoteAssets(AssetCode assetCode) const;
+
+    bool tryDecreaseAvailableAmount(uint64_t baseAmount) const;
 
     uint64_t getAmount() const;
 

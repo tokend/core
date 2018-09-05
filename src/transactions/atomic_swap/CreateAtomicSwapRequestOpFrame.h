@@ -7,7 +7,7 @@ namespace stellar
 class CreateAtomicSwapRequestOpFrame : public OperationFrame
 {
 
-    ManageInvoiceRequestResult&
+    CreateASwapRequestResult&
     innerResult()
     {
         return mResult.tr().createASwapRequestResult();
@@ -23,11 +23,6 @@ class CreateAtomicSwapRequestOpFrame : public OperationFrame
                             counterpartiesDetails,
                             int32_t ledgerVersion) const override;
 
-    bool createManageInvoiceRequest(Application& app, LedgerDelta& delta,
-                                    LedgerManager& ledgerManager);
-
-
-
 public:
     CreateAtomicSwapRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
@@ -36,10 +31,10 @@ public:
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
-    static ManageInvoiceRequestResultCode
+    static CreateASwapRequestResultCode
     getInnerCode(OperationResult const& res)
     {
-        return res.tr().manageInvoiceRequestResult().code();
+        return res.tr().createASwapRequestResult().code();
     }
 };
 }

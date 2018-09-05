@@ -11,10 +11,6 @@ std::unordered_map<AccountID, CounterpartyDetails>
 CreateAtomicSwapRequestOpFrame::getCounterpartyDetails(Database & db,
                                                     LedgerDelta * delta) const
 {
-    return{
-            {mManageInvoiceRequest.details.invoiceRequest().sender,
-                    CounterpartyDetails(getAllAccountTypes(), true, true)},
-    };
 }
 
 SourceDetails
@@ -25,13 +21,13 @@ CreateAtomicSwapRequestOpFrame::getSourceAccountDetails(
 {
     return SourceDetails(getAllAccountTypes(),
                          mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::FIX_ME));
+                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
 }
 
 CreateAtomicSwapRequestOpFrame::CreateAtomicSwapRequestOpFrame(
         Operation const& op, OperationResult& res, TransactionFrame& parentTx)
         : OperationFrame(op, res, parentTx)
-        , mManageInvoiceRequest(mOperation.body.manageInvoiceRequestOp())
+        , mCreateASwapRequest(mOperation.body.createASwapRequestOp())
 {
 }
 
@@ -50,13 +46,13 @@ CreateAtomicSwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         return false;
     }
 
-    if (bidFrame->isInQuoteAssets(request.quoteAsset))
+    if (!bidFrame->isInQuoteAssets(request.quoteAsset))
     {
         innerResult().code(CreateASwapRequestResultCode::BID_QUOTE_ASSET_NOT_FOUND);
         return false;
     }
 
-    if (bidFrame->getReservedAmount() < request.baseAmount)
+    if (!bidFrame->tryDecreaseAvailableAmount(request.baseAmount))
     {
         innerResult().code(CreateASwapRequestResultCode::BASE_AMOUNT_TOO_MUCH);
         return false;
@@ -64,13 +60,13 @@ CreateAtomicSwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     ReviewableRequestEntry::_body_t body;
     body.type(ReviewableRequestType::ATOMIC_SWAP);
-    body.invoiceRequest() = request;
+    body.aSwapRequest() = request;
 
     auto reviewableRequest = ReviewableRequestFrame::createNewWithHash(
             delta, getSourceID(), bidFrame->getOwner(),
             nullptr, body, ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+    EntryHelperProvider::storeAddEntry(delta, db, reviewableRequest->mEntry);
 
     return true;
 }

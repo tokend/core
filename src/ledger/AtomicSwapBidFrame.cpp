@@ -58,12 +58,6 @@ namespace stellar
         return mAtomicSwapBid.ownerID;
     }
 
-    uint64_t
-    AtomicSwapBidFrame::getPrice() const
-    {
-        return mAtomicSwapBid.price;
-    }
-
     bool
     AtomicSwapBidFrame::isInQuoteAssets(AssetCode assetCode) const
     {
@@ -78,10 +72,20 @@ namespace stellar
         return false;
     }
 
+    bool
+    AtomicSwapBidFrame::tryDecreaseAvailableAmount(uint64_t baseAmount) const
+    {
+        if (mAtomicSwapBid.availableAmount < baseAmount)
+            return false;
+
+        mAtomicSwapBid.availableAmount -= baseAmount;
+        return true;
+    }
+
     uint64_t
     AtomicSwapBidFrame::getAmount() const
     {
-        return mAtomicSwapBid.baseAmount;
+        return mAtomicSwapBid.amount;
     }
 
     uint64_t
