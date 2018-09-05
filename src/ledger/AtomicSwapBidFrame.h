@@ -28,7 +28,7 @@ public:
 
     AccountID getOwner() const;
 
-    bool isInQuoteAssets(AssetCode assetCode) const;
+    bool hasQuoteAsset(AssetCode assetCode) const;
 
     bool tryDecreaseAvailableAmount(uint64_t baseAmount) const;
 

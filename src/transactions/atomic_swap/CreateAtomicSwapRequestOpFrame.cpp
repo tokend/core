@@ -33,22 +33,22 @@ CreateAtomicSwapRequestOpFrame::CreateAtomicSwapRequestOpFrame(
 
 bool
 CreateAtomicSwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
-                                     LedgerManager& ledgerManager)
+                                        LedgerManager& ledgerManager)
 {
     Database& db = ledgerManager.getDatabase();
     auto request = mCreateASwapRequest.request;
 
-    auto swapBidHelper = AtomicSwapBidHelper::Instance();
-    auto bidFrame = swapBidHelper->loadAtomicSwapBid(request.bidID, db, &delta);
+    auto bidFrame = AtomicSwapBidHelper::Instance()->
+            loadAtomicSwapBid(request.bidID, db, &delta);
     if (!bidFrame)
     {
         innerResult().code(CreateASwapRequestResultCode::BID_NOT_FOUND);
         return false;
     }
 
-    if (!bidFrame->isInQuoteAssets(request.quoteAsset))
+    if (!bidFrame->hasQuoteAsset(request.quoteAsset))
     {
-        innerResult().code(CreateASwapRequestResultCode::BID_QUOTE_ASSET_NOT_FOUND);
+        innerResult().code(CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
         return false;
     }
 
@@ -68,6 +68,10 @@ CreateAtomicSwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     EntryHelperProvider::storeAddEntry(delta, db, reviewableRequest->mEntry);
 
+    innerResult().code(CreateASwapRequestResultCode::SUCCESS);
+    innerResult().success().requestID = reviewableRequest->getRequestID();
+    innerResult().success().owner = bidFrame->getOwner();
+
     return true;
 }
 
@@ -76,13 +80,13 @@ CreateAtomicSwapRequestOpFrame::doCheckValid(Application& app)
 {
     if (mCreateASwapRequest.request.baseAmount == 0)
     {
-        innerResult().code(CreateASwapRequestResultCode::MALFORMED);
+        innerResult().code(CreateASwapRequestResultCode::INVALID_BASE_AMOUNT);
         return false;
     }
 
     if (mCreateASwapRequest.request.quoteAsset.empty())
     {
-        innerResult().code(CreateASwapRequestResultCode::MALFORMED);
+        innerResult().code(CreateASwapRequestResultCode::INVALID_QUOTE_ASSET);
         return false;
     }
 

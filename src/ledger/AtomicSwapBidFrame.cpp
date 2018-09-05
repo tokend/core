@@ -59,7 +59,7 @@ namespace stellar
     }
 
     bool
-    AtomicSwapBidFrame::isInQuoteAssets(AssetCode assetCode) const
+    AtomicSwapBidFrame::hasQuoteAsset(AssetCode assetCode) const
     {
         for (auto quoteAsset : mAtomicSwapBid.quoteAssets)
         {
