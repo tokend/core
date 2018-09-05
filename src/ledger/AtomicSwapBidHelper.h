@@ -51,6 +51,10 @@ namespace stellar
         loadAtomicSwapBid(AccountID const& accountID, uint64_t bidID,
                           Database& db, LedgerDelta* delta = nullptr);
 
+        AtomicSwapBidFrame::pointer
+        loadAtomicSwapBid(uint64_t bidID, Database &db,
+                          LedgerDelta *delta = nullptr);
+
         std::unordered_map<AccountID, std::vector<AtomicSwapBidFrame::pointer>>
         loadAllAtomicSwapBids(Database& db);
 

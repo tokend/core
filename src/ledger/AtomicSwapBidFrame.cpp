@@ -52,10 +52,30 @@ namespace stellar
         return mAtomicSwapBid.bidID;
     }
 
+    AccountID
+    AtomicSwapBidFrame::getOwner() const
+    {
+        return mAtomicSwapBid.ownerID;
+    }
+
     uint64_t
     AtomicSwapBidFrame::getPrice() const
     {
         return mAtomicSwapBid.price;
+    }
+
+    bool
+    AtomicSwapBidFrame::isInQuoteAssets(AssetCode assetCode) const
+    {
+        for (auto quoteAsset : mAtomicSwapBid.quoteAssets)
+        {
+            if (assetCode == quoteAsset.quoteAsset)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     uint64_t

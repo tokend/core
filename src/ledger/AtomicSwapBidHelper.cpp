@@ -142,6 +142,32 @@ AtomicSwapBidHelper::loadAtomicSwapBid(AccountID const &accountID, uint64_t bidI
     return retBid;
 }
 
+AtomicSwapBidFrame::pointer
+AtomicSwapBidHelper::loadAtomicSwapBid(uint64_t bidID, Database &db,
+                                       LedgerDelta *delta)
+{
+    string sql = atomicSwapBidColumnSelector;
+    sql += " WHERE bid_id = :id";
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(bidID, "id"));
+
+    auto timer = db.getSelectTimer("atomic-swap-bid");
+
+    AtomicSwapBidFrame::pointer retBid;
+    loadAtomicSwapBids(db, prep, [&retBid](LedgerEntry const& atomicSwapBid)
+    {
+        retBid = make_shared<AtomicSwapBidFrame>(atomicSwapBid);
+    });
+
+    if (delta != nullptr && retBid != nullptr)
+    {
+        delta->recordEntry(*retBid);
+    }
+
+    return retBid;
+}
+
 std::unordered_map<AccountID, std::vector<AtomicSwapBidFrame::pointer>>
 AtomicSwapBidHelper::loadAllAtomicSwapBids(Database &db)
 {

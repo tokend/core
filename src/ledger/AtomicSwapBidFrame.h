@@ -26,7 +26,11 @@ public:
 
     uint64_t getBidID() const;
 
+    AccountID getOwner() const;
+
     uint64_t getPrice() const;
+
+    bool isInQuoteAssets(AssetCode assetCode) const;
 
     uint64_t getAmount() const;
 
