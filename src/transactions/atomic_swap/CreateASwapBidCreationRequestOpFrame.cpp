@@ -36,50 +36,67 @@ SourceDetails CreateASwapBidCreationRequestOpFrame::getSourceAccountDetails(
                          static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
 }
 
+CreateASwapBidCreationRequestResultCode
+CreateASwapBidCreationRequestOpFrame::isBaseAssetValid(Database &db,
+                                                       AssetCode baseAssetCode)
+{
+    AssetFrame::pointer baseAssetFrame =
+            AssetHelper::Instance()->loadAsset(baseAssetCode, db);
+    if (baseAssetFrame == nullptr)
+    {
+        return CreateASwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND;
+    }
 
-bool CreateASwapBidCreationRequestOpFrame::isQuoteAssetValid(Database& db,
-                                                          AssetCode baseAssetCode,
-                                                          AssetCode quoteAssetCode)
+    if (baseAssetFrame->isPolicySet(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP))
+    {
+        return CreateASwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED;
+    }
+
+    return CreateASwapBidCreationRequestResultCode::SUCCESS;
+}
+
+CreateASwapBidCreationRequestResultCode
+CreateASwapBidCreationRequestOpFrame::isQuoteAssetValid(Database& db,
+                                                        AssetCode baseAssetCode,
+                                                        AssetCode quoteAssetCode)
 {
     if (baseAssetCode == quoteAssetCode)
     {
-        innerResult().code(CreateASwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL);
-        return false;
+        return CreateASwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL;
     }
 
     auto quoteAssetFrame = AssetHelper::Instance()->loadAsset(quoteAssetCode, db);
 
     if (quoteAssetFrame == nullptr)
     {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND);
-        return false;
+        return CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND;
     }
 
     if (quoteAssetFrame->isPolicySet(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP))
     {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
-        return false;
+        return CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED;
     }
 
-    return true;
+    return CreateASwapBidCreationRequestResultCode::SUCCESS;
 }
 
-bool CreateASwapBidCreationRequestOpFrame::areQuoteAssetsValid(Database& db,
-                                                            AssetCode baseAssetCode)
+CreateASwapBidCreationRequestResultCode
+CreateASwapBidCreationRequestOpFrame::areQuoteAssetsValid(
+        Database& db, AssetCode baseAssetCode,
+        xdr::xvector<ASwapBidQuoteAsset> quoteAssets)
 {
-    auto& quoteAssets = mCreateASwapBidCreationRequest.request.quoteAssets;
-
     for (auto const& quoteAsset : quoteAssets)
     {
-        if (!isQuoteAssetValid(db, baseAssetCode, quoteAsset))
+        auto quoteAssetValidationResultCode = isQuoteAssetValid(db, baseAssetCode,
+                                                                quoteAsset);
+        if (quoteAssetValidationResultCode !=
+            CreateASwapBidCreationRequestResultCode::SUCCESS)
         {
-            return false;
+            return quoteAssetValidationResultCode;
         }
     }
 
-    return true;
+    return CreateASwapBidCreationRequestResultCode::SUCCESS;
 }
 
 bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta &delta,
@@ -99,28 +116,24 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
         return false;
     }
 
-    AssetFrame::pointer baseAssetFrame =
-            AssetHelper::Instance()->loadAsset(baseBalanceFrame->getAsset(), db);
-    if (baseAssetFrame == nullptr)
+    CreateASwapBidCreationRequestResultCode validationResultCode = isBaseAssetValid(
+            db, baseBalanceFrame->getAsset());
+    if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
     {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND);
+        innerResult().code(validationResultCode);
         return false;
     }
 
-    if (baseAssetFrame->isPolicySet(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP))
+    validationResultCode = areQuoteAssetsValid(db, baseBalanceFrame->getAsset(),
+                                               aSwapBidCreationRequest.quoteAssets);
+    if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
     {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
+        innerResult().code(validationResultCode);
         return false;
     }
 
-    if (!areQuoteAssetsValid(db, baseAssetFrame->getCode()))
-    {
-        return false;
-    }
-
-    if (!baseBalanceFrame->hasEnoughAmount(aSwapBidCreationRequest.amount))
+    auto lockResult = baseBalanceFrame->tryLock(aSwapBidCreationRequest.amount);
+    if (lockResult != BalanceFrame::Result::SUCCESS)
     {
         innerResult().code(
                 CreateASwapBidCreationRequestResultCode::BASE_BALANCE_UNDERFUNDED);

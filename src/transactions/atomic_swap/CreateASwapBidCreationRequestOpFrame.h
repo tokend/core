@@ -26,10 +26,15 @@ public:
     CreateASwapBidCreationRequestOpFrame(Operation const &op, OperationResult &opRes,
                                       TransactionFrame &parentTx);
 
-    bool isQuoteAssetValid(Database& db, AssetCode baseAssetCode,
-                           AssetCode quoteAssetCode);
+    static CreateASwapBidCreationRequestResultCode
+    isBaseAssetValid(Database& db, AssetCode baseAssetCode);
 
-    bool areQuoteAssetsValid(Database& db, AssetCode baseAssetCode);
+    static CreateASwapBidCreationRequestResultCode
+    isQuoteAssetValid(Database& db, AssetCode baseAssetCode, AssetCode quoteAssetCode);
+
+    static CreateASwapBidCreationRequestResultCode
+    areQuoteAssetsValid(Database& db, AssetCode baseAssetCode,
+                        xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
 
     bool doApply(Application &app, LedgerDelta &delta,
                  LedgerManager &ledgerManager) override;
