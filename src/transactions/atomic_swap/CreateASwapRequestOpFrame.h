@@ -4,7 +4,7 @@
 
 namespace stellar
 {
-class CreateAtomicSwapRequestOpFrame : public OperationFrame
+class CreateASwapRequestOpFrame : public OperationFrame
 {
 
     CreateASwapRequestResult&
@@ -24,7 +24,7 @@ class CreateAtomicSwapRequestOpFrame : public OperationFrame
                             int32_t ledgerVersion) const override;
 
 public:
-    CreateAtomicSwapRequestOpFrame(Operation const& op, OperationResult& res,
+    CreateASwapRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
 
     bool doApply(Application& app, LedgerDelta& delta,

@@ -1,20 +1,20 @@
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/AssetHelper.h>
 #include <ledger/ReviewableRequestFrame.h>
-#include "CreateAtomicSwapRequestOpFrame.h"
+#include "CreateASwapRequestOpFrame.h"
 
 namespace stellar
 {
 using xdr::operator==;
 
 std::unordered_map<AccountID, CounterpartyDetails>
-CreateAtomicSwapRequestOpFrame::getCounterpartyDetails(Database & db,
+CreateASwapRequestOpFrame::getCounterpartyDetails(Database & db,
                                                     LedgerDelta * delta) const
 {
 }
 
 SourceDetails
-CreateAtomicSwapRequestOpFrame::getSourceAccountDetails(
+CreateASwapRequestOpFrame::getSourceAccountDetails(
         std::unordered_map<AccountID,
         CounterpartyDetails> counterpartiesDetails,
         int32_t ledgerVersion) const
@@ -24,7 +24,7 @@ CreateAtomicSwapRequestOpFrame::getSourceAccountDetails(
                          static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
 }
 
-CreateAtomicSwapRequestOpFrame::CreateAtomicSwapRequestOpFrame(
+CreateASwapRequestOpFrame::CreateASwapRequestOpFrame(
         Operation const& op, OperationResult& res, TransactionFrame& parentTx)
         : OperationFrame(op, res, parentTx)
         , mCreateASwapRequest(mOperation.body.createASwapRequestOp())
@@ -32,7 +32,7 @@ CreateAtomicSwapRequestOpFrame::CreateAtomicSwapRequestOpFrame(
 }
 
 bool
-CreateAtomicSwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
                                         LedgerManager& ledgerManager)
 {
     Database& db = ledgerManager.getDatabase();
@@ -76,7 +76,7 @@ CreateAtomicSwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 }
 
 bool
-CreateAtomicSwapRequestOpFrame::doCheckValid(Application& app)
+CreateASwapRequestOpFrame::doCheckValid(Application& app)
 {
     if (mCreateASwapRequest.request.baseAmount == 0)
     {
