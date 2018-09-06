@@ -99,6 +99,27 @@ CreateASwapBidCreationRequestOpFrame::areQuoteAssetsValid(
     return CreateASwapBidCreationRequestResultCode::SUCCESS;
 }
 
+CreateASwapBidCreationRequestResultCode
+CreateASwapBidCreationRequestOpFrame::areAllAssetsValid(
+        Database &db, AssetCode baseAssetCode,
+        xdr::xvector<ASwapBidQuoteAsset> quoteAssets)
+{
+    CreateASwapBidCreationRequestResultCode validationResultCode = isBaseAssetValid(
+            db, baseAssetCode);
+    if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
+    {
+        return validationResultCode;
+    }
+
+    validationResultCode = areQuoteAssetsValid(db, baseAssetCode, quoteAssets);
+    if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
+    {
+        return validationResultCode;
+    }
+
+    return CreateASwapBidCreationRequestResultCode::SUCCESS;
+}
+
 bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta &delta,
                                                 LedgerManager &ledgerManager)
 {
@@ -106,9 +127,8 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 
     auto& const aSwapBidCreationRequest = mCreateASwapBidCreationRequest.request;
 
-    BalanceFrame::pointer baseBalanceFrame =
-            BalanceHelper::Instance()->loadBalance(aSwapBidCreationRequest.baseBalance,
-                                                   db);
+    BalanceFrame::pointer baseBalanceFrame = BalanceHelper::Instance()->loadBalance(
+                    getSourceID(), aSwapBidCreationRequest.baseBalance, db);
     if (baseBalanceFrame == nullptr)
     {
         innerResult().code(
@@ -116,19 +136,12 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
         return false;
     }
 
-    CreateASwapBidCreationRequestResultCode validationResultCode = isBaseAssetValid(
-            db, baseBalanceFrame->getAsset());
-    if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
+    auto allAssetsValidationResultCode = areAllAssetsValid(
+            db, baseBalanceFrame->getAsset(), aSwapBidCreationRequest.quoteAssets);
+    if (allAssetsValidationResultCode !=
+        CreateASwapBidCreationRequestResultCode::SUCCESS)
     {
-        innerResult().code(validationResultCode);
-        return false;
-    }
-
-    validationResultCode = areQuoteAssetsValid(db, baseBalanceFrame->getAsset(),
-                                               aSwapBidCreationRequest.quoteAssets);
-    if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
-    {
-        innerResult().code(validationResultCode);
+        innerResult().code(allAssetsValidationResultCode);
         return false;
     }
 

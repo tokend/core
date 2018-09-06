@@ -36,6 +36,10 @@ public:
     areQuoteAssetsValid(Database& db, AssetCode baseAssetCode,
                         xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
 
+    static CreateASwapBidCreationRequestResultCode
+    areAllAssetsValid(Database& db, AssetCode baseAssetCode,
+                      xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
+
     bool doApply(Application &app, LedgerDelta &delta,
                  LedgerManager &ledgerManager) override;
 
