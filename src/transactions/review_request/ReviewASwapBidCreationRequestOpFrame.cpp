@@ -3,7 +3,6 @@
 #include <ledger/LedgerDelta.h>
 #include <ledger/BalanceHelper.h>
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
-#include <transactions/FeesManager.h>
 #include <ledger/AccountHelper.h>
 #include "ReviewASwapBidCreationRequestOpFrame.h"
 
@@ -135,27 +134,6 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
     auto bidFrame = buildNewBid(requestor->getID(), baseBalanceFrame->getAsset(),
                                 ledgerManager.getCloseTime(), aSwapCreationRequest,
                                 delta);
-
-    auto const feeResult = FeeManager::calcualteFeeForAccount(
-            requestor, FeeType::ATOMIC_SWAP_SALE_FEE, baseBalanceFrame->getAsset(),
-            FeeFrame::SUBTYPE_ANY, bidFrame->getAmount(), db);
-    if (feeResult.isOverflow)
-    {
-        innerResult().code(ReviewRequestResultCode::ASWAP_BID_OVERFLOW);
-        return false;
-    }
-
-    bidFrame->setFee(feeResult.calculatedPercentFee);
-    bidFrame->setPercentFee(feeResult.percentFee);
-
-    bool const isFeeEnough = bidFrame->getFee() <= aSwapCreationRequest.fee;
-    if (!isFeeEnough)
-    {
-        innerResult().code(ReviewRequestResultCode::ASWAP_BID_INSUFFICIENT_FEE);
-        return false;
-    }
-
-    bidFrame->setFee(aSwapCreationRequest.fee);
 
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
     EntryHelperProvider::storeAddEntry(delta, db, bidFrame->mEntry);
