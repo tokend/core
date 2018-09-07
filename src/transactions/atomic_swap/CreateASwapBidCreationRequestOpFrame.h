@@ -8,7 +8,7 @@ namespace stellar
 class CreateASwapBidCreationRequestOpFrame : public OperationFrame
 {
 protected:
-    CreateASwapBidCreationRequestOp& const mCreateASwapBidCreationRequest;
+    CreateASwapBidCreationRequestOp const& mCreateASwapBidCreationRequest;
 
     CreateASwapBidCreationRequestResult& innerResult()
     {

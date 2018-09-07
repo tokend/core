@@ -88,7 +88,7 @@ CreateASwapBidCreationRequestOpFrame::areQuoteAssetsValid(
     for (auto const& quoteAsset : quoteAssets)
     {
         auto quoteAssetValidationResultCode = isQuoteAssetValid(db, baseAssetCode,
-                                                                quoteAsset);
+                                                                quoteAsset.quoteAsset);
         if (quoteAssetValidationResultCode !=
             CreateASwapBidCreationRequestResultCode::SUCCESS)
         {
@@ -125,7 +125,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 {
     Database& db = app.getDatabase();
 
-    auto& const aSwapBidCreationRequest = mCreateASwapBidCreationRequest.request;
+    auto& aSwapBidCreationRequest = mCreateASwapBidCreationRequest.request;
 
     BalanceFrame::pointer baseBalanceFrame = BalanceHelper::Instance()->loadBalance(
                     getSourceID(), aSwapBidCreationRequest.baseBalance, db);
@@ -172,7 +172,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 
 bool CreateASwapBidCreationRequestOpFrame::doCheckValid(Application &app)
 {
-    auto& const aSwapCreationRequest = mCreateASwapBidCreationRequest.request;
+    auto& aSwapCreationRequest = mCreateASwapBidCreationRequest.request;
 
     if (aSwapCreationRequest.amount == 0)
     {
