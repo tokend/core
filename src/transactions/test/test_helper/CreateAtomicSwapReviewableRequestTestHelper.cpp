@@ -1,7 +1,7 @@
 #include "CreateAtomicSwapReviewableRequestTestHelper.h"
 
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/ManageInvoiceRequestOpFrame.h>
+#include <transactions/atomic_swap/CreateASwapRequestOpFrame.h>
 #include <lib/catch.hpp>
 
 
@@ -24,7 +24,6 @@ CreateAtomicSwapReviewableRequestTestHelper::createASwapRequestOp(
     result.request.baseAmount = amount;
     result.request.quoteAsset = asset;
     result.request.bidID = bidID;
-    result.request.fee = fee;
     result.request.ext.v(LedgerVersion::EMPTY_VERSION);
     result.ext.v(LedgerVersion::EMPTY_VERSION);
 
@@ -36,7 +35,7 @@ CreateAtomicSwapReviewableRequestTestHelper::createASwapRequestTx(
         txtest::Account &source, CreateASwapRequestOp &createASwapRequestOp)
 {
     Operation op;
-    op.body.type(OperationType::CREATE_A_SWAP_REQUEST);
+    op.body.type(OperationType::CREATE_ASWAP_REQUEST);
     op.body.createASwapRequestOp() = createASwapRequestOp;
 
     return txFromOperation(source, op, nullptr);
@@ -58,12 +57,12 @@ CreateAtomicSwapReviewableRequestTestHelper::applyCreateASwapRequest(
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
 
-    auto actualResult = ManageInvoiceRequestOpFrame::getInnerCode(opResult);
+    auto actualResult = CreateASwapRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResult == expectedResult);
 
     uint64 reviewableRequestCountAfterTx =
             reviewableRequestHelper->countObjects(db.getSession());
-    if (expectedResult != ManageInvoiceRequestResultCode::SUCCESS)
+    if (expectedResult != CreateASwapRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
         return CreateASwapRequestResult{};
