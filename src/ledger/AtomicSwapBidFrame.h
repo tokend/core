@@ -26,19 +26,21 @@ public:
 
     uint64_t getBidID() const;
 
-    AccountID getOwner() const;
+    AccountID getOwnerID() const;
 
-    bool hasQuoteAsset(AssetCode assetCode) const;
-
-    bool tryDecreaseAvailableAmount(uint64_t baseAmount) const;
+    AssetCode getBaseAsset() const;
 
     uint64_t getAmount() const;
 
-    uint64_t getFee() const;
+    uint64_t getLockedAmount() const;
 
-    void setFee(uint64_t fee);
+    bool hasQuoteAsset(AssetCode assetCode) const;
 
-    void setPercentFee(uint64_t percentFee);
+    bool tryLockAmount(uint64_t amountToLock);
+
+    bool tryUnlockAmount(uint64_t amountToUnlock);
+
+    bool tryChargeFromLocked(uint64_t amount);
 
     bool isValid() const;
 

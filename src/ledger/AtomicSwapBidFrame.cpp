@@ -53,33 +53,14 @@ namespace stellar
     }
 
     AccountID
-    AtomicSwapBidFrame::getOwner() const
+    AtomicSwapBidFrame::getOwnerID() const
     {
         return mAtomicSwapBid.ownerID;
     }
 
-    bool
-    AtomicSwapBidFrame::hasQuoteAsset(AssetCode assetCode) const
+    AssetCode AtomicSwapBidFrame::getBaseAsset() const
     {
-        for (auto quoteAsset : mAtomicSwapBid.quoteAssets)
-        {
-            if (assetCode == quoteAsset.quoteAsset)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    bool
-    AtomicSwapBidFrame::tryDecreaseAvailableAmount(uint64_t baseAmount) const
-    {
-        if (mAtomicSwapBid.availableAmount < baseAmount)
-            return false;
-
-        mAtomicSwapBid.availableAmount -= baseAmount;
-        return true;
+        return mAtomicSwapBid.baseAsset;
     }
 
     uint64_t
@@ -89,30 +70,97 @@ namespace stellar
     }
 
     uint64_t
-    AtomicSwapBidFrame::getFee() const
+    AtomicSwapBidFrame::getLockedAmount() const
     {
-        return mAtomicSwapBid.fee;
+        return mAtomicSwapBid.lockedAmount;
     }
 
-    void
-    AtomicSwapBidFrame::setFee(uint64_t fee)
+    bool
+    AtomicSwapBidFrame::hasQuoteAsset(AssetCode assetCode) const
     {
-        mAtomicSwapBid.fee = fee;
+        for (auto const& quoteAsset : mAtomicSwapBid.quoteAssets)
+        {
+            if (quoteAsset.quoteAsset == assetCode)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    void
-    AtomicSwapBidFrame::setPercentFee(uint64_t percentFee)
+    bool AtomicSwapBidFrame::tryLockAmount(uint64_t amountToLock)
     {
-        mAtomicSwapBid.percentFee = percentFee;
+        if (mAtomicSwapBid.amount < amountToLock)
+        {
+            return false;
+        }
+
+        mAtomicSwapBid.amount -= amountToLock;
+
+        if (!safeSum(mAtomicSwapBid.lockedAmount, amountToLock,
+                     mAtomicSwapBid.lockedAmount))
+        {
+            CLOG(ERROR, Logging::ENTRY_LOGGER)
+                    << "Unexpected state: addition of the locked amount "
+                       "to atomic swap bid overflows uint64, atomic swap bid ID: "
+                    << mAtomicSwapBid.bidID;
+            throw runtime_error("Unexpected state: addition of the locked amount "
+                                "to atomic swap bid overflows uint64");
+        }
+
+        return true;
+    }
+
+    bool AtomicSwapBidFrame::tryUnlockAmount(uint64_t amountToUnlock)
+    {
+        if (mAtomicSwapBid.lockedAmount < amountToUnlock)
+        {
+            return false;
+        }
+
+        mAtomicSwapBid.lockedAmount -= amountToUnlock;
+
+        if (!safeSum(mAtomicSwapBid.amount, amountToUnlock, mAtomicSwapBid.amount))
+        {
+            CLOG(ERROR, Logging::ENTRY_LOGGER)
+                    << "Unexpected state: unlock of the amount "
+                       "in atomic swap bid overflows uint64, atomic swap bid ID: "
+                    << mAtomicSwapBid.bidID;
+            throw runtime_error("Unexpected state: unlock of the amount "
+                                "in atomic swap bid overflows uint64");
+        }
+
+        return true;
+    }
+
+    bool AtomicSwapBidFrame::tryChargeFromLocked(uint64_t amount)
+    {
+        if (mAtomicSwapBid.lockedAmount < amount)
+        {
+            return false;
+        }
+        mAtomicSwapBid.lockedAmount -= amount;
+        return true;
     }
 
     bool
     AtomicSwapBidFrame::isValid(AtomicSwapBidEntry const& atomicSwapBidEntry)
     {
-        return AssetFrame::isAssetCodeValid(atomicSwapBidEntry.baseAsset)
-               && AssetFrame::isAssetCodeValid(atomicSwapBidEntry.quoteAsset)
-               && atomicSwapBidEntry.baseAmount != 0
-               && atomicSwapBidEntry.price != 0;
+        for (auto const& quoteAsset : atomicSwapBidEntry.quoteAssets)
+        {
+            if (!AssetFrame::isAssetCodeValid(quoteAsset.quoteAsset))
+            {
+                return false;
+            }
+
+            if (quoteAsset.price == 0)
+            {
+                return false;
+            }
+        }
+
+        return atomicSwapBidEntry.amount != 0;
     }
 
     bool
