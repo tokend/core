@@ -13,8 +13,7 @@ using xdr::operator<;
 static const char* atomicSwapBidColumnSelector = "SELECT bid_id, owner_id, "
                                                  "base_asset_code, "
                                                  "base_balance_id, base_amount, "
-                                                 "locked_amount, "
-                                                 "fee, percent_fee, details, "
+                                                 "locked_amount, details, "
                                                  "created_at, "
                                                  "lastmodified, version "
                                                  "FROM atomic_swap_bid";
@@ -29,10 +28,8 @@ AtomicSwapBidHelper::dropAll(Database &db)
                        "owner_id            VARCHAR(56) NOT NULL,"
                        "base_asset_code     VARCHAR(16) NOT NULL,"
                        "base_balance_id     VARCHAR(56) NOT NULL,"
-                       "base_amount         BIGINT      NOT NULL CHECK (base_amount > 0),"
-                       "locked_amount       BIGINT      NOT NULL CHECK (locked_amount > 0)"
-                       "fee                 BIGINT      NOT NULL CHECK (fee >= 0),"
-                       "percent_fee         BIGINT      NOT NULL CHECK (percent_fee >= 0),"
+                       "base_amount         BIGINT      NOT NULL CHECK (base_amount >= 0),"
+                       "locked_amount       BIGINT      NOT NULL CHECK (locked_amount >= 0),"
                        "details             TEXT        NOT NULL,"
                        "created_at          BIGINT      NOT NULL,"
                        "lastmodified        INT         NOT NULL,"
@@ -209,17 +206,16 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     {
         sql = "INSERT INTO atomic_swap_bid (bid_id, owner_id, "
               "base_asset_code, base_balance_id, base_amount, locked_amount, "
-              "fee, percent_fee, details, created_at, lastmodified, version) "
+              "details, created_at, lastmodified, version) "
               "VALUES "
-              "(:id, :oid, :bac, :bbi, :ba, :la, :f, :pf, :d, :ca, :lm, :v)";
+              "(:id, :oid, :bac, :bbi, :ba, :la, :d, :ca, :lm, :v)";
     }
     else
     {
         sql = "UPDATE atomic_swap_bid "
               "SET base_asset_code = :bac, "
               "base_balance_id = :bbi, base_amount = :ba, locked_amount = :la, "
-              "fee = :f, percent_fee = :pf, details = :d, "
-              "created_at = :ca, lastmodified = :lm, version = :v "
+              "details = :d, created_at = :ca, lastmodified = :lm, version = :v "
               "WHERE bid_id = :id";
     }
 
@@ -239,8 +235,6 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     st.exchange(use(baseBalanceID, "bbi"));
     st.exchange(use(bidEntry.amount, "ba"));
     st.exchange(use(bidEntry.lockedAmount, "la"));
-    st.exchange(use(bidEntry.fee, "f"));
-    st.exchange(use(bidEntry.percentFee, "pf"));
     st.exchange(use(bidEntry.details, "d"));
     st.exchange(use(bidEntry.createdAt, "ca"));
     st.exchange(use(bidFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -288,8 +282,6 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
     st.exchange(into(be.baseBalance));
     st.exchange(into(be.amount));
     st.exchange(into(be.lockedAmount));
-    st.exchange(into(be.fee));
-    st.exchange(into(be.percentFee));
     st.exchange(into(be.details));
     st.exchange(into(be.createdAt));
     st.exchange(into(le.lastModifiedLedgerSeq));
