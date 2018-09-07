@@ -375,7 +375,8 @@ bool TransactionFrame::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
 
     if (txFeeAssetKV->getKeyValue().value.type() != KeyValueEntryType::STRING)
     {
-        throw std::runtime_error("Unexpected database state, expected issuance tasks to be STRING");
+        throw std::runtime_error(
+                "Unexpected database state, expected tx fee asset code to be STRING");
     }
 
     if (!AssetFrame::isAssetCodeValid(txFeeAssetKV->getKeyValue().value.stringValue()))
