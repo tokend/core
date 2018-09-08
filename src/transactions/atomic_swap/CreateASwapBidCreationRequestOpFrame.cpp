@@ -1,6 +1,7 @@
 #include "main/Application.h"
 #include "database/Database.h"
 #include <transactions/dex/OfferManager.h>
+#include <ledger/LedgerDelta.h>
 #include <ledger/BalanceHelper.h>
 #include <ledger/AssetHelper.h>
 #include <ledger/ReviewableRequestFrame.h>
@@ -181,7 +182,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
         return false;
     }
 
-    auto requestFrame = ReviewableRequestFrame::createNew(0, getSourceID(),
+    auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
                                                           app.getMasterID(), nullptr,
                                                           ledgerManager.getCloseTime());
     auto& requestEntry = requestFrame->getRequestEntry();
