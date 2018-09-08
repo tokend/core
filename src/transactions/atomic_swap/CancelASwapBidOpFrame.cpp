@@ -1,6 +1,7 @@
 #include "main/Application.h"
 #include <database/Database.h>
 #include <ledger/AtomicSwapBidHelper.h>
+#include <ledger/BalanceHelper.h>
 #include "CancelASwapBidOpFrame.h"
 
 using namespace std;
@@ -43,10 +44,30 @@ bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
         return false;
     }
 
+    if (bidFrame->getLockedAmount() != 0)
+    {
+        bidFrame->setIsCancelled(true);
+        EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
+        innerResult().code(CancelASwapBidResultCode::SUCCESS);
+        return true;
+    }
+
+    auto bidOwnerBalanceFrame = BalanceHelper::Instance()->mustLoadBalance(
+            bidFrame->getOwnerID(), bidFrame->getBaseAsset(), db, &delta);
+
+    if (!bidOwnerBalanceFrame->unlock(bidFrame->getAmount()))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to unlock amount in bid owner balance, "
+                   "bid ID: " << bidFrame->getBidID();
+        throw runtime_error(
+                "Unexpected state: failed to unlock amount in bid owner balance");
+    }
+
+    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
     EntryHelperProvider::storeDeleteEntry(delta, db, bidFrame->getKey());
 
     innerResult().code(CancelASwapBidResultCode::SUCCESS);
-    innerResult().success().bidID = bidFrame->getBidID();
     return true;
 }
 
