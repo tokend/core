@@ -13,8 +13,8 @@ using xdr::operator<;
 static const char* atomicSwapBidColumnSelector = "SELECT bid_id, owner_id, "
                                                  "base_asset_code, "
                                                  "base_balance_id, base_amount, "
-                                                 "locked_amount, details, "
-                                                 "created_at, "
+                                                 "locked_amount, is_cancelled, "
+                                                 "details, created_at, "
                                                  "lastmodified, version "
                                                  "FROM atomic_swap_bid";
 
@@ -24,16 +24,17 @@ AtomicSwapBidHelper::dropAll(Database &db)
     db.getSession() << "DROP TABLE IF EXISTS atomic_swap_bid";
     db.getSession() << "CREATE TABLE atomic_swap_bid"
                        "("
-                       "bid_id              BIGINT      NOT NULL CHECK (bid_id >= 0),"
-                       "owner_id            VARCHAR(56) NOT NULL,"
-                       "base_asset_code     VARCHAR(16) NOT NULL,"
-                       "base_balance_id     VARCHAR(56) NOT NULL,"
-                       "base_amount         BIGINT      NOT NULL CHECK (base_amount >= 0),"
-                       "locked_amount       BIGINT      NOT NULL CHECK (locked_amount >= 0),"
-                       "details             TEXT        NOT NULL,"
-                       "created_at          BIGINT      NOT NULL,"
-                       "lastmodified        INT         NOT NULL,"
-                       "version             INT         NOT NULL DEFAULT 0,"
+                       "bid_id              BIGINT          NOT NULL CHECK (bid_id >= 0),"
+                       "owner_id            VARCHAR(56)     NOT NULL,"
+                       "base_asset_code     VARCHAR(16)     NOT NULL,"
+                       "base_balance_id     VARCHAR(56)     NOT NULL,"
+                       "base_amount         NUMERIC(20,0)   NOT NULL CHECK (base_amount >= 0),"
+                       "locked_amount       NUMERIC(20,0)   NOT NULL CHECK (locked_amount >= 0),"
+                       "is_cancelled        BOOLEAN         NOT NULL,"
+                       "details             TEXT            NOT NULL,"
+                       "created_at          BIGINT          NOT NULL,"
+                       "lastmodified        INT             NOT NULL,"
+                       "version             INT             NOT NULL DEFAULT 0,"
                        "PRIMARY KEY (bid_id)"
                        ");";
 
@@ -69,14 +70,12 @@ AtomicSwapBidHelper::storeDelete(LedgerDelta &delta, Database &db, LedgerKey con
 bool
 AtomicSwapBidHelper::exists(Database &db, LedgerKey const &key)
 {
-    string accIDStrKey = PubKeyUtils::toStrKey(key.atomicSwapBid().ownerID);
     int exists = 0;
     auto timer = db.getSelectTimer("atomic-swap-bid-exists");
     auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM atomic_swap_bid "
-                                        "WHERE bid_id = :id AND owner_id = :oid)");
+                                        "WHERE bid_id = :id)");
     auto& st = prep.statement();
     st.exchange(use(key.atomicSwapBid().bidID, "id"));
-    st.exchange(use(accIDStrKey, "oid"));
     st.exchange(into(exists));
     st.define_and_bind();
     st.execute(true);
@@ -89,14 +88,13 @@ AtomicSwapBidHelper::getLedgerKey(LedgerEntry const &from)
     LedgerKey ledgerKey;
     ledgerKey.type(from.data.type());
     ledgerKey.atomicSwapBid().bidID = from.data.atomicSwapBid().bidID;
-    ledgerKey.atomicSwapBid().ownerID = from.data.atomicSwapBid().ownerID;
     return ledgerKey;
 }
 
 EntryFrame::pointer
 AtomicSwapBidHelper::storeLoad(LedgerKey const &key, Database &db)
 {
-    return loadAtomicSwapBid(key.atomicSwapBid().ownerID, key.offer().offerID, db);
+    return loadAtomicSwapBid(key.atomicSwapBid().bidID, db);
 }
 
 EntryFrame::pointer
@@ -114,12 +112,12 @@ AtomicSwapBidHelper::countObjects(soci::session &sess)
 }
 
 AtomicSwapBidFrame::pointer
-AtomicSwapBidHelper::loadAtomicSwapBid(AccountID const &accountID, uint64_t bidID,
+AtomicSwapBidHelper::loadAtomicSwapBid(AccountID const &ownerID, uint64_t bidID,
                                        Database &db, LedgerDelta *delta)
 {
     AtomicSwapBidFrame::pointer retBid;
 
-    string accIDStrKey = PubKeyUtils::toStrKey(accountID);
+    string accIDStrKey = PubKeyUtils::toStrKey(ownerID);
 
     string sql = atomicSwapBidColumnSelector;
     sql += " WHERE bid_id = :id AND owner_id = :oid";
@@ -206,16 +204,17 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     {
         sql = "INSERT INTO atomic_swap_bid (bid_id, owner_id, "
               "base_asset_code, base_balance_id, base_amount, locked_amount, "
-              "details, created_at, lastmodified, version) "
+              "is_cancelled, details, created_at, lastmodified, version) "
               "VALUES "
-              "(:id, :oid, :bac, :bbi, :ba, :la, :d, :ca, :lm, :v)";
+              "(:id, :oid, :bac, :bbi, :ba, :la, :ic, :d, :ca, :lm, :v)";
     }
     else
     {
         sql = "UPDATE atomic_swap_bid "
               "SET base_asset_code = :bac, "
               "base_balance_id = :bbi, base_amount = :ba, locked_amount = :la, "
-              "details = :d, created_at = :ca, lastmodified = :lm, version = :v "
+              "is_cancelled = :ic, details = :d, created_at = :ca, lastmodified = :lm, "
+              "version = :v "
               "WHERE bid_id = :id";
     }
 
@@ -235,6 +234,7 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     st.exchange(use(baseBalanceID, "bbi"));
     st.exchange(use(bidEntry.amount, "ba"));
     st.exchange(use(bidEntry.lockedAmount, "la"));
+    st.exchange(use(bidEntry.isCancelled, "ic"));
     st.exchange(use(bidEntry.details, "d"));
     st.exchange(use(bidEntry.createdAt, "ca"));
     st.exchange(use(bidFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -282,6 +282,7 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
     st.exchange(into(be.baseBalance));
     st.exchange(into(be.amount));
     st.exchange(into(be.lockedAmount));
+    st.exchange(into(be.isCancelled));
     st.exchange(into(be.details));
     st.exchange(into(be.createdAt));
     st.exchange(into(le.lastModifiedLedgerSeq));

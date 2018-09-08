@@ -48,7 +48,7 @@ namespace stellar
         uint64_t countObjects(soci::session& sess) override;
 
         AtomicSwapBidFrame::pointer
-        loadAtomicSwapBid(AccountID const& accountID, uint64_t bidID,
+        loadAtomicSwapBid(AccountID const& ownerID, uint64_t bidID,
                           Database& db, LedgerDelta* delta = nullptr);
 
         AtomicSwapBidFrame::pointer

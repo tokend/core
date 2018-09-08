@@ -34,6 +34,10 @@ public:
 
     uint64_t getLockedAmount() const;
 
+    bool getIsCancelled() const;
+
+    void setIsCancelled(bool isCancelled);
+
     bool hasQuoteAsset(AssetCode assetCode) const;
 
     bool tryLockAmount(uint64_t amountToLock);
