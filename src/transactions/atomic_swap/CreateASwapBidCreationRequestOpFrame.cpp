@@ -193,6 +193,8 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 
     ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
 
+    EntryHelperProvider::storeChangeEntry(delta, db, baseAssetFrame->mEntry);
+
     innerResult().code(CreateASwapBidCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
 
