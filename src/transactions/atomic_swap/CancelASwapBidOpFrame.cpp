@@ -44,6 +44,12 @@ bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
         return false;
     }
 
+    if (bidFrame->isCancelled())
+    {
+        innerResult().code(CancelASwapBidResultCode::ALREADY_CANCELLED);
+        return false;
+    }
+
     if (bidFrame->getLockedAmount() != 0)
     {
         bidFrame->setIsCancelled(true);
