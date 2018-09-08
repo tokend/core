@@ -39,29 +39,29 @@ bool ReviewASwapBidCreationRequestOpFrame::handleAllAssetsValidationResultCode(
     {
         case CreateASwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND:
         {
-            innerResult().code(ReviewRequestResultCode::ASWAP_BID_BASE_ASSET_NOT_FOUND);
+            innerResult().code(ReviewRequestResultCode::BASE_ASSET_NOT_FOUND);
             return false;
         }
         case CreateASwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED:
         {
             innerResult().code(
-                    ReviewRequestResultCode::ASWAP_BID_BASE_ASSET_CANNOT_BE_SWAPPED);
+                    ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
             return false;
         }
         case CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND:
         {
-            innerResult().code(ReviewRequestResultCode::ASWAP_BID_QUOTE_ASSET_NOT_FOUND);
+            innerResult().code(ReviewRequestResultCode::QUOTE_ASSET_NOT_FOUND);
             return false;
         }
         case CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED:
         {
             innerResult().code(
-                    ReviewRequestResultCode::ASWAP_BID_QUOTE_ASSET_CANNOT_BE_SWAPPED);
+                    ReviewRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
             return false;
         }
         case CreateASwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL:
         {
-            innerResult().code(ReviewRequestResultCode::ASWAP_BID_ASSETS_ARE_EQUAL);
+            innerResult().code(ReviewRequestResultCode::ASSETS_ARE_EQUAL);
             return false;
         }
         default:
@@ -146,6 +146,41 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
     innerResult().success().ext.extendedResult().typeExt.aSwapBidExtended().bidID =
             bidFrame->getBidID();
 
+    return true;
+}
+
+bool ReviewASwapBidCreationRequestOpFrame::handlePermanentReject(
+        Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
+        ReviewableRequestFrame::pointer request)
+{
+    request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
+
+    auto aSwapCreationRequest = request->getRequestEntry().body.aSwapBidCreationRequest();
+    auto& db = app.getDatabase();
+
+    auto baseBalanceFrame = BalanceHelper::Instance()->loadBalance(
+            aSwapCreationRequest.baseBalance, db);
+
+    if (baseBalanceFrame == nullptr)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: expected base balance to exist: "
+                << "atomic swap bid creation request ID: " << request->getRequestID();
+        throw runtime_error("Unexpected state: expected base balance to exist");
+    }
+
+    if (!baseBalanceFrame->unlock(aSwapCreationRequest.amount))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to unlock amount in bid creation requestor balance, "
+                   "request ID: " << request->getRequestID();
+        throw runtime_error(
+                "Unexpected state: failed to unlock amount in bid creation requestor balance");
+    }
+
+    EntryHelperProvider::storeChangeEntry(delta, db, baseBalanceFrame->mEntry);
+    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;
 }
 

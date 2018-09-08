@@ -28,6 +28,10 @@ buildNewBid(AccountID ownerID, AssetCode baseAsset, uint64_t ledgerCloseTime,
 
 bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
                    ReviewableRequestFrame::pointer request) override;
+
+bool handlePermanentReject(Application& app, LedgerDelta& delta,
+                           LedgerManager& ledgerManager,
+                           ReviewableRequestFrame::pointer request) override;
 };
 
 }
