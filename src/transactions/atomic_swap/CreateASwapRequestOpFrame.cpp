@@ -7,6 +7,8 @@
 #include <transactions/ManageKeyValueOpFrame.h>
 #include "CreateASwapRequestOpFrame.h"
 
+using namespace std;
+
 namespace stellar
 {
 using xdr::operator==;
@@ -87,6 +89,34 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     if (!bidFrame->hasQuoteAsset(aSwapRequest.quoteAsset))
     {
         innerResult().code(CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
+        return false;
+    }
+
+    // TODO: move asset requirements check to separate method
+    auto baseAssetFrame = AssetHelper::Instance()->loadAsset(bidFrame->getBaseAsset(),
+                                                             bidFrame->getOwnerID(), db);
+    if (baseAssetFrame == nullptr)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: expected base asset to exist, asset code: "
+                   << bidFrame->getBaseAsset();
+        throw runtime_error("Unexpected state: expected base asset to exist");
+    }
+
+    auto& sourceAccount = getSourceAccount();
+
+    if (baseAssetFrame->isRequireVerification() &&
+        sourceAccount.getAccountType() == AccountType::NOT_VERIFIED)
+    {
+        innerResult().code(CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
+        return false;
+    }
+
+    if (baseAssetFrame->isRequireKYC() &&
+        (sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
+         sourceAccount.getAccountType() == AccountType::VERIFIED))
+    {
+        innerResult().code(CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
         return false;
     }
 
