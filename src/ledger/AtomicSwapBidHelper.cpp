@@ -234,7 +234,8 @@ AtomicSwapBidHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool in
     st.exchange(use(baseBalanceID, "bbi"));
     st.exchange(use(bidEntry.amount, "ba"));
     st.exchange(use(bidEntry.lockedAmount, "la"));
-    st.exchange(use(bidEntry.isCancelled, "ic"));
+    int isCancelled = bidEntry.isCancelled ? 1 : 0;
+    st.exchange(use(isCancelled, "ic"));
     st.exchange(use(bidEntry.details, "d"));
     st.exchange(use(bidEntry.createdAt, "ca"));
     st.exchange(use(bidFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -270,6 +271,7 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
                                         std::function<void(LedgerEntry const &)> atomicSwapBidProcessor)
 {
     int32_t bidVersion = 0;
+    int isCancelled = 0;
 
     LedgerEntry le;
     le.data.type(LedgerEntryType::ATOMIC_SWAP_BID);
@@ -282,7 +284,7 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
     st.exchange(into(be.baseBalance));
     st.exchange(into(be.amount));
     st.exchange(into(be.lockedAmount));
-    st.exchange(into(be.isCancelled));
+    st.exchange(into(isCancelled));
     st.exchange(into(be.details));
     st.exchange(into(be.createdAt));
     st.exchange(into(le.lastModifiedLedgerSeq));
@@ -291,6 +293,7 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
     st.execute(true);
     while (st.got_data())
     {
+        be.isCancelled = isCancelled > 0;
         be.ext.v(static_cast<LedgerVersion>(bidVersion));
         be.quoteAssets = ASwapBidQuoteAssetHelper::loadQuoteAssets(db, be.bidID);
         if (!AtomicSwapBidFrame::isValid(be))

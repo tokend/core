@@ -2,6 +2,7 @@
 #include <database/Database.h>
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include <ledger/BalanceHelper.h>
 #include "ReviewASwapRequestOpFrame.h"
 
 using namespace std;
@@ -44,8 +45,10 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
 
     if (bidFrame == nullptr)
     {
-        innerResult().code(ReviewRequestResultCode::ASWAP_BID_NOT_FOUND);
-        return false;
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: expected atomic swap bid to exist, bid ID: "
+                << bidFrame->getBidID();
+        throw runtime_error("Unexpected state: expected atomic swap bid to exist");
     }
 
     if (!bidFrame->tryUnlockAmount(aSwapCreationRequest.baseAmount))
@@ -62,6 +65,12 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;
+}
+
+bool ReviewASwapRequestOpFrame::canRemoveBid(AtomicSwapBidFrame::pointer bid)
+{
+    bool bidIsSoldOut = bid->getAmount() == 0 && bid->getLockedAmount() == 0;
+    return bidIsSoldOut || (bid->isCancelled() && bid->getLockedAmount() == 0);
 }
 
 bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,
@@ -102,8 +111,10 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
             aSwapRequest.bidID, db, &delta);
     if (bidFrame == nullptr)
     {
-        innerResult().code(ReviewRequestResultCode::ASWAP_BID_NOT_FOUND);
-        return false;
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: expected atomic swap bid to exist, bid ID: "
+                << bidFrame->getBidID();
+        throw runtime_error("Unexpected state: expected atomic swap bid to exist");
     }
 
     if (!bidFrame->tryChargeFromLocked(aSwapRequest.baseAmount))
@@ -131,11 +142,24 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         return false;
     }
 
+    auto bidOwnerBalanceFrame = BalanceHelper::Instance()->mustLoadBalance(
+            bidFrame->getOwnerID(), bidFrame->getBaseAsset(), db, &delta);
+
+    if (!bidOwnerBalanceFrame->tryChargeFromLocked(aSwapRequest.baseAmount))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to charge from bid owner balance locked amount, "
+                   "bid ID: " << bidFrame->getBidID();
+        throw runtime_error(
+                "Unexpected state: failed to charge from bid owner balance locked amount");
+    }
+
     EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
+    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
     EntryHelperProvider::storeChangeEntry(delta, db, purchaserBalanceFrame->mEntry);
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
-    if (bidFrame->getAmount() == 0 && bidFrame->getLockedAmount() == 0)
+    if (canRemoveBid(bidFrame))
     {
         EntryHelperProvider::storeDeleteEntry(delta, db, bidFrame->getKey());
     }

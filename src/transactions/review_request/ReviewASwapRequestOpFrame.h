@@ -19,6 +19,8 @@ SourceDetails getSourceAccountDetails(
 bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                   ReviewableRequestFrame::pointer request) override;
 
+bool canRemoveBid(AtomicSwapBidFrame::pointer bid);
+
 bool handlePermanentReject(Application& app, LedgerDelta& delta,
                            LedgerManager& ledgerManager,
                            ReviewableRequestFrame::pointer request) override;
