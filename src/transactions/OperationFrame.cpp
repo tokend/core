@@ -46,6 +46,9 @@
 #include "CreateManageLimitsRequestOpFrame.h"
 #include "ManageContractRequestOpFrame.h"
 #include "ManageContractOpFrame.h"
+#include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
+#include "atomic_swap/CancelASwapBidOpFrame.h"
+#include "atomic_swap/CreateASwapRequestOpFrame.h"
 
 namespace stellar
 {
@@ -115,6 +118,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new ManageContractRequestOpFrame(op, res, tx));
     case OperationType::MANAGE_CONTRACT:
         return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
+    case OperationType::CREATE_ASWAP_BID_REQUEST:
+        return shared_ptr<OperationFrame>(new CreateASwapBidCreationRequestOpFrame(op, res, tx));
+    case OperationType::CANCEL_ASWAP_BID:
+        return shared_ptr<OperationFrame>(new CancelASwapBidOpFrame(op, res, tx));
+    case OperationType::CREATE_ASWAP_REQUEST:
+        return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
     default:
         ostringstream err;
         err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
