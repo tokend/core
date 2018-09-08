@@ -75,7 +75,7 @@ namespace stellar
         return mAtomicSwapBid.lockedAmount;
     }
 
-    bool AtomicSwapBidFrame::getIsCancelled() const
+    bool AtomicSwapBidFrame::isCancelled() const
     {
         return mAtomicSwapBid.isCancelled;
     }
