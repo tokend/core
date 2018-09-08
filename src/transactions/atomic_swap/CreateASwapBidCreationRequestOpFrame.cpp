@@ -47,7 +47,7 @@ CreateASwapBidCreationRequestOpFrame::isBaseAssetValid(Database &db,
         return CreateASwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND;
     }
 
-    if (baseAssetFrame->isPolicySet(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP))
+    if (!baseAssetFrame->isPolicySet(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP))
     {
         return CreateASwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED;
     }
@@ -72,7 +72,7 @@ CreateASwapBidCreationRequestOpFrame::isQuoteAssetValid(Database& db,
         return CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND;
     }
 
-    if (quoteAssetFrame->isPolicySet(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP))
+    if (!quoteAssetFrame->isPolicySet(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP))
     {
         return CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED;
     }
