@@ -97,8 +97,6 @@ class BalanceFrame : public EntryFrame
         // tryCharge - charges specified amount from available amount. Returns false, if failed to do it;
         bool tryCharge(uint64_t amountToCharge);
 
-        bool hasEnoughAmount(uint64_t amount);
-
 	static pointer createNew(BalanceID id, AccountID owner, AssetCode asset);
 
 };

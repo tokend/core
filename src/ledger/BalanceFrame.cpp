@@ -175,10 +175,5 @@ namespace stellar
         mBalance.amount -= amountToCharge;
         return true;
     }
-
-    bool BalanceFrame::hasEnoughAmount(uint64_t amount)
-    {
-        return mBalance.amount >= amount;
-    }
 }
 
