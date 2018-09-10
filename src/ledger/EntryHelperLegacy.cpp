@@ -18,6 +18,7 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/AtomicSwapBidHelper.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
@@ -192,6 +193,7 @@ namespace stellar
 		{ LedgerEntryType::STATISTICS_V2, StatisticsV2Helper::Instance() },
 		{ LedgerEntryType::PENDING_STATISTICS, PendingStatisticsHelper::Instance() },
 		{ LedgerEntryType::SALE_ANTE, SaleAnteHelper::Instance()},
-		{ LedgerEntryType::CONTRACT, ContractHelper::Instance() }
+		{ LedgerEntryType::CONTRACT, ContractHelper::Instance() },
+		{ LedgerEntryType::ATOMIC_SWAP_BID, AtomicSwapBidHelper::Instance() },
 	};
 }
