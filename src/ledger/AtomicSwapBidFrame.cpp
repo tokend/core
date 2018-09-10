@@ -170,18 +170,7 @@ namespace stellar
             }
         }
 
-        uint64_t totalAmount = 0;
-        if (!safeSum(atomicSwapBidEntry.amount,
-                     atomicSwapBidEntry.lockedAmount, totalAmount))
-        {
-            CLOG(ERROR, Logging::ENTRY_LOGGER)
-                    << "Failed to check atomic swap bid validity, "
-                       "total amount overflows uint64";
-            throw runtime_error("Failed to check atomic swap bid validity, "
-                                "total amount overflows uint64");
-        }
-
-        return totalAmount != 0;
+        return true;
     }
 
     bool
