@@ -145,6 +145,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     requestFrame->recalculateHashRejectReason();
 
+    EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
     EntryHelperProvider::storeAddEntry(delta, db, requestFrame->mEntry);
 
     innerResult().code(CreateASwapRequestResultCode::SUCCESS);
