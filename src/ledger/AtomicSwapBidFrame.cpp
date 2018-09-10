@@ -178,7 +178,7 @@ namespace stellar
                     << "Failed to check atomic swap bid validity, "
                        "total amount overflows uint64";
             throw runtime_error("Failed to check atomic swap bid validity, "
-                                "total amount overflows uint64")
+                                "total amount overflows uint64");
         }
 
         return totalAmount != 0;
