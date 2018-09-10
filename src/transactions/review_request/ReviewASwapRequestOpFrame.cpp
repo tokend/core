@@ -155,14 +155,23 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     }
 
     EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
-    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
     EntryHelperProvider::storeChangeEntry(delta, db, purchaserBalanceFrame->mEntry);
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
     if (canRemoveBid(bidFrame))
     {
+        if (!bidOwnerBalanceFrame->unlock(bidFrame->getAmount()))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                    << "Unexpected state: failed to unlock amount in bid owner balance, "
+                       "bid ID: " << bidFrame->getBidID();
+            throw runtime_error(
+                    "Unexpected state: failed to unlock amount in bid owner balance");
+        }
         EntryHelperProvider::storeDeleteEntry(delta, db, bidFrame->getKey());
     }
+
+    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
