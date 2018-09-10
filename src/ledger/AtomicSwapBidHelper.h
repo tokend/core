@@ -13,7 +13,7 @@ namespace stellar
 
     class StatementContext;
 
-    class AtomicSwapBidHelper : public EntryHelper
+    class AtomicSwapBidHelper : public EntryHelperLegacy
     {
     public:
         AtomicSwapBidHelper(AtomicSwapBidHelper const&) = delete;

@@ -5,6 +5,7 @@
 #include <ledger/ReviewableRequestFrame.h>
 #include <transactions/FeesManager.h>
 #include <transactions/ManageKeyValueOpFrame.h>
+#include <ledger/KeyValueHelperLegacy.h>
 #include "CreateASwapRequestOpFrame.h"
 
 using namespace std;
@@ -52,7 +53,7 @@ CreateASwapRequestOpFrame::getSourceAccountDetails(
 
 bool CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTasks)
 {
-    auto aSwapKV = KeyValueHelper::Instance()->loadKeyValue(
+    auto aSwapKV = KeyValueHelperLegacy::Instance()->loadKeyValue(
             ManageKeyValueOpFrame::atomicSwapTasksPrefix, db);
 
     if (aSwapKV == nullptr)

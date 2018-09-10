@@ -81,7 +81,7 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
 
     REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
 
-    auto newRequestID = createBidCreationRequestResult.success().requestID();
+    auto newRequestID = createBidCreationRequestResult.success().requestID;
 
     auto newRequestFrame = reviewableRequestHelper->loadRequest(newRequestID, db);
     REQUIRE(newRequestFrame);

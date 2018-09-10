@@ -1,6 +1,7 @@
 #include <main/Application.h>
 #include <database/Database.h>
 #include <ledger/LedgerDelta.h>
+#include "ledger/LedgerHeaderFrame.h"
 #include <ledger/BalanceHelper.h>
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
 #include <ledger/AccountHelper.h>
