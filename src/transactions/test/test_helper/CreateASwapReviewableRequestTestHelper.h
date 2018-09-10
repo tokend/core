@@ -6,12 +6,14 @@ namespace stellar
 {
 namespace txtest
 {
-class CreateAtomicSwapReviewableRequestTestHelper : TxHelper
+class CreateASwapReviewableRequestTestHelper : TxHelper
 {
 public:
-    explicit CreateAtomicSwapReviewableRequestTestHelper(
+    explicit CreateASwapReviewableRequestTestHelper(
             TestManager::pointer testManager);
 
+    CreateASwapRequestOp createASwapRequestOp(uint64_t bidID, AssetCode asset,
+                                              uint64_t amount, uint64_t fee);
 
     TransactionFramePtr createASwapRequestTx(Account& source,
                  CreateASwapRequestOp& createASwapRequestOp);
@@ -20,10 +22,6 @@ public:
                           CreateASwapRequestOp& createASwapRequestOp,
                           CreateASwapRequestResultCode expectedResult =
                           CreateASwapRequestResultCode::SUCCESS);
-
-    CreateASwapRequestOp createASwapRequestOp(uint64_t bidID, AssetCode asset,
-                                              uint64_t amount, uint64_t fee);
-
 };
 
 }

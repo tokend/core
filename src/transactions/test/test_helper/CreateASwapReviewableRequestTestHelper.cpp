@@ -3,6 +3,8 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/atomic_swap/CreateASwapRequestOpFrame.h>
 #include <lib/catch.hpp>
+#include <ledger/AtomicSwapBidHelper.h>
+#include <ledger/BalanceHelper.h>
 
 
 namespace stellar
@@ -10,15 +12,17 @@ namespace stellar
 namespace txtest
 {
 
-CreateAtomicSwapReviewableRequestTestHelper::
-CreateAtomicSwapReviewableRequestTestHelper(TestManager::pointer testManager)
+CreateASwapReviewableRequestTestHelper::
+CreateASwapReviewableRequestTestHelper(TestManager::pointer testManager)
         : TxHelper(testManager)
 {
 }
 
 CreateASwapRequestOp
-CreateAtomicSwapReviewableRequestTestHelper::createASwapRequestOp(
-        uint64_t bidID, AssetCode asset, uint64_t amount, uint64_t fee)
+CreateASwapReviewableRequestTestHelper::createASwapRequestOp(uint64_t bidID,
+                                                             AssetCode asset,
+                                                             uint64_t amount,
+                                                             uint64_t fee)
 {
     CreateASwapRequestOp result;
     result.request.baseAmount = amount;
@@ -31,7 +35,7 @@ CreateAtomicSwapReviewableRequestTestHelper::createASwapRequestOp(
 }
 
 TransactionFramePtr
-CreateAtomicSwapReviewableRequestTestHelper::createASwapRequestTx(
+CreateASwapReviewableRequestTestHelper::createASwapRequestTx(
         txtest::Account &source, CreateASwapRequestOp &createASwapRequestOp)
 {
     Operation op;
@@ -42,11 +46,15 @@ CreateAtomicSwapReviewableRequestTestHelper::createASwapRequestTx(
 }
 
 CreateASwapRequestResult
-CreateAtomicSwapReviewableRequestTestHelper::applyCreateASwapRequest(
+CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
         txtest::Account &source, CreateASwapRequestOp &createASwapRequestOp,
         CreateASwapRequestResultCode expectedResult)
 {
     Database& db = mTestManager->getDB();
+
+    auto aSwapBidHelper = AtomicSwapBidHelper::Instance();
+    auto bidFrameBeforeTx = aSwapBidHelper->loadAtomicSwapBid(
+            createASwapRequestOp.request.bidID, db);
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     uint64 reviewableRequestCountBeforeTx =
@@ -70,11 +78,24 @@ CreateAtomicSwapReviewableRequestTestHelper::applyCreateASwapRequest(
 
     auto createASwapRequestResult = opResult.tr().createASwapRequestResult();
 
-    auto aSwapRequest = reviewableRequestHelper->loadRequest(
+    auto requestAfterTx = reviewableRequestHelper->loadRequest(
             createASwapRequestResult.success().requestID, db);
-    REQUIRE(!!aSwapRequest);
+    REQUIRE(requestAfterTx != nullptr);
+
+    auto createASwapRequest = requestAfterTx->getRequestEntry().body.aSwapRequest();
+    REQUIRE(createASwapRequest == createASwapRequestOp.request);
+
     REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
 
+    auto bidFrameAfterTx = aSwapBidHelper->loadAtomicSwapBid(
+            createASwapRequestOp.request.bidID, db);
+
+    REQUIRE(bidFrameAfterTx->getLockedAmount() -
+            createASwapRequestOp.request.baseAmount ==
+            bidFrameBeforeTx->getLockedAmount());
+
+    REQUIRE(bidFrameBeforeTx->getAmount() - createASwapRequestOp.request.baseAmount ==
+            bidFrameBeforeTx->getAmount());
 
     return createASwapRequestResult;
 }
