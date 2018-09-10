@@ -1,4 +1,4 @@
-#include "CreateAtomicSwapReviewableRequestTestHelper.h"
+#include "CreateASwapReviewableRequestTestHelper.h"
 
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/atomic_swap/CreateASwapRequestOpFrame.h>

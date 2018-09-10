@@ -86,6 +86,12 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         return false;
     }
 
+    if (bidFrame->isCancelled())
+    {
+        innerResult().code(CreateASwapRequestResultCode::BID_IS_CANCELLED);
+        return false;
+    }
+
     if (!bidFrame->hasQuoteAsset(aSwapRequest.quoteAsset))
     {
         innerResult().code(CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
