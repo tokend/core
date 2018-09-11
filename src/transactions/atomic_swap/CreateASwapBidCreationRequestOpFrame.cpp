@@ -239,6 +239,7 @@ bool CreateASwapBidCreationRequestOpFrame::doCheckValid(Application &app)
         if (quoteAsset.price == 0)
         {
             innerResult().code(CreateASwapBidCreationRequestResultCode::INVALID_PRICE);
+            return false;
         }
 
         const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(

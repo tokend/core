@@ -83,6 +83,7 @@ ManageOfferOp OfferManager::buildManageOfferOp(BalanceID const& baseBalance,
     return op;
 }
 
+// TODO: use uint64
 int64_t OfferManager::calculateQuoteAmount(int64_t const baseAmount,
                                            int64_t const price)
 {
