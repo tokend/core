@@ -148,7 +148,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 
     // TODO: move asset requirements check to separate method
     auto baseAssetFrame = AssetHelper::Instance()->loadAsset(baseBalanceFrame->getAsset(),
-                                                             getSourceID(), db);
+                                                             db);
     if (baseAssetFrame == nullptr)
     {
         innerResult().code(CreateASwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND);

@@ -101,7 +101,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     // TODO: move asset requirements check to separate method
     auto baseAssetFrame = AssetHelper::Instance()->loadAsset(bidFrame->getBaseAsset(),
-                                                             bidFrame->getOwnerID(), db);
+                                                             db);
     if (baseAssetFrame == nullptr)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
