@@ -32,6 +32,23 @@ bool ReviewASwapRequestOpFrame::handleReject(Application &app, LedgerDelta &delt
     return false;
 }
 
+void ReviewASwapRequestOpFrame::removeBid(Database &db, LedgerDelta &delta,
+                                          BalanceFrame::pointer bidOwnerBalance,
+                                          AtomicSwapBidFrame::pointer bid)
+{
+    if (!bidOwnerBalance->unlock(bid->getAmount()))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to unlock amount in bid owner balance, "
+                   "bid ID: " << bid->getBidID();
+        throw runtime_error(
+                "Unexpected state: failed to unlock amount in bid owner balance");
+    }
+    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalance->mEntry);
+    EntryHelperProvider::storeDeleteEntry(delta, db, bid->getKey());
+}
+
+
 bool
 ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &delta,
                                                  LedgerManager &ledgerManager,
@@ -62,6 +79,16 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
     }
 
     EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
+
+    if (canRemoveBid(bidFrame))
+    {
+        BalanceFrame::pointer bidOwnerBalance =
+                BalanceHelper::Instance()->mustLoadBalance(bidFrame->getOwnerID(),
+                                                           bidFrame->getBaseAsset(),
+                                                           db, &delta);
+        removeBid(db, delta, bidOwnerBalance, bidFrame);
+    }
+
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;
@@ -155,23 +182,14 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     }
 
     EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
+    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
     EntryHelperProvider::storeChangeEntry(delta, db, purchaserBalanceFrame->mEntry);
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
     if (canRemoveBid(bidFrame))
     {
-        if (!bidOwnerBalanceFrame->unlock(bidFrame->getAmount()))
-        {
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Unexpected state: failed to unlock amount in bid owner balance, "
-                       "bid ID: " << bidFrame->getBidID();
-            throw runtime_error(
-                    "Unexpected state: failed to unlock amount in bid owner balance");
-        }
-        EntryHelperProvider::storeDeleteEntry(delta, db, bidFrame->getKey());
+        removeBid(db, delta, bidOwnerBalanceFrame, bidFrame);
     }
-
-    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);

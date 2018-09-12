@@ -21,6 +21,9 @@ bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerMan
 
 bool canRemoveBid(AtomicSwapBidFrame::pointer bid);
 
+void removeBid(Database &db, LedgerDelta &delta,
+               BalanceFrame::pointer bidOwnerBalance, AtomicSwapBidFrame::pointer bid);
+
 bool handlePermanentReject(Application& app, LedgerDelta& delta,
                            LedgerManager& ledgerManager,
                            ReviewableRequestFrame::pointer request) override;
