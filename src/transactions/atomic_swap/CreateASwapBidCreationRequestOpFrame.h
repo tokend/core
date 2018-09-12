@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ledger/ReviewableRequestFrame.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar
@@ -39,6 +40,9 @@ public:
     static CreateASwapBidCreationRequestResultCode
     areAllAssetsValid(Database& db, AssetCode baseAssetCode,
                       xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
+
+    void tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+                        ReviewableRequestFrame::pointer request);
 
     bool doApply(Application &app, LedgerDelta &delta,
                  LedgerManager &ledgerManager) override;

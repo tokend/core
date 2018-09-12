@@ -6,6 +6,7 @@
 #include <ledger/AssetHelper.h>
 #include <ledger/ReviewableRequestFrame.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateASwapBidCreationRequestOpFrame.h"
 
 using namespace std;
@@ -121,6 +122,26 @@ CreateASwapBidCreationRequestOpFrame::areAllAssetsValid(
     return CreateASwapBidCreationRequestResultCode::SUCCESS;
 }
 
+void CreateASwapBidCreationRequestOpFrame::tryAutoApprove(
+        Database& db, LedgerDelta& delta, Application& app,
+        ReviewableRequestFrame::pointer request)
+{
+    auto& ledgerManager = app.getLedgerManager();
+    auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager,
+                                                         delta, request);
+    if (result != ReviewRequestResultCode::SUCCESS)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: "
+                   "tryApproveRequest expected to be success, but was: "
+                << xdr::xdr_to_string(result);
+        throw std::runtime_error("Unexpected state: "
+                                 "tryApproveRequest expected to be success");
+    }
+
+    innerResult().success().fulfilled = true;
+}
+
 bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta &delta,
                                                 LedgerManager &ledgerManager)
 {
@@ -197,6 +218,10 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 
     innerResult().code(CreateASwapBidCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
+    innerResult().success().fulfilled = false;
+
+    // FIXME: remove constant autoapprove
+    tryAutoApprove(db, delta, app, requestFrame);
 
     return true;
 }
