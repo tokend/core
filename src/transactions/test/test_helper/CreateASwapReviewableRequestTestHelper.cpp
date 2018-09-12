@@ -1,10 +1,10 @@
 #include "CreateASwapReviewableRequestTestHelper.h"
-
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/atomic_swap/CreateASwapRequestOpFrame.h>
 #include <lib/catch.hpp>
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/BalanceHelper.h>
+#include "test/test_marshaler.h"
 
 
 namespace stellar
@@ -21,8 +21,7 @@ CreateASwapReviewableRequestTestHelper(TestManager::pointer testManager)
 CreateASwapRequestOp
 CreateASwapReviewableRequestTestHelper::createASwapRequestOp(uint64_t bidID,
                                                              AssetCode asset,
-                                                             uint64_t amount,
-                                                             uint64_t fee)
+                                                             uint64_t amount)
 {
     CreateASwapRequestOp result;
     result.request.baseAmount = amount;
@@ -95,7 +94,7 @@ CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
             bidFrameBeforeTx->getLockedAmount());
 
     REQUIRE(bidFrameBeforeTx->getAmount() - createASwapRequestOp.request.baseAmount ==
-            bidFrameBeforeTx->getAmount());
+            bidFrameAfterTx->getAmount());
 
     return createASwapRequestResult;
 }

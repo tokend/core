@@ -13,7 +13,7 @@ class ASwapRequestReviewChecker : public ReviewChecker
 {
 protected:
     AtomicSwapBidFrame::pointer mBidBeforeTx;
-    BalanceFrame::pointer mBaseBalanceBeforeTx;
+    BalanceFrame::pointer mBidOwnerBalanceBeforeTx;
     BalanceFrame::pointer mPurchaserBalanceBeforeTx;
 
 public:

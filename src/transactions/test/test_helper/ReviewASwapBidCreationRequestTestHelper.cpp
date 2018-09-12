@@ -74,11 +74,7 @@ ReviewASwapBidCreationRequestHelper::createReviewRequestTx(
     reviewRequestOp.requestHash = requestHash;
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
-    reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    reviewRequestOp.ext.reviewDetails().tasksToAdd = 0;
-    reviewRequestOp.ext.reviewDetails().tasksToRemove =
-            action == ReviewRequestOpAction::APPROVE ? 1 : 0;
-    reviewRequestOp.ext.reviewDetails().externalDetails = "{}";
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 
     return txFromOperation(source, op, nullptr);
 }

@@ -13,7 +13,7 @@ public:
             TestManager::pointer testManager);
 
     CreateASwapRequestOp createASwapRequestOp(uint64_t bidID, AssetCode asset,
-                                              uint64_t amount, uint64_t fee);
+                                              uint64_t amount);
 
     TransactionFramePtr createASwapRequestTx(Account& source,
                  CreateASwapRequestOp& createASwapRequestOp);
