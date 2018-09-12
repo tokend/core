@@ -34,6 +34,8 @@ public:
 
     uint64_t getLockedAmount() const;
 
+    uint64_t getTotalAmount() const;
+
     bool isCancelled() const;
 
     void setIsCancelled(bool isCancelled);

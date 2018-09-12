@@ -75,6 +75,21 @@ namespace stellar
         return mAtomicSwapBid.lockedAmount;
     }
 
+    uint64_t AtomicSwapBidFrame::getTotalAmount() const
+    {
+        uint64_t totalAmount = 0;
+        if (!safeSum(mAtomicSwapBid.amount, mAtomicSwapBid.lockedAmount, totalAmount))
+        {
+            CLOG(ERROR, Logging::ENTRY_LOGGER)
+                    << "Unexpected state: "
+                       "total amount of atomic swap bid overflows uint64, bid ID: "
+                    << mAtomicSwapBid.bidID;
+            throw runtime_error("Unexpected state: "
+                                "total amount of atomic swap bid overflows uint64");
+        }
+        return totalAmount;
+    }
+
     bool AtomicSwapBidFrame::isCancelled() const
     {
         return mAtomicSwapBid.isCancelled;
