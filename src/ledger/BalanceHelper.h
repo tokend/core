@@ -85,6 +85,8 @@ namespace stellar
 
 		bool exists(Database& db, BalanceID balanceID);
 
+		uint64_t loadTotalAssetAmount(Database& db, AssetCode assetCode);
+
 	private:
 		BalanceHelper() { ; }
 		~BalanceHelper() { ; }

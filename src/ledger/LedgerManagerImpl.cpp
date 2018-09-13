@@ -11,6 +11,7 @@
 #include "ledger/LedgerManagerImpl.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
 
 #include "overlay/OverlayManager.h"
 #include "util/make_unique.h"
@@ -19,6 +20,7 @@
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "xdrpp/printer.h"
+#include "BalanceHelper.h"
 
 /*
 The ledger module:
@@ -824,11 +826,26 @@ LedgerManagerImpl::deleteOldEntries(Database& db, uint32_t ledgerSeq, uint64_t l
 void
 LedgerManagerImpl::checkDbState()
 {
+    Database& db = getDatabase();
+
 	// TODO move to invariant
 	auto accountHelper = AccountHelper::Instance();
     std::unordered_map<AccountID, AccountFrame::pointer> aData =
-		accountHelper->checkDB(getDatabase());
+		accountHelper->checkDB(db);
 
+    auto allAssetsWithIssued = AssetHelper::Instance()->loadIssuedForAssets(db);
+
+    for (const auto& item : allAssetsWithIssued)
+    {
+        auto totalAssetAmount = BalanceHelper::Instance()->loadTotalAssetAmount(
+                db, item.first);
+
+        if (totalAssetAmount != item.second)
+        {
+            throw std::runtime_error("Total asset amount on all balances not equal to "
+                                     "total issued amount of asset");
+        }
+    }
 }
 
 void
