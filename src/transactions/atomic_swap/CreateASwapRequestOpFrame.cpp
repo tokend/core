@@ -87,6 +87,13 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         return false;
     }
 
+    if (bidFrame->getOwnerID() == getSourceID())
+    {
+        innerResult().code(
+                CreateASwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
+        return false;
+    }
+
     if (bidFrame->isCancelled())
     {
         innerResult().code(CreateASwapRequestResultCode::BID_IS_CANCELLED);

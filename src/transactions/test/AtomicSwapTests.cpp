@@ -339,6 +339,15 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND);
                     }
 
+                    SECTION("Try to create aswap request for own bid")
+                    {
+                        auto aSwapRequest = createASwapReviewableRequestTestHelper.createASwapRequestOp(
+                                bidID, firstQuoteAsset, amountToBuy);
+                        createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
+                                seller, aSwapRequest,
+                                CreateASwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
+                    }
+
                     SECTION("Invalid base amount")
                     {
                         auto aSwapRequest =
