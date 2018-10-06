@@ -93,7 +93,8 @@ AccountRolePermissionHelperImpl::storeUpdate(LedgerEntry const& entry,
 
     const uint64_t id = accountRolePermissionFrame->getID();
     const uint64_t roleID = accountRolePermissionFrame->getRoleID();
-    const OperationType opType = accountRolePermissionFrame->getOperationType();
+    const int32_t opType =
+            static_cast<int32_t>(accountRolePermissionFrame->getOperationType());
     const auto version = static_cast<int32_t>(entry.ext.v());
 
     std::string sql;
@@ -118,7 +119,7 @@ AccountRolePermissionHelperImpl::storeUpdate(LedgerEntry const& entry,
         soci::statement& st = prep.statement();
         st.exchange(use(id, "id"));
         st.exchange(use(roleID, "r"));
-        st.exchange(use(static_cast<int32>(opType), "o"));
+        st.exchange(use(opType, "o"));
         st.exchange(use(
             accountRolePermissionFrame->mEntry.lastModifiedLedgerSeq, "lm"));
         st.exchange(use(version, "v"));
@@ -289,18 +290,16 @@ AccountRolePermissionHelperImpl::checkPermission(uint32 accountRole,
     std::vector<stellar::AccountRolePermissionFrame::pointer> result;
 
     int32 exists;
-    AccountID ownerIDStrKey;
+    const int32 opTypeInt = static_cast<int32>(opType);
 
     auto timer = getDatabase().getSelectTimer("identity_permission-join");
 
     LedgerEntry le;
     le.data.type(LedgerEntryType::ACCOUNT_ROLE_PERMISSION);
 
-    std::string actIDStrKey;
-
     auto& st = prep.statement();
     st.exchange(soci::use(accountRole));
-    st.exchange(soci::use(static_cast<int32>(opType)));
+    st.exchange(soci::use(opTypeInt));
     st.exchange(soci::into(exists));
 
     st.define_and_bind();
