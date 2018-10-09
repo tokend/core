@@ -50,6 +50,7 @@
 #include <thread>
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AccountRolePermissionHelperImpl.h>
+#include <ledger/AssetHelperImpl.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/LimitsV2Helper.h>
 #include <ledger/StatisticsV2Helper.h>
@@ -98,10 +99,11 @@ enum databaseSchemaVersion : unsigned long {
     REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 19,
     REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 20,
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 21,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 22
+    ADD_ACCOUNT_ROLES_AND_POLICIES = 22,
+    ADD_ASSET_CUSTOM_PRECISION = 23
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
 
 static void
 setSerializable(soci::session& sess)
@@ -224,6 +226,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             std::make_unique<AccountRoleHelper>(storageHelper)->dropAll();
             AccountHelper::Instance()->addAccountRole(*this);
             std::unique_ptr<AccountRolePermissionHelper>(new AccountRolePermissionHelperImpl(storageHelper))->dropAll();
+            break;
+        case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
+            std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");

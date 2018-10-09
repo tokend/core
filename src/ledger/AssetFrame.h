@@ -27,6 +27,8 @@ class AssetFrame : public EntryFrame
 public:
     typedef std::shared_ptr<AssetFrame> pointer;
 
+    static const uint32 kMaximumTrailingDigits = 6;
+
     AssetFrame();
     AssetFrame(LedgerEntry const& from);
 
@@ -87,6 +89,8 @@ public:
         return mAsset.preissuedAssetSigner;
     }
 
+    uint32 getTrailingDigitsCount() const;
+
     // returns true, if maxIssuanceAmount will be exceeded after issuance of specified amount
     bool willExceedMaxIssuanceAmount(uint64_t amount) const;
     // returns true, if available for issuance amount is sufficient to issue specified amount
@@ -124,6 +128,8 @@ public:
     {
         mAsset.availableForIssueance = availableForIssuance;
     }
+
+    void setTrailingDigitsCount(uint32 trailingDigitsCount);
 
     bool isPolicySet(const AssetPolicy policy) const
     {

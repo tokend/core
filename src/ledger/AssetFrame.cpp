@@ -19,6 +19,8 @@ namespace stellar
 {
 using xdr::operator<;
 
+const uint32 AssetFrame::kMaximumTrailingDigits;
+
 AssetFrame::AssetFrame() : EntryFrame(LedgerEntryType::ASSET)
                          , mAsset(mEntry.data.asset())
 {
@@ -60,6 +62,11 @@ AssetFrame::pointer AssetFrame::create(AssetCreationRequest const& request,
     asset.policies = request.policies;
     asset.preissuedAssetSigner = request.preissuedAssetSigner;
     asset.pendingIssuance = 0;
+    if (request.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+    {
+        asset.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+        asset.ext.trailingDigitsCount() = request.ext.trailingDigitsCount();
+    }
     return std::make_shared<AssetFrame>(le);
 }
 
@@ -201,6 +208,24 @@ bool AssetFrame::isAssetCodeValid(AssetCode const& code)
     return onechar;
 }
 
+uint32 AssetFrame::getTrailingDigitsCount() const
+{
+    if (mAsset.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+    {
+        return mAsset.ext.trailingDigitsCount();
+    }
+    return kMaximumTrailingDigits;
+}
+
+void AssetFrame::setTrailingDigitsCount(uint32 trailingDigitsCount)
+{
+    if (mAsset.ext.v() != LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+    {
+        throw runtime_error("Unable to set trailing digits count");
+    }
+    mAsset.ext.trailingDigitsCount() = trailingDigitsCount;
+}
+
 void AssetFrame::ensureValid(AssetEntry const& oe)
 {
     try
@@ -216,14 +241,20 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
             throw runtime_error("totalIssuedOrLocked exceeds max issuance amount");
         }
 
-       if (!isAssetCodeValid(oe.code))
-       {
-           throw runtime_error("asset code is invalid");
-       }
+        if (!isAssetCodeValid(oe.code))
+        {
+            throw runtime_error("asset code is invalid");
+        }
 
         if (!isValidJson(oe.details))
         {
             throw runtime_error("details is invalid");
+        }
+
+        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION &&
+            oe.ext.trailingDigitsCount() > kMaximumTrailingDigits)
+        {
+            throw runtime_error("Too many trailing digits");
         }
     }
     catch (...)

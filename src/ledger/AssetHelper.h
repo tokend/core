@@ -26,6 +26,9 @@ public:
 	virtual AssetFrame::pointer
 	loadAsset(AssetCode assetCode, AccountID owner) = 0;
 
+	virtual void
+	addTrailingDigits() = 0;
+
 private:
 
 	virtual void

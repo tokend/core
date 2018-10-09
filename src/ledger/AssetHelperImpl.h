@@ -23,6 +23,9 @@ private:
     dropAll() override;
 
     void
+    addTrailingDigits() override;
+
+    void
     storeAdd(LedgerEntry const& entry) override;
 
     void

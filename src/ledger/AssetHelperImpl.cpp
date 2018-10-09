@@ -19,7 +19,7 @@ AssetHelperImpl::AssetHelperImpl(StorageHelper& storageHelper)
     mAssetColumnSelector = "SELECT code, owner, preissued_asset_signer, "
                            "details, max_issuance_amount, "
                            "available_for_issueance, issued, pending_issuance, "
-                           "policies, lastmodified, version "
+                           "policies, trailing_digits, lastmodified, version "
                            "FROM asset";
 }
 
@@ -44,6 +44,13 @@ AssetHelperImpl::dropAll()
            "version                 INT           NOT NULL, "
            "PRIMARY KEY (code)"
            ");";
+}
+
+void
+AssetHelperImpl::addTrailingDigits()
+{
+    getDatabase().getSession() << "ALTER TABLE asset ADD COLUMN trailing_digits INT NOT NULL DEFAULT "
+                               << AssetFrame::kMaximumTrailingDigits << ";";
 }
 
 void
@@ -127,7 +134,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
         sql = "INSERT INTO asset (code, owner, preissued_asset_signer, details,"
               "                   max_issuance_amount, available_for_issueance,"
               "                   issued, pending_issuance, policies,"
-              "                   lastmodified, version) "
+              "                   trailing_digits, lastmodified, version) "
               "VALUES (:code, :owner, :signer, :details, :max, :available, "
               "        :issued, :pending, :policies, :lm, :v)";
     }
@@ -138,7 +145,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
               "max_issuance_amount = :max, "
               "available_for_issueance = :available, issued = :issued, "
               "pending_issuance = :pending, policies = :policies, "
-              "lastmodified = :lm, version = :v "
+              "trailing_digits = :td, lastmodified = :lm, version = :v "
               "WHERE code = :code";
     }
 
@@ -155,6 +162,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     st.exchange(use(assetEntry.pendingIssuance, "pending"));
     st.exchange(use(assetEntry.policies, "policies"));
     st.exchange(use(assetFrame->mEntry.lastModifiedLedgerSeq, "lm"));
+    st.exchange(use(assetFrame->getTrailingDigitsCount(), "td"));
     st.exchange(use(version, "v"));
     st.define_and_bind();
 
@@ -291,6 +299,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     LedgerEntry le;
     le.data.type(LedgerEntryType::ASSET);
     AssetEntry& oe = le.data.asset();
+    oe.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
 
     int32_t version = 0;
 
@@ -304,6 +313,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     st.exchange(into(oe.issued));
     st.exchange(into(oe.pendingIssuance));
     st.exchange(into(oe.policies));
+    st.exchange(into(oe.ext.trailingDigitsCount()));
     st.exchange(into(le.lastModifiedLedgerSeq));
     st.exchange(into(version));
     st.define_and_bind();

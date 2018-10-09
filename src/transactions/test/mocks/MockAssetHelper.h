@@ -12,6 +12,7 @@ class MockAssetHelper : public AssetHelper
 public:
 
     MOCK_METHOD0(dropAll, void());
+    MOCK_METHOD0(addTrailingDigits, void());
     MOCK_METHOD1(storeAdd, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeChange, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeDelete, void(LedgerKey const& key));
