@@ -3,20 +3,12 @@ services:
   - docker:dind
 
 variables:
-  # dockerfile for building artifact image
   BUILD_DOCKERFILE: build.dockerfile
-  BOOTSTRAP_DOCKERFILE: bootstrap.dockerfile
-  IMAGE_NAME: registry.gitlab.com/swarmfund/core
-  BOOTSTRAP_IMAGE_NAME: $IMAGE_NAME/bootstrap
+  IMAGE_NAME: registry.gitlab.com/tokend/core
   IMAGE_BUILD_NAME: $IMAGE_NAME:$CI_COMMIT_SHA
-  BOOTSTRAP_BUILD_NAME: $BOOTSTRAP_IMAGE_NAME:latest
-  DEPLOYMENT_DIR: /root/deployment
-  DEPLOYMENT_INV: $DEPLOYMENT_DIR/$CI_COMMIT_REF_NAME.ini
-  DEPLOYMENT_SECRETS: $DEPLOYMENT_DIR/secrets/$CI_COMMIT_REF_NAME.yml
 
 stages:
   - build
-  - publish-gh
 
 # build and publish docker image to the registry
 build:
