@@ -86,43 +86,6 @@ namespace stellar
         return totalAmount;
     }
 
-    bool BalanceFrame::addBalance(int64_t delta)
-    {
-        int64_t availableBalance = getAmount();
-        if (availableBalance + delta < 0)
-            return false;
-        if (mBalance.amount + delta < 0)
-            return false;
-        mBalance.amount += delta;
-        int64_t totalFunds = mBalance.amount + mBalance.locked;
-        if (totalFunds < 0)
-            return false;
-        return true;
-    }
-
-    bool BalanceFrame::addLocked(int64_t delta)
-    {
-        if (mBalance.locked + delta < 0)
-            return false;
-        mBalance.locked += delta;
-        int64_t totalFunds = mBalance.amount + mBalance.locked;
-        if (totalFunds < 0)
-            return false;
-        return true;
-    }
-
-    BalanceFrame::Result BalanceFrame::lockBalance(int64_t delta)
-    {
-        int64_t availableBalance = getAmount();
-        if (availableBalance - delta < 0)
-            return Result::UNDERFUNDED;
-        if (mBalance.locked + delta < 0)
-            return Result::LINE_FULL;
-        mBalance.amount -= delta;
-        mBalance.locked += delta;
-        return Result::SUCCESS;
-    }
-
     bool BalanceFrame::tryFundAccount(uint64_t amount)
     {
         uint64_t updatedAmount;

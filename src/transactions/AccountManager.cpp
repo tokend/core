@@ -45,14 +45,22 @@ namespace stellar {
             AccountFrame::pointer account, BalanceFrame::pointer balance, int64 amount,
             int64 &universalAmount, bool requireReview, bool ignoreLimits) {
         if (requireReview) {
-            auto addResult = balance->lockBalance(amount);
-            if (addResult == BalanceFrame::Result::UNDERFUNDED)
+            if (amount > 0) {
+                const BalanceFrame::Result result = balance->tryLock(amount);
+                if (result == BalanceFrame::Result::UNDERFUNDED)
+                    return UNDERFUNDED;
+                if (result == BalanceFrame::Result::LINE_FULL)
+                    return LINE_FULL;
+            } else {
+                if (!balance->unlock(-amount))
+                    return UNDERFUNDED;
+            }
+        } else if (amount > 0) {
+            if (!balance->tryCharge(amount))
                 return UNDERFUNDED;
-            else if (addResult == BalanceFrame::Result::LINE_FULL)
-                return LINE_FULL;
         } else {
-            if (!balance->addBalance(-amount))
-                return UNDERFUNDED;
+            if (!balance->tryFundAccount(-amount))
+                return LINE_FULL;
         }
 
         auto statsAssetFrame = AssetHelperLegacy::Instance()->loadStatsAsset(mDb);
@@ -169,8 +177,14 @@ namespace stellar {
     bool AccountManager::revertRequest(AccountFrame::pointer account,
                                        BalanceFrame::pointer balance, int64 amount,
                                        int64 universalAmount, time_t timePerformed) {
-        if (balance->lockBalance(-amount) != BalanceFrame::Result::SUCCESS) {
-            return false;
+        if (amount > 0) {
+            if (!balance->unlock(amount)) {
+                return false;
+            }
+        } else {
+            if (!balance->tryLock(-amount)) {
+                return false;
+            }
         }
 
         auto statisticsHelper = StatisticsHelper::Instance();

@@ -146,7 +146,7 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 
     if (sellingAmount <= 0)
         return false;
-    return sellingBalance->lockBalance(sellingAmount) == BalanceFrame::Result::
+    return sellingBalance->tryLock(sellingAmount) == BalanceFrame::Result::
            SUCCESS;
 }
 

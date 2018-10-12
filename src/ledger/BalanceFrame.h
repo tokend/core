@@ -79,27 +79,21 @@ class BalanceFrame : public EntryFrame
         
     static bool isValid(BalanceEntry const& oe);
     bool isValid() const;
-	[[deprecated]]
-	bool addBalance(int64_t delta);
-	[[deprecated]]
-    bool addLocked(int64_t delta);
     
     enum Result {SUCCESS, LINE_FULL, UNDERFUNDED};
-    
-	[[deprecated]]
-	Result lockBalance(int64_t delta);
-	// returns false if total amount of funds (balance amount + locked) exceeds UINT64_MAX
-	bool tryFundAccount(uint64_t amount);
-        // tryLock - changes from balance and add to locked
-        Result tryLock(uint64_t amountToBeLocked);
-        // chargeFromLocked - Charges specified amount from locked. Returns false, if failed to do it.
-        bool tryChargeFromLocked(uint64_t amountToCharge);
-        // unlock - removes from lock and adds to balance specified amount. Returns false - if fails
-        bool unlock(uint64_t amountToUnlock);
-        // tryCharge - charges specified amount from available amount. Returns false, if failed to do it;
-        bool tryCharge(uint64_t amountToCharge);
 
-	static pointer createNew(BalanceID id, AccountID owner, AssetCode asset);
+    // returns false if total amount of funds (balance amount + locked) exceeds UINT64_MAX
+    bool tryFundAccount(uint64_t amount);
+    // tryLock - changes from balance and add to locked
+    Result tryLock(uint64_t amountToBeLocked);
+    // chargeFromLocked - Charges specified amount from locked. Returns false, if failed to do it.
+    bool tryChargeFromLocked(uint64_t amountToCharge);
+    // unlock - removes from lock and adds to balance specified amount. Returns false - if fails
+    bool unlock(uint64_t amountToUnlock);
+    // tryCharge - charges specified amount from available amount. Returns false, if failed to do it;
+    bool tryCharge(uint64_t amountToCharge);
+
+    static pointer createNew(BalanceID id, AccountID owner, AssetCode asset);
 
 };
 }

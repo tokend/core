@@ -269,7 +269,7 @@ bool PaymentOpFrame::processFees_v1(Application& app, LedgerDelta& delta,
     auto totalFee = feeData.sourceFee.paymentFee + feeData.sourceFee.fixedFee +
         feeData.destinationFee.paymentFee + feeData.destinationFee.fixedFee;
 
-    if (!commissionBalanceFrame->addBalance(totalFee))
+    if (!commissionBalanceFrame->tryFundAccount(totalFee))
     {
         app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();
         innerResult().code(PaymentResultCode::LINE_FULL);
@@ -370,7 +370,8 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     if (!processBalanceChange(app, transferResult))
         return false;
 
-	if (!mDestBalance->addBalance(destReceived))
+    if (destReceived < 0) throw std::runtime_error("// TMP:");
+	if (!mDestBalance->tryFundAccount(destReceived))
 	{
 		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
 		innerResult().code(PaymentResultCode::LINE_FULL);

@@ -166,19 +166,19 @@ void OfferExchange::unlockBalancesForTakenOffer(OfferFrame& offer,
                                                 BalanceFrame::pointer
                                                 quoteBalance)
 {
-    BalanceFrame::Result result;
+    bool result;
     if (offer.getOffer().isBuy)
     {
-        int64_t lockedAmount = offer.getOffer().quoteAmount + offer.getOffer().
-                                                                    fee;
-        result = quoteBalance->lockBalance(-lockedAmount);
+        const int64_t lockedAmount = offer.getOffer().quoteAmount +
+                                     offer.getOffer().fee;
+        result = quoteBalance->unlock(lockedAmount);
     }
     else
     {
-        result = baseBalance->lockBalance(-offer.getOffer().baseAmount);
+        result = baseBalance->unlock(offer.getOffer().baseAmount);
     }
 
-    if (result != BalanceFrame::Result::SUCCESS)
+    if (!result)
         throw std::runtime_error("Failed to mark offer as taken");
 }
 
@@ -217,8 +217,10 @@ void OfferExchange::offerMatched(OfferEntry& offer,
     {
         assert(match.buyerFee >= 0);
         int64_t amountToCharge = match.quoteDelta + match.buyerFee;
-        isBalanceValid = baseBalance->addBalance(match.baseDelta) &&
-                         quoteBalance->addLocked(-amountToCharge);
+        assert(match.baseDelta >= 0);
+        assert(amountToCharge >= 0);
+        isBalanceValid = baseBalance->tryFundAccount(match.baseDelta) &&
+                         quoteBalance->tryChargeFromLocked(amountToCharge);
         offer.fee -= match.buyerFee;
     }
     else
@@ -228,9 +230,10 @@ void OfferExchange::offerMatched(OfferEntry& offer,
 
         assert(match.sellerFee >= 0);
         int64_t amountToAdd = match.quoteDelta - match.sellerFee;
+        assert(match.baseDelta >= 0);
         assert(amountToAdd > 0);
-        isBalanceValid = baseBalance->addLocked(-match.baseDelta) &&
-                         quoteBalance->addBalance(amountToAdd);
+        isBalanceValid = baseBalance->tryChargeFromLocked(match.baseDelta) &&
+                         quoteBalance->tryFundAccount(amountToAdd);
     }
 
     if (!isBalanceValid)
@@ -308,8 +311,11 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
                         ? exchangeResult.buyerFee
                         : exchangeResult.sellerFee);
 
-    assert(mCommissionBalance->addBalance(exchangeResult.buyerFee));
-    assert(mCommissionBalance->addBalance(exchangeResult.sellerFee));
+    if (!mCommissionBalance->tryFundAccount(exchangeResult.buyerFee) ||
+        !mCommissionBalance->tryFundAccount(exchangeResult.sellerFee))
+    {
+        throw std::runtime_error("Unable to increase commission balance.");
+    }
 
     if (!offerNeedsMore(offerB))
     {
