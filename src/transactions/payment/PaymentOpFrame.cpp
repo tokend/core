@@ -370,7 +370,6 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     if (!processBalanceChange(app, transferResult))
         return false;
 
-    if (destReceived < 0) throw std::runtime_error("// TMP:");
 	if (!mDestBalance->tryFundAccount(destReceived))
 	{
 		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
