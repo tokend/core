@@ -211,6 +211,11 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
         retBalance = make_shared<BalanceFrame>(entry);
     });
 
+    if (!retBalance)
+    {
+        return nullptr;
+    }
+
     if (mStorageHelper.getLedgerDelta())
     {
         mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
