@@ -55,8 +55,6 @@ BalanceHelperImpl::storeChange(LedgerEntry const& entry)
 void
 BalanceHelperImpl::storeDelete(LedgerKey const& key)
 {
-    flushCachedEntry(key);
-
     Database& db = getDatabase();
     auto timer = db.getDeleteTimer("delete-balance");
     auto prep =
@@ -72,10 +70,6 @@ BalanceHelperImpl::storeDelete(LedgerKey const& key)
 bool
 BalanceHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
-    {
-        return true;
-    }
     int exists = 0;
 
     Database& db = getDatabase();
@@ -105,7 +99,6 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     {
         balanceFrame->touch(*delta);
     }
-    putCachedEntry(getLedgerKey(entry), make_shared<LedgerEntry>(entry));
 
     bool isValid = balanceFrame->isValid();
     if (!isValid)
@@ -201,15 +194,6 @@ BalanceHelperImpl::countObjects()
 BalanceFrame::pointer
 BalanceHelperImpl::loadBalance(BalanceID balanceID)
 {
-    LedgerKey key;
-    key.type(LedgerEntryType::BALANCE);
-    key.balance().balanceID = balanceID;
-    if (cachedEntryExists(key))
-    {
-        auto entry = getCachedEntry(key);
-        return entry ? std::make_shared<BalanceFrame>(*entry) : nullptr;
-    }
-
     Database& db = getDatabase();
 
     auto balIDStrKey = BalanceKeyUtils::toStrKey(balanceID);
@@ -229,7 +213,6 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
 
     if (!retBalance)
     {
-        putCachedEntry(key, nullptr);
         return nullptr;
     }
 
@@ -237,7 +220,6 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
     {
         mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
     }
-    putCachedEntry(key, make_shared<LedgerEntry>(retBalance->mEntry));
 
     return retBalance;
 }
@@ -291,8 +273,6 @@ BalanceHelperImpl::loadBalance(AccountID accountID, AssetCode assetCode)
     {
         mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
     }
-    putCachedEntry(retBalance->getKey(),
-                   make_shared<LedgerEntry>(retBalance->mEntry));
 
     return retBalance;
 }
