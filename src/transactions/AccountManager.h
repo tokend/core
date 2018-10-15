@@ -42,7 +42,8 @@ public:
         LIMITS_EXCEEDED,
         REQUIRED_KYC,
         REQUIRED_VERIFICATION,
-        BALANCE_NOT_FOUND
+        BALANCE_NOT_FOUND,
+        INCORRECT_PRECISION
     };
 
     AccountManager(Application& app, Database& db, LedgerDelta& delta,

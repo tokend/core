@@ -7,6 +7,7 @@
 #include "util/types.h"
 #include "lib/util/format.h"
 #include "BalanceHelperLegacy.h"
+#include "AssetFrame.h"
 #include <algorithm>
 
 using namespace soci;
@@ -17,8 +18,10 @@ namespace stellar
 using xdr::operator<;
 
 static const char* balanceColumnSelector =
-        "SELECT balance_id, asset, amount, locked, account_id, lastmodified, version "
-        "FROM balance";
+        "SELECT balance.balance_id, balance.asset, balance.amount, balance.locked, "
+        "balance.account_id, asset.trailing_digits, balance.lastmodified, "
+        "balance.version, asset.version "
+        "FROM balance INNER JOIN asset ON asset.code = balance.asset";
 
 void
 BalanceHelperLegacy::dropAll(Database& db)
@@ -207,9 +210,9 @@ BalanceHelperLegacy::loadBalance(BalanceID balanceID, Database& db,
     st.exchange(use(balIDStrKey));
 
     auto timer = db.getSelectTimer("balance");
-    loadBalances(prep, [&retBalance](LedgerEntry const& Balance)
+    loadBalances(prep, [&retBalance](BalanceFrame::pointer& balanceFrame)
     {
-        retBalance = make_shared<BalanceFrame>(Balance);
+        retBalance = balanceFrame;
     });
 
     if (delta && retBalance)
@@ -237,9 +240,9 @@ BalanceHelperLegacy::loadBalance(AccountID account, AssetCode asset,
     st.exchange(use(assetCode));
 
     auto timer = db.getSelectTimer("balance");
-    loadBalances(prep, [&retBalance](LedgerEntry const& Balance)
+    loadBalances(prep, [&retBalance](BalanceFrame::pointer& balanceFrame)
     {
-        retBalance = make_shared<BalanceFrame>(Balance);
+        retBalance = balanceFrame;
     });
 
     if (delta && retBalance)
@@ -252,16 +255,20 @@ BalanceHelperLegacy::loadBalance(AccountID account, AssetCode asset,
 
 void
 BalanceHelperLegacy::loadBalances(StatementContext& prep,
-                            std::function<void(LedgerEntry const&)> balanceProcessor)
+                                  std::function<void(BalanceFrame::pointer&)> balanceProcessor)
 {
     string accountID, balanceID, asset;
 
     LedgerEntry le;
     le.data.type(LedgerEntryType::BALANCE);
     BalanceEntry& oe = le.data.balance();
-    int32_t balanceVersion = 0;
+    int32 balanceVersion = 0;
+    int32 assetVersion = 0;
+    int32 trailingDigits = 0;
 
-    // SELECT balance_id, asset, amount, locked, account_id, lastmodified
+    // SELECT balance.balance_id, balance.asset, balance.amount, balance.locked,
+    //        balance.account_id, asset.trailing_digits, balance.lastmodified,
+    //        balance.version, asset.version
 
     statement& st = prep.statement();
     st.exchange(into(balanceID));
@@ -269,8 +276,10 @@ BalanceHelperLegacy::loadBalances(StatementContext& prep,
     st.exchange(into(oe.amount));
     st.exchange(into(oe.locked));
     st.exchange(into(accountID));
+    st.exchange(into(trailingDigits));
     st.exchange(into(le.lastModifiedLedgerSeq));
     st.exchange(into(balanceVersion));
+    st.exchange(into(assetVersion));
     st.define_and_bind();
     st.execute(true);
     while (st.got_data())
@@ -286,7 +295,16 @@ BalanceHelperLegacy::loadBalances(StatementContext& prep,
             throw std::runtime_error("Invalid Recovery request");
         }
 
-        balanceProcessor(le);
+        BalanceFrame::pointer frame = std::make_shared<BalanceFrame>(le);
+        if (LedgerVersion(assetVersion) >= LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+        {
+            frame->setPrecisionForAmounts(AssetFrame::kMaximumTrailingDigits - trailingDigits);
+        }
+        else
+        {
+            frame->setPrecisionForAmounts(0);
+        }
+        balanceProcessor(frame);
         st.fetch();
     }
 }
@@ -306,9 +324,9 @@ BalanceHelperLegacy::loadBalances(AccountID const& accountID,
     st.exchange(use(actIDStrKey));
 
     auto timer = db.getSelectTimer("balance");
-    loadBalances(prep, [&retBalances](LedgerEntry const& of)
+    loadBalances(prep, [&retBalances](BalanceFrame::pointer& balanceFrame)
     {
-        retBalances.emplace_back(make_shared<BalanceFrame>(of));
+        retBalances.push_back(balanceFrame);
     });
 }
 
@@ -326,9 +344,9 @@ BalanceHelperLegacy::loadBalances(AccountID const& accountID, Database& db)
     st.exchange(use(actIDStrKey));
 
     auto timer = db.getSelectTimer("balance");
-    loadBalances(prep, [&retBalances](LedgerEntry const& of)
+    loadBalances(prep, [&retBalances](BalanceFrame::pointer& balanceFrame)
     {
-        retBalances[of.data.balance().asset] = make_shared<BalanceFrame>(of);
+        retBalances[balanceFrame->getAsset()] = balanceFrame;
     });
     return retBalances;
 }
@@ -342,10 +360,10 @@ BalanceHelperLegacy::loadAllBalances(Database& db)
     auto prep = db.getPreparedStatement(sql);
 
     auto timer = db.getSelectTimer("balance");
-    loadBalances(prep, [&retBalances](LedgerEntry const& of)
+    loadBalances(prep, [&retBalances](BalanceFrame::pointer& balanceFrame)
     {
-        auto& thisUserBalance = retBalances[of.data.balance().accountID];
-        thisUserBalance.emplace_back(make_shared<BalanceFrame>(of));
+        auto& thisUserBalance = retBalances[balanceFrame->getAccountID()];
+        thisUserBalance.push_back(balanceFrame);
     });
     return retBalances;
 }
@@ -385,10 +403,8 @@ BalanceHelperLegacy::loadAssetHolders(AssetCode assetCode, AccountID ownerID,
     auto timer = db.getSelectTimer("balance");
 
     std::vector<BalanceFrame::pointer> holders;
-    loadBalances(prep, [&holders](LedgerEntry const &of)
+    loadBalances(prep, [&holders](BalanceFrame::pointer& balanceFrame)
     {
-        auto balanceFrame = make_shared<BalanceFrame>(of);
-
         if (balanceFrame->getTotal() > 0)
             holders.emplace_back(balanceFrame);
     });
@@ -413,9 +429,9 @@ BalanceHelperLegacy::loadBalances(AccountID account, AssetCode asset,
     auto timer = db.getSelectTimer("balance");
 
     std::vector<BalanceFrame::pointer> result;
-    loadBalances(prep, [&result](LedgerEntry const &of)
+    loadBalances(prep, [&result](BalanceFrame::pointer& balanceFrame)
     {
-        result.emplace_back(make_shared<BalanceFrame>(of));
+        result.push_back(balanceFrame);
     });
 
     return result;
@@ -455,9 +471,9 @@ BalanceHelperLegacy::loadBalances(std::vector<AccountID> accountIDs,
     auto timer = db.getSelectTimer("balances");
 
     std::vector<BalanceFrame::pointer> result;
-    loadBalances(prep, [&result](LedgerEntry const &of)
+    loadBalances(prep, [&result](BalanceFrame::pointer& balanceFrame)
     {
-        result.emplace_back(make_shared<BalanceFrame>(of));
+        result.push_back(balanceFrame);
     });
 
     return result;

@@ -12,6 +12,7 @@ class LedgerKey;
 class EntryHelper
 {
   public:
+    virtual ~EntryHelper() {}
     virtual void dropAll() = 0;
 
     virtual void storeAdd(LedgerEntry const& entry) = 0;

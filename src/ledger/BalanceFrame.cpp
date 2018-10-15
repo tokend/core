@@ -3,154 +3,211 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "BalanceFrame.h"
-#include "crypto/SecretKey.h"
-#include "crypto/Hex.h"
-#include "database/Database.h"
+#include "AssetFrame.h"
 #include "LedgerDelta.h"
+#include "crypto/Hex.h"
+#include "crypto/SecretKey.h"
+#include "database/Database.h"
 #include "ledger/LedgerManager.h"
+#include "lib/util/format.h"
 #include "util/basen.h"
 #include "util/types.h"
-#include "lib/util/format.h"
 #include <algorithm>
-#include "AssetFrame.h"
 
 using namespace soci;
 using namespace std;
 
 namespace stellar
 {
-    using xdr::operator<;
+using xdr::operator<;
 
-    BalanceFrame::BalanceFrame() : EntryFrame(LedgerEntryType::BALANCE), mBalance(mEntry.data.balance())
-    {
-    }
+static const uint64 kPrecisionBase = 10;
 
-    BalanceFrame::BalanceFrame(LedgerEntry const& from)
-        : EntryFrame(from), mBalance(mEntry.data.balance())
-    {
-    }
-
-    BalanceFrame::BalanceFrame(BalanceFrame const& from) : BalanceFrame(from.mEntry)
-    {
-    }
-
-    BalanceFrame& BalanceFrame::operator=(BalanceFrame const& other)
-    {
-        if (&other != this)
-        {
-            mBalance = other.mBalance;
-            mKey = other.mKey;
-            mKeyCalculated = other.mKeyCalculated;
-        }
-        return *this;
-    }
-
-    BalanceFrame::pointer BalanceFrame::createNew(BalanceID id, AccountID owner, AssetCode asset)
-    {
-        LedgerEntry le;
-        le.data.type(LedgerEntryType::BALANCE);
-        BalanceEntry& entry = le.data.balance();
-
-        entry.balanceID = id;
-        entry.accountID = owner;
-        entry.asset = asset;
-        entry.amount = 0;
-        entry.locked = 0;
-        return std::make_shared<BalanceFrame>(le);
-    }
-
-    bool
-    BalanceFrame::isValid(BalanceEntry const& oe)
-    {
-        return AssetFrame::isAssetCodeValid(oe.asset) && oe.locked >= 0 && oe.amount >= 0;
-    }
-
-    bool
-    BalanceFrame::isValid() const
-    {
-        return isValid(mBalance);
-    }
-
-    uint64_t BalanceFrame::getTotal() const
-    {
-        uint64_t totalAmount;
-        if (!safeSum(mBalance.amount, mBalance.locked, totalAmount))
-        {
-            CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected state: "
-                  << "total balance amount overflows UINT64_MAX, balance id: "
-                  << BalanceKeyUtils::toStrKey(mBalance.balanceID);
-            throw runtime_error("Unexpected state: "
-                                "total balance amount overflows UINT64_MAX");
-        }
-
-        return totalAmount;
-    }
-
-    bool BalanceFrame::tryFundAccount(uint64_t amount)
-    {
-        uint64_t updatedAmount;
-        if (!safeSum(mBalance.amount, amount, updatedAmount)) {
-            return false;
-        }
-
-        uint64_t totalFunds;
-        if (!safeSum(updatedAmount, mBalance.locked, totalFunds)) {
-            return false;
-        }
-
-        mBalance.amount = updatedAmount;
-        return true;
-    }
-
-    BalanceFrame::Result BalanceFrame::tryLock(const uint64_t amountToBeLocked)
-    {
-        if (mBalance.amount < amountToBeLocked)
-        {
-            return UNDERFUNDED;
-        }
-
-        mBalance.amount -= amountToBeLocked;
-
-        uint64_t updatedLockedAmount;
-        if (!safeSum(mBalance.locked, amountToBeLocked, updatedLockedAmount))
-        {
-            return LINE_FULL;
-        }
-
-        mBalance.locked = updatedLockedAmount;
-        return SUCCESS;
-
-    }
-
-    bool BalanceFrame::tryChargeFromLocked(uint64_t amountToCharge)
-    {
-        if (mBalance.locked < amountToCharge)
-        {
-            return false;
-        }
-
-        mBalance.locked -= amountToCharge;
-        return true;
-    }
-
-    bool BalanceFrame::unlock(const uint64_t amountToUnlock)
-    {
-        if (mBalance.locked < amountToUnlock)
-        {
-            return false;
-        }
-
-        mBalance.locked -= amountToUnlock;
-        return tryFundAccount(amountToUnlock);
-    }
-    bool BalanceFrame::tryCharge(uint64_t amountToCharge)
-    {
-        if (mBalance.amount < amountToCharge) {
-            return false;
-        }
-
-        mBalance.amount -= amountToCharge;
-        return true;
-    }
+BalanceFrame::BalanceFrame()
+    : EntryFrame(LedgerEntryType::BALANCE), mBalance(mEntry.data.balance())
+{
 }
 
+BalanceFrame::BalanceFrame(LedgerEntry const& from)
+    : EntryFrame(from), mBalance(mEntry.data.balance())
+{
+}
+
+BalanceFrame::BalanceFrame(BalanceFrame const& from) : BalanceFrame(from.mEntry)
+{
+}
+
+BalanceFrame&
+BalanceFrame::operator=(BalanceFrame const& other)
+{
+    if (&other != this)
+    {
+        mBalance = other.mBalance;
+        mKey = other.mKey;
+        mKeyCalculated = other.mKeyCalculated;
+    }
+    return *this;
+}
+
+BalanceFrame::pointer
+BalanceFrame::createNew(BalanceID id, AccountID owner, AssetCode asset)
+{
+    LedgerEntry le;
+    le.data.type(LedgerEntryType::BALANCE);
+    BalanceEntry& entry = le.data.balance();
+
+    entry.balanceID = id;
+    entry.accountID = owner;
+    entry.asset = asset;
+    entry.amount = 0;
+    entry.locked = 0;
+    return std::make_shared<BalanceFrame>(le);
+}
+
+bool
+BalanceFrame::isValid(BalanceEntry const& oe)
+{
+    return AssetFrame::isAssetCodeValid(oe.asset) && oe.locked >= 0 &&
+           oe.amount >= 0;
+}
+
+bool
+BalanceFrame::isValid() const
+{
+    return isValid(mBalance);
+}
+
+uint64_t
+BalanceFrame::getTotal() const
+{
+    uint64_t totalAmount;
+    if (!safeSum(mBalance.amount, mBalance.locked, totalAmount))
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER)
+            << "Unexpected state: "
+            << "total balance amount overflows UINT64_MAX, balance id: "
+            << BalanceKeyUtils::toStrKey(mBalance.balanceID);
+        throw runtime_error("Unexpected state: "
+                            "total balance amount overflows UINT64_MAX");
+    }
+
+    return totalAmount;
+}
+
+void
+BalanceFrame::setPrecisionForAmounts(uint32 precisionExponent)
+{
+    uint64 precision = 1;
+    while (precisionExponent != 0)
+    {
+        precision *= kPrecisionBase;
+        precisionExponent--;
+    }
+    mPrecisionToUse = std::make_unique<uint64_t>(precision);
+}
+
+BalanceFrame::Result
+BalanceFrame::tryFundAccount(uint64_t amount)
+{
+    if (!checkPrecisionForAmount(amount))
+    {
+        return NONMATCHING_PRECISION;
+    }
+
+    uint64_t updatedAmount;
+    if (!safeSum(mBalance.amount, amount, updatedAmount))
+    {
+        return LINE_FULL;
+    }
+
+    uint64_t totalFunds;
+    if (!safeSum(updatedAmount, mBalance.locked, totalFunds))
+    {
+        return LINE_FULL;
+    }
+
+    mBalance.amount = updatedAmount;
+    return SUCCESS;
+}
+
+BalanceFrame::Result
+BalanceFrame::tryLock(const uint64_t amountToBeLocked)
+{
+    if (!checkPrecisionForAmount(amountToBeLocked))
+    {
+        return NONMATCHING_PRECISION;
+    }
+    if (mBalance.amount < amountToBeLocked)
+    {
+        return UNDERFUNDED;
+    }
+
+    mBalance.amount -= amountToBeLocked;
+
+    uint64_t updatedLockedAmount;
+    if (!safeSum(mBalance.locked, amountToBeLocked, updatedLockedAmount))
+    {
+        return LINE_FULL;
+    }
+
+    mBalance.locked = updatedLockedAmount;
+    return SUCCESS;
+}
+
+BalanceFrame::Result
+BalanceFrame::tryChargeFromLocked(uint64_t amountToCharge)
+{
+    if (!checkPrecisionForAmount(amountToCharge))
+    {
+        return NONMATCHING_PRECISION;
+    }
+    if (mBalance.locked < amountToCharge)
+    {
+        return UNDERFUNDED;
+    }
+
+    mBalance.locked -= amountToCharge;
+    return SUCCESS;
+}
+
+BalanceFrame::Result
+BalanceFrame::unlock(const uint64_t amountToUnlock)
+{
+    if (!checkPrecisionForAmount(amountToUnlock))
+    {
+        return NONMATCHING_PRECISION;
+    }
+    if (mBalance.locked < amountToUnlock)
+    {
+        return UNDERFUNDED;
+    }
+
+    mBalance.locked -= amountToUnlock;
+    return tryFundAccount(amountToUnlock);
+}
+BalanceFrame::Result
+BalanceFrame::tryCharge(uint64_t amountToCharge)
+{
+    if (!checkPrecisionForAmount(amountToCharge))
+    {
+        return NONMATCHING_PRECISION;
+    }
+    if (mBalance.amount < amountToCharge)
+    {
+        return UNDERFUNDED;
+    }
+    mBalance.amount -= amountToCharge;
+    return SUCCESS;
+}
+
+bool BalanceFrame::checkPrecisionForAmount(stellar::uint64 amount)
+{
+    if (!mPrecisionToUse)
+    {
+        throw std::runtime_error("Precision is not set.");
+    }
+
+    return amount % *mPrecisionToUse == 0;
+}
+
+} // namespace stellar

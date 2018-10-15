@@ -102,7 +102,7 @@ private:
     std::string obtainStrAccountIDs(std::vector<AccountID> accountIDs);
 
     static void loadBalances(StatementContext& prep,
-                             std::function<void(LedgerEntry const&)> balanceProcessor);
+                             std::function<void(BalanceFrame::pointer&)> balanceProcessor);
 
     void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert, LedgerEntry const& entry);
 };
