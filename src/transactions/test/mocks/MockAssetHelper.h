@@ -12,11 +12,11 @@ class MockAssetHelper : public AssetHelper
 public:
 
     MOCK_METHOD0(dropAll, void());
-    MOCK_METHOD0(addTrailingDigits, void());
     MOCK_METHOD1(storeAdd, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeChange, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeDelete, void(LedgerKey const& key));
     MOCK_METHOD1(exists, bool(LedgerKey const& key));
+    MOCK_METHOD1(exists, bool(AssetCode const& key));
     MOCK_METHOD1(getLedgerKey, LedgerKey(LedgerEntry const& from));
     MOCK_METHOD1(fromXDR, EntryFrame::pointer(LedgerEntry const& from));
     MOCK_METHOD1(storeLoad, EntryFrame::pointer(LedgerKey const& ledgerKey));
@@ -32,7 +32,9 @@ public:
                  AssetFrame::pointer(AssetCode assetCode, AccountID owner));
     MOCK_METHOD2(loadAssets, void(StatementContext& prep,
             std::function<void(LedgerEntry const&)> assetProcessor));
-
+    MOCK_METHOD0(loadStatsAsset, AssetFrame::pointer());
+    MOCK_METHOD1(loadBaseAssets, void(std::vector<AssetFrame::pointer>&));
+    MOCK_METHOD0(addTrailingDigits, void());
 };
 
 }  // namespace stellar

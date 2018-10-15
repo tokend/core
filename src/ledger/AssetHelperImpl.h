@@ -37,6 +37,9 @@ private:
     bool
     exists(LedgerKey const& key) override;
 
+    bool
+    exists(const AssetCode &code) override;
+
     LedgerKey
     getLedgerKey(LedgerEntry const& from) override;
 
@@ -58,9 +61,15 @@ private:
     AssetFrame::pointer
     loadAsset(AssetCode assetCode, AccountID owner) override;
 
+    AssetFrame::pointer
+    loadStatsAsset() override;
+
     void
     loadAssets(StatementContext& prep,
                std::function<void(LedgerEntry const&)> assetProcessor) override;
+
+    void
+    loadBaseAssets(std::vector<AssetFrame::pointer>& retAssets) override;
 
     void
     storeUpdateHelper(bool insert, LedgerEntry const& entry);

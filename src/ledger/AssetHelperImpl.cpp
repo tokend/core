@@ -106,6 +106,22 @@ AssetHelperImpl::exists(LedgerKey const& key)
     return exists != 0;
 }
 
+bool
+AssetHelperImpl::exists(const AssetCode &code)
+{
+    int exists = 0;
+    auto timer = getDatabase().getSelectTimer("asset-exists");
+    std::string assetCode = code;
+    auto prep = getDatabase().getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
+    auto& st = prep.statement();
+    st.exchange(use(assetCode));
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 void
 AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
 {
@@ -136,7 +152,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
               "                   issued, pending_issuance, policies,"
               "                   trailing_digits, lastmodified, version) "
               "VALUES (:code, :owner, :signer, :details, :max, :available, "
-              "        :issued, :pending, :policies, :lm, :v)";
+              "        :issued, :pending, :policies, :td, :lm, :v)";
     }
     else
     {
@@ -292,6 +308,26 @@ AssetHelperImpl::loadAsset(AssetCode assetCode, AccountID owner)
     return nullptr;
 }
 
+AssetFrame::pointer
+AssetHelperImpl::loadStatsAsset()
+{
+    const uint32 statsAssetPolicy = static_cast<uint32>(AssetPolicy::STATS_QUOTE_ASSET);
+
+    AssetFrame::pointer retAsset;
+    std::string sql = mAssetColumnSelector;
+    sql += " WHERE policies & :sp = :sp";
+    auto prep = getDatabase().getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(statsAssetPolicy, "sp"));
+
+    auto timer = getDatabase().getSelectTimer("asset");
+    loadAssets(prep, [&retAsset](LedgerEntry const& asset)
+    {
+        retAsset = make_shared<AssetFrame>(asset);
+    });
+    return retAsset;
+}
+
 void
 AssetHelperImpl::loadAssets(StatementContext& prep,
                             function<void(LedgerEntry const&)> assetProcessor)
@@ -328,6 +364,23 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
         assetProcessor(le);
         st.fetch();
     }
+}
+
+void
+AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
+{
+    std::string sql = mAssetColumnSelector;
+    sql += " WHERE policies & :bp = :bp "
+           " ORDER BY code ";
+    uint32 baseAssetPolicy = static_cast<uint32>(AssetPolicy::BASE_ASSET);
+    auto prep = getDatabase().getPreparedStatement(sql);
+    prep.statement().exchange(use(baseAssetPolicy, "bp"));
+
+    auto timer = getDatabase().getSelectTimer("asset");
+    loadAssets(prep, [&retAssets](LedgerEntry const& asset)
+    {
+        retAssets.push_back(make_shared<AssetFrame>(asset));
+    });
 }
 
 Database&
