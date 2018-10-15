@@ -275,42 +275,41 @@ ELPP_INTERNAL_DEBUGGING_OUT_INFO << ELPP_INTERNAL_DEBUGGING_MSG(internalInfoStre
 #define ELPP_VARIADIC_TEMPLATES_SUPPORTED \
 (ELPP_COMPILER_GCC || ELPP_COMPILER_CLANG || ELPP_COMPILER_INTEL || (ELPP_COMPILER_MSVC && _MSC_VER >= 1800))
 // Logging Enable/Disable macros
-#define ELPP_LOGGING_ENABLED (!defined(ELPP_DISABLE_LOGS))
-#if (!defined(ELPP_DISABLE_DEBUG_LOGS) && (ELPP_LOGGING_ENABLED) && ((defined(_DEBUG)) || (!defined(NDEBUG))))
+#if (!defined(ELPP_DISABLE_DEBUG_LOGS) && (!defined(ELPP_DISABLE_LOGS)) && ((defined(_DEBUG)) || (!defined(NDEBUG))))
 #   define ELPP_DEBUG_LOG 1
 #else
 #   define ELPP_DEBUG_LOG 0
-#endif  // (!defined(ELPP_DISABLE_DEBUG_LOGS) && (ELPP_LOGGING_ENABLED) && ((defined(_DEBUG)) || (!defined(NDEBUG))))
-#if (!defined(ELPP_DISABLE_INFO_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_DEBUG_LOGS) && (!defined(ELPP_DISABLE_LOGS)) && ((defined(_DEBUG)) || (!defined(NDEBUG))))
+#if (!defined(ELPP_DISABLE_INFO_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #   define ELPP_INFO_LOG 1
 #else
 #   define ELPP_INFO_LOG 0
-#endif  // (!defined(ELPP_DISABLE_INFO_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_WARNING_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_INFO_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
+#if (!defined(ELPP_DISABLE_WARNING_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #   define ELPP_WARNING_LOG 1
 #else
 #   define ELPP_WARNING_LOG 0
-#endif  // (!defined(ELPP_DISABLE_WARNING_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_ERROR_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_WARNING_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
+#if (!defined(ELPP_DISABLE_ERROR_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #   define ELPP_ERROR_LOG 1
 #else
 #   define ELPP_ERROR_LOG 0
-#endif  // (!defined(ELPP_DISABLE_ERROR_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_FATAL_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_ERROR_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
+#if (!defined(ELPP_DISABLE_FATAL_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #   define ELPP_FATAL_LOG 1
 #else
 #   define ELPP_FATAL_LOG 0
-#endif  // (!defined(ELPP_DISABLE_FATAL_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_TRACE_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_FATAL_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
+#if (!defined(ELPP_DISABLE_TRACE_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #   define ELPP_TRACE_LOG 1
 #else
 #   define ELPP_TRACE_LOG 0
-#endif  // (!defined(ELPP_DISABLE_TRACE_LOGS) && (ELPP_LOGGING_ENABLED))
-#if (!defined(ELPP_DISABLE_VERBOSE_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_TRACE_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
+#if (!defined(ELPP_DISABLE_VERBOSE_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #   define ELPP_VERBOSE_LOG 1
 #else
 #   define ELPP_VERBOSE_LOG 0
-#endif  // (!defined(ELPP_DISABLE_VERBOSE_LOGS) && (ELPP_LOGGING_ENABLED))
+#endif  // (!defined(ELPP_DISABLE_VERBOSE_LOGS) && (!defined(ELPP_DISABLE_LOGS)))
 #if (!(ELPP_CXX0X || ELPP_CXX11))
 #   error "Easylogging++ 9.0+ is only compatible with C++0x (or higher) compliant compiler"
 #endif  // (!(ELPP_CXX0X || ELPP_CXX11))
@@ -4961,20 +4960,20 @@ ELPP_LITERAL("(") << elem->first << ELPP_LITERAL(", ") << elem->second << ELPP_L
             
             template <typename T>
             inline Writer& operator<<(const T& log) {
-#if ELPP_LOGGING_ENABLED
+#if !defined(ELPP_DISABLE_LOGS)
                 if (m_proceed) {
                     m_messageBuilder << log;
                 }
-#endif  // ELPP_LOGGING_ENABLED
+#endif  // !defined(ELPP_DISABLE_LOGS)
                 return *this;
             }
             
             inline Writer& operator<<(std::ostream& (*log)(std::ostream&)) {
-#if ELPP_LOGGING_ENABLED
+#if !defined(ELPP_DISABLE_LOGS)
                 if (m_proceed) {
                     m_messageBuilder << log;
                 }
-#endif  // ELPP_LOGGING_ENABLED
+#endif  // !defined(ELPP_DISABLE_LOGS)
                 return *this;
             }
             
@@ -5044,7 +5043,7 @@ ELPP_LITERAL("(") << elem->first << ELPP_LITERAL(", ") << elem->second << ELPP_L
             }
             
             void processDispatch() {
-#if ELPP_LOGGING_ENABLED
+#if !defined(ELPP_DISABLE_LOGS)
                 if (ELPP->hasFlag(LoggingFlag::MultiLoggerSupport)) {
                     bool firstDispatched = false;
                     base::type::string_t logMessage;
@@ -5081,7 +5080,7 @@ ELPP_LITERAL("(") << elem->first << ELPP_LITERAL(", ") << elem->second << ELPP_L
                     m_logger->stream().str(ELPP_LITERAL(""));
                     m_logger->releaseLock();
                 }
-#endif // ELPP_LOGGING_ENABLED
+#endif // !defined(ELPP_DISABLE_LOGS)
             }
             
             void triggerDispatch(void) {
@@ -5326,7 +5325,7 @@ writer(level, __FILE__, __LINE__, ELPP_FUNC, dispatchAction).construct(el_getVAL
                                bool scopedLog = true, Level level = base::consts::kPerformanceTrackerDefaultLevel) :
             m_blockName(blockName), m_timestampUnit(timestampUnit), m_loggerId(loggerId), m_scopedLog(scopedLog),
             m_level(level), m_hasChecked(false), m_lastCheckpointId(std::string()), m_enabled(false) {
-#if !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && ELPP_LOGGING_ENABLED
+#if !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && !defined(ELPP_DISABLE_LOGS)
                 // We store it locally so that if user happen to change configuration by the end of scope
                 // or before calling checkpoint, we still depend on state of configuraton at time of construction
                 el::Logger* loggerPtr = ELPP->registeredLoggers()->get(loggerId, false);
@@ -5334,7 +5333,7 @@ writer(level, __FILE__, __LINE__, ELPP_FUNC, dispatchAction).construct(el_getVAL
                 if (m_enabled) {
                     base::utils::DateTime::gettimeofday(&m_startTime);
                 }
-#endif  // !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && ELPP_LOGGING_ENABLED
+#endif  // !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && !defined(ELPP_DISABLE_LOGS)
             }
             /// @brief Copy constructor
             PerformanceTracker(const PerformanceTracker& t) :
@@ -5343,7 +5342,7 @@ writer(level, __FILE__, __LINE__, ELPP_FUNC, dispatchAction).construct(el_getVAL
             m_startTime(t.m_startTime), m_endTime(t.m_endTime), m_lastCheckpointTime(t.m_lastCheckpointTime) {
             }
             virtual ~PerformanceTracker(void) {
-#if !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && ELPP_LOGGING_ENABLED
+#if !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && !defined(ELPP_DISABLE_LOGS)
                 if (m_enabled) {
                     base::threading::ScopedLock scopedLock(lock());
                     if (m_scopedLog) {
@@ -5364,11 +5363,11 @@ writer(level, __FILE__, __LINE__, ELPP_FUNC, dispatchAction).construct(el_getVAL
                         }
                     }
                 }
-#endif  // !defined(ELPP_DISABLE_PERFORMANCE_TRACKING)
+#endif  // !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && !defined(ELPP_DISABLE_LOGS)
             }
             /// @brief A checkpoint for current performanceTracker block.
             void checkpoint(const std::string& id = std::string(), const char* file = __FILE__, unsigned long int line = __LINE__, const char* func = "") {
-#if !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && ELPP_LOGGING_ENABLED
+#if !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && !defined(ELPP_DISABLE_LOGS)
                 if (m_enabled) {
                     base::threading::ScopedLock scopedLock(lock());
                     base::utils::DateTime::gettimeofday(&m_endTime);
@@ -5394,7 +5393,7 @@ writer(level, __FILE__, __LINE__, ELPP_FUNC, dispatchAction).construct(el_getVAL
                     m_hasChecked = true;
                     m_lastCheckpointId = id;
                 }
-#endif  // !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && ELPP_LOGGING_ENABLED
+#endif  // !defined(ELPP_DISABLE_PERFORMANCE_TRACKING) && !defined(ELPP_DISABLE_LOGS)
                 ELPP_UNUSED(id);
                 ELPP_UNUSED(file);
                 ELPP_UNUSED(line);
