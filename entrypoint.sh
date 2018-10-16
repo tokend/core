@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eax
+set -e
 
 CONFIG=$1
 BIN=/usr/local/bin/core
