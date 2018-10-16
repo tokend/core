@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-set -e
+set -eax
 
 CONFIG=$1
-BIN=/usr/local/bin/stellar-core
+BIN=/usr/local/bin/core
 HISTORY=/history
 
 start() {

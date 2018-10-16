@@ -3,23 +3,44 @@ services:
   - docker:dind
 
 variables:
+  IMAGE_NAME: registry.gitlab.com/swarmfund/core
+  BUILD_BASE_IMAGE: $IMAGE_NAME/buildbase:latest
+  BUILD_BASE_DOCKERFILE: buildbase.dockerfile
+  BUILD_IMAGE: corebuild
   BUILD_DOCKERFILE: build.dockerfile
-  IMAGE_NAME: registry.gitlab.com/tokend/core
-  IMAGE_BUILD_NAME: $IMAGE_NAME:$CI_COMMIT_SHA
+  LEGACY_IMAGE: $IMAGE_NAME:$CI_COMMIT_SHA
+  LEGACY_DOCKERFILE: legacy.dockerfile
+  PG_IMAGE: $IMAGE_NAME:pg-$CI_COMMIT_SHA
+  PG_DOCKERFILE: pg.dockerfile
 
 stages:
   - build
 
-# build and publish docker image to the registry
+build-base-image:
+  image: docker:latest
+  stage: build
+  only:
+    - buildbase
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker build --pull -t $BUILD_BASE_IMAGE -f $BUILD_BASE_DOCKERFILE .
+    - docker push $BUILD_BASE_IMAGE
+
 build:
   image: docker:latest
   stage: build
   only:
-    - master
-  tags:
-    - tokend
+   - master
+   - feature/docker-refactor
   script:
     # login to docker registry
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $IMAGE_BUILD_NAME -f $BUILD_DOCKERFILE .
-    - docker push $IMAGE_BUILD_NAME
+    # build intermediate binary base
+    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $BUILD_IMAGE -f $BUILD_DOCKERFILE .
+    # legacy container
+    - docker build -t $LEGACY_IMAGE -f $LEGACY_DOCKERFILE .
+    - docker push $LEGACY_IMAGE
+    # new container
+    - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
+    - docker build -t $PG_IMAGE -f $PG_DOCKERFILE .
+    - docker push $PG_IMAGE
