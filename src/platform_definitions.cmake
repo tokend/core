@@ -8,6 +8,11 @@ add_definitions(
         -DUSE_POSTGRES=1
     )
 
+set(DEVELOPER_EDITION ${DEVELOPER_EDITION})
+if (DEFINED DEVELOPER_EDITION)
+    add_definitions(-DDEVELOPER_EDITION=1)
+endif(DEFINED DEVELOPER_EDITION)
+
 #For Windows
 if(${CMAKE_HOST_WIN32})
     add_definitions(
