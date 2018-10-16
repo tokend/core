@@ -110,5 +110,7 @@ public:
 
     static void unlockPendingIssuanceForSale(const SaleFrame::pointer sale, LedgerDelta &delta, Database &db,
                                              LedgerManager &lm);
+
+    static Result balanceResultToResult(BalanceFrame::Result balanceResult);
 };
 }

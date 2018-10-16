@@ -52,7 +52,7 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
  
     auto balance = BalanceHelperLegacy::Instance()->mustLoadBalance(withdrawRequest.balance, db, &delta);
     const auto totalAmountToCharge = getTotalAmountToCharge(request->getRequestID(), withdrawRequest);
-    if (!balance->tryChargeFromLocked(totalAmountToCharge))
+    if (balance->tryChargeFromLocked(totalAmountToCharge) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state. Failed to charge from locked amount which must be locked. requestID: " << request->getRequestID();
         throw runtime_error("Unexected db state. Failed to charge from locked");

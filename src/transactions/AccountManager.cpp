@@ -44,23 +44,21 @@ namespace stellar {
     AccountManager::Result AccountManager::processTransfer(
             AccountFrame::pointer account, BalanceFrame::pointer balance, int64 amount,
             int64 &universalAmount, bool requireReview, bool ignoreLimits) {
+        BalanceFrame::Result balanceResult = BalanceFrame::Result::SUCCESS;
         if (requireReview) {
             if (amount > 0) {
-                const BalanceFrame::Result result = balance->tryLock(amount);
-                if (result == BalanceFrame::Result::UNDERFUNDED)
-                    return UNDERFUNDED;
-                if (result == BalanceFrame::Result::LINE_FULL)
-                    return LINE_FULL;
+                balanceResult = balance->tryLock(amount);
             } else {
-                if (!balance->unlock(-amount))
-                    return UNDERFUNDED;
+                balanceResult = balance->unlock(-amount);
             }
         } else if (amount > 0) {
-            if (!balance->tryCharge(amount))
-                return UNDERFUNDED;
+            balanceResult = balance->tryCharge(amount);
         } else {
-            if (!balance->tryFundAccount(-amount))
-                return LINE_FULL;
+            balanceResult = balance->tryFundAccount(-amount);
+        }
+        if (balanceResult != BalanceFrame::Result::SUCCESS)
+        {
+            return balanceResultToResult(balanceResult);
         }
 
         auto statsAssetFrame = AssetHelperLegacy::Instance()->loadStatsAsset(mDb);
@@ -120,14 +118,16 @@ namespace stellar {
     AccountManager::processTransferV2(AccountFrame::pointer from, BalanceFrame::pointer fromBalance,
                                       BalanceFrame::pointer toBalance, uint64_t amount, bool noIncludeIntoStats) {
         // charge sender
-        if (!fromBalance->tryCharge(amount)) {
-            return ProcessTransferResult(Result::UNDERFUNDED, 0);
+        const BalanceFrame::Result fromBalanceChargeResult = fromBalance->tryCharge(amount);
+        if (fromBalanceChargeResult != BalanceFrame::Result::SUCCESS) {
+            return ProcessTransferResult(balanceResultToResult(fromBalanceChargeResult), 0);
         }
 
         EntryHelperProvider::storeChangeEntry(mDelta, mDb, fromBalance->mEntry);
 
-        if (!toBalance->tryFundAccount(amount)) {
-            return ProcessTransferResult(Result::LINE_FULL, 0);
+        const BalanceFrame::Result toBalanceResult = toBalance->tryFundAccount(amount);
+        if (toBalanceResult != BalanceFrame::Result::SUCCESS) {
+            return ProcessTransferResult(balanceResultToResult(toBalanceResult), 0);
         }
 
         EntryHelperProvider::storeChangeEntry(mDelta, mDb, toBalance->mEntry);
@@ -178,11 +178,11 @@ namespace stellar {
                                        BalanceFrame::pointer balance, int64 amount,
                                        int64 universalAmount, time_t timePerformed) {
         if (amount > 0) {
-            if (!balance->unlock(amount)) {
+            if (balance->unlock(amount) != BalanceFrame::Result::SUCCESS) {
                 return false;
             }
         } else {
-            if (!balance->tryLock(-amount)) {
+            if (balance->tryLock(-amount) != BalanceFrame::Result::SUCCESS) {
                 return false;
             }
         }
@@ -338,11 +338,12 @@ namespace stellar {
         // load commission balance and transfer fee
         auto commissionBalance = loadOrCreateBalanceFrameForAsset(mApp.getCommissionID(), asset, mDb, mDelta);
 
-        if (!commissionBalance->tryFundAccount(totalFee)) {
+        const BalanceFrame::Result commissionBalanceFundResult = commissionBalance->tryFundAccount(totalFee);
+        if (commissionBalanceFundResult != BalanceFrame::Result::SUCCESS) {
             std::string strBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to fund commission balance with fee - overflow. balanceID:"
-                    << strBalanceID;
+                    << "Failed to fund commission balance with fee, reason " << commissionBalanceFundResult
+                    << ". balanceID: " << strBalanceID;
             throw runtime_error("Failed to fund commission balance with fee");
         }
 
@@ -423,5 +424,22 @@ namespace stellar {
                                 ? sale->getSaleEntry().maxAmountToBeSold : baseAsset->getPendingIssuance();
         baseAsset->mustUnlockIssuedAmount(baseAmount);
         AssetHelperLegacy::Instance()->storeChange(delta, db, baseAsset->mEntry);
+    }
+
+    AccountManager::Result AccountManager::balanceResultToResult(BalanceFrame::Result balanceResult)
+    {
+        switch (balanceResult)
+        {
+            case BalanceFrame::Result::SUCCESS:
+                return SUCCESS;
+            case BalanceFrame::Result::NONMATCHING_PRECISION:
+                return INCORRECT_PRECISION;
+            case BalanceFrame::Result::LINE_FULL:
+                return LINE_FULL;
+            case BalanceFrame::Result::UNDERFUNDED:
+                return UNDERFUNDED;
+            default:
+                throw std::runtime_error("Unknown balance result type");
+        }
     }
 }

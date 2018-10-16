@@ -101,21 +101,26 @@ ReviewInvoiceRequestOpFrame::tryLockAmount(BalanceFrame::pointer balance, uint64
 
     switch (lockResult)
     {
-        case BalanceFrame::SUCCESS:
+        case BalanceFrame::Result::SUCCESS:
         {
             return true;
         }
-        case BalanceFrame::LINE_FULL:
+        case BalanceFrame::Result::LINE_FULL:
         {
             innerResult().code(ReviewRequestResultCode::INVOICE_RECEIVER_BALANCE_LOCK_AMOUNT_OVERFLOW);
             return false;
         }
-        case BalanceFrame::UNDERFUNDED:
+        case BalanceFrame::Result::UNDERFUNDED:
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. There must be enough amount "
                                                    << "actual: " << to_string(balance->getAmount())
                                                    << "expected: " << to_string(amount);
             throw std::runtime_error("Unexpected state. There must be enough amount");
+        }
+        case BalanceFrame::Result::NONMATCHING_PRECISION:
+        {
+            innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
+            return false;
         }
         default:
         {

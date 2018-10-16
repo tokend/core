@@ -269,9 +269,8 @@ bool PaymentOpFrame::processFees_v1(Application& app, LedgerDelta& delta,
     auto totalFee = feeData.sourceFee.paymentFee + feeData.sourceFee.fixedFee +
         feeData.destinationFee.paymentFee + feeData.destinationFee.fixedFee;
 
-    if (!commissionBalanceFrame->tryFundAccount(totalFee))
+    if (commissionBalanceFrame->tryFundAccount(totalFee) != BalanceFrame::Result::SUCCESS)
     {
-        app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();
         innerResult().code(PaymentResultCode::LINE_FULL);
         return false;
     }
@@ -296,10 +295,13 @@ bool PaymentOpFrame::processFees_v2(Application& app, LedgerDelta& delta,
     }
 
     auto balance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getCommissionID(), mSourceBalance->getAsset(), db, delta);
-    if (!balance->tryFundAccount(totalFees))
+    const BalanceFrame::Result fundResult = balance->tryFundAccount(totalFees);
+    if (fundResult != BalanceFrame::Result::SUCCESS)
     {
         app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();
-        innerResult().code(PaymentResultCode::LINE_FULL);
+        innerResult().code(fundResult == BalanceFrame::Result::LINE_FULL ?
+                           PaymentResultCode::LINE_FULL :
+                           PaymentResultCode::INCORRECT_PRECISION);
         return false;
     }
 
@@ -370,10 +372,13 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     if (!processBalanceChange(app, transferResult))
         return false;
 
-	if (!mDestBalance->tryFundAccount(destReceived))
+    const BalanceFrame::Result destFundResult = mDestBalance->tryFundAccount(destReceived);
+	if (destFundResult != BalanceFrame::Result::SUCCESS)
 	{
 		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
-		innerResult().code(PaymentResultCode::LINE_FULL);
+		innerResult().code(destFundResult == BalanceFrame::Result::LINE_FULL ?
+		                   PaymentResultCode::LINE_FULL :
+		                   PaymentResultCode::INCORRECT_PRECISION);
 		return false;
 	}
 

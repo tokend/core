@@ -33,7 +33,8 @@ bool ReviewAMLAlertRequestOpFrame::handleApprove(Application& app,
     auto& db = app.getDatabase();
     createReference(delta, db, request->getRequestor(), request->getReference());
     auto balanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(amlAlert.balanceID, db, &delta);
-    if (!balanceFrame->tryChargeFromLocked(amlAlert.amount)) {
+    const BalanceFrame::Result chargeResult = balanceFrame->tryChargeFromLocked(amlAlert.amount);
+    if (chargeResult != BalanceFrame::Result::SUCCESS) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to charge from unlock specified amount in request: request"
             << xdr::xdr_to_string(amlAlert) << "; balance: " << xdr::xdr_to_string(balanceFrame->getBalance());
         throw runtime_error("Unexpected state: failed to charge from unlock specified amount in aml request");
@@ -85,10 +86,15 @@ bool ReviewAMLAlertRequestOpFrame::handlePermanentReject(Application &app, Ledge
         // create reference to make sure that same alert will not be triggered again
         createReference(delta, db, request->getRequestor(), request->getReference());
         const auto amlAlert = getAmlAlert(request);
-        auto balanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(amlAlert.balanceID,db,&delta);
-        if(!balanceFrame->unlock(amlAlert.amount)){
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to unlock specified amount in request: request" 
-            << xdr::xdr_to_string(amlAlert) << "; balance: " << xdr::xdr_to_string(balanceFrame->getBalance());
+        auto balanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
+                amlAlert.balanceID, db, &delta);
+        const BalanceFrame::Result unlockResult = balanceFrame->unlock(amlAlert.amount);
+        if (unlockResult != BalanceFrame::Result::SUCCESS)
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to unlock specified amount in request: request "
+                << xdr::xdr_to_string(amlAlert) << "; balance: " << xdr::xdr_to_string(balanceFrame->getBalance())
+                << "; result " << unlockResult;
             throw runtime_error("Unexpected state: failed to unlock specified amount in aml request");
         }
 

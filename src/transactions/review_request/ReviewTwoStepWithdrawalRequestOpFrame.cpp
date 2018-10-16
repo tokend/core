@@ -111,7 +111,7 @@ bool ReviewTwoStepWithdrawalRequestOpFrame::rejectWithdrawalRequest(Application&
     Database& db = app.getDatabase();
     auto balance = BalanceHelperLegacy::Instance()->mustLoadBalance(withdrawRequest.balance, db, &delta);
     const auto totalAmountToCharge = getTotalAmountToCharge(request->getRequestID(), withdrawRequest);
-    if (!balance->unlock(totalAmountToCharge))
+    if (balance->unlock(totalAmountToCharge) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state. Failed to unlock locked amount. requestID: " << request->getRequestID();
         throw runtime_error("Unexpected db state. Failed to unlock locked amount");

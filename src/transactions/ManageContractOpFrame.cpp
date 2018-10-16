@@ -198,7 +198,7 @@ ManageContractOpFrame::tryCompleted(ContractFrame::pointer contractFrame,
         auto balanceHelper = BalanceHelperLegacy::Instance();
         auto balanceFrame = balanceHelper->mustLoadBalance(invoice.receiverBalance, db, &delta);
 
-        if (!balanceFrame->unlock(invoice.amount))
+        if (balanceFrame->unlock(invoice.amount) != BalanceFrame::Result::SUCCESS)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected balance state. "
                                                    << "Expected success unlock in manage contract. ";
@@ -298,7 +298,8 @@ ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFram
         }
 
         auto contractorBalance = balanceHelper->mustLoadBalance(invoice.receiverBalance, db, &delta);
-        if (!contractorBalance->tryChargeFromLocked(invoice.amount))
+        const BalanceFrame::Result contractorBalanceChargeResult = contractorBalance->tryChargeFromLocked(invoice.amount);
+        if (contractorBalanceChargeResult != BalanceFrame::Result::SUCCESS)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected balance state. "
                                                    << "Expected success charge from locked in manage contract. ";
@@ -307,9 +308,13 @@ ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFram
         balanceHelper->storeChange(delta, db, contractorBalance->mEntry);
 
         auto customerBalance = balanceHelper->mustLoadBalance(invoice.senderBalance, db, &delta);
-        if (!customerBalance->tryFundAccount(invoice.amount))
+        const BalanceFrame::Result customerBalanceFundResult = customerBalance->tryFundAccount(invoice.amount);
+        if (customerBalanceFundResult != BalanceFrame::Result::SUCCESS)
         {
-            innerResult().code(ManageContractResultCode::CUSTOMER_BALANCE_OVERFLOW);
+            innerResult().code(
+                    customerBalanceFundResult == BalanceFrame::Result::NONMATCHING_PRECISION ?
+                    ManageContractResultCode::INCORRECT_PRECISION :
+                    ManageContractResultCode::CUSTOMER_BALANCE_OVERFLOW);
             return false;
         }
         balanceHelper->storeChange(delta, db, customerBalance->mEntry);
@@ -337,7 +342,7 @@ ManageContractOpFrame::unlockApprovedInvoicesAmounts(ContractFrame::pointer cont
         }
 
         auto contractorBalance = balanceHelper->mustLoadBalance(invoice.receiverBalance, db, &delta);
-        if (!contractorBalance->unlock(invoice.amount))
+        if (contractorBalance->unlock(invoice.amount) != BalanceFrame::Result::SUCCESS)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected balance state. "
                                                    << "Expected success charge from locked in manage contract. ";

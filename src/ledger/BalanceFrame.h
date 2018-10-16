@@ -80,7 +80,7 @@ class BalanceFrame : public EntryFrame
     static bool isValid(BalanceEntry const& oe);
     bool isValid() const;
 
-    enum Result
+    enum class Result
     {
         SUCCESS,
         LINE_FULL,
@@ -114,4 +114,6 @@ class BalanceFrame : public EntryFrame
     bool checkPrecisionForAmount(uint64 amount);
     std::unique_ptr<uint64> mPrecisionToUse;
 };
+
+std::ostream& operator<<(std::ostream& stream, const BalanceFrame::Result& result);
 } // namespace stellar

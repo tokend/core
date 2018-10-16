@@ -130,19 +130,23 @@ void CheckSaleStateOpFrame::chargeSaleAntes(uint64_t saleID, AccountID const &co
             throw std::runtime_error("Unexpected state. Expected commission balance to exist");
         }
 
-        if (!participantBalanceFrame->tryChargeFromLocked(saleAnte->getAmount())) {
+        const BalanceFrame::Result participantChargeResult = participantBalanceFrame->tryChargeFromLocked(saleAnte->getAmount());
+        if (participantChargeResult != BalanceFrame::Result::SUCCESS) {
             string strParticipantBalanceID = PubKeyUtils::toStrKey(participantBalanceFrame->getBalanceID());
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to charge from locked amount for sale ante with sale id: " << saleAnte->getSaleID()
+                    << "Failed to charge from locked amount for sale ante with reason "
+                    << participantChargeResult << " sale id: " << saleAnte->getSaleID()
                     << " and participant balance id: " << strParticipantBalanceID;
             throw std::runtime_error("Failed to charge from locked amount for sale ante");
         }
 
-        if (!commissionBalance->tryFundAccount(saleAnte->getAmount())) {
+        const BalanceFrame::Result commissionBalanceFundResult = commissionBalance->tryFundAccount(saleAnte->getAmount());
+        if (commissionBalanceFundResult != BalanceFrame::Result::SUCCESS) {
             string strCommissionBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to fund commission balance with sale ante - overflow. Sale id: "
-                    << saleAnte->getSaleID() << " and commission balance id: " << strCommissionBalanceID;
+                    << "Failed to fund commission balance with sale ante, reason " << commissionBalanceFundResult
+                    << ". Sale id: " << saleAnte->getSaleID() << " and commission balance id: "
+                    << strCommissionBalanceID;
             throw runtime_error("Failed to fund commission balance with sale ante");
         }
 
@@ -179,7 +183,8 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
     }
 
     // return delta back to the asset
-    if (!balanceAfter->tryCharge(balanceDelta)) {
+    const BalanceFrame::Result balanceAfterChargeResult = balanceAfter->tryCharge(balanceDelta);
+    if (balanceAfterChargeResult != BalanceFrame::Result::SUCCESS) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to clean up sale manager balance after sale been performed: " << sale->getID();
         throw std::runtime_error("Unexpected state: failed to clean up sale manager balance after sale been performed");
     }
@@ -195,8 +200,6 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
     }
 
     AssetHelperLegacy::Instance()->storeChange(delta, db, asset->mEntry);
-
-    return;
 }
 
 

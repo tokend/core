@@ -111,23 +111,23 @@ BalanceFrame::tryFundAccount(uint64_t amount)
 {
     if (!checkPrecisionForAmount(amount))
     {
-        return NONMATCHING_PRECISION;
+        return Result::NONMATCHING_PRECISION;
     }
 
     uint64_t updatedAmount;
     if (!safeSum(mBalance.amount, amount, updatedAmount))
     {
-        return LINE_FULL;
+        return Result::LINE_FULL;
     }
 
     uint64_t totalFunds;
     if (!safeSum(updatedAmount, mBalance.locked, totalFunds))
     {
-        return LINE_FULL;
+        return Result::LINE_FULL;
     }
 
     mBalance.amount = updatedAmount;
-    return SUCCESS;
+    return Result::SUCCESS;
 }
 
 BalanceFrame::Result
@@ -135,11 +135,11 @@ BalanceFrame::tryLock(const uint64_t amountToBeLocked)
 {
     if (!checkPrecisionForAmount(amountToBeLocked))
     {
-        return NONMATCHING_PRECISION;
+        return Result::NONMATCHING_PRECISION;
     }
     if (mBalance.amount < amountToBeLocked)
     {
-        return UNDERFUNDED;
+        return Result::UNDERFUNDED;
     }
 
     mBalance.amount -= amountToBeLocked;
@@ -147,11 +147,11 @@ BalanceFrame::tryLock(const uint64_t amountToBeLocked)
     uint64_t updatedLockedAmount;
     if (!safeSum(mBalance.locked, amountToBeLocked, updatedLockedAmount))
     {
-        return LINE_FULL;
+        return Result::LINE_FULL;
     }
 
     mBalance.locked = updatedLockedAmount;
-    return SUCCESS;
+    return Result::SUCCESS;
 }
 
 BalanceFrame::Result
@@ -159,15 +159,15 @@ BalanceFrame::tryChargeFromLocked(uint64_t amountToCharge)
 {
     if (!checkPrecisionForAmount(amountToCharge))
     {
-        return NONMATCHING_PRECISION;
+        return Result::NONMATCHING_PRECISION;
     }
     if (mBalance.locked < amountToCharge)
     {
-        return UNDERFUNDED;
+        return Result::UNDERFUNDED;
     }
 
     mBalance.locked -= amountToCharge;
-    return SUCCESS;
+    return Result::SUCCESS;
 }
 
 BalanceFrame::Result
@@ -175,11 +175,11 @@ BalanceFrame::unlock(const uint64_t amountToUnlock)
 {
     if (!checkPrecisionForAmount(amountToUnlock))
     {
-        return NONMATCHING_PRECISION;
+        return Result::NONMATCHING_PRECISION;
     }
     if (mBalance.locked < amountToUnlock)
     {
-        return UNDERFUNDED;
+        return Result::UNDERFUNDED;
     }
 
     mBalance.locked -= amountToUnlock;
@@ -190,14 +190,14 @@ BalanceFrame::tryCharge(uint64_t amountToCharge)
 {
     if (!checkPrecisionForAmount(amountToCharge))
     {
-        return NONMATCHING_PRECISION;
+        return Result::NONMATCHING_PRECISION;
     }
     if (mBalance.amount < amountToCharge)
     {
-        return UNDERFUNDED;
+        return Result::UNDERFUNDED;
     }
     mBalance.amount -= amountToCharge;
-    return SUCCESS;
+    return Result::SUCCESS;
 }
 
 bool BalanceFrame::checkPrecisionForAmount(stellar::uint64 amount)
@@ -208,6 +208,23 @@ bool BalanceFrame::checkPrecisionForAmount(stellar::uint64 amount)
     }
 
     return amount % *mPrecisionToUse == 0;
+}
+
+std::ostream& operator<<(std::ostream& stream, const BalanceFrame::Result& result)
+{
+    switch (result)
+    {
+        case BalanceFrame::Result::SUCCESS:
+            return stream << "SUCCESS";
+        case BalanceFrame::Result::LINE_FULL:
+            return stream << "LINE_FULL";
+        case BalanceFrame::Result::UNDERFUNDED:
+            return stream << "UNDERFUNDED";
+        case BalanceFrame::Result::NONMATCHING_PRECISION:
+            return stream << "NONMATCHING_PRECISION";
+        default:
+            throw std::runtime_error("Unknown result type.");
+    }
 }
 
 } // namespace stellar

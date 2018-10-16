@@ -22,7 +22,8 @@ void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
     }
 
     const auto amountToUnlock = offerFrame->getLockedAmount();
-    if (!balanceFrame->unlock(amountToUnlock))
+    const BalanceFrame::Result unlockResult = balanceFrame->unlock(amountToUnlock);
+    if (unlockResult != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Invalid database state: failed to unlocked locked amount for offer: " << xdr::xdr_to_string(offerFrame->getOffer());
         throw std::runtime_error("Invalid database state: failed to unlocked locked amount for offer");
