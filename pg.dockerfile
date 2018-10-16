@@ -11,7 +11,11 @@ VOLUME /data
 COPY --from=corebuild /build/src/core /usr/local/bin/core
 COPY entrypoint.sh /usr/local/bin/core-entrypoint.sh
 COPY pg-entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN mv /usr/bin/entrypoint.sh /usr/local/bin/pg-entrypoint.sh
+RUN true \
+ && mv /usr/bin/entrypoint.sh /usr/local/bin/pg-entrypoint.sh \
+ && chmod +x /usr/local/bin/core-entrypoint.sh \
+ && chmod +x /usr/local/bin/entrypoint.sh \ 
+ && chmod +x /usr/local/bin/pg-entrypoint.sh
 
 ENTRYPOINT ["entrypoint.sh"]
 
