@@ -8,13 +8,16 @@ variables:
   BUILD_BASE_DOCKERFILE: buildbase.dockerfile
   BUILD_IMAGE: corebuild
   BUILD_DOCKERFILE: build.dockerfile
+  DE_DOCKERFILE: developeredition.dockerfile
   LEGACY_IMAGE: $IMAGE_NAME:$CI_COMMIT_SHA
   LEGACY_DOCKERFILE: legacy.dockerfile
   PG_IMAGE: $IMAGE_NAME:pg-$CI_COMMIT_SHA
   PG_DOCKERFILE: pg.dockerfile
+  DH_IMAGE: tokend/core:latest
 
 stages:
   - build
+  - publish
 
 build-base-image:
   image: docker:latest
@@ -33,7 +36,6 @@ build:
   stage: build
   only:
     - master
-    - feature/docker-refactor
   tags:
     - tokend
   script:
@@ -48,3 +50,18 @@ build:
     - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
     - docker build -t $PG_IMAGE -f $PG_DOCKERFILE .
     - docker push $PG_IMAGE
+
+publish-dh:
+  image: docker:latest
+  stage: publish
+  tags:
+    - tokend
+  only:
+    - dockerhub
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
+    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $BUILD_IMAGE -f $DE_DOCKERFILE .
+    - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
+    - docker build -t $DH_IMAGE -f $PG_DOCKERFILE .
+    - docker push $DH_IMAGE
