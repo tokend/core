@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-CONFIG=$1
+CONFIG=/config.ini
 BIN=/usr/local/bin/core
 HISTORY=/history
 
@@ -16,7 +16,7 @@ init() {
     $BIN --conf $CONFIG --newhist vs
 }
 
-case "$2" in
+case "$1" in
     "init")
         init
         ;;
