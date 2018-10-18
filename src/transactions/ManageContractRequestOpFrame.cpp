@@ -101,7 +101,7 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Ledg
     Database& db = ledgerManager.getDatabase();
     auto& contractRequest = mManageContractRequest.details.contractRequest();
 
-    if (!checkMaxContractsForContractor(app, db, delta))
+    if (!checkMaxContractsForContractor(app, db, delta, ledgerManager))
         return false;
 
     if (!checkMaxContractDetailLength(app, db, delta))
@@ -125,10 +125,19 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Ledg
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app,
+                 Database& db, LedgerDelta& delta, LedgerManager& ledgerManager)
 {
     auto maxContractsCount = obtainMaxContractsForContractor(app, db, delta);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
+
+    if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
+    {
+        auto allRequests = ReviewableRequestHelper::Instance()->
+                loadRequests(getSourceID(), ReviewableRequestType::CONTRACT, db);
+
+        contractsCount += allRequests.size();
+    }
 
     if (contractsCount >= maxContractsCount)
     {

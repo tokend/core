@@ -23,7 +23,7 @@ class ManageContractRequestOpFrame : public OperationFrame
 
     bool createManageContractRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
 
-    bool checkMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta);
+    bool checkMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta, LedgerManager& ledgerManager);
 
     uint64_t obtainMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta);
 
