@@ -1,4 +1,3 @@
-
 #include "KeyValueEntryFrame.h"
 
 namespace stellar{

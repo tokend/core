@@ -1,9 +1,4 @@
-//
-// Created by dmytriiev on 04.04.18.
-//
-
-#ifndef STELLAR_KYCSETTINGS_H
-#define STELLAR_KYCSETTINGS_H
+#pragma once
 
 #include "ledger/EntryFrame.h"
 #include <iostream>
@@ -43,8 +38,8 @@ namespace stellar {
             return mKeyEntry.key;
         }
 
-        KeyValueEntryType const&
-        getKeyValueEntryType()
+        KeyValueEntryType const
+        getKeyValueEntryType() const
         {
             return mKeyEntry.value.type();
         }
@@ -66,5 +61,3 @@ namespace stellar {
     };
 
 }
-
-#endif //STELLAR_KYCSETTINGS_H
