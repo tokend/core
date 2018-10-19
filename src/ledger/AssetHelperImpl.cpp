@@ -241,8 +241,14 @@ AssetHelperImpl::loadAsset(AssetCode assetCode)
     key.asset().code = assetCode;
     if (cachedEntryExists(key))
     {
-        auto entry = getCachedEntry(key);
-        return entry ? std::make_shared<AssetFrame>(*entry) : nullptr;
+        auto asset = getCachedEntry(key);
+        auto assetFrame = asset ? std::make_shared<AssetFrame>(*asset) : nullptr;
+        if (asset && mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*assetFrame);
+        }
+
+        return assetFrame;
     }
 
     Database& db = getDatabase();
