@@ -381,10 +381,13 @@ BalanceHelperImpl::loadBalances(vector<AccountID> accountIDs,
 
     Database& db = getDatabase();
 
-    string sql = "SELECT DISTINCT ON (account_id) balance_id, asset, "
-                 "amount, locked, account_id, lastmodified, version "
-                 "FROM balance "
-                 "WHERE asset = :asset AND account_id IN (" +
+    string sql = "SELECT DISTINCT ON (balance.account_id) "
+                 "balance.balance_id, balance.asset, balance.amount, "
+                 "balance.locked, balance.account_id, asset.trailing_digits, "
+                 "balance.lastmodified, balance.version, asset.version "
+                 "FROM balance INNER JOIN asset ON balance.asset = "
+                 "asset.code "
+                 "WHERE balance.asset = :asset AND balance.account_id IN (" +
                  obtainStrAccountIDs(accountIDs) + ")";
 
     auto prep = db.getPreparedStatement(sql);
