@@ -62,7 +62,10 @@ namespace txtest
         mTestManager->applyCheck(txFrame);
 
         auto txResult = txFrame->getResult();
-        auto actualResultCode = BindExternalSystemAccountIdOpFrame::getInnerCode(txResult.result.results()[0]);
+        auto opResult = txResult.result.results()[0];
+        REQUIRE(opResult.code() == OperationResultCode::opINNER);
+
+        auto actualResultCode = BindExternalSystemAccountIdOpFrame::getInnerCode(opResult);
 
         REQUIRE(actualResultCode == expectedResultCode);
 
@@ -72,7 +75,7 @@ namespace txtest
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDsAfter;
         externalSystemAccountIDsAfter = externalSystemAccountIDHelper->loadAll(db);
 
-        auto opResult = txResult.result.results()[0].tr().bindExternalSystemAccountIdResult();
+        auto innerResult = opResult.tr().bindExternalSystemAccountIdResult();
 
         if (actualResultCode != BindExternalSystemAccountIdResultCode::SUCCESS)
         {
@@ -85,7 +88,7 @@ namespace txtest
             else
                 REQUIRE(externalSystemAccountIDs.size() == externalSystemAccountIDsAfter.size() - 1);
 
-            auto boundPoolEntryData = opResult.success().data;
+            auto boundPoolEntryData = innerResult.success().data;
             auto boundPoolEntryFrame = externalSystemAccountIDPoolEntryHelper->load(externalSystemType,
                                                                                     boundPoolEntryData, db);
             REQUIRE(!!boundPoolEntryFrame);
@@ -111,7 +114,7 @@ namespace txtest
             REQUIRE(externalSystemAccountID.data == boundPoolEntryData);
         }
 
-        return opResult;
+        return innerResult;
     }
 }
 

@@ -2,7 +2,7 @@
 #include <database/Database.h>
 #include <ledger/LedgerDelta.h>
 #include "ledger/LedgerHeaderFrame.h"
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
 #include <ledger/AccountHelper.h>
 #include "ReviewASwapBidCreationRequestOpFrame.h"
@@ -111,7 +111,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
 
     Database& db = app.getDatabase();
 
-    auto baseBalanceFrame = BalanceHelper::Instance()->loadBalance(
+    auto baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
             aSwapCreationRequest.baseBalance, db);
 
     if (baseBalanceFrame == nullptr)
@@ -160,7 +160,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handlePermanentReject(
     auto aSwapCreationRequest = request->getRequestEntry().body.aSwapBidCreationRequest();
     auto& db = app.getDatabase();
 
-    auto baseBalanceFrame = BalanceHelper::Instance()->loadBalance(
+    auto baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
             aSwapCreationRequest.baseBalance, db);
 
     if (baseBalanceFrame == nullptr)

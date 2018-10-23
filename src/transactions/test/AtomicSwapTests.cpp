@@ -8,7 +8,7 @@
 #include <transactions/test/test_helper/CreateASwapReviewableRequestTestHelper.h>
 #include <transactions/test/test_helper/ReviewAswapRequestTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include "test/test_marshaler.h"
 #include "main/test.h"
 
@@ -42,7 +42,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
 
     // db helpers
-    auto balanceHelper = BalanceHelper::Instance();
+    auto balanceHelper = BalanceHelperLegacy::Instance();
 
     // create seller and buyer accounts
     auto root = Account{getRoot(), Salt(0)};

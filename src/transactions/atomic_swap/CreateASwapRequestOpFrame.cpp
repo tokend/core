@@ -1,6 +1,6 @@
 #include "main/Application.h"
 #include <ledger/AtomicSwapBidHelper.h>
-#include <ledger/AssetHelper.h>
+#include <ledger/AssetHelperLegacy.h>
 #include <ledger/KeyValueHelper.h>
 #include <ledger/ReviewableRequestFrame.h>
 #include <transactions/FeesManager.h>
@@ -107,7 +107,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     // TODO: move asset requirements check to separate method
-    auto baseAssetFrame = AssetHelper::Instance()->loadAsset(bidFrame->getBaseAsset(),
+    auto baseAssetFrame = AssetHelperLegacy::Instance()->loadAsset(bidFrame->getBaseAsset(),
                                                              db);
     if (baseAssetFrame == nullptr)
     {

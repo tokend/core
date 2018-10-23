@@ -2,8 +2,8 @@
 #include "database/Database.h"
 #include <transactions/dex/OfferManager.h>
 #include <ledger/LedgerDelta.h>
-#include <ledger/BalanceHelper.h>
-#include <ledger/AssetHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/AssetHelperLegacy.h>
 #include <ledger/ReviewableRequestFrame.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
@@ -43,7 +43,7 @@ CreateASwapBidCreationRequestOpFrame::isBaseAssetValid(Database &db,
                                                        AssetCode baseAssetCode)
 {
     AssetFrame::pointer baseAssetFrame =
-            AssetHelper::Instance()->loadAsset(baseAssetCode, db);
+            AssetHelperLegacy::Instance()->loadAsset(baseAssetCode, db);
     if (baseAssetFrame == nullptr)
     {
         return CreateASwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND;
@@ -67,7 +67,7 @@ CreateASwapBidCreationRequestOpFrame::isQuoteAssetValid(Database& db,
         return CreateASwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL;
     }
 
-    auto quoteAssetFrame = AssetHelper::Instance()->loadAsset(quoteAssetCode, db);
+    auto quoteAssetFrame = AssetHelperLegacy::Instance()->loadAsset(quoteAssetCode, db);
 
     if (quoteAssetFrame == nullptr)
     {
@@ -149,7 +149,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
 
     auto& aSwapBidCreationRequest = mCreateASwapBidCreationRequest.request;
 
-    BalanceFrame::pointer baseBalanceFrame = BalanceHelper::Instance()->loadBalance(
+    BalanceFrame::pointer baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
                     getSourceID(), aSwapBidCreationRequest.baseBalance, db);
     if (baseBalanceFrame == nullptr)
     {
@@ -168,7 +168,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
     }
 
     // TODO: move asset requirements check to separate method
-    auto baseAssetFrame = AssetHelper::Instance()->loadAsset(baseBalanceFrame->getAsset(),
+    auto baseAssetFrame = AssetHelperLegacy::Instance()->loadAsset(baseBalanceFrame->getAsset(),
                                                              db);
     if (baseAssetFrame == nullptr)
     {

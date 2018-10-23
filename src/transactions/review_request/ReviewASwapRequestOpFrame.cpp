@@ -2,7 +2,7 @@
 #include <database/Database.h>
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include "ReviewASwapRequestOpFrame.h"
 
 using namespace std;
@@ -83,7 +83,7 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
     if (canRemoveBid(bidFrame))
     {
         BalanceFrame::pointer bidOwnerBalance =
-                BalanceHelper::Instance()->mustLoadBalance(bidFrame->getOwnerID(),
+                BalanceHelperLegacy::Instance()->mustLoadBalance(bidFrame->getOwnerID(),
                                                            bidFrame->getBaseAsset(),
                                                            db, &delta);
         removeBid(db, delta, bidOwnerBalance, bidFrame);
@@ -169,7 +169,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         return false;
     }
 
-    auto bidOwnerBalanceFrame = BalanceHelper::Instance()->mustLoadBalance(
+    auto bidOwnerBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
             bidFrame->getOwnerID(), bidFrame->getBaseAsset(), db, &delta);
 
     if (!bidOwnerBalanceFrame->tryChargeFromLocked(aSwapRequest.baseAmount))

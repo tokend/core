@@ -1,7 +1,7 @@
 #include <ledger/AccountHelper.h>
 #include <transactions/CreateAccountOpFrame.h>
 #include <ledger/StatisticsHelper.h>
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include "CreateAccountTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -23,6 +23,11 @@ namespace stellar {
                 createAccountOp.policies = policies;
             if (referrer)
                 createAccountOp.referrer.activate() = *referrer;
+            if (isRoleIDSpecified)
+            {
+                createAccountOp.ext.v(LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+                createAccountOp.ext.opExt().roleID.activate() = roleID;
+            }
             return op;
         }
 
@@ -56,6 +61,14 @@ namespace stellar {
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setPolicies(AccountPolicies policies) {
             return setPolicies(static_cast<int32_t>(policies));
+        }
+
+        CreateAccountTestBuilder CreateAccountTestBuilder::setRoleID(uint64_t roleID)
+        {
+            auto newTestHelper = copy();
+            newTestHelper.isRoleIDSpecified = true;
+            newTestHelper.roleID = roleID;
+            return newTestHelper;
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setResultCode(CreateAccountResultCode expectedResult) {
@@ -163,7 +176,7 @@ namespace stellar {
 
             if (!toAccount)
             {
-                auto balanceHelper = BalanceHelper::Instance();
+                auto balanceHelper = BalanceHelperLegacy::Instance();
                 std::vector<BalanceFrame::pointer> balances;
                 balanceHelper->loadBalances(toAccountAfter->getAccount().accountID, balances, db);
                 for (const auto& balance : balances)

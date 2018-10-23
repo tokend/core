@@ -1,6 +1,6 @@
 #include "ReviewAswapRequestTestHelper.h"
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include "test/test_marshaler.h"
 
 namespace stellar
@@ -18,9 +18,9 @@ ASwapRequestReviewChecker::ASwapRequestReviewChecker(TestManager::pointer testMa
     auto& aSwapRequest = request->getRequestEntry().body.aSwapRequest();
     mBidBeforeTx = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapRequest.bidID, db);
-    mBidOwnerBalanceBeforeTx = BalanceHelper::Instance()->loadBalance(
+    mBidOwnerBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(
             mBidBeforeTx->getOwnerID(), mBidBeforeTx->getBaseAsset(), db, nullptr);
-    mPurchaserBalanceBeforeTx = BalanceHelper::Instance()->loadBalance(
+    mPurchaserBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(
             request->getRequestor(), mBidBeforeTx->getBaseAsset(), db, nullptr);
 }
 
@@ -48,7 +48,7 @@ ASwapRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer 
         return;
     }
 
-    auto baseBalanceAfterTx = BalanceHelper::Instance()->mustLoadBalance(
+    auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
             mBidBeforeTx->getOwnerID(), mBidBeforeTx->getBaseAsset(), db);
 
     REQUIRE(baseBalanceAfterTx->getAmount() - mBidBeforeTx->getTotalAmount() ==
@@ -67,7 +67,7 @@ ASwapRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
 
     REQUIRE(requestAfterTx == nullptr);
 
-    auto balanceHelper = BalanceHelper::Instance();
+    auto balanceHelper = BalanceHelperLegacy::Instance();
 
     auto purchaserBalanceAfterTx = balanceHelper->loadBalance(
             request->getRequestor(), mBidBeforeTx->getBaseAsset(), db, nullptr);

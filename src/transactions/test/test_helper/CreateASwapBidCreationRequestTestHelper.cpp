@@ -1,6 +1,6 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include "CreateASwapBidCreationRequestTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -49,7 +49,7 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
         Account &source, ASwapBidCreationRequest request,
         CreateASwapBidCreationRequestResultCode expectedResult)
 {
-    auto balanceHelper = BalanceHelper::Instance();
+    auto balanceHelper = BalanceHelperLegacy::Instance();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
 
     Database& db = mTestManager->getDB();

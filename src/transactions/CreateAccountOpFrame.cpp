@@ -8,7 +8,7 @@
 #include "database/Database.h"
 
 #include "ledger/AccountHelper.h"
-#include "ledger/AssetHelper.h"
+#include "ledger/AssetHelperLegacy.h"
 
 #include "exsysidgen/ExternalSystemIDGenerators.h"
 #include "main/Application.h"
@@ -135,7 +135,7 @@ namespace stellar {
 
     void CreateAccountOpFrame::createBalance(LedgerDelta &delta, Database &db) {
         std::vector<AssetFrame::pointer> baseAssets;
-        AssetHelper::Instance()->loadBaseAssets(baseAssets, db);
+        AssetHelperLegacy::Instance()->loadBaseAssets(baseAssets, db);
         for (const auto &baseAsset : baseAssets) {
             ManageAssetHelper::createBalanceForAccount(mCreateAccount.destination, baseAsset->getCode(), db, delta);
         }
@@ -205,5 +205,11 @@ namespace stellar {
         trySetReferrer(app, db, destAccountFrame);
         destAccount.policies = mCreateAccount.policies;
         storeExternalSystemsIDs(app, delta, db, destAccountFrame);
+        if (mCreateAccount.ext.v() == LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES &&
+            mCreateAccount.ext.opExt().roleID)
+        {
+            destAccount.ext.v(LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+            destAccount.ext.accountEntryExt().accountRole.activate() = *mCreateAccount.ext.opExt().roleID;
+        }
     }
 }

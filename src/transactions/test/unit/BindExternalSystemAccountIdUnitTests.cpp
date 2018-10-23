@@ -17,6 +17,8 @@
 #include "transactions/test/mocks/MockExternalSystemAccountIDHelper.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
+#include "transactions/test/mocks/MockBalanceHelper.h"
+#include "transactions/test/mocks/MockAssetHelper.h"
 #include "transactions/test/mocks/MockLedgerDelta.h"
 #include "transactions/test/mocks/MockLedgerManager.h"
 #include "transactions/test/mocks/MockSignatureValidator.h"
@@ -65,6 +67,8 @@ TEST_CASE("bind external system account_id - unit test",
         AccountFrame::makeAuthOnlyAccount(*operation.sourceAccount);
     LedgerHeader ledgerHeaderFake;
 
+    Database::EntryCache cacheFake(4096);
+
     ON_CALL(appMock, getDatabase()).WillByDefault(ReturnRef(dbMock));
     ON_CALL(appMock, getLedgerManager())
         .WillByDefault(ReturnRef(ledgerManagerMock));
@@ -72,12 +76,13 @@ TEST_CASE("bind external system account_id - unit test",
         .WillByDefault(ReturnRef(ledgerHeaderFake));
     ON_CALL(storageHelperMock, getDatabase()).WillByDefault(ReturnRef(dbMock));
     ON_CALL(storageHelperMock, getLedgerDelta())
-        .WillByDefault(ReturnRef(ledgerDeltaMock));
+        .WillByDefault(Return(&ledgerDeltaMock));
     ON_CALL(transactionFrameMock, getSignatureValidator())
         .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
             check(Ref(appMock), Ref(dbMock), Ref(*accountFrameFake), _))
         .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
+    ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
 
     ON_CALL(storageHelperMock, getKeyValueHelper())
         .WillByDefault(ReturnRef(keyValueHelperMock));
@@ -88,7 +93,6 @@ TEST_CASE("bind external system account_id - unit test",
 
     BindExternalSystemAccountIdOpFrame opFrame(operation, operationResult,
                                                transactionFrameMock);
-
     SECTION("Check validity")
     {
         EXPECT_CALL(transactionFrameMock,

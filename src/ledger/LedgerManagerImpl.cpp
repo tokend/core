@@ -11,7 +11,7 @@
 #include "ledger/LedgerManagerImpl.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AccountHelper.h"
-#include "ledger/AssetHelper.h"
+#include "ledger/AssetHelperLegacy.h"
 
 #include "overlay/OverlayManager.h"
 #include "util/make_unique.h"
@@ -20,7 +20,7 @@
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "xdrpp/printer.h"
-#include "BalanceHelper.h"
+#include "BalanceHelperLegacy.h"
 
 /*
 The ledger module:
@@ -833,11 +833,11 @@ LedgerManagerImpl::checkDbState()
     std::unordered_map<AccountID, AccountFrame::pointer> aData =
 		accountHelper->checkDB(db);
 
-    auto allAssetsWithIssued = AssetHelper::Instance()->loadIssuedForAssets(db);
+    auto allAssetsWithIssued = AssetHelperLegacy::Instance()->loadIssuedForAssets(db);
 
     for (const auto& item : allAssetsWithIssued)
     {
-        auto totalAssetAmount = BalanceHelper::Instance()->loadTotalAssetAmount(
+        auto totalAssetAmount = BalanceHelperLegacy::Instance()->loadTotalAssetAmount(
                 db, item.first);
 
         if (totalAssetAmount != item.second)

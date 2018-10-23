@@ -1,4 +1,4 @@
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include "ReviewRequestTestHelper.h"
@@ -19,7 +19,7 @@ ASwapBidCreationRequestReviewChecker::ASwapBidCreationRequestReviewChecker(
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.aSwapBidCreationRequest();
-    mBaseBalanceBeforeTx = BalanceHelper::Instance()->mustLoadBalance(
+    mBaseBalanceBeforeTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
             aSwapCreationRequest.baseBalance, db);
 }
 
@@ -35,7 +35,7 @@ void ASwapBidCreationRequestReviewChecker::checkPermanentReject(
 
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.aSwapBidCreationRequest();
-    auto baseBalanceAfterTx = BalanceHelper::Instance()->loadBalance(
+    auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(
             aSwapCreationRequest.baseBalance, db);
 
     REQUIRE(baseBalanceAfterTx->getAmount() - aSwapCreationRequest.amount ==

@@ -1,7 +1,7 @@
 #include "main/Application.h"
 #include <database/Database.h>
 #include <ledger/AtomicSwapBidHelper.h>
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include "CancelASwapBidOpFrame.h"
 
 using namespace std;
@@ -58,7 +58,7 @@ bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
         return true;
     }
 
-    auto bidOwnerBalanceFrame = BalanceHelper::Instance()->mustLoadBalance(
+    auto bidOwnerBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
             bidFrame->getOwnerID(), bidFrame->getBaseAsset(), db, &delta);
 
     if (!bidOwnerBalanceFrame->unlock(bidFrame->getAmount()))

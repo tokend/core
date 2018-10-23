@@ -33,13 +33,15 @@
 #include "transactions/DirectDebitOpFrame.h"
 #include "transactions/ManageInvoiceRequestOpFrame.h"
 #include "transactions/review_request/ReviewRequestOpFrame.h"
+#include "transactions/PayoutOpFrame.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "transactions/manage_external_system_account_id_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
 #include "transactions/kyc/CreateKYCReviewableRequestOpFrame.h"
 #include "transactions/dex/ManageSaleOpFrame.h"
+#include "transactions/ManageAccountRolePermissionOpFrame.h"
+#include "transactions/ManageAccountRoleOpFrame.h"
 #include "database/Database.h"
-
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "dex/ManageOfferOpFrame.h"
@@ -101,6 +103,8 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new CreateSaleCreationRequestOpFrame(op, res, tx));
     case OperationType::CHECK_SALE_STATE:
         return shared_ptr<OperationFrame>(new CheckSaleStateOpFrame(op, res, tx));
+    case OperationType::PAYOUT:
+        return shared_ptr<OperationFrame>(new PayoutOpFrame(op, res, tx));
     case OperationType::MANAGE_EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         return shared_ptr<OperationFrame>(ManageExternalSystemAccountIdPoolEntryOpFrame::makeHelper(op, res, tx));
     case OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID:
@@ -129,6 +133,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new CancelASwapBidOpFrame(op, res, tx));
     case OperationType::CREATE_ASWAP_REQUEST:
         return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
+    case OperationType::MANAGE_ACCOUNT_ROLE:
+        return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
+    case OperationType::MANAGE_ACCOUNT_ROLE_PERMISSION:
+        return shared_ptr<OperationFrame>(new ManageAccountRolePermissionOpFrame(op, res, tx));
     default:
         ostringstream err;
         err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
@@ -145,12 +153,12 @@ OperationFrame::OperationFrame(Operation const& op, OperationResult& res,
 bool
 OperationFrame::apply(StorageHelper& storageHelper, Application& app)
 {
-    bool res;
-    res = checkValid(app, &storageHelper.getLedgerDelta());
-    if (!res)
-        return res;
+    if (!storageHelper.getLedgerDelta() || !checkValid(app, storageHelper.getLedgerDelta()))
+    {
+        return false;
+    }
     bool isApplied =
-        doApply(app, storageHelper.getLedgerDelta(), app.getLedgerManager());
+        doApply(app, *storageHelper.getLedgerDelta(), app.getLedgerManager());
 	app.getMetrics().NewMeter({ "operation", isApplied ? "applied" : "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
 	return isApplied;
 }
@@ -221,7 +229,7 @@ bool
 OperationFrame::doApply(Application& app, LedgerDelta& delta,
 	LedgerManager& ledgerManager)
 {
-    StorageHelperImpl storageHelper(app.getDatabase(), delta);
+    StorageHelperImpl storageHelper(app.getDatabase(), &delta);
     static_cast<StorageHelper&>(storageHelper).release();
     return doApply(app, storageHelper, ledgerManager);
 }
@@ -230,7 +238,12 @@ OperationFrame::doApply(Application& app, LedgerDelta& delta,
 bool OperationFrame::doApply(Application& app, StorageHelper& storageHelper,
                              LedgerManager& ledgerManager)
 {
-    return doApply(app, storageHelper.getLedgerDelta(), ledgerManager);
+    if (!storageHelper.getLedgerDelta())
+    {
+        throw std::runtime_error("Cannot apply operation frame without "
+                                 "LedgerDelta.");
+    }
+    return doApply(app, *storageHelper.getLedgerDelta(), ledgerManager);
 }
 
 AccountID const&
@@ -239,7 +252,6 @@ OperationFrame::getSourceID() const
     return mOperation.sourceAccount ? *mOperation.sourceAccount
                                     : mParentTx.getEnvelope().tx.sourceAccount;
 }
-
 
 bool
 OperationFrame::loadAccount(LedgerDelta* delta, Database& db)
@@ -258,11 +270,10 @@ OperationFrame::createReferenceEntry(string reference, StorageHelper& storageHel
 
     entry.reference = reference;
     auto referenceFrame = std::make_shared<ReferenceFrame>(le);
-    EntryHelperProvider::storeAddEntry(storageHelper.getLedgerDelta(),
+    EntryHelperProvider::storeAddEntry(*storageHelper.getLedgerDelta(),
                                        storageHelper.getDatabase(),
                                        referenceFrame->mEntry);
 }
-
 
 
 OperationResultCode
@@ -270,7 +281,6 @@ OperationFrame::getResultCode() const
 {
     return mResult.code();
 }
-
 
 // called when determining if we should accept this operation.
 // called when determining if we should flood
@@ -305,13 +315,23 @@ OperationFrame::checkValid(Application& app, LedgerDelta* delta)
         }
     }
 
-	auto counterpartiesDetails = getCounterpartyDetails(db, delta, app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion);
+    const uint32 ledgerVersion = app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion;
+    auto counterpartiesDetails = getCounterpartyDetails(db, delta, ledgerVersion);
 	if (!checkCounterparties(app, counterpartiesDetails))
 	{
 		return false;
 	}
 
-	auto sourceDetails = getSourceAccountDetails(counterpartiesDetails, app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion, db);
+    if (ledgerVersion >= (uint32)LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
+    {
+        if (!checkRolePermissions(app))
+        {
+            mResult.code(OperationResultCode::opNO_ROLE_PERMISSION);
+            return false;
+        }
+    }
+
+    auto sourceDetails = getSourceAccountDetails(counterpartiesDetails, ledgerVersion, db);
     if (!doCheckSignature(app, db, sourceDetails))
     {
         return false;
@@ -330,9 +350,10 @@ OperationFrame::checkValid(Application& app, LedgerDelta* delta)
     bool isValid = doCheckValid(app);
 	if (!isValid) {
 		app.getMetrics().NewMeter({ "operation", "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
+        return isValid;
 	}
 
-	return isValid;
+    return true;
 }
 
 bool
@@ -375,6 +396,23 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
     }
 
     return true;
+}
+
+bool
+OperationFrame::checkRolePermissions(Application& app)
+{
+    const bool shouldCheckPolicies = app.isCheckingPolicies();
+    const bool isSourceAccountMaster = xdr::operator==(mSourceAccount->getID(), app.getMasterID());
+    if (!shouldCheckPolicies || isSourceAccountMaster)
+    {
+        return true;
+    }
+
+    const OperationType thisOpType = getOperation().body.type();
+    StorageHelperImpl storageHelper(app.getDatabase(), nullptr);
+    AccountRolePermissionHelperImpl permissionHelper(storageHelper);
+    return static_cast<AccountRolePermissionHelper&>(permissionHelper)
+        .hasPermission(mSourceAccount, thisOpType);
 }
 
 }

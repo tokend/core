@@ -1,4 +1,4 @@
-#include <ledger/BalanceHelper.h>
+#include <ledger/BalanceHelperLegacy.h>
 #include <ledger/AtomicSwapBidHelper.h>
 #include <transactions/atomic_swap/CancelASwapBidOpFrame.h>
 #include "CancelASwapBidTestHelper.h"
@@ -30,7 +30,7 @@ CancelASwapBidResult
 CancelASwapBidHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
                                           CancelASwapBidResultCode expectedResult)
 {
-    auto balanceHelper = BalanceHelper::Instance();
+    auto balanceHelper = BalanceHelperLegacy::Instance();
     auto aSwapBidHelper = AtomicSwapBidHelper::Instance();
 
     Database& db = mTestManager->getDB();
