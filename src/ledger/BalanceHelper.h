@@ -16,6 +16,10 @@ class StatementContext;
 class BalanceHelper : public EntryHelper
 {
   public:
+    using EntryHelper::exists;
+
+    virtual bool exists(BalanceID balanceID) = 0;
+
     virtual BalanceFrame::pointer loadBalance(BalanceID balanceID) = 0;
 
     virtual BalanceFrame::pointer loadBalance(BalanceID balanceID,
@@ -23,6 +27,9 @@ class BalanceHelper : public EntryHelper
 
     virtual BalanceFrame::pointer loadBalance(AccountID accountID,
                                               AssetCode assetCode) = 0;
+
+    virtual void loadBalances(AccountID const& accountID,
+                              std::vector<BalanceFrame::pointer>& retBalances) = 0;
 
     virtual std::vector<BalanceFrame::pointer>
     loadBalances(AccountID accountID, AssetCode assetCode) = 0;
@@ -33,10 +40,5 @@ class BalanceHelper : public EntryHelper
     virtual std::vector<BalanceFrame::pointer>
     loadAssetHolders(AssetCode assetCode, AccountID owner,
                      uint64_t minTotalAmount) = 0;
-
-  private:
-    virtual void
-    loadBalances(StatementContext& prep,
-                 std::function<void(LedgerEntry const&)> balanceProcessor) = 0;
 };
-}
+} // namespace stellar

@@ -61,7 +61,10 @@ BalanceFrame::createNew(BalanceID id, AccountID owner, AssetCode asset)
     entry.asset = asset;
     entry.amount = 0;
     entry.locked = 0;
-    return std::make_shared<BalanceFrame>(le);
+
+    auto framePtr = std::make_shared<BalanceFrame>(le);
+    framePtr->setPrecisionForAmounts(0);
+    return framePtr;
 }
 
 bool

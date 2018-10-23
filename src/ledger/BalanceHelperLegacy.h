@@ -72,13 +72,6 @@ public:
         throw std::runtime_error("expected balance for account to exist");
     }
 
-    // load all Balances from the database (very slow)
-    std::unordered_map<BalanceID, std::vector<BalanceFrame::pointer>>
-    loadAllBalances(Database& db);
-
-    std::unordered_map<std::string, BalanceFrame::pointer>
-    loadBalances(AccountID const& accountID, Database& db);
-
     std::vector<BalanceFrame::pointer> loadBalances(AccountID account,
                                                     AssetCode asset, Database& db);
 
@@ -98,12 +91,5 @@ private:
 
     BalanceHelperLegacy(BalanceHelperLegacy const&) = delete;
     BalanceHelperLegacy& operator=(BalanceHelperLegacy const&) = delete;
-
-    std::string obtainStrAccountIDs(std::vector<AccountID> accountIDs);
-
-    static void loadBalances(StatementContext& prep,
-                             std::function<void(BalanceFrame::pointer&)> balanceProcessor);
-
-    void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert, LedgerEntry const& entry);
 };
 }
