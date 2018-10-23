@@ -212,7 +212,6 @@ ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, Data
 {
     auto maxInvoiceDetailsLength = obtainMaxInvoiceDetailsLength(app, db, delta);
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     if (mManageInvoiceRequest.details.invoiceRequest().details.size() >= maxInvoiceDetailsLength)
     {
         innerResult().code(ManageInvoiceRequestResultCode::DETAILS_TOO_LONG);
