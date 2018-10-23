@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-CONFIG=$1
-BIN=/usr/local/bin/stellar-core
+CONFIG=/config.ini
+BIN=/usr/local/bin/core
 HISTORY=/history
 
 start() {
@@ -16,7 +16,7 @@ init() {
     $BIN --conf $CONFIG --newhist vs
 }
 
-case "$2" in
+case "$1" in
     "init")
         init
         ;;
