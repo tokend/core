@@ -58,6 +58,9 @@ namespace stellar {
             return prefix;
         }
 
+        uint32_t const
+        mustGetUint32Value() const;
+
     };
 
 }

@@ -408,12 +408,7 @@ CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &allTasks
         return loadDefaultIssuanceTasks(db, allTasks, lm);
     }
 
-    if (keyValueFrame->getKeyValueEntryType() != KeyValueEntryType::UINT32)
-    {
-        throw std::runtime_error("Unexpected database state, expected issuance tasks to be UINT32");
-    }
-
-    allTasks = keyValueFrame->getKeyValue().value.ui32Value();
+    allTasks = keyValueFrame->mustGetUint32Value();
     return true;
 }
 
@@ -433,16 +428,7 @@ CreateIssuanceRequestOpFrame::loadDefaultIssuanceTasks(Database& db, uint32_t& a
 		return false;
 	}
 
-	if (keyValueFrame->getKeyValueEntryType() != KeyValueEntryType::UINT32)
-	{
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
-			<< "Expected default issuance tasks to be UINT32 type, get:"
-			<< xdr::xdr_traits<KeyValueEntryType>::enum_name(keyValueFrame->getKeyValueEntryType());
-		throw std::runtime_error("Unexpected database state. "
-                           "Expected default issuance tasks to be UINT32 type");
-	}
-
-	allTasks = keyValueFrame->getKeyValue().value.ui32Value();
+	allTasks = keyValueFrame->mustGetUint32Value();
 	return true;
 }
 
