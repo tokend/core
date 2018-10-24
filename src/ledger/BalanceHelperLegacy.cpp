@@ -88,7 +88,7 @@ BalanceHelperLegacy::loadBalance(AccountID accountID, BalanceID balanceID,
 {
     auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, delta));
     storageHelper->release();
-    return storageHelper->getBalanceHelper().loadBalance(accountID, balanceID);
+    return storageHelper->getBalanceHelper().loadBalance(balanceID, accountID);
 }
 
 BalanceFrame::pointer
