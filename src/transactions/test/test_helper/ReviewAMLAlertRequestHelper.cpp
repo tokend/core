@@ -31,15 +31,11 @@ void AmlReviewChecker::checkPermanentReject(AMLAlertRequest const& request,
     AccountID const& requestor)
 {
     auto balanceBeforeTx = mStateBeforeTxHelper.getBalance(request.balanceID);
-    REQUIRE(!!balanceBeforeTx);
+    REQUIRE(balanceBeforeTx);
     auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(request.balanceID, mTestManager->getDB());
-    REQUIRE(!!balanceAfterTx);
+    REQUIRE(balanceAfterTx);
     REQUIRE(balanceBeforeTx->getAmount() + request.amount == balanceAfterTx->getAmount());
     REQUIRE(balanceBeforeTx->getLocked() - request.amount == balanceAfterTx->getLocked());
-
-    auto assetBeforeTx = mStateBeforeTxHelper.getAssetFrame(balanceBeforeTx->getAsset());
-    // asset has not been changed, so it should not be available in mStateBeforeTxHelper
-    REQUIRE(!assetBeforeTx);
 }
 
 void AmlReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
