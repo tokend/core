@@ -231,10 +231,14 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
             return nullptr;
         }
         auto asset = mStorageHelper.getAssetHelper().mustLoadAsset(entry->data.balance().asset);
-        auto balanceEntry = std::make_shared<BalanceFrame>(*entry);
-        balanceEntry->setPrecisionForAmounts(
+        auto balanceFrame = std::make_shared<BalanceFrame>(*entry);
+        balanceFrame->setPrecisionForAmounts(
                 AssetFrame::kMaximumTrailingDigits - asset->getTrailingDigitsCount());
-        return balanceEntry;
+        if (mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*balanceFrame);
+        }
+        return balanceFrame;
     }
 
     Database& db = getDatabase();
@@ -258,11 +262,6 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
     {
         putCachedEntry(key, nullptr);
         return nullptr;
-    }
-
-    if (mStorageHelper.getLedgerDelta())
-    {
-        mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
     }
     putCachedEntry(key, make_shared<LedgerEntry>(retBalance->mEntry));
 
@@ -314,10 +313,6 @@ BalanceHelperImpl::loadBalance(AccountID accountID, AssetCode assetCode)
         return nullptr;
     }
 
-    if (mStorageHelper.getLedgerDelta())
-    {
-        mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
-    }
     putCachedEntry(retBalance->getKey(),
                    make_shared<LedgerEntry>(retBalance->mEntry));
 
@@ -452,6 +447,12 @@ BalanceHelperImpl::loadBalances(StatementContext& prep,
         {
             balanceFrame->setPrecisionForAmounts(0);
         }
+
+        if (mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*balanceFrame);
+        }
+
         balanceProcessor(balanceFrame);
         st.fetch();
     }
