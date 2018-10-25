@@ -284,7 +284,7 @@ void ManageAssetTestHelper::changeAssetTrailingDigits(AssetCode assetCode,
 
     auto asset = storageHelper->getAssetHelper().mustLoadAsset(assetCode);
     asset->mEntry.data.asset().ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
-    asset->setTrailingDigitsCount(0);
+    asset->setTrailingDigitsCount(trailingDigitsCount);
     storageHelper->getAssetHelper().storeChange(asset->mEntry);
 }
 
