@@ -7,9 +7,11 @@
 #include "ManageAssetTestHelper.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelperImpl.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
 #include "ReviewAssetRequestHelper.h"
 #include "test/test_marshaler.h"
@@ -271,6 +273,19 @@ void ManageAssetTestHelper::updateAsset(Account& assetOwner,
                                             approvingRequest->getHash(),
                                             approvingRequest->getType(),
                                             ReviewRequestOpAction::APPROVE, "");
+}
+
+void ManageAssetTestHelper::changeAssetTrailingDigits(AssetCode assetCode,
+                                                      uint32 trailingDigitsCount)
+{
+    auto storageHelper = std::unique_ptr<StorageHelper>(
+            new StorageHelperImpl(mTestManager->getDB(), nullptr));
+    storageHelper->release();
+
+    auto asset = storageHelper->getAssetHelper().mustLoadAsset(assetCode);
+    asset->mEntry.data.asset().ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+    asset->setTrailingDigitsCount(0);
+    storageHelper->getAssetHelper().storeChange(asset->mEntry);
 }
 
 void ManageAssetTestHelper::validateManageAssetEffect(
