@@ -109,6 +109,12 @@ BalanceFrame::setPrecisionForAmounts(uint32 precisionExponent)
     mPrecisionToUse = std::make_unique<uint64_t>(precision);
 }
 
+uint64
+BalanceFrame::getMinimumAmount()
+{
+    return mPrecisionToUse ? *mPrecisionToUse : 1;
+}
+
 BalanceFrame::Result
 BalanceFrame::tryFundAccount(uint64_t amount)
 {

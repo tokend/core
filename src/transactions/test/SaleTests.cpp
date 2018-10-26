@@ -110,11 +110,23 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
     REQUIRE(sales.size() == 1);
     const auto saleID = sales[0]->getID();
 
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+    SECTION("Happy path")
+    {
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+    }
+    SECTION("Happy path with different precisions")
+    {
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(baseAsset, 2);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 0);
 
-    CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
 
+        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+    }
 }
 
 TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
@@ -200,11 +212,27 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     const auto saleID = sales[0]->getID();
 
     auto saleStateData = manageSaleHelper.setSaleState(SaleState::NONE);
-    manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
 
-    checkStateHelper.applyCheckSaleStateTx(root, saleID);
+    SECTION("Happy path")
+    {
+        manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+
+        checkStateHelper.applyCheckSaleStateTx(root, saleID);
+    }
+    SECTION("Happy path with different precisions")
+    {
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(baseAsset, 0);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 2);
+
+        manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+
+        checkStateHelper.applyCheckSaleStateTx(root, saleID);
+    }
 }
 
 TEST_CASE("Sale", "[tx][sale]")

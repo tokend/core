@@ -93,6 +93,9 @@ class BalanceFrame : public EntryFrame
     // These methods will throw without precision set, but
     // the frame without a precision is still considered valid.
     void setPrecisionForAmounts(uint32 precisionExponent);
+    // Returns minimum amount that this balance can be changed according,
+    // to precision, or 1 if precision was not set.
+    uint64 getMinimumAmount();
 
     // Adds amount to current account.
     Result tryFundAccount(uint64_t amount);
