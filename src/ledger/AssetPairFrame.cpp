@@ -66,7 +66,8 @@ AssetPairFrame::pointer AssetPairFrame::create(AssetCode base, AssetCode quote, 
 	return make_shared<AssetPairFrame>(le);
 }
 
-bool AssetPairFrame::convertAmount(const AssetCode destCode, const uint64_t amount, const Rounding rounding, uint64_t& result) const
+bool AssetPairFrame::convertAmount(const AssetCode destCode, const uint64_t amount, const Rounding rounding,
+        const uint64_t roundingStep, uint64_t& result) const
 {
     if (mAssetPair.currentPrice <= 0)
     {
@@ -74,13 +75,28 @@ bool AssetPairFrame::convertAmount(const AssetCode destCode, const uint64_t amou
     }
 
     const uint64_t currentPrice = mAssetPair.currentPrice;
+    bool divideOverflow = false;
     if (mAssetPair.quote == destCode)
     {
-        return bigDivide(result, amount, currentPrice, ONE, rounding);
+        divideOverflow = bigDivide(result, amount, currentPrice, ONE, rounding);
+    }
+    else
+    {
+        divideOverflow = bigDivide(result, amount, ONE, currentPrice, rounding);
     }
 
-    return bigDivide(result, amount, ONE, currentPrice, rounding);
-
+    switch (rounding)
+    {
+        case Rounding::ROUND_DOWN:
+            result -= result % roundingStep;
+            break;
+        case Rounding::ROUND_UP:
+            if (result % roundingStep != 0)
+            {
+                result += roundingStep - (result % roundingStep);
+            }
+            break;
+    }
 }
 
 bool

@@ -10,6 +10,7 @@
 #include "ledger/OfferHelper.h"
 #include "OfferManager.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
@@ -298,7 +299,6 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
 bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer sale,
     Database& db, uint64_t& totalCurrentCapInDefaultQuote)
 {
-
     totalCurrentCapInDefaultQuote = 0;
     auto const& saleEntry = sale->getSaleEntry();
     for (auto const& quoteAsset : saleEntry.quoteAssets)
@@ -322,8 +322,10 @@ bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer 
             throw runtime_error("Failed to load asset pair for sale");
         }
 
+        auto defaultQuoteAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(saleEntry.defaultQuoteAsset, db);
         uint64_t currentCapInDefaultQuote = 0;
-        if (!assetPair->convertAmount(saleEntry.defaultQuoteAsset, quoteAsset.currentCap, ROUND_UP, currentCapInDefaultQuote))
+        if (!assetPair->convertAmount(saleEntry.defaultQuoteAsset, quoteAsset.currentCap, ROUND_UP,
+                                      defaultQuoteAssetFrame->getMinimumAmount(), currentCapInDefaultQuote))
         {
             return false;
         }

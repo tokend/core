@@ -261,7 +261,9 @@ namespace stellar {
             else
                 destAsset = transferAsset;
 
-            if (!assetPair->convertAmount(destAsset, amount, Rounding::ROUND_UP, amount)) {
+            auto destAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(destAsset, db);
+            if (!assetPair->convertAmount(destAsset, amount, Rounding::ROUND_UP, destAssetFrame->getMinimumAmount(),
+                    amount)) {
                 // most probably it will not happen, but it'd better to return error code
                 throw std::runtime_error("failed to convert transfer amount into fee asset");
             }

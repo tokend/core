@@ -80,8 +80,8 @@ class AssetPairFrame : public EntryFrame
 		return (mAssetPair.policies & policyValue) == policyValue;
 	}
 
-        // convertAmount - converts amount to opposite of asset based. Returns false, if overflow
-        bool convertAmount(AssetCode code, uint64_t amount, Rounding rounding, uint64_t& result) const;
+    // convertAmount - converts amount to opposite of asset based. Returns false, if overflow
+    bool convertAmount(AssetCode code, uint64_t amount, Rounding rounding, uint64_t roundingStep, uint64_t& result) const;
 
     static bool isValid(AssetPairEntry const& oe);
     bool isValid() const;

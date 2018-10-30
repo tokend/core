@@ -111,7 +111,10 @@ namespace stellar {
             return true;
         }
 
-        return assetPairFrame->convertAmount(transferAsset, amount, Rounding::ROUND_UP, universalAmount);
+        const auto transferAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(transferAsset, mDb, &mDelta);
+        const uint64 transferAssetMinimumAmount = transferAssetFrame->getMinimumAmount();
+        return assetPairFrame->convertAmount(transferAsset, amount, Rounding::ROUND_UP,
+                                             transferAssetMinimumAmount, universalAmount);
     }
 
     AccountManager::ProcessTransferResult
@@ -306,7 +309,8 @@ namespace stellar {
         if (!statsAssetPair)
             return SUCCESS;
 
-        if (!statsAssetPair->convertAmount(statsAssetFrame->getCode(), amountToAdd, ROUND_UP, universalAmount))
+        if (!statsAssetPair->convertAmount(statsAssetFrame->getCode(), amountToAdd, ROUND_UP,
+                statsAssetFrame->getMinimumAmount(), universalAmount))
             return STATS_OVERFLOW;
 
         auto statsFrame = StatisticsHelper::Instance()->mustLoadStatistics(account->getID(), mDb);
