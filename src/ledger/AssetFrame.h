@@ -146,6 +146,8 @@ public:
         return isPolicySet(AssetPolicy::REQUIRES_VERIFICATION);
     }
 
+    uint64 getMinimumAmount() const;
+
     static bool isAssetCodeValid(AssetCode const& code);
     
     static void ensureValid(AssetEntry const& oe);

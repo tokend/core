@@ -155,6 +155,8 @@ PayoutOpFrame::obtainHoldersPayoutAmountsMap(Application& app, uint64_t& totalAm
             throw std::runtime_error("Unexpected state: calculatedAmount "
                                      "overflows UINT64_MAX");
         }
+        const uint64_t minimumAssetAmount = holder->getMinimumAmount();
+        calculatedAmount -= calculatedAmount % minimumAssetAmount;
 
         if ((calculatedAmount == 0) ||
             (calculatedAmount < mPayout.minPayoutAmount))

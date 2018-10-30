@@ -226,6 +226,25 @@ void AssetFrame::setTrailingDigitsCount(uint32 trailingDigitsCount)
     mAsset.ext.trailingDigitsCount() = trailingDigitsCount;
 }
 
+uint64 AssetFrame::getMinimumAmount() const
+{
+    if (mAsset.ext.v() != LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+    {
+        return 1;
+    }
+    const int nullDigits = AssetFrame::kMaximumTrailingDigits - mAsset.ext.trailingDigitsCount();
+    if (nullDigits < 0)
+    {
+        throw std::runtime_error("Unexpected error: more trailing digits than maximum");
+    }
+    uint64 result = 1;
+    for (int i = 0; i < nullDigits; i++)
+    {
+        result *= 10;
+    }
+    return result;
+}
+
 void AssetFrame::ensureValid(AssetEntry const& oe)
 {
     try
