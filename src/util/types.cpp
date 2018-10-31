@@ -260,17 +260,18 @@ bigDivide(uint64_t& result, uint64_t A, uint64_t B, uint64_t C,
     uint128_t b(B);
     uint128_t c(C);
     uint128_t x(0);
+    uint128_t r(roundingStep);
     if (rounding == ROUND_DOWN)
 	{
     	x = (a * b) / c;
-    	x -= x % roundingStep;
+    	x -= x % r;
 	}
 	else
 	{
 		x = (a * b + c - 1) / c;
-		if (x % roundingStep != 0)
+		if (x % r != 0)
 		{
-			x += roundingStep - (x % roundingStep);
+			x += r - (x % r);
 		}
 	}
 
