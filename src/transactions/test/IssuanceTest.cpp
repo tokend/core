@@ -88,7 +88,7 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
             auto issuanceRequestResult = issuanceRequestHelper.applyCreateIssuanceRequest(assetOwner, assetToBeIssued, preIssuedAmount,
                                                                                           receiverBalance->getBalanceID(), receiverKP.getStrKeyPublic());
             uint64_t percentFeeToPay = 0;
-            feeFrame->calculatePercentFee(preIssuedAmount, percentFeeToPay, ROUND_UP);
+            feeFrame->calculatePercentFee(preIssuedAmount, percentFeeToPay, ROUND_UP, receiverBalance->getMinimumAmount());
 
             REQUIRE(issuanceRequestResult.success().fee.fixed == fixedFee);
             REQUIRE(issuanceRequestResult.success().fee.percent == percentFeeToPay);

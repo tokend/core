@@ -341,7 +341,7 @@ TEST_CASE("Sale", "[tx][sale]")
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
 
         uint64_t quotePreIssued(0);
-        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
         quotePreIssued += hardCap + ONE;
         IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
 
@@ -361,7 +361,7 @@ TEST_CASE("Sale", "[tx][sale]")
         const int numberOfParticipants = 10;
         const uint64_t quoteAmount = softCap / numberOfParticipants;
         uint64_t feeToPay(0);
-        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
         const int64_t timeStep = (endTime - currentTime) / numberOfParticipants;
         for (int i = 0; i < numberOfParticipants - 1; i++)
         {
@@ -370,7 +370,7 @@ TEST_CASE("Sale", "[tx][sale]")
             checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
         }
 
-        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAmount, price, feeToPay);
         testManager->advanceToTime(endTime + 1);
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -386,7 +386,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                              FeeFrame::SUBTYPE_ANY, 0, INT64_MAX, db);
         REQUIRE(!!investFeeFrame);
         uint64_t quotePreIssued = 0;
-        investFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP);
+        investFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
         quotePreIssued += hardCap + ONE;
         quotePreIssued += 50 * ONE;
         IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
@@ -402,7 +402,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const auto quoteAssetAmount = hardCap / numberOfParticipants;
             uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP);
+            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
             saleAnteAmount += 5 * ONE;
             for (auto i = 0; i < numberOfParticipants; i++)
             {
@@ -420,7 +420,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAssetAmount = softCap / numberOfParticipants;
             uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP);
+            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
             saleAnteAmount += 5 * ONE;
             for (auto i = 0; i < numberOfParticipants - 1; i++)
             {
@@ -440,7 +440,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAssetAmount = softCap / numberOfParticipants;
             uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP);
+            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
             saleAnteAmount += 5 * ONE;
             for (auto i = 0; i < numberOfParticipants - 1; i++)
             {
@@ -470,7 +470,7 @@ TEST_CASE("Sale", "[tx][sale]")
         auto syndicateFee = FeeHelper::Instance()->loadForAccount(FeeType::CAPITAL_DEPLOYMENT_FEE,
                 quoteAsset, FeeFrame::SUBTYPE_ANY, syndicateAccountFrame, saleRequest.hardCap, db);
         uint64_t feeToPayBySyndicate = 0;
-        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP));
+        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP, 1));
 
         uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
@@ -497,7 +497,7 @@ TEST_CASE("Sale", "[tx][sale]")
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
 
         uint64_t quotePreIssued(0);
-        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
         quotePreIssued += hardCap + ONE;
         IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
 
@@ -520,7 +520,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const auto quoteAssetAmount = hardCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
 
             // first sale reached hard cap
             for (auto i = 0; i < numberOfParticipants; i++)
@@ -571,7 +571,7 @@ TEST_CASE("Sale", "[tx][sale]")
             CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
             uint64_t quoteAssetAmount = hardCap / 2;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
             const auto offerID = participationHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
             auto offer = OfferHelper::Instance()->loadOffer(account.key.getPublicKey(), offerID, testManager->getDB());
             REQUIRE(!!offer);
@@ -588,7 +588,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const auto quoteAssetAmount = hardCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
             for (auto i = 0; i < numberOfParticipants; i++)
             {
                 participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
@@ -606,7 +606,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAmount = softCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
             const int64_t timeStep = (endTime - currentTime) / numberOfParticipants;
             for (int i = 0; i < numberOfParticipants - 1; i++)
             {
@@ -615,7 +615,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
             }
             // sale is still active
-            participantsFeeFrame->calculatePercentFee(2 * quoteAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(2 * quoteAmount, feeToPay, ROUND_UP, 1);
             participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, 2 * quoteAmount, price, feeToPay);
             testManager->advanceToTime(endTime + 1);
             checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -626,7 +626,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAmount = softCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
             for (auto i = 0; i < numberOfParticipants - 1; i++)
             {
                 participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAmount, price, feeToPay);

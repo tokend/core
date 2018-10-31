@@ -77,7 +77,8 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
                                                           mTestManager->getDB());
     uint64_t totalFee = 0;
     if (feeFrame) {
-        REQUIRE(feeFrame->calculatePercentFee(issuanceRequest->amount, totalFee, ROUND_UP));
+        REQUIRE(feeFrame->calculatePercentFee(issuanceRequest->amount, totalFee, ROUND_UP,
+                                              assetFrameAfterTx->getMinimumAmount()));
         totalFee += feeFrame->getFee().fixedFee;
         REQUIRE(!!commissionBalanceBeforeTx);
         auto commissionBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getCommissionID(),
