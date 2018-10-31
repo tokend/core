@@ -57,8 +57,6 @@ BalanceHelperImpl::storeChange(LedgerEntry const& entry)
 void
 BalanceHelperImpl::storeDelete(LedgerKey const& key)
 {
-    flushCachedEntry(key);
-
     Database& db = getDatabase();
     auto timer = db.getDeleteTimer("delete-balance");
     auto prep =
@@ -74,10 +72,6 @@ BalanceHelperImpl::storeDelete(LedgerKey const& key)
 bool
 BalanceHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
-    {
-        return true;
-    }
     int exists = 0;
 
     Database& db = getDatabase();
@@ -124,7 +118,6 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     {
         balanceFrame->touch(*delta);
     }
-    putCachedEntry(getLedgerKey(entry), make_shared<LedgerEntry>(entry));
 
     bool isValid = balanceFrame->isValid();
     if (!isValid)
@@ -260,7 +253,6 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
 
     if (!retBalance)
     {
-        putCachedEntry(key, nullptr);
         return nullptr;
     }
     putCachedEntry(key, make_shared<LedgerEntry>(retBalance->mEntry));

@@ -478,6 +478,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
     SECTION("Create and review issuance request with tasks")
     {
         auto issuanceRequestHelper = IssuanceRequestHelper(testManager);
+        auto manageKeyValueHelper = ManageKeyValueTestHelper(testManager);
         AssetCode assetToBeIssued = "EUR";
         uint64_t preIssuedAmount = 10000;
         auto issuerSecret = SecretKey::random();
@@ -501,6 +502,29 @@ TEST_CASE("Issuance", "[tx][issuance]")
                 issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount,
                                                                  issuerBalanceID, reference, nullptr,
                                                                  CreateIssuanceRequestResultCode::ISSUANCE_TASKS_NOT_FOUND);
+            }
+            SECTION("Get issuance tasks from key value")
+            {
+                manageKeyValueHelper.
+                        setKey(ManageKeyValueOpFrame::makeIssuanceTasksKey("*"))->
+                        setUi32Value(0)->
+                        doApply(app, ManageKVAction::PUT, true, KeyValueEntryType::UINT32);
+
+                auto result = issuanceRequestHelper.applyCreateIssuanceRequest(
+                        issuer, assetToBeIssued, preIssuedAmount,
+                        issuerBalanceID, reference, nullptr);
+                REQUIRE(result.success().fulfilled);
+
+                manageKeyValueHelper.
+                        setKey(ManageKeyValueOpFrame::makeIssuanceTasksKey(assetToBeIssued))->
+                        setUi32Value(8)->
+                        doApply(app, ManageKVAction::PUT, true, KeyValueEntryType::UINT32);
+
+                reference = "some new reference";
+                result = issuanceRequestHelper.applyCreateIssuanceRequest(
+                        issuer, assetToBeIssued, preIssuedAmount,
+                        issuerBalanceID, reference, nullptr);
+                REQUIRE(!result.success().fulfilled);
             }
             SECTION("Trying to set system task")
             {

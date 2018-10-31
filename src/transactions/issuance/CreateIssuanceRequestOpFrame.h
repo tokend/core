@@ -35,7 +35,9 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
 
     bool isAllowedToReceive(BalanceID receivingBalance, Database &db);
 
-    bool loadIssuanceTasks(Database &db, uint32_t &allTasks);
+    bool loadIssuanceTasks(Database &db, uint32_t &allTasks, LedgerManager& lm);
+
+    bool loadDefaultIssuanceTasks(Database &db, uint32_t &allTasks, LedgerManager& lm);
 
 public:
 

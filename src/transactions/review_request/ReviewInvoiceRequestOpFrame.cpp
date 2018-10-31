@@ -236,6 +236,26 @@ ReviewInvoiceRequestOpFrame::handleReject(Application& app, LedgerDelta& delta, 
     return false;
 }
 
+bool
+ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
+                               LedgerDelta& delta, LedgerManager& ledgerManager,
+                               ReviewableRequestFrame::pointer request)
+{
+    if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
+    {
+        request->checkRequestType(ReviewableRequestType::INVOICE);
+
+        if (request->getRequestEntry().body.invoiceRequest().isApproved)
+        {
+            innerResult().code(ReviewRequestResultCode::INVOICE_ALREADY_APPROVED);
+            return false;
+        }
+    }
+
+    return ReviewRequestOpFrame::handlePermanentReject(app, delta,
+                                                       ledgerManager, request);
+}
+
 ReviewInvoiceRequestOpFrame::ReviewInvoiceRequestOpFrame(Operation const & op, OperationResult & res,
                                                          TransactionFrame & parentTx) :
         ReviewRequestOpFrame(op, res, parentTx)

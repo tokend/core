@@ -110,7 +110,7 @@ bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delt
 	auto& db = app.getDatabase();
 
     uint32_t allTasks = 0;
-    if (!loadIssuanceTasks(db, allTasks))
+    if (!loadIssuanceTasks(db, allTasks, ledgerManager))
     {
         innerResult().code(CreateIssuanceRequestResultCode::ISSUANCE_TASKS_NOT_FOUND);
         return false;
@@ -395,7 +395,9 @@ CreateIssuanceRequestOpFrame::isAllowedToReceive(BalanceID receivingBalance, Dat
 	}
 }
 
-bool CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &allTasks)
+bool
+CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &allTasks,
+                                                LedgerManager& lm)
 {
     if (mCreateIssuanceRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST && mCreateIssuanceRequest.ext.allTasks())
     {
@@ -407,16 +409,31 @@ bool CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &all
     auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
     if (!keyValueFrame)
     {
-        return false;
+        return loadDefaultIssuanceTasks(db, allTasks, lm);
     }
 
-    if (keyValueFrame->getKeyValue().value.type() != KeyValueEntryType::UINT32)
-    {
-        throw std::runtime_error("Unexpected database state, expected issuance tasks to be UINT32");
-    }
-
-    allTasks = keyValueFrame->getKeyValue().value.ui32Value();
+    allTasks = keyValueFrame->mustGetUint32Value();
     return true;
+}
+
+bool
+CreateIssuanceRequestOpFrame::loadDefaultIssuanceTasks(Database& db, uint32_t& allTasks,
+                                                       LedgerManager& lm)
+{
+	if (!lm.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
+	{
+		return false;
+	}
+
+	auto key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+	auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
+	if (!keyValueFrame)
+	{
+		return false;
+	}
+
+	allTasks = keyValueFrame->mustGetUint32Value();
+	return true;
 }
 
 }

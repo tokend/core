@@ -679,6 +679,14 @@ during replays.
 void
 LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
 {
+#ifdef DEVELOPER_EDITION
+    if (getLastClosedLedgerNum() >= 600000)
+    {
+        throw std::runtime_error("Developer edition is expired on 600000 ledger sequence."
+                                 " Contact to Distributed Lab salespeople to get full version,"
+                                 " email: enterprise@distributedlab.com");
+    }
+#endif
     DBTimeExcluder qtExclude(mApp);
     CLOG(DEBUG, "Ledger") << "starting closeLedger() on ledgerSeq="
                           << mCurrentLedger->getHeader().ledgerSeq;

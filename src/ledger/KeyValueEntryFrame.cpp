@@ -1,4 +1,3 @@
-
 #include "KeyValueEntryFrame.h"
 
 namespace stellar{
@@ -25,6 +24,22 @@ namespace stellar{
             mKeyEntry = other.mKeyEntry;
         }
         return *this;
+    }
+
+    uint32_t const
+    KeyValueEntryFrame::mustGetUint32Value() const
+    {
+        if (getKeyValueEntryType() == KeyValueEntryType::UINT32)
+        {
+            return mKeyEntry.value.ui32Value();
+        }
+
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
+                << "Expected " + mKeyEntry.key + " key to be UINT32 type, get:"
+                << xdr::xdr_traits<KeyValueEntryType>::enum_name(
+                                getKeyValueEntryType());
+        throw std::runtime_error("Unexpected database state. Expected " +
+                                 mKeyEntry.key + "key to be UINT32 type");
     }
 
 }

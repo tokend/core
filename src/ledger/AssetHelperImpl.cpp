@@ -87,10 +87,6 @@ AssetHelperImpl::storeDelete(LedgerKey const& key)
 bool
 AssetHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
-    {
-        return true;
-    }
     int exists = 0;
 
     Database& db = getDatabase();
@@ -135,7 +131,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     {
         assetFrame->touch(*delta);
     }
-    putCachedEntry(getLedgerKey(entry), make_shared<LedgerEntry>(entry));
+    flushCachedEntry(getLedgerKey(entry));
 
     assetFrame->ensureValid();
 
