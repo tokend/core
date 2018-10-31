@@ -103,7 +103,8 @@ bool safeSum(uint64_t& result, std::vector<uint64_t> params);
 uint64_t safeDelta(uint64_t a, uint64_t b);
 
 // calculates A*B/C when A*B overflows 64bits
-int64_t bigDivide(int64_t A, int64_t B, int64_t C, Rounding rounding);
+int64_t bigDivide(int64_t A, int64_t B, int64_t C, Rounding rounding,
+                  uint64_t roundingStep = 1);
 // no throw version, returns true if result is valid
 bool bigDivide(int64_t& result, int64_t A, int64_t B, int64_t C, Rounding rounding,
                uint64_t roundingStep = 1);

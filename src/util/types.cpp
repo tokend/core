@@ -307,10 +307,10 @@ uint64_t safeDelta(uint64_t a, uint64_t b){
 }
 
 int64_t
-bigDivide(int64_t A, int64_t B, int64_t C, Rounding rounding)
+bigDivide(int64_t A, int64_t B, int64_t C, Rounding rounding, uint64_t roundingStep)
 {
     int64_t res;
-    if (!bigDivide(res, A, B, C, rounding))
+    if (!bigDivide(res, A, B, C, rounding, roundingStep))
     {
         throw std::overflow_error("overflow while performing bigDivide");
     }

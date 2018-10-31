@@ -36,7 +36,7 @@ PayoutOpFrame::getSourceAccountDetails(
 
 Fee
 PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
-                            Database& db)
+                            uint64_t precisionStep, Database& db)
 {
     Fee actualFee;
     actualFee.fixed = 0;
@@ -49,7 +49,7 @@ PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
         return actualFee;
     }
 
-    if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP))
+    if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP, precisionStep))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Actual calculated payout fee overflows, asset code: "
@@ -74,7 +74,8 @@ PayoutOpFrame::tryProcessTransferFee(AccountManager& accountManager,
                                      BalanceFrame::pointer sourceBalance)
 {
     auto actualFee = getActualFee(sourceBalance->getAsset(),
-                                  actualTotalAmount, db);
+                                  actualTotalAmount,
+                                  sourceBalance->getMinimumAmount(), db);
 
     if (!isFeeAppropriate(actualFee))
     {

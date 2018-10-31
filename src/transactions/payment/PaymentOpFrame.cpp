@@ -186,8 +186,14 @@ bool PaymentOpFrame::isTransferFeeMatch(AccountFrame::pointer accountFrame, Asse
 	if (!feeFrame)
 		return true;
 
-    int64_t requiredPaymentFee = feeFrame->calculatePercentFee(amount);
-    int64_t requiredFixedFee = feeFrame->getFee().fixedFee;
+    const uint64_t assetFramePrecisionStep = AssetHelperLegacy::Instance()->mustLoadAsset(assetCode, db)->getMinimumAmount();
+	uint64_t requiredPaymentFee = 0;
+    if (!feeFrame->calculatePercentFee(amount, requiredPaymentFee, Rounding::ROUND_UP, assetFramePrecisionStep))
+    {
+        // overflow
+        return false;
+    }
+    const int64_t requiredFixedFee = feeFrame->getFee().fixedFee;
     return feeData.paymentFee == requiredPaymentFee && feeData.fixedFee == requiredFixedFee;
 }
 

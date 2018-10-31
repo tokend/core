@@ -76,8 +76,9 @@ bool CreateSaleParticipationOpFrame::isPriceValid(SaleFrame::pointer sale, Balan
 
     const int64_t priceForSoftCap = CheckSaleStateOpFrame::getSalePriceForCap(sale->getSoftCap(), sale);
     const int64_t priceInQuoteAsset = CheckSaleStateOpFrame::getPriceInQuoteAsset(priceForSoftCap, sale, quoteBalance->getAsset(), db);
+    const uint64_t baseStep = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db)->getMinimumAmount();
     int64_t baseAmount = 0;
-    if (!bigDivide(baseAmount, mManageOffer.amount, ONE, priceInQuoteAsset, ROUND_DOWN))
+    if (!bigDivide(baseAmount, mManageOffer.amount, ONE, priceInQuoteAsset, ROUND_DOWN, baseStep))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate base amount for sale participation on soft cap " << xdr::xdr_to_string(mManageOffer);
         throw runtime_error("Failed to calculate base amount for sale participation on soft cap");
@@ -151,14 +152,16 @@ CreateSaleParticipationOpFrame::tryCreateSaleAnte(Database &db, LedgerDelta &del
     }
 
     int64_t quoteAssetAmount = 0; // required for calculating amount of sale ante
-    if (!bigDivide(quoteAssetAmount, mManageOffer.amount, mManageOffer.price, ONE, ROUND_UP)) {
+    if (!bigDivide(quoteAssetAmount, mManageOffer.amount, mManageOffer.price, ONE, ROUND_UP,
+                   sourceBalanceFrame->getMinimumAmount())) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate quote asset amount - overflow, asset code: "
                                                << investFeeFrame->getAsset();
         throw std::runtime_error("Failed to calculate quote asset amount - overflow");
     }
 
     uint64_t amountToLock = 0;
-    if (!investFeeFrame->calculatePercentFee(static_cast<uint64_t>(quoteAssetAmount), amountToLock, ROUND_UP)) {
+    if (!investFeeFrame->calculatePercentFee(static_cast<uint64_t>(quoteAssetAmount), amountToLock, ROUND_UP,
+                                             sourceBalanceFrame->getMinimumAmount())) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate invest percent fee - overflow, asset code: "
                                                << investFeeFrame->getAsset();
         throw std::runtime_error("Failed to calculate invest percent fee - overflow");

@@ -1,5 +1,4 @@
 #include "ledger/FeeFrame.h"
-#include "database/Database.h"
 #include "crypto/SecretKey.h"
 #include "crypto/SHA.h"
 #include "LedgerDelta.h"
@@ -65,16 +64,8 @@ bool FeeFrame::isInRange(int64_t a, int64_t b, int64_t point)
     return a <= point && point <= b;
 }
 
-int64_t FeeFrame::calculatePercentFee(int64_t amount, bool roundUp)
-{
-    if (mFee.percentFee == 0)
-        return 0;
-    auto rounding = roundUp ? ROUND_UP : ROUND_DOWN;
-    return bigDivide(amount, mFee.percentFee, 100 * ONE, rounding);
-}
-
 bool FeeFrame::calculatePercentFee(const uint64_t amount, uint64_t& result,
-                                   const Rounding rounding) const
+                                   const Rounding rounding, uint64_t roundingStep) const
 {
     result = 0;
     if (mFee.percentFee == 0)
@@ -82,23 +73,8 @@ bool FeeFrame::calculatePercentFee(const uint64_t amount, uint64_t& result,
         return true;
     }
 
-    return bigDivide(result, amount, mFee.percentFee, 100 * ONE, rounding);
+    return bigDivide(result, amount, mFee.percentFee, 100 * ONE, rounding, roundingStep);
 }
-
-int64_t FeeFrame::calculatePercentFeeForPeriod(int64_t amount, int64_t periodPassed, int64_t basePeriod)
-{
-    if (mFee.percentFee == 0
-        || periodPassed == 0
-        || basePeriod == 0
-        || amount == 0)
-    {
-        return 0;
-    }
-
-    int64_t percentFeeForFullPeriod = calculatePercentFee(amount);
-    return bigDivide(percentFeeForFullPeriod, periodPassed, basePeriod, ROUND_UP);
-}
-
     
 bool FeeFrame::isCrossAssetFee() const
 {

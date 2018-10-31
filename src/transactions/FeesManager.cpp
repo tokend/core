@@ -4,6 +4,7 @@
 
 #include "FeesManager.h"
 #include "ledger/FeeHelper.h"
+#include "ledger/AssetHelperLegacy.h"
 
 namespace stellar
 {
@@ -19,9 +20,12 @@ FeeManager::calculateFeeForAccount(const AccountFrame::pointer account,
         return result;
     }
 
+    auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(asset, db);
+    const uint64_t feeAssetPrecision = feeAssetFrame->getMinimumAmount();
+
     result.fixedFee = feeFrame->getFixedFee();
     result.percentFee = feeFrame->getPercentFee();
-    result.isOverflow = !feeFrame->calculatePercentFee(amount, result.calculatedPercentFee, ROUND_UP);
+    result.isOverflow = !feeFrame->calculatePercentFee(amount, result.calculatedPercentFee, ROUND_UP, feeAssetPrecision);
     return result;
 }
 

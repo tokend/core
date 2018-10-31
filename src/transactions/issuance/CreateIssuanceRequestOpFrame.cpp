@@ -336,7 +336,9 @@ bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db
                                                           mCreateIssuanceRequest.request.amount, db);
     if (feeFrame) {
         fee.fixed = feeFrame->getFee().fixedFee;
-        feeFrame->calculatePercentFee(mCreateIssuanceRequest.request.amount, fee.percent, ROUND_UP);
+        auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(mCreateIssuanceRequest.request.asset, db);
+        feeFrame->calculatePercentFee(mCreateIssuanceRequest.request.amount, fee.percent, ROUND_UP,
+                                      feeAssetFrame->getMinimumAmount());
     }
 
     uint64_t totalFee = 0;

@@ -256,7 +256,7 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     Database& db = app.getDatabase();
     const auto asset = AssetHelperLegacy::Instance()->loadAsset(sale->getBaseAsset(), db);
     //TODO Must be refactored
-    uint64_t amountToIssue = std::min(sale->getBaseAmountForCurrentCap(), asset->getMaxIssuanceAmount());
+    uint64_t amountToIssue = std::min(sale->getBaseAmountForCurrentCap(asset->getMinimumAmount()), asset->getMaxIssuanceAmount());
 
     const auto issuanceRequestOp = CreateIssuanceRequestOpFrame::build(sale->getBaseAsset(), amountToIssue,
                                                                        sale->getBaseBalanceID(), lm, 0);
@@ -352,7 +352,8 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
     auto baseBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(sale->getBaseBalanceID(), db);
     auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(saleQuoteAsset.quoteBalance, db);
 
-    uint64_t baseAmount = min(sale->getBaseAmountForCurrentCap(saleQuoteAsset.quoteAsset), static_cast<uint64_t>(baseBalance->getAmount()));
+    const uint64_t baseAmountByCap = sale->getBaseAmountForCurrentCap(saleQuoteAsset.quoteAsset, baseBalance->getMinimumAmount());
+    uint64_t baseAmount = min(baseAmountByCap, static_cast<uint64_t>(baseBalance->getAmount()));
     int64_t quoteAmount = OfferManager::calculateQuoteAmount(baseAmount, saleQuoteAsset.price, quoteBalance->getMinimumAmount());
     auto saleType = sale->getSaleType();
     auto baseAsset = sale->getBaseAsset();

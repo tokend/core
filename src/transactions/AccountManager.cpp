@@ -286,9 +286,13 @@ namespace stellar {
             return false;
         }
 
+        auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(assetCode, mDb);
+
         // if we have overflow - fee does not match
         uint64_t expectedPercentFee = 0;
-        if (!feeFrame->calculatePercentFee(amount, expectedPercentFee, Rounding::ROUND_UP)) {
+        if (!feeFrame->calculatePercentFee(amount, expectedPercentFee, Rounding::ROUND_UP,
+            feeAssetFrame->getMinimumAmount()))
+        {
             return false;
         }
 

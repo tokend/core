@@ -245,6 +245,12 @@ namespace stellar {
         }
 
         actualFee.feeAsset = feeFrame->getFeeAsset();
+        AssetCode destAsset;
+        if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_FEE))
+            destAsset = actualFee.feeAsset;
+        else
+            destAsset = transferAsset;
+        auto destAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(destAsset, db);
         if (actualFee.feeAsset != transferAsset) {
             auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(actualFee.feeAsset, transferAsset,
                                                                                     db);
@@ -255,13 +261,6 @@ namespace stellar {
                 throw std::runtime_error("Unexpected state. Failed to load asset pair for cross asset fee");
             }
 
-            AssetCode destAsset;
-            if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_FEE))
-                destAsset = actualFee.feeAsset;
-            else
-                destAsset = transferAsset;
-
-            auto destAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(destAsset, db);
             if (!assetPair->convertAmount(destAsset, amount, Rounding::ROUND_UP, destAssetFrame->getMinimumAmount(),
                     amount)) {
                 // most probably it will not happen, but it'd better to return error code
@@ -269,7 +268,8 @@ namespace stellar {
             }
         }
 
-        if (!feeFrame->calculatePercentFee(amount, actualFee.maxPaymentFee, ROUND_UP)) {
+        if (!feeFrame->calculatePercentFee(amount, actualFee.maxPaymentFee, ROUND_UP,
+                                           destAssetFrame->getMinimumAmount())) {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
                                                    << feeFrame->getFeeAsset();
             throw std::runtime_error("Failed to calculate actual payment fee - overflow");

@@ -78,13 +78,14 @@ class SaleFrame : public EntryFrame
     AssetCode const& getBaseAsset() const;
     AssetCode const& getDefaultQuoteAsset() const;
 
-    static bool convertToBaseAmount(uint64_t const& price, uint64_t const& quoteAssetAmount, uint64_t& result);
+    static bool convertToBaseAmount(uint64_t const& price, uint64_t const& quoteAssetAmount,
+        uint64_t basePrecisionStep, uint64_t& result);
 
     static pointer createNew(uint64_t const& id, AccountID const &ownerID, SaleCreationRequest const& request,
         std::map<AssetCode, BalanceID> balances, uint64_t maxAmountToBeSold);
 
-    uint64_t getBaseAmountForCurrentCap(AssetCode const& asset);
-    uint64_t getBaseAmountForCurrentCap();
+    uint64_t getBaseAmountForCurrentCap(AssetCode const& asset, uint64_t basePrecisionStep);
+    uint64_t getBaseAmountForCurrentCap(uint64_t basePrecisionStep);
 
 
     bool tryLockBaseAsset(uint64_t amount);
