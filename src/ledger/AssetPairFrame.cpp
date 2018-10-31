@@ -75,28 +75,12 @@ bool AssetPairFrame::convertAmount(const AssetCode destCode, const uint64_t amou
     }
 
     const uint64_t currentPrice = mAssetPair.currentPrice;
-    bool divideOverflow = false;
     if (mAssetPair.quote == destCode)
     {
-        divideOverflow = bigDivide(result, amount, currentPrice, ONE, rounding);
-    }
-    else
-    {
-        divideOverflow = bigDivide(result, amount, ONE, currentPrice, rounding);
+        return bigDivide(result, amount, currentPrice, ONE, rounding, roundingStep);
     }
 
-    switch (rounding)
-    {
-        case Rounding::ROUND_DOWN:
-            result -= result % roundingStep;
-            break;
-        case Rounding::ROUND_UP:
-            if (result % roundingStep != 0)
-            {
-                result += roundingStep - (result % roundingStep);
-            }
-            break;
-    }
+    return bigDivide(result, amount, ONE, currentPrice, rounding, roundingStep);
 }
 
 bool

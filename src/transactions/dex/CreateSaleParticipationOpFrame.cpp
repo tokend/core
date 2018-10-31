@@ -247,15 +247,15 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
-    const auto quoteAmount = OfferManager::
-    calculateQuoteAmount(mManageOffer.amount, mManageOffer.price);
+    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(mManageOffer.quoteBalance, db);
+    const auto quoteAmount = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price,
+            quoteBalance->getMinimumAmount());
     if (quoteAmount == 0)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: quote amount overflows";
         throw runtime_error("Unexpected state: quote amount overflows");
     }
 
-    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(mManageOffer.quoteBalance, db);
     if (!tryAddSaleCap(db, quoteAmount, quoteBalance->getAsset(), sale))
     {
         innerResult().code(ManageOfferResultCode::ORDER_VIOLATES_HARD_CAP);

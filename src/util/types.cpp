@@ -233,14 +233,16 @@ int32_t getManagerType(AccountType accountType)
 }
 
 
-// calculates A*B/C when A*B overflows 64bits
+// calculates A*B/C when A*B overflows 64bits, with optional rounding step
 bool
-bigDivide(int64_t& result, int64_t A, int64_t B, int64_t C, Rounding rounding)
+bigDivide(int64_t& result, int64_t A, int64_t B, int64_t C,
+          Rounding rounding, uint64_t roundingStep)
 {
     bool res;
     assert((A >= 0) && (B >= 0) && (C > 0));
     uint64_t r2;
-    res = bigDivide(r2, (uint64_t)A, (uint64_t)B, (uint64_t)C, rounding);
+    res = bigDivide(r2, (uint64_t)A, (uint64_t)B, (uint64_t)C,
+                    rounding, roundingStep);
     if (res)
     {
         res = r2 <= INT64_MAX;
@@ -250,13 +252,27 @@ bigDivide(int64_t& result, int64_t A, int64_t B, int64_t C, Rounding rounding)
 }
 
 bool
-bigDivide(uint64_t& result, uint64_t A, uint64_t B, uint64_t C, Rounding rounding)
+bigDivide(uint64_t& result, uint64_t A, uint64_t B, uint64_t C,
+          Rounding rounding, uint64_t roundingStep)
 {
     // update when moving to (signed) int128
     uint128_t a(A);
     uint128_t b(B);
     uint128_t c(C);
-	uint128_t x = rounding == ROUND_DOWN ? (a * b) / c : (a * b + c - 1) / c;
+    uint128_t x(0);
+    if (rounding == ROUND_DOWN)
+	{
+    	x = (a * b) / c;
+    	x -= x % roundingStep;
+	}
+	else
+	{
+		x = (a * b + c - 1) / c;
+		if (x % roundingStep != 0)
+		{
+			x += roundingStep - (x % roundingStep);
+		}
+	}
 
     result = (uint64_t)x;
 

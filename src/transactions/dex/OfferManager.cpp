@@ -44,7 +44,7 @@ void OfferManager::deleteOffers(std::vector<OfferFrame::pointer> offers,
 }
 
 OfferFrame::pointer OfferManager::buildOffer(AccountID const& sourceID, ManageOfferOp const& op,
-    AssetCode const& base, AssetCode const& quote)
+    AssetCode const& base, AssetCode const& quote, uint64_t quotePrecisionStep)
 {
     OfferEntry o;
     o.orderBookID = op.orderBookID;
@@ -57,7 +57,7 @@ OfferFrame::pointer OfferManager::buildOffer(AccountID const& sourceID, ManageOf
     o.ownerID = sourceID;
     o.price = op.price;
     o.quote = quote;
-    o.quoteAmount = calculateQuoteAmount(op.amount, op.price);
+    o.quoteAmount = calculateQuoteAmount(op.amount, op.price, quotePrecisionStep);
     if (o.quoteAmount == 0)
         return nullptr;
 
@@ -85,18 +85,11 @@ ManageOfferOp OfferManager::buildManageOfferOp(BalanceID const& baseBalance,
 }
 
 int64_t OfferManager::calculateQuoteAmount(int64_t const baseAmount,
-                                           int64_t const price)
+                                           int64_t const price,
+                                           uint64_t quotePrecisionStep)
 {
-    // 1. Check quote amount fits minimal precision
     int64_t result;
-    if (!bigDivide(result, baseAmount, price, ONE, ROUND_DOWN))
-        return 0;
-
-    if (result == 0)
-        return 0;
-
-    // 2. Calculate amount to be spent
-    if (!bigDivide(result, baseAmount, price, ONE, ROUND_UP))
+    if (!bigDivide(result, baseAmount, price, ONE, ROUND_UP, quotePrecisionStep))
         return 0;
     return result;
 }

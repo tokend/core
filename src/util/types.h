@@ -105,10 +105,12 @@ uint64_t safeDelta(uint64_t a, uint64_t b);
 // calculates A*B/C when A*B overflows 64bits
 int64_t bigDivide(int64_t A, int64_t B, int64_t C, Rounding rounding);
 // no throw version, returns true if result is valid
-bool bigDivide(int64_t& result, int64_t A, int64_t B, int64_t C, Rounding rounding);
+bool bigDivide(int64_t& result, int64_t A, int64_t B, int64_t C, Rounding rounding,
+               uint64_t roundingStep = 1);
 
 // no throw version, returns true if result is valid
-bool bigDivide(uint64_t& result, uint64_t A, uint64_t B, uint64_t C, Rounding rounding);
+bool bigDivide(uint64_t& result, uint64_t A, uint64_t B, uint64_t C, Rounding rounding,
+               uint64_t roundingStep = 1);
 
 bool iequals(std::string const& a, std::string const& b);
 }

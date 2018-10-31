@@ -62,12 +62,15 @@ public:
 private:
 
     bool getQuoteAmountBasedOnFee(OfferEntry const& offer,
-                                  int64_t& quoteAmountBasedOnFee);
+                                  int64_t& quoteAmountBasedOnFee,
+                                  uint64_t quotePrecisionStep);
 
-    ExchangeResult exchange(OfferEntry& offerA, OfferEntry& offerB);
+    ExchangeResult exchange(OfferEntry& offerA, OfferEntry& offerB,
+                            uint64_t basePrecisionStep, uint64_t quotePrecisionStep);
     ExchangeResult exchange(int64_t buyerBase, int64_t buyerQuote,
                             int64_t sellerBase, int64_t sellerQuote,
-                            int64_t matchPrice);
+                            int64_t matchPrice, uint64_t basePrecisionStep,
+                            uint64_t quotePrecisionStep);
 
     BalanceFrame::pointer loadBalance(BalanceID& balanceID, Database& db);
 
@@ -117,7 +120,7 @@ public:
         return mFeePaidByA;
     }
 
-    bool offerNeedsMore(OfferEntry& offer);
+    bool offerNeedsMore(OfferEntry& offer, uint64_t quotePrecisionStep);
 
     static bool isOfferPriceMeetAssetPairRestrictions(
         AssetPairFrame::pointer assetPair, int64_t offerPrice);

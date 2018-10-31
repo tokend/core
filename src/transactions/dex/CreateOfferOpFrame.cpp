@@ -172,7 +172,7 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     auto offerFrame = OfferManager::buildOffer(getSourceID(), mManageOffer, mBaseBalance->getAsset(),
-        mQuoteBalance->getAsset());
+        mQuoteBalance->getAsset(), mQuoteBalance->getMinimumAmount());
     if (!offerFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: quote amount overflows";
@@ -268,7 +268,7 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
             commissionBalance->mEntry);
     }
 
-    if (oe.offerNeedsMore(offer))
+    if (oe.offerNeedsMore(offer, mQuoteBalance->getMinimumAmount()))
     {
         offerFrame->mEntry.data.offer().offerID = delta.getHeaderFrame().
             generateID(LedgerEntryType
@@ -308,7 +308,7 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price) > 0;
+    const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price, 1) > 0;
     if (!isQuoteAmountFits)
     {
         innerResult().code(ManageOfferResultCode::OFFER_OVERFLOW);

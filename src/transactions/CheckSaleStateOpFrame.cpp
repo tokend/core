@@ -350,9 +350,10 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
 {
     auto& db = app.getDatabase();
     auto baseBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(sale->getBaseBalanceID(), db);
+    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(saleQuoteAsset.quoteBalance, db);
 
     uint64_t baseAmount = min(sale->getBaseAmountForCurrentCap(saleQuoteAsset.quoteAsset), static_cast<uint64_t>(baseBalance->getAmount()));
-    int64_t quoteAmount = OfferManager::calculateQuoteAmount(baseAmount, saleQuoteAsset.price);
+    int64_t quoteAmount = OfferManager::calculateQuoteAmount(baseAmount, saleQuoteAsset.price, quoteBalance->getMinimumAmount());
     auto saleType = sale->getSaleType();
     auto baseAsset = sale->getBaseAsset();
     auto price = saleQuoteAsset.price;
