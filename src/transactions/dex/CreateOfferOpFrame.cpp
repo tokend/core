@@ -308,6 +308,7 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
         return false;
     }
 
+    // merely check for overflow - we don't need precision here, so set it to 1
     const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price, 1) > 0;
     if (!isQuoteAmountFits)
     {
