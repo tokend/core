@@ -164,6 +164,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
+    const uint32 trailingDigits = assetFrame->getTrailingDigitsCount();
     st.exchange(use(assetEntry.code, "code"));
     st.exchange(use(owner, "owner"));
     st.exchange(use(signer, "signer"));
@@ -174,7 +175,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     st.exchange(use(assetEntry.pendingIssuance, "pending"));
     st.exchange(use(assetEntry.policies, "policies"));
     st.exchange(use(assetFrame->mEntry.lastModifiedLedgerSeq, "lm"));
-    st.exchange(use(assetFrame->getTrailingDigitsCount(), "td"));
+    st.exchange(use(trailingDigits, "td"));
     st.exchange(use(version, "v"));
     st.define_and_bind();
 
@@ -337,9 +338,9 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     LedgerEntry le;
     le.data.type(LedgerEntryType::ASSET);
     AssetEntry& oe = le.data.asset();
-    oe.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
 
     int32_t version = 0;
+    uint32_t trailingDigits = 0;
 
     statement& st = prep.statement();
     st.exchange(into(oe.code));
@@ -351,7 +352,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     st.exchange(into(oe.issued));
     st.exchange(into(oe.pendingIssuance));
     st.exchange(into(oe.policies));
-    st.exchange(into(oe.ext.trailingDigitsCount()));
+    st.exchange(into(trailingDigits));
     st.exchange(into(le.lastModifiedLedgerSeq));
     st.exchange(into(version));
     st.define_and_bind();
@@ -360,6 +361,10 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     while (st.got_data())
     {
         oe.ext.v(static_cast<LedgerVersion>(version));
+        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+        {
+            oe.ext.trailingDigitsCount() = trailingDigits;
+        }
 
         AssetFrame::ensureValid(oe);
 
