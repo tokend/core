@@ -87,6 +87,12 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
         return false;
     }
 
+    if (mManageOffer.amount % mBaseBalance->getMinimumAmount() != 0)
+    {
+        innerResult().code(ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION);
+        return false;
+    }
+
     BalanceID receivingBalance;
     if (mManageOffer.isBuy)
         receivingBalance = mManageOffer.baseBalance;
