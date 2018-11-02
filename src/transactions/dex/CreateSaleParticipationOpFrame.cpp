@@ -327,8 +327,8 @@ bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer 
 
         auto defaultQuoteAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(saleEntry.defaultQuoteAsset, db);
         uint64_t currentCapInDefaultQuote = 0;
-        if (!assetPair->convertAmount(saleEntry.defaultQuoteAsset, quoteAsset.currentCap, ROUND_UP,
-                                      defaultQuoteAssetFrame->getMinimumAmount(), currentCapInDefaultQuote))
+        if (!AssetPairHelper::Instance()->convertAmount(assetPair, saleEntry.defaultQuoteAsset, quoteAsset.currentCap,
+                                                        ROUND_UP, db, currentCapInDefaultQuote))
         {
             return false;
         }

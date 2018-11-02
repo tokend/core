@@ -11,6 +11,7 @@
 #include "util/basen.h"
 #include "util/types.h"
 #include "lib/util/format.h"
+#include "ledger/AssetHelperLegacy.h"
 #include <algorithm>
 
 using namespace soci;
@@ -281,23 +282,6 @@ AssetPairFrame::pointer AssetPairHelper::tryLoadAssetPairForAssets(
     return loadAssetPair(code2, code1, db, delta);
 }
 
-	void AssetPairHelper::loadAssetPairsByQuote(AssetCode quoteAsset, Database& db, std::vector<AssetPairFrame::pointer>& retAssetPairs)
-	{
-
-		string quoteCode = quoteAsset;
-		std::string sql = assetPairColumnSelector;
-		sql += " WHERE quote = :quote";
-		auto prep = db.getPreparedStatement(sql);
-		auto& st = prep.statement();
-		st.exchange(use(quoteCode));
-
-		auto timer = db.getSelectTimer("assert-pair-by-quote");
-		loadAssetPairs(prep, [&retAssetPairs](LedgerEntry const& of)
-		{
-			retAssetPairs.emplace_back(make_shared<AssetPairFrame>(of));
-		});
-	}
-
 	void
 	AssetPairHelper::loadAssetPairs(StatementContext& prep,
 			std::function<void(LedgerEntry const&)> assetPairProcessor)
@@ -336,5 +320,31 @@ AssetPairFrame::pointer AssetPairHelper::tryLoadAssetPairForAssets(
 			st.fetch();
 		}
 	}
+
+bool AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair, const AssetCode& destCode, uint64_t amount,
+                                    const Rounding rounding, Database& db, uint64_t& result) const
+{
+    if (assetPair->getCurrentPrice() <= 0)
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected state. Current price is <= 0: " << destCode;
+        return false;
+    }
+
+    if (destCode != assetPair->getBaseAsset() && destCode != assetPair->getQuoteAsset())
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unknown asset code: " << destCode;
+        return false;
+    }
+
+    const int64_t currentPrice = assetPair->getCurrentPrice();
+    const auto destAsset = AssetHelperLegacy::Instance()->mustLoadAsset(destCode, db);
+    const uint64_t destAssetMinimumAmount = destAsset->getMinimumAmount();
+    if (destCode == assetPair->getQuoteAsset())
+    {
+        return bigDivide(result, amount, currentPrice, ONE, rounding, destAssetMinimumAmount);
+    }
+
+    return bigDivide(result, amount, ONE, currentPrice, rounding, destAssetMinimumAmount);
+}
 
 }

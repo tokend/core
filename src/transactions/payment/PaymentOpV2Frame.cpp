@@ -261,8 +261,8 @@ namespace stellar {
                 throw std::runtime_error("Unexpected state. Failed to load asset pair for cross asset fee");
             }
 
-            if (!assetPair->convertAmount(destAsset, amount, Rounding::ROUND_UP, destAssetFrame->getMinimumAmount(),
-                    amount)) {
+            if (!AssetPairHelper::Instance()->convertAmount(assetPair, destAsset, amount, Rounding::ROUND_UP, db, amount))
+            {
                 // most probably it will not happen, but it'd better to return error code
                 throw std::runtime_error("failed to convert transfer amount into fee asset");
             }

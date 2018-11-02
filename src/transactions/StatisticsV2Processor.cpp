@@ -101,8 +101,8 @@ namespace stellar
                 }
 
                 auto statsAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(statisticsV2Frame->getAsset(), mDb);
-                if (!statsAssetPair->convertAmount(statisticsV2Frame->getAsset(), amountToAdd, ROUND_UP,
-                                                   statsAssetFrame->getMinimumAmount(), universalAmount))
+                if (!AssetPairHelper::Instance()->convertAmount(statsAssetPair, statisticsV2Frame->getAsset(), amountToAdd,
+                        ROUND_UP, mDb, universalAmount))
                     return STATS_V2_OVERFLOW;
             }
 
