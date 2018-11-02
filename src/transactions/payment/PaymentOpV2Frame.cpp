@@ -245,12 +245,6 @@ namespace stellar {
         }
 
         actualFee.feeAsset = feeFrame->getFeeAsset();
-        AssetCode destAsset;
-        if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_FEE))
-            destAsset = actualFee.feeAsset;
-        else
-            destAsset = transferAsset;
-        auto destAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(destAsset, db);
         if (actualFee.feeAsset != transferAsset) {
             auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(actualFee.feeAsset, transferAsset,
                                                                                     db);
@@ -261,15 +255,22 @@ namespace stellar {
                 throw std::runtime_error("Unexpected state. Failed to load asset pair for cross asset fee");
             }
 
-            if (!AssetPairHelper::Instance()->convertAmount(assetPair, destAsset, amount, Rounding::ROUND_UP, db, amount))
+            AssetCode destAsset;
+            if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_FEE))
+                destAsset = actualFee.feeAsset;
+            else
+                destAsset = transferAsset;
+
+            if (!AssetPairHelper::Instance()->convertAmount(assetPair, destAsset, amount,
+                    Rounding::ROUND_UP, db, amount))
             {
                 // most probably it will not happen, but it'd better to return error code
                 throw std::runtime_error("failed to convert transfer amount into fee asset");
             }
         }
 
-        if (!feeFrame->calculatePercentFee(amount, actualFee.maxPaymentFee, ROUND_UP,
-                                           destAssetFrame->getMinimumAmount())) {
+        const uint64_t feeMinimumAmount = AssetHelperLegacy::Instance()->mustLoadAsset(actualFee.feeAsset, db)->getMinimumAmount();
+        if (!feeFrame->calculatePercentFee(amount, actualFee.maxPaymentFee, ROUND_UP, feeMinimumAmount)) {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
                                                    << feeFrame->getFeeAsset();
             throw std::runtime_error("Failed to calculate actual payment fee - overflow");
