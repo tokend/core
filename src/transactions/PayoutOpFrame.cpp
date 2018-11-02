@@ -147,7 +147,8 @@ PayoutOpFrame::obtainHoldersPayoutAmountsMap(Application& app, uint64_t& totalAm
 
         uint64_t calculatedAmount;
         if (!bigDivide(calculatedAmount, mPayout.maxPayoutAmount,
-                       holder->getTotal(), assetHoldersAmount, ROUND_DOWN))
+                holder->getTotal(), assetHoldersAmount,
+                ROUND_DOWN, holder->getMinimumAmount()))
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: calculatedAmount overflows UINT64_MAX, "
@@ -156,8 +157,6 @@ PayoutOpFrame::obtainHoldersPayoutAmountsMap(Application& app, uint64_t& totalAm
             throw std::runtime_error("Unexpected state: calculatedAmount "
                                      "overflows UINT64_MAX");
         }
-        const uint64_t minimumAssetAmount = holder->getMinimumAmount();
-        calculatedAmount -= calculatedAmount % minimumAssetAmount;
 
         if ((calculatedAmount == 0) ||
             (calculatedAmount < mPayout.minPayoutAmount))
