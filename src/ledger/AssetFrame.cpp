@@ -270,10 +270,33 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
             throw runtime_error("details is invalid");
         }
 
-        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION &&
-            oe.ext.trailingDigitsCount() > kMaximumTrailingDigits)
+        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
         {
-            throw runtime_error("Too many trailing digits");
+            if (oe.ext.trailingDigitsCount() > kMaximumTrailingDigits)
+            {
+                throw runtime_error("Too many trailing digits");
+            }
+            int precision = 1;
+            for (int i = 0; i < kMaximumTrailingDigits - oe.ext.trailingDigitsCount(); i++)
+            {
+                precision *= 10;
+            }
+            if (oe.maxIssuanceAmount % precision != 0)
+            {
+                throw runtime_error("Invalid maximum issuance amount");
+            }
+            if (oe.availableForIssueance % precision != 0)
+            {
+                throw runtime_error("Invalid available for issuance amount");
+            }
+            if (oe.issued % precision != 0)
+            {
+                throw runtime_error("Invalid issued amount");
+            }
+            if (oe.pendingIssuance % precision != 0)
+            {
+                throw runtime_error("Invalid pending issuance amount");
+            }
         }
     }
     catch (...)
