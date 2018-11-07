@@ -53,7 +53,8 @@ enum opttag
     OPT_PRINTTXN,
     OPT_SIGNTXN,
     OPT_TEST,
-    OPT_VERSION
+    OPT_VERSION,
+    OPT_HISTEXISTS
 };
 
 static const struct option stellar_core_options[] = {
@@ -77,6 +78,7 @@ static const struct option stellar_core_options[] = {
     {"metric", required_argument, nullptr, OPT_METRIC},
     {"newdb", no_argument, nullptr, OPT_NEWDB},
     {"newhist", required_argument, nullptr, OPT_NEWHIST},
+    {"histexists", required_argument, nullptr, OPT_HISTEXISTS},
     {"test", no_argument, nullptr, OPT_TEST},
     {"version", no_argument, nullptr, OPT_VERSION},
     {nullptr, 0, nullptr, 0}};
@@ -327,6 +329,19 @@ initializeHistories(Config& cfg, vector<string> newHistories)
 }
 
 static int
+historyExists(Config& cfg, vector<string> histories)
+{
+    VirtualClock clock;
+    Application::pointer app = Application::create(clock, cfg, false);
+
+    for (auto const &arch : histories) {
+        if (!HistoryManager::isHistoryArchiveExists(*app, arch))
+            return 42;
+    }
+    return 0;
+}
+
+static int
 startApp(string cfgFile, Config& cfg)
 {
     LOG(INFO) << "Starting stellar-core " << STELLAR_CORE_VERSION;
@@ -395,6 +410,7 @@ main(int argc, char* const* argv)
     bool getOfflineInfo = false;
     std::string loadXdrBucket = "";
     std::vector<std::string> newHistories;
+    std::vector<std::string> histExists;
     std::vector<std::string> metrics;
 
     int opt;
@@ -467,6 +483,9 @@ main(int argc, char* const* argv)
             break;
         case OPT_NEWHIST:
             newHistories.push_back(std::string(optarg));
+            break;
+        case OPT_HISTEXISTS:
+            histExists.emplace_back(std::string(optarg));
             break;
         case OPT_TEST:
         {
@@ -542,6 +561,9 @@ main(int argc, char* const* argv)
         {
             setNoListen(cfg);
             return initializeHistories(cfg, newHistories);
+        }
+        else if (!histExists.empty()) {
+            return historyExists(cfg, histExists);
         }
 
         if (cfg.MANUAL_CLOSE)

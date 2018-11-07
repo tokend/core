@@ -54,6 +54,39 @@ HistoryManager::dropAll(Database& db)
 }
 
 bool
+HistoryManager::isHistoryArchiveExists(Application& app, std::string arch)
+{
+    auto const& cfg = app.getConfig();
+    auto i = cfg.HISTORY.find(arch);
+    if (i == cfg.HISTORY.end())
+    {
+        CLOG(FATAL, "History") << "There is no such history archive '"
+                               << arch << "' in config";
+        return false;
+    }
+
+    auto& wm = app.getWorkManager();
+
+    HistoryArchiveState existing;
+    CLOG(INFO, "History") << "Probing history archive '" << arch << "' for existing state";
+    auto getHas = wm.addWork<GetHistoryArchiveStateWork>(existing, 0,
+                                                         std::chrono::seconds(0),
+                                                         i->second, 0);
+    wm.advanceChildren();
+    while (!wm.allChildrenDone())
+    {
+        app.getClock().crank(false);
+    }
+    if (getHas->getState() == Work::WORK_SUCCESS)
+    {
+        CLOG(ERROR, "History") << "History archive '" << arch << "' found!";
+        return true;
+    }
+
+    return false;
+}
+
+bool
 HistoryManager::initializeHistoryArchive(Application& app, std::string arch)
 {
     auto const& cfg = app.getConfig();
