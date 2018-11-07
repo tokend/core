@@ -233,6 +233,8 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     aSwapExtended.baseAmount = aSwapRequest.baseAmount;
     aSwapExtended.quoteAmount = static_cast<uint64>(quoteAmount);
     aSwapExtended.price = quoteAssetPrice;
+    aSwapExtended.bidOwnerBaseBalanceID = bidOwnerBalanceFrame->getBalanceID();
+    aSwapExtended.purchaserBaseBalanceID = purchaserBalanceFrame->getBalanceID();
 
     return true;
 }
