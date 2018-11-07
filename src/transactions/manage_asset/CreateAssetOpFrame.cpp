@@ -133,6 +133,12 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
         return false;
     }
 
+    if (mAssetCreationRequest.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION &&
+        mAssetCreationRequest.ext.trailingDigitsCount() > AssetFrame::kMaximumTrailingDigits)
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_TRAILING_DIGITS_COUNT);
+    }
+
 	return true;
 }
 
