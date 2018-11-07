@@ -3,6 +3,7 @@
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
+#include <transactions/dex/OfferManager.h>
 #include "ReviewASwapRequestOpFrame.h"
 
 using namespace std;
@@ -191,11 +192,48 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         removeBid(db, delta, bidOwnerBalanceFrame, bidFrame);
     }
 
+    if (!ledgerManager.shouldUse(LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT))
+    {
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+        innerResult().success().ext.extendedResult().fulfilled = true;
+        innerResult().success().ext.extendedResult().typeExt.requestType(
+                ReviewableRequestType::NONE);
+        return true;
+    }
+
+    auto quoteAssetPrice = bidFrame->getQuoteAssetPrice(aSwapRequest.quoteAsset);
+    if (quoteAssetPrice == 0)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+        << "Unexpected state: quote asset not found in bid's quote assets list, "
+        << "quote asset code: " << aSwapRequest.quoteAsset << ", "
+        << "atomic swap bid ID: " << bidFrame->getBidID();
+        throw runtime_error(
+                "Unexpected state: quote asset not found in bid's quote assets list");
+    }
+
+    auto quoteAmount = OfferManager::calculateQuoteAmount(
+            aSwapRequest.baseAmount, quoteAssetPrice);
+
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
     innerResult().success().ext.extendedResult().fulfilled = true;
     innerResult().success().ext.extendedResult().typeExt.requestType(
-            ReviewableRequestType::NONE);
+            ReviewableRequestType::ATOMIC_SWAP);
+
+    auto& aSwapExtended =
+            innerResult().success().ext.extendedResult().typeExt.aSwapExtended();
+
+    aSwapExtended.bidID = bidFrame->getBidID();
+    aSwapExtended.bidOwnerID = bidFrame->getOwnerID();
+    aSwapExtended.purchaserID = request->getRequestor();
+    aSwapExtended.baseAsset = bidFrame->getBaseAsset();
+    aSwapExtended.quoteAsset = aSwapRequest.quoteAsset;
+    aSwapExtended.baseAmount = aSwapRequest.baseAmount;
+    aSwapExtended.quoteAmount = static_cast<uint64>(quoteAmount);
+    aSwapExtended.price = quoteAssetPrice;
+
     return true;
 }
 
