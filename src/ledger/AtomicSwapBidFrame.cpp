@@ -194,4 +194,17 @@ namespace stellar
         return isValid(mAtomicSwapBid);
     }
 
+    uint64_t
+    AtomicSwapBidFrame::getQuoteAssetPrice(AssetCode const &quoteAssetCode) const
+    {
+        for (auto const& quoteAsset : mAtomicSwapBid.quoteAssets)
+        {
+            if (quoteAsset.quoteAsset == quoteAssetCode)
+            {
+                return quoteAsset.price;
+            }
+        }
+
+        return 0;
+    }
 }

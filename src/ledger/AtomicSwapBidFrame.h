@@ -42,6 +42,8 @@ public:
 
     bool hasQuoteAsset(AssetCode assetCode) const;
 
+    uint64_t getQuoteAssetPrice(AssetCode const &quoteAssetCode) const;
+
     bool tryLockAmount(uint64_t amountToLock);
 
     bool tryUnlockAmount(uint64_t amountToUnlock);
