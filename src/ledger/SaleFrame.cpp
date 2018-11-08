@@ -143,6 +143,11 @@ uint64_t SaleFrame::getMaxAmountToBeSold() const
     return mSale.maxAmountToBeSold;
 }
 
+uint64_t SaleFrame::getCurrentCapInBase() const
+{
+    return mSale.currentCapInBase;
+}
+
 BalanceID const& SaleFrame::getBaseBalanceID() const
 {
     return mSale.baseBalance;

@@ -68,6 +68,7 @@ class SaleFrame : public EntryFrame
     uint64_t getID() const;
     uint64_t getPrice(AssetCode const& code);
     uint64_t getMaxAmountToBeSold() const;
+    uint64_t getCurrentCapInBase() const;
     BalanceID const& getBaseBalanceID() const;
     void subCurrentCap(AssetCode const& asset, uint64_t const amount);
 

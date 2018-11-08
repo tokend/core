@@ -1,12 +1,10 @@
-//
-// Created by kirill on 05.12.17.
-//
-
 #include "SaleHelper.h"
 #include "xdrpp/printer.h"
 #include "LedgerDelta.h"
 #include "util/basen.h"
 #include "SaleQuoteAssetHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelperImpl.h"
 
 using namespace soci;
 using namespace std;
@@ -144,6 +142,30 @@ void SaleHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     saleFrame->touch(delta);
     const auto saleEntry = saleFrame->getSaleEntry();
     saleFrame->ensureValid();
+
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.release();
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            saleFrame->getBaseAsset(), saleFrame->getCurrentCapInBase()))
+    {
+        throw std::runtime_error("Invalid current cap in base");
+    }
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            saleFrame->getBaseAsset(), saleFrame->getMaxAmountToBeSold()))
+    {
+        throw std::runtime_error("Invalid max amount to be sold");
+    }
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            saleFrame->getDefaultQuoteAsset(), saleFrame->getSoftCap()))
+    {
+        throw std::runtime_error("Invalid soft cap amount");
+    }
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            saleFrame->getDefaultQuoteAsset(), saleFrame->getHardCap()))
+    {
+        throw std::runtime_error("Invalid hard cap amount");
+    }
 
     const auto key = saleFrame->getKey();
     flushCachedEntry(key, db);
