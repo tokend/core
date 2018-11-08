@@ -232,7 +232,12 @@ uint64 AssetFrame::getMinimumAmount() const
     {
         return 1;
     }
-    const int nullDigits = AssetFrame::kMaximumTrailingDigits - mAsset.ext.trailingDigitsCount();
+    return getMinimumAmountFromTrailingDigits(mAsset.ext.trailingDigitsCount());
+}
+
+uint64 AssetFrame::getMinimumAmountFromTrailingDigits(stellar::uint32 trailingDigitsCount)
+{
+    const int nullDigits = AssetFrame::kMaximumTrailingDigits - trailingDigitsCount;
     if (nullDigits < 0)
     {
         throw std::runtime_error("Unexpected error: more trailing digits than maximum");
@@ -276,11 +281,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
             {
                 throw runtime_error("Too many trailing digits");
             }
-            int precision = 1;
-            for (int i = 0; i < kMaximumTrailingDigits - oe.ext.trailingDigitsCount(); i++)
-            {
-                precision *= 10;
-            }
+            const int precision = getMinimumAmountFromTrailingDigits(oe.ext.trailingDigitsCount());
             if (oe.maxIssuanceAmount % precision != 0)
             {
                 throw runtime_error("Invalid maximum issuance amount");

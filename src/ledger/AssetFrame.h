@@ -147,6 +147,7 @@ public:
     }
 
     uint64 getMinimumAmount() const;
+    static uint64 getMinimumAmountFromTrailingDigits(uint32 trailingDigitsCount);
 
     static bool isAssetCodeValid(AssetCode const& code);
     
