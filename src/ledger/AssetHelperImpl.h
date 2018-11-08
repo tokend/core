@@ -71,6 +71,9 @@ private:
     void
     loadBaseAssets(std::vector<AssetFrame::pointer>& retAssets) override;
 
+    bool
+    doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) override;
+
     void
     storeUpdateHelper(bool insert, LedgerEntry const& entry);
 

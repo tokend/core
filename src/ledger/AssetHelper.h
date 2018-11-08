@@ -39,6 +39,9 @@ public:
 	virtual void
 	addTrailingDigits() = 0;
 
+	virtual bool
+	doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) = 0;
+
 private:
 
 	virtual void

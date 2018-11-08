@@ -1,5 +1,8 @@
 #include "SaleAnteHelper.h"
 #include "LedgerDelta.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "xdrpp/printer.h"
 
 using namespace soci;
@@ -26,6 +29,10 @@ namespace stellar {
         auto saleAnteFrame = make_shared<SaleAnteFrame>(entry);
         saleAnteFrame->touch(delta);
         saleAnteFrame->ensureValid();
+        if (!checkAmountPrecision(saleAnteFrame, delta, db))
+        {
+            throw std::runtime_error("Invalid sale amount precision");
+        }
 
         auto const key = saleAnteFrame->getKey();
         flushCachedEntry(key, db);
@@ -246,5 +253,22 @@ namespace stellar {
         });
 
         return retSaleAntes;
+    }
+
+    bool
+    SaleAnteHelper::checkAmountPrecision(const SaleAnteFrame::pointer& frame, LedgerDelta& delta, Database& db)
+    {
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        StorageHelper& storageHelper = static_cast<StorageHelper&>(storageHelperImpl);
+        storageHelper.release();
+
+        BalanceFrame::pointer participantBalance = storageHelper.getBalanceHelper().loadBalance(
+                frame->getParticipantBalanceID());
+        if (!participantBalance)
+        {
+            throw std::runtime_error("Invalid participant balance ID");
+        }
+        return storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+                participantBalance->getAsset(), frame->getAmount());
     }
 }

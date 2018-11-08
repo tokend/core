@@ -373,6 +373,13 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     }
 }
 
+bool
+AssetHelperImpl::doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount)
+{
+    const uint64_t precision = mustLoadAsset(assetCode)->getMinimumAmount();
+    return precision % amount == 0;
+}
+
 void
 AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
 {
