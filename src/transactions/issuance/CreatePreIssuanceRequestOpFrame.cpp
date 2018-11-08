@@ -60,6 +60,11 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 		return false;
 	}
 
+    if (mCreatePreIssuanceRequest.request.amount % asset->getMinimumAmount() != 0) {
+        innerResult().code(CreatePreIssuanceRequestResultCode::INCORRECT_AMOUNT_PRECISION);
+        return false;
+    }
+
 	if (!asset->canAddAvailableForIssuance(mCreatePreIssuanceRequest.request.amount)) {
 		innerResult().code(CreatePreIssuanceRequestResultCode::EXCEEDED_MAX_AMOUNT);
 		return false;
