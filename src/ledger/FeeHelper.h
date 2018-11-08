@@ -74,5 +74,7 @@ namespace stellar {
         void storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, LedgerEntry const &entry);
 
         void loadFees(StatementContext &prep, std::function<void(LedgerEntry const &)> feeProcessor);
+
+        void checkAmounts(const FeeFrame::pointer &frame, Database& db, LedgerDelta& delta) const;
     };
 }
