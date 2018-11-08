@@ -126,10 +126,14 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     }
     putCachedEntry(getLedgerKey(entry), make_shared<LedgerEntry>(entry));
 
-    bool isValid = balanceFrame->isValid();
-    if (!isValid)
+    if (!balanceFrame->isValid())
     {
         throw std::runtime_error("Invalid balance");
+    }
+    if (!mStorageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            balanceEntry.asset, balanceEntry.amount))
+    {
+        throw std::runtime_error("Invalid balance amount");
     }
 
     std::string accountID = PubKeyUtils::toStrKey(balanceFrame->getAccountID());
