@@ -9,11 +9,13 @@
 #include "util/asio.h"
 #include "CreateIssuanceRequestOpFrame.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
+#include "ledger/StorageHelperImpl.h"
 #include "util/Logging.h"
 #include "util/types.h"
 #include "database/Database.h"
@@ -199,6 +201,16 @@ CreateIssuanceRequestOpFrame::doCheckValid(Application& app)
 
 	if (mCreateIssuanceRequest.request.amount == 0) {
 		innerResult().code(CreateIssuanceRequestResultCode::INVALID_AMOUNT);
+		return false;
+	}
+
+	StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
+	StorageHelper& storageHelper = storageHelperImpl;
+	storageHelper.release();
+	if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+			mCreateIssuanceRequest.request.asset, mCreateIssuanceRequest.request.amount))
+	{
+		innerResult().code(CreateIssuanceRequestResultCode::INVALID_AMOUNT_PRECISION);
 		return false;
 	}
 
