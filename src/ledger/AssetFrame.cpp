@@ -282,10 +282,6 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
                 throw runtime_error("Too many trailing digits");
             }
             const int precision = getMinimumAmountFromTrailingDigits(oe.ext.trailingDigitsCount());
-            if (oe.maxIssuanceAmount % precision != 0)
-            {
-                throw runtime_error("Invalid maximum issuance amount");
-            }
             if (oe.availableForIssueance % precision != 0)
             {
                 throw runtime_error("Invalid available for issuance amount");
