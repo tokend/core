@@ -204,16 +204,6 @@ CreateIssuanceRequestOpFrame::doCheckValid(Application& app)
 		return false;
 	}
 
-	StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
-	StorageHelper& storageHelper = storageHelperImpl;
-	storageHelper.release();
-	if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
-			mCreateIssuanceRequest.request.asset, mCreateIssuanceRequest.request.amount))
-	{
-		innerResult().code(CreateIssuanceRequestResultCode::INVALID_AMOUNT_PRECISION);
-		return false;
-	}
-
 	if (mCreateIssuanceRequest.reference.empty()) {
 		innerResult().code(CreateIssuanceRequestResultCode::REFERENCE_DUPLICATION);
 		return false;
@@ -285,10 +275,19 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 		return nullptr;
 	}
 
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto asset = assetHelper->loadAsset(mCreateIssuanceRequest.request.asset, db);
+	StorageHelperImpl storageHelperImpl(db, &delta);
+	StorageHelper& storageHelper = storageHelperImpl;
+	storageHelper.release();
+	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
 	if (!asset) {
 		innerResult().code(CreateIssuanceRequestResultCode::ASSET_NOT_FOUND);
+		return nullptr;
+	}
+
+	if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+			mCreateIssuanceRequest.request.asset, mCreateIssuanceRequest.request.amount))
+	{
+		innerResult().code(CreateIssuanceRequestResultCode::INVALID_AMOUNT_PRECISION);
 		return nullptr;
 	}
 
