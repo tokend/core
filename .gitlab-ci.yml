@@ -36,7 +36,7 @@ build:
   stage: build
   only:
     - master
-    - feature/atomic_swap
+    - developer_edition
   tags:
     - tokend
   script:
