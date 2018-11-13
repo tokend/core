@@ -340,4 +340,29 @@ void AssetHelperLegacy::loadAssets(StatementContext& prep,
         st.fetch();
     }
 }
+
+std::map<AssetCode, uint64_t>
+AssetHelperLegacy::loadIssuedForAssets(Database &db)
+{
+    uint64_t issued = 0;
+    AssetCode assetCode;
+
+    std::map<AssetCode, uint64_t> result;
+
+    auto timer = db.getSelectTimer("issued-for-asset");
+    auto prep = db.getPreparedStatement("SELECT code, issued FROM asset");
+    auto& st = prep.statement();
+    st.exchange(into(assetCode));
+    st.exchange(into(issued));
+    st.define_and_bind();
+    st.execute(true);
+    while(st.got_data())
+    {
+        result[assetCode] = issued;
+        st.fetch();
+    }
+
+    return result;
+}
+
 }

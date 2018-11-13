@@ -59,6 +59,7 @@
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/SaleAnteHelper.h"
+#include "ledger/AtomicSwapBidHelper.h"
 
 extern "C" void register_factory_sqlite3();
 
@@ -98,10 +99,11 @@ enum databaseSchemaVersion : unsigned long {
     REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 19,
     REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 20,
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 21,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 22
+    ADD_ACCOUNT_ROLES_AND_POLICIES = 22,
+    ADD_ATOMIC_SWAP_BID = 23
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ATOMIC_SWAP_BID;
 
 static void
 setSerializable(soci::session& sess)
@@ -219,6 +221,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
             ContractHelper::Instance()->addCustomerDetails(*this);
+            break;
+        case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
+            AtomicSwapBidHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES:
             std::make_unique<AccountRoleHelper>(storageHelper)->dropAll();

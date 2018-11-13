@@ -24,6 +24,7 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
     char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
+    char const * ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_tasks";
 
     ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                                  stellar::TransactionFrame &parentTx)
@@ -156,5 +157,10 @@ namespace stellar {
         key = key + issuanceTasksPrefix + ":" + assetCode;
 
         return key;
+    }
+
+    longstring ManageKeyValueOpFrame::makeAtomicSwapTasksKey()
+    {
+        return atomicSwapTasksPrefix;
     }
 }
