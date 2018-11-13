@@ -11,6 +11,7 @@
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
@@ -167,6 +168,34 @@ CreateWithdrawalRequestOpFrame::createRequest(LedgerDelta& delta, LedgerManager&
     return request;
 }
 
+ReviewableRequestFrame::pointer
+CreateWithdrawalRequestOpFrame::tryCreateRequest(LedgerDelta& delta, LedgerManager& ledgerManager,
+                                              Database& db, const AssetFrame::pointer assetFrame)
+{
+    uint64_t universalAmount = 0;
+    auto request = ReviewableRequestFrame::createNew(delta, getSourceID(), assetFrame->getOwner(), nullptr,
+                                                     ledgerManager.getCloseTime());
+    ReviewableRequestEntry &requestEntry = request->getRequestEntry();
+    if (assetFrame->isPolicySet(AssetPolicy::TWO_STEP_WITHDRAWAL)) {
+        requestEntry.body.type(ReviewableRequestType::TWO_STEP_WITHDRAWAL);
+        requestEntry.body.twoStepWithdrawalRequest() = mCreateWithdrawalRequest.request;
+        requestEntry.body.twoStepWithdrawalRequest().universalAmount = universalAmount;
+    } else {
+        requestEntry.body.type(ReviewableRequestType::WITHDRAW);
+        requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
+        requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
+
+        auto allTasks = *mCreateWithdrawalRequest.ext.allTasks();
+        if (!loadWithdrawalTasks(db, allTasks, ledgerManager, assetFrame->getCode()))
+            return nullptr;
+
+        requestEntry.ext.tasksExt().allTasks = allTasks;
+    }
+
+    request->recalculateHashRejectReason();
+    return request;
+}
+
 void
 CreateWithdrawalRequestOpFrame::storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
                                                    Database& db, const uint64_t universalAmount)
@@ -215,6 +244,18 @@ bool
 CreateWithdrawalRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
                                         LedgerManager& ledgerManager)
 {
+    if (ledgerManager.shouldUse(LedgerVersion::WITHDRAWAL_TASKS))
+    {
+        return doApplyV2(app, delta, ledgerManager);
+    }
+
+    return doApplyV1(app, delta, ledgerManager);
+}
+
+bool
+CreateWithdrawalRequestOpFrame::doApplyV1(Application& app, LedgerDelta& delta,
+                                            LedgerManager& ledgerManager)
+{
     auto& db = ledgerManager.getDatabase();
     auto balanceFrame = tryLoadBalance(db, delta);
     if (!balanceFrame)
@@ -261,6 +302,63 @@ CreateWithdrawalRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     BalanceHelperLegacy::Instance()->storeChange(delta, db, balanceFrame->mEntry);
 
+    innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
+    innerResult().success().requestID = request->getRequestID();
+    return true;
+}
+
+bool
+CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
+                                        LedgerManager& ledgerManager)
+{
+
+    auto& db = ledgerManager.getDatabase();
+    auto balanceFrame = tryLoadBalance(db, delta);
+    if (!balanceFrame)
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
+        return false;
+    }
+
+    const auto assetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(balanceFrame->getAsset(), db);
+    if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::ASSET_IS_NOT_WITHDRAWABLE);
+        return false;
+    }
+
+    auto code = assetFrame->getAsset().code;
+    if (!exceedsLowerBound(db, code))
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::LOWER_BOUND_NOT_EXCEEDED);
+        return false;
+    }
+
+    AccountManager accountManager(app, db, delta, ledgerManager);
+    if (!isFeeMatches(accountManager, balanceFrame))
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
+        return false;
+    }
+
+    if (!isConvertedAmountMatches(balanceFrame, db))
+    {
+        return false;
+    }
+
+
+    if (!tryLockBalance(balanceFrame))
+    {
+        return false;
+    }
+
+    auto request = tryCreateRequest(delta, ledgerManager, db, assetFrame);
+    if (!request)
+        return false;
+
+    BalanceHelperLegacy::Instance()->storeChange(delta, db, balanceFrame->mEntry);
+
+    ReviewableRequestHelper::Instance()->storeAdd(delta, db, request->mEntry);
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
     innerResult().success().requestID = request->getRequestID();
     return true;
@@ -379,5 +477,47 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
     auto &request = mCreateWithdrawalRequest.request;
     return lowerBound.get()->getKeyValue().value.ui64Value() <= request.amount;
 }
+
+bool
+CreateWithdrawalRequestOpFrame::loadWithdrawalTasks(Database &db, uint32_t &allTasks,
+                                                    LedgerManager& lm, AssetCode assetCode)
+{
+    if (mCreateWithdrawalRequest.ext.v() == LedgerVersion::WITHDRAWAL_TASKS && mCreateWithdrawalRequest.ext.allTasks())
+    {
+        allTasks = *mCreateWithdrawalRequest.ext.allTasks().get();
+        return true;
+    }
+
+    auto key = ManageKeyValueOpFrame::makeWithdrawalTasksKey(mCreateWithdrawalRequest.request.balance);
+    auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
+    if (!keyValueFrame)
+    {
+        return loadDefaultWithdrawalTasks(db, allTasks, lm, assetCode);
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
+    return true;
+}
+
+bool
+CreateWithdrawalRequestOpFrame::loadDefaultWithdrawalTasks(Database& db, uint32_t& allTasks,
+                                                       LedgerManager& lm, AssetCode assetCode)
+{
+    if (!lm.shouldUse(LedgerVersion::WITHDRAWAL_TASKS))
+    {
+        return false;
+    }
+
+    auto key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+    auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
+    if (!keyValueFrame)
+    {
+        return false;
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
+    return true;
+}
+
 
 }
