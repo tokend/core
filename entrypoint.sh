@@ -37,6 +37,7 @@ case "$1" in
         start
         ;;
     *)
-    [[ -n $ENSUREDB ]] && ensuredb && start
-    [[ -ne $ENSUREDB ]] && start
+
+    if [ -z "$ENSUREDB" ]; then ensuredb && start; else start; fi
+
 esac
