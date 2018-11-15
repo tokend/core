@@ -61,6 +61,7 @@ TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTx(
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.requestDetails.withdrawal().externalDetails = "{}";
+    reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
     return txFromOperation(source, op, nullptr);
 }
 

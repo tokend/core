@@ -50,8 +50,7 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
                   const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
 
     ReviewableRequestFrame::pointer
-    tryCreateRequest(LedgerDelta& delta, LedgerManager& ledgerManager, Database& db,
-                  const AssetFrame::pointer assetFrame);
+    tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
 
     void
     storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
@@ -63,10 +62,10 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
 
 
     bool loadWithdrawalTasks(Database &db, uint32_t &allTasks,
-                                                             LedgerManager& lm, AssetCode assetCode);
+                                                             LedgerManager& lm);
 
     bool loadDefaultWithdrawalTasks(Database &db, uint32_t &allTasks,
-                                                             LedgerManager& lm, AssetCode assetCode);
+                                                             LedgerManager& lm);
 
 public:
 

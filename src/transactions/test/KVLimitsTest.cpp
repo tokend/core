@@ -46,6 +46,9 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
     assetHelper.updateAsset(root, asset, root,
             static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
 
+    //Tasks
+    uint32_t allTasks = 0;
+
     //create stats asset and stats asset pair
     const AssetCode statsAsset = "UAH";
     assetHelper.createAsset(root, root.key, statsAsset, root, static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
@@ -60,7 +63,6 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
     auto withdrawerBalance = BalanceHelperLegacy::Instance()->
             loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
     REQUIRE(withdrawerBalance);
-    uint32_t allTasks = 0;
     issuanceHelper.applyCreateIssuanceRequest(root, asset, preIssuedAmount, withdrawerBalance->getBalanceID(),
                                               "RANDOM ISSUANCE REFERENCE", &allTasks);
 
@@ -92,7 +94,7 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
             manageKVHelper.setUi64Value(lowerLimits);
             manageKVHelper.doApply(app, ManageKVAction::PUT, true);
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                    CreateWithdrawalRequestResultCode::SUCCESS);
+                    &allTasks);
         }
         SECTION("Reject")
         {
@@ -101,12 +103,13 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
             manageKVHelper.setUi64Value(lowerLimits);
             manageKVHelper.doApply(app, ManageKVAction::PUT, true);
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
+                    &allTasks,
                     CreateWithdrawalRequestResultCode::LOWER_BOUND_NOT_EXCEEDED);
         }
 
         SECTION("KV limits not set")
         {
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest);
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
         }
     }
 

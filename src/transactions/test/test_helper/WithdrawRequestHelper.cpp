@@ -24,6 +24,7 @@ WithdrawRequestHelper(TestManager::pointer testManager) : TxHelper(testManager)
 
 CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     Account& source, WithdrawalRequest request,
+    uint32_t *allTasks,
     CreateWithdrawalRequestResultCode expectedResult)
 {
     Database& db = mTestManager->getDB();
@@ -50,7 +51,7 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
         statsBeforeRequestVector.emplace_back(statsBeforeRequest);
     }
 
-    auto txFrame = createWithdrawalRequestTx(source, request);
+    auto txFrame = createWithdrawalRequestTx(source, request, allTasks);
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
@@ -109,13 +110,17 @@ WithdrawalRequest WithdrawRequestHelper::createWithdrawRequest(
 }
 
 TransactionFramePtr WithdrawRequestHelper::createWithdrawalRequestTx(
-    Account& source, const WithdrawalRequest request)
+    Account& source, const WithdrawalRequest request, uint32_t *allTasks)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_WITHDRAWAL_REQUEST);
     auto& op = baseOp.body.createWithdrawalRequestOp();
     op.request = request;
-    op.ext.v(LedgerVersion::EMPTY_VERSION);
+    op.ext.v(LedgerVersion::WITHDRAWAL_TASKS);
+    if (allTasks != nullptr)
+    {
+        op.ext.allTasks().activate() = *allTasks;
+    }
     return txFromOperation(source, baseOp, nullptr);
 }
 

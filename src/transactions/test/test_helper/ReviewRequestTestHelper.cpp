@@ -82,7 +82,8 @@ ReviewRequestResult ReviewRequestHelper::applyReviewRequestTx(
 
     if (requestMustBeDeletedAfterApproval)
     {
-        if (requestBeforeTx->getRequestType() != ReviewableRequestType::ISSUANCE_CREATE)
+        if (requestBeforeTx->getRequestType() != ReviewableRequestType::ISSUANCE_CREATE
+        && requestBeforeTx->getRequestType() != ReviewableRequestType::WITHDRAW)
         {
             REQUIRE(!requestAfterTx);
         }
@@ -118,6 +119,7 @@ TransactionFramePtr ReviewRequestHelper::createReviewRequestTx(
     reviewRequestOp.requestHash = requestHash;
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
+    reviewRequestOp.ext.v(LedgerVersion::WITHDRAWAL_TASKS);
     return txFromOperation(source, op, nullptr);
 }
 }
