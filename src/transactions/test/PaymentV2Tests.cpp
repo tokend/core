@@ -23,7 +23,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
         const AssetCode feeAsset;
         const int trailingDigitsCount;
     };
-    auto testSet = GENERATE(
+    const TestSet testSet = GENERATE(
             TestSet { "USD", "ETH", AssetFrame::kMaximumTrailingDigits },
             TestSet { "USDN", "ETHN", 0 } );
 
