@@ -35,8 +35,7 @@ FeeFrame& FeeFrame::operator=(FeeFrame const& other)
 }
 
 FeeFrame::pointer FeeFrame::create(FeeType feeType, int64_t fixedFee,
-    int64_t percentFee, AssetCode asset, AccountID* accountID,
-    AccountType* accountType, int64_t subtype, int64_t lowerBound, int64_t upperBound)
+    int64_t percentFee, AssetCode asset, AccountID* accountID, uint64_t assetPrecision)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::FEE);
@@ -45,17 +44,14 @@ FeeFrame::pointer FeeFrame::create(FeeType feeType, int64_t fixedFee,
     entry.percentFee = percentFee;
     entry.feeType = feeType;
     entry.asset = asset;
-    entry.subtype = subtype;
+    entry.subtype = SUBTYPE_ANY;
     if (accountID)
         entry.accountID.activate() = *accountID;
 
-    if (accountType)
-        entry.accountType.activate() = *accountType;
+    entry.lowerBound = 0;
+    entry.upperBound = INT64_MAX - (INT64_MAX % assetPrecision);
 
-    entry.lowerBound = lowerBound;
-    entry.upperBound = upperBound;
-
-    entry.hash = calcHash(feeType, asset, accountID, accountType, subtype);
+    entry.hash = calcHash(feeType, asset, accountID, nullptr, entry.subtype);
     return std::make_shared<FeeFrame>(le);
 }
 

@@ -32,7 +32,8 @@ namespace txtest
 				std::string details,
 				uint64_t maxIssuanceAmount,
 				uint32_t policies,
-                uint64_t initialPreissuanceAmount = 0);
+                uint64_t initialPreissuanceAmount = 0,
+                uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
 
 		ManageAssetOp::_request_t createAssetUpdateRequest(
 				AssetCode code,

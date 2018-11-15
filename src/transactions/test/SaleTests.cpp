@@ -237,6 +237,16 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
 
 TEST_CASE("Sale", "[tx][sale]")
 {
+    struct TestSet
+    {
+        const AssetCode quoteAsset;
+        const AssetCode baseAsset;
+        const int trailingDigitsCount;
+    };
+    const TestSet testSet = GENERATE(
+            TestSet { "USD", "BTC", AssetFrame::kMaximumTrailingDigits },
+            TestSet { "USDN", "BTCN", 0 } );
+
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
     VirtualClock clock;
     Application::pointer appPtr = Application::create(clock, cfg);
@@ -249,11 +259,14 @@ TEST_CASE("Sale", "[tx][sale]")
 
     auto root = Account{ getRoot(), Salt(0) };
 
-    AssetCode quoteAsset = "USD";
+    const AssetCode& baseAsset = testSet.baseAsset;
+    const AssetCode& quoteAsset = testSet.quoteAsset;
+    const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);
+    const uint64_t maxNonDividedAmount = INT64_MAX - (INT64_MAX % precision);
+
     auto assetTestHelper = ManageAssetTestHelper(testManager);
-    uint64_t quoteMaxIssuance = INT64_MAX;
-    auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAsset, root.key.getPublicKey(), "{}", quoteMaxIssuance,
-                                                                           uint32_t(AssetPolicy::BASE_ASSET));
+    auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAsset, root.key.getPublicKey(), "{}", maxNonDividedAmount,
+                                                                           uint32_t(AssetPolicy::BASE_ASSET), 0, testSet.trailingDigitsCount);
     assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
@@ -272,12 +285,11 @@ TEST_CASE("Sale", "[tx][sale]")
     auto syndicatePubKey = syndicate.key.getPublicKey();
 
     CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
-    const AssetCode baseAsset = "BTC";
     // TODO: for now we need to keep maxIssuance = preIssuance to allow sale creation
     const uint64_t maxIssuanceAmount = 6000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount,0, preIssuedAmount);
+                                                                      maxIssuanceAmount, 0, preIssuedAmount, testSet.trailingDigitsCount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const uint64_t price = 2 * ONE;
     auto hardCap = static_cast<const uint64_t>(bigDivide(preIssuedAmount / 2, price, ONE, ROUND_DOWN));
@@ -334,8 +346,8 @@ TEST_CASE("Sale", "[tx][sale]")
     }
 
     SECTION("Non zero balance on sale close"){
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr);
+        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
         EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
@@ -379,11 +391,12 @@ TEST_CASE("Sale", "[tx][sale]")
     SECTION("Sale with sale antes") {
         // set invest fee for sale antes
         auto investFeeEntry = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset,
-                                                               int64_t(5 * ONE), int64_t(5 * ONE));
+                                                               int64_t(5 * ONE), int64_t(5 * ONE), nullptr,
+                                                               nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &investFeeEntry, false);
 
         auto investFeeFrame = FeeHelper::Instance()->loadFee(FeeType::INVEST_FEE, quoteAsset, nullptr, nullptr,
-                                                             FeeFrame::SUBTYPE_ANY, 0, INT64_MAX, db);
+                                                             FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount, db);
         REQUIRE(!!investFeeFrame);
         uint64_t quotePreIssued = 0;
         investFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
@@ -456,11 +469,14 @@ TEST_CASE("Sale", "[tx][sale]")
 
     SECTION("Simple happy path for test fee")
     {
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE);
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
+                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE);
+        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE,
+                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE);
+        fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
+                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
 
         saleRequest.hardCap = 200 * ONE;
@@ -488,12 +504,13 @@ TEST_CASE("Sale", "[tx][sale]")
     {
         //set offer fee for sale owner and participants
         // TODO: use set fees
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr);
+        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
         EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE);
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
+                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
 
         uint64_t quotePreIssued(0);
@@ -956,7 +973,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                         nullptr)->getBalanceID();
 
         // pre-issue quote amount
-        uint64_t quotePreIssued = quoteMaxIssuance - 1;
+        const uint64_t quotePreIssued = maxNonDividedAmount - precision;
         issuanceHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
 
         SECTION("malformed manage offer")
@@ -1158,6 +1175,14 @@ TEST_CASE("Sale", "[tx][sale]")
             {
                 testManager->advanceToTime(endTime + 1);
                 participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::SALE_ALREADY_ENDED);
+            }
+            SECTION("Invalid offer amount precision")
+            {
+                if (testSet.baseAsset == "USDN")
+                {
+                    manageOffer.amount = 1;
+                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION);
+                }
             }
         }
     }

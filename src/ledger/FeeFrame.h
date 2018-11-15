@@ -40,8 +40,7 @@ namespace stellar
         FeeFrame& operator=(FeeFrame const& other);
 
 		static pointer create(FeeType feeType, int64_t fixedFee, int64_t percentFee, AssetCode asset, 
-            AccountID* accountID = nullptr, AccountType* accountType = nullptr, int64_t subtype = SUBTYPE_ANY,
-            int64_t lowerBound=0, int64_t upperBound=INT64_MAX);
+            AccountID* accountID = nullptr, uint64_t assetPrecision = 1);
         
         EntryFrame::pointer
         copy() const override

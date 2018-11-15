@@ -159,7 +159,8 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     std::string details,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
-    uint64_t initialPreissuanceAmount)
+    uint64_t initialPreissuanceAmount,
+    uint32_t trailingDigitsCount)
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
@@ -170,6 +171,11 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;
     assetCreationRequest.initialPreissuedAmount = initialPreissuanceAmount;
+    if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
+    {
+        assetCreationRequest.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+        assetCreationRequest.ext.trailingDigitsCount() = trailingDigitsCount;
+    }
     return request;
 }
 
