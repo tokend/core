@@ -137,6 +137,10 @@ namespace stellar {
                 innerResult().code(PaymentV2ResultCode::LINE_FULL);
                 return;
             }
+            case AccountManager::Result::INCORRECT_PRECISION: {
+                innerResult().code(PaymentV2ResultCode::INCORRECT_AMOUNT_PRECISION);
+                return;
+            }
             default: {
                 CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from process transfer v2: "
                                                        << transferResult;

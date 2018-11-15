@@ -217,13 +217,23 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createChangeSignerRequest(
 void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         SecretKey& preIssuedSigner,
                                         AssetCode assetCode, Account& root,
-                                        uint32_t policies)
+                                        uint32_t policies,
+                                        uint32_t trailingDigitsCount)
 {
+    const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
+            AssetFrame::getMinimumAmountFromTrailingDigits(trailingDigitsCount));
     auto creationRequest = createAssetCreationRequest(assetCode,
                                                       preIssuedSigner.
                                                       getPublicKey(),
-                                                      "{}", UINT64_MAX,
+                                                      "{}", maxIssuanceAmount,
                                                       policies, 0);
+    if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
+    {
+        creationRequest.createAsset().ext.v(
+                LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+        creationRequest.createAsset().ext.trailingDigitsCount() =
+                trailingDigitsCount;
+    }
     auto creationResult = applyManageAssetTx(assetOwner, 0, creationRequest);
 
     auto accountHelper = AccountHelper::Instance();
