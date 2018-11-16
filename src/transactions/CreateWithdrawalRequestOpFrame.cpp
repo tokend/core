@@ -37,6 +37,12 @@ SourceDetails CreateWithdrawalRequestOpFrame::getSourceAccountDetails(std::unord
                                                                       int32_t ledgerVersion)
 const
 {
+    if (mCreateWithdrawalRequest.ext.v() == LedgerVersion::WITHDRAWAL_TASKS && !mCreateWithdrawalRequest.ext.allTasks())
+    {
+        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
+                             static_cast<uint32_t>(SignerType::WITHDRAW_MANAGER));
+    }
+
     return SourceDetails({
                              AccountType::GENERAL, AccountType::SYNDICATE,
                              AccountType::OPERATIONAL, AccountType::EXCHANGE, AccountType::NOT_VERIFIED,
@@ -373,21 +379,9 @@ CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
     requestFrame->setTasks(allTasks);
     EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
 
-//    if (allTasks == 0)
-//    {
-////        ReviewRequestResult reviewRequestResult = approveRequest()
-//        ReviewRequestResult reviewRequestResult = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app,
-//                                                                                                   ledgerManager, delta,
-//                                                                                                   requestFrame);
-//        reviewRequestResultCode = reviewRequestResult.code();
-//        if (reviewRequestResultCode == ReviewRequestResultCode::SUCCESS) {
-//            isFulfilled = reviewRequestResult.success().ext.extendedResult().fulfilled;
-//        }
-//    }
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
     innerResult().success().ext.v(LedgerVersion::WITHDRAWAL_TASKS);
-    innerResult().success().ext.fulfilled() = false;
     return true;
 }
 

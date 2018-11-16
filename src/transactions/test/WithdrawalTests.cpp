@@ -127,8 +127,11 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
         auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
 
+        auto reviewResult = reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
+
+
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
-        REQUIRE_FALSE(withdrawResult.success().ext.fulfilled());
+        REQUIRE(reviewResult.success().ext.extendedResult().fulfilled);
     }
 
 }
