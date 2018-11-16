@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONFIG=/config.ini
+CONFIG=${CONFIG:-/config.ini}
 BIN=/usr/local/bin/core
 
 # will make init if core thinks history does not exist.
@@ -37,6 +37,14 @@ case "$1" in
         ;;
     *)
 
-    if [ -z "$ENSUREDB" ]; then start; else ensuredb && start; fi
+    echo "ensuredb=$ENSUREDB"
+
+    if [ -z "$ENSUREDB" ]; then
+        echo "starting node"
+        start
+    else 
+        echo "ensuring history and starting node"
+        ensuredb && start
+    fi
 
 esac
