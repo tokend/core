@@ -7,7 +7,7 @@ BIN=/usr/local/bin/core
 # USE AT YOUR ON OWN RISK
 ensuredb() {
     # vs history is hard-coded as a de facto standard
-    $BIN --conf $CONFIG histexists vs
+    $BIN --conf $CONFIG --histexists vs
     exit_code=$?
     [[ $exit_code -eq 0 ]] && return
     [[ $exit_code -eq 42 ]] && init && return
