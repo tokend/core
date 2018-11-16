@@ -21,7 +21,6 @@ start() {
 }
 
 init() {
-    rm -rf $HISTORY/*
     $BIN --conf $CONFIG --newdb
     $BIN --conf $CONFIG --newhist vs
 }
@@ -38,6 +37,6 @@ case "$1" in
         ;;
     *)
 
-    if [ -z "$ENSUREDB" ]; then ensuredb && start; else start; fi
+    if [ -z "$ENSUREDB" ]; then start; else ensuredb && start; fi
 
 esac
