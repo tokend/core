@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/swarmfund/tokend/buildbase:latest
+FROM registry.gitlab.com/tokend/core/buildbase:latest
 
 ARG RSA_KEY
 WORKDIR /build
