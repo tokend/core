@@ -37,7 +37,7 @@ SourceDetails CreateWithdrawalRequestOpFrame::getSourceAccountDetails(std::unord
                                                                       int32_t ledgerVersion)
 const
 {
-    if (mCreateWithdrawalRequest.ext.v() == LedgerVersion::WITHDRAWAL_TASKS && !mCreateWithdrawalRequest.ext.allTasks())
+    if (mCreateWithdrawalRequest.ext.v() == LedgerVersion::WITHDRAWAL_TASKS && mCreateWithdrawalRequest.ext.allTasks(   ))
     {
         return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
                              static_cast<uint32_t>(SignerType::WITHDRAW_MANAGER));
@@ -228,11 +228,12 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app, Led
         requestEntry.body.type(ReviewableRequestType::TWO_STEP_WITHDRAWAL);
         requestEntry.body.twoStepWithdrawalRequest() = mCreateWithdrawalRequest.request;
         requestEntry.body.twoStepWithdrawalRequest().universalAmount = universalAmount;
-        requestEntry.body.twoStepWithdrawalRequest().ext.v(LedgerVersion::EMPTY_VERSION);
+        requestEntry.ext.v(LedgerVersion::EMPTY_VERSION);
     } else {
         requestEntry.body.type(ReviewableRequestType::WITHDRAW);
         requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
         requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
+        requestEntry.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
     }
 
     request->recalculateHashRejectReason();
@@ -373,15 +374,18 @@ CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
     }
     auto& db = app.getDatabase();
 
-    uint32_t allTasks = 0;
-    loadWithdrawalTasks(db, allTasks, ledgerManager);
+    if (requestFrame->getRequestType() != ReviewableRequestType::TWO_STEP_WITHDRAWAL)
+    {
+        uint32_t allTasks = 0;
+        loadWithdrawalTasks(db, allTasks, ledgerManager);
 
-    requestFrame->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
+        requestFrame->setTasks(allTasks);
+        EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
+    }
 
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
-    innerResult().success().ext.v(LedgerVersion::WITHDRAWAL_TASKS);
+    innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     return true;
 }
 
