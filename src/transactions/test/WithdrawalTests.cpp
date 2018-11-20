@@ -101,7 +101,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     Fee zeroFee;
     zeroFee.fixed = 0;
     zeroFee.percent = 0;
-    SECTION("Approve") {
+    SECTION("No tasks") {
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                            amountToWithdraw,
                                                                            zeroFee, "{}", withdrawDestAsset,
@@ -115,7 +115,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
     }
 
-    SECTION("With tasks") {
+    SECTION("Default tasks") {
         longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
         manageKeyValueHelper.setKey(key)->setUi32Value(2048);
         manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
@@ -140,6 +140,21 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
         REQUIRE(reviewResult.success().ext.extendedResult().fulfilled);
+    }
+
+    SECTION("Set tasks on request creation") {
+        longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+        manageKeyValueHelper.setKey(key)->setUi32Value(2048);
+        manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
+        auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
+                                                                           amountToWithdraw,
+                                                                           zeroFee, "{}", withdrawDestAsset,
+                                                                           expectedAmountInDestAsset);
+
+
+        uint32_t allTasks = 1024;
+        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+                                                                               CreateWithdrawalRequestResultCode::NOT_ALLOWED_TO_SET_WITHDRAWAL_TASKS);
     }
 
 }
