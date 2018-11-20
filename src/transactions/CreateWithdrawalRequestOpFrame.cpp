@@ -37,12 +37,6 @@ SourceDetails CreateWithdrawalRequestOpFrame::getSourceAccountDetails(std::unord
                                                                       int32_t ledgerVersion)
 const
 {
-    if (mCreateWithdrawalRequest.ext.v() == LedgerVersion::WITHDRAWAL_TASKS && mCreateWithdrawalRequest.ext.allTasks(   ))
-    {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<uint32_t>(SignerType::WITHDRAW_MANAGER));
-    }
-
     return SourceDetails({
                              AccountType::GENERAL, AccountType::SYNDICATE,
                              AccountType::OPERATIONAL, AccountType::EXCHANGE, AccountType::NOT_VERIFIED,
@@ -188,7 +182,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app, Led
     }
 
     const auto assetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(balanceFrame->getAsset(), db);
-    if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
+    if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE_V2))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::ASSET_IS_NOT_WITHDRAWABLE);
         return nullptr;
@@ -224,17 +218,11 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app, Led
     auto request = ReviewableRequestFrame::createNew(delta, getSourceID(), assetFrame->getOwner(), nullptr,
                                                      ledgerManager.getCloseTime());
     ReviewableRequestEntry &requestEntry = request->getRequestEntry();
-    if (assetFrame->isPolicySet(AssetPolicy::TWO_STEP_WITHDRAWAL)) {
-        requestEntry.body.type(ReviewableRequestType::TWO_STEP_WITHDRAWAL);
-        requestEntry.body.twoStepWithdrawalRequest() = mCreateWithdrawalRequest.request;
-        requestEntry.body.twoStepWithdrawalRequest().universalAmount = universalAmount;
-        requestEntry.ext.v(LedgerVersion::EMPTY_VERSION);
-    } else {
-        requestEntry.body.type(ReviewableRequestType::WITHDRAW);
-        requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
-        requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
-        requestEntry.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    }
+
+    requestEntry.body.type(ReviewableRequestType::WITHDRAW);
+    requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
+    requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
+    requestEntry.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
 
     request->recalculateHashRejectReason();
     EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
@@ -299,7 +287,17 @@ bool
 CreateWithdrawalRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
                                         LedgerManager& ledgerManager)
 {
-    if (ledgerManager.shouldUse(LedgerVersion::WITHDRAWAL_TASKS))
+    auto& db = ledgerManager.getDatabase();
+    auto balanceFrame = tryLoadBalance(db, delta);
+    if (!balanceFrame)
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
+        return false;
+    }
+
+    const auto assetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(balanceFrame->getAsset(), db);
+
+    if (assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE_V2))
     {
         return doApplyV2(app, delta, ledgerManager);
     }
@@ -374,14 +372,11 @@ CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
     }
     auto& db = app.getDatabase();
 
-    if (requestFrame->getRequestType() != ReviewableRequestType::TWO_STEP_WITHDRAWAL)
-    {
-        uint32_t allTasks = 0;
-        loadWithdrawalTasks(db, allTasks, ledgerManager);
+    uint32_t allTasks = 0;
+    loadWithdrawalTasks(db, allTasks, ledgerManager);
 
-        requestFrame->setTasks(allTasks);
-        EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
-    }
+    requestFrame->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
 
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
@@ -391,6 +386,12 @@ CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
 
 bool CreateWithdrawalRequestOpFrame::doCheckValid(Application& app)
 {
+    if (mCreateWithdrawalRequest.ext.v() == LedgerVersion::WITHDRAWAL_TASKS && mCreateWithdrawalRequest.ext.allTasks())
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::NOT_ALLOWED_TO_SET_WITHDRAWAL_TASKS);
+        return false;
+    }
+
     if (mCreateWithdrawalRequest.request.amount == 0)
     {
         innerResult().code(CreateWithdrawalRequestResultCode::INVALID_AMOUNT);

@@ -77,6 +77,13 @@ bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
 		return false;
 	}
 
+    if (isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE_V2) &&
+        (isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE) ||
+         isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL))) {
+        innerResult().code(ManageAssetResultCode::INCOMPATIBLE_POLICIES);
+        return false;
+    }
+
     bool isStats = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
     if (isStats) {
         auto statsAssetFrame = assetHelper->loadStatsAsset(db);

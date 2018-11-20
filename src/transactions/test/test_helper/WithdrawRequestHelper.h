@@ -25,7 +25,7 @@ public:
 
     CreateWithdrawalRequestResult applyCreateWithdrawRequest(
         Account& source, WithdrawalRequest request,
-        uint32_t *allTasks,
+        uint32_t *allTasks = nullptr,
         CreateWithdrawalRequestResultCode expectedResult =
             CreateWithdrawalRequestResultCode::SUCCESS);
 

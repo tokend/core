@@ -47,7 +47,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     const AssetCode asset = "USD";
     const uint64_t preIssuedAmount = 10000 * ONE;
     issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
-    assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
+    assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE_V2));
 
     //create stats asset and stats asset pair
     const AssetCode statsAsset = "UAH";
@@ -101,7 +101,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     Fee zeroFee;
     zeroFee.fixed = 0;
     zeroFee.percent = 0;
-    SECTION("Autoapprove") {
+    SECTION("Approve") {
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                            amountToWithdraw,
                                                                            zeroFee, "{}", withdrawDestAsset,
@@ -113,7 +113,6 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
 
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
-        REQUIRE(reviewResult.success().ext.extendedResult().fulfilled);
     }
 
     SECTION("With tasks") {
@@ -127,7 +126,16 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
         auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
 
-        auto reviewResult = reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
+        uint32_t toAdd = 0;
+        uint32_t toRemove = 2048;
+        auto reviewResult = reviewWithdrawHelper.applyReviewRequestTxWithTasks(root,
+                withdrawResult.success().requestID,
+                ReviewRequestOpAction::APPROVE,
+                "",
+                ReviewRequestResultCode::SUCCESS,
+                &toAdd,
+                &toRemove
+                );
 
 
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
@@ -214,7 +222,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                                            zeroFee, "{}", withdrawDestAsset,
                                                                            expectedAmountInDestAsset);
 
-        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
+        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         SECTION("Approve")
         {
             reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
@@ -243,7 +251,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             auto withdrawWithFeeRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                                       amountToWithdraw, fee, "{}",
                                                                                       withdrawDestAsset, expectedAmountInDestAsset);
-            auto result = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawWithFeeRequest, &allTasks);
+            auto result = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawWithFeeRequest, nullptr);
 
             //approve request
             reviewWithdrawHelper.applyReviewRequestTx(root, result.success().requestID, ReviewRequestOpAction::APPROVE, "");
@@ -274,14 +282,14 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
         SECTION("successful application")
         {
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         }
 
         SECTION("Account with block reason 'WITHDRAWAL' not allowed")
         {
             manageAccountTestHelper.applyManageAccount(root, withdrawer.key.getPublicKey(), AccountType::GENERAL,
                                                        {BlockReasons::WITHDRAWAL}, {});
-            auto createWithdrawRequestTx = withdrawRequestHelper.createWithdrawalRequestTx(withdrawer, withdrawRequest, &allTasks);
+            auto createWithdrawRequestTx = withdrawRequestHelper.createWithdrawalRequestTx(withdrawer, withdrawRequest, nullptr);
             REQUIRE(!testManager->applyCheck(createWithdrawRequestTx));
             auto opResult = getFirstResultCode(*createWithdrawRequestTx);
             REQUIRE(opResult == OperationResultCode::opACCOUNT_BLOCKED);
@@ -289,7 +297,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         SECTION("Try to withdraw zero amount")
         {
             withdrawRequest.amount = 0;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks, CreateWithdrawalRequestResultCode::INVALID_AMOUNT);
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr, CreateWithdrawalRequestResultCode::INVALID_AMOUNT);
         }
 
         SECTION("Try to withdraw in same asset") {
@@ -297,7 +305,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                                           amountToWithdraw,
                                                                           zeroFee, "{}", asset, amountToWithdraw);
 
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         }
 
         SECTION("too long external details")
@@ -305,7 +313,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             uint64 maxLength = testManager->getApp().getWithdrawalDetailsMaxLength();
             std::string longExternalDetails(maxLength + 1, 'x');
             withdrawRequest.externalDetails = longExternalDetails;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         }
 
@@ -314,13 +322,13 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             //missed colon
             std::string invalidExternalDetails = "{ \"key\" \"value\" }";
             withdrawRequest.externalDetails = invalidExternalDetails;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         }
 
         SECTION("try to review with invalid external details")
         {
-            auto opRes = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
+            auto opRes = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
             uint64_t requestID = opRes.success().requestID;
 
             auto requestFrame = ReviewableRequestHelper::Instance()->loadRequest(requestID, testManager->getDB());
@@ -347,13 +355,13 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         SECTION("non-zero universal amount")
         {
             withdrawRequest.universalAmount = ONE;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_UNIVERSAL_AMOUNT);
         }
         SECTION("Non empty preconfirmation details")
         {
             withdrawRequest.preConfirmationDetails = "some random data";
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                 CreateWithdrawalRequestResultCode::INVALID_PRE_CONFIRMATION_DETAILS);
         }
 
@@ -361,7 +369,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
             withdrawRequest.balance = nonExistingBalance;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
         }
 
@@ -372,7 +380,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), AccountType::GENERAL);
             Account newAccount = Account{newAccountKP, Salt(0)};
 
-            withdrawRequestHelper.applyCreateWithdrawRequest(newAccount, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(newAccount, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
         }
 
@@ -380,7 +388,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             // make asset non-withdrawable by updating policies
             assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET));
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::ASSET_IS_NOT_WITHDRAWABLE);
         }
 
@@ -390,7 +398,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             newFee.fixed = ONE;
             newFee.percent = ONE;
             withdrawRequest.fee = newFee;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
         }
 
@@ -398,21 +406,21 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             AssetCode nonExistingAsset = "BYN";
             withdrawRequest.details.autoConversion().destAsset = nonExistingAsset;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::CONVERSION_PRICE_IS_NOT_AVAILABLE);
         }
 
         SECTION("overflow converted amount")
         {
             withdrawRequest.amount = UINT64_MAX/pricePerUnit + 1;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::CONVERSION_OVERFLOW);
         }
 
         SECTION("mismatch conversion amount")
         {
             withdrawRequest.details.autoConversion().expectedAmount = expectedAmountInDestAsset + 1;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::CONVERTED_AMOUNT_MISMATCHED);
         }
 
@@ -422,7 +430,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             uint64_t convertedAmount = pricePerUnit * withdrawRequest.amount;
             withdrawRequest.details.autoConversion().expectedAmount = convertedAmount;
 
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::UNDERFUNDED);
         }
 
@@ -436,14 +444,14 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                       SecretKey::random().getStrKeyPublic(), &allTasks);
             withdrawRequest.amount = enoughToOverflow;
             withdrawRequest.details.autoConversion().expectedAmount = enoughToOverflow * pricePerUnit;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks,
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::STATS_OVERFLOW);
         }
 
         SECTION("try to review withdrawal request of blocked user")
         {
             // successfully create withdraw request
-            auto requestID = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks).success().requestID;
+            auto requestID = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr).success().requestID;
 
             // block withdrawer
             manageAccountTestHelper.applyManageAccount(root, withdrawerKP.getPublicKey(), AccountType::GENERAL,
@@ -467,7 +475,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
 
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                                                             &allTasks,
+                                                             nullptr,
                                                              CreateWithdrawalRequestResultCode::LIMITS_EXCEEDED);
         }
 
@@ -495,7 +503,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             zeroFee, "{}", withdrawDestAsset,
             expectedAmountInDestAsset);
 
-        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
+        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest);
         auto twoStepHelper = ReviewTwoStepWithdrawRequestHelper(testManager);
         SECTION("Happy path")
         {

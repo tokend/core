@@ -94,7 +94,7 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
             manageKVHelper.setUi64Value(lowerLimits);
             manageKVHelper.doApply(app, ManageKVAction::PUT, true);
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                    &allTasks);
+                    nullptr);
         }
         SECTION("Reject")
         {
@@ -103,13 +103,13 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
             manageKVHelper.setUi64Value(lowerLimits);
             manageKVHelper.doApply(app, ManageKVAction::PUT, true);
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                    &allTasks,
+                    nullptr,
                     CreateWithdrawalRequestResultCode::LOWER_BOUND_NOT_EXCEEDED);
         }
 
         SECTION("KV limits not set")
         {
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, &allTasks);
+            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         }
     }
 

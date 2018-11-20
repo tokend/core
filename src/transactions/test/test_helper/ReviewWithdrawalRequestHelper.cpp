@@ -61,7 +61,34 @@ TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTx(
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.requestDetails.withdrawal().externalDetails = "{}";
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+    return txFromOperation(source, op, nullptr);
+}
+
+TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTxWithTasks(txtest::Account &source,
+                                                                                uint64_t requestID, Hash requestHash,
+                                                                                ReviewableRequestType requestType,
+                                                                                ReviewRequestOpAction action,
+                                                                                std::string rejectReason,
+                                                                                uint32_t *tasksToAdd,
+                                                                                uint32_t *tasksToRemove)
+{
+    Operation op;
+    op.body.type(OperationType::REVIEW_REQUEST);
+    ReviewRequestOp& reviewRequestOp = op.body.reviewRequestOp();
+    reviewRequestOp.action = action;
+    reviewRequestOp.reason = rejectReason;
+    reviewRequestOp.requestHash = requestHash;
+    reviewRequestOp.requestID = requestID;
+    reviewRequestOp.requestDetails.requestType(requestType);
+    reviewRequestOp.requestDetails.withdrawal().externalDetails = "{}";
     reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+    if ( tasksToAdd != nullptr) {
+        reviewRequestOp.ext.reviewDetails().tasksToAdd = *tasksToAdd;
+    }
+    if ( tasksToRemove != nullptr) {
+        reviewRequestOp.ext.reviewDetails().tasksToRemove = *tasksToRemove;
+    }
     return txFromOperation(source, op, nullptr);
 }
 
@@ -82,6 +109,26 @@ ReviewRequestResult ReviewWithdrawRequestHelper::applyReviewRequestTx(
                                                      action, rejectReason,
                                                      expectedResult,
                                                      checker
+                                                    );
+}
+
+ReviewRequestResult ReviewWithdrawRequestHelper::applyReviewRequestTxWithTasks(txtest::Account &source,
+                                                                               uint64_t requestID, Hash requestHash,
+                                                                               ReviewableRequestType requestType,
+                                                                               ReviewRequestOpAction action,
+                                                                               std::string rejectReason,
+                                                                               ReviewRequestResultCode expectedResult,
+                                                                               uint32_t *tasksToAdd,
+                                                                               uint32_t *tasksToRemove)
+{
+    auto checker = WithdrawReviewChecker(mTestManager, requestID);
+    return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                     requestHash, requestType,
+                                                     action, rejectReason,
+                                                     expectedResult,
+                                                     checker,
+                                                     tasksToAdd,
+                                                     tasksToRemove
                                                     );
 }
 }
