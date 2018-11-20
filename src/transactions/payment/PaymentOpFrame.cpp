@@ -378,7 +378,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 	if (mDestBalance->tryFundAccount(destReceived) != BalanceFrame::Result::SUCCESS)
 	{
 		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
-		innerResult().code(PaymentResultCode::INCORRECT_PRECISION);
+		innerResult().code(PaymentResultCode::LINE_FULL);
 		return false;
 	}
 
