@@ -301,13 +301,10 @@ bool PaymentOpFrame::processFees_v2(Application& app, LedgerDelta& delta,
     }
 
     auto balance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getCommissionID(), mSourceBalance->getAsset(), db, delta);
-    const BalanceFrame::Result fundResult = balance->tryFundAccount(totalFees);
-    if (fundResult != BalanceFrame::Result::SUCCESS)
+    if (balance->tryFundAccount(totalFees) != BalanceFrame::Result::SUCCESS)
     {
         app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();
-        innerResult().code(fundResult == BalanceFrame::Result::LINE_FULL ?
-                           PaymentResultCode::LINE_FULL :
-                           PaymentResultCode::INCORRECT_PRECISION);
+        innerResult().code(PaymentResultCode::LINE_FULL);
         return false;
     }
 
@@ -378,13 +375,10 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     if (!processBalanceChange(app, transferResult))
         return false;
 
-    const BalanceFrame::Result destFundResult = mDestBalance->tryFundAccount(destReceived);
-	if (destFundResult != BalanceFrame::Result::SUCCESS)
+	if (mDestBalance->tryFundAccount(destReceived) != BalanceFrame::Result::SUCCESS)
 	{
 		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
-		innerResult().code(destFundResult == BalanceFrame::Result::LINE_FULL ?
-		                   PaymentResultCode::LINE_FULL :
-		                   PaymentResultCode::INCORRECT_PRECISION);
+		innerResult().code(PaymentResultCode::INCORRECT_PRECISION);
 		return false;
 	}
 
