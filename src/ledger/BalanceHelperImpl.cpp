@@ -1,9 +1,8 @@
 #include "BalanceHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
 #include <memory>
-#include <xdrpp/marshal.h>
-#include "util/basen.h"
 
 using namespace soci;
 using namespace std;
@@ -13,12 +12,15 @@ namespace stellar
 
 using xdr::operator<;
 
+static const char* balanceColumnSelector =
+        "SELECT balance.balance_id, balance.asset, balance.amount, balance.locked, "
+        "balance.account_id, asset.trailing_digits, balance.lastmodified, "
+        "balance.version, asset.version "
+        "FROM balance INNER JOIN asset ON asset.code = balance.asset";
+
 BalanceHelperImpl::BalanceHelperImpl(StorageHelper& storageHelper)
         : mStorageHelper(storageHelper)
 {
-    mBalanceColumnSelector = "SELECT balance_id, asset, amount, locked, "
-                             "account_id, lastmodified, version "
-                             "FROM balance";
 }
 
 void
@@ -55,6 +57,8 @@ BalanceHelperImpl::storeChange(LedgerEntry const& entry)
 void
 BalanceHelperImpl::storeDelete(LedgerKey const& key)
 {
+    flushCachedEntry(key);
+
     Database& db = getDatabase();
     auto timer = db.getDeleteTimer("delete-balance");
     auto prep =
@@ -70,6 +74,10 @@ BalanceHelperImpl::storeDelete(LedgerKey const& key)
 bool
 BalanceHelperImpl::exists(LedgerKey const& key)
 {
+    if (cachedEntryExists(key))
+    {
+        return true;
+    }
     int exists = 0;
 
     Database& db = getDatabase();
@@ -86,6 +94,23 @@ BalanceHelperImpl::exists(LedgerKey const& key)
     return exists != 0;
 }
 
+bool
+BalanceHelperImpl::exists(BalanceID balanceID)
+{
+    int exists = 0;
+    Database& db = getDatabase();
+    auto timer = db.getSelectTimer("balance-exists");
+    auto prep =
+            db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM balance WHERE balance_id=:id)");
+    auto balIDStrKey = BalanceKeyUtils::toStrKey(balanceID);
+    auto& st = prep.statement();
+    st.exchange(use(balIDStrKey));
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+    return exists != 0;
+}
+
 void
 BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
 {
@@ -99,11 +124,16 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     {
         balanceFrame->touch(*delta);
     }
+    putCachedEntry(getLedgerKey(entry), make_shared<LedgerEntry>(entry));
 
-    bool isValid = balanceFrame->isValid();
-    if (!isValid)
+    if (!balanceFrame->isValid())
     {
         throw std::runtime_error("Invalid balance");
+    }
+    if (!mStorageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            balanceEntry.asset, balanceEntry.amount))
+    {
+        throw std::runtime_error("Invalid balance amount");
     }
 
     std::string accountID = PubKeyUtils::toStrKey(balanceFrame->getAccountID());
@@ -194,11 +224,32 @@ BalanceHelperImpl::countObjects()
 BalanceFrame::pointer
 BalanceHelperImpl::loadBalance(BalanceID balanceID)
 {
+    LedgerKey key;
+    key.type(LedgerEntryType::BALANCE);
+    key.balance().balanceID = balanceID;
+    if (cachedEntryExists(key))
+    {
+        auto entry = getCachedEntry(key);
+        if (!entry)
+        {
+            return nullptr;
+        }
+        auto asset = mStorageHelper.getAssetHelper().mustLoadAsset(entry->data.balance().asset);
+        auto balanceFrame = std::make_shared<BalanceFrame>(*entry);
+        balanceFrame->setPrecisionForAmounts(
+                AssetFrame::kMaximumTrailingDigits - asset->getTrailingDigitsCount());
+        if (mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*balanceFrame);
+        }
+        return balanceFrame;
+    }
+
     Database& db = getDatabase();
 
     auto balIDStrKey = BalanceKeyUtils::toStrKey(balanceID);
 
-    std::string sql = mBalanceColumnSelector;
+    std::string sql = balanceColumnSelector;
     sql += " WHERE balance_id = :id";
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
@@ -206,20 +257,17 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
 
     auto timer = db.getSelectTimer("load-balance");
     BalanceFrame::pointer retBalance;
-    loadBalances(prep, [&retBalance](LedgerEntry const& entry)
+    loadBalances(prep, [&retBalance](BalanceFrame::pointer const& framePtr)
     {
-        retBalance = make_shared<BalanceFrame>(entry);
+        retBalance = framePtr;
     });
 
     if (!retBalance)
     {
+        putCachedEntry(key, nullptr);
         return nullptr;
     }
-
-    if (mStorageHelper.getLedgerDelta())
-    {
-        mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
-    }
+    putCachedEntry(key, make_shared<LedgerEntry>(retBalance->mEntry));
 
     return retBalance;
 }
@@ -248,7 +296,7 @@ BalanceHelperImpl::loadBalance(AccountID accountID, AssetCode assetCode)
 
     string accountIDStr = PubKeyUtils::toStrKey(accountID);
 
-    string sql = mBalanceColumnSelector;
+    string sql = balanceColumnSelector;
     sql += " WHERE asset = :asset AND account_id = :acc_id";
 
     auto prep = db.getPreparedStatement(sql);
@@ -259,9 +307,9 @@ BalanceHelperImpl::loadBalance(AccountID accountID, AssetCode assetCode)
     auto timer = db.getSelectTimer("load-balances");
 
     BalanceFrame::pointer retBalance;
-    loadBalances(prep, [&retBalance](LedgerEntry const &entry)
+    loadBalances(prep, [&retBalance](BalanceFrame::pointer const& framePtr)
     {
-        retBalance = make_shared<BalanceFrame>(entry);
+        retBalance = framePtr;
     });
 
     if (!retBalance)
@@ -269,12 +317,30 @@ BalanceHelperImpl::loadBalance(AccountID accountID, AssetCode assetCode)
         return nullptr;
     }
 
-    if (mStorageHelper.getLedgerDelta())
-    {
-        mStorageHelper.getLedgerDelta()->recordEntry(*retBalance);
-    }
+    putCachedEntry(retBalance->getKey(),
+                   make_shared<LedgerEntry>(retBalance->mEntry));
 
     return retBalance;
+}
+
+void
+BalanceHelperImpl::loadBalances(AccountID const& accountID,
+                                std::vector<BalanceFrame::pointer>& retBalances)
+{
+    std::string actIDStrKey;
+    actIDStrKey = PubKeyUtils::toStrKey(accountID);
+
+    std::string sql = balanceColumnSelector;
+    sql += " WHERE account_id = :account_id";
+    auto prep = getDatabase().getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(actIDStrKey));
+
+    auto timer = getDatabase().getSelectTimer("balance");
+    loadBalances(prep, [&retBalances](BalanceFrame::pointer const& balanceFrame)
+    {
+        retBalances.push_back(balanceFrame);
+    });
 }
 
 vector<BalanceFrame::pointer>
@@ -284,7 +350,7 @@ BalanceHelperImpl::loadBalances(AccountID accountID, AssetCode assetCode)
 
     string accountIDStr = PubKeyUtils::toStrKey(accountID);
 
-    string sql = mBalanceColumnSelector;
+    string sql = balanceColumnSelector;
     sql += " WHERE asset = :asset AND account_id = :acc_id";
 
     auto prep = db.getPreparedStatement(sql);
@@ -295,9 +361,9 @@ BalanceHelperImpl::loadBalances(AccountID accountID, AssetCode assetCode)
     auto timer = db.getSelectTimer("load-balances");
 
     std::vector<BalanceFrame::pointer> retBalances;
-    loadBalances(prep, [&retBalances](LedgerEntry const &entry)
+    loadBalances(prep, [&retBalances](BalanceFrame::pointer const& framePtr)
     {
-        retBalances.emplace_back(make_shared<BalanceFrame>(entry));
+        retBalances.push_back(framePtr);
     });
 
     return retBalances;
@@ -314,10 +380,13 @@ BalanceHelperImpl::loadBalances(vector<AccountID> accountIDs,
 
     Database& db = getDatabase();
 
-    string sql = "SELECT DISTINCT ON (account_id) balance_id, asset, "
-                 "amount, locked, account_id, lastmodified, version "
-                 "FROM balance "
-                 "WHERE asset = :asset AND account_id IN (" +
+    string sql = "SELECT DISTINCT ON (balance.account_id) "
+                 "balance.balance_id, balance.asset, balance.amount, "
+                 "balance.locked, balance.account_id, asset.trailing_digits, "
+                 "balance.lastmodified, balance.version, asset.version "
+                 "FROM balance INNER JOIN asset ON balance.asset = "
+                 "asset.code "
+                 "WHERE balance.asset = :asset AND balance.account_id IN (" +
                  obtainStrAccountIDs(accountIDs) + ")";
 
     auto prep = db.getPreparedStatement(sql);
@@ -327,12 +396,70 @@ BalanceHelperImpl::loadBalances(vector<AccountID> accountIDs,
     auto timer = db.getSelectTimer("load-balances");
 
     vector<BalanceFrame::pointer> result;
-    loadBalances(prep, [&result](LedgerEntry const &entry)
+    loadBalances(prep, [&result](BalanceFrame::pointer const& framePtr)
     {
-        result.emplace_back(make_shared<BalanceFrame>(entry));
+        result.push_back(framePtr);
     });
 
     return result;
+}
+
+void
+BalanceHelperImpl::loadBalances(StatementContext& prep,
+                   function<void(BalanceFrame::pointer const&)> balanceProcessor)
+{
+    LedgerEntry le;
+    le.data.type(LedgerEntryType::BALANCE);
+    BalanceEntry& oe = le.data.balance();
+
+    int32 balanceVersion = 0;
+    int32 assetVersion = 0;
+    int trailingDigits = 0;
+    string accountID, balanceID, asset;
+
+    statement& st = prep.statement();
+    st.exchange(into(balanceID));
+    st.exchange(into(asset));
+    st.exchange(into(oe.amount));
+    st.exchange(into(oe.locked));
+    st.exchange(into(accountID));
+    st.exchange(into(trailingDigits));
+    st.exchange(into(le.lastModifiedLedgerSeq));
+    st.exchange(into(balanceVersion));
+    st.exchange(into(assetVersion));
+    st.define_and_bind();
+    st.execute(true);
+    while (st.got_data())
+    {
+        oe.accountID = PubKeyUtils::fromStrKey(accountID);
+        oe.balanceID = BalanceKeyUtils::fromStrKey(balanceID);
+        oe.asset = asset;
+        oe.ext.v(static_cast<LedgerVersion>(balanceVersion));
+
+        bool isValid = BalanceFrame::isValid(oe);
+        if (!isValid)
+        {
+            throw std::runtime_error("Invalid balance from database");
+        }
+
+        auto balanceFrame = std::make_shared<BalanceFrame>(le);
+        if (assetVersion >= (uint32)LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+        {
+            balanceFrame->setPrecisionForAmounts(AssetFrame::kMaximumTrailingDigits - trailingDigits);
+        }
+        else
+        {
+            balanceFrame->setPrecisionForAmounts(0);
+        }
+
+        if (mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*balanceFrame);
+        }
+
+        balanceProcessor(balanceFrame);
+        st.fetch();
+    }
 }
 
 vector<BalanceFrame::pointer>
@@ -343,7 +470,7 @@ BalanceHelperImpl::loadAssetHolders(AssetCode assetCode, AccountID owner,
 
     std::string ownerIDStr = PubKeyUtils::toStrKey(owner);
 
-    std::string sql = mBalanceColumnSelector;
+    std::string sql = balanceColumnSelector;
     sql += " WHERE asset = :asset AND account_id != :owner AND"
            " amount + locked >= :min_tot";
 
@@ -356,55 +483,15 @@ BalanceHelperImpl::loadAssetHolders(AssetCode assetCode, AccountID owner,
     auto timer = db.getSelectTimer("balance");
 
     std::vector<BalanceFrame::pointer> holders;
-    loadBalances(prep, [&holders](LedgerEntry const &entry)
+    loadBalances(prep, [&holders](BalanceFrame::pointer const& framePtr)
     {
-        auto balanceFrame = make_shared<BalanceFrame>(entry);
-        if (balanceFrame->getTotal() > 0)
+        if (framePtr->getTotal() > 0)
         {
-            holders.emplace_back(balanceFrame);
+            holders.push_back(framePtr);
         }
     });
 
     return holders;
-}
-
-void
-BalanceHelperImpl::loadBalances(StatementContext& prep,
-                   function<void(LedgerEntry const&)> balanceProcessor)
-{
-    LedgerEntry le;
-    le.data.type(LedgerEntryType::BALANCE);
-    BalanceEntry& oe = le.data.balance();
-
-    int32_t version = 0;
-    string accountID, balanceID, asset;
-
-    statement& st = prep.statement();
-    st.exchange(into(balanceID));
-    st.exchange(into(asset));
-    st.exchange(into(oe.amount));
-    st.exchange(into(oe.locked));
-    st.exchange(into(accountID));
-    st.exchange(into(le.lastModifiedLedgerSeq));
-    st.exchange(into(version));
-    st.define_and_bind();
-    st.execute(true);
-    while (st.got_data())
-    {
-        oe.accountID = PubKeyUtils::fromStrKey(accountID);
-        oe.balanceID = BalanceKeyUtils::fromStrKey(balanceID);
-        oe.asset = asset;
-        oe.ext.v(static_cast<LedgerVersion>(version));
-
-        bool isValid = BalanceFrame::isValid(oe);
-        if (!isValid)
-        {
-            throw std::runtime_error("Invalid balance from database");
-        }
-
-        balanceProcessor(le);
-        st.fetch();
-    }
 }
 
 Database&

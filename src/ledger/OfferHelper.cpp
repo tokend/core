@@ -4,6 +4,9 @@
 
 #include "OfferHelper.h"
 #include "LedgerDelta.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "xdrpp/printer.h"
 
 using namespace soci;
@@ -112,6 +115,7 @@ namespace stellar {
                     << xdr::xdr_to_string(offerFrame->getOffer());
             throw std::runtime_error("Unexpected state - offer is invalid");
         }
+        checkAmounts(offerFrame, db, delta);
 
         string sql;
 
@@ -381,4 +385,32 @@ std::unordered_map<AccountID, std::vector<OfferFrame::pointer>> OfferHelper::loa
             retOffers.emplace_back(make_shared<OfferFrame>(of));
         });
     }
+
+void OfferHelper::checkAmounts(const OfferFrame::pointer& frame, Database& db, LedgerDelta& delta) const
+{
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.release();
+
+    const OfferEntry& entry = frame->getOffer();
+
+    auto baseBalance = storageHelper.getBalanceHelper().loadBalance(entry.baseBalance);
+    auto quoteBalance = storageHelper.getBalanceHelper().loadBalance(entry.quoteBalance);
+    if (!baseBalance || !quoteBalance)
+    {
+        throw std::runtime_error("Unexpected state: unable to find offer balances");
+    }
+
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            baseBalance->getAsset(), frame->getOffer().baseAmount))
+    {
+        throw std::runtime_error("Invalid base amount");
+    }
+
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+            quoteBalance->getAsset(), frame->getOffer().quoteAmount))
+    {
+        throw std::runtime_error("Invalid quote amount");
+    }
+}
 }

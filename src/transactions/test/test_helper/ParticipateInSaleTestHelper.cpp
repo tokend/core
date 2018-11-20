@@ -87,15 +87,16 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
         IssuanceRequestHelper issuanceRequestHelper(mTestManager);
         auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(participant.key.getPublicKey(), quoteAsset, mTestManager->getDB(), nullptr);
         REQUIRE(!!quoteBalance);
-        // issue 1 more to ensure that it is enough to cover rounded up base amount
+        // issue a tad more to ensure that it is enough to cover rounded up base amount
+        const uint64 tad = quoteBalance->getMinimumAmount();
         uint32_t allTasks = 0;
-        if (!!saleAnteAmount) {
-            issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + *saleAnteAmount + fee + 1, root);
-            issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + *saleAnteAmount + fee + 1, quoteBalance->getBalanceID(),
+        if (saleAnteAmount) {
+            issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + *saleAnteAmount + fee + tad, root);
+            issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + *saleAnteAmount + fee + tad, quoteBalance->getBalanceID(),
                                                                           SecretKey::random().getStrKeyPublic(), &allTasks);
         } else {
-            issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + fee + 1, root);
-            issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + fee + 1, quoteBalance->getBalanceID(),
+            issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + fee + tad, root);
+            issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + fee + tad, quoteBalance->getBalanceID(),
                                                                           SecretKey::random().getStrKeyPublic(), &allTasks);
         }
 

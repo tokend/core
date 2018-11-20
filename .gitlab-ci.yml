@@ -34,8 +34,6 @@ build-base-image:
 build:
   image: docker:latest
   stage: build
-  only:
-    - master
   tags:
     - tokend
   script:

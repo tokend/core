@@ -125,7 +125,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
             Fee fee;
             fee.fixed = fixedFee;
-            REQUIRE(feeFrame->calculatePercentFee(amountToWithdraw, fee.percent, ROUND_UP));
+            REQUIRE(feeFrame->calculatePercentFee(amountToWithdraw, fee.percent, ROUND_UP, 1));
             auto withdrawWithFeeRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                                       amountToWithdraw, fee, "{}",
                                                                                       withdrawDestAsset, expectedAmountInDestAsset);

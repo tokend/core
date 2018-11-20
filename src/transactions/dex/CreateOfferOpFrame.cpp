@@ -87,6 +87,12 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
         return false;
     }
 
+    if (mManageOffer.amount % mBaseBalance->getMinimumAmount() != 0)
+    {
+        innerResult().code(ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION);
+        return false;
+    }
+
     BalanceID receivingBalance;
     if (mManageOffer.isBuy)
         receivingBalance = mManageOffer.baseBalance;
@@ -146,7 +152,7 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 
     if (sellingAmount <= 0)
         return false;
-    return sellingBalance->lockBalance(sellingAmount) == BalanceFrame::Result::
+    return sellingBalance->tryLock(sellingAmount) == BalanceFrame::Result::
            SUCCESS;
 }
 
@@ -172,7 +178,7 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     auto offerFrame = OfferManager::buildOffer(getSourceID(), mManageOffer, mBaseBalance->getAsset(),
-        mQuoteBalance->getAsset());
+        mQuoteBalance->getAsset(), mQuoteBalance->getMinimumAmount());
     if (!offerFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: quote amount overflows";
@@ -268,7 +274,7 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
             commissionBalance->mEntry);
     }
 
-    if (oe.offerNeedsMore(offer))
+    if (oe.offerNeedsMore(offer, mQuoteBalance->getMinimumAmount()))
     {
         offerFrame->mEntry.data.offer().offerID = delta.getHeaderFrame().
             generateID(LedgerEntryType
@@ -308,7 +314,8 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price) > 0;
+    // merely check for overflow - we don't need precision here, so set it to 1
+    const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price, 1) > 0;
     if (!isQuoteAmountFits)
     {
         innerResult().code(ManageOfferResultCode::OFFER_OVERFLOW);

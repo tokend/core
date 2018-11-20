@@ -67,6 +67,6 @@ namespace stellar
 
         void loadOffers(StatementContext& prep, std::function<void(LedgerEntry const&)> offerProcessor);
 
-
+        void checkAmounts(const OfferFrame::pointer& frame, Database& db, LedgerDelta& delta) const;
     };
 }

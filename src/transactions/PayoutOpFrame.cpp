@@ -36,7 +36,7 @@ PayoutOpFrame::getSourceAccountDetails(
 
 Fee
 PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
-                            Database& db)
+                            uint64_t precisionStep, Database& db)
 {
     Fee actualFee;
     actualFee.fixed = 0;
@@ -49,7 +49,7 @@ PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
         return actualFee;
     }
 
-    if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP))
+    if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP, precisionStep))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Actual calculated payout fee overflows, asset code: "
@@ -74,7 +74,8 @@ PayoutOpFrame::tryProcessTransferFee(AccountManager& accountManager,
                                      BalanceFrame::pointer sourceBalance)
 {
     auto actualFee = getActualFee(sourceBalance->getAsset(),
-                                  actualTotalAmount, db);
+                                  actualTotalAmount,
+                                  sourceBalance->getMinimumAmount(), db);
 
     if (!isFeeAppropriate(actualFee))
     {
@@ -98,9 +99,12 @@ PayoutOpFrame::tryProcessTransferFee(AccountManager& accountManager,
         return false;
     }
 
-    if (!sourceBalance->tryCharge(totalFee))
+    BalanceFrame::Result sourceChargeResult = sourceBalance->tryCharge(totalFee);
+    if (sourceChargeResult != BalanceFrame::Result::SUCCESS)
     {
-        innerResult().code(PayoutResultCode::UNDERFUNDED);
+        innerResult().code(sourceChargeResult == BalanceFrame::Result::UNDERFUNDED ?
+                PayoutResultCode::UNDERFUNDED :
+                PayoutResultCode::INCORRECT_PRECISION);
         return false;
     }
 
@@ -143,7 +147,8 @@ PayoutOpFrame::obtainHoldersPayoutAmountsMap(Application& app, uint64_t& totalAm
 
         uint64_t calculatedAmount;
         if (!bigDivide(calculatedAmount, mPayout.maxPayoutAmount,
-                       holder->getTotal(), assetHoldersAmount, ROUND_DOWN))
+                holder->getTotal(), assetHoldersAmount,
+                ROUND_DOWN, holder->getMinimumAmount()))
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: calculatedAmount overflows UINT64_MAX, "
@@ -211,9 +216,12 @@ PayoutOpFrame::processTransfers(BalanceFrame::pointer sourceBalance,
         uint64_t totalAmount, std::map<AccountID, uint64_t> assetHoldersAmounts,
         StorageHelper& storageHelper)
 {
-    if (!sourceBalance->tryCharge(totalAmount))
+    BalanceFrame::Result sourceChargeResult = sourceBalance->tryCharge(totalAmount);
+    if (sourceChargeResult != BalanceFrame::Result::SUCCESS)
     {
-        innerResult().code(PayoutResultCode::UNDERFUNDED);
+        innerResult().code(sourceChargeResult == BalanceFrame::Result::UNDERFUNDED ?
+                PayoutResultCode::UNDERFUNDED :
+                PayoutResultCode::INCORRECT_PRECISION);
         return false;
     }
 
@@ -239,9 +247,12 @@ PayoutOpFrame::processTransfers(BalanceFrame::pointer sourceBalance,
             isNewBalance = true;
         }
 
-        if (!receiverBalance->tryFundAccount(holdersAmount.second))
+        BalanceFrame::Result receiverFundResult = receiverBalance->tryFundAccount(holdersAmount.second);
+        if (receiverFundResult != BalanceFrame::Result::SUCCESS)
         {
-            innerResult().code(PayoutResultCode::LINE_FULL);
+            innerResult().code(receiverFundResult == BalanceFrame::Result::LINE_FULL ?
+                               PayoutResultCode::LINE_FULL :
+                               PayoutResultCode::INCORRECT_PRECISION);
             return false;
         }
 

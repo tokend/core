@@ -1,5 +1,4 @@
 #include "ledger/FeeFrame.h"
-#include "database/Database.h"
 #include "crypto/SecretKey.h"
 #include "crypto/SHA.h"
 #include "LedgerDelta.h"
@@ -36,8 +35,7 @@ FeeFrame& FeeFrame::operator=(FeeFrame const& other)
 }
 
 FeeFrame::pointer FeeFrame::create(FeeType feeType, int64_t fixedFee,
-    int64_t percentFee, AssetCode asset, AccountID* accountID,
-    AccountType* accountType, int64_t subtype, int64_t lowerBound, int64_t upperBound)
+    int64_t percentFee, AssetCode asset, AccountID* accountID, uint64_t assetPrecision)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::FEE);
@@ -46,17 +44,14 @@ FeeFrame::pointer FeeFrame::create(FeeType feeType, int64_t fixedFee,
     entry.percentFee = percentFee;
     entry.feeType = feeType;
     entry.asset = asset;
-    entry.subtype = subtype;
+    entry.subtype = SUBTYPE_ANY;
     if (accountID)
         entry.accountID.activate() = *accountID;
 
-    if (accountType)
-        entry.accountType.activate() = *accountType;
+    entry.lowerBound = 0;
+    entry.upperBound = INT64_MAX - (INT64_MAX % assetPrecision);
 
-    entry.lowerBound = lowerBound;
-    entry.upperBound = upperBound;
-
-    entry.hash = calcHash(feeType, asset, accountID, accountType, subtype);
+    entry.hash = calcHash(feeType, asset, accountID, nullptr, entry.subtype);
     return std::make_shared<FeeFrame>(le);
 }
 
@@ -65,16 +60,8 @@ bool FeeFrame::isInRange(int64_t a, int64_t b, int64_t point)
     return a <= point && point <= b;
 }
 
-int64_t FeeFrame::calculatePercentFee(int64_t amount, bool roundUp)
-{
-    if (mFee.percentFee == 0)
-        return 0;
-    auto rounding = roundUp ? ROUND_UP : ROUND_DOWN;
-    return bigDivide(amount, mFee.percentFee, 100 * ONE, rounding);
-}
-
 bool FeeFrame::calculatePercentFee(const uint64_t amount, uint64_t& result,
-                                   const Rounding rounding) const
+                                   const Rounding rounding, uint64_t roundingStep) const
 {
     result = 0;
     if (mFee.percentFee == 0)
@@ -82,23 +69,8 @@ bool FeeFrame::calculatePercentFee(const uint64_t amount, uint64_t& result,
         return true;
     }
 
-    return bigDivide(result, amount, mFee.percentFee, 100 * ONE, rounding);
+    return bigDivide(result, amount, mFee.percentFee, 100 * ONE, rounding, roundingStep);
 }
-
-int64_t FeeFrame::calculatePercentFeeForPeriod(int64_t amount, int64_t periodPassed, int64_t basePeriod)
-{
-    if (mFee.percentFee == 0
-        || periodPassed == 0
-        || basePeriod == 0
-        || amount == 0)
-    {
-        return 0;
-    }
-
-    int64_t percentFeeForFullPeriod = calculatePercentFee(amount);
-    return bigDivide(percentFeeForFullPeriod, periodPassed, basePeriod, ROUND_UP);
-}
-
     
 bool FeeFrame::isCrossAssetFee() const
 {

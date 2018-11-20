@@ -52,7 +52,7 @@ namespace stellar {
         FeeEntry
         SetFeesTestHelper::createFeeEntry(FeeType type, AssetCode asset, int64_t fixed, int64_t percent,
                                           AccountID *accountID, AccountType *accountType, int64_t subtype,
-                                          int64_t lowerBound, int64_t upperBound, AssetCode *feeAsset) {
+                                          int64_t lowerBound, int64_t upperBound, const AssetCode* feeAsset) {
             FeeEntry fee;
             fee.feeType = type;
             fee.asset = asset;

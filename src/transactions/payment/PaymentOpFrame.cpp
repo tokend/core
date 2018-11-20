@@ -186,8 +186,14 @@ bool PaymentOpFrame::isTransferFeeMatch(AccountFrame::pointer accountFrame, Asse
 	if (!feeFrame)
 		return true;
 
-    int64_t requiredPaymentFee = feeFrame->calculatePercentFee(amount);
-    int64_t requiredFixedFee = feeFrame->getFee().fixedFee;
+    const uint64_t assetFramePrecisionStep = AssetHelperLegacy::Instance()->mustLoadAsset(assetCode, db)->getMinimumAmount();
+	uint64_t requiredPaymentFee = 0;
+    if (!feeFrame->calculatePercentFee(amount, requiredPaymentFee, Rounding::ROUND_UP, assetFramePrecisionStep))
+    {
+        // overflow
+        return false;
+    }
+    const int64_t requiredFixedFee = feeFrame->getFee().fixedFee;
     return feeData.paymentFee == requiredPaymentFee && feeData.fixedFee == requiredFixedFee;
 }
 
@@ -269,9 +275,8 @@ bool PaymentOpFrame::processFees_v1(Application& app, LedgerDelta& delta,
     auto totalFee = feeData.sourceFee.paymentFee + feeData.sourceFee.fixedFee +
         feeData.destinationFee.paymentFee + feeData.destinationFee.fixedFee;
 
-    if (!commissionBalanceFrame->addBalance(totalFee))
+    if (commissionBalanceFrame->tryFundAccount(totalFee) != BalanceFrame::Result::SUCCESS)
     {
-        app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();
         innerResult().code(PaymentResultCode::LINE_FULL);
         return false;
     }
@@ -296,7 +301,7 @@ bool PaymentOpFrame::processFees_v2(Application& app, LedgerDelta& delta,
     }
 
     auto balance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getCommissionID(), mSourceBalance->getAsset(), db, delta);
-    if (!balance->tryFundAccount(totalFees))
+    if (balance->tryFundAccount(totalFees) != BalanceFrame::Result::SUCCESS)
     {
         app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();
         innerResult().code(PaymentResultCode::LINE_FULL);
@@ -370,7 +375,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     if (!processBalanceChange(app, transferResult))
         return false;
 
-	if (!mDestBalance->addBalance(destReceived))
+	if (mDestBalance->tryFundAccount(destReceived) != BalanceFrame::Result::SUCCESS)
 	{
 		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
 		innerResult().code(PaymentResultCode::LINE_FULL);

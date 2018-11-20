@@ -4,6 +4,7 @@
 #include <ledger/PendingStatisticsFrame.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include "ledger/AssetHelperLegacy.h"
 #include "StatisticsV2Processor.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
@@ -99,8 +100,9 @@ namespace stellar
                     continue;
                 }
 
-                if (!statsAssetPair->convertAmount(statisticsV2Frame->getAsset(), amountToAdd, ROUND_UP,
-                                                   universalAmount))
+                auto statsAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(statisticsV2Frame->getAsset(), mDb);
+                if (!AssetPairHelper::Instance()->convertAmount(statsAssetPair, statisticsV2Frame->getAsset(), amountToAdd,
+                        ROUND_UP, mDb, universalAmount))
                     return STATS_V2_OVERFLOW;
             }
 

@@ -9,11 +9,13 @@
 #include "util/asio.h"
 #include "CreateIssuanceRequestOpFrame.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
+#include "ledger/StorageHelperImpl.h"
 #include "util/Logging.h"
 #include "util/types.h"
 #include "database/Database.h"
@@ -143,7 +145,9 @@ bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delt
 																								   ledgerManager, delta,
 																								   requestFrame);
 		reviewRequestResultCode = reviewRequestResult.code();
-		isFulfilled = reviewRequestResult.success().ext.extendedResult().fulfilled;
+		isFulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?
+					  reviewRequestResult.success().ext.extendedResult().fulfilled:
+					  false;
 	}
 
 	switch (reviewRequestResultCode) {
@@ -271,10 +275,19 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 		return nullptr;
 	}
 
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto asset = assetHelper->loadAsset(mCreateIssuanceRequest.request.asset, db);
+	StorageHelperImpl storageHelperImpl(db, &delta);
+	StorageHelper& storageHelper = storageHelperImpl;
+	storageHelper.release();
+	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
 	if (!asset) {
 		innerResult().code(CreateIssuanceRequestResultCode::ASSET_NOT_FOUND);
+		return nullptr;
+	}
+
+	if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+			mCreateIssuanceRequest.request.asset, mCreateIssuanceRequest.request.amount))
+	{
+		innerResult().code(CreateIssuanceRequestResultCode::INVALID_AMOUNT_PRECISION);
 		return nullptr;
 	}
 
@@ -334,7 +347,9 @@ bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db
                                                           mCreateIssuanceRequest.request.amount, db);
     if (feeFrame) {
         fee.fixed = feeFrame->getFee().fixedFee;
-        feeFrame->calculatePercentFee(mCreateIssuanceRequest.request.amount, fee.percent, ROUND_UP);
+        auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(mCreateIssuanceRequest.request.asset, db);
+        feeFrame->calculatePercentFee(mCreateIssuanceRequest.request.amount, fee.percent, ROUND_UP,
+                                      feeAssetFrame->getMinimumAmount());
     }
 
     uint64_t totalFee = 0;

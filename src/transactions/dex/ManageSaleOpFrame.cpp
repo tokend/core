@@ -207,11 +207,13 @@ namespace stellar {
             auto participantBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
                     saleAnte->getParticipantBalanceID(),
                     db, &delta);
-            if (!participantBalanceFrame->unlock(saleAnte->getAmount())) {
+            const BalanceFrame::Result unlockResult = participantBalanceFrame->unlock(saleAnte->getAmount());
+            if (unlockResult != BalanceFrame::Result::SUCCESS) {
                 std::string strParticipantBalanceID = PubKeyUtils::toStrKey(saleAnte->getParticipantBalanceID());
                 CLOG(ERROR, Logging::OPERATION_LOGGER)
-                        << "Failed to unlock locked amount for sale ante with sale id: " << saleAnte->getSaleID()
-                        << " and participant balance id: " << strParticipantBalanceID;
+                        << "Failed to unlock locked amount for sale ante with reason " << unlockResult
+                        << " sale id: " << saleAnte->getSaleID() << " and participant balance id: "
+                        << strParticipantBalanceID;
                 throw std::runtime_error("Failed to unlock locked amount for sale ante");
             }
 

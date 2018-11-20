@@ -196,12 +196,13 @@ namespace txtest
         return issuanceRequest;
     }
 
-	void IssuanceRequestHelper::createAssetWithPreIssuedAmount(Account & assetOwner, AssetCode assetCode, uint64_t preIssuedAmount, Account& root) {
+    void IssuanceRequestHelper::createAssetWithPreIssuedAmount(Account& assetOwner, AssetCode assetCode, uint64_t preIssuedAmount,
+                                                               Account& root, uint32_t trailingDigitsCount) {
 		auto manageAssetHelper = ManageAssetTestHelper(mTestManager);
 		auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
 														 ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
 														 : 0;
-		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies);
+		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, trailingDigitsCount);
 		authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
 	}
 

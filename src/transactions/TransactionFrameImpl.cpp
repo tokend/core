@@ -163,25 +163,23 @@ TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
     auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
         app.getCommissionID(), txFeeAssetCode, db, *delta);
 
-    if (!sourceBalance->tryCharge(totalFeeAmount))
+    const BalanceFrame::Result sourceChargeResult = sourceBalance->tryCharge(totalFeeAmount);
+    if (sourceChargeResult != BalanceFrame::Result::SUCCESS)
     {
-        app.getMetrics()
-            .NewMeter({"transaction", "invalid", "source-underfunded"},
-                      "transaction")
-            .Mark();
-        getResult().result.code(TransactionResultCode::txSOURCE_UNDERFUNDED);
+        getResult().result.code(sourceChargeResult == BalanceFrame::Result::UNDERFUNDED ?
+                                TransactionResultCode::txSOURCE_UNDERFUNDED :
+                                TransactionResultCode::txFEE_INCORRECT_PRECISION);
         return false;
     }
 
     EntryHelperProvider::storeChangeEntry(*delta, db, sourceBalance->mEntry);
 
-    if (!commissionBalance->tryFundAccount(totalFeeAmount))
+    const BalanceFrame::Result commissionResult = commissionBalance->tryFundAccount(totalFeeAmount);
+    if (commissionResult != BalanceFrame::Result::SUCCESS)
     {
-        app.getMetrics()
-            .NewMeter({"transaction", "invalid", "commission-line-full"},
-                      "transaction")
-            .Mark();
-        getResult().result.code(TransactionResultCode::txCOMMISSION_LINE_FULL);
+        getResult().result.code(commissionResult == BalanceFrame::Result::LINE_FULL ?
+                                TransactionResultCode::txCOMMISSION_LINE_FULL :
+                                TransactionResultCode::txFEE_INCORRECT_PRECISION);
         return false;
     }
 

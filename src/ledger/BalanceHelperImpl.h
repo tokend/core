@@ -35,6 +35,9 @@ private:
     bool
     exists(LedgerKey const& key) override;
 
+    bool
+    exists(BalanceID balanceID) override;
+
     LedgerKey
     getLedgerKey(LedgerEntry const& from) override;
 
@@ -56,6 +59,10 @@ private:
     BalanceFrame::pointer
     loadBalance(AccountID accountID, AssetCode assetCode) override;
 
+    void
+    loadBalances(AccountID const& accountID,
+                 std::vector<BalanceFrame::pointer>& retBalances) override;
+
     std::vector<BalanceFrame::pointer>
     loadBalances(AccountID accountID, AssetCode assetCode) override;
 
@@ -69,7 +76,7 @@ private:
 
     void
     loadBalances(StatementContext& prep,
-            std::function<void(LedgerEntry const&)> balanceProcessor) override;
+            std::function<void(BalanceFrame::pointer const&)> balanceProcessor);
 
     void
     storeUpdateHelper(bool insert, LedgerEntry const& entry);
@@ -81,7 +88,6 @@ private:
     obtainStrAccountIDs(std::vector<AccountID> accountIDs);
 
     StorageHelper& mStorageHelper;
-    const char* mBalanceColumnSelector;
 };
 
 } // namespace stellar

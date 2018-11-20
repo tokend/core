@@ -133,6 +133,28 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
         return false;
     }
 
+    if (mAssetCreationRequest.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+    {
+        if (mAssetCreationRequest.ext.trailingDigitsCount() > AssetFrame::kMaximumTrailingDigits)
+        {
+            innerResult().code(ManageAssetResultCode::INVALID_TRAILING_DIGITS_COUNT);
+            return false;
+        }
+
+        const uint64 precision = AssetFrame::getMinimumAmountFromTrailingDigits(
+                mAssetCreationRequest.ext.trailingDigitsCount());
+        if (mAssetCreationRequest.initialPreissuedAmount % precision != 0)
+        {
+            innerResult().code(ManageAssetResultCode::INVALID_PREISSUED_AMOUNT_PRECISION);
+            return false;
+        }
+        if (mAssetCreationRequest.maxIssuanceAmount % precision != 0)
+        {
+            innerResult().code(ManageAssetResultCode::INVALID_MAX_ISSUANCE_AMOUNT_PRECISION);
+            return false;
+        }
+    }
+
 	return true;
 }
 

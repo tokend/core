@@ -70,8 +70,8 @@ bool ReviewIssuanceCreationRequestOpFrame::handleApproveV1(Application &app, Led
 	AccountManager accountManager(app, db, delta, ledgerManager);
 	accountManager.transferFee(issuanceRequest.asset, totalFee);
 
-	uint64_t destinationReceive = issuanceRequest.amount - totalFee;
-	if (!receiver->tryFundAccount(destinationReceive)) {
+	const uint64_t destinationReceive = issuanceRequest.amount - totalFee;
+	if (receiver->tryFundAccount(destinationReceive) != BalanceFrame::Result::SUCCESS) {
 		innerResult().code(ReviewRequestResultCode::FULL_LINE);
 		return false;
 	}
@@ -169,10 +169,13 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 	AccountManager accountManager(app, db, delta, ledgerManager);
 	accountManager.transferFee(issuanceRequest.asset, totalFee);
 
-	uint64_t destinationReceive = issuanceRequest.amount - totalFee;
-	if (!receiver->tryFundAccount(destinationReceive))
+	const uint64_t destinationReceive = issuanceRequest.amount - totalFee;
+	const BalanceFrame::Result fundResult = receiver->tryFundAccount(destinationReceive);
+	if (fundResult != BalanceFrame::Result::SUCCESS)
 	{
-		innerResult().code(ReviewRequestResultCode::FULL_LINE);
+		innerResult().code(fundResult == BalanceFrame::Result::LINE_FULL ?
+		                   ReviewRequestResultCode::FULL_LINE :
+						   ReviewRequestResultCode::INCORRECT_PRECISION);
 		return false;
 	}
 
