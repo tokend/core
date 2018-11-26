@@ -68,9 +68,7 @@ bool CreateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
 
 	auto assetHelper = AssetHelperLegacy::Instance();
 
-    if (isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE_V2) &&
-        (isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE) ||
-         isSetFlag(mAssetCreationRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL))) {
+    if (policiesIncompatible()) {
         innerResult().code(ManageAssetResultCode::INCOMPATIBLE_POLICIES);
         return false;
     }
@@ -141,6 +139,13 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
     }
 
 	return true;
+}
+
+bool CreateAssetOpFrame::policiesIncompatible() {
+    return (isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE) ||
+            isSetFlag(mAssetCreationRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL)) &&
+            isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE_V2);
+
 }
 
 string CreateAssetOpFrame::getAssetCode() const
