@@ -77,9 +77,7 @@ bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
 		return false;
 	}
 
-    if (isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE_V2) &&
-        (isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE) ||
-         isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL))) {
+    if (policiesIncompatible(assetFrame)) {
         innerResult().code(ManageAssetResultCode::INCOMPATIBLE_POLICIES);
         return false;
     }
@@ -135,6 +133,18 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
     }
 
 	return true;
+}
+
+bool UpdateAssetOpFrame::policiesIncompatible(AssetFrame::pointer assetFrame) {
+    bool oldWay = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE) ||
+            isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL) ||
+            assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE) ||
+            assetFrame->isPolicySet(AssetPolicy::TWO_STEP_WITHDRAWAL);
+
+    bool newWay = assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE_V2) || isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE_V2);
+
+    return oldWay && newWay;
+
 }
 
 string UpdateAssetOpFrame::getAssetCode() const
