@@ -50,7 +50,9 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
                   const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
 
     ReviewableRequestFrame::pointer
-    tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
+    tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+                               BalanceFrame::pointer balanceFrame,
+                               AssetFrame::pointer assetFrame);
 
     void
     storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
@@ -74,9 +76,13 @@ public:
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;
     bool doApplyV1(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager);
+                 LedgerManager& ledgerManager,
+                   BalanceFrame::pointer balanceFrame,
+                   AssetFrame::pointer assetFrame);
     bool doApplyV2(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager);
+                 LedgerManager& ledgerManager,
+                   BalanceFrame::pointer balanceFrame,
+                   AssetFrame::pointer assetFrame);
 
     bool doCheckValid(Application& app) override;
 

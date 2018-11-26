@@ -170,18 +170,14 @@ CreateWithdrawalRequestOpFrame::createRequest(LedgerDelta& delta, LedgerManager&
 }
 
 ReviewableRequestFrame::pointer
-CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
+CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
+                                                            LedgerDelta& delta,
+                                                            LedgerManager& ledgerManager,
+                                                            BalanceFrame::pointer balanceFrame,
+                                                            AssetFrame::pointer assetFrame)
 {
     auto& db = app.getDatabase();
 
-    auto balanceFrame = tryLoadBalance(db, delta);
-    if (!balanceFrame)
-    {
-        innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
-        return nullptr;
-    }
-
-    const auto assetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(balanceFrame->getAsset(), db);
     if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE_V2))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::ASSET_IS_NOT_WITHDRAWABLE);
@@ -299,25 +295,19 @@ CreateWithdrawalRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     if (assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE_V2))
     {
-        return doApplyV2(app, delta, ledgerManager);
+        return doApplyV2(app, delta, ledgerManager, balanceFrame, assetFrame);
     }
 
-    return doApplyV1(app, delta, ledgerManager);
+    return doApplyV1(app, delta, ledgerManager, balanceFrame, assetFrame);
 }
 
 bool
 CreateWithdrawalRequestOpFrame::doApplyV1(Application& app, LedgerDelta& delta,
-                                            LedgerManager& ledgerManager)
+                                            LedgerManager& ledgerManager,
+                                          BalanceFrame::pointer balanceFrame,
+                                          AssetFrame::pointer assetFrame)
 {
     auto& db = ledgerManager.getDatabase();
-    auto balanceFrame = tryLoadBalance(db, delta);
-    if (!balanceFrame)
-    {
-        innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
-        return false;
-    }
-
-    const auto assetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(balanceFrame->getAsset(), db);
     if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::ASSET_IS_NOT_WITHDRAWABLE);
@@ -362,10 +352,12 @@ CreateWithdrawalRequestOpFrame::doApplyV1(Application& app, LedgerDelta& delta,
 
 bool
 CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
-                                        LedgerManager& ledgerManager)
+                                        LedgerManager& ledgerManager,
+                                          BalanceFrame::pointer balanceFrame,
+                                          AssetFrame::pointer assetFrame)
 {
 
-    auto requestFrame = tryCreateWithdrawalRequest(app, delta, ledgerManager);
+    auto requestFrame = tryCreateWithdrawalRequest(app, delta, ledgerManager, balanceFrame, assetFrame);
     if (!requestFrame)
     {
         return false;
@@ -373,7 +365,8 @@ CreateWithdrawalRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta,
     auto& db = app.getDatabase();
 
     uint32_t allTasks = 0;
-    loadWithdrawalTasks(db, allTasks, ledgerManager);
+    if (!loadWithdrawalTasks(db, allTasks, ledgerManager))
+        return false;
 
     requestFrame->setTasks(allTasks);
     EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
