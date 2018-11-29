@@ -114,6 +114,11 @@ bool ReviewWithdrawalRequestOpFrame::handleApproveV2(
     auto& withdrawRequest = request->getRequestEntry().body.withdrawalRequest();
     auto& requestEntry = request->getRequestEntry();
 
+    if (removingNotSetTask(requestEntry)){
+        innerResult().code(ReviewRequestResultCode::REMOVING_NOT_SET_TASKS);
+        return false;
+    }
+
     requestEntry.ext.tasksExt().allTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
     requestEntry.ext.tasksExt().pendingTasks &= ~mReviewRequest.ext.reviewDetails().tasksToRemove;
     requestEntry.ext.tasksExt().pendingTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
@@ -218,5 +223,8 @@ bool ReviewWithdrawalRequestOpFrame::doCheckValid(Application &app)
     }
 
     return ReviewRequestOpFrame::doCheckValid(app);
+}
+bool ReviewWithdrawalRequestOpFrame::removingNotSetTask(ReviewableRequestEntry &requestEntry) {
+    return !(requestEntry.ext.tasksExt().pendingTasks & mReviewRequest.ext.reviewDetails().tasksToRemove);
 }
 }

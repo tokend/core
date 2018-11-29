@@ -17,6 +17,7 @@ protected:
 	bool handleApproveV1(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 	bool handleApproveV2(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
+	bool removingNotSetTask(ReviewableRequestEntry &requestEntry);
 public:
 
 	  ReviewWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
