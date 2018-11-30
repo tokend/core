@@ -110,11 +110,23 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
     REQUIRE(sales.size() == 1);
     const auto saleID = sales[0]->getID();
 
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+    SECTION("Happy path")
+    {
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+    }
+    SECTION("Happy path with different precisions")
+    {
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(baseAsset, 2);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 0);
 
-    CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
 
+        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+    }
 }
 
 TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
@@ -200,15 +212,41 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     const auto saleID = sales[0]->getID();
 
     auto saleStateData = manageSaleHelper.setSaleState(SaleState::NONE);
-    manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-    participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
 
-    checkStateHelper.applyCheckSaleStateTx(root, saleID);
+    SECTION("Happy path")
+    {
+        manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+
+        checkStateHelper.applyCheckSaleStateTx(root, saleID);
+    }
+    SECTION("Happy path with different precisions")
+    {
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(baseAsset, 0);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
+        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 2);
+
+        manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
+
+        checkStateHelper.applyCheckSaleStateTx(root, saleID);
+    }
 }
 
 TEST_CASE("Sale", "[tx][sale]")
 {
+    struct TestSet
+    {
+        const AssetCode quoteAsset;
+        const AssetCode baseAsset;
+        const int trailingDigitsCount;
+    };
+    const TestSet testSet = GENERATE(
+            TestSet { "USD", "BTC", AssetFrame::kMaximumTrailingDigits },
+            TestSet { "USDN", "BTCN", 0 } );
+
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
     VirtualClock clock;
     Application::pointer appPtr = Application::create(clock, cfg);
@@ -221,11 +259,14 @@ TEST_CASE("Sale", "[tx][sale]")
 
     auto root = Account{ getRoot(), Salt(0) };
 
-    AssetCode quoteAsset = "USD";
+    const AssetCode& baseAsset = testSet.baseAsset;
+    const AssetCode& quoteAsset = testSet.quoteAsset;
+    const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);
+    const uint64_t maxNonDividedAmount = INT64_MAX - (INT64_MAX % precision);
+
     auto assetTestHelper = ManageAssetTestHelper(testManager);
-    uint64_t quoteMaxIssuance = INT64_MAX;
-    auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAsset, root.key.getPublicKey(), "{}", quoteMaxIssuance,
-                                                                           uint32_t(AssetPolicy::BASE_ASSET));
+    auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAsset, root.key.getPublicKey(), "{}", maxNonDividedAmount,
+                                                                           uint32_t(AssetPolicy::BASE_ASSET), 0, testSet.trailingDigitsCount);
     assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
@@ -244,12 +285,11 @@ TEST_CASE("Sale", "[tx][sale]")
     auto syndicatePubKey = syndicate.key.getPublicKey();
 
     CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
-    const AssetCode baseAsset = "BTC";
     // TODO: for now we need to keep maxIssuance = preIssuance to allow sale creation
     const uint64_t maxIssuanceAmount = 6000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount,0, preIssuedAmount);
+                                                                      maxIssuanceAmount, 0, preIssuedAmount, testSet.trailingDigitsCount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const uint64_t price = 2 * ONE;
     auto hardCap = static_cast<const uint64_t>(bigDivide(preIssuedAmount / 2, price, ONE, ROUND_DOWN));
@@ -306,14 +346,14 @@ TEST_CASE("Sale", "[tx][sale]")
     }
 
     SECTION("Non zero balance on sale close"){
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr);
+        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
         EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
 
         uint64_t quotePreIssued(0);
-        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
         quotePreIssued += hardCap + ONE;
         IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
 
@@ -333,7 +373,7 @@ TEST_CASE("Sale", "[tx][sale]")
         const int numberOfParticipants = 10;
         const uint64_t quoteAmount = softCap / numberOfParticipants;
         uint64_t feeToPay(0);
-        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
         const int64_t timeStep = (endTime - currentTime) / numberOfParticipants;
         for (int i = 0; i < numberOfParticipants - 1; i++)
         {
@@ -342,7 +382,7 @@ TEST_CASE("Sale", "[tx][sale]")
             checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
         }
 
-        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAmount, price, feeToPay);
         testManager->advanceToTime(endTime + 1);
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -351,14 +391,15 @@ TEST_CASE("Sale", "[tx][sale]")
     SECTION("Sale with sale antes") {
         // set invest fee for sale antes
         auto investFeeEntry = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset,
-                                                               int64_t(5 * ONE), int64_t(5 * ONE));
+                                                               int64_t(5 * ONE), int64_t(5 * ONE), nullptr,
+                                                               nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &investFeeEntry, false);
 
         auto investFeeFrame = FeeHelper::Instance()->loadFee(FeeType::INVEST_FEE, quoteAsset, nullptr, nullptr,
-                                                             FeeFrame::SUBTYPE_ANY, 0, INT64_MAX, db);
+                                                             FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount, db);
         REQUIRE(!!investFeeFrame);
         uint64_t quotePreIssued = 0;
-        investFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP);
+        investFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
         quotePreIssued += hardCap + ONE;
         quotePreIssued += 50 * ONE;
         IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
@@ -374,7 +415,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const auto quoteAssetAmount = hardCap / numberOfParticipants;
             uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP);
+            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
             saleAnteAmount += 5 * ONE;
             for (auto i = 0; i < numberOfParticipants; i++)
             {
@@ -392,7 +433,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAssetAmount = softCap / numberOfParticipants;
             uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP);
+            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
             saleAnteAmount += 5 * ONE;
             for (auto i = 0; i < numberOfParticipants - 1; i++)
             {
@@ -412,7 +453,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAssetAmount = softCap / numberOfParticipants;
             uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP);
+            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
             saleAnteAmount += 5 * ONE;
             for (auto i = 0; i < numberOfParticipants - 1; i++)
             {
@@ -428,11 +469,14 @@ TEST_CASE("Sale", "[tx][sale]")
 
     SECTION("Simple happy path for test fee")
     {
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE);
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
+                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE);
+        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE,
+                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE);
+        fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
+                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
 
         saleRequest.hardCap = 200 * ONE;
@@ -442,7 +486,7 @@ TEST_CASE("Sale", "[tx][sale]")
         auto syndicateFee = FeeHelper::Instance()->loadForAccount(FeeType::CAPITAL_DEPLOYMENT_FEE,
                 quoteAsset, FeeFrame::SUBTYPE_ANY, syndicateAccountFrame, saleRequest.hardCap, db);
         uint64_t feeToPayBySyndicate = 0;
-        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP));
+        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP, 1));
 
         uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
@@ -460,16 +504,17 @@ TEST_CASE("Sale", "[tx][sale]")
     {
         //set offer fee for sale owner and participants
         // TODO: use set fees
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr);
+        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
         EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE);
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
+                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
 
         uint64_t quotePreIssued(0);
-        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP);
+        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
         quotePreIssued += hardCap + ONE;
         IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
 
@@ -492,7 +537,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const auto quoteAssetAmount = hardCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
 
             // first sale reached hard cap
             for (auto i = 0; i < numberOfParticipants; i++)
@@ -543,7 +588,7 @@ TEST_CASE("Sale", "[tx][sale]")
             CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
             uint64_t quoteAssetAmount = hardCap / 2;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
             const auto offerID = participationHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
             auto offer = OfferHelper::Instance()->loadOffer(account.key.getPublicKey(), offerID, testManager->getDB());
             REQUIRE(!!offer);
@@ -560,7 +605,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const auto quoteAssetAmount = hardCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
             for (auto i = 0; i < numberOfParticipants; i++)
             {
                 participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
@@ -578,7 +623,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAmount = softCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
             const int64_t timeStep = (endTime - currentTime) / numberOfParticipants;
             for (int i = 0; i < numberOfParticipants - 1; i++)
             {
@@ -587,7 +632,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
             }
             // sale is still active
-            participantsFeeFrame->calculatePercentFee(2 * quoteAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(2 * quoteAmount, feeToPay, ROUND_UP, 1);
             participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, 2 * quoteAmount, price, feeToPay);
             testManager->advanceToTime(endTime + 1);
             checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -598,7 +643,7 @@ TEST_CASE("Sale", "[tx][sale]")
             const int numberOfParticipants = 10;
             const uint64_t quoteAmount = softCap / numberOfParticipants;
             uint64_t feeToPay(0);
-            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP);
+            participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
             for (auto i = 0; i < numberOfParticipants - 1; i++)
             {
                 participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAmount, price, feeToPay);
@@ -928,7 +973,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                         nullptr)->getBalanceID();
 
         // pre-issue quote amount
-        uint64_t quotePreIssued = quoteMaxIssuance - 1;
+        const uint64_t quotePreIssued = maxNonDividedAmount - precision;
         issuanceHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
 
         SECTION("malformed manage offer")
@@ -1130,6 +1175,14 @@ TEST_CASE("Sale", "[tx][sale]")
             {
                 testManager->advanceToTime(endTime + 1);
                 participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::SALE_ALREADY_ENDED);
+            }
+            SECTION("Invalid offer amount precision")
+            {
+                if (testSet.baseAsset == "USDN")
+                {
+                    manageOffer.amount = 1;
+                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION);
+                }
             }
         }
     }

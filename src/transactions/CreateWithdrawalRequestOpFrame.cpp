@@ -86,7 +86,8 @@ bool CreateWithdrawalRequestOpFrame::isConvertedAmountMatches(
     }
 
     uint64_t expectedConvetedAmount = 0;
-    if (!assetPair->convertAmount(assetToConvertAmountInto, mCreateWithdrawalRequest.request.amount, Rounding::ROUND_DOWN, expectedConvetedAmount))
+    if (!AssetPairHelper::Instance()->convertAmount(assetPair, assetToConvertAmountInto,
+            mCreateWithdrawalRequest.request.amount, Rounding::ROUND_DOWN, db, expectedConvetedAmount))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::CONVERSION_OVERFLOW);
         return false;

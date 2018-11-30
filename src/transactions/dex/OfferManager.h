@@ -21,12 +21,13 @@ public:
     // delets all offers and unlocks locked assets by that offers   
     static void deleteOffers(std::vector<OfferFrame::pointer> offers, Database& db, LedgerDelta& delta);
     // Builds offer frame base on ManageOfferOp
-    static OfferFrame::pointer buildOffer(AccountID const& sourceID, ManageOfferOp const& op, AssetCode const& base, AssetCode const& quote);
+    static OfferFrame::pointer buildOffer(AccountID const& sourceID, ManageOfferOp const& op, AssetCode const& base,
+            AssetCode const& quote, uint64_t quotePrecisionStep);
     // Builds ManageOfferOp base on based params
     static ManageOfferOp buildManageOfferOp(BalanceID const& baseBalance, BalanceID const& quoteBalance, bool const isBuy, int64_t const amount,
         int64_t const price, int64_t const fee, uint64_t const offerID, uint64_t const orderBookID);
     // Calculates quote amount. Returns 0 if fails due to overflow
-    static int64_t calculateQuoteAmount(int64_t const baseAmount, int64_t const price);
+    static int64_t calculateQuoteAmount(int64_t baseAmount, int64_t price, uint64_t quotePrecisionStep);
 
     };
 }

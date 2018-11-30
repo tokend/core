@@ -4,6 +4,8 @@
 
 #include "FeeHelper.h"
 #include "LedgerDelta.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AssetHelper.h"
 #include "xdrpp/printer.h"
 
 using namespace soci;
@@ -120,6 +122,7 @@ namespace stellar {
                     << xdr::xdr_to_string(feeEntry);
             throw std::runtime_error("Unexpected state - fee is invalid");
         }
+        checkAmounts(feeFrame, db, delta);
 
         string sql;
 
@@ -378,6 +381,31 @@ namespace stellar {
                 return true;
         }
         return false;
+    }
+
+    void FeeHelper::checkAmounts(const FeeFrame::pointer& frame, Database& db, LedgerDelta& delta) const
+    {
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        StorageHelper& storageHelper = storageHelperImpl;
+        storageHelper.release();
+
+        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+                frame->getFeeAsset(), frame->getFixedFee()))
+        {
+            throw std::runtime_error("Invalid fixed fee amount");
+        }
+
+        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+                frame->getFeeAsset(), frame->getFee().lowerBound))
+        {
+            throw std::runtime_error("Invalid fee lower bound amount");
+        }
+
+        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+                frame->getFeeAsset(), frame->getFee().upperBound))
+        {
+            throw std::runtime_error("Invalid fee upper bound amount");
+        }
     }
 
 }

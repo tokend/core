@@ -78,7 +78,9 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     const auto result = balanceFrame->tryLock(amlAlertRequest.amount);
     if (result != BalanceFrame::Result::SUCCESS)
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::UNDERFUNDED);
+        innerResult().code(result == BalanceFrame::Result::NONMATCHING_PRECISION ?
+                           CreateAMLAlertRequestResultCode::INCORRECT_PRECISION :
+                           CreateAMLAlertRequestResultCode::UNDERFUNDED);
         return false;
     }
 

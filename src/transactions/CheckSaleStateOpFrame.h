@@ -90,5 +90,8 @@ public:
     std::string getInnerResultCodeAsStr() override;
 
     static void updateAvailableForIssuance(const SaleFrame::pointer sale, LedgerDelta &delta, Database &db);
+
+private:
+    static uint64 getMinimumAssetAmount(const AssetCode& balance, Database& db, LedgerDelta* delta);
 };
 }

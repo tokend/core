@@ -157,18 +157,10 @@ bool CreateSaleCreationRequestOpFrame::isPriceValid(SaleCreationRequestQuoteAsse
         return quoteAsset.price == ONE;
     }
 
+    // check for overflows
     uint64_t requiredBaseAsset;
-    if (!SaleFrame::convertToBaseAmount(quoteAsset.price, saleCreationRequest.hardCap, requiredBaseAsset))
-    {
-        return false;
-    }
-
-    if (!SaleFrame::convertToBaseAmount(quoteAsset.price, saleCreationRequest.softCap, requiredBaseAsset))
-    {
-        return false;
-    }
-
-    return true;
+    return SaleFrame::convertToBaseAmount(quoteAsset.price, saleCreationRequest.hardCap, 1, requiredBaseAsset) &&
+           SaleFrame::convertToBaseAmount(quoteAsset.price, saleCreationRequest.softCap, 1, requiredBaseAsset);
 }
 
 CreateSaleCreationRequestOpFrame::CreateSaleCreationRequestOpFrame(

@@ -54,5 +54,8 @@ namespace stellar {
         std::vector<SaleAnteFrame::pointer> loadSaleAntesForSale(uint64_t saleID, Database &db);
 
         std::unordered_map<BalanceID, SaleAnteFrame::pointer> loadSaleAntes(uint64_t saleID, Database &db);
+
+    private:
+        bool checkAmountPrecision(const SaleAnteFrame::pointer& frame, LedgerDelta &delta, Database &db);
     };
 }

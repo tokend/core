@@ -19,7 +19,7 @@ AssetHelperImpl::AssetHelperImpl(StorageHelper& storageHelper)
     mAssetColumnSelector = "SELECT code, owner, preissued_asset_signer, "
                            "details, max_issuance_amount, "
                            "available_for_issueance, issued, pending_issuance, "
-                           "policies, lastmodified, version "
+                           "policies, trailing_digits, lastmodified, version "
                            "FROM asset";
 }
 
@@ -44,6 +44,13 @@ AssetHelperImpl::dropAll()
            "version                 INT           NOT NULL, "
            "PRIMARY KEY (code)"
            ");";
+}
+
+void
+AssetHelperImpl::addTrailingDigits()
+{
+    getDatabase().getSession() << "ALTER TABLE asset ADD COLUMN trailing_digits INT NOT NULL DEFAULT "
+                               << AssetFrame::kMaximumTrailingDigits << ";";
 }
 
 void
@@ -95,6 +102,22 @@ AssetHelperImpl::exists(LedgerKey const& key)
     return exists != 0;
 }
 
+bool
+AssetHelperImpl::exists(const AssetCode &code)
+{
+    int exists = 0;
+    auto timer = getDatabase().getSelectTimer("asset-exists");
+    std::string assetCode = code;
+    auto prep = getDatabase().getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
+    auto& st = prep.statement();
+    st.exchange(use(assetCode));
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 void
 AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
 {
@@ -123,9 +146,9 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
         sql = "INSERT INTO asset (code, owner, preissued_asset_signer, details,"
               "                   max_issuance_amount, available_for_issueance,"
               "                   issued, pending_issuance, policies,"
-              "                   lastmodified, version) "
+              "                   trailing_digits, lastmodified, version) "
               "VALUES (:code, :owner, :signer, :details, :max, :available, "
-              "        :issued, :pending, :policies, :lm, :v)";
+              "        :issued, :pending, :policies, :td, :lm, :v)";
     }
     else
     {
@@ -134,13 +157,14 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
               "max_issuance_amount = :max, "
               "available_for_issueance = :available, issued = :issued, "
               "pending_issuance = :pending, policies = :policies, "
-              "lastmodified = :lm, version = :v "
+              "trailing_digits = :td, lastmodified = :lm, version = :v "
               "WHERE code = :code";
     }
 
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
+    const uint32 trailingDigits = assetFrame->getTrailingDigitsCount();
     st.exchange(use(assetEntry.code, "code"));
     st.exchange(use(owner, "owner"));
     st.exchange(use(signer, "signer"));
@@ -151,6 +175,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     st.exchange(use(assetEntry.pendingIssuance, "pending"));
     st.exchange(use(assetEntry.policies, "policies"));
     st.exchange(use(assetFrame->mEntry.lastModifiedLedgerSeq, "lm"));
+    st.exchange(use(trailingDigits, "td"));
     st.exchange(use(version, "v"));
     st.define_and_bind();
 
@@ -213,8 +238,14 @@ AssetHelperImpl::loadAsset(AssetCode assetCode)
     key.asset().code = assetCode;
     if (cachedEntryExists(key))
     {
-        auto entry = getCachedEntry(key);
-        return entry ? std::make_shared<AssetFrame>(*entry) : nullptr;
+        auto asset = getCachedEntry(key);
+        auto assetFrame = asset ? std::make_shared<AssetFrame>(*asset) : nullptr;
+        if (asset && mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*assetFrame);
+        }
+
+        return assetFrame;
     }
 
     Database& db = getDatabase();
@@ -280,6 +311,26 @@ AssetHelperImpl::loadAsset(AssetCode assetCode, AccountID owner)
     return nullptr;
 }
 
+AssetFrame::pointer
+AssetHelperImpl::loadStatsAsset()
+{
+    const uint32 statsAssetPolicy = static_cast<uint32>(AssetPolicy::STATS_QUOTE_ASSET);
+
+    AssetFrame::pointer retAsset;
+    std::string sql = mAssetColumnSelector;
+    sql += " WHERE policies & :sp = :sp";
+    auto prep = getDatabase().getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(statsAssetPolicy, "sp"));
+
+    auto timer = getDatabase().getSelectTimer("asset");
+    loadAssets(prep, [&retAsset](LedgerEntry const& asset)
+    {
+        retAsset = make_shared<AssetFrame>(asset);
+    });
+    return retAsset;
+}
+
 void
 AssetHelperImpl::loadAssets(StatementContext& prep,
                             function<void(LedgerEntry const&)> assetProcessor)
@@ -289,6 +340,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     AssetEntry& oe = le.data.asset();
 
     int32_t version = 0;
+    uint32_t trailingDigits = 0;
 
     statement& st = prep.statement();
     st.exchange(into(oe.code));
@@ -300,6 +352,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     st.exchange(into(oe.issued));
     st.exchange(into(oe.pendingIssuance));
     st.exchange(into(oe.policies));
+    st.exchange(into(trailingDigits));
     st.exchange(into(le.lastModifiedLedgerSeq));
     st.exchange(into(version));
     st.define_and_bind();
@@ -308,12 +361,40 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     while (st.got_data())
     {
         oe.ext.v(static_cast<LedgerVersion>(version));
+        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+        {
+            oe.ext.trailingDigitsCount() = trailingDigits;
+        }
 
         AssetFrame::ensureValid(oe);
 
         assetProcessor(le);
         st.fetch();
     }
+}
+
+bool
+AssetHelperImpl::doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount)
+{
+    const uint64_t precision = mustLoadAsset(assetCode)->getMinimumAmount();
+    return amount % precision == 0;
+}
+
+void
+AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
+{
+    std::string sql = mAssetColumnSelector;
+    sql += " WHERE policies & :bp = :bp "
+           " ORDER BY code ";
+    uint32 baseAssetPolicy = static_cast<uint32>(AssetPolicy::BASE_ASSET);
+    auto prep = getDatabase().getPreparedStatement(sql);
+    prep.statement().exchange(use(baseAssetPolicy, "bp"));
+
+    auto timer = getDatabase().getSelectTimer("asset");
+    loadAssets(prep, [&retAssets](LedgerEntry const& asset)
+    {
+        retAssets.push_back(make_shared<AssetFrame>(asset));
+    });
 }
 
 Database&

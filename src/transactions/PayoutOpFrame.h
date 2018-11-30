@@ -24,7 +24,7 @@ class PayoutOpFrame : public OperationFrame
                             int32_t ledgerVersion) const override;
 
     Fee
-    getActualFee(AssetCode const& asset, uint64_t amount, Database& db);
+    getActualFee(AssetCode const& asset, uint64_t amount, uint64_t precisionStep, Database& db);
 
     bool
     isFeeAppropriate(Fee const& actualFee) const;

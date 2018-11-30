@@ -21,6 +21,8 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/SaleAnteHelper.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AssetHelper.h"
 #include "dex/DeleteSaleParticipationOpFrame.h"
 
 namespace stellar
@@ -130,19 +132,23 @@ void CheckSaleStateOpFrame::chargeSaleAntes(uint64_t saleID, AccountID const &co
             throw std::runtime_error("Unexpected state. Expected commission balance to exist");
         }
 
-        if (!participantBalanceFrame->tryChargeFromLocked(saleAnte->getAmount())) {
+        const BalanceFrame::Result participantChargeResult = participantBalanceFrame->tryChargeFromLocked(saleAnte->getAmount());
+        if (participantChargeResult != BalanceFrame::Result::SUCCESS) {
             string strParticipantBalanceID = PubKeyUtils::toStrKey(participantBalanceFrame->getBalanceID());
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to charge from locked amount for sale ante with sale id: " << saleAnte->getSaleID()
+                    << "Failed to charge from locked amount for sale ante with reason "
+                    << participantChargeResult << " sale id: " << saleAnte->getSaleID()
                     << " and participant balance id: " << strParticipantBalanceID;
             throw std::runtime_error("Failed to charge from locked amount for sale ante");
         }
 
-        if (!commissionBalance->tryFundAccount(saleAnte->getAmount())) {
+        const BalanceFrame::Result commissionBalanceFundResult = commissionBalance->tryFundAccount(saleAnte->getAmount());
+        if (commissionBalanceFundResult != BalanceFrame::Result::SUCCESS) {
             string strCommissionBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to fund commission balance with sale ante - overflow. Sale id: "
-                    << saleAnte->getSaleID() << " and commission balance id: " << strCommissionBalanceID;
+                    << "Failed to fund commission balance with sale ante, reason " << commissionBalanceFundResult
+                    << ". Sale id: " << saleAnte->getSaleID() << " and commission balance id: "
+                    << strCommissionBalanceID;
             throw runtime_error("Failed to fund commission balance with sale ante");
         }
 
@@ -179,7 +185,8 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
     }
 
     // return delta back to the asset
-    if (!balanceAfter->tryCharge(balanceDelta)) {
+    const BalanceFrame::Result balanceAfterChargeResult = balanceAfter->tryCharge(balanceDelta);
+    if (balanceAfterChargeResult != BalanceFrame::Result::SUCCESS) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to clean up sale manager balance after sale been performed: " << sale->getID();
         throw std::runtime_error("Unexpected state: failed to clean up sale manager balance after sale been performed");
     }
@@ -195,8 +202,6 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
     }
 
     AssetHelperLegacy::Instance()->storeChange(delta, db, asset->mEntry);
-
-    return;
 }
 
 
@@ -251,7 +256,7 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     Database& db = app.getDatabase();
     const auto asset = AssetHelperLegacy::Instance()->loadAsset(sale->getBaseAsset(), db);
     //TODO Must be refactored
-    uint64_t amountToIssue = std::min(sale->getBaseAmountForCurrentCap(), asset->getMaxIssuanceAmount());
+    uint64_t amountToIssue = std::min(sale->getBaseAmountForCurrentCap(asset->getMinimumAmount()), asset->getMaxIssuanceAmount());
 
     const auto issuanceRequestOp = CreateIssuanceRequestOpFrame::build(sale->getBaseAsset(), amountToIssue,
                                                                        sale->getBaseBalanceID(), lm, 0);
@@ -345,9 +350,11 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
 {
     auto& db = app.getDatabase();
     auto baseBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(sale->getBaseBalanceID(), db);
+    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(saleQuoteAsset.quoteBalance, db);
 
-    uint64_t baseAmount = min(sale->getBaseAmountForCurrentCap(saleQuoteAsset.quoteAsset), static_cast<uint64_t>(baseBalance->getAmount()));
-    int64_t quoteAmount = OfferManager::calculateQuoteAmount(baseAmount, saleQuoteAsset.price);
+    const uint64_t baseAmountByCap = sale->getBaseAmountForCurrentCap(saleQuoteAsset.quoteAsset, baseBalance->getMinimumAmount());
+    uint64_t baseAmount = min(baseAmountByCap, static_cast<uint64_t>(baseBalance->getAmount()));
+    int64_t quoteAmount = OfferManager::calculateQuoteAmount(baseAmount, saleQuoteAsset.price, quoteBalance->getMinimumAmount());
     auto saleType = sale->getSaleType();
     auto baseAsset = sale->getBaseAsset();
     auto price = saleQuoteAsset.price;
@@ -420,19 +427,23 @@ bool CheckSaleStateOpFrame::cleanSale(SaleFrame::pointer sale, Application& app,
     for (auto const& quoteAsset : sale->getSaleEntry().quoteAssets)
     {
         const int64_t priceInQuoteAsset = getPriceInQuoteAsset(priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset, db);
+        const uint64 minimumBaseAmount = getMinimumAssetAmount(sale->getSaleEntry().baseAsset, db, &delta);
         int64_t minAllowedQuoteAmount = 0;
-        if (!bigDivide(minAllowedQuoteAmount, priceInQuoteAsset, 1, ONE, ROUND_UP))
+        if (!bigDivide(minAllowedQuoteAmount, priceInQuoteAsset, minimumBaseAmount, ONE, ROUND_UP))
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate min allowed quote amount: " << sale->getID();
             throw runtime_error("Failed to calculate min quote amount");
         }
+        const uint64 minimumQuoteAmount = getMinimumAssetAmount(quoteAsset.quoteAsset, db, &delta);
+        minAllowedQuoteAmount = std::max<uint64>(minAllowedQuoteAmount, minimumQuoteAmount);
 
-        // it's not possible to create offer with quote amount < 1, so we can continue
+        // optimization: it's not possible to create offer with quote amount < 1, so we don't have to cancel here
         if (minAllowedQuoteAmount == 1)
         {
             continue;
         }
 
+        // cancel all offers which are less than minAllowedQuoteAmount
         auto offersToCancel = OfferHelper::Instance()->loadOffers(sale->getBaseAsset(), quoteAsset.quoteAsset, sale->getID(), minAllowedQuoteAmount, db);
         for (const auto offerToCancel : offersToCancel)
         {
@@ -472,8 +483,9 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale,
                 CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to update price for offer: offerID: " << offerEntry.offerID;
                 throw runtime_error("Failed to update price for offer on check state");
             }
+            offerEntry.baseAmount -= offerEntry.baseAmount % getMinimumAssetAmount(saleEntry.baseAsset, db, &delta);
 
-                        OfferHelper::Instance()->storeChange(delta, db, offerToUpdate->mEntry);
+            OfferHelper::Instance()->storeChange(delta, db, offerToUpdate->mEntry);
         }
     }
 
@@ -483,7 +495,6 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale,
 int64_t CheckSaleStateOpFrame::getSaleCurrentPriceInDefaultQuote(
     const SaleFrame::pointer sale, LedgerDelta& delta, Database& db)
 {
-
     if (sale->getSaleType() == SaleType::FIXED_PRICE)
     {
         uint64_t priceInDefaultQuoteAsset = 0;
@@ -605,5 +616,15 @@ std::string CheckSaleStateOpFrame::getInnerResultCodeAsStr()
 {
     const auto code = getInnerCode(mResult);
     return xdr::xdr_traits<CheckSaleStateResultCode>::enum_name(code);
+}
+
+uint64 CheckSaleStateOpFrame::getMinimumAssetAmount(const AssetCode& balance, Database& db, LedgerDelta* delta)
+{
+    StorageHelperImpl storageHelper(db, delta);
+    static_cast<StorageHelper&>(storageHelper).release();
+    AssetFrame::pointer assetFrame = static_cast<StorageHelper&>(storageHelper)
+            .getAssetHelper().mustLoadAsset(balance);
+
+    return assetFrame->getMinimumAmount();
 }
 }

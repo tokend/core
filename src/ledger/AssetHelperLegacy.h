@@ -56,8 +56,6 @@ public:
 
     AssetFrame::pointer loadStatsAsset(Database& db);
 
-    void loadAssets(std::vector<AssetFrame::pointer>& retAssets, Database& db);
-
     void loadBaseAssets(std::vector<AssetFrame::pointer>& retAssets,
                         Database& db);
 
@@ -72,10 +70,5 @@ private:
     AssetHelperLegacy(AssetHelperLegacy const&) = delete;
     AssetHelperLegacy& operator=(AssetHelperLegacy const&) = delete;
 
-    void loadAssets(StatementContext& prep,
-                    std::function<void(LedgerEntry const&)> AssetProcessor);
-
-    void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert,
-                           LedgerEntry const& entry);
 };
 }

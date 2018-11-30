@@ -86,7 +86,14 @@ namespace stellar {
                 destBalanceBeforeTx = balanceHelper->loadBalance(destination.balanceID(), db);
             }
 
-            auto commissionBalancesBeforeTx = balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), db);
+            std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
+            balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), commissionBalancesBeforeTx, db);
+
+            std::unordered_map<std::string, BalanceFrame::pointer> commissionBalancesBeforeTxByAsset;
+            for (auto& balanceFrame : commissionBalancesBeforeTx)
+            {
+                commissionBalancesBeforeTxByAsset[balanceFrame->getAsset()] = balanceFrame;
+            }
 
             TransactionFramePtr txFrame;
             txFrame = createPaymentV2Tx(source, sourceBalanceID, destination, amount, feeData, subject, reference);
@@ -161,8 +168,8 @@ namespace stellar {
             for (auto &item : commissionDelta) {
                 BalanceFrame::pointer commissionBalanceBeforeTx;
 
-                if (commissionBalancesBeforeTx.count(item.asset) > 0)
-                    commissionBalanceBeforeTx = commissionBalancesBeforeTx[item.asset];
+                if (commissionBalancesBeforeTxByAsset.count(item.asset) > 0)
+                    commissionBalanceBeforeTx = commissionBalancesBeforeTxByAsset[item.asset];
 
                 auto commissionBalanceAfterTx = balanceHelper->loadBalance(mTestManager->getApp().getCommissionID(),
                                                                            item.asset, db, nullptr);

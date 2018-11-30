@@ -30,7 +30,8 @@ OfferExchange::OfferExchange(AccountManager& accountManager, LedgerDelta& delta,
 
 
 bool OfferExchange::getQuoteAmountBasedOnFee(OfferEntry const& offer,
-                                             int64_t& quoteAmountBasedOnFee)
+                                             int64_t& quoteAmountBasedOnFee,
+                                             uint64_t quotePrecisionStep)
 {
     int64_t percentFee = offer.percentFee;
     if (percentFee == 0)
@@ -40,7 +41,7 @@ bool OfferExchange::getQuoteAmountBasedOnFee(OfferEntry const& offer,
     }
 
     return bigDivide(quoteAmountBasedOnFee, offer.fee, 100 * ONE, percentFee,
-                     ROUND_DOWN);
+                     ROUND_DOWN, quotePrecisionStep);
 }
 
 int64 OfferExchange::getMatchPrice(OfferEntry const& buy,
@@ -58,14 +59,16 @@ int64 OfferExchange::getMatchPrice(OfferEntry const& buy,
     return sell.price;
 }
 
-ExchangeResult OfferExchange::exchange(OfferEntry& offerA, OfferEntry& offerB)
+ExchangeResult OfferExchange::exchange(OfferEntry& offerA, OfferEntry& offerB,
+        uint64_t basePrecisionStep, uint64_t quotePrecisionStep)
 {
     OfferEntry& buyingOffer = offerA.isBuy ? offerA : offerB;
     OfferEntry& sellingOffer = offerA.isBuy ? offerB : offerA;
     int64_t matchPrice = getMatchPrice(buyingOffer, sellingOffer);
 
     int64_t quoteAmountBasedOnLockedFee;
-    if (!getQuoteAmountBasedOnFee(buyingOffer, quoteAmountBasedOnLockedFee))
+    if (!getQuoteAmountBasedOnFee(buyingOffer,
+            quoteAmountBasedOnLockedFee, quotePrecisionStep))
     {
         ExchangeResult result{};
         result.type = ExchangeResultType::RESULT_OVERFLOW;
@@ -77,7 +80,7 @@ ExchangeResult OfferExchange::exchange(OfferEntry& offerA, OfferEntry& offerB)
 
     auto match = exchange(buyingOffer.baseAmount, buyingOfferQuoteAmount,
                           sellingOffer.baseAmount, sellingOffer.quoteAmount,
-                          matchPrice);
+                          matchPrice, basePrecisionStep, quotePrecisionStep);
     if (!setFeeToPay(match.buyerFee, match.quoteDelta, buyingOffer.percentFee)
         || !setFeeToPay(match.sellerFee, match.quoteDelta,
                         sellingOffer.percentFee))
@@ -105,14 +108,20 @@ bool OfferExchange::setFeeToPay(int64_t& feeToPay, int64_t quoteAmount,
 // TODO handle overflows
 ExchangeResult OfferExchange::exchange(int64_t buyerBase, int64_t buyerQuote,
                                        int64_t sellerBase, int64_t sellerQuote,
-                                       int64_t matchPrice)
+                                       int64_t matchPrice, uint64_t basePrecisionStep,
+                                       uint64_t quotePrecisionStep)
 {
+    // Base and quote values for buyer and seller could become mismatched,
+    // for example, after buyer made another exchange and his amounts decreased.
+    // Because of that, we need to decrease all other parameters so they
+    // would match each other again.
+
     ExchangeResult result{};
     result.matchPrice = matchPrice;
     // find smallest base and calculate quote based on it
     result.baseDelta = std::min(buyerBase, sellerBase);
     if (!bigDivide(result.quoteDelta, result.baseDelta, matchPrice, ONE,
-                   ROUND_UP))
+                   ROUND_UP, quotePrecisionStep))
     {
         result.type = ExchangeResultType::RESULT_OVERFLOW;
         return result;
@@ -129,7 +138,7 @@ ExchangeResult OfferExchange::exchange(int64_t buyerBase, int64_t buyerQuote,
 
     // calculate baseDelta based on quoteDelta
     if (!bigDivide(result.baseDelta, result.quoteDelta, ONE, matchPrice,
-                   ROUND_DOWN))
+                   ROUND_DOWN, basePrecisionStep))
     {
         result.type = ExchangeResultType::RESULT_OVERFLOW;
         return result;
@@ -138,7 +147,7 @@ ExchangeResult OfferExchange::exchange(int64_t buyerBase, int64_t buyerQuote,
     // now we can try to make quote delta more accurate based on new base delta
     int64_t quoteDeltaCandiate = 0;
     if (!bigDivide(quoteDeltaCandiate, result.baseDelta, matchPrice, ONE,
-                   ROUND_UP))
+                   ROUND_UP, quotePrecisionStep))
     {
         result.type = ExchangeResultType::RESULT_OVERFLOW;
         return result;
@@ -169,13 +178,13 @@ void OfferExchange::unlockBalancesForTakenOffer(OfferFrame& offer,
     BalanceFrame::Result result;
     if (offer.getOffer().isBuy)
     {
-        int64_t lockedAmount = offer.getOffer().quoteAmount + offer.getOffer().
-                                                                    fee;
-        result = quoteBalance->lockBalance(-lockedAmount);
+        const int64_t lockedAmount = offer.getOffer().quoteAmount +
+                                     offer.getOffer().fee;
+        result = quoteBalance->unlock(lockedAmount);
     }
     else
     {
-        result = baseBalance->lockBalance(-offer.getOffer().baseAmount);
+        result = baseBalance->unlock(offer.getOffer().baseAmount);
     }
 
     if (result != BalanceFrame::Result::SUCCESS)
@@ -213,12 +222,15 @@ void OfferExchange::offerMatched(OfferEntry& offer,
     offer.quoteAmount -= match.quoteDelta;
 
     bool isBalanceValid = false;
+    const BalanceFrame::Result success = BalanceFrame::Result::SUCCESS;
     if (offer.isBuy)
     {
         assert(match.buyerFee >= 0);
         int64_t amountToCharge = match.quoteDelta + match.buyerFee;
-        isBalanceValid = baseBalance->addBalance(match.baseDelta) &&
-                         quoteBalance->addLocked(-amountToCharge);
+        assert(match.baseDelta >= 0);
+        assert(amountToCharge >= 0);
+        isBalanceValid = baseBalance->tryFundAccount(match.baseDelta) == success &&
+                         quoteBalance->tryChargeFromLocked(amountToCharge) == success;
         offer.fee -= match.buyerFee;
     }
     else
@@ -228,9 +240,10 @@ void OfferExchange::offerMatched(OfferEntry& offer,
 
         assert(match.sellerFee >= 0);
         int64_t amountToAdd = match.quoteDelta - match.sellerFee;
+        assert(match.baseDelta >= 0);
         assert(amountToAdd > 0);
-        isBalanceValid = baseBalance->addLocked(-match.baseDelta) &&
-                         quoteBalance->addBalance(amountToAdd);
+        isBalanceValid = baseBalance->tryChargeFromLocked(match.baseDelta) == success &&
+                         quoteBalance->tryFundAccount(amountToAdd) == success;
     }
 
     if (!isBalanceValid)
@@ -287,7 +300,8 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
         return eOfferTaken;
     }
 
-    auto exchangeResult = exchange(offerA, offerB);
+    auto exchangeResult = exchange(offerA, offerB, baseBalanceA->getMinimumAmount(),
+            quoteBalanceA->getMinimumAmount());
     if (exchangeResult.type == ExchangeResultType::RESULT_OVERFLOW)
         return eOfferCantConvert;
 
@@ -308,10 +322,13 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
                         ? exchangeResult.buyerFee
                         : exchangeResult.sellerFee);
 
-    assert(mCommissionBalance->addBalance(exchangeResult.buyerFee));
-    assert(mCommissionBalance->addBalance(exchangeResult.sellerFee));
+    if (mCommissionBalance->tryFundAccount(exchangeResult.buyerFee) != BalanceFrame::Result::SUCCESS ||
+        mCommissionBalance->tryFundAccount(exchangeResult.sellerFee) != BalanceFrame::Result::SUCCESS)
+    {
+        throw std::runtime_error("Unable to increase commission balance.");
+    }
 
-    if (!offerNeedsMore(offerB))
+    if (!offerNeedsMore(offerB, quoteBalanceB->getMinimumAmount()))
     {
         // entire offer is taken
         markOfferAsTaken(offerFrameB, baseBalanceB, quoteBalanceB, db);
@@ -327,20 +344,21 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     return eOfferPartial;
 }
 
-bool OfferExchange::offerNeedsMore(OfferEntry& offer)
+bool OfferExchange::offerNeedsMore(OfferEntry& offer, uint64_t quotePrecisionStep)
 {
     // check how much can we buy
     if (offer.isBuy)
     {
         int64_t quoteAmountBasedOnFee;
-        if (!getQuoteAmountBasedOnFee(offer, quoteAmountBasedOnFee))
+        if (!getQuoteAmountBasedOnFee(offer, quoteAmountBasedOnFee,
+                                      quotePrecisionStep))
             return false;
 
         int64_t availableQuoteAmount = std::min(quoteAmountBasedOnFee,
                                                 offer.quoteAmount);
         int64_t canBuy = 0;
         if (!bigDivide(canBuy, availableQuoteAmount, ONE, offer.price,
-                       ROUND_DOWN) || canBuy == 0)
+                       ROUND_DOWN, quotePrecisionStep) || canBuy == 0)
             return false;
     }
     return offer.baseAmount > 0 && offer.quoteAmount > 0;
@@ -357,7 +375,7 @@ OfferExchange::convertWithOffers(
 
     size_t offerOffset = 0;
 
-    while (offerNeedsMore(offerA))
+    while (offerNeedsMore(offerA, quoteBalanceA->getMinimumAmount()))
     {
         std::vector<OfferFrame::pointer> retList;
         auto offerHelper = OfferHelper::Instance();
@@ -399,7 +417,7 @@ OfferExchange::convertWithOffers(
                 return ePartial;
             }
 
-            if (!offerNeedsMore(offerA))
+            if (!offerNeedsMore(offerA, quoteBalanceA->getMinimumAmount()))
             {
                 return eOK;
             }
@@ -411,7 +429,7 @@ OfferExchange::convertWithOffers(
         }
 
         // still stuff to fill but no more offers
-        if (offerNeedsMore(offerA) && retList.size() < OFFERS_TO_TAKE)
+        if (offerNeedsMore(offerA, quoteBalanceA->getMinimumAmount()) && retList.size() < OFFERS_TO_TAKE)
         {
             return eOK;
         }

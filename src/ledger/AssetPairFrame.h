@@ -6,6 +6,7 @@
 
 #include "ledger/EntryFrame.h"
 #include "ledger/LedgerManager.h"
+#include "ledger/AssetFrame.h"
 #include <functional>
 #include <unordered_map>
 
@@ -79,9 +80,6 @@ class AssetPairFrame : public EntryFrame
 		auto policyValue = static_cast<int32_t >(policy);
 		return (mAssetPair.policies & policyValue) == policyValue;
 	}
-
-        // convertAmount - converts amount to opposite of asset based. Returns false, if overflow
-        bool convertAmount(AssetCode code, uint64_t amount, Rounding rounding, uint64_t& result) const;
 
     static bool isValid(AssetPairEntry const& oe);
     bool isValid() const;

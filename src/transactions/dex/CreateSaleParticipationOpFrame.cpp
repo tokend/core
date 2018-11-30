@@ -10,6 +10,7 @@
 #include "ledger/OfferHelper.h"
 #include "OfferManager.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
@@ -75,8 +76,9 @@ bool CreateSaleParticipationOpFrame::isPriceValid(SaleFrame::pointer sale, Balan
 
     const int64_t priceForSoftCap = CheckSaleStateOpFrame::getSalePriceForCap(sale->getSoftCap(), sale);
     const int64_t priceInQuoteAsset = CheckSaleStateOpFrame::getPriceInQuoteAsset(priceForSoftCap, sale, quoteBalance->getAsset(), db);
+    const uint64_t baseStep = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db)->getMinimumAmount();
     int64_t baseAmount = 0;
-    if (!bigDivide(baseAmount, mManageOffer.amount, ONE, priceInQuoteAsset, ROUND_DOWN))
+    if (!bigDivide(baseAmount, mManageOffer.amount, ONE, priceInQuoteAsset, ROUND_DOWN, baseStep))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate base amount for sale participation on soft cap " << xdr::xdr_to_string(mManageOffer);
         throw runtime_error("Failed to calculate base amount for sale participation on soft cap");
@@ -150,14 +152,16 @@ CreateSaleParticipationOpFrame::tryCreateSaleAnte(Database &db, LedgerDelta &del
     }
 
     int64_t quoteAssetAmount = 0; // required for calculating amount of sale ante
-    if (!bigDivide(quoteAssetAmount, mManageOffer.amount, mManageOffer.price, ONE, ROUND_UP)) {
+    if (!bigDivide(quoteAssetAmount, mManageOffer.amount, mManageOffer.price, ONE, ROUND_UP,
+                   sourceBalanceFrame->getMinimumAmount())) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate quote asset amount - overflow, asset code: "
                                                << investFeeFrame->getAsset();
         throw std::runtime_error("Failed to calculate quote asset amount - overflow");
     }
 
     uint64_t amountToLock = 0;
-    if (!investFeeFrame->calculatePercentFee(static_cast<uint64_t>(quoteAssetAmount), amountToLock, ROUND_UP)) {
+    if (!investFeeFrame->calculatePercentFee(static_cast<uint64_t>(quoteAssetAmount), amountToLock, ROUND_UP,
+                                             sourceBalanceFrame->getMinimumAmount())) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate invest percent fee - overflow, asset code: "
                                                << investFeeFrame->getAsset();
         throw std::runtime_error("Failed to calculate invest percent fee - overflow");
@@ -246,15 +250,15 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
-    const auto quoteAmount = OfferManager::
-    calculateQuoteAmount(mManageOffer.amount, mManageOffer.price);
+    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(mManageOffer.quoteBalance, db);
+    const auto quoteAmount = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price,
+            quoteBalance->getMinimumAmount());
     if (quoteAmount == 0)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: quote amount overflows";
         throw runtime_error("Unexpected state: quote amount overflows");
     }
 
-    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(mManageOffer.quoteBalance, db);
     if (!tryAddSaleCap(db, quoteAmount, quoteBalance->getAsset(), sale))
     {
         innerResult().code(ManageOfferResultCode::ORDER_VIOLATES_HARD_CAP);
@@ -298,7 +302,6 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
 bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer sale,
     Database& db, uint64_t& totalCurrentCapInDefaultQuote)
 {
-
     totalCurrentCapInDefaultQuote = 0;
     auto const& saleEntry = sale->getSaleEntry();
     for (auto const& quoteAsset : saleEntry.quoteAssets)
@@ -322,8 +325,10 @@ bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer 
             throw runtime_error("Failed to load asset pair for sale");
         }
 
+        auto defaultQuoteAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(saleEntry.defaultQuoteAsset, db);
         uint64_t currentCapInDefaultQuote = 0;
-        if (!assetPair->convertAmount(saleEntry.defaultQuoteAsset, quoteAsset.currentCap, ROUND_UP, currentCapInDefaultQuote))
+        if (!AssetPairHelper::Instance()->convertAmount(assetPair, saleEntry.defaultQuoteAsset, quoteAsset.currentCap,
+                                                        ROUND_UP, db, currentCapInDefaultQuote))
         {
             return false;
         }

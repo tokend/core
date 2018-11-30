@@ -66,6 +66,11 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         {
             amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount + 1, "Inalid", reference, CreateAMLAlertRequestResultCode::UNDERFUNDED);
         }
+        SECTION("Mismatching balance precision and amount")
+        {
+            ManageAssetTestHelper(testManager).changeAssetTrailingDigits(balance->getAsset(), 0);
+            amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount - 1, "Inalid", reference, CreateAMLAlertRequestResultCode::INCORRECT_PRECISION);
+        }
         SECTION("Given valid aml alert request")
         {
             const auto requestID = amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount/2, "Inalid", reference,

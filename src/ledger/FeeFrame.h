@@ -40,8 +40,7 @@ namespace stellar
         FeeFrame& operator=(FeeFrame const& other);
 
 		static pointer create(FeeType feeType, int64_t fixedFee, int64_t percentFee, AssetCode asset, 
-            AccountID* accountID = nullptr, AccountType* accountType = nullptr, int64_t subtype = SUBTYPE_ANY,
-            int64_t lowerBound=0, int64_t upperBound=INT64_MAX);
+            AccountID* accountID = nullptr, uint64_t assetPrecision = 1);
         
         EntryFrame::pointer
         copy() const override
@@ -49,14 +48,7 @@ namespace stellar
             return EntryFrame::pointer(new FeeFrame(*this));
         }
 
-                [[deprecated]]
-		// calculates percent fee of amount with rounding up
-		int64_t calculatePercentFee(int64_t amount, bool roundUp = true);
-
-                bool calculatePercentFee(uint64_t amount, uint64_t& result, Rounding rounding) const;
-
-		// calculaates percent fee for period amount*percentFee*periodPassed/basePeriod
-		int64_t calculatePercentFeeForPeriod(int64_t amount, int64_t periodPassed, int64_t basePeriod);
+        bool calculatePercentFee(uint64_t amount, uint64_t& result, Rounding rounding, uint64_t roundingStep) const;
         
         FeeEntry const&
         getFee() const

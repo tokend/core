@@ -143,6 +143,11 @@ uint64_t SaleFrame::getMaxAmountToBeSold() const
     return mSale.maxAmountToBeSold;
 }
 
+uint64_t SaleFrame::getCurrentCapInBase() const
+{
+    return mSale.currentCapInBase;
+}
+
 BalanceID const& SaleFrame::getBaseBalanceID() const
 {
     return mSale.baseBalance;
@@ -190,9 +195,9 @@ AssetCode const& SaleFrame::getDefaultQuoteAsset() const
 }
 
 bool SaleFrame::convertToBaseAmount(uint64_t const& price,
-    uint64_t const& quoteAssetAmount, uint64_t& result)
+    uint64_t const& quoteAssetAmount, uint64_t basePrecisionStep, uint64_t& result)
 {
-    return bigDivide(result, quoteAssetAmount, ONE, price, ROUND_UP);
+    return bigDivide(result, quoteAssetAmount, ONE, price, ROUND_UP, basePrecisionStep);
 }
 
 SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &ownerID, SaleCreationRequest const& request,
@@ -262,11 +267,11 @@ SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &own
     }
 }
 
-uint64_t SaleFrame::getBaseAmountForCurrentCap(AssetCode const& asset)
+uint64_t SaleFrame::getBaseAmountForCurrentCap(AssetCode const& asset, uint64_t basePrecisionStep)
 {
-    auto& quoteAsset = getSaleQuoteAsset(asset);
-    uint64_t baseAmount;
-    if (!convertToBaseAmount(quoteAsset.price, quoteAsset.currentCap, baseAmount))
+    auto& quoteSaleAsset = getSaleQuoteAsset(asset);
+    uint64_t baseAmount = 0;
+    if (!convertToBaseAmount(quoteSaleAsset.price, quoteSaleAsset.currentCap, basePrecisionStep, baseAmount))
     {
         CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected state: failed to conver to base amount current cap: " << xdr::xdr_to_string(mSale);
         throw runtime_error("Unexpected state: failed to conver to base amount current cap");
@@ -275,12 +280,12 @@ uint64_t SaleFrame::getBaseAmountForCurrentCap(AssetCode const& asset)
     return baseAmount;
 }
 
-uint64_t SaleFrame::getBaseAmountForCurrentCap()
+uint64_t SaleFrame::getBaseAmountForCurrentCap(uint64_t basePrecisionStep)
 {
     uint64_t amountToIssue = 0;
     for (auto const& quoteAsset : mSale.quoteAssets)
     {
-        const uint64_t baseAmountForCurrentCap = getBaseAmountForCurrentCap(quoteAsset.quoteAsset);
+        const uint64_t baseAmountForCurrentCap = getBaseAmountForCurrentCap(quoteAsset.quoteAsset, basePrecisionStep);
         if (!safeSum(amountToIssue, baseAmountForCurrentCap, amountToIssue))
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate amount to issue for sale: " << xdr::xdr_to_string(mSale);

@@ -7,9 +7,11 @@
 #include "ManageAssetTestHelper.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelperImpl.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
 #include "ReviewAssetRequestHelper.h"
 #include "test/test_marshaler.h"
@@ -157,7 +159,8 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     std::string details,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
-    uint64_t initialPreissuanceAmount)
+    uint64_t initialPreissuanceAmount,
+    uint32_t trailingDigitsCount)
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
@@ -168,6 +171,11 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;
     assetCreationRequest.initialPreissuedAmount = initialPreissuanceAmount;
+    if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
+    {
+        assetCreationRequest.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+        assetCreationRequest.ext.trailingDigitsCount() = trailingDigitsCount;
+    }
     return request;
 }
 
@@ -215,13 +223,23 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createChangeSignerRequest(
 void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         SecretKey& preIssuedSigner,
                                         AssetCode assetCode, Account& root,
-                                        uint32_t policies)
+                                        uint32_t policies,
+                                        uint32_t trailingDigitsCount)
 {
+    const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
+            AssetFrame::getMinimumAmountFromTrailingDigits(trailingDigitsCount));
     auto creationRequest = createAssetCreationRequest(assetCode,
                                                       preIssuedSigner.
                                                       getPublicKey(),
-                                                      "{}", UINT64_MAX,
+                                                      "{}", maxIssuanceAmount,
                                                       policies, 0);
+    if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
+    {
+        creationRequest.createAsset().ext.v(
+                LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+        creationRequest.createAsset().ext.trailingDigitsCount() =
+                trailingDigitsCount;
+    }
     auto creationResult = applyManageAssetTx(assetOwner, 0, creationRequest);
 
     auto accountHelper = AccountHelper::Instance();
@@ -271,6 +289,19 @@ void ManageAssetTestHelper::updateAsset(Account& assetOwner,
                                             approvingRequest->getHash(),
                                             approvingRequest->getType(),
                                             ReviewRequestOpAction::APPROVE, "");
+}
+
+void ManageAssetTestHelper::changeAssetTrailingDigits(AssetCode assetCode,
+                                                      uint32 trailingDigitsCount)
+{
+    auto storageHelper = std::unique_ptr<StorageHelper>(
+            new StorageHelperImpl(mTestManager->getDB(), nullptr));
+    storageHelper->release();
+
+    auto asset = storageHelper->getAssetHelper().mustLoadAsset(assetCode);
+    asset->mEntry.data.asset().ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+    asset->setTrailingDigitsCount(trailingDigitsCount);
+    storageHelper->getAssetHelper().storeChange(asset->mEntry);
 }
 
 void ManageAssetTestHelper::validateManageAssetEffect(

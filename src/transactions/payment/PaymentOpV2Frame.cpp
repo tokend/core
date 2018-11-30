@@ -137,6 +137,10 @@ namespace stellar {
                 innerResult().code(PaymentV2ResultCode::LINE_FULL);
                 return;
             }
+            case AccountManager::Result::INCORRECT_PRECISION: {
+                innerResult().code(PaymentV2ResultCode::INCORRECT_AMOUNT_PRECISION);
+                return;
+            }
             default: {
                 CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from process transfer v2: "
                                                        << transferResult;
@@ -261,13 +265,16 @@ namespace stellar {
             else
                 destAsset = transferAsset;
 
-            if (!assetPair->convertAmount(destAsset, amount, Rounding::ROUND_UP, amount)) {
+            if (!AssetPairHelper::Instance()->convertAmount(assetPair, destAsset, amount,
+                    Rounding::ROUND_UP, db, amount))
+            {
                 // most probably it will not happen, but it'd better to return error code
                 throw std::runtime_error("failed to convert transfer amount into fee asset");
             }
         }
 
-        if (!feeFrame->calculatePercentFee(amount, actualFee.maxPaymentFee, ROUND_UP)) {
+        const uint64_t feeMinimumAmount = AssetHelperLegacy::Instance()->mustLoadAsset(actualFee.feeAsset, db)->getMinimumAmount();
+        if (!feeFrame->calculatePercentFee(amount, actualFee.maxPaymentFee, ROUND_UP, feeMinimumAmount)) {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
                                                    << feeFrame->getFeeAsset();
             throw std::runtime_error("Failed to calculate actual payment fee - overflow");
