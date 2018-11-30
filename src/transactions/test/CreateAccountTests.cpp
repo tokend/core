@@ -41,27 +41,27 @@ TEST_CASE("create account", "[tx][create_account]") {
     int32 BitcoinExternalSystemType = 1;
     int32 EthereumExternalSystemType = 2;
 
-    SECTION("External system account id are generated") {
+    SECTION("External system account id are not generated") {
         auto externalSystemAccountIDHelper = ExternalSystemAccountIDHelperLegacy::Instance();
         createAccountHelper.applyTx(createAccountTestBuilder);
         const auto btcKey = externalSystemAccountIDHelper->load(randomAccount.getPublicKey(),
                                                                 BitcoinExternalSystemType, app.getDatabase());
-        REQUIRE(!!btcKey);
+        REQUIRE(!btcKey);
 
         const auto ethKey = externalSystemAccountIDHelper->load(randomAccount.getPublicKey(),
                                                                 EthereumExternalSystemType, app.getDatabase());
-        REQUIRE(!!ethKey);
+        REQUIRE(!ethKey);
 
         SECTION("Can update account, but ext keys will be the same") {
             createAccountHelper.applyTx(createAccountTestBuilder.setType(AccountType::GENERAL));
             const auto btcKeyAfterUpdate = externalSystemAccountIDHelper->load(randomAccount.getPublicKey(),
                                                                                BitcoinExternalSystemType,
                                                                                app.getDatabase());
-            REQUIRE(btcKey->getExternalSystemAccountID() == btcKeyAfterUpdate->getExternalSystemAccountID());
+            REQUIRE(!btcKeyAfterUpdate);
             const auto ethKeyAfterUpdate = externalSystemAccountIDHelper->load(randomAccount.getPublicKey(),
                                                                                EthereumExternalSystemType,
                                                                                app.getDatabase());
-            REQUIRE(ethKey->getExternalSystemAccountID() == ethKeyAfterUpdate->getExternalSystemAccountID());
+            REQUIRE(!ethKeyAfterUpdate);
         }
     }
     SECTION("Can't create system account") {

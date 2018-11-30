@@ -54,7 +54,7 @@ TEST_CASE("manage external system account id pool entry", "[tx][manage_external_
         int32 BitcoinExternalSystemType = 1;
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
-                            BitcoinExternalSystemType, "");
+                            BitcoinExternalSystemType, "Some valid data");
     }
     SECTION("Happy path")
     {
