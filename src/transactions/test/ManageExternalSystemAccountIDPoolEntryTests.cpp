@@ -1,5 +1,5 @@
-#include <exsysidgen/Generator.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
+#include <ledger/ExternalSystemAccountIDPoolEntry.h>
 #include "main/Application.h"
 #include "util/Timer.h"
 #include "main/Config.h"
@@ -51,9 +51,10 @@ TEST_CASE("manage external system account id pool entry", "[tx][manage_external_
     }
     SECTION("Auto generated type")
     {
+        int32 BitcoinExternalSystemType = 1;
+
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
-                                                        BitcoinExternalSystemType, "",
-                                    ManageExternalSystemAccountIdPoolEntryResultCode::AUTO_GENERATED_TYPE_NOT_ALLOWED);
+                            BitcoinExternalSystemType, "");
     }
     SECTION("Happy path")
     {

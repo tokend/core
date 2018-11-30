@@ -29,8 +29,6 @@ namespace stellar {
 
         void buildAccount(Application &app, LedgerDelta &delta, AccountFrame::pointer destAccountFrame);
         void trySetReferrer(Application &app, Database &db, AccountFrame::pointer destAccount) const;
-        void storeExternalSystemsIDs(Application &app, LedgerDelta &delta,
-                                     Database &db, const AccountFrame::pointer account);
 
         bool isAllowedToUpdateAccountType(AccountFrame::pointer destAccount) const;
 

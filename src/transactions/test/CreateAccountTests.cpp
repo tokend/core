@@ -4,7 +4,7 @@
 #include <transactions/test/test_helper/TestManager.h>
 #include <transactions/test/test_helper/ManageAssetTestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
-#include <exsysidgen/Generator.h>
+#include <ledger/ExternalSystemAccountIDPoolEntry.h>
 #include "overlay/LoopbackPeer.h"
 #include "main/test.h"
 #include "ledger/AccountHelper.h"
@@ -37,6 +37,9 @@ TEST_CASE("create account", "[tx][create_account]") {
             .setRecovery(SecretKey::random().getPublicKey());
 
     auto createAccountHelper = CreateAccountTestHelper(testManager);
+
+    int32 BitcoinExternalSystemType = 1;
+    int32 EthereumExternalSystemType = 2;
 
     SECTION("External system account id are generated") {
         auto externalSystemAccountIDHelper = ExternalSystemAccountIDHelperLegacy::Instance();
