@@ -4,6 +4,8 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include <transactions/dex/OfferManager.h>
+#include <ledger/StorageHelperImpl.h>
+#include <ledger/AssetHelper.h>
 #include "ReviewASwapRequestOpFrame.h"
 
 using namespace std;
@@ -37,7 +39,7 @@ void ReviewASwapRequestOpFrame::removeBid(Database &db, LedgerDelta &delta,
                                           BalanceFrame::pointer bidOwnerBalance,
                                           AtomicSwapBidFrame::pointer bid)
 {
-    if (!bidOwnerBalance->unlock(bid->getAmount()))
+    if (bidOwnerBalance->unlock(bid->getAmount()) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: failed to unlock amount in bid owner balance, "
@@ -164,7 +166,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
                 "Unexpected state. Expected purchaser balance to exist");
     }
 
-    if (!purchaserBalanceFrame->tryFundAccount(aSwapRequest.baseAmount))
+    if (purchaserBalanceFrame->tryFundAccount(aSwapRequest.baseAmount) != BalanceFrame::Result::SUCCESS)
     {
         innerResult().code(ReviewRequestResultCode::ASWAP_PURCHASER_FULL_LINE);
         return false;
@@ -173,7 +175,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     auto bidOwnerBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
             bidFrame->getOwnerID(), bidFrame->getBaseAsset(), db, &delta);
 
-    if (!bidOwnerBalanceFrame->tryChargeFromLocked(aSwapRequest.baseAmount))
+    if (bidOwnerBalanceFrame->tryChargeFromLocked(aSwapRequest.baseAmount) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: failed to charge from bid owner balance locked amount, "
@@ -213,8 +215,12 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
                 "Unexpected state: quote asset not found in bid's quote assets list");
     }
 
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    auto& assetHelper = static_cast<StorageHelper&>(storageHelperImpl).getAssetHelper();
+    auto quoteAssetFrame = assetHelper.mustLoadAsset(aSwapRequest.quoteAsset);
+
     auto quoteAmount = OfferManager::calculateQuoteAmount(
-            aSwapRequest.baseAmount, quoteAssetPrice);
+            aSwapRequest.baseAmount, quoteAssetPrice, quoteAssetFrame->getMinimumAmount());
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);

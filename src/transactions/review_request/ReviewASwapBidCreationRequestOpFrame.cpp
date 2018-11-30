@@ -171,7 +171,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handlePermanentReject(
         throw runtime_error("Unexpected state: expected base balance to exist");
     }
 
-    if (!baseBalanceFrame->unlock(aSwapCreationRequest.amount))
+    if (baseBalanceFrame->unlock(aSwapCreationRequest.amount) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: failed to unlock amount in bid creation requestor balance, "

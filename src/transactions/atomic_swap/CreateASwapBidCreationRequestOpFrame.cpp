@@ -267,8 +267,9 @@ bool CreateASwapBidCreationRequestOpFrame::doCheckValid(Application &app)
             return false;
         }
 
+        // FIXME: use minimal amount of current quote asset
         const bool isQuoteAmountFits = OfferManager::calculateQuoteAmount(
-                aSwapCreationRequest.amount, quoteAsset.price) > 0;
+                aSwapCreationRequest.amount, quoteAsset.price, 1) > 0;
         if (!isQuoteAmountFits)
         {
             innerResult().code(

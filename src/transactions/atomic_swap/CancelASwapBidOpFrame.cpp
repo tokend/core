@@ -61,7 +61,7 @@ bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
     auto bidOwnerBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
             bidFrame->getOwnerID(), bidFrame->getBaseAsset(), db, &delta);
 
-    if (!bidOwnerBalanceFrame->unlock(bidFrame->getAmount()))
+    if (bidOwnerBalanceFrame->unlock(bidFrame->getAmount()) != BalanceFrame::Result ::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: failed to unlock amount in bid owner balance, "
