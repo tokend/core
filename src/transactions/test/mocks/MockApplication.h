@@ -90,16 +90,6 @@ class MockApplication : public Application
     MOCK_CONST_METHOD0(getMaxInvoicesForReceiverAccount, int64());
     MOCK_CONST_METHOD0(getKYCSuperAdminMask, int32());
 
-    MOCK_CONST_METHOD1(areAllExternalSystemGeneratorsAvailable,
-                       bool(xdr::xvector<ExternalSystemIDGeneratorType>));
-    MOCK_METHOD1(addAvailableExternalSystemGenerator,
-                 void(ExternalSystemIDGeneratorType));
-    MOCK_METHOD0(getAvailableExternalSystemGenerator,
-                 const std::unordered_set<ExternalSystemIDGeneratorType>&());
-
-    MOCK_CONST_METHOD0(getBTCAddressRoot, const std::string());
-    MOCK_CONST_METHOD0(getETHAddressRoot, const std::string());
-
     MOCK_CONST_METHOD0(isCheckingPolicies, bool());
     MOCK_METHOD0(stopCheckingPolicies, void());
     MOCK_METHOD0(resumeCheckingPolicies, void());

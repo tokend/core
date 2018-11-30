@@ -270,14 +270,6 @@ class Application
     virtual int64 getMaxInvoicesForReceiverAccount() const = 0;
     virtual int32 getKYCSuperAdminMask() const = 0;
 
-    virtual bool areAllExternalSystemGeneratorsAvailable(xdr::xvector<ExternalSystemIDGeneratorType> ex) const = 0;
-    virtual void addAvailableExternalSystemGenerator(ExternalSystemIDGeneratorType ex) = 0;
-    virtual const std::unordered_set<ExternalSystemIDGeneratorType>& getAvailableExternalSystemGenerator() = 0;
-
-
-    virtual const std::string getBTCAddressRoot() const = 0;
-    virtual const std::string getETHAddressRoot() const = 0;
-
     // Returns false if policies should not be checked,
     // for sake of testing or otherwise.
     virtual bool isCheckingPolicies() const = 0;

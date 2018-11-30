@@ -62,7 +62,6 @@ TEST_CASE("ledgerheader", "[ledger][header]")
         TxSetFramePtr txSet = make_shared<TxSetFrame>(lastHash);
 
         REQUIRE(lcl.header.maxTxSetSize == 100);
-        REQUIRE(lcl.header.externalSystemIDGenerators.empty());
         REQUIRE(lcl.header.txExpirationPeriod == INT64_MAX / 2);
 
 
@@ -82,27 +81,6 @@ TEST_CASE("ledgerheader", "[ledger][header]")
             auto& newLCL = app->getLedgerManager().getLastClosedLedgerHeader();
 
             REQUIRE(newLCL.header.maxTxSetSize == 1300);
-        }
-
-        SECTION("external system id generator")
-        {
-            StellarValue sv(txSet->getContentsHash(), 2, emptyUpgradeSteps, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
-            {
-                LedgerUpgrade up(LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR);
-                up.newExternalSystemIDGenerators().push_back(ExternalSystemIDGeneratorType::ETHEREUM_BASIC);
-                up.newExternalSystemIDGenerators().push_back(ExternalSystemIDGeneratorType::BITCOIN_BASIC);
-                Value v(xdr::xdr_to_opaque(up));
-                sv.upgrades.emplace_back(v.begin(), v.end());
-            }
-
-            LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
-            app->getLedgerManager().closeLedger(ledgerData);
-
-            auto& newLCL = app->getLedgerManager().getLastClosedLedgerHeader();
-
-            REQUIRE(newLCL.header.externalSystemIDGenerators.size() == 2);
-            REQUIRE(newLCL.header.externalSystemIDGenerators[0] == ExternalSystemIDGeneratorType::ETHEREUM_BASIC);
-            REQUIRE(newLCL.header.externalSystemIDGenerators[1] == ExternalSystemIDGeneratorType::BITCOIN_BASIC);
         }
 
         SECTION("tx expiration period")

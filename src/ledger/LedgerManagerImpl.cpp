@@ -767,9 +767,6 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
         case LedgerUpgradeType::MAX_TX_SET_SIZE:
             ledgerDelta.getHeader().maxTxSetSize = lupgrade.newMaxTxSetSize();
             break;
-        case LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR:
-            ledgerDelta.getHeader().externalSystemIDGenerators = lupgrade.newExternalSystemIDGenerators();
-            break;
         case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
             ledgerDelta.getHeader().txExpirationPeriod = lupgrade.newTxExpirationPeriod();
             break;
