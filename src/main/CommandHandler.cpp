@@ -431,6 +431,9 @@ CommandHandler::info(std::string const& params, std::string& retStr)
     if (mApp.getConfig().UNSAFE_QUORUM)
         info["UNSAFE_QUORUM"] = "UNSAFE QUORUM ALLOWED";
     info["build"] = STELLAR_CORE_VERSION;
+#ifdef XDR_REVISION
+    info["xdr_revision"] = XDR_REVISION;
+#endif
     info["protocol_version"] = mApp.getConfig().LEDGER_PROTOCOL_VERSION;
     info["ledger_version"] = lm.getLastClosedLedgerHeader().header.ledgerVersion;
     info["tx_expiration_period"] = Json::UInt64(lm.getTxExpirationPeriod()
