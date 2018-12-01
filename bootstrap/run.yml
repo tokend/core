@@ -3,7 +3,7 @@
   tasks:
 
   - set_fact:
-      core_docker_image: registry.gitlab.com/swarmfund/core
+      core_docker_image: registry.gitlab.com/tokend/core
       docker_network: core-network
       config_volume: core-config
       data_volume: core-data
