@@ -169,7 +169,7 @@ ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, 
         throw std::runtime_error("Unexpected database state, expected max contracts count key value to be UINT32");
     }
 
-    return maxContractsCountKeyValue->getKeyValue().value.ui32Value();
+    return maxContractsCountKeyValue->getKeyValue().value.value.ui32Value();
 }
 
 bool
@@ -206,7 +206,7 @@ ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& 
         throw std::runtime_error("Unexpected database state, expected max contracts initial detail length key value to be UINT32");
     }
 
-    return maxContractInitialDetailLengthKeyValue->getKeyValue().value.ui32Value();
+    return maxContractInitialDetailLengthKeyValue->getKeyValue().value.value.ui32Value();
 }
 
 bool

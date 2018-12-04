@@ -52,7 +52,7 @@ KeyValueHelperLegacy::storeDelete(LedgerDelta& delta, Database& db,
     auto prep =
         db.getPreparedStatement("DELETE FROM key_value_entry WHERE key=:key");
     auto& st = prep.statement();
-    auto keyStr = key.keyValue().key;
+    auto keyStr = key.keyValueV2().key;
     st.exchange(use(keyStr));
     st.define_and_bind();
     st.execute(true);
@@ -71,7 +71,7 @@ KeyValueHelperLegacy::exists(Database& db, LedgerKey const& key)
     auto prep = db.getPreparedStatement(
         "SELECT EXISTS (SELECT NULL FROM key_value_entry WHERE key=:key)");
     auto& st = prep.statement();
-    auto keyStr = key.keyValue().key;
+    auto keyStr = key.keyValueV2().key;
     st.exchange(use(keyStr));
     int exists = 0;
     st.exchange(into(exists));
@@ -113,7 +113,7 @@ KeyValueHelperLegacy::storeUpdateHelper(LedgerDelta& delta, Database& db,
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
-    st.exchange(use(keyValueEntry.key, "key"));
+    st.exchange(use(keyValueEntry.value.key, "key"));
     st.exchange(use(strValue, "value"));
     st.exchange(use(version, "v"));
     st.exchange(use(keyValueFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -143,14 +143,14 @@ KeyValueHelperLegacy::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey;
     ledgerKey.type(from.data.type());
-    ledgerKey.keyValue().key = from.data.keyValue().key;
+    ledgerKey.keyValueV2().key = from.data.keyValueV2().key;
     return ledgerKey;
 }
 
 EntryFrame::pointer
 KeyValueHelperLegacy::storeLoad(LedgerKey const& key, Database& db)
 {
-    return loadKeyValue(key.keyValue().key, db);
+    return loadKeyValue(key.keyValueV2().key, db);
 }
 
 EntryFrame::pointer
@@ -173,7 +173,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
 {
     LedgerKey key;
     key.type(LedgerEntryType::KEY_VALUE);
-    key.keyValue().key = valueKey;
+    key.keyValueV2().key = valueKey;
     if (cachedEntryExists(key, db))
     {
         auto p = getCachedEntry(key, db);
@@ -221,7 +221,7 @@ KeyValueHelperLegacy::loadKeyValues(
     int version;
 
     statement& st = prep.statement();
-    st.exchange(into(oe.key));
+    st.exchange(into(oe.value.key));
     st.exchange(into(value));
     st.exchange(into(version));
     st.exchange(into(le.lastModifiedLedgerSeq));

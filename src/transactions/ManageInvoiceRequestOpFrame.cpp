@@ -240,7 +240,7 @@ ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, Database& 
         throw std::runtime_error("Unexpected database state, expected max invoices count key value to be UINT32");
     }
 
-    return maxInvoicesCountKeyValue->getKeyValue().value.ui32Value();
+    return maxInvoicesCountKeyValue->getKeyValue().value.value.ui32Value();
 }
 
 uint64_t
@@ -263,7 +263,7 @@ ManageInvoiceRequestOpFrame::obtainMaxInvoiceDetailsLength(Application& app, Dat
         throw std::runtime_error("Unexpected database state, expected max invoices details length key value to be UINT32");
     }
 
-    return maxInvoicesDetailsLengthKeyValue->getKeyValue().value.ui32Value();
+    return maxInvoicesDetailsLengthKeyValue->getKeyValue().value.value.ui32Value();
 }
 
 bool

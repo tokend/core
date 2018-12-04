@@ -23,19 +23,19 @@ namespace stellar {
         }
 
         txtest::ManageKeyValueTestHelper *ManageKeyValueTestHelper::setUi32Value(uint32 value) {
-            this->value.type(KeyValueEntryType::UINT32);
-            this->value.ui32Value() = value;
+            this->value.value.type(KeyValueEntryType::UINT32);
+            this->value.value.ui32Value() = value;
             return this;
         }
 
         txtest::ManageKeyValueTestHelper *ManageKeyValueTestHelper::setValue(std::string value) {
-            this->value.type(KeyValueEntryType::STRING);
-            this->value.stringValue() = value;
+            this->value.value.type(KeyValueEntryType::STRING);
+            this->value.value.stringValue() = value;
             return this;
         }
         txtest::ManageKeyValueTestHelper *ManageKeyValueTestHelper::setUi64Value(uint64 value) {
-            this->value.type(KeyValueEntryType::UINT64);
-            this->value.ui64Value() = value;
+            this->value.value.type(KeyValueEntryType::UINT64);
+            this->value.value.ui64Value() = value;
             return this;
         }
 
@@ -80,18 +80,18 @@ namespace stellar {
             Operation op;
             op.body.type(OperationType::MANAGE_KEY_VALUE);
             op.body.manageKeyValueOp() = ManageKeyValueOp();
-            op.body.manageKeyValueOp().key = key;
+            op.body.manageKeyValueOp().action.value().key = key;
             op.body.manageKeyValueOp().action.action(kvAction);
 
             if(kvAction == ManageKVAction::PUT) {
                 op.body.manageKeyValueOp().action.value().value.type(this->type);
-                op.body.manageKeyValueOp().action.value().value = value;
+                op.body.manageKeyValueOp().action.value() = value;
             }
             return op;
         }
 
         ManageKeyValueTestBuilder::ManageKeyValueTestBuilder(string256 key, TestManager::pointer &testManager,
-                                                             ManageKVAction action, KeyValueEntry::_value_t value,
+                                                             ManageKVAction action, KeyValueEntryV2 value,
                                                              KeyValueEntryType type)
                 :key(key),
                  kvAction(action)

@@ -62,19 +62,19 @@ TransactionFrameImpl::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
         return false;
     }
 
-    if (txFeeAssetKV->getKeyValue().value.type() != KeyValueEntryType::STRING)
+    if (txFeeAssetKV->getKeyValue().value.value.type() != KeyValueEntryType::STRING)
     {
         throw std::runtime_error(
             "Unexpected database state, expected issuance tasks to be STRING");
     }
 
     if (!AssetFrame::isAssetCodeValid(
-            txFeeAssetKV->getKeyValue().value.stringValue()))
+            txFeeAssetKV->getKeyValue().value.value.stringValue()))
     {
         throw std::invalid_argument("Tx fee asset code is invalid");
     }
 
-    txFeeAssetCode = txFeeAssetKV->getKeyValue().value.stringValue();
+    txFeeAssetCode = txFeeAssetKV->getKeyValue().value.value.stringValue();
     return true;
 }
 

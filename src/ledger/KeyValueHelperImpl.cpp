@@ -59,7 +59,7 @@ KeyValueHelperImpl::storeDelete(LedgerKey const& key)
     auto prep =
         db.getPreparedStatement("DELETE FROM key_value_entry WHERE key=:key");
     auto& st = prep.statement();
-    auto keyStr = key.keyValue().key;
+    auto keyStr = key.keyValueV2().key;
     st.exchange(use(keyStr));
     st.define_and_bind();
     st.execute(true);
@@ -82,7 +82,7 @@ KeyValueHelperImpl::exists(LedgerKey const& key)
     auto prep = db.getPreparedStatement(
         "SELECT EXISTS (SELECT NULL FROM key_value_entry WHERE key=:key)");
     auto& st = prep.statement();
-    auto keyStr = key.keyValue().key;
+    auto keyStr = key.keyValueV2().key;
     st.exchange(use(keyStr));
     int exists = 0;
     st.exchange(into(exists));
@@ -127,7 +127,7 @@ KeyValueHelperImpl::storeUpdateHelper(LedgerDelta* delta, Database& db,
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
-    st.exchange(use(keyValueEntry.key, "key"));
+    st.exchange(use(keyValueEntry.value.key, "key"));
     st.exchange(use(strValue, "value"));
     st.exchange(use(version, "v"));
     st.exchange(use(keyValueFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -160,14 +160,14 @@ KeyValueHelperImpl::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey;
     ledgerKey.type(from.data.type());
-    ledgerKey.keyValue().key = from.data.keyValue().key;
+    ledgerKey.keyValueV2().key = from.data.keyValueV2().key;
     return ledgerKey;
 }
 
 EntryFrame::pointer
 KeyValueHelperImpl::storeLoad(LedgerKey const& key)
 {
-    return loadKeyValue(key.keyValue().key);
+    return loadKeyValue(key.keyValueV2().key);
 }
 
 EntryFrame::pointer
@@ -189,7 +189,7 @@ KeyValueHelperImpl::loadKeyValue(string256 valueKey)
 {
     LedgerKey key;
     key.type(LedgerEntryType::KEY_VALUE);
-    key.keyValue().key = valueKey;
+    key.keyValueV2().key = valueKey;
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
@@ -238,7 +238,7 @@ KeyValueHelperImpl::loadKeyValues(
     int version;
 
     statement& st = prep.statement();
-    st.exchange(into(oe.key));
+    st.exchange(into(oe.value.key));
     st.exchange(into(value));
     st.exchange(into(version));
     st.exchange(into(le.lastModifiedLedgerSeq));

@@ -62,13 +62,13 @@ bool CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &al
         return false;
     }
 
-    if (aSwapKV->getKeyValue().value.type() != KeyValueEntryType::UINT32)
+    if (aSwapKV->getKeyValue().value.value.type() != KeyValueEntryType::UINT32)
     {
         throw std::runtime_error(
                 "Unexpected database state, expected atomic swap tasks to be UINT32");
     }
 
-    allTasks = aSwapKV->getKeyValue().value.ui32Value();
+    allTasks = aSwapKV->getKeyValue().value.value.ui32Value();
     return true;
 }
 

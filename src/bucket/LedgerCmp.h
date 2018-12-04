@@ -138,8 +138,8 @@ struct LedgerEntryIdCmp
                 return as.saleID < bs.saleID;
             }
             case LedgerEntryType::KEY_VALUE: {
-                auto const &akv = a.keyValue();
-                auto const &bkv = b.keyValue();
+                auto const &akv = a.keyValueV2();
+                auto const &bkv = b.keyValueV2();
                 return akv.key < bkv.key;
             }
             case LedgerEntryType::ACCOUNT_KYC: {

@@ -35,24 +35,24 @@ namespace stellar {
 
         longstring getEntryKey()
         {
-            return mKeyEntry.key;
+            return mKeyEntry.value.key;
         }
 
         KeyValueEntryType const
         getKeyValueEntryType() const
         {
-            return mKeyEntry.value.type();
+            return mKeyEntry.value.value.type();
         }
 
         void setKey(string256 newKey)
         {
-            mKeyEntry.key = newKey;
+            mKeyEntry.value.key = newKey;
         }
 
         string256 getPrefix()
         {
             string256 prefix;
-            std::istringstream from(mKeyEntry.key);
+            std::istringstream from(mKeyEntry.value.key);
             std::getline(from,prefix,':');
 
             return prefix;

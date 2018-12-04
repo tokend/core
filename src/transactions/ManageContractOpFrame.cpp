@@ -142,7 +142,7 @@ ManageContractOpFrame::obtainMaxContractDetailLength(Application& app, Database&
         throw std::runtime_error("Unexpected database state, expected max contract detail length key value to be UINT32");
     }
 
-    return maxContractDetailLengthKeyValue->getKeyValue().value.ui32Value();
+    return maxContractDetailLengthKeyValue->getKeyValue().value.value.ui32Value();
 }
 
 bool

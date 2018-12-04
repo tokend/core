@@ -154,16 +154,16 @@ BindExternalSystemAccountIdOpFrame::getExpiresAt(StorageHelper& storageHelper,
         return dayInSeconds;
     }
 
-    if (kvEntry.get()->getKeyValue().value.type() != KeyValueEntryType::UINT32)
+    if (kvEntry.get()->getKeyValue().value.value.type() != KeyValueEntryType::UINT32)
     {
         CLOG(WARNING, "BindExternalSystemAccountId")
             << "KeyValueEntryType: "
             << to_string(static_cast<int32>(
-                   kvEntry.get()->getKeyValue().value.type()));
+                   kvEntry.get()->getKeyValue().value.value.type()));
         return dayInSeconds;
     }
 
-    return kvEntry.get()->getKeyValue().value.ui32Value();
+    return kvEntry.get()->getKeyValue().value.value.ui32Value();
 }
 
 } // namespace stellar

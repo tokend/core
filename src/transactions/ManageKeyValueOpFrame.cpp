@@ -38,7 +38,7 @@ namespace stellar {
 
         Database &db = ledgerManager.getDatabase();
         auto keyValueHelper = KeyValueHelperLegacy::Instance();
-        auto keyValueFrame = keyValueHelper->loadKeyValue(this->mManageKeyValue.key, db, &delta);
+        auto keyValueFrame = keyValueHelper->loadKeyValue(this->mManageKeyValue.action.value().key, db, &delta);
 
         if (mManageKeyValue.action.action() == ManageKVAction::REMOVE) {
             if (!keyValueFrame) {
@@ -55,8 +55,8 @@ namespace stellar {
         if (!keyValueFrame) {
             LedgerEntry mEntry;
             mEntry.data.type(LedgerEntryType::KEY_VALUE);
-            mEntry.data.keyValue().key = mManageKeyValue.key;
-            mEntry.data.keyValue().value = mManageKeyValue.action.value().value;
+            mEntry.data.keyValueV2().key = mManageKeyValue.action.value().key;
+            mEntry.data.keyValue().value = mManageKeyValue.action.value();
             keyValueHelper->storeAdd(delta, db, mEntry);
 
             return true;
@@ -64,7 +64,7 @@ namespace stellar {
 
         if (ledgerManager.shouldUse(LedgerVersion::KEY_VALUE_UPDATE))
         {
-            keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value().value;
+            keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
         }
         keyValueHelper->storeChange(delta, db, keyValueFrame->mEntry);
 
