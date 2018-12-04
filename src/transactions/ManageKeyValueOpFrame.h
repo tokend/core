@@ -44,7 +44,7 @@ namespace stellar {
 
         string256 getPrefix() const {
             string256 prefix;
-            std::istringstream from(mManageKeyValue.action.value().key);
+            std::istringstream from(mManageKeyValue.key);
             std::getline(from,prefix,':');
 
             return prefix;

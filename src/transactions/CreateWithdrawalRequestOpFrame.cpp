@@ -368,17 +368,17 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
         return true;
     }
 
-    if (lowerBound.get()->getKeyValue().value.value.type() != KeyValueEntryType::UINT64) {
+    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
         CLOG(WARNING, "WithdrawLowerBound")
             << "AssetCode:" << code
             << "KeyValueEntryType: "
             << std::to_string(
-                static_cast<int32>(lowerBound.get()->getKeyValue().value.value.type()));
+                static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
         return true;
     }
 
     auto &request = mCreateWithdrawalRequest.request;
-    return lowerBound.get()->getKeyValue().value.value.ui64Value() <= request.amount;
+    return lowerBound.get()->getKeyValue().value.ui64Value() <= request.amount;
 }
 
 }

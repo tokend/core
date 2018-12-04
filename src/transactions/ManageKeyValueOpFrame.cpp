@@ -38,7 +38,7 @@ namespace stellar {
 
         Database &db = ledgerManager.getDatabase();
         auto keyValueHelper = KeyValueHelperLegacy::Instance();
-        auto keyValueFrame = keyValueHelper->loadKeyValue(this->mManageKeyValue.action.value().key, db, &delta);
+        auto keyValueFrame = keyValueHelper->loadKeyValue(this->mManageKeyValue.key, db, &delta);
 
         if (mManageKeyValue.action.action() == ManageKVAction::REMOVE) {
             if (!keyValueFrame) {
@@ -55,7 +55,7 @@ namespace stellar {
         if (!keyValueFrame) {
             LedgerEntry mEntry;
             mEntry.data.type(LedgerEntryType::KEY_VALUE);
-            mEntry.data.keyValueV2().key = mManageKeyValue.action.value().key;
+            mEntry.data.keyValue().key = mManageKeyValue.key;
             mEntry.data.keyValue().value = mManageKeyValue.action.value();
             keyValueHelper->storeAdd(delta, db, mEntry);
 
@@ -75,8 +75,9 @@ namespace stellar {
     bool ManageKeyValueOpFrame::doCheckValid(Application &app) {
         auto prefix = getPrefix();
         bool isKycRule = strcmp(prefix.c_str(), kycRulesPrefix) == 0;
+//        bool isExternalSystem = strcmp(prefix.c_str(), externalSystemPrefix) == 0;
 
-        if (isKycRule && (mManageKeyValue.action.value().value.type() != KeyValueEntryType::UINT32)){
+        if (isKycRule && (mManageKeyValue.action.value().type() != KeyValueEntryType::UINT32)){
             innerResult().code(ManageKeyValueResultCode::INVALID_TYPE);
             return false;
         }
