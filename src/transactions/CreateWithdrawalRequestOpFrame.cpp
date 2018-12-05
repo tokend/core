@@ -369,12 +369,13 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
         return true;
     }
 
-    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
-        CLOG(WARNING, key.c_str())
-            << "AssetCode:" << code
+    CLOG(WARNING, Logging::OPERATION_LOGGER)
+            << "AssetCode: " << code
             << "KeyValueEntryType: "
+            << "Key: " << key.c_str()
             << std::to_string(
-                static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
+                    static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
+    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
         return true;
     }
 
