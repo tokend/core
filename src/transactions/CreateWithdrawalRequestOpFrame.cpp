@@ -370,7 +370,7 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
     }
 
     if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
-        CLOG(WARNING, ManageKeyValueOpFrame::withdrawLowerBoundPrefix)
+        CLOG(WARNING, key.c_str())
             << "AssetCode:" << code
             << "KeyValueEntryType: "
             << std::to_string(

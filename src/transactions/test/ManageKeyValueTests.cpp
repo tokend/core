@@ -50,8 +50,6 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
         testHelper.doApply(app, ManageKVAction::PUT, false, KeyValueEntryType::STRING);
     }
 
-    SECTION("Invalid type ExternalSys")
-
     testHelper.setKey(key);
 
     SECTION("Can create new") {

@@ -13,7 +13,6 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
-#include "transactions/ManageKeyValueOpFrame.h"
 #include "ReviewAssetRequestHelper.h"
 #include "test/test_marshaler.h"
 
