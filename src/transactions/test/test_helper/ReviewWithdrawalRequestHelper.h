@@ -40,10 +40,26 @@ public:
                                              expectedResult =
                                                  ReviewRequestResultCode::
                                                  SUCCESS) override;
+    using ReviewRequestHelper::applyReviewRequestTxWithTasks;
+    ReviewRequestResult applyReviewRequestTxWithTasks(Account& source,
+                                             uint64_t requestID,
+                                             Hash requestHash,
+                                             ReviewableRequestType requestType,
+                                             ReviewRequestOpAction action,
+                                             std::string rejectReason,
+                                             ReviewRequestResultCode
+                                             expectedResult =
+                                                 ReviewRequestResultCode::
+                                                 SUCCESS,
+                                                 uint32_t *tasksToAdd = nullptr,
+                                                 uint32_t *tasksToRemove = nullptr) override;
 
     TransactionFramePtr createReviewRequestTx(Account& source,
         uint64_t requestID, Hash requestHash, ReviewableRequestType requestType,
         ReviewRequestOpAction action, std::string rejectReason) override;
+    TransactionFramePtr createReviewRequestTxWithTasks(Account& source,
+        uint64_t requestID, Hash requestHash, ReviewableRequestType requestType,
+        ReviewRequestOpAction action, std::string rejectReason, uint32_t *tasksToAdd, uint32_t *tasksToRemove);
 };
 }
 }

@@ -68,6 +68,11 @@ bool CreateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
 
 	auto assetHelper = AssetHelperLegacy::Instance();
 
+    if (policiesIncompatible()) {
+        innerResult().code(ManageAssetResultCode::INCOMPATIBLE_POLICIES);
+        return false;
+    }
+
     auto isAssetExist = assetHelper->exists(db, mAssetCreationRequest.code);
     if (isAssetExist) {
         innerResult().code(ManageAssetResultCode::ASSET_ALREADY_EXISTS);
@@ -156,6 +161,13 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
     }
 
 	return true;
+}
+
+bool CreateAssetOpFrame::policiesIncompatible() {
+    return (isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE) ||
+            isSetFlag(mAssetCreationRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL)) &&
+            isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE_V2);
+
 }
 
 string CreateAssetOpFrame::getAssetCode() const

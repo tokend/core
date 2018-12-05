@@ -49,6 +49,11 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     createRequest(LedgerDelta& delta, LedgerManager& ledgerManager, Database& db,
                   const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
 
+    ReviewableRequestFrame::pointer
+    tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+                               BalanceFrame::pointer balanceFrame,
+                               AssetFrame::pointer assetFrame);
+
     void
     storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
                        Database& db, const uint64_t universalAmount);
@@ -57,12 +62,27 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     approveRequest(AccountManager& accountManager, LedgerDelta& delta, LedgerManager& ledgerManager,
                    Database& db, const AssetFrame::pointer assetFrame, const BalanceFrame::pointer balanceFrame);
 
+
+    bool loadWithdrawalTasks(Database &db, uint32_t &allTasks,
+                                                             LedgerManager& lm);
+
+    bool loadDefaultWithdrawalTasks(Database &db, uint32_t &allTasks,
+                                                             LedgerManager& lm);
+
 public:
 
     CreateWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;
+    bool doApplyV1(Application& app, LedgerDelta& delta,
+                 LedgerManager& ledgerManager,
+                   BalanceFrame::pointer balanceFrame,
+                   AssetFrame::pointer assetFrame);
+    bool doApplyV2(Application& app, LedgerDelta& delta,
+                 LedgerManager& ledgerManager,
+                   BalanceFrame::pointer balanceFrame,
+                   AssetFrame::pointer assetFrame);
 
     bool doCheckValid(Application& app) override;
 

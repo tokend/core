@@ -30,7 +30,9 @@ public:
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
-protected:
+	bool policiesIncompatible();
+
+		protected:
     std::string getAssetCode() const override;
 };
 }

@@ -67,11 +67,24 @@ protected:
                                              ReviewRequestResultCode
                                              expectedResult,
                                              ReviewChecker& checker);
+    ReviewRequestResult applyReviewRequestTxWithTasks(Account& source,
+                                             uint64_t requestID,
+                                             Hash requestHash,
+                                             ReviewableRequestType requestType,
+                                             ReviewRequestOpAction action,
+                                             std::string rejectReason,
+                                             ReviewRequestResultCode
+                                             expectedResult,
+                                             ReviewChecker& checker,
+                                             uint32_t *tasksToAdd = nullptr,
+                                             uint32_t *tasksToRemove= nullptr);
 
 public:
 
     virtual ReviewRequestResult applyReviewRequestTx(Account& source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason,
         ReviewRequestResultCode expectedResult = ReviewRequestResultCode::SUCCESS);
+    virtual ReviewRequestResult applyReviewRequestTxWithTasks(Account& source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason,
+        ReviewRequestResultCode expectedResult = ReviewRequestResultCode::SUCCESS, uint32_t *tasksToAdd = nullptr, uint32_t *tasksToRemove= nullptr);
 
     virtual ReviewRequestResult applyReviewRequestTx(
         Account& source, uint64_t requestID, Hash requestHash,
@@ -80,10 +93,26 @@ public:
         ReviewRequestResultCode expectedResult = ReviewRequestResultCode::
             SUCCESS) = 0;
 
+    virtual ReviewRequestResult applyReviewRequestTxWithTasks(
+        Account& source, uint64_t requestID, Hash requestHash,
+        ReviewableRequestType requestType,
+        ReviewRequestOpAction action, std::string rejectReason,
+        ReviewRequestResultCode expectedResult = ReviewRequestResultCode::
+            SUCCESS,
+            uint32_t *tasksToAdd = nullptr,
+            uint32_t *tasksToRemove= nullptr);
+
     virtual TransactionFramePtr createReviewRequestTx(
         Account& source, uint64_t requestID, Hash requestHash,
         ReviewableRequestType requestType,
         ReviewRequestOpAction action, std::string rejectReason);
+
+    virtual TransactionFramePtr createReviewRequestTxWithTasks(
+        Account& source, uint64_t requestID, Hash requestHash,
+        ReviewableRequestType requestType,
+        ReviewRequestOpAction action, std::string rejectReason,
+        uint32_t *tasksToAdd = nullptr,
+        uint32_t *tasksToRemove= nullptr);
 };
 }
 }
