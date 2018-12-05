@@ -133,7 +133,7 @@ bool ReviewWithdrawalRequestOpFrame::handleApproveV2(
         return true;
     }
 
-    //Delete pending_statistics entries before reviwable_request due to constraint change
+    //Delete pending_statistics entries before reviewable request due to constraint change
     auto reqID = request->getRequestID();
     auto pendingStats = PendingStatisticsHelper::Instance()->loadPendingStatistics(reqID, db, delta);
     for (auto& pending : pendingStats){
@@ -147,10 +147,11 @@ bool ReviewWithdrawalRequestOpFrame::handleApproveV2(
 
     auto balance = BalanceHelperLegacy::Instance()->mustLoadBalance(withdrawRequest.balance, db, &delta);
     const auto totalAmountToCharge = getTotalAmountToCharge(request->getRequestID(), withdrawRequest);
-    if (!balance->tryChargeFromLocked(totalAmountToCharge))
+    if (balance->tryChargeFromLocked(totalAmountToCharge) != BalanceFrame::Result::SUCCESS)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state. Failed to charge from locked amount which must be locked. requestID: " << request->getRequestID();
-        throw runtime_error("Unexected db state. Failed to charge from locked");
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state. Failed to charge from locked amount which must be locked. requestID: "
+                                               << request->getRequestID();
+        throw runtime_error("Unexpected db state. Failed to charge from locked");
     }
     EntryHelperProvider::storeChangeEntry(delta, db, balance->mEntry);
 
@@ -187,11 +188,9 @@ bool ReviewWithdrawalRequestOpFrame::handleReject(
     return false;
 }
 
-    ReviewWithdrawalRequestOpFrame::ReviewWithdrawalRequestOpFrame(
-    Operation const& op, OperationResult& res, TransactionFrame& parentTx) :
-        ReviewTwoStepWithdrawalRequestOpFrame(op,
-                                                                                                res,
-                                                                                                parentTx)
+ReviewWithdrawalRequestOpFrame::ReviewWithdrawalRequestOpFrame(
+        Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+        : ReviewTwoStepWithdrawalRequestOpFrame(op, res, parentTx)
 {
 }
 
