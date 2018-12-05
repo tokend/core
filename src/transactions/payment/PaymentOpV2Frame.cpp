@@ -393,8 +393,10 @@ namespace stellar {
         innerResult().paymentV2Response().asset = destBalance->getAsset();
         innerResult().paymentV2Response().sourceSentUniversal = sourceSentUniversal;
         innerResult().paymentV2Response().paymentID = paymentID;
-        innerResult().paymentV2Response().actualSourcePaymentFee = sourceFee.maxPaymentFee;
-        innerResult().paymentV2Response().actualDestinationPaymentFee = destFee.maxPaymentFee;
+        innerResult().paymentV2Response().actualSourcePaymentFee.fixed = sourceFee.fixedFee;
+        innerResult().paymentV2Response().actualSourcePaymentFee.percent = sourceFee.maxPaymentFee;
+        innerResult().paymentV2Response().actualDestinationPaymentFee.fixed = destFee.fixedFee;
+        innerResult().paymentV2Response().actualDestinationPaymentFee.percent = destFee.maxPaymentFee;
 
         return true;
     }
