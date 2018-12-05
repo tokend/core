@@ -84,14 +84,14 @@ namespace stellar {
             op.body.manageKeyValueOp().action.action(kvAction);
 
             if(kvAction == ManageKVAction::PUT) {
-                op.body.manageKeyValueOp().action.value().value.type(this->type);
-                op.body.manageKeyValueOp().action.value().value = value;
+                op.body.manageKeyValueOp().action.value().type(this->type);
+                op.body.manageKeyValueOp().action.value() = value;
             }
             return op;
         }
 
         ManageKeyValueTestBuilder::ManageKeyValueTestBuilder(string256 key, TestManager::pointer &testManager,
-                                                             ManageKVAction action, KeyValueEntry::_value_t value,
+                                                             ManageKVAction action, KeyValueEntryValue value,
                                                              KeyValueEntryType type)
                 :key(key),
                  kvAction(action)
