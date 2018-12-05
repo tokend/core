@@ -14,8 +14,6 @@ namespace stellar {
             return mResult.tr().manageKeyValueResult();
         }
 
-        static void initializePossibleValueTypes();
-
     public:
 
         ManageKeyValueOpFrame(Operation const& op, OperationResult& res,
@@ -86,6 +84,6 @@ namespace stellar {
         static const char * atomicSwapTasksPrefix;
         static const char * withdrawLowerBoundPrefix;
 
-        static std::map<xdr::xstring<256>, KeyValueEntryType> valueTypes;
+        static std::map<std::string, KeyValueEntryType> valueTypes;
     };
 }

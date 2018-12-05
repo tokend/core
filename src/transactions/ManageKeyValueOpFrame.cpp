@@ -11,7 +11,6 @@
 #include <transactions/kyc/CreateKYCReviewableRequestOpFrame.h>
 #include <map>
 
-
 namespace stellar {
     using namespace std;
     using xdr::operator==;
@@ -27,28 +26,25 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
     char const * ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_tasks";
     char const * ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
-    map<xdr::xstring<256>, KeyValueEntryType> ManageKeyValueOpFrame::valueTypes = map<xdr::xstring<256>, KeyValueEntryType>();
+    map<std::string, KeyValueEntryType> ManageKeyValueOpFrame::valueTypes = {
+        {kycRulesPrefix, KeyValueEntryType::UINT32},
+        {externalSystemPrefix, KeyValueEntryType::UINT32},
+        {issuanceTasksPrefix, KeyValueEntryType::UINT32},
+        {maxContractDetailLengthPrefix, KeyValueEntryType::UINT32},
+        {maxContractInitialDetailLengthPrefix, KeyValueEntryType::UINT32},
+        {maxContractsCountPrefix, KeyValueEntryType::UINT32},
+        {maxInvoiceDetailLengthPrefix, KeyValueEntryType::UINT32},
+        {maxInvoicesCountPrefix, KeyValueEntryType::UINT32},
+        {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
+        {withdrawLowerBoundPrefix, KeyValueEntryType::UINT64},
+        {transactionFeeAssetPrefix, KeyValueEntryType::STRING},
+    };
 
     ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                                  stellar::TransactionFrame &parentTx)
             : OperationFrame(op, res, parentTx),
               mManageKeyValue(mOperation.body.manageKeyValueOp())
     {
-        initializePossibleValueTypes();
-    }
-
-    void ManageKeyValueOpFrame::initializePossibleValueTypes() {
-        valueTypes.insert(make_pair(kycRulesPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(externalSystemPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(issuanceTasksPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(maxContractDetailLengthPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(maxContractInitialDetailLengthPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(maxContractsCountPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(maxInvoiceDetailLengthPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(maxInvoicesCountPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(atomicSwapTasksPrefix, KeyValueEntryType::UINT32));
-        valueTypes.insert(make_pair(withdrawLowerBoundPrefix, KeyValueEntryType::UINT64));
-        valueTypes.insert(make_pair(transactionFeeAssetPrefix, KeyValueEntryType::STRING));
     }
 
     bool ManageKeyValueOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) {
@@ -125,20 +121,14 @@ namespace stellar {
     longstring
     ManageKeyValueOpFrame::makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet,
                                           uint32 kycLevelToSet) {
-        longstring key;
-        key = key + kycRulesPrefix + ":" + to_string(static_cast<uint32 >(accountType)) + ":" + to_string(kycLevel) + ":"
-            + to_string(static_cast<uint32>(accountTypeToSet)) + ":" + to_string(kycLevelToSet);
-
-        return key;
+        return string(kycRulesPrefix) + ":" + to_string(static_cast<uint32 >(accountType)) + ":" + to_string(kycLevel) + ":"
+               + to_string(static_cast<uint32>(accountTypeToSet)) + ":" + to_string(kycLevelToSet);
     }
 
     longstring
     ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(int32 externalSystemType)
     {
-        longstring key;
-        key = key + externalSystemPrefix + ":" + to_string(externalSystemType);
-
-        return key;
+        return string(externalSystemPrefix) + ":" + to_string(externalSystemType);
     }
 
     longstring
@@ -178,10 +168,7 @@ namespace stellar {
 
     longstring ManageKeyValueOpFrame::makeIssuanceTasksKey(AssetCode assetCode)
     {
-        longstring key;
-        key = key + issuanceTasksPrefix + ":" + assetCode;
-
-        return key;
+        return string(issuanceTasksPrefix) + ":" + assetCode;
     }
 
     longstring ManageKeyValueOpFrame::makeAtomicSwapTasksKey()
@@ -191,8 +178,6 @@ namespace stellar {
 
     longstring ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(AssetCode assetCode)
     {
-        longstring key;
-        key = key + withdrawLowerBoundPrefix + ":" + assetCode;
-        return key;
+        return string(withdrawLowerBoundPrefix) + ":" + assetCode;
     }
 }

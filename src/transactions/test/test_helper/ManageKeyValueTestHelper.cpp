@@ -91,7 +91,7 @@ namespace stellar {
         }
 
         ManageKeyValueTestBuilder::ManageKeyValueTestBuilder(string256 key, TestManager::pointer &testManager,
-                                                             ManageKVAction action, KeyValueTypedEntry value,
+                                                             ManageKVAction action, KeyValueEntryValue value,
                                                              KeyValueEntryType type)
                 :key(key),
                  kvAction(action)
