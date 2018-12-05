@@ -85,10 +85,12 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
                                                                            zeroFee, "{}", withdrawDestAsset,
                                                                            expectedAmountInDestAsset);
 
+        auto key = ManageKeyValueOpFrame::makeWithdrawLowerBoundKey("USD");
+
         SECTION("Approve")
         {
             uint64 lowerLimits = ONE;
-            manageKVHelper.setKey("WithdrawLowerBound:USD");
+            manageKVHelper.setKey(key);
             manageKVHelper.setUi64Value(lowerLimits);
             manageKVHelper.doApply(app, ManageKVAction::PUT, true);
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
@@ -97,7 +99,7 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
         SECTION("Reject")
         {
             uint64 lowerLimits = 1000 * ONE;
-            manageKVHelper.setKey("WithdrawLowerBound:USD");
+            manageKVHelper.setKey(key);
             manageKVHelper.setUi64Value(lowerLimits);
             manageKVHelper.doApply(app, ManageKVAction::PUT, true);
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,

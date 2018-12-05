@@ -55,8 +55,10 @@ TransactionFrameImpl::storeFeeForOpType(
 bool
 TransactionFrameImpl::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
 {
-    auto txFeeAssetKV = KeyValueHelperLegacy::Instance()->loadKeyValue(
-        ManageKeyValueOpFrame::transactionFeeAssetKey, db);
+
+    auto key = ManageKeyValueOpFrame::makeTransactionFeeAssetKey();
+    auto txFeeAssetKV = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
+
     if (txFeeAssetKV == nullptr)
     {
         return false;

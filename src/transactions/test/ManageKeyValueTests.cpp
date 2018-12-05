@@ -40,7 +40,7 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
         REQUIRE(!kvFrame);
     }
 
-    SECTION("Invalid type"){
+    SECTION("Invalid type KYCRuleKey"){
         testHelper.setResult(ManageKeyValueResultCode::INVALID_TYPE);
         auto kvFrame = keyValueHelper->loadKeyValue(key,testManager->getDB());
         REQUIRE(!kvFrame);
@@ -49,6 +49,8 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
         testHelper.setValue("smth");
         testHelper.doApply(app, ManageKVAction::PUT, false, KeyValueEntryType::STRING);
     }
+
+    SECTION("Invalid type ExternalSys")
 
     testHelper.setKey(key);
 
