@@ -141,12 +141,9 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
     EntryHelperProvider::storeAddEntry(delta, db, bidFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
-    innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    innerResult().success().ext.extendedResult().fulfilled = true;
-    innerResult().success().ext.extendedResult().typeExt.requestType(
-            ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
-    innerResult().success().ext.extendedResult().typeExt.aSwapBidExtended().bidID =
-            bidFrame->getBidID();
+    innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
+    innerResult().success().typeExt.aSwapBidExtended().bidID = bidFrame->getBidID();
 
     return true;
 }

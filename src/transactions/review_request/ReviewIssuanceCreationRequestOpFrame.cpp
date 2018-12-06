@@ -123,9 +123,8 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 	if (!request->canBeFulfilled(ledgerManager))
 	{
 		innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().fulfilled = false;
-		innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::NONE);
+        innerResult().success().fulfilled = false;
+		innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
 		return true;
 	}
 
@@ -181,9 +180,8 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 
 	EntryHelperProvider::storeChangeEntry(delta, db, receiver->mEntry);
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
-    innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    innerResult().success().ext.extendedResult().fulfilled = true;
-	innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::NONE);
+    innerResult().success().fulfilled = true;
+	innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
 	return true;
 }
 

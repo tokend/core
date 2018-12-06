@@ -74,8 +74,8 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
 
     if (ledgerManager.shouldUse(LedgerVersion::ADD_CONTRACT_ID_REVIEW_REQUEST_RESULT))
     {
-        innerResult().success().ext.v(LedgerVersion::ADD_CONTRACT_ID_REVIEW_REQUEST_RESULT);
-        innerResult().success().ext.contractID() = contractEntry.contractID;
+        innerResult().success().typeExt.requestType(ReviewableRequestType::CONTRACT);
+        innerResult().success().typeExt.contractExtended().contractID = contractEntry.contractID;
     }
 
     return true;

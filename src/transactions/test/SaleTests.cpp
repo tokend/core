@@ -490,7 +490,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-        auto saleID = result.success().ext.extendedResult().typeExt.saleExtended().saleID;
+        auto saleID = result.success().typeExt.saleExtended().saleID;
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay, &feeToPay);
 
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -832,11 +832,10 @@ TEST_CASE("Sale", "[tx][sale]")
         {
             auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTx(root, requestID,
                                                                              ReviewRequestOpAction::APPROVE, "");
-            REQUIRE(reviewSaleRequestResult.success().ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-            REQUIRE(reviewSaleRequestResult.success().ext.extendedResult().fulfilled);
-            REQUIRE(reviewSaleRequestResult.success().ext.extendedResult().typeExt.requestType() ==
+            REQUIRE(reviewSaleRequestResult.success().fulfilled);
+            REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
                     ReviewableRequestType::SALE);
-            REQUIRE(reviewSaleRequestResult.success().ext.extendedResult().typeExt.saleExtended().saleID != 0);
+            REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
         }
         SECTION("Max issuance or preissued amount is less then hard cap")
         {

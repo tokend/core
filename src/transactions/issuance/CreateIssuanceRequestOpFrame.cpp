@@ -146,7 +146,7 @@ bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delt
 																								   requestFrame);
 		reviewRequestResultCode = reviewRequestResult.code();
 		isFulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?
-					  reviewRequestResult.success().ext.extendedResult().fulfilled:
+					  reviewRequestResult.success().fulfilled :
 					  false;
 	}
 
