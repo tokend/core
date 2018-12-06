@@ -17,6 +17,7 @@
 #include "medida/metrics_registry.h"
 #include "xdrpp/printer.h"
 #include "StatisticsV2Processor.h"
+#include "ManageKeyValueOpFrame.h"
 
 namespace stellar
 {
@@ -362,18 +363,19 @@ bool CreateWithdrawalRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statis
 
 bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& code)
 {
-    xdr::xstring<256> key = "WithdrawLowerBound:" + code;
+    xdr::xstring<256> key = ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(code);
     auto lowerBound = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
     if (!lowerBound) {
         return true;
     }
 
-    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
-        CLOG(WARNING, "WithdrawLowerBound")
-            << "AssetCode:" << code
+    CLOG(WARNING, Logging::OPERATION_LOGGER)
+            << "AssetCode: " << code
             << "KeyValueEntryType: "
+            << "Key: " << key.c_str()
             << std::to_string(
-                static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
+                    static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
+    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
         return true;
     }
 

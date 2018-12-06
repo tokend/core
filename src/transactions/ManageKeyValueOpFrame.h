@@ -54,6 +54,8 @@ namespace stellar {
 
         static longstring makeExternalSystemExpirationPeriodKey(int32 externalSystemType);
 
+        static longstring makeTransactionFeeAssetKey();
+
         static longstring makeIssuanceTasksKey(AssetCode assetCode);
 
         static longstring makeMaxContractDetailLengthKey();
@@ -68,9 +70,11 @@ namespace stellar {
 
         static longstring makeAtomicSwapTasksKey();
 
+        static longstring makeWithdrawLowerBoundKey(AssetCode assetCode);
+
         static const char * kycRulesPrefix;
         static const char * externalSystemPrefix;
-        static const char * transactionFeeAssetKey;
+        static const char * transactionFeeAssetPrefix;
         static const char * issuanceTasksPrefix;
         static const char * maxContractDetailLengthPrefix;
         static const char * maxContractInitialDetailLengthPrefix;
@@ -78,5 +82,8 @@ namespace stellar {
         static const char * maxInvoicesCountPrefix;
         static const char * maxInvoiceDetailLengthPrefix;
         static const char * atomicSwapTasksPrefix;
+        static const char * withdrawLowerBoundPrefix;
+
+        static std::map<std::string, KeyValueEntryType> valueTypes;
     };
 }
