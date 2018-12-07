@@ -122,16 +122,6 @@ namespace stellar {
                     continue;
                 }
 
-//                REQUIRE(isCrossAssetPayment);
-//
-//                if (item.asset == sourceFeeBalanceBeforeTx->getAsset()) {
-//                    auto sourceFeeBalanceAfterTx = balanceHelper->loadBalance(sourceFeeBalanceBeforeTx->getBalanceID(),
-//                                                                              db);
-//                    REQUIRE(sourceFeeBalanceAfterTx->getAmount() == sourceFeeBalanceBeforeTx->getAmount() +
-//                                                                    item.amountDelta);
-//                    continue;
-//                }
-
                 throw std::runtime_error("Unexpected asset code");
             }
 
