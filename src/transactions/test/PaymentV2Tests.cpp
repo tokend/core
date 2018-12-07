@@ -151,13 +151,13 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                      "", "", nullptr,
                                                      PaymentV2ResultCode::MALFORMED);
             }
-            SECTION("Invalid asset code") {
-                paymentFeeData.sourceFee.feeAsset = "";
-                paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
-                                                     destination, paymentAmount, paymentFeeData,
-                                                     "", "", nullptr,
-                                                     PaymentV2ResultCode::MALFORMED);
-            }
+//            SECTION("Invalid asset code") {
+//                paymentFeeData.sourceFee.feeAsset = "";
+//                paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
+//                                                     destination, paymentAmount, paymentFeeData,
+//                                                     "", "", nullptr,
+//                                                     PaymentV2ResultCode::MALFORMED);
+//            }
         }
         SECTION("Amount is less than destination fee") {
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
@@ -237,24 +237,24 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  "", nullptr,
                                                  PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
         }
-        SECTION("Destination fee asset differs from payment amount asset") {
-            paymentFeeData.destinationFee.feeAsset = feeAsset;
-            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
-                                                 destination, paymentAmount, paymentFeeData, "",
-                                                 "", nullptr,
-                                                 PaymentV2ResultCode::INVALID_DESTINATION_FEE_ASSET);
-        }
-        SECTION("Source fee asset mismatched") {
-            issuanceTestHelper.createAssetWithPreIssuedAmount(root, "EUR", INT64_MAX, root);
-            paymentFeeData.sourceFee.feeAsset = "EUR";
-            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
-                                                 destination, paymentAmount, paymentFeeData, "",
-                                                 "", nullptr,
-                                                 PaymentV2ResultCode::FEE_ASSET_MISMATCHED);
-        }
+//        SECTION("Destination fee asset differs from payment amount asset") {
+//            paymentFeeData.destinationFee.feeAsset = feeAsset;
+//            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
+//                                                 destination, paymentAmount, paymentFeeData, "",
+//                                                 "", nullptr,
+//                                                 PaymentV2ResultCode::INVALID_DESTINATION_FEE_ASSET);
+//        }
+//        SECTION("Source fee asset mismatched") {
+//            issuanceTestHelper.createAssetWithPreIssuedAmount(root, "EUR", INT64_MAX, root);
+//            paymentFeeData.sourceFee.feeAsset = "EUR";
+//            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
+//                                                 destination, paymentAmount, paymentFeeData, "",
+//                                                 "", nullptr,
+//                                                 PaymentV2ResultCode::FEE_ASSET_MISMATCHED);
+//        }
         SECTION("Insufficient fee amount") {
-            paymentFeeData.sourceFee.fixedFee = static_cast<uint64>(outgoingFee.fixedFee - 1);
-            paymentFeeData.sourceFee.maxPaymentFee = static_cast<uint64>(outgoingFee.percentFee - 1);
+            paymentFeeData.sourceFee.fee.fixed = static_cast<uint64>(outgoingFee.fixedFee - 1);
+            paymentFeeData.sourceFee.fee.percent = static_cast<uint64>(outgoingFee.percentFee - 1);
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
@@ -263,7 +263,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
         SECTION("Balance to charge fee from not found") {
             auto eur = "EUR";
             issuanceTestHelper.createAssetWithPreIssuedAmount(root, eur, INT64_MAX, root);
-            paymentFeeData.sourceFee.feeAsset = eur;
+            //paymentFeeData.sourceFee.feeAsset = eur;
             manageAssetPairTestHelper.createAssetPair(root, eur, paymentAsset, 2 * ONE);
             setFeesTestHelper.applySetFeesTx(root, &outgoingFee, true);
             outgoingFee.ext.feeAsset() = eur;
@@ -282,8 +282,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                              nullptr, PaymentV2ResultCode::LIMITS_EXCEEDED);
     }
     SECTION("Dest fee amount overflows UINT64_MAX") {
-        paymentFeeData.destinationFee.fixedFee = UINT64_MAX;
-        paymentFeeData.destinationFee.maxPaymentFee = 1;
+        paymentFeeData.destinationFee.fee.fixed = UINT64_MAX;
+        paymentFeeData.destinationFee.fee.percent = 1;
         paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                              destination, paymentAmount, paymentFeeData, "", "",
                                              nullptr, PaymentV2ResultCode::INVALID_DESTINATION_FEE);
@@ -343,7 +343,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
         SECTION("Source pays for destination success") {
             paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, true);
-            paymentFeeData.sourceFee.feeAsset = paymentAsset;
+//            paymentFeeData.sourceFee.feeAsset = paymentAsset;
 
             SECTION("Happy path") {
                 // create paymentDelta to check balances amounts
@@ -370,7 +370,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
         }
         SECTION("Destination pays") {
             paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, false);
-            paymentFeeData.sourceFee.feeAsset = paymentAsset;
+//            paymentFeeData.sourceFee.feeAsset = paymentAsset;
 
             SECTION("Happy path") {
                 // create paymentDelta to check balances amounts
