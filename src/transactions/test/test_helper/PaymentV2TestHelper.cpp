@@ -61,7 +61,7 @@ namespace stellar {
             return txFromOperation(source, baseOp, nullptr);
         }
 
-        PaymentV2Result PaymentV2TestHelper:: applyPaymentV2Tx(Account &source, BalanceID sourceBalanceID,
+        PaymentV2Result PaymentV2TestHelper::applyPaymentV2Tx(Account &source, BalanceID sourceBalanceID,
                                                               PaymentOpV2::_destination_t destination, uint64_t amount,
                                                               PaymentFeeDataV2 feeData, std::string subject,
                                                               std::string reference, PaymentV2Delta *paymentDelta,
@@ -71,45 +71,22 @@ namespace stellar {
 
             auto sourceBalanceBeforeTx = balanceHelper->loadBalance(sourceBalanceID, db);
 
-            if (!!sourceBalanceBeforeTx) {
-                std::cout << "src bal found";
-            }
 
             BalanceFrame::pointer destBalanceBeforeTx;
             if (destination.type() == PaymentDestinationType::BALANCE) {
                 destBalanceBeforeTx = balanceHelper->loadBalance(destination.balanceID(), db);
             }
 
-/*            std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
-//            balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), commissionBalancesBeforeTx, db);*/
-            if (!!destBalanceBeforeTx) {
-                std::cout
-                << mTestManager->getApp().getCommissionID() << '\n'
-                << std::string(sourceBalanceBeforeTx.get()->getAsset()) << '\n' << "dest bal found\n";
+            std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
+            balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), commissionBalancesBeforeTx, db);
+
+            std::unordered_map<std::string, BalanceFrame::pointer> commissionBalancesBeforeTxByAsset;
+            for (auto& balanceFrame : commissionBalancesBeforeTx)
+            {
+                commissionBalancesBeforeTxByAsset[balanceFrame->getAsset()] = balanceFrame;
             }
-
-            auto commissionBalanceBeforeTx = balanceHelper->loadBalance(
-                    mTestManager->getApp().getCommissionID(),
-                    sourceBalanceBeforeTx.get()->getAsset(),
-                    db);
-
-            if (!!commissionBalanceBeforeTx) {
-                std::cout << "comm bal found\n";
-            }
-
-/*            std::unordered_map<std::string, BalanceFrame::pointer> commissionBalancesBeforeTxByAsset;
-//            for (auto& balanceFrame : commissionBalancesBeforeTx)
-//            {
-//                commissionBalancesBeforeTxByAsset[balanceFrame->getAsset()] = balanceFrame;
-//            }*/
 
             TransactionFramePtr txFrame;
-/*            std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-            << "amount: " << amount << '\n'
-            << "fixed fees: " << feeData.destinationFee.fee.fixed << ' ' << feeData.sourceFee.fee.fixed << '\n'
-            << "percents: " << feeData.destinationFee.fee.percent << ' ' << feeData.sourceFee.fee.percent << '\n'
-            << "sourcePaysForDest: " << int(feeData.sourcePaysForDest) << '\n';
-*/
 
             txFrame = createPaymentV2Tx(source, sourceBalanceID, destination, amount, feeData, subject, reference);
             mTestManager->applyCheck(txFrame);
@@ -138,11 +115,6 @@ namespace stellar {
             for (auto &item : sourceDelta) {
                 if (item.asset == sourceBalanceBeforeTx->getAsset()) {
                     auto sourceBalanceAfterTx = balanceHelper->loadBalance(sourceBalanceID, db);
-/*                    std::cout << "source info:\n"
-                            << "amount delta: " << item.amountDelta << '\n'
-                            << "before tx: " << sourceBalanceBeforeTx->getAmount() << '\n'
-                            << "after tx: " << sourceBalanceAfterTx->getAmount() << '\n'
-                            << '\n';*/
                     REQUIRE(sourceBalanceAfterTx->getAmount() == sourceBalanceBeforeTx->getAmount() + item.amountDelta);
                     continue;
                 }
@@ -166,42 +138,25 @@ namespace stellar {
                 }
 
                 REQUIRE(!!destBalanceAfterTx);
-//                std::cout << "destination info:\n";
                 if (!destBalanceBeforeTx) {
-                    /*std::cout
-                            << "amount delta: " << item.amountDelta << '\n'
-                            << "after tx: " << destBalanceAfterTx->getAmount() << '\n'
-                            << '\n';*/
                     REQUIRE(destBalanceAfterTx->getAmount() == item.amountDelta);
                     continue;
                 }
-                /*std::cout
-                        << "amount delta: " << item.amountDelta << '\n'
-                        << "before tx: " << destBalanceBeforeTx->getAmount() << '\n'
-                        << "after tx: " << destBalanceAfterTx->getAmount() << '\n'
-                        << '\n';*/
                 REQUIRE(destBalanceAfterTx->getAmount() == destBalanceBeforeTx->getAmount() + item.amountDelta);
             }
 
             for (auto &item : commissionDelta) {
-/*                BalanceFrame::pointer commissionBalanceBeforeTx;
+                BalanceFrame::pointer commissionBalanceBeforeTx;
 
-//                if (commissionBalancesBeforeTxByAsset.count(item.asset) > 0)
-//                    commissionBalanceBeforeTx = commissionBalancesBeforeTxByAsset[item.asset];
-*/
+                if (commissionBalancesBeforeTxByAsset.count(item.asset) > 0)
+                    commissionBalanceBeforeTx = commissionBalancesBeforeTxByAsset[item.asset];
+
                 auto commissionBalanceAfterTx = balanceHelper->loadBalance(mTestManager->getApp().getCommissionID(),
                                                                            item.asset, db, nullptr);
                 if (!commissionBalanceBeforeTx) {
                     REQUIRE(commissionBalanceAfterTx->getAmount() == item.amountDelta);
                     continue;
                 }
-
-/*                std::cout << "comission info: \n"
-                        << "amount delta: " << item.amountDelta << '\n'
-                        << "before tx: " << commissionBalanceBeforeTx->getAmount() << '\n'
-                        << "after tx: " << commissionBalanceAfterTx->getAmount() << '\n'
-                        << '\n';
-*/
                 REQUIRE(commissionBalanceAfterTx->getAmount() == commissionBalanceBeforeTx->getAmount() +
                                                                  item.amountDelta);
             }

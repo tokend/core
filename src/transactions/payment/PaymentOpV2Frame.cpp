@@ -79,13 +79,7 @@ namespace stellar {
         if (actualFee.fixed == 0 && actualFee.percent == 0) {
             return true;
         }
-/*        if (actualFee.feeAsset != expectedFee.feeAsset) {
-//            innerResult().code(PaymentV2ResultCode::FEE_ASSET_MISMATCHED);
-//            return false;
-//        }
-        cout
-        << "expected fee: " << expectedFee.fee.fixed << " fixed " <<  expectedFee.fee.percent << " percents \n"
-        << "actual fee: " << actualFee.fee.fixed << " fixed " <<  actualFee.fee.percent << " percents \n";*/
+
         if (expectedFee.fixed < actualFee.fixed || expectedFee.percent < actualFee.percent) {
             innerResult().code(PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT);
             return false;
@@ -97,15 +91,7 @@ namespace stellar {
                     << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
             throw std::runtime_error("Total sum of fees to be charged overflows");
         }
-/*        // try to load balance for fee to be charged
-//        if (chargeFrom->getAsset() != actualFee.feeAsset) {
-//            chargeFrom = BalanceHelperLegacy::Instance()->loadBalance(chargeFrom->getAccountID(), actualFee.feeAsset, db,
-//                                                                &delta);
-//            if (!chargeFrom) {
-//                innerResult().code(PaymentV2ResultCode::BALANCE_TO_CHARGE_FEE_FROM_NOT_FOUND);
-//                return false;
-//            }
-//        }*/
+
         // load commission balance
         auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID, chargeFrom.get()->getAsset(), db,
                                                                                   delta);
@@ -319,14 +305,7 @@ namespace stellar {
         auto destAccount = AccountHelper::Instance()->mustLoadAccount(destBalance->getAccountID(), db);
         auto destFee = getActualFee(destAccount, destBalance->getAsset(), mPayment.amount, PaymentFeeType::INCOMING,
                                     db, ledgerManager);
-/*        // destination fee asset must be the same as asset of payment
-        // cross asset fee is not allowed for payment destination balance
 
-//        if (destBalance->getAsset() != sourceBalance->getAsset() ) {
-//            innerResult().code(PaymentV2ResultCode::INVALID_DESTINATION_FEE_ASSET);
-//            return false;
-//        }
-*/
         if (!isRecipientFeeNotRequired()) {
             auto destFeePayer = destAccount;
             auto destFeePayerBalance = destBalance;
