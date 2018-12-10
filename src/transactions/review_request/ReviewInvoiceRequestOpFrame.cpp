@@ -205,8 +205,9 @@ ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &del
 
     if (ledgerManager.shouldUse(LedgerVersion::ADD_REVIEW_INVOICE_REQUEST_PAYMENT_RESPONSE))
     {
-        innerResult().success().ext.v(LedgerVersion::ADD_REVIEW_INVOICE_REQUEST_PAYMENT_RESPONSE);
-        innerResult().success().ext.paymentV2Response() = opRes.tr().paymentV2Result().paymentV2Response();
+        innerResult().success().typeExt.requestType(ReviewableRequestType::INVOICE);
+        innerResult().success().typeExt.invoiceExtended().paymentV2Response =
+                opRes.tr().paymentV2Result().paymentV2Response();
     }
 
     return true;

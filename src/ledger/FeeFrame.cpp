@@ -107,12 +107,11 @@ FeeFrame::calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, Accou
     std::string data = "";
 
     char buff[100];
-    snprintf(buff, sizeof(buff), "type:%i", feeType);
+    snprintf(buff, sizeof(buff), "type:%i", static_cast<int32_t>(feeType));
     std::string buffAsStdStr = buff;
     data += buffAsStdStr;
 
-    std::string rawAsset = asset;
-    snprintf(buff, sizeof(buff), "asset:%s", rawAsset.c_str());
+    snprintf(buff, sizeof(buff), "asset:%s", asset.c_str());
     buffAsStdStr = buff;
     data += buffAsStdStr;
 
@@ -127,7 +126,7 @@ FeeFrame::calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, Accou
         data += buffAsStdStr;
     }
     if (accountType) {
-        snprintf(buff, sizeof(buff), "accountType:%i", *accountType);
+        snprintf(buff, sizeof(buff), "accountType:%i", static_cast<int32_t>(*accountType));
         buffAsStdStr = buff;
         data += buffAsStdStr;
     }

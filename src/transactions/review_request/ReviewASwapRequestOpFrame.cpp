@@ -128,10 +128,8 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     if (!request->canBeFulfilled(ledgerManager))
     {
         innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().fulfilled = false;
-        innerResult().success().ext.extendedResult().typeExt.requestType(
-                ReviewableRequestType::NONE);
+        innerResult().success().fulfilled = false;
+        innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
         return true;
     }
 
@@ -197,10 +195,8 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     if (!ledgerManager.shouldUse(LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT))
     {
         innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().fulfilled = true;
-        innerResult().success().ext.extendedResult().typeExt.requestType(
-                ReviewableRequestType::NONE);
+        innerResult().success().fulfilled = true;
+        innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
         return true;
     }
 
@@ -223,13 +219,10 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
             aSwapRequest.baseAmount, quoteAssetPrice, quoteAssetFrame->getMinimumAmount());
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
-    innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    innerResult().success().ext.extendedResult().fulfilled = true;
-    innerResult().success().ext.extendedResult().typeExt.requestType(
-            ReviewableRequestType::ATOMIC_SWAP);
+    innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::ATOMIC_SWAP);
 
-    auto& aSwapExtended =
-            innerResult().success().ext.extendedResult().typeExt.aSwapExtended();
+    auto& aSwapExtended = innerResult().success().typeExt.aSwapExtended();
 
     aSwapExtended.bidID = bidFrame->getBidID();
     aSwapExtended.bidOwnerID = bidFrame->getOwnerID();

@@ -201,6 +201,9 @@ LedgerDeltaImpl::recordEntry(EntryFrame::pointer entry)
     checkState();
     // keeps the old one around
     mPrevious.insert(std::make_pair(entry->getKey(), entry));
+
+    mAllChanges.emplace_back(LedgerEntryChangeType::STATE);
+    mAllChanges.back().state() = entry->mEntry;
 }
 
 void

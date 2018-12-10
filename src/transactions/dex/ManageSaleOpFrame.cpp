@@ -217,6 +217,8 @@ namespace stellar {
                 throw std::runtime_error("Failed to unlock locked amount for sale ante");
             }
 
+            delta.recordEntry(*saleAnte);
+
             EntryHelperProvider::storeChangeEntry(delta, db, participantBalanceFrame->mEntry);
             EntryHelperProvider::storeDeleteEntry(delta, db, saleAnte->getKey());
         }

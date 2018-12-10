@@ -163,18 +163,10 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
 
     if (ledgerManager.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
     {
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().fulfilled = true;
-        innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::SALE);
-        innerResult().success().ext.extendedResult().typeExt.saleExtended().saleID = newSaleID;
+        innerResult().success().fulfilled = true;
+        innerResult().success().typeExt.requestType(ReviewableRequestType::SALE);
+        innerResult().success().typeExt.saleExtended().saleID = newSaleID;
         return true;
-    }
-
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_SALE_ID_REVIEW_REQUEST_RESULT))
-    {
-        innerResult().success().ext.v(
-            LedgerVersion::ADD_SALE_ID_REVIEW_REQUEST_RESULT);
-        innerResult().success().ext.saleID() = newSaleID;
     }
 
     return true;

@@ -144,7 +144,7 @@ TEST_CASE("Contract", "[tx][contract]")
         {
             auto reviewResult = reviewContractRequestHelper.applyReviewRequestTx(payer, requestID,
                                                                                  ReviewRequestOpAction::APPROVE, "");
-            auto contractID = reviewResult.success().ext.contractID();
+            auto contractID = reviewResult.success().typeExt.contractExtended().contractID;
             auto contractHelper = ContractHelper::Instance();
             auto contractFrame = contractHelper->loadContract(contractID, db);
             REQUIRE(!!contractFrame);
@@ -159,7 +159,7 @@ TEST_CASE("Contract", "[tx][contract]")
             reviewContractRequestHelper.customerDetails = "Some details, all okay.";
             auto reviewResult = reviewContractRequestHelper.applyReviewRequestTx(payer, requestID,
                                                                                  ReviewRequestOpAction::APPROVE, "");
-            auto contractID = reviewResult.success().ext.contractID();
+            auto contractID = reviewResult.success().typeExt.contractExtended().contractID;
             auto contractHelper = ContractHelper::Instance();
             auto contractFrame = contractHelper->loadContract(contractID, db);
             REQUIRE(!!contractFrame);

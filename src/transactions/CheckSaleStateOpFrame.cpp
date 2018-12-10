@@ -152,6 +152,8 @@ void CheckSaleStateOpFrame::chargeSaleAntes(uint64_t saleID, AccountID const &co
             throw runtime_error("Failed to fund commission balance with sale ante");
         }
 
+        delta.recordEntry(*saleAnte);
+
         EntryHelperProvider::storeChangeEntry(delta, db, participantBalanceFrame->mEntry);
         EntryHelperProvider::storeChangeEntry(delta, db, commissionBalance->mEntry);
         EntryHelperProvider::storeDeleteEntry(delta, db, saleAnte->getKey());

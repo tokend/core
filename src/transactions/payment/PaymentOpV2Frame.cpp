@@ -9,7 +9,6 @@
 #include <ledger/FeeHelper.h>
 #include <ledger/LedgerHeaderFrame.h>
 #include <ledger/ReferenceHelper.h>
-#include <transactions/AccountManager.h>
 
 namespace stellar {
     using namespace std;
