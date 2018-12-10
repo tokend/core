@@ -80,13 +80,11 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     // create fee charging rules for incoming and outgoing payments
     auto incomingFee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, paymentAsset, 5 * ONE, 0, nullptr, nullptr,
-                                                        static_cast<int64_t>(PaymentFeeType::INCOMING), 0, preIssuedAmount,
-                                                        &paymentAsset);
+                                                        static_cast<int64_t>(PaymentFeeType::INCOMING), 0, preIssuedAmount);
     setFeesTestHelper.applySetFeesTx(root, &incomingFee, false);
 
     auto outgoingFee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, paymentAsset, 5 * ONE, 5 * ONE, nullptr, nullptr,
-                                                        static_cast<int64_t>(PaymentFeeType::OUTGOING), 0, preIssuedAmount,
-                                                        &paymentAsset);
+                                                        static_cast<int64_t>(PaymentFeeType::OUTGOING), 0, preIssuedAmount);
     setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
 
     // find payer
@@ -231,7 +229,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     SECTION("Single asset payment") {
         setFeesTestHelper.applySetFeesTx(root, &outgoingFee, true);
-        outgoingFee.ext.feeAsset() = paymentAsset;
+        outgoingFee.asset = paymentAsset;
         setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
 
         SECTION("Source pays for destination success") {

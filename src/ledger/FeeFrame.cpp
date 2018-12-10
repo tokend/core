@@ -71,23 +71,10 @@ bool FeeFrame::calculatePercentFee(const uint64_t amount, uint64_t& result,
 
     return bigDivide(result, amount, mFee.percentFee, 100 * ONE, rounding, roundingStep);
 }
-    
-bool FeeFrame::isCrossAssetFee() const
-{
-    if (mFee.ext.v() != LedgerVersion::CROSS_ASSET_FEE) {
-        return false;
-    }
-
-    return !(mFee.asset == mFee.ext.feeAsset());
-}
 
 AssetCode FeeFrame::getFeeAsset() const
 {
-    if (mFee.ext.v() != LedgerVersion::CROSS_ASSET_FEE) {
-        return mFee.asset;
-    }
-
-    return mFee.ext.feeAsset();
+    return mFee.asset;
 }
 
 bool
