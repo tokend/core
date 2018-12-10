@@ -72,11 +72,11 @@ namespace stellar {
     }
 
     bool PaymentOpV2Frame::processTransferFee(AccountManager &accountManager, AccountFrame::pointer payer,
-                                              BalanceFrame::pointer chargeFrom, FeeDataV2 expectedFee,
-                                              FeeDataV2 actualFee, AccountID const &commissionID,
+                                              BalanceFrame::pointer chargeFrom, Fee expectedFee,
+                                              Fee actualFee, AccountID const &commissionID,
                                               Database &db, LedgerDelta &delta, bool ignoreStats,
                                               uint64_t &universalAmount) {
-        if (actualFee.fee.fixed == 0 && actualFee.fee.percent == 0) {
+        if (actualFee.fixed == 0 && actualFee.percent == 0) {
             return true;
         }
 /*        if (actualFee.feeAsset != expectedFee.feeAsset) {
@@ -86,13 +86,13 @@ namespace stellar {
         cout
         << "expected fee: " << expectedFee.fee.fixed << " fixed " <<  expectedFee.fee.percent << " percents \n"
         << "actual fee: " << actualFee.fee.fixed << " fixed " <<  actualFee.fee.percent << " percents \n";*/
-        if (expectedFee.fee.fixed < actualFee.fee.fixed || expectedFee.fee.percent < actualFee.fee.percent) {
+        if (expectedFee.fixed < actualFee.fixed || expectedFee.percent < actualFee.percent) {
             innerResult().code(PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT);
             return false;
         }
 
         uint64_t totalFee;
-        if (!safeSum(actualFee.fee.fixed, actualFee.fee.percent, totalFee)) {
+        if (!safeSum(actualFee.fixed, actualFee.percent, totalFee)) {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
                     << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
             throw std::runtime_error("Total sum of fees to be charged overflows");
@@ -231,12 +231,12 @@ namespace stellar {
         return true;
     }
 
-    FeeDataV2
+    Fee
     PaymentOpV2Frame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
                                    PaymentFeeType feeType, Database &db, LedgerManager& lm) {
-        FeeDataV2 actualFee;
-        actualFee.fee.percent = 0;
-        actualFee.fee.fixed = 0;
+        Fee actualFee;
+        actualFee.percent = 0;
+        actualFee.fixed = 0;
         auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
                                                               static_cast<int64_t>(feeType),
                                                               accountFrame, amount, db);
@@ -246,13 +246,13 @@ namespace stellar {
         }
 
         const uint64_t feeMinimumAmount = AssetHelperLegacy::Instance()->mustLoadAsset(transferAsset, db)->getMinimumAmount();
-        if (!feeFrame->calculatePercentFee(amount, actualFee.fee.percent, ROUND_UP, feeMinimumAmount)) {
+        if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP, feeMinimumAmount)) {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
                                                    << feeFrame->getFeeAsset();
             throw std::runtime_error("Failed to calculate actual payment fee - overflow");
         }
 
-        actualFee.fee.fixed = static_cast<uint64>(feeFrame->getFee().fixedFee);
+        actualFee.fixed = static_cast<uint64>(feeFrame->getFee().fixedFee);
         return actualFee;
     }
 
@@ -364,15 +364,15 @@ namespace stellar {
         innerResult().paymentV2Response().asset = destBalance->getAsset();
         innerResult().paymentV2Response().sourceSentUniversal = sourceSentUniversal;
         innerResult().paymentV2Response().paymentID = paymentID;
-        innerResult().paymentV2Response().actualSourcePaymentFee = sourceFee.fee.percent;
-        innerResult().paymentV2Response().actualDestinationPaymentFee = destFee.fee.percent;
+        innerResult().paymentV2Response().actualSourcePaymentFee = sourceFee;
+        innerResult().paymentV2Response().actualDestinationPaymentFee = destFee;
 
         return true;
     }
 
     bool PaymentOpV2Frame::isDestinationFeeValid() {
         uint64_t totalDestinationFee;
-        if (!safeSum(mPayment.feeData.destinationFee.fee.fixed, mPayment.feeData.destinationFee.fee.percent,
+        if (!safeSum(mPayment.feeData.destinationFee.fixed, mPayment.feeData.destinationFee.percent,
                      totalDestinationFee)) {
             innerResult().code(PaymentV2ResultCode::INVALID_DESTINATION_FEE);
             return false;

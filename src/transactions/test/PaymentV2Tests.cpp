@@ -105,10 +105,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     auto destination = paymentV2TestHelper.createDestinationForAccount(recipient.key.getPublicKey());
 
     // maxPaymnetFee more in five times because fee in ETH, payment in USD, exchange rates 1:5
-    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee,
-                                                           outgoingFee.ext.feeAsset());
-    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee,
-                                                         incomingFee.ext.feeAsset());
+    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee);
+    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee);
     auto paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, false);
 
     if (testSet.paymentAsset == "USD") {
@@ -208,8 +206,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
         }
 
         SECTION("Insufficient fee amount") {
-            paymentFeeData.sourceFee.fee.fixed = static_cast<uint64>(outgoingFee.fixedFee - 1);
-            paymentFeeData.sourceFee.fee.percent = static_cast<uint64>(outgoingFee.percentFee - 1);
+            paymentFeeData.sourceFee.fixed = static_cast<uint64>(outgoingFee.fixedFee - 1);
+            paymentFeeData.sourceFee.percent = static_cast<uint64>(outgoingFee.percentFee - 1);
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
@@ -224,8 +222,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                              nullptr, PaymentV2ResultCode::LIMITS_EXCEEDED);
     }
     SECTION("Dest fee amount overflows UINT64_MAX") {
-        paymentFeeData.destinationFee.fee.fixed = UINT64_MAX;
-        paymentFeeData.destinationFee.fee.percent = 1;
+        paymentFeeData.destinationFee.fixed = UINT64_MAX;
+        paymentFeeData.destinationFee.percent = 1;
         paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                              destination, paymentAmount, paymentFeeData, "", "",
                                              nullptr, PaymentV2ResultCode::INVALID_DESTINATION_FEE);

@@ -123,10 +123,8 @@ TEST_CASE("Contract", "[tx][contract]")
     // create destination and feeData for further tests
     auto destination = paymentV2TestHelper.createDestinationForAccount(recipient.key.getPublicKey());
 
-    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee,
-                                                           outgoingFee.ext.feeAsset());
-    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee,
-                                                         incomingFee.ext.feeAsset());
+    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee);
+    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee);
     auto paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, true);
 
     longstring details = "Contract details";

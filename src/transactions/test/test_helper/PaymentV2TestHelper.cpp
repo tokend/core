@@ -24,16 +24,16 @@ namespace stellar {
             return destination;
         }
 
-        FeeDataV2 PaymentV2TestHelper::createFeeData(uint64 fixedFee, uint64 paymentFee, AssetCode feeAsset) {
-            FeeDataV2 feeData;
+        Fee PaymentV2TestHelper::createFeeData(uint64 fixedFee, uint64 paymentFee) {
+            Fee feeData;
 
-            feeData.fee.fixed= fixedFee;
-            feeData.fee.percent = paymentFee;
+            feeData.fixed= fixedFee;
+            feeData.percent = paymentFee;
 
             return feeData;
         }
 
-        PaymentFeeDataV2 PaymentV2TestHelper::createPaymentFeeData(FeeDataV2 sourceFeeData, FeeDataV2 destFeeData,
+        PaymentFeeDataV2 PaymentV2TestHelper::createPaymentFeeData(Fee sourceFeeData, Fee destFeeData,
                                                                    bool sourcePaysForDest) {
             PaymentFeeDataV2 paymentFeeData;
 
@@ -71,6 +71,10 @@ namespace stellar {
 
             auto sourceBalanceBeforeTx = balanceHelper->loadBalance(sourceBalanceID, db);
 
+            if (!!sourceBalanceBeforeTx) {
+                std::cout << "src bal found";
+            }
+
             BalanceFrame::pointer destBalanceBeforeTx;
             if (destination.type() == PaymentDestinationType::BALANCE) {
                 destBalanceBeforeTx = balanceHelper->loadBalance(destination.balanceID(), db);
@@ -78,14 +82,20 @@ namespace stellar {
 
 /*            std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
 //            balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), commissionBalancesBeforeTx, db);*/
-            std::cout << "dest bal found\n";
+            if (!!destBalanceBeforeTx) {
+                std::cout
+                << mTestManager->getApp().getCommissionID() << '\n'
+                << std::string(sourceBalanceBeforeTx.get()->getAsset()) << '\n' << "dest bal found\n";
+            }
 
             auto commissionBalanceBeforeTx = balanceHelper->loadBalance(
                     mTestManager->getApp().getCommissionID(),
                     sourceBalanceBeforeTx.get()->getAsset(),
                     db);
 
-            std::cout << "comm bal found\n";
+            if (!!commissionBalanceBeforeTx) {
+                std::cout << "comm bal found\n";
+            }
 
 /*            std::unordered_map<std::string, BalanceFrame::pointer> commissionBalancesBeforeTxByAsset;
 //            for (auto& balanceFrame : commissionBalancesBeforeTx)

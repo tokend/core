@@ -115,10 +115,8 @@ TEST_CASE("Invoice", "[tx][invoice]")
     // create destination and feeData for further tests
     auto destination = paymentV2TestHelper.createDestinationForBalance(receiverBalance->getBalanceID());
 
-    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee,
-                                                           outgoingFee.ext.feeAsset());
-    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee,
-                                                         incomingFee.ext.feeAsset());
+    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee);
+    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee);
     auto paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, true);
 
 	longstring details = " Bill for certain services";
