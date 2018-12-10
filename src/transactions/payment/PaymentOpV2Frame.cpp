@@ -80,12 +80,13 @@ namespace stellar {
         if (actualFee.fee.fixed == 0 && actualFee.fee.percent == 0) {
             return true;
         }
-
-//        if (actualFee.feeAsset != expectedFee.feeAsset) {
+/*        if (actualFee.feeAsset != expectedFee.feeAsset) {
 //            innerResult().code(PaymentV2ResultCode::FEE_ASSET_MISMATCHED);
 //            return false;
 //        }
-
+        cout
+        << "expected fee: " << expectedFee.fee.fixed << " fixed " <<  expectedFee.fee.percent << " percents \n"
+        << "actual fee: " << actualFee.fee.fixed << " fixed " <<  actualFee.fee.percent << " percents \n";*/
         if (expectedFee.fee.fixed < actualFee.fee.fixed || expectedFee.fee.percent < actualFee.fee.percent) {
             innerResult().code(PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT);
             return false;
@@ -97,8 +98,7 @@ namespace stellar {
                     << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
             throw std::runtime_error("Total sum of fees to be charged overflows");
         }
-
-//        // try to load balance for fee to be charged
+/*        // try to load balance for fee to be charged
 //        if (chargeFrom->getAsset() != actualFee.feeAsset) {
 //            chargeFrom = BalanceHelperLegacy::Instance()->loadBalance(chargeFrom->getAccountID(), actualFee.feeAsset, db,
 //                                                                &delta);
@@ -106,17 +106,16 @@ namespace stellar {
 //                innerResult().code(PaymentV2ResultCode::BALANCE_TO_CHARGE_FEE_FROM_NOT_FOUND);
 //                return false;
 //            }
-//        }
-//
-//        // load commission balance
-//        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID, actualFee.feeAsset, db,
-//                                                                                  delta);
-//        if (!commissionBalance) {
-//            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected commission balance to exist";
-//            throw std::runtime_error("Unexpected state. Expected commission balance to exist");
-//        }
+//        }*/
+        // load commission balance
+        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID, chargeFrom.get()->getAsset(), db,
+                                                                                  delta);
+        if (!commissionBalance) {
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected commission balance to exist";
+            throw std::runtime_error("Unexpected state. Expected commission balance to exist");
+        }
 
-        return processTransfer(accountManager, payer, chargeFrom, chargeFrom, totalFee, universalAmount, db);
+        return processTransfer(accountManager, payer, chargeFrom, commissionBalance, totalFee, universalAmount, db);
     }
 
     void PaymentOpV2Frame::setErrorCode(AccountManager::Result transferResult) {
@@ -237,7 +236,6 @@ namespace stellar {
     PaymentOpV2Frame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
                                    PaymentFeeType feeType, Database &db, LedgerManager& lm) {
         FeeDataV2 actualFee;
-        // actualFee.feeAsset = transferAsset;
         actualFee.fee.percent = 0;
         actualFee.fee.fixed = 0;
         auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
@@ -247,32 +245,7 @@ namespace stellar {
         if (!feeFrame) {
             return actualFee;
         }
-/*
-//        actualFee.feeAsset = feeFrame->getFeeAsset();
-//        if (actualFee.feeAsset != transferAsset) {
-//            auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(actualFee.feeAsset, transferAsset,
-//                                                                                    db);
-//            if (!assetPair) {
-//                CLOG(ERROR, Logging::OPERATION_LOGGER)
-//                        << "Unexpected state. Failed to load asset pair for cross asset fee: "
-//                        << actualFee.feeAsset << " " << transferAsset;
-//                throw std::runtime_error("Unexpected state. Failed to load asset pair for cross asset fee");
-//            }
-//
-//            AssetCode destAsset;
-//            if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_FEE))
-//                destAsset = actualFee.feeAsset;
-//            else
-//                destAsset = transferAsset;
-//
-//            if (!AssetPairHelper::Instance()->convertAmount(assetPair, destAsset, amount,
-//                    Rounding::ROUND_UP, db, amount))
-//            {
-//                // most probably it will not happen, but it'd better to return error code
-//                throw std::runtime_error("failed to convert transfer amount into fee asset");
-//            }
-//        }
-*/
+
         const uint64_t feeMinimumAmount = AssetHelperLegacy::Instance()->mustLoadAsset(transferAsset, db)->getMinimumAmount();
         if (!feeFrame->calculatePercentFee(amount, actualFee.fee.percent, ROUND_UP, feeMinimumAmount)) {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
@@ -345,17 +318,16 @@ namespace stellar {
         }
 
         auto destAccount = AccountHelper::Instance()->mustLoadAccount(destBalance->getAccountID(), db);
-        auto destFee = getActualFee(destAccount, sourceBalance->getAsset(), mPayment.amount, PaymentFeeType::INCOMING,
+        auto destFee = getActualFee(destAccount, destBalance->getAsset(), mPayment.amount, PaymentFeeType::INCOMING,
                                     db, ledgerManager);
-
-        // destination fee asset must be the same as asset of payment
+/*        // destination fee asset must be the same as asset of payment
         // cross asset fee is not allowed for payment destination balance
-//        if (destFee.feeAsset != sourceBalance->getAsset() ||
-//            mPayment.feeData.destinationFee.feeAsset != sourceBalance->getAsset()) {
+
+//        if (destBalance->getAsset() != sourceBalance->getAsset() ) {
 //            innerResult().code(PaymentV2ResultCode::INVALID_DESTINATION_FEE_ASSET);
 //            return false;
 //        }
-
+*/
         if (!isRecipientFeeNotRequired()) {
             auto destFeePayer = destAccount;
             auto destFeePayerBalance = destBalance;
@@ -419,12 +391,6 @@ namespace stellar {
     }
 
     bool PaymentOpV2Frame::doCheckValid(Application &app) {
-//        if (!AssetFrame::isAssetCodeValid(mPayment.feeData.sourceFee.feeAsset) ||
-//            !AssetFrame::isAssetCodeValid(mPayment.feeData.destinationFee.feeAsset)) {
-//            innerResult().code(PaymentV2ResultCode::MALFORMED);
-//            return false;
-//        }
-
         if (mPayment.reference.length() > 64) {
             innerResult().code(PaymentV2ResultCode::MALFORMED);
             return false;

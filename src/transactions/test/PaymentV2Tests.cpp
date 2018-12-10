@@ -20,7 +20,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     struct TestSet
     {
         const AssetCode paymentAsset;
-        //const AssetCode feeAsset;
         const int trailingDigitsCount;
     };
     const TestSet testSet = GENERATE(
@@ -54,19 +53,14 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     auto recipient = Account{SecretKey::random(), Salt(1)};
 
     const AssetCode& paymentAsset = testSet.paymentAsset;
-    //const AssetCode& feeAsset = testSet.feeAsset;
     const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);
     const uint64_t preIssuedAmount = INT64_MAX - (INT64_MAX % precision);
 
-    // create two assets
+    // create asset
     issuanceTestHelper.createAssetWithPreIssuedAmount(root, paymentAsset, preIssuedAmount, root, testSet.trailingDigitsCount);
     manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                 static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
                                                                 static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
-    issuanceTestHelper.createAssetWithPreIssuedAmount(root, paymentAsset, preIssuedAmount, root, testSet.trailingDigitsCount);
-    manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
-                                                            static_cast<uint32_t>(AssetPolicy::TRANSFERABLE));
-
     // create payment participants
     createAccountTestHelper.applyCreateAccountTx(root, payer.key.getPublicKey(), AccountType::GENERAL);
     createAccountTestHelper.applyCreateAccountTx(root, recipient.key.getPublicKey(), AccountType::GENERAL);
@@ -84,12 +78,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     manageLimitsOp.details.limitsCreateDetails().annualOut = 200000 * ONE;
     manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
 
-    // exchange rates ETH USD
-    auto exchangeRatesETH_USD = 5;
-
-    // create asset pair
-    manageAssetPairTestHelper.createAssetPair(root, paymentAsset, paymentAsset, exchangeRatesETH_USD * ONE);
-
     // create fee charging rules for incoming and outgoing payments
     auto incomingFee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, paymentAsset, 5 * ONE, 0, nullptr, nullptr,
                                                         static_cast<int64_t>(PaymentFeeType::INCOMING), 0, preIssuedAmount,
@@ -101,12 +89,9 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                         &paymentAsset);
     setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
 
-    // fund payer
+    // find payer
     auto payerBalance = balanceHelper->loadBalance(payer.key.getPublicKey(), paymentAsset, db, nullptr);
     REQUIRE(payerBalance);
-
-    auto payerFeeBalance = balanceHelper->loadBalance(payer.key.getPublicKey(), paymentAsset, db, nullptr);
-    REQUIRE(payerFeeBalance);
 
     int64_t paymentAmount = 100 * ONE;
     auto emissionAmount = 3 * paymentAmount;
@@ -115,14 +100,12 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     issuanceTestHelper.applyCreateIssuanceRequest(root, paymentAsset, emissionAmount, payerBalance->getBalanceID(),
                                                   SecretKey::random().getStrKeyPublic(), &issuanceTasks);
-    issuanceTestHelper.applyCreateIssuanceRequest(root, paymentAsset, emissionAmount, payerFeeBalance->getBalanceID(),
-                                                  SecretKey::random().getStrKeyPublic(), &issuanceTasks);
 
     // create destination and feeData for further tests
     auto destination = paymentV2TestHelper.createDestinationForAccount(recipient.key.getPublicKey());
 
     // maxPaymnetFee more in five times because fee in ETH, payment in USD, exchange rates 1:5
-    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee * exchangeRatesETH_USD,
+    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee,
                                                            outgoingFee.ext.feeAsset());
     auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee,
                                                          incomingFee.ext.feeAsset());
@@ -178,13 +161,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  "", nullptr,
                                                  PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND);
         }
-        SECTION("Payment between different assets are not supported") {
-            auto balanceDestination = paymentV2TestHelper.createDestinationForBalance(payerFeeBalance->getBalanceID());
-            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
-                                                 balanceDestination, paymentAmount, paymentFeeData, "",
-                                                 "", nullptr,
-                                                 PaymentV2ResultCode::BALANCE_ASSETS_MISMATCHED);
-        }
         SECTION("Source balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
             paymentV2TestHelper.applyPaymentV2Tx(payer, nonExistingBalance,
@@ -239,19 +215,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  "", nullptr,
                                                  PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT);
         }
-        SECTION("Balance to charge fee from not found") {
-            auto eur = "EUR";
-            issuanceTestHelper.createAssetWithPreIssuedAmount(root, eur, INT64_MAX, root);
-            //paymentFeeData.sourceFee.feeAsset = eur;
-            manageAssetPairTestHelper.createAssetPair(root, eur, paymentAsset, 2 * ONE);
-            setFeesTestHelper.applySetFeesTx(root, &outgoingFee, true);
-            outgoingFee.ext.feeAsset() = eur;
-            setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
-            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
-                                                 destination, paymentAmount, paymentFeeData, "",
-                                                 "", nullptr,
-                                                 PaymentV2ResultCode::BALANCE_TO_CHARGE_FEE_FROM_NOT_FOUND);
-        }
     }
     SECTION("Limits exceeded") {
         manageLimitsOp.details.limitsCreateDetails().dailyOut = paymentAmount - 1;
@@ -301,7 +264,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
         }
         SECTION("Destination pays") {
             paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, false);
-//            paymentFeeData.sourceFee.feeAsset = paymentAsset;
 
             SECTION("Happy path") {
                 // create paymentDelta to check balances amounts
