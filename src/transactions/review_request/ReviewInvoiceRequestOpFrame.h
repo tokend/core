@@ -16,7 +16,6 @@ class ReviewInvoiceRequestOpFrame : public ReviewRequestOpFrame
         {PaymentV2ResultCode::MALFORMED, ReviewRequestResultCode::PAYMENT_V2_MALFORMED},
         {PaymentV2ResultCode::UNDERFUNDED, ReviewRequestResultCode::UNDERFUNDED},
         {PaymentV2ResultCode::LINE_FULL, ReviewRequestResultCode::LINE_FULL},
-        {PaymentV2ResultCode::FEE_ASSET_MISMATCHED, ReviewRequestResultCode::FEE_ASSET_MISMATCHED},
         {PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND, ReviewRequestResultCode::DESTINATION_BALANCE_NOT_FOUND},
         {PaymentV2ResultCode::INVALID_DESTINATION_FEE, ReviewRequestResultCode::INVALID_DESTINATION_FEE},
         {PaymentV2ResultCode::BALANCE_ASSETS_MISMATCHED, ReviewRequestResultCode::BALANCE_ASSETS_MISMATCHED},
@@ -25,9 +24,7 @@ class ReviewInvoiceRequestOpFrame : public ReviewRequestOpFrame
         {PaymentV2ResultCode::STATS_OVERFLOW, ReviewRequestResultCode::STATS_OVERFLOW},
         {PaymentV2ResultCode::LIMITS_EXCEEDED, ReviewRequestResultCode::LIMITS_EXCEEDED},
         {PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY, ReviewRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY},
-        {PaymentV2ResultCode::INVALID_DESTINATION_FEE_ASSET, ReviewRequestResultCode::INVALID_DESTINATION_FEE_ASSET},
         {PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT, ReviewRequestResultCode::INSUFFICIENT_FEE_AMOUNT},
-        {PaymentV2ResultCode::BALANCE_TO_CHARGE_FEE_FROM_NOT_FOUND, ReviewRequestResultCode::BALANCE_TO_CHARGE_FEE_FROM_NOT_FOUND},
         {PaymentV2ResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE, ReviewRequestResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE},
         {PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND, ReviewRequestResultCode::DESTINATION_ACCOUNT_NOT_FOUND},
     };
