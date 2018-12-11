@@ -17,12 +17,8 @@ namespace stellar {
     const int32 EMPTY_VALUE = -1;
 
     static const char* feeColumnSelector = "SELECT fee_type, asset, fixed, percent, account_id, account_type, subtype, "
-            "lower_bound, upper_bound, hash, lastmodified, fee_asset, version "
+            "lower_bound, upper_bound, hash, lastmodified, version "
             "FROM   fee_state";
-
-    void FeeHelper::addFeeAsset(Database &db) {
-        db.getSession() << "ALTER TABLE fee_state ADD fee_asset VARCHAR(16) NOT NULL DEFAULT ''";
-    }
 
     void FeeHelper::dropAll(Database &db) {
         db.getSession() << "DROP TABLE IF EXISTS fee_state;";
@@ -211,7 +207,7 @@ namespace stellar {
         int32_t accountType;
         int32_t feeVersion = 0;
 
-        string feeAsset;
+//        string feeAsset;
 
         auto& st = prep.statement();
         st.exchange(into(rawFeeType));
@@ -227,7 +223,7 @@ namespace stellar {
         st.exchange(into(rawHash));
 
         st.exchange(into(le.lastModifiedLedgerSeq));
-        st.exchange(into(feeAsset));
+//        st.exchange(into(feeAsset));
         st.exchange(into(feeVersion));
 
         st.define_and_bind();
