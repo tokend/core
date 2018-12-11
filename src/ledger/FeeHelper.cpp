@@ -129,14 +129,14 @@ namespace stellar {
         if (insert)
         {
             sql = "INSERT INTO fee_state (fee_type, asset, fixed, percent, account_id, account_type, subtype, "
-                    "lastmodified, lower_bound, upper_bound, hash, fee_asset, version) "
-                    "VALUES (:ft, :as, :f, :p, :aid, :at, :subt, :lm, :lb, :ub, :hash, :fa, :v)";
+                    "lastmodified, lower_bound, upper_bound, hash, version) "
+                    "VALUES (:ft, :as, :f, :p, :aid, :at, :subt, :lm, :lb, :ub, :hash, :v)";
         }
         else
         {
             sql = "UPDATE fee_state "
                     "SET    fee_type=:ft, asset=:as, fixed=:f, percent=:p, account_id=:aid, "
-                    "account_type=:at, subtype=:subt, lastmodified=:lm, fee_asset=:fa, version=:v "
+                    "account_type=:at, subtype=:subt, lastmodified=:lm, version=:v "
                     "WHERE  lower_bound=:lb AND upper_bound=:ub AND hash=:hash";
         }
 
@@ -168,9 +168,6 @@ namespace stellar {
 
         string hash(binToHex(feeEntry.hash));
         st.exchange(use(hash, "hash"));
-
-        std::string feeAsset = "";
-        st.exchange(use(feeAsset, "fa"));
 
         auto feeVersion = static_cast<int32_t >(feeEntry.ext.v());
         st.exchange(use(feeVersion, "v"));
