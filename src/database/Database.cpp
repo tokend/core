@@ -250,7 +250,6 @@ DatabaseImpl::upgradeToCurrentSchema()
     while (vers < SCHEMA_VERSION)
     {
         ++vers;
-        cout << vers << '\n';
         CLOG(INFO, "Database") << "Applying DB schema upgrade to version "
                                << vers;
         applySchemaUpgrade(vers);

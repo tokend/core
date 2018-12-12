@@ -207,8 +207,6 @@ namespace stellar {
         int32_t accountType;
         int32_t feeVersion = 0;
 
-//        string feeAsset;
-
         auto& st = prep.statement();
         st.exchange(into(rawFeeType));
         st.exchange(into(rawAsset));
@@ -223,7 +221,6 @@ namespace stellar {
         st.exchange(into(rawHash));
 
         st.exchange(into(le.lastModifiedLedgerSeq));
-//        st.exchange(into(feeAsset));
         st.exchange(into(feeVersion));
 
         st.define_and_bind();
