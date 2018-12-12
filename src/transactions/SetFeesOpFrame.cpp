@@ -97,30 +97,6 @@ namespace stellar {
             innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
             return false;
         }
-
-        if (mSetFees.fee->ext.v() != LedgerVersion::CROSS_ASSET_FEE ||
-            mSetFees.fee->asset == mSetFees.fee->ext.feeAsset()) {
-            return true;
-        }
-
-        if (!AssetHelperLegacy::Instance()->exists(db, mSetFees.fee->ext.feeAsset())) {
-            innerResult().code(SetFeesResultCode::FEE_ASSET_NOT_FOUND);
-            return false;
-        }
-
-        auto feeAssetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(mSetFees.fee->asset,
-                                                                                   mSetFees.fee->ext.feeAsset(),
-                                                                                   db);
-        if (!feeAssetPair) {
-            innerResult().code(SetFeesResultCode::ASSET_PAIR_NOT_FOUND);
-            return false;
-        }
-
-        if (feeAssetPair->getCurrentPrice() <= 0) {
-            innerResult().code(SetFeesResultCode::INVALID_ASSET_PAIR_PRICE);
-            return false;
-        }
-
         return true;
     }
 
@@ -345,24 +321,6 @@ namespace stellar {
         if (!app.getLedgerManager().shouldUse(mSetFees.fee->ext.v())) {
             innerResult().code(SetFeesResultCode::INVALID_FEE_VERSION);
             return false;
-        }
-
-        if (mSetFees.fee->ext.v() == LedgerVersion::CROSS_ASSET_FEE) {
-            if (!AssetFrame::isAssetCodeValid(mSetFees.fee->ext.feeAsset())) {
-                innerResult().code(SetFeesResultCode::INVALID_FEE_ASSET);
-                return false;
-            }
-
-            if (mSetFees.fee->feeType != FeeType::PAYMENT_FEE) {
-                innerResult().code(SetFeesResultCode::FEE_ASSET_NOT_ALLOWED);
-                return false;
-            }
-
-            if (mSetFees.fee->ext.feeAsset() != mSetFees.fee->asset &&
-                mSetFees.fee->subtype != static_cast<int64>(PaymentFeeType::OUTGOING)) {
-                innerResult().code(SetFeesResultCode::CROSS_ASSET_FEE_NOT_ALLOWED);
-                return false;
-            }
         }
 
         bool isValidFee;

@@ -83,13 +83,11 @@ TEST_CASE("Invoice", "[tx][invoice]")
 
     // create fee charging rules for incoming and outgoing payments
     auto incomingFee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, paymentAsset, 5 * ONE, 0, nullptr, nullptr,
-                                                        static_cast<int64_t>(PaymentFeeType::INCOMING), 0, INT64_MAX,
-                                                        &paymentAsset);
+                                                        static_cast<int64_t>(PaymentFeeType::INCOMING), 0, INT64_MAX);
     setFeesTestHelper.applySetFeesTx(root, &incomingFee, false);
 
     auto outgoingFee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, paymentAsset, 5 * ONE, 5 * ONE, nullptr, nullptr,
-                                                        static_cast<int64_t>(PaymentFeeType::OUTGOING), 0, INT64_MAX,
-                                                        &paymentAsset);
+                                                        static_cast<int64_t>(PaymentFeeType::OUTGOING), 0, INT64_MAX);
     setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
 
     // fund payer
@@ -115,10 +113,8 @@ TEST_CASE("Invoice", "[tx][invoice]")
     // create destination and feeData for further tests
     auto destination = paymentV2TestHelper.createDestinationForBalance(receiverBalance->getBalanceID());
 
-    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee,
-                                                           outgoingFee.ext.feeAsset());
-    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee,
-                                                         incomingFee.ext.feeAsset());
+    auto sourceFeeData = paymentV2TestHelper.createFeeData(outgoingFee.fixedFee, outgoingFee.percentFee);
+    auto destFeeData = paymentV2TestHelper.createFeeData(incomingFee.fixedFee, incomingFee.percentFee);
     auto paymentFeeData = paymentV2TestHelper.createPaymentFeeData(sourceFeeData, destFeeData, true);
 
 	longstring details = " Bill for certain services";
