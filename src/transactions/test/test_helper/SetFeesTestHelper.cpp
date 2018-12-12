@@ -52,7 +52,7 @@ namespace stellar {
         FeeEntry
         SetFeesTestHelper::createFeeEntry(FeeType type, AssetCode asset, int64_t fixed, int64_t percent,
                                           AccountID *accountID, AccountType *accountType, int64_t subtype,
-                                          int64_t lowerBound, int64_t upperBound, const AssetCode* feeAsset) {
+                                          int64_t lowerBound, int64_t upperBound) {
             FeeEntry fee;
             fee.feeType = type;
             fee.asset = asset;
@@ -71,11 +71,6 @@ namespace stellar {
             fee.upperBound = upperBound;
 
             fee.hash = FeeFrame::calcHash(type, asset, accountID, accountType, subtype);
-
-            if (feeAsset != nullptr) {
-                fee.ext.v(LedgerVersion::CROSS_ASSET_FEE);
-                fee.ext.feeAsset() = *feeAsset;
-            }
 
             return fee;
         }

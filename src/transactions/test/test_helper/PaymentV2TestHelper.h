@@ -33,9 +33,9 @@ namespace stellar {
 
             PaymentOpV2::_destination_t createDestinationForBalance(BalanceID destBalanceID);
 
-            FeeDataV2 createFeeData(uint64 fixedFee, uint64 paymentFee, AssetCode feeAsset);
+            Fee createFeeData(uint64 fixedFee, uint64 paymentFee);
 
-            PaymentFeeDataV2 createPaymentFeeData(FeeDataV2 sourceFeeData, FeeDataV2 destFeeData,
+            PaymentFeeDataV2 createPaymentFeeData(Fee sourceFeeData, Fee destFeeData,
                                                   bool sourcePaysForDest);
         };
     }
