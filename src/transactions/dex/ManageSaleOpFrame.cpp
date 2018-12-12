@@ -4,7 +4,6 @@
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/OfferHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/SaleAnteHelper.h>
 #include <ledger/SaleHelper.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
 
@@ -184,10 +183,6 @@ namespace stellar {
             cancelAllOffersForQuoteAsset(sale, saleQuoteAsset, delta, db);
         }
 
-        if (lm.shouldUse(LedgerVersion::USE_SALE_ANTE)) {
-            deleteAllAntesForSale(sale->getID(), delta, db);
-        }
-
         AccountManager::unlockPendingIssuanceForSale(sale, delta, db, lm);
         SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
     }
@@ -199,29 +194,6 @@ namespace stellar {
                                                                                    saleQuoteAsset.quoteAsset,
                                                                                    &orderBookID, nullptr, db);
         OfferManager::deleteOffers(offersToCancel, db, delta);
-    }
-
-    void ManageSaleOpFrame::deleteAllAntesForSale(uint64_t saleID, LedgerDelta &delta, Database &db) {
-        auto saleAntes = SaleAnteHelper::Instance()->loadSaleAntesForSale(saleID, db);
-        for (auto &saleAnte : saleAntes) {
-            auto participantBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
-                    saleAnte->getParticipantBalanceID(),
-                    db, &delta);
-            const BalanceFrame::Result unlockResult = participantBalanceFrame->unlock(saleAnte->getAmount());
-            if (unlockResult != BalanceFrame::Result::SUCCESS) {
-                std::string strParticipantBalanceID = PubKeyUtils::toStrKey(saleAnte->getParticipantBalanceID());
-                CLOG(ERROR, Logging::OPERATION_LOGGER)
-                        << "Failed to unlock locked amount for sale ante with reason " << unlockResult
-                        << " sale id: " << saleAnte->getSaleID() << " and participant balance id: "
-                        << strParticipantBalanceID;
-                throw std::runtime_error("Failed to unlock locked amount for sale ante");
-            }
-
-            delta.recordEntry(*saleAnte);
-
-            EntryHelperProvider::storeChangeEntry(delta, db, participantBalanceFrame->mEntry);
-            EntryHelperProvider::storeDeleteEntry(delta, db, saleAnte->getKey());
-        }
     }
 
     bool ManageSaleOpFrame::createPromotionUpdateRequest(Application &app, LedgerDelta &delta, Database &db,

@@ -4,7 +4,6 @@
 #include <ledger/AccountHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/OfferHelper.h>
-#include <ledger/SaleAnteHelper.h>
 #include "test/test_marshaler.h"
 #include "ledger/SaleHelper.h"
 
@@ -13,8 +12,7 @@ namespace stellar
 namespace txtest
 {
 
-void CheckSaleStateHelper::ensureCancel(uint64_t saleID, StateBeforeTxHelper& stateBeforeTx,
-                                        std::unordered_map<BalanceID, SaleAnteFrame::pointer> saleAntesBeforeTx) const
+void CheckSaleStateHelper::ensureCancel(uint64_t saleID, StateBeforeTxHelper& stateBeforeTx) const
 {
     // asset unlocked
     const auto sale = stateBeforeTx.getSale(saleID);
@@ -28,22 +26,13 @@ void CheckSaleStateHelper::ensureCancel(uint64_t saleID, StateBeforeTxHelper& st
 
     // balances unlocked
     auto offers = stateBeforeTx.getAllOffers();
-    if (!saleAntesBeforeTx.empty()) {
-        REQUIRE(offers.size() == saleAntesBeforeTx.size());
-    }
     for (auto offer : offers)
     {
         auto balanceBefore = stateBeforeTx.getBalance(offer.quoteBalance);
         REQUIRE(balanceBefore);
         auto balanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(offer.quoteBalance, mTestManager->getDB());
 
-        auto saleAnte = saleAntesBeforeTx[offer.quoteBalance];
-        if (!!saleAnte) {
-            REQUIRE(balanceBefore->getLocked() == balanceAfter->getLocked() + offer.quoteAmount + offer.fee +
-                                                  saleAntesBeforeTx[balanceBefore->getBalanceID()]->getAmount());
-        } else {
-            REQUIRE(balanceBefore->getLocked() == balanceAfter->getLocked() + offer.quoteAmount + offer.fee);
-        }
+        REQUIRE(balanceBefore->getLocked() == balanceAfter->getLocked() + offer.quoteAmount + offer.fee);
     }
 }
 
@@ -59,8 +48,7 @@ CheckSubSaleClosedResult getOfferResultForQuoteBalance(const CheckSaleStateSucce
 
     throw std::runtime_error("Failed to find result for balance");
 }
-void CheckSaleStateHelper::ensureClose(const CheckSaleStateSuccess result,
-    StateBeforeTxHelper& stateBeforeTx, std::unordered_map<BalanceID, SaleAnteFrame::pointer> saleAntesBeforeTx) const
+void CheckSaleStateHelper::ensureClose(const CheckSaleStateSuccess result, StateBeforeTxHelper& stateBeforeTx) const
 {
     auto sale = stateBeforeTx.getSale(result.saleID);
     auto baseAssetBeforeTx = stateBeforeTx.getAssetEntry(sale->getBaseAsset());
@@ -84,7 +72,7 @@ void CheckSaleStateHelper::ensureClose(const CheckSaleStateSuccess result,
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
         const auto quoteAssetResult = getOfferResultForQuoteBalance(result, quoteAsset.quoteBalance);
-        checkBalancesAfterApproval(stateBeforeTx, sale, quoteAsset, quoteAssetResult, saleAntesBeforeTx);
+        checkBalancesAfterApproval(stateBeforeTx, sale, quoteAsset, quoteAssetResult);
     }
 
     auto baseBalanceBeforeTx = stateBeforeTx.getBalance(sale->getBaseBalanceID());
@@ -125,16 +113,9 @@ void CheckSaleStateHelper::ensureNoOffersLeft(CheckSaleStateSuccess result, Stat
     }
 }
 
-void CheckSaleStateHelper::ensureNoSaleAntesLeft(uint64_t saleID) const
-{
-    auto saleAntes = SaleAnteHelper::Instance()->loadSaleAntesForSale(saleID, mTestManager->getDB());
-    REQUIRE(saleAntes.empty());
-}
-
 void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& stateBeforeTx, SaleFrame::pointer sale,
                                                       SaleQuoteAsset const& saleQuoteAsset,
-                                                      CheckSubSaleClosedResult result,
-                                                      std::unordered_map<BalanceID, SaleAnteFrame::pointer> saleAntesBeforeTx) const
+                                                      CheckSubSaleClosedResult result) const
 {
     auto ownerQuoteBalanceBefore = stateBeforeTx.getBalance(saleQuoteAsset.quoteBalance);
     REQUIRE(ownerQuoteBalanceBefore);
@@ -148,7 +129,7 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
     // check participants balances
     auto takenOffers = result.saleDetails.offersClaimed;
     uint64_t totalParticipantFee = 0;
-    uint64_t totalSaleAnte = 0;
+
     for (auto& takenOffer : takenOffers)
     {
         // participant got his base asset
@@ -162,18 +143,9 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
         REQUIRE(quoteBalanceBefore);
         auto quoteBalanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(takenOffer.quoteBalance, mTestManager->getDB());
 
-        auto saleAnte = saleAntesBeforeTx[takenOffer.quoteBalance];
-
         auto proposedOffer = stateBeforeTx.getOffer(takenOffer.offerID, takenOffer.bAccountID);
-        //unlock balance
-        if (!!saleAnte) {
-            REQUIRE(quoteBalanceBefore->getLocked() == quoteBalanceAfter->getLocked() + proposedOffer.quoteAmount +
-                                                       proposedOffer.fee + saleAnte->getAmount());
-            totalSaleAnte += saleAnte->getAmount();
-        } else {
-            REQUIRE(quoteBalanceBefore->getLocked() == quoteBalanceAfter->getLocked() + proposedOffer.quoteAmount +
+        REQUIRE(quoteBalanceBefore->getLocked() == quoteBalanceAfter->getLocked() + proposedOffer.quoteAmount +
                                                        proposedOffer.fee);
-        }
 
         //change is available on balance
         int64_t change = proposedOffer.quoteAmount - takenOffer.quoteAmount;
@@ -189,12 +161,7 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
     auto commissionBefore = stateBeforeTx.getBalance(commissionAfter->getBalanceID());
     REQUIRE(commissionBefore);
 
-    if(!saleAntesBeforeTx.empty()){
-        REQUIRE(commissionAfter->getAmount() == commissionBefore->getAmount() + totalParticipantFee + totalSellerFee +
-                                                totalSaleAnte);
-    } else {
-        REQUIRE(commissionAfter->getAmount() == commissionBefore->getAmount() + totalParticipantFee + totalSellerFee);
-    }
+    REQUIRE(commissionAfter->getAmount() == commissionBefore->getAmount() + totalParticipantFee + totalSellerFee);
 }
 
 CheckSaleStateHelper::CheckSaleStateHelper(const TestManager::pointer testManager) : TxHelper(testManager)
@@ -213,8 +180,6 @@ TransactionFramePtr CheckSaleStateHelper::createCheckSaleStateTx(Account& source
 CheckSaleStateResult CheckSaleStateHelper::applyCheckSaleStateTx(
     Account& source, uint64_t saleID, CheckSaleStateResultCode expectedResult)
 {
-    auto saleAntesBeforeTx = SaleAnteHelper::Instance()->loadSaleAntes(saleID, mTestManager->getDB());
-
     auto tx = createCheckSaleStateTx(source, saleID);
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOps;
     mTestManager->applyCheck(tx, stateBeforeOps);
@@ -236,14 +201,12 @@ CheckSaleStateResult CheckSaleStateHelper::applyCheckSaleStateTx(
     switch(effect)
     {
     case CheckSaleStateEffect::CANCELED:
-        ensureCancel(checkSaleStateResult.success().saleID, stateHelper, saleAntesBeforeTx);
+        ensureCancel(checkSaleStateResult.success().saleID, stateHelper);
         ensureNoOffersLeft(checkSaleStateResult.success(), stateHelper);
-        ensureNoSaleAntesLeft(checkSaleStateResult.success().saleID);
         break;
     case CheckSaleStateEffect::CLOSED:
-        ensureClose(checkSaleStateResult.success(), stateHelper, saleAntesBeforeTx);
+        ensureClose(checkSaleStateResult.success(), stateHelper);
         ensureNoOffersLeft(checkSaleStateResult.success(), stateHelper);
-        ensureNoSaleAntesLeft(checkSaleStateResult.success().saleID);
         break;
     case CheckSaleStateEffect::UPDATED:
         ensureUpdated(checkSaleStateResult.success(), stateHelper);
