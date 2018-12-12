@@ -93,7 +93,7 @@ namespace stellar {
         }
 
         // load commission balance
-        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID, chargeFrom.get()->getAsset(), db,
+        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID, chargeFrom->getAsset(), db,
                                                                                   delta);
         if (!commissionBalance) {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected commission balance to exist";
