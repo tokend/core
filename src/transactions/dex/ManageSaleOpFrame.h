@@ -73,17 +73,6 @@ namespace stellar {
             return binToHex(hash);
         }
 
-        std::string getUpdateSaleEndTimeRequestReference() const {
-            const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_SALE_END_TIME,
-                                                        mManageSaleOp.saleID));
-            return binToHex(hash);
-        }
-
-        std::string getPromotionUpdateRequestReference() const {
-            const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_PROMOTION, mManageSaleOp.saleID));
-            return binToHex(hash);
-        }
-
         static ManageSaleResultCode getInnerCode(OperationResult &res) {
             return res.tr().manageSaleResult().code();
         }

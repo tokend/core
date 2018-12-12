@@ -6,11 +6,10 @@
 
 #include "ReviewRequestOpFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
-#include "ReviewTwoStepWithdrawalRequestOpFrame.h"
 
 namespace stellar
 {
-class ReviewWithdrawalRequestOpFrame : public ReviewTwoStepWithdrawalRequestOpFrame
+class ReviewWithdrawalRequestOpFrame : public ReviewRequestOpFrame
 {
 protected:
 	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
@@ -18,6 +17,17 @@ protected:
 	bool handleApproveV2(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
 	bool removingNotSetTask(ReviewableRequestEntry &requestEntry);
+
+	// returns total fee to pay, throws exception if overflow
+	uint64_t getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
+	// returns total amount to be charged, throws exception if overflow
+	uint64_t getTotalAmountToCharge(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
+
+    bool rejectWithdrawalRequest(Application& app, LedgerDelta& delta,
+                                 LedgerManager& ledgerManager,
+                                 ReviewableRequestFrame::pointer request,
+                                 WithdrawalRequest& withdrawRequest);
+
 public:
 
 	  ReviewWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,

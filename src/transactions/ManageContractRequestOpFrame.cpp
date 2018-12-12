@@ -25,9 +25,9 @@ ManageContractRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta 
         return{};
     }
     return{
-        {mManageContractRequest.details.contractRequest().customer,
+        {mManageContractRequest.details.createContractRequest().contractRequest.customer,
                 CounterpartyDetails(getAllAccountTypes(), true, true)},
-        {mManageContractRequest.details.contractRequest().escrow,
+        {mManageContractRequest.details.createContractRequest().contractRequest.escrow,
                 CounterpartyDetails(getAllAccountTypes(), true, true)},
     };
 }
@@ -37,8 +37,9 @@ ManageContractRequestOpFrame::getSourceAccountDetails(
         std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
         int32_t ledgerVersion) const
 {
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
+    return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
+//    SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
+//                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
 }
 
 ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, OperationResult& res,
@@ -99,7 +100,7 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Ledg
                                                           LedgerManager& ledgerManager)
 {
     Database& db = ledgerManager.getDatabase();
-    auto& contractRequest = mManageContractRequest.details.contractRequest();
+    auto& contractRequest = mManageContractRequest.details.createContractRequest().contractRequest;
 
     if (!checkMaxContractsForContractor(app, db, delta, ledgerManager))
         return false;
@@ -177,7 +178,7 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Dat
 {
     auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, db, delta);
 
-    if (mManageContractRequest.details.contractRequest().details.size() > maxContractInitialDetailLength)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.details.size() > maxContractInitialDetailLength)
     {
         innerResult().code(ManageContractRequestResultCode::DETAILS_TOO_LONG);
         return false;
@@ -215,41 +216,41 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     if (mManageContractRequest.details.action() != ManageContractRequestAction::CREATE)
         return true;
 
-    if (mManageContractRequest.details.contractRequest().details.empty())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.details.empty())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
-    if (mManageContractRequest.details.contractRequest().customer == getSourceID())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.customer == getSourceID())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
-    if (mManageContractRequest.details.contractRequest().escrow == getSourceID())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.escrow == getSourceID())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
-    if (mManageContractRequest.details.contractRequest().customer ==
-        mManageContractRequest.details.contractRequest().escrow)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.customer ==
+        mManageContractRequest.details.createContractRequest().contractRequest.escrow)
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
     if (app.getLedgerManager().getCloseTime() >=
-        mManageContractRequest.details.contractRequest().endTime)
+        mManageContractRequest.details.createContractRequest().contractRequest.endTime)
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
 
-    if (mManageContractRequest.details.contractRequest().startTime >=
-        mManageContractRequest.details.contractRequest().endTime)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.startTime >=
+        mManageContractRequest.details.createContractRequest().contractRequest.endTime)
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;

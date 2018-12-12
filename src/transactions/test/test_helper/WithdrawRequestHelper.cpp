@@ -119,7 +119,7 @@ TransactionFramePtr WithdrawRequestHelper::createWithdrawalRequestTx(
     op.ext.v(LedgerVersion::WITHDRAWAL_TASKS);
     if (allTasks != nullptr)
     {
-        op.ext.allTasks().activate() = *allTasks;
+        op.allTasks.activate() = *allTasks;
     }
     return txFromOperation(source, baseOp, nullptr);
 }
@@ -131,9 +131,6 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
     uint64_t universalAmount = 0;
     switch (withdrawRequest->getRequestType())
     {
-    case ReviewableRequestType::TWO_STEP_WITHDRAWAL:
-        universalAmount = withdrawRequest->getRequestEntry().body.twoStepWithdrawalRequest().universalAmount;
-        break;
     case ReviewableRequestType::WITHDRAW:
         universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
         break;

@@ -157,9 +157,8 @@ namespace txtest
 		REQUIRE(!!issuanceRequestFrameAfterTx);
 
 		auto& issuanceRequestEntryAfterTx = issuanceRequestFrameAfterTx->getRequestEntry();
-		REQUIRE(issuanceRequestEntryAfterTx.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-		REQUIRE(issuanceRequestEntryAfterTx.ext.tasksExt().allTasks != 0);
-		REQUIRE(issuanceRequestEntryAfterTx.ext.tasksExt().pendingTasks != 0);
+		REQUIRE(issuanceRequestEntryAfterTx.tasks.allTasks != 0);
+		REQUIRE(issuanceRequestEntryAfterTx.tasks.pendingTasks != 0);
 
 
 		return result;
@@ -178,7 +177,7 @@ namespace txtest
 
         if (allTasks != nullptr)
 		{
-			createIssuanceRequestOp.ext.allTasks().activate() = *allTasks;
+			createIssuanceRequestOp.allTasks.activate() = *allTasks;
 		}
 
 		return txFromOperation(source, op, nullptr);

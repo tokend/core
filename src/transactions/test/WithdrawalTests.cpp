@@ -47,7 +47,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     const AssetCode asset = "USD";
     const uint64_t preIssuedAmount = 10000 * ONE;
     issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
-    assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE_V2));
+    assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
 
     //create stats asset and stats asset pair
     const AssetCode statsAsset = "UAH";
@@ -139,7 +139,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
 
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
-        REQUIRE(reviewResult.success().ext.extendedResult().fulfilled);
+        REQUIRE(reviewResult.success().extendedResult.fulfilled);
     }
 
     SECTION("Set tasks on request creation") {
@@ -373,12 +373,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_UNIVERSAL_AMOUNT);
         }
-        SECTION("Non empty preconfirmation details")
-        {
-            withdrawRequest.preConfirmationDetails = "some random data";
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                CreateWithdrawalRequestResultCode::INVALID_PRE_CONFIRMATION_DETAILS);
-        }
 
         SECTION("try to withdraw from non-existing balance")
         {
@@ -494,56 +488,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                              CreateWithdrawalRequestResultCode::LIMITS_EXCEEDED);
         }
 
-    }
-    SECTION("Two step withdrawal request")
-    {
-        // make asset require two step withdrwal
-        assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE) | static_cast<uint32_t>(AssetPolicy::TWO_STEP_WITHDRAWAL));
-        // create asset to withdraw to
-        const AssetCode withdrawDestAsset = "BTC";
-        assetHelper.createAsset(root, root.key, withdrawDestAsset, root, 0);
-        const uint64_t price = 2000 * ONE;
-        assetPairHelper.createAssetPair(root, withdrawDestAsset, asset, price);
-
-        //create withdraw request
-        uint64_t amountToWithdraw = 1000 * ONE;
-        withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
-        REQUIRE(withdrawerBalance->getAmount() >= amountToWithdraw);
-        const uint64_t expectedAmountInDestAsset = 0.5 * ONE;
-
-        Fee zeroFee;
-        zeroFee.fixed = 0;
-        zeroFee.percent = 0;
-        auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(), amountToWithdraw,
-            zeroFee, "{}", withdrawDestAsset,
-            expectedAmountInDestAsset);
-
-        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest);
-        auto twoStepHelper = ReviewTwoStepWithdrawRequestHelper(testManager);
-        SECTION("Happy path")
-        {
-            twoStepHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
-            reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
-        }
-        SECTION("Reject")
-        {
-            SECTION("Reject on first step")
-            {
-                twoStepHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::PERMANENT_REJECT, "No money");
-            }
-            SECTION("Reject on second step")
-            {
-                twoStepHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
-                reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::PERMANENT_REJECT, "Something went wrong");
-            }
-        }
-        SECTION("Can not review two step as regular withdrawal")
-        {
-            auto request = ReviewableRequestHelper::Instance()->loadRequest(withdrawResult.success().requestID, testManager->getDB());
-            reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID,
-                request->getHash(), ReviewableRequestType::WITHDRAW, 
-                ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::TYPE_MISMATCHED);
-        }
     }
 
 }

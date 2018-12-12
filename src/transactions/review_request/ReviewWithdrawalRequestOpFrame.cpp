@@ -119,17 +119,17 @@ bool ReviewWithdrawalRequestOpFrame::handleApproveV2(
         return false;
     }
 
-    requestEntry.ext.tasksExt().allTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-    requestEntry.ext.tasksExt().pendingTasks &= ~mReviewRequest.ext.reviewDetails().tasksToRemove;
-    requestEntry.ext.tasksExt().pendingTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-    requestEntry.ext.tasksExt().externalDetails.emplace_back(mReviewRequest.ext.reviewDetails().externalDetails);
+    requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    requestEntry.tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
+    requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
     ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
 
     if (!request->canBeFulfilled(ledgerManager)){
         innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::NONE);
-        innerResult().success().ext.extendedResult().fulfilled = false;
+        innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
+        innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
+        innerResult().success().extendedResult.fulfilled = false;
         return true;
     }
 
@@ -175,8 +175,8 @@ bool ReviewWithdrawalRequestOpFrame::handleApproveV2(
     AssetHelperLegacy::Instance()->storeChange(delta, db, assetFrame->mEntry);
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    innerResult().success().ext.extendedResult().fulfilled = true;
-    innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::NONE);
+    innerResult().success().extendedResult.fulfilled = true;
+    innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
     return true;
 }
 
@@ -190,7 +190,7 @@ bool ReviewWithdrawalRequestOpFrame::handleReject(
 
 ReviewWithdrawalRequestOpFrame::ReviewWithdrawalRequestOpFrame(
         Operation const& op, OperationResult& res, TransactionFrame& parentTx)
-        : ReviewTwoStepWithdrawalRequestOpFrame(op, res, parentTx)
+        : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 
@@ -224,6 +224,68 @@ bool ReviewWithdrawalRequestOpFrame::doCheckValid(Application &app)
     return ReviewRequestOpFrame::doCheckValid(app);
 }
 bool ReviewWithdrawalRequestOpFrame::removingNotSetTask(ReviewableRequestEntry &requestEntry) {
-    return !(requestEntry.ext.tasksExt().pendingTasks & mReviewRequest.ext.reviewDetails().tasksToRemove);
+    return !(requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove);
 }
+
+
+uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
+{
+    uint64_t totalFee;
+    if (!safeSum(withdrawRequest.fee.percent, withdrawRequest.fee.fixed, totalFee))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate total fee for withdrawal request: " << requestID;
+        throw runtime_error("Failed to calculate total fee for withdrawal request");
+    }
+
+    return totalFee;
+}
+
+
+bool ReviewWithdrawalRequestOpFrame::rejectWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request, WithdrawalRequest& withdrawRequest)
+{
+    Database& db = app.getDatabase();
+    auto balance = BalanceHelperLegacy::Instance()->mustLoadBalance(withdrawRequest.balance, db, &delta);
+    const auto totalAmountToCharge = getTotalAmountToCharge(request->getRequestID(), withdrawRequest);
+    if (balance->unlock(totalAmountToCharge) != BalanceFrame::Result::SUCCESS)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state. Failed to unlock locked amount. requestID: " << request->getRequestID();
+        throw runtime_error("Unexpected db state. Failed to unlock locked amount");
+    }
+
+    const uint64_t universalAmount = withdrawRequest.universalAmount;
+    if (universalAmount > 0)
+    {
+        if (!ledgerManager.shouldUse(LedgerVersion::CREATE_ONLY_STATISTICS_V2))
+        {
+            AccountManager accountManager(app, ledgerManager.getDatabase(), delta, ledgerManager);
+            const AccountID requestor = request->getRequestor();
+            const time_t timePerformed = request->getCreatedAt();
+            accountManager.revertStats(requestor, universalAmount, timePerformed);
+        }
+        else
+        {
+            StatisticsV2Processor statisticsV2Processor(ledgerManager.getDatabase(), delta, ledgerManager);
+            statisticsV2Processor.revertStatsV2(request->getRequestID());
+        }
+    }
+
+    EntryHelperProvider::storeChangeEntry(delta, db, balance->mEntry);
+    return ReviewRequestOpFrame::handlePermanentReject(app, delta, ledgerManager, request);
+}
+
+
+uint64_t ReviewWithdrawalRequestOpFrame::getTotalAmountToCharge(
+        const uint64_t requestID, WithdrawalRequest& withdrawalRequest)
+{
+    const auto totalFee = getTotalFee(requestID, withdrawalRequest);
+    uint64_t totalAmountToCharge;
+    if (!safeSum(withdrawalRequest.amount, totalFee, totalAmountToCharge))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate total amount ot be charged for withdrawal request: " << requestID;
+        throw runtime_error("Failed to calculate total amount to be charged for withdrawal request");
+    }
+
+    return totalAmountToCharge;
+}
+
 }

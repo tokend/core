@@ -123,62 +123,6 @@ namespace stellar {
         return true;
     }
 
-    bool
-    ManageSaleOpFrame::createUpdateEndTimeRequest(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-                                                  Database &db) {
-        auto reference = getUpdateSaleEndTimeRequestReference();
-        auto const referencePtr = xdr::pointer<string64>(new string64(reference));
-        auto requestHelper = ReviewableRequestHelper::Instance();
-        if (requestHelper->isReferenceExist(db, getSourceID(), reference)) {
-            innerResult().code(ManageSaleResultCode::UPDATE_END_TIME_REQUEST_ALREADY_EXISTS);
-            return false;
-        }
-
-        auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(), app.getMasterID(), referencePtr,
-                                                              ledgerManager.getCloseTime());
-        auto &requestEntry = requestFrame->getRequestEntry();
-        requestEntry.body.type(ReviewableRequestType::UPDATE_SALE_END_TIME);
-        requestEntry.body.updateSaleEndTimeRequest().saleID = mManageSaleOp.saleID;
-        requestEntry.body.updateSaleEndTimeRequest().newEndTime = mManageSaleOp.data.updateSaleEndTimeData().newEndTime;
-
-        requestFrame->recalculateHashRejectReason();
-
-        requestHelper->storeAdd(delta, db, requestFrame->mEntry);
-
-        innerResult().code(ManageSaleResultCode::SUCCESS);
-        innerResult().success().response.action(ManageSaleAction::CREATE_UPDATE_END_TIME_REQUEST);
-        innerResult().success().response.updateEndTimeRequestID() = requestFrame->getRequestID();
-
-        trySetFulfilled(ledgerManager, false);
-
-        return true;
-    }
-
-    bool ManageSaleOpFrame::amendUpdateEndTimeRequest(LedgerManager &lm, Database &db, LedgerDelta &delta) {
-        auto requestFrame = ReviewableRequestHelper::Instance()->loadRequest(
-                mManageSaleOp.data.updateSaleEndTimeData().requestID, getSourceID(),
-                ReviewableRequestType::UPDATE_SALE_END_TIME, db, &delta);
-
-        if (!requestFrame) {
-            innerResult().code(ManageSaleResultCode::UPDATE_END_TIME_REQUEST_NOT_FOUND);
-            return false;
-        }
-
-        auto &requestEntry = requestFrame->getRequestEntry();
-        requestEntry.body.updateSaleEndTimeRequest().newEndTime = mManageSaleOp.data.updateSaleEndTimeData().newEndTime;
-
-        requestFrame->recalculateHashRejectReason();
-        ReviewableRequestHelper::Instance()->storeChange(delta, db, requestFrame->mEntry);
-
-        innerResult().code(ManageSaleResultCode::SUCCESS);
-        innerResult().success().response.action(ManageSaleAction::CREATE_UPDATE_END_TIME_REQUEST);
-        innerResult().success().response.updateEndTimeRequestID() = requestFrame->getRequestID();
-
-        trySetFulfilled(lm, false);
-
-        return true;
-    }
-
     void ManageSaleOpFrame::cancelSale(SaleFrame::pointer sale, LedgerDelta &delta, Database &db, LedgerManager &lm) {
         for (auto &saleQuoteAsset : sale->getSaleEntry().quoteAssets) {
             cancelAllOffersForQuoteAsset(sale, saleQuoteAsset, delta, db);
@@ -222,49 +166,6 @@ namespace stellar {
         }
     }
 
-    bool ManageSaleOpFrame::createPromotionUpdateRequest(Application &app, LedgerDelta &delta, Database &db,
-                                                         SaleState saleState) {
-        auto &ledgerManager = app.getLedgerManager();
-
-        if (!ManageSaleOpFrame::isSaleStateValid(ledgerManager, saleState)) {
-            innerResult().code(ManageSaleResultCode::INVALID_SALE_STATE);
-            return false;
-        }
-
-        auto reference = getPromotionUpdateRequestReference();
-        auto const referencePtr = xdr::pointer<string64>(new string64(reference));
-        auto requestHelper = ReviewableRequestHelper::Instance();
-        if (requestHelper->isReferenceExist(db, getSourceID(), reference)) {
-            innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_ALREADY_EXISTS);
-            return false;
-        }
-
-        auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(), app.getMasterID(),
-                                                              referencePtr, ledgerManager.getCloseTime());
-
-        auto &requestEntry = requestFrame->getRequestEntry();
-        requestEntry.body.type(ReviewableRequestType::UPDATE_PROMOTION);
-        requestEntry.body.promotionUpdateRequest().promotionID = mManageSaleOp.saleID;
-        requestEntry.body.promotionUpdateRequest().newPromotionData = mManageSaleOp.data.promotionUpdateData().newPromotionData;
-
-        requestFrame->recalculateHashRejectReason();
-
-        requestHelper->storeAdd(delta, db, requestFrame->mEntry);
-
-        innerResult().code(ManageSaleResultCode::SUCCESS);
-        innerResult().success().response.action(ManageSaleAction::CREATE_PROMOTION_UPDATE_REQUEST);
-        innerResult().success().response.promotionUpdateRequestID() = requestFrame->getRequestID();
-
-        if (mSourceAccount->getAccountType() == AccountType::MASTER) {
-            tryAutoApprove(app, db, delta, requestFrame);
-            return true;
-        }
-
-        trySetFulfilled(ledgerManager, false);
-
-        return true;
-    }
-
     void ManageSaleOpFrame::tryAutoApprove(Application &app, Database &db, LedgerDelta &delta,
                                            ReviewableRequestFrame::pointer requestFrame) {
         auto &lm = app.getLedgerManager();
@@ -282,31 +183,6 @@ namespace stellar {
         }
 
         trySetFulfilled(lm, true);
-    }
-
-    bool ManageSaleOpFrame::amendPromotionUpdateRequest(LedgerManager &lm, Database &db, LedgerDelta &delta) {
-        auto requestFrame = ReviewableRequestHelper::Instance()->loadRequest(
-                mManageSaleOp.data.promotionUpdateData().requestID, getSourceID(),
-                ReviewableRequestType::UPDATE_PROMOTION, db, &delta);
-
-        if (!requestFrame) {
-            innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_NOT_FOUND);
-            return false;
-        }
-
-        auto &requestEntry = requestFrame->getRequestEntry();
-        requestEntry.body.promotionUpdateRequest().newPromotionData = mManageSaleOp.data.promotionUpdateData().newPromotionData;
-
-        requestFrame->recalculateHashRejectReason();
-        ReviewableRequestHelper::Instance()->storeChange(delta, db, requestFrame->mEntry);
-
-        innerResult().code(ManageSaleResultCode::SUCCESS);
-        innerResult().success().response.action(ManageSaleAction::CREATE_PROMOTION_UPDATE_REQUEST);
-        innerResult().success().response.promotionUpdateRequestID() = requestFrame->getRequestID();
-
-        trySetFulfilled(lm, false);
-
-        return true;
     }
 
     bool ManageSaleOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) {
@@ -337,23 +213,6 @@ namespace stellar {
             case ManageSaleAction::SET_STATE: {
                 return setSaleState(saleFrame, app, delta, ledgerManager, db);
             }
-            case ManageSaleAction::CREATE_UPDATE_END_TIME_REQUEST: {
-                uint64_t newEndTime = mManageSaleOp.data.updateSaleEndTimeData().newEndTime;
-                if (!saleFrame->isEndTimeValid(newEndTime, ledgerManager.getCloseTime())) {
-                    innerResult().code(ManageSaleResultCode::INVALID_NEW_END_TIME);
-                    return false;
-                }
-                if (mManageSaleOp.data.updateSaleEndTimeData().requestID != 0) {
-                    return amendUpdateEndTimeRequest(ledgerManager, db, delta);
-                }
-                return createUpdateEndTimeRequest(app, delta, ledgerManager, db);
-            }
-            case ManageSaleAction::CREATE_PROMOTION_UPDATE_REQUEST: {
-                if (mManageSaleOp.data.promotionUpdateData().requestID != 0) {
-                    return amendPromotionUpdateRequest(ledgerManager, db, delta);
-                }
-                return createPromotionUpdateRequest(app, delta, db, saleFrame->getState());
-            }
             default:
                 CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected action from manage sale op: "
                                                        << xdr::xdr_to_string(mManageSaleOp.data.action());
@@ -363,53 +222,10 @@ namespace stellar {
         return true;
     }
 
-    bool ManageSaleOpFrame::isPromotionUpdateDataValid(Application &app) {
-        auto saleCreationRequestValidationResult = CreateSaleCreationRequestOpFrame::doCheckValid(
-                app, mManageSaleOp.data.promotionUpdateData().newPromotionData, getSourceID());
-
-        if (saleCreationRequestValidationResult == CreateSaleCreationRequestResultCode::SUCCESS) {
-            return true;
-        }
-
-        switch (saleCreationRequestValidationResult) {
-            case CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR: {
-                innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_ASSET_PAIR);
-                return false;
-            }
-            case CreateSaleCreationRequestResultCode::INVALID_PRICE: {
-                innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_PRICE);
-                return false;
-            }
-            case CreateSaleCreationRequestResultCode::START_END_INVALID: {
-                innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_START_END_INVALID);
-                return false;
-            }
-            case CreateSaleCreationRequestResultCode::INVALID_CAP: {
-                innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_CAP);
-                return false;
-            }
-            case CreateSaleCreationRequestResultCode::INVALID_DETAILS: {
-                innerResult().code(ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_DETAILS);
-                return false;
-            }
-            default: {
-                CLOG(ERROR, Logging::OPERATION_LOGGER)
-                        << "Unexpected result code from CreateSaleCreationRequestOpFrame::doCheckValid: "
-                        << xdr::xdr_traits<CreateSaleCreationRequestResultCode>::enum_name(
-                                saleCreationRequestValidationResult);
-                throw std::runtime_error("Unexpected result code from CreateSaleCreationRequestOpFrame::doCheckValid");
-            }
-        }
-    }
-
     bool ManageSaleOpFrame::doCheckValid(Application &app) {
         if (mManageSaleOp.saleID == 0) {
             innerResult().code(ManageSaleResultCode::SALE_NOT_FOUND);
             return false;
-        }
-
-        if (mManageSaleOp.data.action() == ManageSaleAction::CREATE_PROMOTION_UPDATE_REQUEST) {
-            return isPromotionUpdateDataValid(app);
         }
 
         if (mManageSaleOp.data.action() != ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST) {

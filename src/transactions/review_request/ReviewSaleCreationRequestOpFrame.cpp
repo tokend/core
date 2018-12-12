@@ -31,12 +31,6 @@ ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(
     {
         return request->getRequestEntry().body.saleCreationRequest();
     }
-    case ReviewableRequestType::UPDATE_PROMOTION:
-    {
-        return request->getRequestEntry()
-            .body.promotionUpdateRequest()
-            .newPromotionData;
-    }
     default:
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -163,10 +157,9 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
 
     if (ledgerManager.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
     {
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().fulfilled = true;
-        innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::SALE);
-        innerResult().success().ext.extendedResult().typeExt.saleExtended().saleID = newSaleID;
+        innerResult().success().extendedResult.fulfilled = true;
+        innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::SALE);
+        innerResult().success().extendedResult.typeExt.saleExtended().saleID = newSaleID;
         return true;
     }
 

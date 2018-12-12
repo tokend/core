@@ -19,7 +19,6 @@
 #include "transactions/dex/OfferManager.h"
 #include "test_helper/ParticipateInSaleTestHelper.h"
 #include "test_helper/ManageSaleTestHelper.h"
-#include "test_helper/ReviewPromotionUpdateRequestTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -49,7 +48,6 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     IssuanceRequestHelper issuanceHelper(testManager);
     CheckSaleStateHelper checkSaleStateHelper(testManager);
     ManageSaleTestHelper manageSaleHelper(testManager);
-    ReviewPromotionUpdateRequestHelper reviewPromotionUpdateHelper(testManager);
     ManageBalanceTestHelper balanceTestHelper(testManager);
     ManageOfferTestHelper offerTestHelper(testManager);
 
@@ -213,7 +211,6 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
     IssuanceRequestHelper issuanceHelper(testManager);
     CheckSaleStateHelper checkSaleStateHelper(testManager);
     ManageSaleTestHelper manageSaleHelper(testManager);
-    ReviewPromotionUpdateRequestHelper reviewPromotionUpdateHelper(testManager);
     ParticipateInSaleTestHelper participationHelper(testManager);
 
     auto syndicate = Account{ SecretKey::random(), 0 };

@@ -6,7 +6,6 @@
 #include <transactions/FeesManager.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/SaleAnteHelper.h>
-#include <transactions/test/test_helper/ReviewUpdateSaleEndTimeRequestHelper.h>
 #include "main/Application.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -275,7 +274,6 @@ TEST_CASE("Sale", "[tx][sale]")
     CheckSaleStateHelper checkStateHelper(testManager);
     ManageSaleTestHelper manageSaleTestHelper(testManager);
     ReviewUpdateSaleDetailsRequestTestHelper reviewUpdateSaleDetailsRequestTestHelper(testManager);
-    ReviewUpdateSaleEndTimeRequestHelper reviewUpdateSaleEndTimeRequestHelper(testManager);
     CreateAccountTestHelper accountTestHelper(testManager);
     SetFeesTestHelper setFeesTestHelper(testManager);
     auto saleReviewer = ReviewSaleRequestHelper(testManager);
@@ -490,7 +488,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-        auto saleID = result.success().ext.extendedResult().typeExt.saleExtended().saleID;
+        auto saleID = result.success().extendedResult.typeExt.saleExtended().saleID;
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay, &feeToPay);
 
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -693,53 +691,6 @@ TEST_CASE("Sale", "[tx][sale]")
                 reviewUpdateSaleDetailsRequestTestHelper.applyReviewRequestTx(root, requestID,
                                                                               ReviewRequestOpAction::APPROVE, "");
             }
-            SECTION("Update sale end time") {
-                auto manageSaleData = manageSaleTestHelper.createUpdateSaleEndTimeRequest(0, endTime + 1000);
-
-                SECTION("Invalid end time") {
-                    manageSaleData.updateSaleEndTimeData().newEndTime = 0;
-                    manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                           ManageSaleResultCode::INVALID_NEW_END_TIME);
-                }
-                SECTION("Sale not found") {
-                    manageSaleTestHelper.applyManageSaleTx(syndicate, 42, manageSaleData,
-                                                           ManageSaleResultCode::SALE_NOT_FOUND);
-                }
-
-                SECTION("Successful update end time request creation") {
-                    auto manageSaleResult = manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
-                    auto requestID = manageSaleResult.success().response.updateEndTimeRequestID();
-
-                    SECTION("Trying to create same request once again") {
-                        manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                        ManageSaleResultCode::UPDATE_END_TIME_REQUEST_ALREADY_EXISTS);
-                    }
-
-                    SECTION("Trying to update non existing request") {
-                        manageSaleData.updateSaleEndTimeData().requestID = 42;
-                        manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                               ManageSaleResultCode::UPDATE_END_TIME_REQUEST_NOT_FOUND);
-                    }
-
-                    SECTION("Review request") {
-                        testManager->advanceToTime(3000);
-
-                        SECTION("Invalid new end time") {
-                            reviewUpdateSaleEndTimeRequestHelper.applyReviewRequestTx(root, requestID,
-                                                                                          ReviewRequestOpAction::APPROVE, "",
-                                                                                          ReviewRequestResultCode::INVALID_SALE_NEW_END_TIME);
-                        }
-
-                        // amend update sale end time request successfully
-                        manageSaleData.updateSaleEndTimeData().requestID = requestID;
-                        manageSaleData.updateSaleEndTimeData().newEndTime = endTime + 3000;
-                        manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
-
-                        reviewUpdateSaleEndTimeRequestHelper.applyReviewRequestTx(root, requestID,
-                                                                                      ReviewRequestOpAction::APPROVE, "");
-                    }
-                }
-            }
         }
     }
 
@@ -833,10 +784,10 @@ TEST_CASE("Sale", "[tx][sale]")
             auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTx(root, requestID,
                                                                              ReviewRequestOpAction::APPROVE, "");
             REQUIRE(reviewSaleRequestResult.success().ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-            REQUIRE(reviewSaleRequestResult.success().ext.extendedResult().fulfilled);
-            REQUIRE(reviewSaleRequestResult.success().ext.extendedResult().typeExt.requestType() ==
+            REQUIRE(reviewSaleRequestResult.success().extendedResult.fulfilled);
+            REQUIRE(reviewSaleRequestResult.success().extendedResult.typeExt.requestType() ==
                     ReviewableRequestType::SALE);
-            REQUIRE(reviewSaleRequestResult.success().ext.extendedResult().typeExt.saleExtended().saleID != 0);
+            REQUIRE(reviewSaleRequestResult.success().extendedResult.typeExt.saleExtended().saleID != 0);
         }
         SECTION("Max issuance or preissued amount is less then hard cap")
         {

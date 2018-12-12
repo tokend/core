@@ -223,21 +223,15 @@ namespace stellar {
             oe.rejectReason = rejectReason;
             oe.ext.v(static_cast<LedgerVersion>(version));
 
-            if(oe.ext.v() < LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST && allTasks != 0)
-                throw std::runtime_error("version is incorrect but AllTasks in not empty");
+            oe.tasks.allTasks = allTasks;
+            oe.tasks.pendingTasks = pendingTasks;
 
-            if (oe.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-            {
-                oe.ext.tasksExt().allTasks = allTasks;
-                oe.ext.tasksExt().pendingTasks = pendingTasks;
-
-                // unmarshal external details
-                std::vector<uint8_t> decodedDetails;
-                bn::decode_b64(externalDetails, decodedDetails);
-                xdr::xdr_get detailsUnmarshaler(&decodedDetails.front(), &decodedDetails.back() + 1);
-                xdr::xdr_argpack_archive(detailsUnmarshaler, oe.ext.tasksExt().externalDetails);
-                detailsUnmarshaler.done();
-            }
+            // unmarshal external details
+            std::vector<uint8_t> decodedDetails;
+            bn::decode_b64(externalDetails, decodedDetails);
+            xdr::xdr_get detailsUnmarshaler(&decodedDetails.front(), &decodedDetails.back() + 1);
+            xdr::xdr_argpack_archive(detailsUnmarshaler, oe.tasks.externalDetails);
+            detailsUnmarshaler.done();
 
             ReviewableRequestFrame::ensureValid(oe);
 

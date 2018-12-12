@@ -239,9 +239,6 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return;
         case ReviewableRequestType::LIMITS_UPDATE:
             return;
-        case ReviewableRequestType::TWO_STEP_WITHDRAWAL:
-            ensureWithdrawalValid(oe.body.twoStepWithdrawalRequest());
-            return;
         case ReviewableRequestType::AML_ALERT:
             ensureAMLAlertValid(oe.body.amlAlertRequest());
             return;
@@ -253,10 +250,6 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return;
         case ReviewableRequestType::INVOICE:
             ensureInvoiceValid(oe.body.invoiceRequest());
-            return;
-        case ReviewableRequestType::UPDATE_SALE_END_TIME:
-            return;
-        case ReviewableRequestType ::UPDATE_PROMOTION:
             return;
         case ReviewableRequestType::CONTRACT:
             return;
@@ -278,9 +271,9 @@ ReviewableRequestFrame::ensureValid() const
 
 void ReviewableRequestFrame::setTasks(uint32_t allTasks)
 {
-    mRequest.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    mRequest.ext.tasksExt().allTasks = allTasks;
-    mRequest.ext.tasksExt().pendingTasks = allTasks;
+    mRequest.ext.v(LedgerVersion::EMPTY_VERSION);
+    mRequest.tasks.allTasks = allTasks;
+    mRequest.tasks.pendingTasks = allTasks;
 }
 
 void ReviewableRequestFrame::checkRequestType(ReviewableRequestType requestType) const
@@ -297,13 +290,7 @@ void ReviewableRequestFrame::checkRequestType(ReviewableRequestType requestType)
 
 bool ReviewableRequestFrame::canBeFulfilled(LedgerManager& lm) const
 {
-    if (!lm.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST) ||
-        mRequest.ext.v() != LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return true;
-    }
-
-    return mRequest.ext.tasksExt().pendingTasks == 0;
+    return mRequest.tasks.pendingTasks == 0;
 }
 
 }

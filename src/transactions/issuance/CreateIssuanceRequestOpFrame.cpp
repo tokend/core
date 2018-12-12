@@ -146,7 +146,7 @@ bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delt
 																								   requestFrame);
 		reviewRequestResultCode = reviewRequestResult.code();
 		isFulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?
-					  reviewRequestResult.success().ext.extendedResult().fulfilled:
+					  reviewRequestResult.success().extendedResult.fulfilled:
 					  false;
 	}
 
@@ -216,16 +216,12 @@ CreateIssuanceRequestOpFrame::doCheckValid(Application& app)
         return false;
 	}
 
-	if (mCreateIssuanceRequest.ext.v() != LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-	{
-		return true;
-	}
 
 	int32_t systemTasks = CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT |
 						  CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED |
 						  CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
 
-	if (mCreateIssuanceRequest.ext.allTasks() && (*mCreateIssuanceRequest.ext.allTasks() & systemTasks) != 0)
+	if (mCreateIssuanceRequest.allTasks && (*mCreateIssuanceRequest.allTasks.get() & systemTasks) != 0)
 	{
 		innerResult().code(CreateIssuanceRequestResultCode::SYSTEM_TASKS_NOT_ALLOWED);
 		return false;
@@ -249,7 +245,7 @@ SourceDetails CreateIssuanceRequestOpFrame::getSourceAccountDetails(std::unorder
 							 static_cast<int32_t>(SignerType::ISSUANCE_MANAGER));
 	}
 
-	if (mCreateIssuanceRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST && !mCreateIssuanceRequest.ext.allTasks())
+	if (!mCreateIssuanceRequest.allTasks)
 	{
 		return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
 							 static_cast<uint32_t>(SignerType::ISSUANCE_MANAGER) |
@@ -374,11 +370,7 @@ CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
     issuanceRequestOp.request = request;
     issuanceRequestOp.reference = binToHex(sha256(xdr_to_opaque(receiver, asset, amount, lm.getCloseTime())));
 
-    if (lm.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-    {
-        issuanceRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        issuanceRequestOp.ext.allTasks().activate() = allTasks;
-    }
+	issuanceRequestOp.allTasks.activate() = allTasks;
 
     return issuanceRequestOp;
 }
@@ -410,9 +402,9 @@ bool
 CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &allTasks,
                                                 LedgerManager& lm)
 {
-    if (mCreateIssuanceRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST && mCreateIssuanceRequest.ext.allTasks())
+    if (mCreateIssuanceRequest.allTasks)
     {
-        allTasks = *mCreateIssuanceRequest.ext.allTasks().get();
+        allTasks = *mCreateIssuanceRequest.allTasks.get();
         return true;
     }
 
@@ -431,11 +423,6 @@ bool
 CreateIssuanceRequestOpFrame::loadDefaultIssuanceTasks(Database& db, uint32_t& allTasks,
                                                        LedgerManager& lm)
 {
-	if (!lm.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
-	{
-		return false;
-	}
-
 	auto key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
 	auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
 	if (!keyValueFrame)

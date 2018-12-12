@@ -110,13 +110,13 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 		throw std::runtime_error("Expected only system tasks, got more");
 	}
 
-    requestEntry.ext.tasksExt().allTasks |= systemTasksToAdd;
-	requestEntry.ext.tasksExt().pendingTasks |= systemTasksToAdd;
+    requestEntry.tasks.allTasks |= systemTasksToAdd;
+	requestEntry.tasks.pendingTasks |= systemTasksToAdd;
 
-	requestEntry.ext.tasksExt().allTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-	requestEntry.ext.tasksExt().pendingTasks &= ~mReviewRequest.ext.reviewDetails().tasksToRemove;
-	requestEntry.ext.tasksExt().pendingTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-	requestEntry.ext.tasksExt().externalDetails.emplace_back(mReviewRequest.ext.reviewDetails().externalDetails);
+	requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+	requestEntry.tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
+	requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+	requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
 
 	ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
 
@@ -124,8 +124,8 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 	{
 		innerResult().code(ReviewRequestResultCode::SUCCESS);
         innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        innerResult().success().ext.extendedResult().fulfilled = false;
-		innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::NONE);
+        innerResult().success().extendedResult.fulfilled = false;
+		innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
 		return true;
 	}
 
@@ -181,13 +181,12 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 
 	EntryHelperProvider::storeChangeEntry(delta, db, receiver->mEntry);
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
-    innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    innerResult().success().ext.extendedResult().fulfilled = true;
-	innerResult().success().ext.extendedResult().typeExt.requestType(ReviewableRequestType::NONE);
+    innerResult().success().extendedResult.fulfilled = true;
+	innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
 	return true;
 }
 
-
+//TODO
 bool ReviewIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta,
                                                          LedgerManager & ledgerManager,
                                                          ReviewableRequestFrame::pointer request)
@@ -231,8 +230,8 @@ SourceDetails ReviewIssuanceCreationRequestOpFrame::getSourceAccountDetails(std:
                              allowedSigners);
     }
 
-    if ((mReviewRequest.ext.reviewDetails().tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
-    (mReviewRequest.ext.reviewDetails().tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
+    if ((mReviewRequest.reviewDetails.tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
+    (mReviewRequest.reviewDetails.tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
     {
         return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
                 static_cast<int32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
@@ -259,14 +258,14 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
 	int32_t systemTasks = CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT |
 			              CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
 
-	if ((mReviewRequest.ext.reviewDetails().tasksToAdd & systemTasks) != 0 ||
-        (mReviewRequest.ext.reviewDetails().tasksToRemove & systemTasks) != 0)
+	if ((mReviewRequest.reviewDetails.tasksToAdd & systemTasks) != 0 ||
+        (mReviewRequest.reviewDetails.tasksToRemove & systemTasks) != 0)
 	{
 		innerResult().code(ReviewRequestResultCode::SYSTEM_TASKS_NOT_ALLOWED);
 		return false;
 	}
 
-	if (!isValidJson(mReviewRequest.ext.reviewDetails().externalDetails))
+	if (!isValidJson(mReviewRequest.reviewDetails.externalDetails))
 	{
 		innerResult().code(ReviewRequestResultCode::INVALID_EXTERNAL_DETAILS);
 		return false;
@@ -333,7 +332,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		}
 		else
 		{
-			requestEntry.ext.tasksExt().pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
+			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
 		}
 
 		if (!addStatistics(db, localDelta, ledgerManager,
@@ -344,7 +343,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		}
 		else
 		{
-			requestEntry.ext.tasksExt().pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
 		}
 
 		if (allTasks == 0)
