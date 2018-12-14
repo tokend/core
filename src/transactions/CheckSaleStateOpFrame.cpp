@@ -20,7 +20,6 @@
 #include "dex/CreateSaleParticipationOpFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/SaleAnteHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "dex/DeleteSaleParticipationOpFrame.h"
@@ -117,50 +116,6 @@ bool CheckSaleStateOpFrame::handleCancel(SaleFrame::pointer sale, LedgerManager&
     return true;
 }
 
-void CheckSaleStateOpFrame::chargeSaleAntes(uint64_t saleID, AccountID const &commissionID,
-                                            LedgerDelta &delta, Database &db)
-{
-    auto saleAntes = SaleAnteHelper::Instance()->loadSaleAntesForSale(saleID, db);
-    for (auto &saleAnte : saleAntes) {
-        auto participantBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(saleAnte->getParticipantBalanceID(),
-                                                                                  db, &delta);
-        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID,
-                                                                                  participantBalanceFrame->getAsset(),
-                                                                                  db, delta);
-        if (!commissionBalance) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected commission balance to exist";
-            throw std::runtime_error("Unexpected state. Expected commission balance to exist");
-        }
-
-        const BalanceFrame::Result participantChargeResult = participantBalanceFrame->tryChargeFromLocked(saleAnte->getAmount());
-        if (participantChargeResult != BalanceFrame::Result::SUCCESS) {
-            string strParticipantBalanceID = PubKeyUtils::toStrKey(participantBalanceFrame->getBalanceID());
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to charge from locked amount for sale ante with reason "
-                    << participantChargeResult << " sale id: " << saleAnte->getSaleID()
-                    << " and participant balance id: " << strParticipantBalanceID;
-            throw std::runtime_error("Failed to charge from locked amount for sale ante");
-        }
-
-        const BalanceFrame::Result commissionBalanceFundResult = commissionBalance->tryFundAccount(saleAnte->getAmount());
-        if (commissionBalanceFundResult != BalanceFrame::Result::SUCCESS) {
-            string strCommissionBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to fund commission balance with sale ante, reason " << commissionBalanceFundResult
-                    << ". Sale id: " << saleAnte->getSaleID() << " and commission balance id: "
-                    << strCommissionBalanceID;
-            throw runtime_error("Failed to fund commission balance with sale ante");
-        }
-
-        delta.recordEntry(*saleAnte);
-
-        EntryHelperProvider::storeChangeEntry(delta, db, participantBalanceFrame->mEntry);
-        EntryHelperProvider::storeChangeEntry(delta, db, commissionBalance->mEntry);
-        EntryHelperProvider::storeDeleteEntry(delta, db, saleAnte->getKey());
-    }
-}
-
-
 void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, LedgerManager& lm, Database& db, LedgerDelta& delta, BalanceFrame::pointer balanceBefore){
     auto balanceAfter = BalanceHelperLegacy::Instance()->loadBalance(sale->getBaseBalanceID(), db);
     if(!lm.shouldUse(LedgerVersion::ALLOW_CLOSE_SALE_WITH_NON_ZERO_BALANCE)) {
@@ -238,10 +193,6 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
         result.saleQuoteBalance = quoteAsset.quoteBalance;
         success.effect.saleClosed().results.push_back(result);
         ManageSaleOpFrame::cancelAllOffersForQuoteAsset(sale, quoteAsset, delta, db);
-    }
-
-    if (lm.shouldUse(LedgerVersion::USE_SALE_ANTE)) {
-        chargeSaleAntes(sale->getID(), app.getCommissionID(), delta, db);
     }
 
     SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());

@@ -7,7 +7,6 @@
 #include "test/test_marshaler.h"
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/SaleAnteHelper.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
 #include <transactions/dex/ManageSaleOpFrame.h>
@@ -140,9 +139,6 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
         break;
     }
 
-    auto saleAntesBeforeTx =
-        SaleAnteHelper::Instance()->loadSaleAntes(saleID, db);
-
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOp;
     TransactionFramePtr txFrame;
     txFrame = createManageSaleTx(source, saleID, data);
@@ -245,7 +241,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
         REQUIRE(stateBeforeOp.size() == 1);
         StateBeforeTxHelper stateBeforeTxHelper(stateBeforeOp[0]);
         CheckSaleStateHelper(mTestManager)
-            .ensureCancel(saleID, stateBeforeTxHelper, saleAntesBeforeTx);
+            .ensureCancel(saleID, stateBeforeTxHelper);
         break;
     }
     case ManageSaleAction::SET_STATE:

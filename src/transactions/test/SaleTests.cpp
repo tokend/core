@@ -5,7 +5,6 @@
 #include <ledger/AssetPairHelper.h>
 #include <transactions/FeesManager.h>
 #include <ledger/FeeHelper.h>
-#include <ledger/SaleAnteHelper.h>
 #include <transactions/test/test_helper/ReviewUpdateSaleEndTimeRequestHelper.h>
 #include "main/Application.h"
 #include "ledger/AssetHelperLegacy.h"
@@ -388,85 +387,6 @@ TEST_CASE("Sale", "[tx][sale]")
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
     }
 
-    SECTION("Sale with sale antes") {
-        // set invest fee for sale antes
-        auto investFeeEntry = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset,
-                                                               int64_t(5 * ONE), int64_t(5 * ONE), nullptr,
-                                                               nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
-        setFeesTestHelper.applySetFeesTx(root, &investFeeEntry, false);
-
-        auto investFeeFrame = FeeHelper::Instance()->loadFee(FeeType::INVEST_FEE, quoteAsset, nullptr, nullptr,
-                                                             FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount, db);
-        REQUIRE(!!investFeeFrame);
-        uint64_t quotePreIssued = 0;
-        investFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
-        quotePreIssued += hardCap + ONE;
-        quotePreIssued += 50 * ONE;
-        IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
-
-        saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
-        REQUIRE(sales.size() == 1);
-        const auto saleID = sales[0]->getID();
-
-        SECTION("Successful closure")
-        {
-            const int numberOfParticipants = 10;
-            const auto quoteAssetAmount = hardCap / numberOfParticipants;
-            uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
-            saleAnteAmount += 5 * ONE;
-            for (auto i = 0; i < numberOfParticipants; i++)
-            {
-                participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, 0, &saleAnteAmount);
-                if (i < numberOfParticipants - 1)
-                {
-                    CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-                }
-            }
-
-            CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
-        }
-
-        SECTION("Canceled because of expiration") {
-            const int numberOfParticipants = 10;
-            const uint64_t quoteAssetAmount = softCap / numberOfParticipants;
-            uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
-            saleAnteAmount += 5 * ONE;
-            for (auto i = 0; i < numberOfParticipants - 1; i++)
-            {
-                participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, 0,
-                                  &saleAnteAmount);
-                checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-            }
-            // softcap is not reached, so no sale to close
-            CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-            // close ledger after end time
-            testManager->advanceToTime(endTime + 1);
-            auto checkRes = checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::SUCCESS);
-            REQUIRE(checkRes.success().effect.effect() == CheckSaleStateEffect::CANCELED);
-        }
-
-        SECTION("Canceled manually") {
-            const int numberOfParticipants = 10;
-            const uint64_t quoteAssetAmount = softCap / numberOfParticipants;
-            uint64_t saleAnteAmount = 0;
-            investFeeFrame->calculatePercentFee(quoteAssetAmount, saleAnteAmount, ROUND_UP, 1);
-            saleAnteAmount += 5 * ONE;
-            for (auto i = 0; i < numberOfParticipants - 1; i++)
-            {
-                participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, 0,
-                                  &saleAnteAmount);
-                checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-            }
-
-            auto data = manageSaleTestHelper.createDataForAction(ManageSaleAction::CANCEL);
-            manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, data);
-        }
-    }
-
     SECTION("Simple happy path for test fee")
     {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
@@ -491,13 +411,13 @@ TEST_CASE("Sale", "[tx][sale]")
         uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
         auto saleID = result.success().typeExt.saleExtended().saleID;
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay, &feeToPay);
+        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay);
 
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
 
         auto commissionBalance = BalanceHelperLegacy::Instance()->loadBalance(app.getCommissionID(),  quoteAsset, db, nullptr);
         REQUIRE(!!commissionBalance);
-        REQUIRE(commissionBalance->getAmount() == 2 * feeToPay + feeToPayBySyndicate);
+        REQUIRE(commissionBalance->getAmount() == feeToPay + feeToPayBySyndicate);
     }
 
     SECTION("Happy path")

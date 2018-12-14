@@ -59,7 +59,6 @@
 #include <ledger/ContractHelper.h>
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/SaleAnteHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
 
 extern "C" void register_factory_sqlite3();
@@ -91,17 +90,16 @@ enum databaseSchemaVersion : unsigned long {
     EXTERNAL_POOL_FIX_MIGRATION = 10,
     KEY_VALUE_FIX_MIGRATION = 11,
     EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 12,
-    ADD_SALE_ANTE = 13,
-    ADD_SALE_STATE = 14,
-    ADD_LIMITS_V2 = 15,
-    ADD_REVIEWABLE_REQUEST_TASKS = 16,
-    ADD_CONTRACTS = 17,
-    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 18,
-    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 19,
-    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 20,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 21,
-    ADD_ATOMIC_SWAP_BID = 22,
-    ADD_ASSET_CUSTOM_PRECISION = 23
+    ADD_SALE_STATE = 13,
+    ADD_LIMITS_V2 = 14,
+    ADD_REVIEWABLE_REQUEST_TASKS = 15,
+    ADD_CONTRACTS = 16,
+    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 17,
+    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 18,
+    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 19,
+    ADD_ACCOUNT_ROLES_AND_POLICIES = 20,
+    ADD_ATOMIC_SWAP_BID = 21,
+    ADD_ASSET_CUSTOM_PRECISION = 22
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
@@ -192,9 +190,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_PARENT_DB_TYPE:
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
-            break;
-        case databaseSchemaVersion::ADD_SALE_ANTE:
-            SaleAnteHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_SALE_STATE:
             SaleHelper::Instance()->addState(*this);
