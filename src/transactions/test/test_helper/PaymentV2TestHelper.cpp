@@ -24,17 +24,16 @@ namespace stellar {
             return destination;
         }
 
-        FeeDataV2 PaymentV2TestHelper::createFeeData(uint64 fixedFee, uint64 paymentFee, AssetCode feeAsset) {
-            FeeDataV2 feeData;
+        Fee PaymentV2TestHelper::createFeeData(uint64 fixedFee, uint64 paymentFee) {
+            Fee feeData;
 
-            feeData.fixedFee = fixedFee;
-            feeData.maxPaymentFee = paymentFee;
-            feeData.feeAsset = feeAsset;
+            feeData.fixed= fixedFee;
+            feeData.percent = paymentFee;
 
             return feeData;
         }
 
-        PaymentFeeDataV2 PaymentV2TestHelper::createPaymentFeeData(FeeDataV2 sourceFeeData, FeeDataV2 destFeeData,
+        PaymentFeeDataV2 PaymentV2TestHelper::createPaymentFeeData(Fee sourceFeeData, Fee destFeeData,
                                                                    bool sourcePaysForDest) {
             PaymentFeeDataV2 paymentFeeData;
 
@@ -72,14 +71,6 @@ namespace stellar {
 
             auto sourceBalanceBeforeTx = balanceHelper->loadBalance(sourceBalanceID, db);
 
-            // for now destination fee can be charged only in asset which is the same as asset of payment amount
-            // so it's ok to assert that sourceBalance asset is the same as destination fee asset
-            bool isCrossAssetPayment = feeData.destinationFee.feeAsset != feeData.sourceFee.feeAsset;
-
-            BalanceFrame::pointer sourceFeeBalanceBeforeTx;
-            if (!!sourceBalanceBeforeTx && isCrossAssetPayment)
-                sourceFeeBalanceBeforeTx = balanceHelper->loadBalance(sourceBalanceBeforeTx->getAccountID(),
-                                                                      feeData.sourceFee.feeAsset, db, nullptr);
 
             BalanceFrame::pointer destBalanceBeforeTx;
             if (destination.type() == PaymentDestinationType::BALANCE) {
@@ -96,6 +87,7 @@ namespace stellar {
             }
 
             TransactionFramePtr txFrame;
+
             txFrame = createPaymentV2Tx(source, sourceBalanceID, destination, amount, feeData, subject, reference);
             mTestManager->applyCheck(txFrame);
 
@@ -127,16 +119,6 @@ namespace stellar {
                     continue;
                 }
 
-                REQUIRE(isCrossAssetPayment);
-
-                if (item.asset == sourceFeeBalanceBeforeTx->getAsset()) {
-                    auto sourceFeeBalanceAfterTx = balanceHelper->loadBalance(sourceFeeBalanceBeforeTx->getBalanceID(),
-                                                                              db);
-                    REQUIRE(sourceFeeBalanceAfterTx->getAmount() == sourceFeeBalanceBeforeTx->getAmount() +
-                                                                    item.amountDelta);
-                    continue;
-                }
-
                 throw std::runtime_error("Unexpected asset code");
             }
 
@@ -156,12 +138,10 @@ namespace stellar {
                 }
 
                 REQUIRE(!!destBalanceAfterTx);
-
                 if (!destBalanceBeforeTx) {
                     REQUIRE(destBalanceAfterTx->getAmount() == item.amountDelta);
                     continue;
                 }
-
                 REQUIRE(destBalanceAfterTx->getAmount() == destBalanceBeforeTx->getAmount() + item.amountDelta);
             }
 
@@ -177,11 +157,9 @@ namespace stellar {
                     REQUIRE(commissionBalanceAfterTx->getAmount() == item.amountDelta);
                     continue;
                 }
-
                 REQUIRE(commissionBalanceAfterTx->getAmount() == commissionBalanceBeforeTx->getAmount() +
                                                                  item.amountDelta);
             }
-
             return opResult;
         }
     }

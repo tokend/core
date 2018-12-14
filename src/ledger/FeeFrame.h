@@ -61,10 +61,6 @@ namespace stellar
             return mFee;
         }
 
-        AssetCode getAsset() const {
-            return mFee.asset;
-        }
-
 		int64_t getPercentFee()
 		{
 			return mFee.percentFee;
@@ -76,8 +72,6 @@ namespace stellar
         }
 
         static void checkFeeType(FeeEntry const& feeEntry, FeeType feeType);
-
-        bool isCrossAssetFee() const;
 
         AssetCode getFeeAsset() const;
         

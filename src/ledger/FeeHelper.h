@@ -29,8 +29,6 @@ namespace stellar {
             return &singleton;
         }
 
-        void addFeeAsset(Database &db);
-
         void dropAll(Database &db) override;
 
         void storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) override;
