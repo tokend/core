@@ -35,6 +35,12 @@ namespace stellar {
         Hash hash = FeeFrame::calcHash(mSetFees.fee->feeType, mSetFees.fee->asset, mSetFees.fee->accountID.get(),
                                        mSetFees.fee->accountType.get(), mSetFees.fee->subtype);
 
+        auto actualHashValue = mSetFees.fee.get()->hash;
+        if (actualHashValue != hash) {
+            innerResult().code(SetFeesResultCode::INVALID_FEE_HASH);
+            return false;
+        }
+
         auto feeHelper = FeeHelper::Instance();
         auto feeFrame = feeHelper->loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db, &delta);
 
