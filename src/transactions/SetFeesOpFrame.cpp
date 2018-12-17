@@ -38,7 +38,7 @@ namespace stellar {
         auto actualHashValue = mSetFees.fee.get()->hash;
         if (actualHashValue != hash) {
             innerResult().code(SetFeesResultCode::INVALID_FEE_HASH);
-
+            return false;
         }
 
         auto feeHelper = FeeHelper::Instance();
