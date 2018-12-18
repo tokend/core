@@ -20,18 +20,18 @@ class ManageInvoiceRequestOpFrame : public OperationFrame
 	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
-    bool createManageInvoiceRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
+    bool createManageInvoiceRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 
-    bool checkMaxInvoicesForReceiverAccount(Application& app, Database& db, LedgerDelta& delta);
-    bool checkMaxInvoiceDetailsLength(Application& app, Database& db, LedgerDelta& delta);
-    int64_t obtainMaxInvoicesCount(Application& app, Database& db, LedgerDelta& delta);
-    uint64_t obtainMaxInvoiceDetailsLength(Application& app, Database& db, LedgerDelta& delta);
+    bool checkMaxInvoicesForReceiverAccount(Application& app, Database &db, KeyValueHelper &keyValueHelper);
+    bool checkMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper);
+    int64_t obtainMaxInvoicesCount(Application& app, KeyValueHelper &keyValueHelper);
+    uint64_t obtainMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper);
 
 
 public:
     ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper &storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
@@ -40,5 +40,9 @@ public:
     {
         return res.tr().manageInvoiceRequestResult().code();
     }
+
+    longstring makeTasksKey() override;
+
+    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
 };
 }

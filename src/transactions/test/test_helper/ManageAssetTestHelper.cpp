@@ -121,11 +121,11 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
     {
     case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
         REQUIRE(requestAfterTx->getRequestEntry().body.assetCreationRequest() ==
-            request.createAsset());
+            request.createAssetCreationRequest().createAsset);
         break;
     case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
         REQUIRE(requestAfterTx->getRequestEntry().body.assetUpdateRequest() ==
-            request.updateAsset());
+            request.createAssetUpdateRequest().updateAsset);
         break;
     default:
         throw std::runtime_error("Unexpected action for manage asset");
@@ -164,7 +164,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
-    AssetCreationRequest& assetCreationRequest = request.createAsset();
+    AssetCreationRequest& assetCreationRequest = request.createAssetCreationRequest().createAsset;
     assetCreationRequest.code = code;
     assetCreationRequest.details = details;
     assetCreationRequest.maxIssuanceAmount = maxIssuanceAmount;
@@ -187,7 +187,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST);
-    AssetUpdateRequest& assetUpdateRequest = request.updateAsset();
+    AssetUpdateRequest& assetUpdateRequest = request.createAssetUpdateRequest().updateAsset;
     assetUpdateRequest.code = code;
     assetUpdateRequest.details = details;
     assetUpdateRequest.policies = policies;
@@ -235,9 +235,9 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                                       policies, 0);
     if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
     {
-        creationRequest.createAsset().ext.v(
+        creationRequest.createAssetCreationRequest().createAsset.ext.v(
                 LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
-        creationRequest.createAsset().ext.trailingDigitsCount() =
+        creationRequest.createAssetCreationRequest().createAsset.ext.trailingDigitsCount() =
                 trailingDigitsCount;
     }
     auto creationResult = applyManageAssetTx(assetOwner, 0, creationRequest);
@@ -312,17 +312,17 @@ void ManageAssetTestHelper::validateManageAssetEffect(
     switch (request.action())
     {
     case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
-        assetCode = request.createAsset().code;
+        assetCode = request.createAssetCreationRequest().createAsset.code;
         break;
     case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
     {
-        assetCode = request.updateAsset().code;
+        assetCode = request.createAssetUpdateRequest().updateAsset.code;
         auto assetFrame = assetHelper->loadAsset(assetCode,
                                                  mTestManager->getDB());
         REQUIRE(assetFrame);
         auto assetEntry = assetFrame->getAsset();
-        REQUIRE(assetEntry.details == request.updateAsset().details);
-        REQUIRE(assetEntry.policies == request.updateAsset().policies);
+        REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.details);
+        REQUIRE(assetEntry.policies == request.createAssetUpdateRequest().updateAsset.policies);
         break;
     }
     default:

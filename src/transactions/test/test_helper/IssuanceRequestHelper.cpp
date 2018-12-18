@@ -173,7 +173,7 @@ namespace txtest
 		CreateIssuanceRequestOp& createIssuanceRequestOp = op.body.createIssuanceRequestOp();
 		createIssuanceRequestOp.request = request;
         createIssuanceRequestOp.reference = reference;
-		createIssuanceRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+		createIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 
         if (allTasks != nullptr)
 		{

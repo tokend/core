@@ -45,7 +45,7 @@ namespace stellar {
     CreateUpdateKYCRequestOpFrame::getSourceAccountDetails(
             std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
             int32_t ledgerVersion) const {
-        if (!!mCreateUpdateKYCRequest.updateKYCRequestData.allTasks) {
+        if (mCreateUpdateKYCRequest.allTasks) {
             return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
                                  static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
         }
@@ -86,7 +86,7 @@ namespace stellar {
         if (updateKYCRequest.kycLevel != updateKYCRequestData.kycLevelToSet) {
             return false;
         }
-        if (!!updateKYCRequestData.allTasks) {
+        if (mCreateUpdateKYCRequest.allTasks) {
             return false;
         }
 
@@ -228,11 +228,11 @@ namespace stellar {
         requestEntry.body.updateKYCRequest().kycLevel = mCreateUpdateKYCRequest.updateKYCRequestData.kycLevelToSet;
         requestEntry.body.updateKYCRequest().kycData = mCreateUpdateKYCRequest.updateKYCRequestData.kycData;
 
-        requestEntry.body.updateKYCRequest().allTasks = !!mCreateUpdateKYCRequest.updateKYCRequestData.allTasks
-                                                        ?mCreateUpdateKYCRequest.updateKYCRequestData.allTasks.activate()
+        requestEntry.tasks.allTasks = mCreateUpdateKYCRequest.allTasks.get()
+                                                        ? mCreateUpdateKYCRequest.allTasks.activate()
                                                         :defaultMask;
 
-        requestEntry.body.updateKYCRequest().pendingTasks = requestEntry.body.updateKYCRequest().allTasks;
+        requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
         requestEntry.body.updateKYCRequest().sequenceNumber = 0;
     }
 
@@ -268,7 +268,7 @@ namespace stellar {
 
     void CreateUpdateKYCRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
         requestEntry.body.updateKYCRequest().kycData = mCreateUpdateKYCRequest.updateKYCRequestData.kycData;
-        requestEntry.body.updateKYCRequest().pendingTasks = requestEntry.body.updateKYCRequest().allTasks;
+        requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
         requestEntry.body.updateKYCRequest().sequenceNumber++;
     }
 }

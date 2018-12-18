@@ -10,6 +10,8 @@
 #include "test_helper/ReviewAssetRequestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ReviewPreIssuanceRequestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "test/test_marshaler.h"
 
@@ -49,6 +51,18 @@ TEST_CASE("Authorize pre issued asset", "[tx][auth_preissued_asset]")
 	Application& app = *appPtr;
 	app.start();
 	auto testManager = TestManager::make(app);
+
+	ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+	longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+	manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+	manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+	longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+	manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+	manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+	longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+	manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+	manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
 
 	auto root = Account{ getRoot(), Salt(0) };
 	SECTION("Root happy path")

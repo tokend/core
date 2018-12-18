@@ -35,23 +35,17 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
 
     bool isAllowedToReceive(BalanceID receivingBalance, Database &db);
 
-    bool loadIssuanceTasks(Database &db, uint32_t &allTasks, LedgerManager& lm);
-
-    bool loadDefaultIssuanceTasks(Database &db, uint32_t &allTasks, LedgerManager& lm);
-
 public:
 
     CreateIssuanceRequestOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper &storageHelper,
                  LedgerManager& ledgerManager) override;
 
-    bool doApplyV1(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
-
-    bool doApplyV2(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
-
     bool doCheckValid(Application& app) override;
+
+    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
 
     static CreateIssuanceRequestResultCode
     getInnerCode(OperationResult const& res)
@@ -72,6 +66,10 @@ public:
     {
         mIsFeeRequired = false;
     }
+
+    longstring makeTasksKey() override;
+
+    longstring makeDefaultTasksKey() override;
 
     // flags for issuance tasks
     static const uint32_t INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT = 1;

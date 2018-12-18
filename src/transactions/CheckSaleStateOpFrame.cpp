@@ -271,7 +271,11 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     CreateIssuanceRequestOpFrame createIssuanceRequestOpFrame(op, opRes, mParentTx);
     createIssuanceRequestOpFrame.doNotRequireFee();
     createIssuanceRequestOpFrame.setSourceAccountPtr(saleOwnerAccount);
-    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, delta, lm))
+
+    //TODO switch to storage helper
+    StorageHelperImpl storageHelper(db, &delta);
+    static_cast<StorageHelper&>(storageHelper).release();
+    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply create issuance request on check sale: " << sale->getID();
         throw runtime_error("Unexpected state: failed to create issuance request on check sale");

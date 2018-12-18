@@ -12,11 +12,15 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"
+#include "ledger/StorageHelper.h"
+#include "transactions/review_request/ReviewRequestHelper.h"
+#include "ledger/AssetHelper.h"
 #include "xdrpp/printer.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "bucket/BucketApplicator.h"
 #include "ledger/SaleFrame.h"
 #include "ledger/AssetPairHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 
 namespace stellar
 {
@@ -173,10 +177,11 @@ CreateSaleCreationRequestOpFrame::CreateSaleCreationRequestOpFrame(
 
 
 bool
-CreateSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
                                         LedgerManager& ledgerManager)
 {
     auto const& sale = mCreateSaleCreationRequest.request;
+    auto delta = storageHelper.getLedgerDelta();
 
     auto saleVersion = static_cast<int32>(sale.ext.v());
     if (saleVersion > app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion)
@@ -192,7 +197,7 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     auto& db = ledgerManager.getDatabase();
-    auto request = createNewUpdateRequest(app, ledgerManager, db, delta, ledgerManager.getCloseTime());
+    auto request = createNewUpdateRequest(app, ledgerManager, db, *delta, ledgerManager.getCloseTime());
     if (!request)
     {
         innerResult().code(CreateSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
@@ -227,17 +232,39 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         return false;
     }
 
+    bool autoreview = true;
     if (request->getRequestID() == 0)
     {
-        request->setRequestID(delta.getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST));
-        ReviewableRequestHelper::Instance()->storeAdd(delta, db, request->mEntry);
+        request->setRequestID(delta->getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST));
+        ReviewableRequestHelper::Instance()->storeAdd(*delta, db, request->mEntry);
+        uint32_t allTasks = 0;
+        if (!loadTasks(storageHelper, allTasks))
+        {
+            innerResult().code(CreateSaleCreationRequestResultCode::SALE_CREATE_TASKS_NOT_FOUND);
+            return false;
+        }
+
+        request->setTasks(allTasks);
+        autoreview = allTasks == 0;
+        EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+
     } else
     {
-        ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+        ReviewableRequestHelper::Instance()->storeChange(*delta, db, request->mEntry);
+    }
+
+    bool fulfilled = false;
+    if (autoreview) {
+        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
+
+        if (resultCode == ReviewRequestResultCode::SUCCESS) {
+            fulfilled = true;
+        }
     }
 
     innerResult().code(CreateSaleCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = request->getRequestID();
+    innerResult().success().fulfilled = fulfilled;
     return true;
 }
 
@@ -328,5 +355,23 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
 
     return CreateSaleCreationRequestResultCode::SUCCESS;
 }
+
+longstring CreateSaleCreationRequestOpFrame::makeTasksKey() {
+    return ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset);
+}
+
+longstring CreateSaleCreationRequestOpFrame::makeDefaultTasksKey() {
+    return ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+}
+
+bool CreateSaleCreationRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
+    if (mCreateSaleCreationRequest.allTasks)
+    {
+        allTasks = *mCreateSaleCreationRequest.allTasks.get();
+        return true;
+    }
+    return OperationFrame::loadTasks(storageHelper, allTasks);
+}
+
 
 }

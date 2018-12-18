@@ -9,6 +9,7 @@
 #include <string>
 #include <ledger/AccountHelper.h>
 #include <transactions/kyc/CreateKYCReviewableRequestOpFrame.h>
+#include "xdrpp/printer.h"
 
 
 namespace stellar {
@@ -20,6 +21,13 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::transactionFeeAssetKey = "tx_fee_asset";
     char const * ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
     char const * ManageKeyValueOpFrame::withdrawalTasksPrefix = "withdrawal_tasks";
+    char const * ManageKeyValueOpFrame::preIssuanceTasksPrefix = "preissuance_tasks";
+    char const * ManageKeyValueOpFrame::assetCreateTasks = "asset_create_tasks";
+    char const * ManageKeyValueOpFrame::assetUpdateTasks = "asset_update_tasks";
+    char const * ManageKeyValueOpFrame::saleUpdateDetailsTasksPrefix = "sale_update_tasks";
+    char const * ManageKeyValueOpFrame::saleCreateTasksPrefix = "sale_create_tasks";
+    char const * ManageKeyValueOpFrame::invoiceCreateTasks = "invoice_create_tasks";
+    char const * ManageKeyValueOpFrame::contractCreateTasks = "contract_create_tasks";
     char const * ManageKeyValueOpFrame::maxContractDetailLengthPrefix = "max_contract_detail_length";
     char const * ManageKeyValueOpFrame::maxContractInitialDetailLengthPrefix = "max_contract_initial_detail_length";
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
@@ -166,4 +174,50 @@ namespace stellar {
 
         return key;
     }
+
+    longstring ManageKeyValueOpFrame::makePreIssuanceTasksKey(AssetCode assetCode)
+    {
+        longstring key;
+        key = key + preIssuanceTasksPrefix + ":" + assetCode;
+
+        return key;
+    }
+
+    longstring ManageKeyValueOpFrame::makeAssetCreateTasksKey()
+    {
+        return assetCreateTasks;
+    }
+
+    longstring ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
+    {
+        return assetUpdateTasks;
+    }
+
+    longstring ManageKeyValueOpFrame::makeSaleUpdateTasksKey(longstring ID)
+    {
+        longstring key;
+
+        key = key + saleUpdateDetailsTasksPrefix + ":" + ID;
+        return key;
+    }
+
+    longstring ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()
+    {
+        return invoiceCreateTasks;
+    }
+
+    longstring ManageKeyValueOpFrame::makeContractCreateTasksKey()
+    {
+        return contractCreateTasks;
+    }
+
+    longstring ManageKeyValueOpFrame::makeSaleCreateTasksKey(AssetCode assetCode)
+    {
+        longstring key;
+        key = key + saleCreateTasksPrefix + ":" + assetCode;
+
+        return key;
+    }
+
+
 }

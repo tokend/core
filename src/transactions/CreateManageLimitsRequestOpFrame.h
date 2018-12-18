@@ -23,15 +23,18 @@ class CreateManageLimitsRequestOpFrame : public OperationFrame
     std::string getLimitsManageRequestReference(Hash const& documentHash) const;
     std::string getLimitsManageRequestDetailsReference(longstring const& details) const;
 
+    bool ensureLimitsUpdateValid();
+
+
 public:
 
     CreateManageLimitsRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
     bool createManageLimitsRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
 
-    bool updateManageLimitsRequest(LedgerManager& lm, Database& db, LedgerDelta& delta);
+    bool updateManageLimitsRequest(Application &app, StorageHelper &storageHelper, LedgerManager &lm);
 
-    bool doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager) override;
+    bool doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
 

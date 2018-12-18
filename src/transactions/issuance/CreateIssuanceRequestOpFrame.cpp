@@ -16,6 +16,7 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/StorageHelperImpl.h"
+#include "ledger/StorageHelper.h"
 #include "util/Logging.h"
 #include "util/types.h"
 #include "database/Database.h"
@@ -44,65 +45,9 @@ CreateIssuanceRequestOpFrame::CreateIssuanceRequestOpFrame(Operation const& op,
     mIsFeeRequired = true;
 }
 
-bool CreateIssuanceRequestOpFrame::doApplyV1(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
+bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-	auto request = tryCreateIssuanceRequest(app, delta, ledgerManager);
-	if (!request) {
-		return false;
-	}
-
-    auto& database = app.getDatabase();
-    const auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(mCreateIssuanceRequest.request.asset, database);
-    if (!assetFrame)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to load asset for issuance request. Asset Code: "
-                                               << mCreateIssuanceRequest.request.asset;
-        throw runtime_error("Failed to load asset for issuance request");
-    }
-
-    auto reviewResultCode = ReviewRequestResultCode::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
-    if (!assetFrame->isPolicySet(AssetPolicy::ISSUANCE_MANUAL_REVIEW_REQUIRED))
-    {
-        reviewResultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, request);
-    }
-
-	bool isFulfilled;
-	switch (reviewResultCode) {
-	case ReviewRequestResultCode::SUCCESS:
-	{
-		isFulfilled = true;
-		break;
-	}
-	case ReviewRequestResultCode::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT:
-	{
-		isFulfilled = false;
-		break;
-	}
-	case ReviewRequestResultCode::FULL_LINE:
-	{
-		innerResult().code(CreateIssuanceRequestResultCode::RECEIVER_FULL_LINE);
-		return false;
-	}
-	default: {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result received on review of just created issuance request: " 
-			<< xdr::xdr_traits<ReviewRequestResultCode>::enum_name(reviewResultCode);
-		throw std::runtime_error("Unexpected result received on review of just created issuance request");
-	}
-	}
-
-	innerResult().code(CreateIssuanceRequestResultCode::SUCCESS);
-	innerResult().success().requestID = request->getRequestID();
-	innerResult().success().fulfilled = isFulfilled;
-    innerResult().success().fee = request->getRequestEntry().body.issuanceRequest().fee;
-	auto& db = app.getDatabase();
-	auto balanceHelper = BalanceHelperLegacy::Instance();
-	auto receiver = balanceHelper->mustLoadBalance(mCreateIssuanceRequest.request.receiver, db);
-	innerResult().success().receiver = receiver->getAccountID();
-	return true;
-}
-
-bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
-{
+    auto& delta = *storageHelper.getLedgerDelta();
     auto requestFrame = tryCreateIssuanceRequest(app, delta, ledgerManager);
     if (!requestFrame)
     {
@@ -112,7 +57,7 @@ bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delt
 	auto& db = app.getDatabase();
 
     uint32_t allTasks = 0;
-    if (!loadIssuanceTasks(db, allTasks, ledgerManager))
+    if (!loadTasks(storageHelper, allTasks))
     {
         innerResult().code(CreateIssuanceRequestResultCode::ISSUANCE_TASKS_NOT_FOUND);
         return false;
@@ -177,17 +122,6 @@ bool CreateIssuanceRequestOpFrame::doApplyV2(Application& app, LedgerDelta& delt
 	auto receiver = balanceHelper->mustLoadBalance(mCreateIssuanceRequest.request.receiver, db);
 	innerResult().success().receiver = receiver->getAccountID();
     return true;
-}
-
-bool
-CreateIssuanceRequestOpFrame::doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
-{
-	if (ledgerManager.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-	{
-		return doApplyV2(app, delta, ledgerManager);
-	}
-
-	return doApplyV1(app, delta, ledgerManager);
 }
 
 bool
@@ -399,8 +333,7 @@ CreateIssuanceRequestOpFrame::isAllowedToReceive(BalanceID receivingBalance, Dat
 }
 
 bool
-CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &allTasks,
-                                                LedgerManager& lm)
+CreateIssuanceRequestOpFrame::loadTasks(StorageHelper& storageHelper, uint32_t &allTasks)
 {
     if (mCreateIssuanceRequest.allTasks)
     {
@@ -408,30 +341,15 @@ CreateIssuanceRequestOpFrame::loadIssuanceTasks(Database &db, uint32_t &allTasks
         return true;
     }
 
-    auto key = ManageKeyValueOpFrame::makeIssuanceTasksKey(mCreateIssuanceRequest.request.asset);
-    auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
-    if (!keyValueFrame)
-    {
-        return loadDefaultIssuanceTasks(db, allTasks, lm);
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
+	return OperationFrame::loadTasks(storageHelper, allTasks);
 }
 
-bool
-CreateIssuanceRequestOpFrame::loadDefaultIssuanceTasks(Database& db, uint32_t& allTasks,
-                                                       LedgerManager& lm)
-{
-	auto key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
-	auto keyValueFrame = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
-	if (!keyValueFrame)
-	{
-		return false;
+	longstring CreateIssuanceRequestOpFrame::makeTasksKey() {
+		return ManageKeyValueOpFrame::makeIssuanceTasksKey(mCreateIssuanceRequest.request.asset);
 	}
 
-	allTasks = keyValueFrame->mustGetUint32Value();
-	return true;
-}
+	longstring CreateIssuanceRequestOpFrame::makeDefaultTasksKey() {
+		return ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+	}
 
 }

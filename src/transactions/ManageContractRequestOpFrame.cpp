@@ -9,7 +9,9 @@
 #include <ledger/ContractHelper.h>
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "review_request/ReviewRequestHelper.h"
 #include "ManageContractOpFrame.h"
 #include "ManageKeyValueOpFrame.h"
 
@@ -49,14 +51,16 @@ ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, 
 }
 
 bool
-ManageContractRequestOpFrame::doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
+ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
     innerResult().code(ManageContractRequestResultCode::SUCCESS);
 
     if (mManageContractRequest.details.action() == ManageContractRequestAction::CREATE)
     {
-        return createManageContractRequest(app, delta, ledgerManager);
+        return createManageContractRequest(app, storageHelper, ledgerManager);
     }
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -88,7 +92,7 @@ ManageContractRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledg
     LedgerKey requestKey;
     requestKey.type(LedgerEntryType::REVIEWABLE_REQUEST);
     requestKey.reviewableRequest().requestID = mManageContractRequest.details.requestID();
-    reviewableRequestHelper->storeDelete(delta, db, requestKey);
+    reviewableRequestHelper->storeDelete(*delta, db, requestKey);
 
     innerResult().success().details.action(ManageContractRequestAction::REMOVE);
 
@@ -96,31 +100,57 @@ ManageContractRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledg
 }
 
 bool
-ManageContractRequestOpFrame::createManageContractRequest(Application& app, LedgerDelta& delta,
+ManageContractRequestOpFrame::createManageContractRequest(Application& app, StorageHelper &storageHelper,
                                                           LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    Database& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
     auto& contractRequest = mManageContractRequest.details.createContractRequest().contractRequest;
 
-    if (!checkMaxContractsForContractor(app, db, delta, ledgerManager))
+    if (!checkMaxContractsForContractor(app, db, *delta, ledgerManager))
         return false;
 
-    if (!checkMaxContractDetailLength(app, db, delta))
+    if (!checkMaxContractDetailLength(app, db, *delta))
         return false;
 
     ReviewableRequestEntry::_body_t body;
     body.type(ReviewableRequestType::CONTRACT);
     body.contractRequest() = contractRequest;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),
+    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
                                                              contractRequest.customer,
                                                              nullptr, body,
                                                              ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+
+
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+
+
+    uint32_t allTasks = 0;
+    if (!loadTasks(storageHelper, allTasks))
+    {
+        innerResult().code(ManageContractRequestResultCode::CONTRACT_CREATE_TASKS_NOT_FOUND);
+        return false;
+    }
+
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+
+    bool fulfilled = false;
+
+    if (allTasks == 0) {
+        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
+
+        if (resultCode == ReviewRequestResultCode::SUCCESS) {
+            fulfilled = true;
+        }
+    }
 
     innerResult().success().details.action(ManageContractRequestAction::CREATE);
     innerResult().success().details.response().requestID = request->getRequestID();
+    innerResult().success().details.response().fulfilled = fulfilled;
 
     return true;
 }
@@ -147,7 +177,6 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app,
     }
 
     return true;
-}
 }
 
 uint64_t
@@ -259,3 +288,13 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
+bool ManageContractRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
+    if (mManageContractRequest.details.createContractRequest().allTasks)
+    {
+        allTasks = *mManageContractRequest.details.createContractRequest().allTasks.get();
+        return true;
+    }
+    return OperationFrame::loadTasks(storageHelper, allTasks);
+}
+
+}

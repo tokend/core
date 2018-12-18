@@ -21,6 +21,8 @@ private:
 
     std::pair<bool, ReviewRequestResult> tryReviewRequest(TransactionFrame &parentTx);
 
+    bool isAutoreviewable(ReviewableRequestType type);
+
     ReviewRequestHelper(Application &app, LedgerManager &ledgerManager, LedgerDelta &delta,
                         ReviewableRequestFrame::pointer reviewableRequest);
 

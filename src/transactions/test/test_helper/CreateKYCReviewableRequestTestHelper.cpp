@@ -85,10 +85,10 @@ namespace stellar {
                             requestBeforeTxEntry.body.updateKYCRequest().kycData);
                     REQUIRE(requestAfterTxEntry.body.updateKYCRequest().kycLevel ==
                             requestBeforeTxEntry.body.updateKYCRequest().kycLevel);
-                    REQUIRE(requestAfterTxEntry.body.updateKYCRequest().allTasks ==
-                            requestBeforeTxEntry.body.updateKYCRequest().allTasks);
-                    REQUIRE(requestAfterTxEntry.body.updateKYCRequest().pendingTasks ==
-                            requestBeforeTxEntry.body.updateKYCRequest().pendingTasks);
+                    REQUIRE(requestAfterTxEntry.tasks.allTasks ==
+                            requestBeforeTxEntry.tasks.allTasks);
+                    REQUIRE(requestAfterTxEntry.tasks.pendingTasks ==
+                            requestBeforeTxEntry.tasks.pendingTasks);
                     REQUIRE(requestAfterTxEntry.body.updateKYCRequest().sequenceNumber ==
                             requestBeforeTxEntry.body.updateKYCRequest().sequenceNumber);
                     REQUIRE(requestAfterTxEntry.body.updateKYCRequest().externalDetails ==
@@ -120,7 +120,7 @@ namespace stellar {
             REQUIRE(requestAfterTxEntry.body.updateKYCRequest().kycData == kycData);
 
             if (!!allTasks) {
-                REQUIRE(requestAfterTxEntry.body.updateKYCRequest().allTasks == *allTasks);
+                REQUIRE(requestAfterTxEntry.tasks.allTasks == *allTasks);
             } else {
                 uint32 tasks;
                 UpdateKYCRequestData requestData;
@@ -130,12 +130,12 @@ namespace stellar {
                 CreateUpdateKYCRequestOpFrame::getDefaultKYCMask(mTestManager->getDB(),mTestManager->getLedgerManager()
                 ,requestData,accountAfter,tasks);
 
-                REQUIRE(requestAfterTxEntry.body.updateKYCRequest().allTasks ==
+                REQUIRE(requestAfterTxEntry.tasks.allTasks ==
                         tasks);
             }
 
-            REQUIRE(requestAfterTxEntry.body.updateKYCRequest().pendingTasks ==
-                    requestAfterTxEntry.body.updateKYCRequest().allTasks);
+            REQUIRE(requestAfterTxEntry.tasks.pendingTasks ==
+                    requestAfterTxEntry.tasks.allTasks);
 
             if (requestBeforeTx) {
                 auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
@@ -163,7 +163,7 @@ namespace stellar {
             op.updateKYCRequestData.kycData = kycData;
             op.updateKYCRequestData.kycLevelToSet = kycLevel;
             if (!!allTasks) {
-                op.updateKYCRequestData.allTasks.activate() = *allTasks;
+                op.allTasks.activate() = *allTasks;
             }
 
             return txFromOperation(source, baseOp, nullptr);

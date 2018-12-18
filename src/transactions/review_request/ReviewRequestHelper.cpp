@@ -76,13 +76,7 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     reviewRequestOp.requestID = mRequest->getRequestID();
     reviewRequestOp.requestDetails.requestType(mRequest->getRequestType());
 
-    if (mRequest->getRequestType() == ReviewableRequestType::UPDATE_KYC) {
-        reviewRequestOp.requestDetails.updateKYC().tasksToAdd = 0;
-        reviewRequestOp.requestDetails.updateKYC().tasksToRemove = 0;
-        reviewRequestOp.requestDetails.updateKYC().externalDetails = "{}";
-    }
-
-    if (mRequest->getRequestType() == ReviewableRequestType::ISSUANCE_CREATE)
+    if (isAutoreviewable(mRequest->getRequestType()))
     {
         reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
         reviewRequestOp.reviewDetails.tasksToAdd = 0;
@@ -113,7 +107,14 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     return std::pair<bool, ReviewRequestResult>(isApplied, reviewRequestOpFrame->getResult().tr().reviewRequestResult());
 }
 
+bool
+ReviewRequestHelper::isAutoreviewable(ReviewableRequestType type)
+{
+    uint32_t notAutoreviewable = static_cast<uint32_t>(ReviewableRequestType::WITHDRAW) |
+            static_cast<uint32_t>(ReviewableRequestType::LIMITS_UPDATE);
 
+    return (static_cast<uint32_t>(type) & notAutoreviewable) == 0;
+}
 
 }
 

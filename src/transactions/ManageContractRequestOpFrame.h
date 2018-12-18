@@ -21,7 +21,7 @@ class ManageContractRequestOpFrame : public OperationFrame
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                           int32_t ledgerVersion) const override;
 
-    bool createManageContractRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
+    bool createManageContractRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 
     bool checkMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta, LedgerManager& ledgerManager);
 
@@ -34,7 +34,7 @@ class ManageContractRequestOpFrame : public OperationFrame
 public:
     ManageContractRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager) override;
+    bool doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
     static ManageContractRequestResultCode
@@ -42,5 +42,7 @@ public:
     {
         return res.tr().manageContractRequestResult().code();
     }
+
+    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
 };
 }

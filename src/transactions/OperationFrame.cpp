@@ -15,6 +15,7 @@
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
@@ -404,6 +405,48 @@ OperationFrame::checkRolePermissions(Application& app)
     AccountRolePermissionHelperImpl permissionHelper(storageHelper);
     return static_cast<AccountRolePermissionHelper&>(permissionHelper)
         .hasPermission(mSourceAccount, thisOpType);
+}
+
+
+bool
+OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks)
+{
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto key = makeTasksKey();
+
+    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+    if (!keyValueFrame)
+    {
+        return loadDefaultTasks(keyValueHelper, allTasks);
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
+    return true;
+}
+
+bool
+OperationFrame::loadDefaultTasks(KeyValueHelper &keyValueHelper, uint32_t& allTasks)
+{
+
+    auto key = makeDefaultTasksKey();
+    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+    if (!keyValueFrame)
+    {
+        return false;
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
+    return true;
+}
+
+longstring
+OperationFrame::makeTasksKey() {
+    return "not_implemented";
+}
+
+longstring
+OperationFrame::makeDefaultTasksKey() {
+    return "not_implemented";
 }
 
 }

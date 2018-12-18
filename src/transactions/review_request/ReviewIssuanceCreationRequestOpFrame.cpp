@@ -15,76 +15,8 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-bool ReviewIssuanceCreationRequestOpFrame::handleApproveV1(Application &app, LedgerDelta &delta,
-														   LedgerManager &ledgerManager,
-														   ReviewableRequestFrame::pointer request)
-{
-    request->checkRequestType(ReviewableRequestType::ISSUANCE_CREATE);
-
-	auto& issuanceRequest = request->getRequestEntry().body.issuanceRequest();
-	Database& db = ledgerManager.getDatabase();
-	createReference(delta, db, request->getRequestor(), request->getReference());
-
-	auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(issuanceRequest.asset, db, &delta);
-
-	if (asset->willExceedMaxIssuanceAmount(issuanceRequest.amount)) {
-		innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
-		return false;
-	}
-
-	if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount)) {
-		innerResult().code(ReviewRequestResultCode::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT);
-		return false;
-	}
-
-	if (!asset->tryIssue(issuanceRequest.amount)) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Failed to fulfill request: "
-                                               << xdr::xdr_to_string(request->getRequestEntry());
-		throw std::runtime_error("Unexpected issuance result. Expected to be able to issue");
-	}
-
-	EntryHelperProvider::storeChangeEntry(delta, db, asset->mEntry);
-
-	auto receiver = BalanceHelperLegacy::Instance()->mustLoadBalance(issuanceRequest.receiver, db, &delta);
-
-	uint64_t totalFee = 0;
-	if (!safeSum(issuanceRequest.fee.fixed, issuanceRequest.fee.percent, totalFee)) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "totalFee overflows uint64 for request: " << request->getRequestID();
-		throw std::runtime_error("totalFee overflows uint64");
-	}
-
-	if (totalFee >= issuanceRequest.amount) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. totalFee exceeds amount for request: "
-											   << request->getRequestID();
-		throw std::runtime_error("Unexpected state. totalFee exceeds amount");
-	}
-
-	auto receiverAccount = AccountHelper::Instance()->mustLoadAccount(receiver->getAccountID(), db);
-	if (AccountManager::isAllowedToReceive(receiver->getBalanceID(), db) != AccountManager::SUCCESS) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Asset requires receiver account to have KYC or be VERIFIED "
-											   << request->getRequestID();
-		throw std::runtime_error("Unexpected state. Asset requires KYC or VERIFIED but account is NOT_VERIFIED");
-	}
-
-	//transfer fee
-	AccountManager accountManager(app, db, delta, ledgerManager);
-	accountManager.transferFee(issuanceRequest.asset, totalFee);
-
-	const uint64_t destinationReceive = issuanceRequest.amount - totalFee;
-	if (receiver->tryFundAccount(destinationReceive) != BalanceFrame::Result::SUCCESS) {
-		innerResult().code(ReviewRequestResultCode::FULL_LINE);
-		return false;
-	}
-
-	EntryHelperProvider::storeChangeEntry(delta, db, receiver->mEntry);
-
-	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
-	innerResult().code(ReviewRequestResultCode::SUCCESS);
-	return true;
-}
-
 bool ReviewIssuanceCreationRequestOpFrame::
-handleApproveV2(Application &app, LedgerDelta &delta,
+handleApprove(Application &app, LedgerDelta &delta,
 														   LedgerManager &ledgerManager,
 														   ReviewableRequestFrame::pointer request)
 {
@@ -123,7 +55,7 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 	if (!request->canBeFulfilled(ledgerManager))
 	{
 		innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+        innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
         innerResult().success().extendedResult.fulfilled = false;
 		innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
 		return true;
@@ -184,20 +116,6 @@ handleApproveV2(Application &app, LedgerDelta &delta,
     innerResult().success().extendedResult.fulfilled = true;
 	innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
 	return true;
-}
-
-//TODO
-bool ReviewIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta,
-                                                         LedgerManager & ledgerManager,
-                                                         ReviewableRequestFrame::pointer request)
-{
-	if (ledgerManager.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST) &&
-        mReviewRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST &&
-        request->getRequestEntry().ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return handleApproveV2(app, delta, ledgerManager, request);
-    }
-	return handleApproveV1(app, delta, ledgerManager, request);
 }
 
 bool ReviewIssuanceCreationRequestOpFrame::handleReject(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager,

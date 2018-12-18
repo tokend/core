@@ -62,29 +62,17 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     approveRequest(AccountManager& accountManager, LedgerDelta& delta, LedgerManager& ledgerManager,
                    Database& db, const AssetFrame::pointer assetFrame, const BalanceFrame::pointer balanceFrame);
 
-
-    bool loadWithdrawalTasks(Database &db, uint32_t &allTasks,
-                                                             LedgerManager& lm);
-
-    bool loadDefaultWithdrawalTasks(Database &db, uint32_t &allTasks,
-                                                             LedgerManager& lm);
-
 public:
 
     CreateWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
-    bool doApply(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager) override;
-    bool doApplyV1(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager,
-                   BalanceFrame::pointer balanceFrame,
-                   AssetFrame::pointer assetFrame);
-    bool doApplyV2(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager,
-                   BalanceFrame::pointer balanceFrame,
-                   AssetFrame::pointer assetFrame);
+    bool doApply (Application& app, StorageHelper& storageHelper,
+    LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
+
+    longstring makeTasksKey() override;
+    longstring makeDefaultTasksKey() override;
 
     static CreateWithdrawalRequestResultCode getInnerCode(
         OperationResult const& res)

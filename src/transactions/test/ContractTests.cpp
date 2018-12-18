@@ -16,6 +16,8 @@
 #include <ledger/ContractHelper.h>
 #include <transactions/test/test_helper/ManageContractTestHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include "transactions/ManageKeyValueOpFrame.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "main/Application.h"
 #include "ledger/LedgerManager.h"
 #include "overlay/LoopbackPeer.h"
@@ -43,6 +45,9 @@ TEST_CASE("Contract", "[tx][contract]")
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
 
+
+
+
     // test helpers
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto issuanceTestHelper = IssuanceRequestHelper(testManager);
@@ -57,6 +62,20 @@ TEST_CASE("Contract", "[tx][contract]")
     ManageContractTestHelper manageContractTestHelper(testManager);
 
     // set up world
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring contractCreateKey = ManageKeyValueOpFrame::makeContractCreateTasksKey();
+    manageKeyValueHelper.setKey(contractCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
     auto balanceHelper = BalanceHelperLegacy::Instance();
     Database &db = testManager->getDB();
 

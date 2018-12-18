@@ -7,6 +7,8 @@
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "transactions/ManageKeyValueOpFrame.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/ReviewAMLAlertRequestHelper.h"
 
@@ -52,6 +54,21 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         auto issuanceHelper = IssuanceRequestHelper(testManager);
         const AssetCode asset = "USD";
         const uint64_t preIssuedAmount = 10000 * ONE;
+
+        ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+        longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+        manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+        manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+        manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+//        longstring contractKey = ManageKeyValueOpFrame::make();
+//        manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+//        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
         issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
         ManageAssetTestHelper(testManager).updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
 
@@ -62,7 +79,7 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         uint32_t allTasks = 0;
         issuanceHelper.applyCreateIssuanceRequest(root, asset, preIssuedAmount, balance->getBalanceID(),
                                                   "RANDOM ISSUANCE REFERENCE", &allTasks);
-        SECTION("Insuficient balance")
+        SECTION("Insufficient balance")
         {
             amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount + 1, "Inalid", reference, CreateAMLAlertRequestResultCode::UNDERFUNDED);
         }

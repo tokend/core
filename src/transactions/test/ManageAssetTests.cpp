@@ -11,6 +11,8 @@
 #include "TxTests.h"
 #include "transactions/test/test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ReviewAssetRequestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 #include "test/test_marshaler.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
 
@@ -33,6 +35,18 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     auto root = Account{ getRoot(), Salt(0) };
 
     auto account = Account{ SecretKey::random(), 0 };
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
     createAccountTestHelper.applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::SYNDICATE);
@@ -89,6 +103,18 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     auto& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
+
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     auto root = Account{getRoot(), Salt(0)};
 
@@ -417,7 +443,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
         }
         SECTION("Can update existing request")
         {
-            creationRequest.createAsset().code = "USDT";
+            creationRequest.createAssetCreationRequest().createAsset.code = "USDT";
             auto updateResult = manageAssetHelper.applyManageAssetTx(account,
                                                                      creationResult
                                                                      .success().

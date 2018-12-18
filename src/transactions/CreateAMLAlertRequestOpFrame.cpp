@@ -1,14 +1,18 @@
+#include <ledger/BalanceHelper.h>
+#include <ledger/ReviewableRequestHelper.h>
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
+#include "ledger/ReviewableRequestFrame.h"
+#include "review_request/ReviewRequestHelper.h"
 #include "xdrpp/printer.h"
-#include "ledger/ReviewableRequestHelper.h"
 #include "bucket/BucketApplicator.h"
 
 
@@ -62,14 +66,15 @@ CreateAMLAlertRequestOpFrame::CreateAMLAlertRequestOpFrame(
 
 
 bool
-CreateAMLAlertRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
                                       LedgerManager& ledgerManager)
 {
-    auto& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
+    auto& balanceHelper = storageHelper.getBalanceHelper();
     const auto amlAlertRequest = mCreateAMLAlertRequest.amlAlertRequest;
-    auto balanceFrame = BalanceHelperLegacy::Instance()->
-        loadBalance(amlAlertRequest.balanceID, db,
-                    &delta);
+    auto balanceFrame = balanceHelper.loadBalance(amlAlertRequest.balanceID);
     if (!balanceFrame)
     {
         innerResult().code(CreateAMLAlertRequestResultCode::BALANCE_NOT_EXIST);
@@ -91,7 +96,7 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         return false;
     }
 
-    const uint64 requestID = delta.getHeaderFrame().
+    const uint64 requestID = delta->getHeaderFrame().
                              generateID(LedgerEntryType::REVIEWABLE_REQUEST);
     const auto referencePtr = xdr::pointer<string64>(new string64(mCreateAMLAlertRequest.reference));
     auto requestFrame = ReviewableRequestFrame::createNew(requestID,
@@ -101,15 +106,19 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
                                                           ledgerManager.
                                                           getCloseTime());
 
+
     auto& requestEntry = requestFrame->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::AML_ALERT);
     requestEntry.body.amlAlertRequest() = amlAlertRequest;
     requestFrame->recalculateHashRejectReason();
-    BalanceHelperLegacy::Instance()->storeChange(delta, db, balanceFrame->mEntry);
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db,
+    balanceHelper.storeChange(balanceFrame->mEntry);
+    ReviewableRequestHelper::Instance()->storeAdd(*delta, db,
                                                   requestFrame->mEntry);
+
     innerResult().code(CreateAMLAlertRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestID;
+    innerResult().success().fulfilled = false;
+    innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     return true;
 }
 

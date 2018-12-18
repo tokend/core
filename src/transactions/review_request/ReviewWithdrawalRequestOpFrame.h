@@ -13,8 +13,6 @@ class ReviewWithdrawalRequestOpFrame : public ReviewRequestOpFrame
 {
 protected:
 	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
-	bool handleApproveV1(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
-	bool handleApproveV2(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
 	bool removingNotSetTask(ReviewableRequestEntry &requestEntry);
 

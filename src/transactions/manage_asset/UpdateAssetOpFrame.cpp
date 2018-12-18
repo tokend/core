@@ -8,6 +8,10 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/KeyValueHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 
 #include "database/Database.h"
 
@@ -35,9 +39,25 @@ SourceDetails UpdateAssetOpFrame::getSourceAccountDetails(std::unordered_map<Acc
                          static_cast<int32_t>(SignerType::ASSET_MANAGER));
 }
 
-ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)
+ReviewableRequestFrame::pointer
+UpdateAssetOpFrame::getUpdatedReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_UPDATE);
+    ReviewableRequestFrame::pointer request = getReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_UPDATE);
+    if (!request) {
+        return nullptr;
+    }
+
+    ReviewableRequestEntry& requestEntry = request->getRequestEntry();
+	requestEntry.body.type(ReviewableRequestType::ASSET_UPDATE);
+	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
+	request->recalculateHashRejectReason();
+	return request;
+}
+
+ReviewableRequestFrame::pointer
+UpdateAssetOpFrame::getCreatedReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
+{
+    ReviewableRequestFrame::pointer request = createReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_UPDATE);
     if (!request) {
         return nullptr;
     }
@@ -50,13 +70,14 @@ ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewable
 }
 
 UpdateAssetOpFrame::UpdateAssetOpFrame(Operation const & op, OperationResult & res, TransactionFrame & parentTx) :
-	ManageAssetOpFrame(op, res, parentTx), mAssetUpdateRequest(mManageAsset.request.updateAsset())
+	ManageAssetOpFrame(op, res, parentTx), mAssetUpdateRequest(mManageAsset.request.createAssetUpdateRequest().updateAsset)
 {
 }
 
-bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager)
+bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper, LedgerManager & ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     bool isRequestReferenceCheckNeeded = mManageAsset.requestID == 0 && ledgerManager.shouldUse(LedgerVersion::ASSET_UPDATE_CHECK_REFERENCE_EXISTS);
     if (isRequestReferenceCheckNeeded && reviewableRequestHelper->exists(db, getSourceID(), mAssetUpdateRequest.code)) {
@@ -64,14 +85,26 @@ bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
         return false;
     }
 
-    auto request = getUpdatedOrCreateReviewableRequest(app, db, delta);
+    if (mManageAsset.requestID == 0){
+        return handleCreateRequest(app, storageHelper, ledgerManager);
+    }
+    return handleUpdateRequest(app, storageHelper, ledgerManager);
+}
+
+bool
+UpdateAssetOpFrame::handleCreateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager)
+{
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
+    auto request = getCreatedReviewableRequest(app, db, *delta);
     if (!request) {
         innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
         return false;
     }
 
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto assetFrame = assetHelper->loadAsset(mAssetUpdateRequest.code, getSourceID(), db, &delta);
+	auto& assetHelper = storageHelper.getAssetHelper();
+	auto assetFrame = assetHelper.loadAsset(mAssetUpdateRequest.code, getSourceID());
 	if (!assetFrame) {
 		innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);
 		return false;
@@ -79,35 +112,87 @@ bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
 
     bool isStats = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
     if (isStats) {
-        auto statsAssetFrame = assetHelper->loadStatsAsset(db);
+        auto statsAssetFrame = assetHelper.loadStatsAsset();
         if (statsAssetFrame && mAssetUpdateRequest.code != statsAssetFrame->getCode()) {
             innerResult().code(ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
             return false;
         }
     }
 
-	if (mManageAsset.requestID == 0) {
-		EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
-	}
-	else {
-		EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
-	}
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+
+
+    uint32_t allTasks = 0;
+    if (!loadTasks(storageHelper, allTasks))
+    {
+        innerResult().code(ManageAssetResultCode::ASSET_UPDATE_TASKS_NOT_FOUND);
+        return false;
+    }
+
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
     bool fulfilled = false;
 
-    if (getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, request);
+    if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
+        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
 
-        if (resultCode != ReviewRequestResultCode::SUCCESS) {
-            throw std::runtime_error("Failed to approve review request");
+        if (resultCode == ReviewRequestResultCode::SUCCESS) {
+            fulfilled = true;
         }
-        fulfilled = true;
     }
 
 	innerResult().code(ManageAssetResultCode::SUCCESS);
 	innerResult().success().requestID = request->getRequestID();
     innerResult().success().fulfilled = fulfilled;
 	return true;
+
+}
+
+bool
+UpdateAssetOpFrame::handleUpdateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager)
+{
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
+    auto request = getUpdatedReviewableRequest(app, db, *delta);
+    if (!request) {
+        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
+        return false;
+    }
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto assetFrame = assetHelper.loadAsset(mAssetUpdateRequest.code, getSourceID());
+    if (!assetFrame) {
+        innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);
+        return false;
+    }
+
+    bool isStats = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
+    if (isStats) {
+        auto statsAssetFrame = assetHelper.loadStatsAsset();
+        if (statsAssetFrame && mAssetUpdateRequest.code != statsAssetFrame->getCode()) {
+            innerResult().code(ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
+            return false;
+        }
+    }
+
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+
+    bool fulfilled = false;
+
+    if (getSourceAccount().getAccountType() == AccountType::MASTER) {
+        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
+
+        if (resultCode == ReviewRequestResultCode::SUCCESS) {
+            fulfilled = true;
+        }
+    }
+
+    innerResult().code(ManageAssetResultCode::SUCCESS);
+    innerResult().success().requestID = request->getRequestID();
+    innerResult().success().fulfilled = fulfilled;
+    return true;
 }
 
 bool UpdateAssetOpFrame::doCheckValid(Application & app)
@@ -133,6 +218,30 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 string UpdateAssetOpFrame::getAssetCode() const
 {
     return mAssetUpdateRequest.code;
+}
+
+bool UpdateAssetOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
+    if (mManageAsset.request.createAssetUpdateRequest().allTasks)
+    {
+        allTasks = *mManageAsset.request.createAssetUpdateRequest().allTasks.get();
+        return true;
+    }
+
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto key = makeTasksKey();
+
+    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+    if (!keyValueFrame)
+    {
+        return false;
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
+    return true;
+}
+
+longstring UpdateAssetOpFrame::makeTasksKey() {
+    return ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
 }
 
 }

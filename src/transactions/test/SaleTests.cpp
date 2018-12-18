@@ -32,6 +32,8 @@
 #include "test_helper/SetFeesTestHelper.h"
 #include "test/test_marshaler.h"
 #include "ledger/OfferHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
 
 using namespace stellar;
@@ -137,6 +139,25 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     app.start();
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
+
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
+    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     Database& db = testManager->getDB();
     CreateAccountTestHelper createAccountTestHelper(testManager);
@@ -809,8 +830,8 @@ TEST_CASE("Sale", "[tx][sale]")
             SECTION("Hard cap will exceed max issuance")
             {
                 // Update asset creation request with max issuance = 900 * ONE and pre issued = 500 * ONE
-                assetCreationRequest.createAsset().maxIssuanceAmount = 900 * ONE;
-                assetCreationRequest.createAsset().initialPreissuedAmount = 500 * ONE;
+                assetCreationRequest.createAssetCreationRequest().createAsset.maxIssuanceAmount = 900 * ONE;
+                assetCreationRequest.createAssetCreationRequest().createAsset.initialPreissuedAmount = 500 * ONE;
                 assetRequestCreationResult = assetTestHelper.applyManageAssetTx(syndicate, assetRequestID,
                                                                                 assetCreationRequest);
                 // Approve asset creation request
@@ -824,7 +845,7 @@ TEST_CASE("Sale", "[tx][sale]")
             SECTION("Preissued amount of base asset is not enough for hard cap")
             {
                 // Update asset creation request with preissued = 500 * ONE
-                assetCreationRequest.createAsset().initialPreissuedAmount = 500 * ONE;
+                assetCreationRequest.createAssetCreationRequest().createAsset.initialPreissuedAmount = 500 * ONE;
                 assetRequestCreationResult = assetTestHelper.applyManageAssetTx(syndicate, assetRequestID,
                                                                                 assetCreationRequest);
                 // Approve asset creation request
