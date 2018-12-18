@@ -9,8 +9,10 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
+#include "ledger/KeyValueHelper.h"
 #include "review_request/ReviewRequestHelper.h"
 #include "xdrpp/printer.h"
 #include "bucket/BucketApplicator.h"
@@ -115,9 +117,27 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     ReviewableRequestHelper::Instance()->storeAdd(*delta, db,
                                                   requestFrame->mEntry);
 
+    uint32_t allTasks = 0;
+    if (!loadTasks(storageHelper, allTasks))
+    {
+        innerResult().code(CreateAMLAlertRequestResultCode::AML_ALERT_TASKS_NOT_FOUND);
+        return false;
+    }
+
+    requestFrame->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
+
+    bool fulfilled = false;
+
+    if (allTasks == 0) {
+        auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, requestFrame);
+        if (result == ReviewRequestResultCode::SUCCESS)
+            fulfilled = true;
+    }
+
     innerResult().code(CreateAMLAlertRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestID;
-    innerResult().success().fulfilled = false;
+    innerResult().success().fulfilled = fulfilled;
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     return true;
 }
@@ -136,6 +156,31 @@ bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
         return false;
     }
 
+    return true;
+}
+
+longstring CreateAMLAlertRequestOpFrame::makeTasksKey() {
+    return ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey();
+}
+
+bool CreateAMLAlertRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
+
+    if (mCreateAMLAlertRequest.allTasks)
+    {
+        allTasks = *mCreateAMLAlertRequest.allTasks.get();
+        return true;
+    }
+
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto key = makeTasksKey();
+
+    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+    if (!keyValueFrame)
+    {
+        return false;
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
     return true;
 }
 }

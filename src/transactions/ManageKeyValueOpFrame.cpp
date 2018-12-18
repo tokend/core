@@ -28,6 +28,7 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::saleCreateTasksPrefix = "sale_create_tasks";
     char const * ManageKeyValueOpFrame::invoiceCreateTasks = "invoice_create_tasks";
     char const * ManageKeyValueOpFrame::contractCreateTasks = "contract_create_tasks";
+    char const * ManageKeyValueOpFrame::amlAlertCreateTasks = "aml_alert_create";
     char const * ManageKeyValueOpFrame::maxContractDetailLengthPrefix = "max_contract_detail_length";
     char const * ManageKeyValueOpFrame::maxContractInitialDetailLengthPrefix = "max_contract_initial_detail_length";
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
@@ -217,6 +218,11 @@ namespace stellar {
         key = key + saleCreateTasksPrefix + ":" + assetCode;
 
         return key;
+    }
+
+    longstring ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()
+    {
+        return amlAlertCreateTasks;
     }
 
 

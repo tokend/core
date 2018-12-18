@@ -81,6 +81,8 @@ namespace stellar {
 
         static longstring makeContractCreateTasksKey();
 
+        static longstring makeAmlAlertCreateTasksKey();
+
 
         static const char * kycRulesPrefix;
         static const char * externalSystemPrefix;
@@ -99,5 +101,6 @@ namespace stellar {
         static char const * saleCreateTasksPrefix;
         static char const * invoiceCreateTasks;
         static char const * contractCreateTasks;
+        static char const * amlAlertCreateTasks;
     };
 }
