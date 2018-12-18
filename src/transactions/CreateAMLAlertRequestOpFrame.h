@@ -46,9 +46,7 @@ namespace stellar {
         }
 
         longstring makeTasksKey() override;
-
-        longstring makeDefaultTasksKey() override;
-
+        
         bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
     };
 }
