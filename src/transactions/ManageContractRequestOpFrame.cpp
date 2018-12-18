@@ -288,13 +288,32 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-bool ManageContractRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
+bool
+ManageContractRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks)
+{
     if (mManageContractRequest.details.createContractRequest().allTasks)
     {
         allTasks = *mManageContractRequest.details.createContractRequest().allTasks.get();
         return true;
     }
-    return OperationFrame::loadTasks(storageHelper, allTasks);
+
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto key = makeTasksKey();
+
+    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+    if (!keyValueFrame)
+    {
+        return false;
+    }
+
+    allTasks = keyValueFrame->mustGetUint32Value();
+    return true;
+}
+
+longstring
+ManageContractRequestOpFrame::makeTasksKey()
+{
+    return ManageKeyValueOpFrame::makeContractCreateTasksKey();
 }
 
 }

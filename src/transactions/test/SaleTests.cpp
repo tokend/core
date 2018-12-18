@@ -56,6 +56,24 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
 
     auto root = Account{ getRoot(), Salt(0) };
 
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
+    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
     AssetCode defaultQuoteAsset = "USD";
     uint64_t quoteMaxIssuance = INT64_MAX;
     auto assetTestHelper = ManageAssetTestHelper(testManager);
@@ -283,6 +301,24 @@ TEST_CASE("Sale", "[tx][sale]")
     const AssetCode& quoteAsset = testSet.quoteAsset;
     const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);
     const uint64_t maxNonDividedAmount = INT64_MAX - (INT64_MAX % precision);
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
+    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     auto assetTestHelper = ManageAssetTestHelper(testManager);
     auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAsset, root.key.getPublicKey(), "{}", maxNonDividedAmount,

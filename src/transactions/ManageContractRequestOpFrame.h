@@ -44,5 +44,7 @@ public:
     }
 
     bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
+
+    longstring makeTasksKey() override;
 };
 }

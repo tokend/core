@@ -56,13 +56,13 @@ CreateSaleCreationRequestResult SaleRequestHelper::applyCreateSaleRequest(
         return CreateSaleCreationRequestResult{};
     }
 
-    if (requestID == 0)
-    {
-        REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
-    } else
-    {
+//    if (requestID == 0)
+//    {
+//        REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
+//    } else
+//    {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
-    }
+//    }
 
     return opResult.tr().createSaleCreationRequestResult();
 }
