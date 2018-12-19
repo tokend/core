@@ -207,7 +207,6 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 
 	StorageHelperImpl storageHelperImpl(db, &delta);
 	StorageHelper& storageHelper = storageHelperImpl;
-	storageHelper.release();
 	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
 	if (!asset) {
 		innerResult().code(CreateIssuanceRequestResultCode::ASSET_NOT_FOUND);

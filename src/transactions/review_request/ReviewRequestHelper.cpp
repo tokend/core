@@ -31,6 +31,7 @@ ReviewRequestResult ReviewRequestHelper::tryApproveRequestWithResult(Transaction
     LedgerDeltaImpl reviewRequestDelta(delta);
     StorageHelperImpl storageHelperImpl(ledgerManager.getDatabase(), &reviewRequestDelta);
     StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.begin();
 
     auto helper = ReviewRequestHelper(app, ledgerManager, reviewRequestDelta, reviewableRequest);
     auto result = helper.tryApproveRequest(parentTx);

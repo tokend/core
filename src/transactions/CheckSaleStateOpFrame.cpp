@@ -272,9 +272,7 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     createIssuanceRequestOpFrame.doNotRequireFee();
     createIssuanceRequestOpFrame.setSourceAccountPtr(saleOwnerAccount);
 
-    //TODO switch to storage helper
     StorageHelperImpl storageHelper(db, &delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply create issuance request on check sale: " << sale->getID();
@@ -625,7 +623,6 @@ std::string CheckSaleStateOpFrame::getInnerResultCodeAsStr()
 uint64 CheckSaleStateOpFrame::getMinimumAssetAmount(const AssetCode& balance, Database& db, LedgerDelta* delta)
 {
     StorageHelperImpl storageHelper(db, delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     AssetFrame::pointer assetFrame = static_cast<StorageHelper&>(storageHelper)
             .getAssetHelper().mustLoadAsset(balance);
 

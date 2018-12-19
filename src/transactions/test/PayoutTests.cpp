@@ -59,6 +59,8 @@ TEST_CASE("payout", "[tx][payout]") {
     LedgerDelta& delta = deltaImpl;
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.begin();
+
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
 

@@ -222,7 +222,6 @@ OperationFrame::doApply(Application& app, LedgerDelta& delta,
 	LedgerManager& ledgerManager)
 {
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     return doApply(app, storageHelper, ledgerManager);
 }
 
@@ -402,6 +401,7 @@ OperationFrame::checkRolePermissions(Application& app)
 
     const OperationType thisOpType = getOperation().body.type();
     StorageHelperImpl storageHelper(app.getDatabase(), nullptr);
+    static_cast<StorageHelper&>(storageHelper).begin();
     AccountRolePermissionHelperImpl permissionHelper(storageHelper);
     return static_cast<AccountRolePermissionHelper&>(permissionHelper)
         .hasPermission(mSourceAccount, thisOpType);

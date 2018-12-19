@@ -145,7 +145,6 @@ void SaleHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
 
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
-    storageHelper.release();
     if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
             saleFrame->getBaseAsset(), saleFrame->getCurrentCapInBase()))
     {

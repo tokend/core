@@ -159,7 +159,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
     clearPreparedStatementCache();
 
     StorageHelperImpl storageHelper(*this, nullptr);
-    static_cast<StorageHelper&>(storageHelper).release();
     switch (vers) {
         case databaseSchemaVersion::DROP_SCP:
             Herder::dropAll(*this);

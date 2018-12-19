@@ -134,6 +134,7 @@ namespace stellar
         if (!helper)
         {
             StorageHelperImpl storageHelper(db, nullptr);
+            static_cast<StorageHelper&>(storageHelper).begin();
             auto helper = createHelper(entry.data.type(), storageHelper);
             if (!helper)
             {
@@ -202,6 +203,7 @@ namespace stellar
             return helper->exists(db, key);
         }
         StorageHelperImpl storageHelper(db, nullptr);
+		static_cast<StorageHelper&>(storageHelper).begin();
         auto createdHelper = createHelper(key.type(), storageHelper);
         if (!createdHelper)
         {

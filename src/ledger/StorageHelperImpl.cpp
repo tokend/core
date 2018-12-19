@@ -12,7 +12,7 @@ namespace stellar
 StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
     : mDatabase(db)
     , mLedgerDelta(ledgerDelta)
-    , mTransaction(new soci::transaction(db.getSession()))
+    , mTransaction(nullptr)
 {
 }
 
@@ -49,6 +49,16 @@ const LedgerDelta*
 StorageHelperImpl::getLedgerDelta() const
 {
     return mLedgerDelta;
+}
+
+void
+StorageHelperImpl::begin()
+{
+    mIsReleased = false;
+    if (!mTransaction)
+    {
+        mTransaction = std::make_unique<soci::transaction>(soci::transaction(mDatabase.getSession()));
+    }
 }
 
 void

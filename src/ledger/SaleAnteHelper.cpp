@@ -260,7 +260,6 @@ namespace stellar {
     {
         StorageHelperImpl storageHelperImpl(db, &delta);
         StorageHelper& storageHelper = static_cast<StorageHelper&>(storageHelperImpl);
-        storageHelper.release();
 
         BalanceFrame::pointer participantBalance = storageHelper.getBalanceHelper().loadBalance(
                 frame->getParticipantBalanceID());
