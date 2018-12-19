@@ -44,24 +44,9 @@ SourceDetails CreateAssetOpFrame::getSourceAccountDetails(std::unordered_map<Acc
                              static_cast<int32_t>(SignerType::ASSET_MANAGER));
 }
 
-ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
+ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
 {
-    ReviewableRequestFrame::pointer request = getReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_CREATE);
-	if (!request) {
-        return nullptr;
-    }
-
-    ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_CREATE);
-	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
-	request->recalculateHashRejectReason();
-
-	return request;
-}
-
-ReviewableRequestFrame::pointer CreateAssetOpFrame::getCreatedReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
-{
-    ReviewableRequestFrame::pointer request = ManageAssetOpFrame::createReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_CREATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_CREATE);
 	if (!request) {
         return nullptr;
     }
@@ -99,12 +84,42 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         return false;
     }
 
-    if (mManageAsset.requestID == 0)
-    {
-        return handleCreateRequest(app, storageHelper, ledgerManager);
+	auto request = getUpdatedOrCreateReviewableRequest(app, db, *delta);
+	if (!request) {
+        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
+		return false;
+	}
+
+	bool autoreview = true;
+    if (mManageAsset.requestID == 0) {
+        uint32_t allTasks = 0;
+        if (!loadTasks(storageHelper, allTasks))
+        {
+            innerResult().code(ManageAssetResultCode::ASSET_UPDATE_TASKS_NOT_FOUND);
+            return false;
+        }
+        request->setTasks(allTasks);
+        EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+        autoreview = allTasks == 0;
+    }
+    else {
+		EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
     }
 
-    return handleUpdateRequest(app, storageHelper, ledgerManager);
+    bool fulfilled = false;
+    if (autoreview && getSourceAccount().getAccountType() == AccountType::MASTER) {
+        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
+
+        if (resultCode != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review create asset request");
+        }
+        fulfilled = true;
+    }
+
+    innerResult().code(ManageAssetResultCode::SUCCESS);
+	innerResult().success().requestID = request->getRequestID();
+    innerResult().success().fulfilled = fulfilled;
+	return true;
 }
 
 bool CreateAssetOpFrame::doCheckValid(Application & app)
@@ -161,81 +176,11 @@ string CreateAssetOpFrame::getAssetCode() const
     return mAssetCreationRequest.code;
 }
 
-bool
-CreateAssetOpFrame::handleCreateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager)
-{
-    auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
-
-	auto request = getCreatedReviewableRequest(app, db, *delta);
-    if (!request)
-    {
-        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
-        return false;
-    }
-
-    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
-
-    uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks))
-    {
-        innerResult().code(ManageAssetResultCode::ASSET_CREATE_TASKS_NOT_FOUND);
-        return false;
-    }
-
-    request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
-
-    bool fulfilled = false;
-
-    if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode == ReviewRequestResultCode::SUCCESS) {
-            fulfilled = true;
-        }
-    }
-
-    innerResult().code(ManageAssetResultCode::SUCCESS);
-    innerResult().success().requestID = request->getRequestID();
-    innerResult().success().fulfilled = fulfilled;
-    return true;
+longstring CreateAssetOpFrame::makeTasksKey() {
+    return ManageKeyValueOpFrame::makeAssetCreateTasksKey();
 }
 
-bool
-CreateAssetOpFrame::handleUpdateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager)
-{
-    auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
-
-    auto request = getUpdatedReviewableRequest(app, db, *delta);
-    if (!request)
-    {
-        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
-        return false;
-    }
-
-    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
-
-    bool fulfilled = false;
-    if (getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode == ReviewRequestResultCode::SUCCESS) {
-            fulfilled = true;
-        }
-    }
-
-    innerResult().code(ManageAssetResultCode::SUCCESS);
-    innerResult().success().requestID = request->getRequestID();
-    innerResult().success().fulfilled = fulfilled;
-    return true;
-}
-
-
-bool
-CreateAssetOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks)
-{
+bool CreateAssetOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
     if (mManageAsset.request.createAssetCreationRequest().allTasks)
     {
         allTasks = *mManageAsset.request.createAssetCreationRequest().allTasks.get();
@@ -253,10 +198,5 @@ CreateAssetOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks)
 
     allTasks = keyValueFrame->mustGetUint32Value();
     return true;
-}
-
-
-longstring CreateAssetOpFrame::makeTasksKey() {
-    return ManageKeyValueOpFrame::makeAssetCreateTasksKey();
 }
 }

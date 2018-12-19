@@ -23,13 +23,13 @@ class ManageContractRequestOpFrame : public OperationFrame
 
     bool createManageContractRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 
-    bool checkMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta, LedgerManager& ledgerManager);
+    bool checkMaxContractsForContractor(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 
-    uint64_t obtainMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta);
+    uint64_t obtainMaxContractsForContractor(Application& app, StorageHelper &storageHelper);
 
-    bool checkMaxContractDetailLength(Application& app, Database& db, LedgerDelta& delta);
+    bool checkMaxContractDetailLength(Application& app, KeyValueHelper &keyValueHelper);
 
-    uint64_t obtainMaxContractInitialDetailLength(Application& app, Database& db, LedgerDelta& delta);
+    uint64_t obtainMaxContractInitialDetailLength(Application& app, KeyValueHelper &keyValueHelper);
 
 public:
     ManageContractRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);

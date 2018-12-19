@@ -17,13 +17,7 @@ class CreateAssetOpFrame : public ManageAssetOpFrame
 
 	// Returns update already existing request from db
 	// if fails to load request, returns nullptr
-	ReviewableRequestFrame::pointer getUpdatedReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
-	//creates new reviewable request
-	ReviewableRequestFrame::pointer getCreatedReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
-
-    bool handleCreateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager);
-    bool handleUpdateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager);
-
+	ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
 
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                           int32_t ledgerVersion) const override;
@@ -37,8 +31,8 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-
 	longstring makeTasksKey() override;
+
 	bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
 
 protected:

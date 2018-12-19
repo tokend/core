@@ -47,14 +47,14 @@ CreateIssuanceRequestOpFrame::CreateIssuanceRequestOpFrame(Operation const& op,
 
 bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    auto& delta = *storageHelper.getLedgerDelta();
-    auto requestFrame = tryCreateIssuanceRequest(app, delta, ledgerManager);
-    if (!requestFrame)
+	auto delta = storageHelper.getLedgerDelta();
+	auto requestFrame = tryCreateIssuanceRequest(app, *delta, ledgerManager);
+	if (!requestFrame)
     {
-        return false;
-    }
+		return false;
+	}
 
-	auto& db = app.getDatabase();
+	auto& db = storageHelper.getDatabase();
 
     uint32_t allTasks = 0;
     if (!loadTasks(storageHelper, allTasks))
@@ -64,7 +64,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
     }
 
     requestFrame->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
+    EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
 
     const auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(mCreateIssuanceRequest.request.asset, db);
     if (!assetFrame)
@@ -78,7 +78,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 	{
 		allTasks |= ISSUANCE_MANUAL_REVIEW_REQUIRED;
 		requestFrame->setTasks(allTasks);
-		EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
+		EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
 	}
 
     bool isFulfilled = false;
@@ -87,7 +87,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 	if (allTasks == 0)
 	{
 		ReviewRequestResult reviewRequestResult = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app,
-																								   ledgerManager, delta,
+																								   ledgerManager, *delta,
 																								   requestFrame);
 		reviewRequestResultCode = reviewRequestResult.code();
 		isFulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?

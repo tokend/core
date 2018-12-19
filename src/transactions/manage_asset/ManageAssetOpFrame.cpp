@@ -57,17 +57,15 @@ ManageAssetOpFrame* ManageAssetOpFrame::makeHelper(Operation const & op, Operati
 	}
 }	
 
-ReviewableRequestFrame::pointer ManageAssetOpFrame::getReviewableRequest(Application& app, Database& db, LedgerDelta& delta, const ReviewableRequestType requestType) const
+ReviewableRequestFrame::pointer ManageAssetOpFrame::getOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta, const ReviewableRequestType requestType) const
 {
+	if (mManageAsset.requestID == 0) {
+	        const auto reference = xdr::pointer<string64>(new string64(getAssetCode()));
+		return ReviewableRequestFrame::createNew(delta, getSourceID(), app.getMasterID(), reference,
+                                                 app.getLedgerManager().getCloseTime());
+	}
+
 	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
 	return reviewableRequestHelper->loadRequest(mManageAsset.requestID, getSourceID(), requestType, db, &delta);
-}
-
-ReviewableRequestFrame::pointer ManageAssetOpFrame::createReviewableRequest(Application& app, Database& db, LedgerDelta& delta, const ReviewableRequestType requestType) const
-{
-		const auto reference = xdr::pointer<string64>(new string64(getAssetCode()));
-		return ReviewableRequestFrame::createNew(delta, getSourceID(), app.getMasterID(), reference,
-												 app.getLedgerManager().getCloseTime());
-
 }
 }

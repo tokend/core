@@ -24,10 +24,8 @@ protected:
 	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
-    // Creates new request
-    ReviewableRequestFrame::pointer createReviewableRequest(Application& app, Database& db, LedgerDelta& delta, ReviewableRequestType requestType) const;
-    // tries to load it from db
-    ReviewableRequestFrame::pointer getReviewableRequest(Application& app, Database& db, LedgerDelta& delta, ReviewableRequestType requestType) const;
+	// Creates new request if requestID is 0, otherwise tries to load it from db
+	ReviewableRequestFrame::pointer getOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta, ReviewableRequestType requestType) const;
 
         virtual std::string getAssetCode() const = 0;
 

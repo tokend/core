@@ -14,15 +14,9 @@ class UpdateAssetOpFrame : public ManageAssetOpFrame
 {
 	AssetUpdateRequest const& mAssetUpdateRequest;
 
-
-    // Returns update already existing request from db
-    // if fails to load request, returns nullptr
-    ReviewableRequestFrame::pointer getUpdatedReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
-    //creates new reviewable request
-    ReviewableRequestFrame::pointer getCreatedReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
-
-    bool handleCreateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager);
-    bool handleUpdateRequest(Application &app, StorageHelper &storageHelper, LedgerManager &ledgerManager);
+    // Returns update already existing request from db or creates new one.
+	// if fails to load request, returns nullptr
+	ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta);
 
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                           int32_t ledgerVersion) const override;

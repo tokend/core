@@ -5,12 +5,12 @@
 #include "medida/meter.h"
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/ContractHelper.h>
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "review_request/ReviewRequestHelper.h"
 #include "ManageContractOpFrame.h"
 #include "ManageKeyValueOpFrame.h"
@@ -108,10 +108,11 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
 
     auto& contractRequest = mManageContractRequest.details.createContractRequest().contractRequest;
 
-    if (!checkMaxContractsForContractor(app, db, *delta, ledgerManager))
+    if (!checkMaxContractsForContractor(app, storageHelper, ledgerManager))
         return false;
 
-    if (!checkMaxContractDetailLength(app, db, *delta))
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    if (!checkMaxContractDetailLength(app, keyValueHelper))
         return false;
 
     ReviewableRequestEntry::_body_t body;
@@ -156,10 +157,11 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app,
-                 Database& db, LedgerDelta& delta, LedgerManager& ledgerManager)
+ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, StorageHelper &storageHelper,
+        LedgerManager& ledgerManager)
 {
-    auto maxContractsCount = obtainMaxContractsForContractor(app, db, delta);
+    auto& db = storageHelper.getDatabase();
+    auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
     if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
@@ -180,11 +182,11 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app,
 }
 
 uint64_t
-ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, StorageHelper &storageHelper)
 {
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
     auto maxContractsCountKey = ManageKeyValueOpFrame::makeMaxContractsCountKey();
-    auto maxContractsCountKeyValue = KeyValueHelperLegacy::Instance()->
-            loadKeyValue(maxContractsCountKey, db, &delta);
+    auto maxContractsCountKeyValue = keyValueHelper.loadKeyValue(maxContractsCountKey);
 
     if (!maxContractsCountKeyValue)
     {
@@ -203,9 +205,9 @@ ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, 
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, KeyValueHelper &keyValueHelper)
 {
-    auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, db, delta);
+    auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, keyValueHelper);
 
     if (mManageContractRequest.details.createContractRequest().contractRequest.details.size() > maxContractInitialDetailLength)
     {
@@ -217,11 +219,10 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Dat
 }
 
 uint64_t
-ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& app, KeyValueHelper &keyValueHelper)
 {
     auto maxContractInitialDetailLengthKey = ManageKeyValueOpFrame::makeMaxContractInitialDetailLengthKey();
-    auto maxContractInitialDetailLengthKeyValue = KeyValueHelperLegacy::Instance()->
-            loadKeyValue(maxContractInitialDetailLengthKey, db, &delta);
+    auto maxContractInitialDetailLengthKeyValue = keyValueHelper.loadKeyValue(maxContractInitialDetailLengthKey);
 
     if (!maxContractInitialDetailLengthKeyValue)
     {
