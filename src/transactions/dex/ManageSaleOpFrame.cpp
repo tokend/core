@@ -77,44 +77,9 @@ namespace stellar {
         return true;
     }
 
-    bool ManageSaleOpFrame::setSaleState(SaleFrame::pointer sale, Application &app, LedgerDelta &delta,
-                                         LedgerManager &ledgerManager, Database &db) {
-        if (mSourceAccount->getAccountType() != AccountType::MASTER) {
-            innerResult().code(ManageSaleResultCode::NOT_ALLOWED);
-            if (ledgerManager.shouldUse(LedgerVersion::FIX_SET_SALE_STATE_AND_CHECK_SALE_STATE_OPS)) {
-                return false;
-            }
-        }
-
-        sale->migrateToVersion(LedgerVersion::STATABLE_SALES);
-        auto stateToSet = mManageSaleOp.data.saleState();
-        switch (sale->getState()) {
-            case SaleState::NONE:
-                innerResult().code(ManageSaleResultCode::NOT_ALLOWED);
-                return false;
-            case SaleState::PROMOTION:
-                break;
-            case SaleState::VOTING:
-                if (stateToSet == SaleState::PROMOTION) {
-                    innerResult().code(ManageSaleResultCode::NOT_ALLOWED);
-                    return false;
-                }
-                break;
-            default:
-                throw std::runtime_error("Unexpected sale state on manage sale set sale state");
-        }
-
-        sale->setSaleState(stateToSet);
-        SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
-        innerResult().code(ManageSaleResultCode::SUCCESS);
-        innerResult().success().response.action(ManageSaleAction::SET_STATE);
-
-        return true;
-    }
-
     bool
     ManageSaleOpFrame::createUpdateSaleDetailsRequest(Application &app, StorageHelper &storageHelper,
-                                                      LedgerManager &lm) {
+                                                      LedgerManager &ledgerManager) {
         auto& db = storageHelper.getDatabase();
         auto delta = storageHelper.getLedgerDelta();
 
@@ -126,41 +91,41 @@ namespace stellar {
             return false;
         }
 
-        auto requestFrame = ReviewableRequestFrame::createNew(*delta, getSourceID(), app.getMasterID(),
-                                                              referencePtr, lm.getCloseTime());
-        auto &requestEntry = requestFrame->getRequestEntry();
+        auto request = ReviewableRequestFrame::createNew(*delta, getSourceID(), app.getMasterID(),
+                                                              referencePtr, ledgerManager.getCloseTime());
+        auto &requestEntry = request->getRequestEntry();
         requestEntry.body.type(ReviewableRequestType::UPDATE_SALE_DETAILS);
         requestEntry.body.updateSaleDetailsRequest().saleID = mManageSaleOp.saleID;
         requestEntry.body.updateSaleDetailsRequest().newDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
 
-        requestFrame->recalculateHashRejectReason();
+        request->recalculateHashRejectReason();
 
-        requestHelper->storeAdd(*delta, db, requestFrame->mEntry);
+        requestHelper->storeAdd(*delta, db, request->mEntry);
 
 
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks))
+        if (!loadTasks(storageHelper, allTasks, mManageSaleOp.data.updateSaleDetailsData().allTasks))
         {
             innerResult().code(ManageSaleResultCode::SALE_UPDATE_DETAILS_TASKS_NOT_FOUND);
             return false;
         }
 
-        requestFrame->setTasks(allTasks);
-        EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
+        request->setTasks(allTasks);
+        EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
         bool fulfilled = false;
 
         if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
-            auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, lm, *delta, requestFrame);
-
-            if (resultCode == ReviewRequestResultCode::SUCCESS) {
-                fulfilled = true;
+            auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+            if (result.code() != ReviewRequestResultCode::SUCCESS) {
+                throw std::runtime_error("Failed to review manage sale request");
             }
+            fulfilled = result.success().fulfilled;
         }
 
         innerResult().code(ManageSaleResultCode::SUCCESS);
         innerResult().success().response.action(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST);
-        innerResult().success().response.requestID() = requestFrame->getRequestID();
+        innerResult().success().response.requestID() = request->getRequestID();
         innerResult().success().fulfilled = fulfilled;
 
         return true;
@@ -235,9 +200,6 @@ namespace stellar {
                 innerResult().success().response.action(ManageSaleAction::CANCEL);
                 break;
             }
-            case ManageSaleAction::SET_STATE: {
-                return setSaleState(saleFrame, app, *delta, lm, db);
-            }
             default:
                 CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected action from manage sale op: "
                                                        << xdr::xdr_to_string(mManageSaleOp.data.action());
@@ -279,24 +241,11 @@ namespace stellar {
         }
     }
 
-    bool ManageSaleOpFrame::isSaleStateValid(LedgerManager &lm, SaleState saleState) {
-        if (!lm.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_VOTING_SALES_AS_PROMOTION)) {
-            return saleState == SaleState::PROMOTION;
-        }
-
-        if (saleState != SaleState::PROMOTION && saleState != SaleState::VOTING) {
-            return false;
-        }
-
-        return true;
-    }
-
-    longstring ManageSaleOpFrame::makeDefaultTasksKey() {
-        return ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
-    }
-
-    longstring ManageSaleOpFrame::makeTasksKey() {
-        return ManageKeyValueOpFrame::makeSaleUpdateTasksKey(xdr::xdr_to_string(mManageSaleOp.saleID));
+    std::vector<longstring> ManageSaleOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+        return std::vector<longstring> {
+                ManageKeyValueOpFrame::makeSaleUpdateTasksKey(xdr::xdr_to_string(mManageSaleOp.saleID)),
+                ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*")
+        };
     }
 
     bool ManageSaleOpFrame::ensureSaleUpdateDataValid(stellar::ReviewableRequestEntry &requestEntry)

@@ -6,7 +6,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AccountHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
@@ -48,10 +48,10 @@ const
                          static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS));
 }
 
-BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(
-    Database& db, LedgerDelta& delta) const
+BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelper &storageHelper) const
 {
-    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(mCreateWithdrawalRequest.request.balance, db, &delta);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balanceFrame = balanceHelper.loadBalance(mCreateWithdrawalRequest.request.balance);
     if (!balanceFrame || !(balanceFrame->getAccountID() == getSourceID()))
     {
         return nullptr;
@@ -65,44 +65,6 @@ bool CreateWithdrawalRequestOpFrame::isFeeMatches(
 {
     return accountManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee, FeeType::WITHDRAWAL_FEE,
         FeeFrame::SUBTYPE_ANY, balance->getAsset(), mCreateWithdrawalRequest.request.amount);
-}
-
-bool CreateWithdrawalRequestOpFrame::isConvertedAmountMatches(
-    BalanceFrame::pointer balance, Database& db)
-{
-    const auto assetToConvertAmountInto = mCreateWithdrawalRequest.request.details.autoConversion().destAsset;
-
-    if(balance->getAsset() == assetToConvertAmountInto) {
-        if (mCreateWithdrawalRequest.request.amount !=
-                mCreateWithdrawalRequest.request.details.autoConversion().expectedAmount) {
-            innerResult().code(CreateWithdrawalRequestResultCode::CONVERTED_AMOUNT_MISMATCHED);
-            return false;
-        }
-        return true;
-    }
-
-    const auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(balance->getAsset(), assetToConvertAmountInto, db);
-    if (!assetPair)
-    {
-        innerResult().code(CreateWithdrawalRequestResultCode::CONVERSION_PRICE_IS_NOT_AVAILABLE);
-        return false;
-    }
-
-    uint64_t expectedConvetedAmount = 0;
-    if (!AssetPairHelper::Instance()->convertAmount(assetPair, assetToConvertAmountInto,
-            mCreateWithdrawalRequest.request.amount, Rounding::ROUND_DOWN, db, expectedConvetedAmount))
-    {
-        innerResult().code(CreateWithdrawalRequestResultCode::CONVERSION_OVERFLOW);
-        return false;
-    }
-
-    if (expectedConvetedAmount != mCreateWithdrawalRequest.request.details.autoConversion().expectedAmount)
-    {
-        innerResult().code(CreateWithdrawalRequestResultCode::CONVERTED_AMOUNT_MISMATCHED);
-        return false;
-    }
-
-    return true;
 }
 
 bool CreateWithdrawalRequestOpFrame::tryLockBalance(
@@ -167,12 +129,13 @@ CreateWithdrawalRequestOpFrame::createRequest(LedgerDelta& delta, LedgerManager&
 
 ReviewableRequestFrame::pointer
 CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
-                                                            LedgerDelta& delta,
+                                                            StorageHelper &storageHelper,
                                                             LedgerManager& ledgerManager,
                                                             BalanceFrame::pointer balanceFrame,
                                                             AssetFrame::pointer assetFrame)
 {
     auto& db = app.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
 
     if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
     {
@@ -187,15 +150,10 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
         return nullptr;
     }
 
-    AccountManager accountManager(app, db, delta, ledgerManager);
+    AccountManager accountManager(app, db, *delta, ledgerManager);
     if (!isFeeMatches(accountManager, balanceFrame))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
-        return nullptr;
-    }
-
-    if (!isConvertedAmountMatches(balanceFrame, db))
-    {
         return nullptr;
     }
 
@@ -207,7 +165,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
 
 
     uint64_t universalAmount = 0;
-    auto request = ReviewableRequestFrame::createNew(delta, getSourceID(), assetFrame->getOwner(), nullptr,
+    auto request = ReviewableRequestFrame::createNew(*delta, getSourceID(), assetFrame->getOwner(), nullptr,
                                                      ledgerManager.getCloseTime());
     ReviewableRequestEntry &requestEntry = request->getRequestEntry();
 
@@ -216,15 +174,15 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
 
     request->recalculateHashRejectReason();
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
-    BalanceHelperLegacy::Instance()->storeChange(delta, db, balanceFrame->mEntry);
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+    storageHelper.getBalanceHelper().storeChange(balanceFrame->mEntry);
 
-    if (!processStatistics(accountManager, db, delta, ledgerManager, balanceFrame,
+    if (!processStatistics(accountManager, db, *delta, ledgerManager, balanceFrame,
                            mCreateWithdrawalRequest.request.amount, universalAmount, request->getRequestID()))
     {
         return nullptr;
     }
-    storeChangeRequest(delta, request, db, universalAmount);
+    storeChangeRequest(*delta, request, db, universalAmount);
 
     return request;
 
@@ -264,7 +222,7 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &st
 {
     auto& db = storageHelper.getDatabase();
     auto delta = storageHelper.getLedgerDelta();
-    auto balanceFrame = tryLoadBalance(db, *delta);
+    auto balanceFrame = tryLoadBalance(storageHelper);
     if (!balanceFrame)
     {
         innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
@@ -273,24 +231,24 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &st
 
     const auto assetFrame = storageHelper.getAssetHelper().mustLoadAsset(balanceFrame->getAsset());
 
-    auto requestFrame = tryCreateWithdrawalRequest(app, *delta, ledgerManager, balanceFrame, assetFrame);
-    if (!requestFrame)
+    auto request = tryCreateWithdrawalRequest(app, storageHelper, ledgerManager, balanceFrame, assetFrame);
+    if (!request)
     {
         return false;
     }
 
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks))
+    if (!loadTasks(storageHelper, allTasks, nullptr))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::WITHDRAWAL_TASKS_NOT_FOUND);
         return false;
     }
 
-    requestFrame->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
-    innerResult().success().requestID = requestFrame->getRequestID();
+    innerResult().success().requestID = request->getRequestID();
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     innerResult().success().fulfilled = false;
     return true;
@@ -410,18 +368,17 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
     return lowerBound.get()->getKeyValue().value.ui64Value() <= request.amount;
 }
 
-longstring
-CreateWithdrawalRequestOpFrame::makeTasksKey()
+std::vector<longstring>
+CreateWithdrawalRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
 {
-    auto assetCode = mCreateWithdrawalRequest.request.details.autoConversion().destAsset;
-
-    return ManageKeyValueOpFrame::makeWithdrawalTasksKey(assetCode);
-}
-
-longstring
-CreateWithdrawalRequestOpFrame::makeDefaultTasksKey()
-{
-    return ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+    auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
+    if (!balanceFrame){
+        throw std::runtime_error("Withdrawer balance not found");
+    }
+    return std::vector<longstring> {
+        ManageKeyValueOpFrame::makeWithdrawalTasksKey(balanceFrame->getAsset()),
+        ManageKeyValueOpFrame::makeWithdrawalTasksKey("*")
+    };
 }
 
 }

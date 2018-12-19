@@ -57,7 +57,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 	auto& db = storageHelper.getDatabase();
 
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks))
+    if (!loadTasks(storageHelper, allTasks, mCreateIssuanceRequest.allTasks))
     {
         innerResult().code(CreateIssuanceRequestResultCode::ISSUANCE_TASKS_NOT_FOUND);
         return false;
@@ -81,7 +81,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 		EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
 	}
 
-    bool isFulfilled = false;
+    bool fulfilled = false;
 	ReviewRequestResultCode reviewRequestResultCode = ReviewRequestResultCode::SUCCESS;
 
 	if (allTasks == 0)
@@ -90,8 +90,8 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 																								   ledgerManager, *delta,
 																								   requestFrame);
 		reviewRequestResultCode = reviewRequestResult.code();
-		isFulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?
-					  reviewRequestResult.success().extendedResult.fulfilled:
+		fulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?
+					  reviewRequestResult.success().fulfilled:
 					  false;
 	}
 
@@ -116,7 +116,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 
 	innerResult().code(CreateIssuanceRequestResultCode::SUCCESS);
 	innerResult().success().requestID = requestFrame->getRequestID();
-	innerResult().success().fulfilled = isFulfilled;
+	innerResult().success().fulfilled = fulfilled;
 	innerResult().success().fee = requestFrame->getRequestEntry().body.issuanceRequest().fee;
 	auto balanceHelper = BalanceHelperLegacy::Instance();
 	auto receiver = balanceHelper->mustLoadBalance(mCreateIssuanceRequest.request.receiver, db);
@@ -332,24 +332,10 @@ CreateIssuanceRequestOpFrame::isAllowedToReceive(BalanceID receivingBalance, Dat
 	}
 }
 
-bool
-CreateIssuanceRequestOpFrame::loadTasks(StorageHelper& storageHelper, uint32_t &allTasks)
-{
-    if (mCreateIssuanceRequest.allTasks)
-    {
-        allTasks = *mCreateIssuanceRequest.allTasks.get();
-        return true;
-    }
-
-	return OperationFrame::loadTasks(storageHelper, allTasks);
+std::vector<longstring> CreateIssuanceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+	return std::vector<longstring> {
+		ManageKeyValueOpFrame::makeIssuanceTasksKey(mCreateIssuanceRequest.request.asset),
+		ManageKeyValueOpFrame::makeIssuanceTasksKey("*")
+	};
 }
-
-	longstring CreateIssuanceRequestOpFrame::makeTasksKey() {
-		return ManageKeyValueOpFrame::makeIssuanceTasksKey(mCreateIssuanceRequest.request.asset);
-	}
-
-	longstring CreateIssuanceRequestOpFrame::makeDefaultTasksKey() {
-		return ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
-	}
-
 }

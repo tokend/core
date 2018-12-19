@@ -45,8 +45,6 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
-
     static CreateIssuanceRequestResultCode
     getInnerCode(OperationResult const& res)
     {
@@ -67,9 +65,7 @@ public:
         mIsFeeRequired = false;
     }
 
-    longstring makeTasksKey() override;
-
-    longstring makeDefaultTasksKey() override;
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
     // flags for issuance tasks
     static const uint32_t INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT = 1;

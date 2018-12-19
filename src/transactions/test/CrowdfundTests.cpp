@@ -79,7 +79,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     SECTION("Price must be 1")
     {
         const auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE + 1) }, &saleType);
+            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE + 1) }, 0, saleType);
         saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest,
             CreateSaleCreationRequestResultCode::INVALID_PRICE);
     }
@@ -87,7 +87,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     {
         auto maxAmountToBeSold = preIssuedAmount / 2;
         const auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE) }, &saleType, &maxAmountToBeSold, SaleState::PROMOTION);
+            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE) }, maxAmountToBeSold, saleType);
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
         auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
         REQUIRE(sales.size() == 1);
@@ -116,9 +116,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
 
         SECTION("Happy path")
         {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
             // exchange rate for quote asset changed, so now amount to recieve is 0
             quoteDefaultQuotePrice = 542680000;
             assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
@@ -132,9 +129,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
         }
         SECTION("Participation amount is too small")
         {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
             // able to invest 10^-6 when price for quote and default quote is 1
             auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
             quoteDefaultQuotePrice = 1000 * ONE;
@@ -162,49 +156,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
             REQUIRE(quoteBalanceAfterTx->getAmount() == quoteBalanceBeforeTx->getAmount() - hardCapInQuoteAsset);
             // close the sale
             CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
-        }
-        SECTION("Not able to invest into sale in voting state")
-        {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::VOTING);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            // able to invest 10^-6 when price for quote and default quote is 1
-            auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
-            quoteDefaultQuotePrice = 1000 * ONE;
-            assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
-            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, 1,
-                ONE, 0, 0, saleID);
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer, ManageOfferResultCode::SALE_IS_NOT_STARTED_YET);
-
-            // reset back
-            saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer);
-        }
-        SECTION("Try to set state with non-master account")
-        {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::VOTING);
-            saleTestHelper.applyManageSaleTx(syndicate, saleID, saleStateData, ManageSaleResultCode::NOT_ALLOWED);
-        }
-        SECTION("Not able to invest into sale in promotion state")
-        {
-            // able to invest 10^-6 when price for quote and default quote is 1
-            auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
-            quoteDefaultQuotePrice = 1000 * ONE;
-            assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
-            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, 1,
-                ONE, 0, 0, saleID);
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer, ManageOfferResultCode::SALE_IS_NOT_STARTED_YET);
-
-            // reset back
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer);
         }
     }
 }

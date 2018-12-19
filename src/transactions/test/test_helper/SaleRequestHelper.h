@@ -32,12 +32,11 @@ public:
             CancelSaleCreationRequestResultCode::SUCCESS);
 
     static SaleCreationRequest createSaleRequest(AssetCode base,
-        AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
-        const uint64_t softCap, const uint64_t hardCap, std::string details,
-        std::vector<SaleCreationRequestQuoteAsset> quoteAssets,
-        SaleType* saleType = nullptr,
-        const uint64_t* requiredBaseAssetForHardCap = nullptr,
-        SaleState state = SaleState::NONE);
+                                                 AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
+                                                 const uint64_t softCap, const uint64_t hardCap, std::string details,
+                                                 std::vector<SaleCreationRequestQuoteAsset> quoteAssets,
+                                                 uint64_t requiredBaseAssetForHardCap,
+                                                 SaleType saleType = SaleType::BASIC_SALE);
 
     TransactionFramePtr createSaleRequestTx(
         Account& source, uint64_t requestID, SaleCreationRequest request);

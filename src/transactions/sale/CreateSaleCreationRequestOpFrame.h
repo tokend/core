@@ -63,11 +63,7 @@ public:
         return xdr::xdr_traits<CreateSaleCreationRequestResultCode>::enum_name(innerResult().code());
     }
 
-    longstring makeTasksKey() override;
-
-    longstring makeDefaultTasksKey() override;
-
-    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
 };
 }

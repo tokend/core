@@ -14,7 +14,6 @@ class ReviewWithdrawalRequestOpFrame : public ReviewRequestOpFrame
 protected:
 	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
 	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
-	bool removingNotSetTask(ReviewableRequestEntry &requestEntry);
 
 	// returns total fee to pay, throws exception if overflow
 	uint64_t getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);

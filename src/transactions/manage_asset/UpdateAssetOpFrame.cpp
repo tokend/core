@@ -93,7 +93,7 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
     bool autoreview = true;
 	if (mManageAsset.requestID == 0) {
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks)){
+        if (!loadTasks(storageHelper, allTasks, mManageAsset.request.createAssetUpdateRequest().allTasks)){
             innerResult().code(ManageAssetResultCode::ASSET_UPDATE_TASKS_NOT_FOUND);
             return false;
         }
@@ -113,11 +113,11 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
     bool fulfilled = false;
 
     if (autoreview && getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode == ReviewRequestResultCode::SUCCESS) {
-            fulfilled = true;
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review update asset request");
         }
+        fulfilled = result.success().fulfilled;
     }
 
 	innerResult().code(ManageAssetResultCode::SUCCESS);
@@ -151,28 +151,10 @@ string UpdateAssetOpFrame::getAssetCode() const
     return mAssetUpdateRequest.code;
 }
 
-bool UpdateAssetOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
-    if (mManageAsset.request.createAssetUpdateRequest().allTasks)
-    {
-        allTasks = *mManageAsset.request.createAssetUpdateRequest().allTasks.get();
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto key = makeTasksKey();
-
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return false;
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
-}
-
-longstring UpdateAssetOpFrame::makeTasksKey() {
-    return ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector() {
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
+    };
 }
 
 }

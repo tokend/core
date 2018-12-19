@@ -45,8 +45,6 @@ namespace stellar {
             return xdr::xdr_traits<CreateAMLAlertRequestResultCode>::enum_name(innerResult().code());
         }
 
-        longstring makeTasksKey() override;
-
-        bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
+        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
     };
 }

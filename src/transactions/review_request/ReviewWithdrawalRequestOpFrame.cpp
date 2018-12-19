@@ -40,22 +40,13 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     auto& withdrawRequest = request->getRequestEntry().body.withdrawalRequest();
     auto& requestEntry = request->getRequestEntry();
 
-    if (removingNotSetTask(requestEntry)){
-        innerResult().code(ReviewRequestResultCode::REMOVING_NOT_SET_TASKS);
-        return false;
-    }
-
-    requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-    requestEntry.tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
-    requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-    requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
-    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+    handleTasks(db, delta, request);
 
     if (!request->canBeFulfilled(ledgerManager)){
         innerResult().code(ReviewRequestResultCode::SUCCESS);
         innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
-        innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
-        innerResult().success().extendedResult.fulfilled = false;
+        innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
+        innerResult().success().fulfilled = false;
         return true;
     }
 
@@ -101,8 +92,8 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     AssetHelperLegacy::Instance()->storeChange(delta, db, assetFrame->mEntry);
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
-    innerResult().success().extendedResult.fulfilled = true;
-    innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
+    innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
     return true;
 }
 
@@ -148,9 +139,6 @@ bool ReviewWithdrawalRequestOpFrame::doCheckValid(Application &app)
     }
 
     return ReviewRequestOpFrame::doCheckValid(app);
-}
-bool ReviewWithdrawalRequestOpFrame::removingNotSetTask(ReviewableRequestEntry &requestEntry) {
-    return !(requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove);
 }
 
 

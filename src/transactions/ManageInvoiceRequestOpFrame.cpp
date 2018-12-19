@@ -193,7 +193,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
 
 
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks))
+    if (!loadTasks(storageHelper, allTasks, mManageInvoiceRequest.details.invoiceRequest().allTasks))
     {
         innerResult().code(ManageInvoiceRequestResultCode::INVOICE_TASKS_NOT_FOUND);
         return false;
@@ -205,11 +205,11 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     bool fulfilled = false;
 
     if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode == ReviewRequestResultCode::SUCCESS) {
-            fulfilled = true;
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review manage invoice request");
         }
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().success().details.action(ManageInvoiceRequestAction::CREATE);
@@ -315,27 +315,9 @@ ManageInvoiceRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-longstring ManageInvoiceRequestOpFrame::makeTasksKey() {
-    return ManageKeyValueOpFrame::makeInvoiceCreateTasksKey();
-}
-
-bool ManageInvoiceRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
-    if (mManageInvoiceRequest.details.invoiceRequest().allTasks)
-    {
-        allTasks = *mManageInvoiceRequest.details.invoiceRequest().allTasks.get();
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto key = makeTasksKey();
-
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return false;
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
+std::vector<longstring> ManageInvoiceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+    return std::vector<longstring> {
+        ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()
+    };
 }
 }

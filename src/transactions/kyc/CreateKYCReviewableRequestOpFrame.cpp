@@ -180,7 +180,7 @@ namespace stellar {
         innerResult().success().requestID = requestFrame->getRequestID();
         innerResult().success().fulfilled = false;
 
-        bool canAutoApprove = ReviewUpdateKYCRequestOpFrame::canBeFulfilled(requestEntry);
+        bool canAutoApprove = requestFrame->canBeFulfilled(ledgerManager);
 
         if (!ledgerManager.shouldUse(LedgerVersion::FIX_CREATE_KYC_REQUEST_AUTO_APPROVE))
             canAutoApprove = canAutoApprove &&

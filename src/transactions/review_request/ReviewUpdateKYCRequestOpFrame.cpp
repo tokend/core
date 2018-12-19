@@ -37,18 +37,12 @@ namespace stellar {
         auto &updateKYCRequest = request->getRequestEntry().body.updateKYCRequest();
 
         auto& requestEntry = request->getRequestEntry();
-        requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-        requestEntry.tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
-        requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-        updateKYCRequest.externalDetails.emplace_back(mReviewRequest.requestDetails.updateKYC().externalDetails);
 
-        const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);
-        requestEntry.hash = newHash;
+        handleTasks(db, delta, request);
 
-        ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
-
-        if (!canBeFulfilled(requestEntry)) {
+        if (!request->canBeFulfilled(ledgerManager)){
             innerResult().code(ReviewRequestResultCode::SUCCESS);
+            innerResult().success().fulfilled = false;
             return true;
         }
 
@@ -79,6 +73,7 @@ namespace stellar {
         EntryHelperProvider::storeChangeEntry(delta, db, accountToUpdateKYCFrame->mEntry);
 
         innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = true;
         return true;
     }
 
@@ -107,10 +102,6 @@ namespace stellar {
 
         innerResult().code(ReviewRequestResultCode::SUCCESS);
         return true;
-    }
-
-    bool ReviewUpdateKYCRequestOpFrame::canBeFulfilled(ReviewableRequestEntry &requestEntry) {
-        return requestEntry.tasks.pendingTasks == 0;
     }
 
     bool ReviewUpdateKYCRequestOpFrame::doCheckValid(Application &app) {

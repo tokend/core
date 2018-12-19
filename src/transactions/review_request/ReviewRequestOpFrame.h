@@ -35,6 +35,8 @@ protected:
 		throw std::runtime_error("There is no default implementation of handleApprove of Reviewable Request");
 	}
 
+	void handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request);
+
         // ensures that blocking rules are fulfilled, if not sets the error code and returns false
         bool areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database& db, LedgerDelta& delta);
 
@@ -62,6 +64,9 @@ protected:
 		return xdr::xdr_traits<ReviewRequestResultCode>::enum_name(innerResult().code());
 	}
 
-    static uint64_t getTotalFee(uint64_t requestID, Fee fee); 
+    static uint64_t getTotalFee(uint64_t requestID, Fee fee);
+
+	bool removingNotSetTasks(ReviewableRequestEntry &requestEntry);
+
 };
 }

@@ -166,6 +166,11 @@ ReviewRequestOpFrame::doApply(Application& app,
 		return false;
 	}
 
+	if (removingNotSetTasks(request->getRequestEntry())){
+		innerResult().code(ReviewRequestResultCode::REMOVING_NOT_SET_TASKS);
+		return false;
+	}
+
 	switch (mReviewRequest.action) {
 	case ReviewRequestOpAction::APPROVE:
 		return handleApprove(app, delta, ledgerManager, request);
@@ -191,7 +196,6 @@ ReviewRequestOpFrame::doCheckValid(Application& app)
 		innerResult().code(ReviewRequestResultCode::INVALID_REASON);
 		return false;
 	}
-    
 
     return true;
 }
@@ -218,6 +222,20 @@ uint64_t ReviewRequestOpFrame::getTotalFee(uint64_t requestID, Fee fee)
     }
 
     return totalFee;
-}    
+}
 
+bool ReviewRequestOpFrame::removingNotSetTasks(ReviewableRequestEntry &requestEntry) {
+	bool emptyTasksToRemove = mReviewRequest.reviewDetails.tasksToRemove == 0;
+
+	return !emptyTasksToRemove && (requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove);
+}
+
+void ReviewRequestOpFrame::handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request)
+{
+    request->getRequestEntry().tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    request->getRequestEntry().tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
+    request->getRequestEntry().tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    request->getRequestEntry().tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
+    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+}
 }

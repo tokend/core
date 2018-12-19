@@ -78,14 +78,12 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
         uint64_t amountToWithdraw = 100 * ONE;
         withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
         REQUIRE(withdrawerBalance->getAmount() >= amountToWithdraw);
-        const uint64_t expectedAmountInDestAsset = 0.05 * ONE;
 
         Fee zeroFee;
         zeroFee.fixed = 0;
         zeroFee.percent = 0;
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(), amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
         SECTION("Approve")
         {

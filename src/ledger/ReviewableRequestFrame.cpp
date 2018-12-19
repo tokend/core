@@ -140,23 +140,6 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
     {
         throw runtime_error("external details is invalid");
     }
-
-    switch (request.details.withdrawalType())
-    {
-    case WithdrawalType::AUTO_CONVERSION:
-        {
-            if (!AssetFrame::isAssetCodeValid(request.details.autoConversion().destAsset))
-            {
-                throw runtime_error("dest asset is invalid");
-            }
-            
-            if (request.details.autoConversion().expectedAmount == 0)
-            {
-                throw runtime_error("destination amount is invalid");
-            }
-        }
-    default: break;
-    }
 }
 
 void ReviewableRequestFrame::ensureSaleCreationValid(

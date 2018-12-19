@@ -409,44 +409,32 @@ OperationFrame::checkRolePermissions(Application& app)
 
 
 bool
-OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks)
+OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr::pointer<uint32> tasks)
 {
+    if (tasks) {
+        allTasks = *tasks;
+        return true;
+    }
+
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto key = makeTasksKey();
-
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return loadDefaultTasks(keyValueHelper, allTasks);
+    auto keys = makeTasksKeyVector(storageHelper);
+    for(auto& key : keys){
+        auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+        if (keyValueFrame)
+        {
+            allTasks = keyValueFrame->mustGetUint32Value();
+            return true;
+        }
     }
 
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
+    return false;
 }
 
-bool
-OperationFrame::loadDefaultTasks(KeyValueHelper &keyValueHelper, uint32_t& allTasks)
+std::vector<longstring>
+OperationFrame::makeTasksKeyVector(StorageHelper &storageHelper)
 {
+    return std::vector<longstring>{};
+};
 
-    auto key = makeDefaultTasksKey();
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return false;
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
-}
-
-longstring
-OperationFrame::makeTasksKey() {
-    return "not_implemented";
-}
-
-longstring
-OperationFrame::makeDefaultTasksKey() {
-    return "not_implemented";
-}
 
 }

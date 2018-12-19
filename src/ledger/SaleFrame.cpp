@@ -230,34 +230,8 @@ SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &own
             sale.quoteAssets.push_back(saleQuoteAsset);
         }
         sale.baseBalance = balances[request.baseAsset];
-
-        switch (request.ext.v()) {
-            case LedgerVersion::EMPTY_VERSION: {
-                break;
-            }
-            case LedgerVersion::TYPED_SALE: {
-                sale.ext.v(LedgerVersion::TYPED_SALE);
-                const auto saleType = request.ext.saleTypeExt().typedSale.saleType();
-                sale.ext.saleTypeExt().typedSale.saleType(saleType);
-                break;
-            }
-            case LedgerVersion::ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP: {
-                sale.ext.v(LedgerVersion::TYPED_SALE);
-                const auto saleType = request.ext.extV2().saleTypeExt.typedSale.saleType();
-                sale.ext.saleTypeExt().typedSale.saleType(saleType);
-                break;
-            }
-            case LedgerVersion::STATABLE_SALES: {
-                sale.ext.v(LedgerVersion::STATABLE_SALES);
-                const auto saleType = request.ext.extV3().saleTypeExt.typedSale.saleType();
-                sale.ext.statableSaleExt().saleTypeExt.typedSale.saleType(saleType);
-                sale.ext.statableSaleExt().state = request.ext.extV3().state;
-                break;
-            }
-            default: {
-                throw std::runtime_error("Unexpected version of sale creation request");
-            }
-        }
+        const auto saleType = request.saleTypeExt.typedSale.saleType();
+        sale.saleTypeExt.typedSale.saleType(saleType);
 
         return std::make_shared<SaleFrame>(entry);
     } catch (...)
@@ -328,47 +302,7 @@ void SaleFrame::unlockBaseAsset(uint64_t amount)
 
 void SaleFrame::migrateToVersion(LedgerVersion version)
 {
-    if (version == mSale.ext.v()) {
-        return;
-    }
-
-    if (version < mSale.ext.v()) {
-        throw std::runtime_error("Trying to migrate sale to lower version");
-    }
-
-    auto allVersion = xdr::xdr_traits<LedgerVersion>::enum_values();
-    for (auto rawCurentVersion : allVersion) {
-        auto currentVersion = LedgerVersion(rawCurentVersion);
-        if (mSale.ext.v() >= currentVersion) {
-            continue;
-        }
-
-
-        if (currentVersion > version) {
-            break;
-        }
-
-        switch (currentVersion) {
-        case LedgerVersion::TYPED_SALE:
-            throw std::runtime_error("Not able to migrate sale from empty version to types sale");
-        case LedgerVersion::STATABLE_SALES:
-            auto typedSale = mSale.ext.saleTypeExt();
-            mSale.ext.v(LedgerVersion::STATABLE_SALES);
-            mSale.ext.statableSaleExt().saleTypeExt = typedSale;
-            mSale.ext.statableSaleExt().state = SaleState::NONE;
-            break;
-        }
-    }
-
-    if (mSale.ext.v() != version) {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "unexpected state failed to migrate sale to version: " << xdr::xdr_to_string(version);
-        throw std::runtime_error("unexpected state: failed to migrate to specified version for sale");
-    }
-}
-
-void SaleFrame::setSaleState(SaleState state)
-{
-    setSaleState(mSale, state);
+    return;
 }
 
 SaleType SaleFrame::getSaleType() const
@@ -378,87 +312,18 @@ SaleType SaleFrame::getSaleType() const
 
 SaleType SaleFrame::getSaleType(SaleEntry const& sale)
 {
-    const auto version = sale.ext.v();
-    switch (version)
-    {
-    case LedgerVersion::EMPTY_VERSION:
-        return DEFAULT_SALE_TYPE;
-    case LedgerVersion::TYPED_SALE:
-        return sale.ext.saleTypeExt().typedSale.saleType();
-    case LedgerVersion::STATABLE_SALES:
-        return sale.ext.statableSaleExt().saleTypeExt.typedSale.saleType();
-    default:
-        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected version of sale entry: " << xdr::xdr_to_string(version);
-        throw runtime_error("Unexpected version of sale entry");
-    }
+    return sale.saleTypeExt.typedSale.saleType();
 }
 
 void SaleFrame::setSaleType(SaleEntry& sale, const SaleType saleType)
 {
-    const auto version = sale.ext.v();
-    switch (version)
-    {
-    case LedgerVersion::EMPTY_VERSION:
-        if (saleType != DEFAULT_SALE_TYPE)
-        {
-            throw invalid_argument("Trying to set non default sale type to not TYPED_SALE sale");
-        }
-
-        return;
-    case LedgerVersion::TYPED_SALE:
-        if (saleType == DEFAULT_SALE_TYPE)
-        {
-            throw invalid_argument("Trying to set default sale type to TYPED_SALE sale");
-        }
-
-        sale.ext.saleTypeExt().typedSale.saleType(saleType);
-        return;
-    case LedgerVersion::STATABLE_SALES:
-        if (saleType == DEFAULT_SALE_TYPE)
-        {
-            throw invalid_argument("Trying to set default sale type to STATABLE_SALES sale");
-        }
-
-        sale.ext.statableSaleExt().saleTypeExt.typedSale.saleType(saleType);
-        return;
-    default:
-        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected ledger version of sale. version: " << xdr::xdr_to_string(version);
-        throw runtime_error("Unexpected ledger version of sale");
-
-    }
-}
-
-void SaleFrame::setSaleState(SaleEntry & sale, SaleState saleState)
-{
-    switch (sale.ext.v()) {
-    case LedgerVersion::STATABLE_SALES:
-        sale.ext.statableSaleExt().state = saleState;
-        return;
-    default:
-        if (saleState == SaleState::NONE) {
-            return;
-        }
-        throw std::runtime_error("Unexpected action: not able to set state for sale of unexpected version");
-    }
+    sale.saleTypeExt.typedSale.saleType(saleType);
 }
 
 void SaleFrame::normalize()
 {
     sort(mSale.quoteAssets.begin(), mSale.quoteAssets.end(), &quoteAssetCompare);
 }
-SaleState SaleFrame::getState()
-{
-    switch (mSale.ext.v()) {
-    case LedgerVersion::STATABLE_SALES:
-        return mSale.ext.statableSaleExt().state;
-    default:
-        return SaleState::NONE;
-    }
-}
 
-bool SaleFrame::isEndTimeValid(uint64 endTime, uint64 ledgerCloseTime)
-{
-    return endTime > mSale.startTime && endTime > ledgerCloseTime;
-}
 }
 

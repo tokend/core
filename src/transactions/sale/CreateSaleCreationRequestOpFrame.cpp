@@ -152,10 +152,7 @@ bool CreateSaleCreationRequestOpFrame::isPriceValid(SaleCreationRequestQuoteAsse
         return false;
     }
 
-    bool isCrowdfunding = saleCreationRequest.ext.v() == LedgerVersion::TYPED_SALE &&
-            saleCreationRequest.ext.saleTypeExt().typedSale.saleType() == SaleType::CROWD_FUNDING;
-    isCrowdfunding = isCrowdfunding || (saleCreationRequest.ext.v() == LedgerVersion::STATABLE_SALES &&
-            saleCreationRequest.ext.extV3().saleTypeExt.typedSale.saleType() == SaleType::CROWD_FUNDING);
+    bool isCrowdfunding = saleCreationRequest.saleTypeExt.typedSale.saleType() == SaleType::CROWD_FUNDING;
     if (isCrowdfunding)
     {
         return quoteAsset.price == ONE;
@@ -238,7 +235,7 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &stora
         request->setRequestID(delta->getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST));
         ReviewableRequestHelper::Instance()->storeAdd(*delta, db, request->mEntry);
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks))
+        if (!loadTasks(storageHelper, allTasks, mCreateSaleCreationRequest.allTasks))
         {
             innerResult().code(CreateSaleCreationRequestResultCode::SALE_CREATE_TASKS_NOT_FOUND);
             return false;
@@ -255,11 +252,11 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &stora
 
     bool fulfilled = false;
     if (autoreview) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode == ReviewRequestResultCode::SUCCESS) {
-            fulfilled = true;
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review create asset request");
         }
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().code(CreateSaleCreationRequestResultCode::SUCCESS);
@@ -272,26 +269,10 @@ bool CreateSaleCreationRequestOpFrame::ensureEnoughAvailable(Application& app,
                                                              const SaleCreationRequest& saleCreationRequest,
                                                              AssetFrame::pointer baseAsset)
 {
-    if(!app.getLedgerManager().shouldUse(LedgerVersion::STATABLE_SALES))
-        return true;
-    SaleType saleType;
-    switch (saleCreationRequest.ext.v()) {
-        case LedgerVersion::ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP: {
-            saleType = saleCreationRequest.ext.extV2().saleTypeExt.typedSale.saleType();
-            break;
-        }
-        case LedgerVersion::STATABLE_SALES: {
-            saleType = saleCreationRequest.ext.extV3().saleTypeExt.typedSale.saleType();
-            break;
-        }
-        default: {
-            return true;
-        }
-    }
-    if (saleType != SaleType::FIXED_PRICE)
+    if (saleCreationRequest.saleTypeExt.typedSale.saleType() != SaleType::FIXED_PRICE)
         return true;
 
-    return baseAsset->getAvailableForIssuance() >= saleCreationRequest.ext.extV3().requiredBaseAssetForHardCap;
+    return baseAsset->getAvailableForIssuance() >= saleCreationRequest.requiredBaseAssetForHardCap;
 }
 
 bool CreateSaleCreationRequestOpFrame::doCheckValid(Application& app)
@@ -356,22 +337,11 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
     return CreateSaleCreationRequestResultCode::SUCCESS;
 }
 
-longstring CreateSaleCreationRequestOpFrame::makeTasksKey() {
-    return ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset);
+std::vector<longstring> CreateSaleCreationRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset),
+        ManageKeyValueOpFrame::makeSaleCreateTasksKey("*")
+    };
 }
-
-longstring CreateSaleCreationRequestOpFrame::makeDefaultTasksKey() {
-    return ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
-}
-
-bool CreateSaleCreationRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
-    if (mCreateSaleCreationRequest.allTasks)
-    {
-        allTasks = *mCreateSaleCreationRequest.allTasks.get();
-        return true;
-    }
-    return OperationFrame::loadTasks(storageHelper, allTasks);
-}
-
 
 }

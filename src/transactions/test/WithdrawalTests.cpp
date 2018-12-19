@@ -96,7 +96,6 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset,
                                                                      testManager->getDB(), nullptr);
     REQUIRE(withdrawerBalance->getAmount() >= amountToWithdraw);
-    const uint64_t expectedAmountInDestAsset = 0.5 * ONE;
 
     Fee zeroFee;
     zeroFee.fixed = 0;
@@ -104,8 +103,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     SECTION("No tasks") {
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                            amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
         auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
 
@@ -121,8 +119,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
         manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                            amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
         auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
 
@@ -139,7 +136,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
 
         REQUIRE(withdrawResult.code() == CreateWithdrawalRequestResultCode::SUCCESS);
-        REQUIRE(reviewResult.success().extendedResult.fulfilled);
+        REQUIRE(reviewResult.success().fulfilled);
     }
 
     SECTION("Set tasks on request creation") {
@@ -148,8 +145,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
         manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                            amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
 
         uint32_t allTasks = 1024;
@@ -234,8 +230,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         zeroFee.fixed = 0;
         zeroFee.percent = 0;
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(), amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
         auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         SECTION("Approve")
@@ -264,8 +259,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             fee.fixed = fixedFee;
             REQUIRE(feeFrame->calculatePercentFee(amountToWithdraw, fee.percent, ROUND_UP, 1));
             auto withdrawWithFeeRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
-                                                                                      amountToWithdraw, fee, "{}",
-                                                                                      withdrawDestAsset, expectedAmountInDestAsset);
+                                                                                      amountToWithdraw, fee, "{}");
             auto result = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawWithFeeRequest, nullptr);
 
             //approve request
@@ -292,8 +286,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         zeroFee.fixed = 0;
         zeroFee.percent = 0;
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(), amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
         SECTION("successful application")
         {
@@ -318,7 +311,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         SECTION("Try to withdraw in same asset") {
             withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(),
                                                                           amountToWithdraw,
-                                                                          zeroFee, "{}", asset, amountToWithdraw);
+                                                                          zeroFee, "{}");
 
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         }
@@ -411,38 +404,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                              CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
         }
 
-        SECTION("try to withdraw in non-existing asset")
-        {
-            AssetCode nonExistingAsset = "BYN";
-            withdrawRequest.details.autoConversion().destAsset = nonExistingAsset;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::CONVERSION_PRICE_IS_NOT_AVAILABLE);
-        }
-
-        SECTION("overflow converted amount")
-        {
-            withdrawRequest.amount = UINT64_MAX/pricePerUnit + 1;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::CONVERSION_OVERFLOW);
-        }
-
-        SECTION("mismatch conversion amount")
-        {
-            withdrawRequest.details.autoConversion().expectedAmount = expectedAmountInDestAsset + 1;
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::CONVERTED_AMOUNT_MISMATCHED);
-        }
-
-        SECTION("underfunded")
-        {
-            withdrawRequest.amount = preIssuedAmount + 1;
-            uint64_t convertedAmount = pricePerUnit * withdrawRequest.amount;
-            withdrawRequest.details.autoConversion().expectedAmount = convertedAmount;
-
-            withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::UNDERFUNDED);
-        }
-
         SECTION("overflow statistics")
         {
             //issue some amount to withdrawer
@@ -452,7 +413,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             issuanceHelper.applyCreateIssuanceRequest(root, asset, enoughToOverflow, withdrawerBalance->getBalanceID(),
                                                       SecretKey::random().getStrKeyPublic(), &allTasks);
             withdrawRequest.amount = enoughToOverflow;
-            withdrawRequest.details.autoConversion().expectedAmount = enoughToOverflow * pricePerUnit;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::STATS_OVERFLOW);
         }

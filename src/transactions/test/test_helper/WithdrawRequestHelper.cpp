@@ -94,17 +94,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
 }
 
 WithdrawalRequest WithdrawRequestHelper::createWithdrawRequest(
-    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails,
-    AssetCode autoConversionDestAsset, const uint64_t expectedAutoConversion)
+    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails)
 {
     WithdrawalRequest result;
     result.balance = balance;
     result.amount = amount;
     result.fee = fee;
     result.externalDetails = externalDetails;
-    result.details.withdrawalType(WithdrawalType::AUTO_CONVERSION);
-    result.details.autoConversion().destAsset = autoConversionDestAsset;
-    result.details.autoConversion().expectedAmount = expectedAutoConversion;
     result.ext.v(LedgerVersion::EMPTY_VERSION);
     return result;
 }

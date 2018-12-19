@@ -94,7 +94,6 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
 
     auto balanceCreationResult = balanceTestHelper.applyManageBalanceTx(account, accountID, baseAsset);
     auto balanceID = balanceCreationResult.success().balanceID;
-    auto saleStateData = manageSaleHelper.setSaleState(SaleState::NONE);
 
      SECTION("Fixed"){
         auto currentTime = testManager->getLedgerManager().getCloseTime();
@@ -103,7 +102,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         const auto fixedpriceReq = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
                                                                         endTime, ONE, 100 * ONE, "{}",
                                                                         { saleRequestHelper.createSaleQuoteAsset(defaultQuoteAsset, ONE) },
-                                                                        &fixedPrice, &hardCapInBase, SaleState::PROMOTION);
+                                                                        hardCapInBase, fixedPrice);
 
         saleRequestHelper.createApprovedSale(root, syndicate, fixedpriceReq);
 
@@ -111,7 +110,6 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
         REQUIRE(sales.size() == 1);
         const auto fixedPriceID = sales[0]->getID();
-        manageSaleHelper.applyManageSaleTx(root, fixedPriceID, saleStateData);
 
         auto manageOfferOp = OfferManager::buildManageOfferOp(balanceCreationResult.success().balanceID, quoteBalance->getBalanceID(),
                                                               true, ONE, ONE, 0, 0, fixedPriceID);
@@ -133,15 +131,13 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         const auto crowdfundReq = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
                                                                        endTime, ONE, 100 * ONE, "{}",
                                                                        { saleRequestHelper.createSaleQuoteAsset(defaultQuoteAsset, ONE) },
-                                                                       &crowdfund, &hardCapInBase, SaleState::PROMOTION);
+                                                                       hardCapInBase, crowdfund);
         saleRequestHelper.createApprovedSale(root, syndicate, crowdfundReq);
 
         auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
         REQUIRE(sales.size() == 1);
 
         const auto crowdfundID = sales[0]->getID();
-
-        manageSaleHelper.applyManageSaleTx(root, crowdfundID, saleStateData);
 
         auto manageOfferOp = OfferManager::buildManageOfferOp(balanceCreationResult.success().balanceID, quoteBalance->getBalanceID(),
                                                               true, ONE, ONE, 0, 0, crowdfundID);
@@ -177,7 +173,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         const auto fixedpriceReq = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
                                                                         endTime, ONE, hardCap, "{}",
                                                                         { saleRequestHelper.createSaleQuoteAsset(QuoteAsset, ONE)},
-                                                                        &fixedPrice, &maxAmountToBeSold, SaleState::PROMOTION);
+                                                                        maxAmountToBeSold, fixedPrice);
 
         saleRequestHelper.createApprovedSale(root, syndicate, fixedpriceReq);
 
@@ -186,7 +182,6 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         REQUIRE(sales.size() == 1);
         const auto fixedPriceID = sales[0]->getID();
 
-        manageSaleHelper.applyManageSaleTx(root, fixedPriceID, saleStateData);
         auto balanceCreationResult = balanceTestHelper.applyManageBalanceTx(account, accountID, QuoteAsset);
         auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(accountID, QuoteAsset, db, nullptr);
 
@@ -251,14 +246,11 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
     const auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
                                                                  endTime, softCap, hardCap, "{}",
                                                                  { saleRequestHelper.createSaleQuoteAsset(defaultQuoteAsset, ONE) },
-                                                                 &saleType, &maxAmountToBeSold, SaleState::PROMOTION);
+                                                                 maxAmountToBeSold, saleType);
     saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
     auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
     REQUIRE(sales.size() == 1);
     const auto saleID = sales[0]->getID();
-
-    auto saleStateData = manageSaleHelper.setSaleState(SaleState::NONE);
-    manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
 
     SECTION("Happy path")
     {

@@ -41,8 +41,7 @@ public:
         return res.tr().manageInvoiceRequestResult().code();
     }
 
-    longstring makeTasksKey() override;
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
-    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
 };
 }

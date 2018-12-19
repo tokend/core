@@ -76,13 +76,10 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     reviewRequestOp.requestID = mRequest->getRequestID();
     reviewRequestOp.requestDetails.requestType(mRequest->getRequestType());
 
-    if (isAutoreviewable(mRequest->getRequestType()))
-    {
-        reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
-        reviewRequestOp.reviewDetails.tasksToAdd = 0;
-        reviewRequestOp.reviewDetails.tasksToRemove = 0;
-        reviewRequestOp.reviewDetails.externalDetails = "{}";
-    }
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+    reviewRequestOp.reviewDetails.tasksToAdd = 0;
+    reviewRequestOp.reviewDetails.tasksToRemove = 0;
+    reviewRequestOp.reviewDetails.externalDetails = "{}";
 
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
@@ -105,15 +102,6 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     }
 
     return std::pair<bool, ReviewRequestResult>(isApplied, reviewRequestOpFrame->getResult().tr().reviewRequestResult());
-}
-
-bool
-ReviewRequestHelper::isAutoreviewable(ReviewableRequestType type)
-{
-    uint32_t notAutoreviewable = static_cast<uint32_t>(ReviewableRequestType::WITHDRAW) |
-            static_cast<uint32_t>(ReviewableRequestType::LIMITS_UPDATE);
-
-    return (static_cast<uint32_t>(type) & notAutoreviewable) == 0;
 }
 
 }

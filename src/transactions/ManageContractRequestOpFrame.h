@@ -43,8 +43,6 @@ public:
         return res.tr().manageContractRequestResult().code();
     }
 
-    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
-
-    longstring makeTasksKey() override;
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 };
 }

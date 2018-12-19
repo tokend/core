@@ -82,7 +82,7 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 
 	uint32_t allTasks = 0;
-	if (!loadTasks(storageHelper, allTasks))
+	if (!loadTasks(storageHelper, allTasks, mCreatePreIssuanceRequest.allTasks))
 	{
 		innerResult().code(CreatePreIssuanceRequestResultCode::PREISSUANCE_TASKS_NOT_FOUND);
 		return false;
@@ -92,20 +92,18 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
     //if source is master then auto review
-    bool isFulfilled = false;
+    bool fulfilled = false;
 
-    //todo validate logic path
     if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-        if (result != ReviewRequestResultCode::SUCCESS) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to approve request: " << request->getRequestID();
-            throw std::runtime_error("Failed to approve request");
-        }
-        isFulfilled = true;
+		auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+		if (result.code() != ReviewRequestResultCode::SUCCESS) {
+			throw std::runtime_error("Failed to review preissuance request");
+		}
+		fulfilled = result.success().fulfilled;
     }
 	innerResult().code(CreatePreIssuanceRequestResultCode::SUCCESS);
 	innerResult().success().requestID = request->getRequestID();
-    innerResult().success().fulfilled = isFulfilled;
+    innerResult().success().fulfilled = fulfilled;
 	return true;
 }
 
@@ -161,22 +159,11 @@ bool CreatePreIssuanceRequestOpFrame::isSignatureValid(AssetFrame::pointer asset
 	return result == SignatureValidator::Result::SUCCESS;
 }
 
-longstring CreatePreIssuanceRequestOpFrame::makeTasksKey() {
-	return ManageKeyValueOpFrame::makePreIssuanceTasksKey(mCreatePreIssuanceRequest.request.asset);
-}
-
-longstring CreatePreIssuanceRequestOpFrame::makeDefaultTasksKey() {
-	return ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
-}
-bool CreatePreIssuanceRequestOpFrame::loadTasks(stellar::StorageHelper &storageHelper, uint32_t &allTasks)
-{
-    if (mCreatePreIssuanceRequest.allTasks)
-    {
-        allTasks = *mCreatePreIssuanceRequest.allTasks.get();
-        return true;
-    }
-
-    return OperationFrame::loadTasks(storageHelper, allTasks);
+std::vector<longstring> CreatePreIssuanceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+	return std::vector<longstring>{
+		ManageKeyValueOpFrame::makePreIssuanceTasksKey(mCreatePreIssuanceRequest.request.asset),
+		ManageKeyValueOpFrame::makePreIssuanceTasksKey("*")
+	};
 }
 
 }

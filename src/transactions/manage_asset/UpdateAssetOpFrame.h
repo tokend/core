@@ -30,9 +30,7 @@ public:
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
-    longstring makeTasksKey() override;
-
-    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
+    std::vector<longstring> makeTasksKeyVector();
 
 protected:
     std::string getAssetCode() const override;

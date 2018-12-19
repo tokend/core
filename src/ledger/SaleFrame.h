@@ -32,16 +32,6 @@ class SaleFrame : public EntryFrame
     static const SaleType DEFAULT_SALE_TYPE = SaleType(0);
 
   public:
-    enum class State : int32_t
-    {
-        ACTIVE = 1,
-        NOT_STARTED_YET = 2,
-        ENDED = 3,
-        VOTING = 4,
-        PROMOTION = 5
-    };
-
-
     typedef std::shared_ptr<SaleFrame> pointer;
 
     SaleFrame();
@@ -94,19 +84,11 @@ class SaleFrame : public EntryFrame
 
     void migrateToVersion(LedgerVersion version);
 
-    void setSaleState(SaleState state);
-
     SaleType getSaleType() const;
     static SaleType getSaleType(SaleEntry const& sale);
 
     static void setSaleType(SaleEntry& sale, SaleType saleType);
-    static void setSaleState(SaleEntry& sale, SaleState saleState);
 
     void normalize();
-
-    SaleState getState();
-
-    bool isEndTimeValid(uint64 endTime, uint64 ledgerCloseTime);
-
 };
 }

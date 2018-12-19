@@ -211,8 +211,6 @@ void SaleHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     st.exchange(use(saleEntry.maxAmountToBeSold, "hard_cap_in_base"));
     auto saleType = static_cast<int>(SaleFrame::getSaleType(saleEntry));
     st.exchange(use(saleType, "sale_type"));
-    auto saleState = static_cast<int>(saleFrame->getState());
-    st.exchange(use(saleState, "state"));
     st.define_and_bind();
 
     auto timer = insert
@@ -277,8 +275,6 @@ void SaleHelper::loadSales(Database& db, StatementContext& prep,
             oe.ext.v(static_cast<LedgerVersion>(version));
             const auto saleType = SaleType(rawSaleType);
             SaleFrame::setSaleType(oe, saleType);
-            const auto saleState = SaleState(rawSaleState);
-            SaleFrame::setSaleState(oe, saleState);
             oe.quoteAssets = SaleQuoteAssetHelper::loadQuoteAssets(db, oe.saleID);
             SaleFrame::ensureValid(oe);
 

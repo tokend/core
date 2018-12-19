@@ -101,7 +101,7 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     const uint64 requestID = delta->getHeaderFrame().
                              generateID(LedgerEntryType::REVIEWABLE_REQUEST);
     const auto referencePtr = xdr::pointer<string64>(new string64(mCreateAMLAlertRequest.reference));
-    auto requestFrame = ReviewableRequestFrame::createNew(requestID,
+    auto request = ReviewableRequestFrame::createNew(requestID,
                                                           getSourceID(),
                                                           app.getMasterID(),
                                                           referencePtr,
@@ -109,30 +109,32 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
                                                           getCloseTime());
 
 
-    auto& requestEntry = requestFrame->getRequestEntry();
+    auto& requestEntry = request->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::AML_ALERT);
     requestEntry.body.amlAlertRequest() = amlAlertRequest;
-    requestFrame->recalculateHashRejectReason();
+    request->recalculateHashRejectReason();
     balanceHelper.storeChange(balanceFrame->mEntry);
     ReviewableRequestHelper::Instance()->storeAdd(*delta, db,
-                                                  requestFrame->mEntry);
+                                                  request->mEntry);
 
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks))
+    if (!loadTasks(storageHelper, allTasks, mCreateAMLAlertRequest.allTasks))
     {
         innerResult().code(CreateAMLAlertRequestResultCode::AML_ALERT_TASKS_NOT_FOUND);
         return false;
     }
 
-    requestFrame->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
     bool fulfilled = false;
 
     if (allTasks == 0) {
-        auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, requestFrame);
-        if (result == ReviewRequestResultCode::SUCCESS)
-            fulfilled = true;
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review AML alert request");
+        }
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().code(CreateAMLAlertRequestResultCode::SUCCESS);
@@ -159,28 +161,9 @@ bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-longstring CreateAMLAlertRequestOpFrame::makeTasksKey() {
-    return ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey();
-}
-
-bool CreateAMLAlertRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
-
-    if (mCreateAMLAlertRequest.allTasks)
-    {
-        allTasks = *mCreateAMLAlertRequest.allTasks.get();
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto key = makeTasksKey();
-
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return false;
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
+std::vector<longstring> CreateAMLAlertRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+    return std::vector<longstring> {
+        ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey(),
+    };
 }
 }

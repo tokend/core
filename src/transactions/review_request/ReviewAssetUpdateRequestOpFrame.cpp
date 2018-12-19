@@ -41,8 +41,17 @@ bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDel
 			"request id: " << request->getRequestID();
 		throw std::runtime_error("Received approval for update request not initiated by owner of asset.");
 	}
+
+	handleTasks(db, delta, request);
+
+	if (!request->canBeFulfilled(ledgerManager)){
+		innerResult().code(ReviewRequestResultCode::SUCCESS);
+		innerResult().success().fulfilled = false;
+		return true;
+	}
+
     bool wasBase = assetFrame->isPolicySet(AssetPolicy::BASE_ASSET);
-    
+
 	AssetEntry& assetEntry = assetFrame->getAsset();
 	assetEntry.details = assetUpdateRequest.details;
 	assetEntry.policies = assetUpdateRequest.policies;
@@ -55,6 +64,7 @@ bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDel
     
 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
+	innerResult().success().fulfilled = true;
 	return true;
 }
 

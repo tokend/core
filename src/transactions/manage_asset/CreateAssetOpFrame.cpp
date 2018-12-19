@@ -93,9 +93,9 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
 	bool autoreview = true;
     if (mManageAsset.requestID == 0) {
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks))
+        if (!loadTasks(storageHelper, allTasks, mManageAsset.request.createAssetCreationRequest().allTasks))
         {
-            innerResult().code(ManageAssetResultCode::ASSET_UPDATE_TASKS_NOT_FOUND);
+            innerResult().code(ManageAssetResultCode::ASSET_CREATE_TASKS_NOT_FOUND);
             return false;
         }
         request->setTasks(allTasks);
@@ -108,12 +108,11 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
 
     bool fulfilled = false;
     if (autoreview && getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode != ReviewRequestResultCode::SUCCESS) {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
             throw std::runtime_error("Failed to review create asset request");
         }
-        fulfilled = true;
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().code(ManageAssetResultCode::SUCCESS);
@@ -176,27 +175,9 @@ string CreateAssetOpFrame::getAssetCode() const
     return mAssetCreationRequest.code;
 }
 
-longstring CreateAssetOpFrame::makeTasksKey() {
-    return ManageKeyValueOpFrame::makeAssetCreateTasksKey();
-}
-
-bool CreateAssetOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) {
-    if (mManageAsset.request.createAssetCreationRequest().allTasks)
-    {
-        allTasks = *mManageAsset.request.createAssetCreationRequest().allTasks.get();
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto key = makeTasksKey();
-
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return false;
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
+vector<longstring> CreateAssetOpFrame::makeTasksKeyVector() {
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeAssetCreateTasksKey()
+    };
 }
 }

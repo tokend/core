@@ -24,8 +24,6 @@ class CreatePreIssuanceRequestOpFrame : public OperationFrame
                                               int32_t ledgerVersion) const override;
 
 	bool isSignatureValid(AssetFrame::pointer asset, LedgerVersion version);
-    bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks) override;
-
 
 public:
 
@@ -48,9 +46,6 @@ public:
 
 	static Hash getSignatureData(stellar::string64 const& reference, uint64_t const& amount, AssetCode const& assetCode);
 
-    longstring makeTasksKey() override;
-
-    longstring makeDefaultTasksKey() override;
-
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 };
 }

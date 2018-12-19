@@ -130,7 +130,7 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
 
 
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks))
+    if (!loadTasks(storageHelper, allTasks, mManageContractRequest.details.createContractRequest().allTasks))
     {
         innerResult().code(ManageContractRequestResultCode::CONTRACT_CREATE_TASKS_NOT_FOUND);
         return false;
@@ -142,11 +142,11 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
     bool fulfilled = false;
 
     if (allTasks == 0) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, *delta, request);
-
-        if (resultCode == ReviewRequestResultCode::SUCCESS) {
-            fulfilled = true;
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review manage contract request");
         }
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().success().details.action(ManageContractRequestAction::CREATE);
@@ -289,32 +289,12 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-bool
-ManageContractRequestOpFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks)
+std::vector<longstring>
+ManageContractRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
 {
-    if (mManageContractRequest.details.createContractRequest().allTasks)
-    {
-        allTasks = *mManageContractRequest.details.createContractRequest().allTasks.get();
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto key = makeTasksKey();
-
-    auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-    if (!keyValueFrame)
-    {
-        return false;
-    }
-
-    allTasks = keyValueFrame->mustGetUint32Value();
-    return true;
-}
-
-longstring
-ManageContractRequestOpFrame::makeTasksKey()
-{
-    return ManageKeyValueOpFrame::makeContractCreateTasksKey();
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeContractCreateTasksKey()
+    };
 }
 
 }

@@ -25,11 +25,9 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
-    BalanceFrame::pointer tryLoadBalance(Database& db, LedgerDelta& delta) const;
+    BalanceFrame::pointer tryLoadBalance(StorageHelper& storageHelper) const;
 
     bool isFeeMatches(AccountManager& accountManager, BalanceFrame::pointer balance) const;
-
-    bool isConvertedAmountMatches(BalanceFrame::pointer balance, Database& db);
 
     bool tryLockBalance(BalanceFrame::pointer balance);
 
@@ -50,7 +48,7 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
                   const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
 
     ReviewableRequestFrame::pointer
-    tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    tryCreateWithdrawalRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager,
                                BalanceFrame::pointer balanceFrame,
                                AssetFrame::pointer assetFrame);
 
@@ -71,8 +69,7 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-    longstring makeTasksKey() override;
-    longstring makeDefaultTasksKey() override;
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
     static CreateWithdrawalRequestResultCode getInnerCode(
         OperationResult const& res)

@@ -45,19 +45,18 @@ handleApprove(Application &app, LedgerDelta &delta,
     requestEntry.tasks.allTasks |= systemTasksToAdd;
 	requestEntry.tasks.pendingTasks |= systemTasksToAdd;
 
-	requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-	requestEntry.tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
-	requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-	requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
+    handleTasks(db, delta, request);
 
-	ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+    if (!request->canBeFulfilled(ledgerManager)){
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
 
 	if (!request->canBeFulfilled(ledgerManager))
 	{
 		innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
-        innerResult().success().extendedResult.fulfilled = false;
-		innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
+        innerResult().success().fulfilled = false;
 		return true;
 	}
 
@@ -113,8 +112,8 @@ handleApprove(Application &app, LedgerDelta &delta,
 
 	EntryHelperProvider::storeChangeEntry(delta, db, receiver->mEntry);
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
-    innerResult().success().extendedResult.fulfilled = true;
-	innerResult().success().extendedResult.typeExt.requestType(ReviewableRequestType::NONE);
+    innerResult().success().fulfilled = true;
+	innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
 	return true;
 }
 

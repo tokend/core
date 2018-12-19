@@ -51,8 +51,6 @@ namespace stellar {
 
         static void deleteAllAntesForSale(uint64_t saleID, LedgerDelta &delta, Database &db);
 
-        static bool isSaleStateValid(LedgerManager &lm, SaleState saleState);
-
         std::string getUpdateSaleDetailsRequestReference() const {
             const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_SALE_DETAILS,
                                                         mManageSaleOp.saleID));
@@ -67,8 +65,7 @@ namespace stellar {
             return xdr::xdr_traits<ManageSaleResultCode>::enum_name(innerResult().code());
         }
 
-        longstring makeTasksKey() override;
+        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
-        longstring makeDefaultTasksKey() override;
     };
 }

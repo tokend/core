@@ -60,15 +60,6 @@ ManageSaleTestHelper::createDataForAction(ManageSaleAction action,
     return data;
 }
 
-ManageSaleOp::_data_t
-ManageSaleTestHelper::setSaleState(SaleState saleState)
-{
-    ManageSaleOp::_data_t data;
-    data.action(ManageSaleAction::SET_STATE);
-    data.saleState() = saleState;
-    return data;
-}
-
 TransactionFramePtr
 ManageSaleTestHelper::createManageSaleTx(Account& source, uint64_t saleID,
                                          ManageSaleOp::_data_t data)
@@ -170,14 +161,6 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
         StateBeforeTxHelper stateBeforeTxHelper(stateBeforeOp[0]);
         CheckSaleStateHelper(mTestManager)
             .ensureCancel(saleID, stateBeforeTxHelper, saleAntesBeforeTx);
-        break;
-    }
-    case ManageSaleAction::SET_STATE:
-    {
-        REQUIRE(!!saleAfterOp);
-        auto currentState = saleAfterOp->getState();
-        auto expectedState = data.saleState();
-        REQUIRE(currentState == expectedState);
         break;
     }
     }

@@ -123,7 +123,7 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
     uint64_t xaauETHPrice = (xaauUSDPrice / ethUSDPrice) * ONE;
     auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
                                                             endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAssetBTC, xaauBTCPrice),
-                                                                                               saleRequestHelper.createSaleQuoteAsset(quoteAssetETH, xaauETHPrice) });
+                                                                                               saleRequestHelper.createSaleQuoteAsset(quoteAssetETH, xaauETHPrice)}, 0);
     saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
     auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
     REQUIRE(sales.size() == 1);
@@ -236,7 +236,7 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
                                                             endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAssetBTC, xaauBTCPrice),
                                                                                                saleRequestHelper.createSaleQuoteAsset(quoteAssetETH, xaauETHPrice) },
-                                                                                               &saleType, &maxIssuanceAmount, SaleState::PROMOTION);
+                                                                                               maxIssuanceAmount, saleType);
     auto saleCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
     assetReviewer.applyReviewRequestTx(root, assetResult.success().requestID,
                                            ReviewRequestOpAction::APPROVE, "");
@@ -249,11 +249,9 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     REQUIRE(sales.size() == 1);
     const auto saleID = sales[0]->getID();
 
-    auto saleStateData = manageSaleHelper.setSaleState(SaleState::NONE);
 
     SECTION("Happy path")
     {
-        manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
 
@@ -265,7 +263,6 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
         ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
         ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 2);
 
-        manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
 
@@ -354,8 +351,8 @@ TEST_CASE("Sale", "[tx][sale]")
     const auto requiredBaseAssetForHardCap = (hardCap / price) * ONE;
     auto basicSaleType = SaleType::BASIC_SALE;
     auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, quoteAsset, currentTime,
-        endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price) }, &basicSaleType,
-                                                            &requiredBaseAssetForHardCap);
+        endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price) },
+                                                            requiredBaseAssetForHardCap);
 
     uint32_t issuanceTasks = 0;
     SECTION("Create sale request")
@@ -545,7 +542,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-        auto saleID = result.success().extendedResult.typeExt.saleExtended().saleID;
+        auto saleID = result.success().typeExt.saleExtended().saleID;
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay, &feeToPay);
 
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
@@ -760,7 +757,7 @@ TEST_CASE("Sale", "[tx][sale]")
             saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, currentTime,
                                                               endTime, softCap, hardCap, "{}",
                                                               { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
-                                                              &basicSaleType, &requiredBaseAssetForHardCap);
+                                                              requiredBaseAssetForHardCap);
             auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
             saleReviewer.applyReviewRequestTx(root, requestCreationResult.success().requestID,
                                               ReviewRequestOpAction::APPROVE, "",
@@ -773,7 +770,7 @@ TEST_CASE("Sale", "[tx][sale]")
             saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, currentTime,
                                                               endTime, softCap, hardCap, "{}",
                                                               { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
-                                                              &basicSaleType, &requiredBaseAssetForHardCap);
+                                                              requiredBaseAssetForHardCap);
             auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
             saleReviewer.applyReviewRequestTx(root, requestCreationResult.success().requestID,
                                               ReviewRequestOpAction::APPROVE, "");
@@ -841,10 +838,10 @@ TEST_CASE("Sale", "[tx][sale]")
             auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTx(root, requestID,
                                                                              ReviewRequestOpAction::APPROVE, "");
             REQUIRE(reviewSaleRequestResult.success().ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-            REQUIRE(reviewSaleRequestResult.success().extendedResult.fulfilled);
-            REQUIRE(reviewSaleRequestResult.success().extendedResult.typeExt.requestType() ==
+            REQUIRE(reviewSaleRequestResult.success().fulfilled);
+            REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
                     ReviewableRequestType::SALE);
-            REQUIRE(reviewSaleRequestResult.success().extendedResult.typeExt.saleExtended().saleID != 0);
+            REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
         }
         SECTION("Max issuance or preissued amount is less then hard cap")
         {
@@ -859,7 +856,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
             // Create sale creation request with hardCap 1000 * ONE
             saleRequest = saleRequestHelper.createSaleRequest(asset, quoteAsset, currentTime, currentTime + 1000, softCap, hardCap, "{}",
-            { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)});
+            { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)}, 0);
             auto saleRequestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
             auto saleRequestID = saleRequestCreationResult.success().requestID;
 
@@ -924,7 +921,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         // Thief creates sale creation request
         auto thiefSaleRequest = SaleRequestHelper::createSaleRequest(asset, quoteAsset, currentTime, currentTime + 1000,
-                                                                     softCap, hardCap, "{}", {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)});
+                                                                     softCap, hardCap, "{}", {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)}, 0);
 
         auto thiefSaleRequestCreationResult = saleRequestHelper.applyCreateSaleRequest(thiefSyndicate, 0, thiefSaleRequest);
         auto thiefSaleRequestID = thiefSaleRequestCreationResult.success().requestID;
@@ -992,7 +989,7 @@ TEST_CASE("Sale", "[tx][sale]")
             uint64_t price = 2 * ONE;
             int64_t hardCap = bigDivide(maxIssuanceAmount, price, ONE, ROUND_UP);
             auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, startTime, endTime,
-                                                                   hardCap/2, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price) });
+                                                                   hardCap/2, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price) }, 0);
             saleRequestHelper.createApprovedSale(root, owner, saleRequest);
             auto sales = SaleHelper::Instance()->loadSalesForOwner(owner.key.getPublicKey(), db);
             uint64_t saleID = sales[0]->getID();

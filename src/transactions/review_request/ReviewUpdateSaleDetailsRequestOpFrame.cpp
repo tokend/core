@@ -23,6 +23,14 @@ namespace stellar {
 
         Database &db = ledgerManager.getDatabase();
 
+        handleTasks(db, delta, request);
+
+        if (!request->canBeFulfilled(ledgerManager)){
+            innerResult().code(ReviewRequestResultCode::SUCCESS);
+            innerResult().success().fulfilled = false;
+            return true;
+        }
+
         auto &updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
 
         auto saleFrame = SaleHelper::Instance()->loadSale(updateSaleDetailsRequest.saleID, db, &delta);
@@ -38,6 +46,7 @@ namespace stellar {
         EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
         innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = true;
         return true;
     }
 }
