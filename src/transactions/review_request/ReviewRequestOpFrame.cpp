@@ -226,8 +226,9 @@ uint64_t ReviewRequestOpFrame::getTotalFee(uint64_t requestID, Fee fee)
 
 bool ReviewRequestOpFrame::removingNotSetTasks(ReviewableRequestEntry &requestEntry) {
 	bool emptyTasksToRemove = mReviewRequest.reviewDetails.tasksToRemove == 0;
+	bool removingTasksPresent = ~requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove;
 
-	return !emptyTasksToRemove && (requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove);
+	return !emptyTasksToRemove && removingTasksPresent;
 }
 
 void ReviewRequestOpFrame::handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request)
