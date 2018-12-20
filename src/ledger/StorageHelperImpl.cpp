@@ -13,6 +13,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
     : mDatabase(db)
     , mLedgerDelta(ledgerDelta)
     , mTransaction(nullptr)
+    , mIsReleased(true)
 {
 }
 
@@ -55,10 +56,8 @@ void
 StorageHelperImpl::begin()
 {
     mIsReleased = false;
-    if (!mTransaction)
-    {
-        mTransaction = std::make_unique<soci::transaction>(soci::transaction(mDatabase.getSession()));
-    }
+    mTransaction.reset();
+    mTransaction = std::make_unique<soci::transaction>(mDatabase.getSession());
 }
 
 void
@@ -76,6 +75,7 @@ StorageHelperImpl::commit()
     {
         mTransaction->commit();
         mTransaction = nullptr;
+        mIsReleased = true;
     }
 }
 void
@@ -93,16 +93,16 @@ StorageHelperImpl::rollback()
     {
         mTransaction->rollback();
         mTransaction = nullptr;
+        mIsReleased = true;
     }
 }
 void
 StorageHelperImpl::release()
 {
-    mIsReleased = true;
-    if (mTransaction)
-    {
-        mTransaction->rollback();
-        mTransaction = nullptr;
+    if (!mIsReleased) {
+            mIsReleased = true;
+            mTransaction->rollback();
+            mTransaction = nullptr;
     }
 }
 
