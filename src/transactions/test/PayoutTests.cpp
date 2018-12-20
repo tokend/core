@@ -66,6 +66,8 @@ TEST_CASE("payout", "[tx][payout]") {
 
     auto root = Account{getRoot(), Salt(0)};
 
+    uint32_t zeroTasks = 0;
+
     // create asset owner
     auto owner = Account{SecretKey::random(), Salt(0)};
     auto ownerID = owner.key.getPublicKey();
@@ -81,7 +83,7 @@ TEST_CASE("payout", "[tx][payout]") {
     auto assetCreationRequest =
             manageAssetTestHelper.createAssetCreationRequest(assetCode,
                  preIssuedSigner.getPublicKey(), "{}", maxIssuanceAmount,
-                 transferableAssetPolicy, preIssuedAmount);
+                 transferableAssetPolicy, &zeroTasks, preIssuedAmount);
     auto manageAssetResult = manageAssetTestHelper.applyManageAssetTx(owner, 0, assetCreationRequest);
     reviewAssetRequestHelper.applyReviewRequestTx(root, manageAssetResult.success().requestID,
                                                   ReviewRequestOpAction::APPROVE, "");

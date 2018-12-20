@@ -201,7 +201,7 @@ namespace txtest
 		auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
 														 ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
 														 : 0;
-		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, trailingDigitsCount);
+		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount);
 		authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
 	}
 

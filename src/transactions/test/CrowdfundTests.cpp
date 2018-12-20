@@ -39,6 +39,8 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
 
     auto root = Account{ getRoot(), Salt(0) };
 
+    uint32_t zeroTasks = 0;
+
     const AssetCode defaultQuoteAsset = "USD";
     auto assetTestHelper = ManageAssetTestHelper(testManager);
     auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(defaultQuoteAsset, root.key.getPublicKey(), "{}", INT64_MAX,
@@ -69,7 +71,9 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     const uint64_t maxIssuanceAmount = 2000 * ONE;
     const auto preIssuedAmount = maxIssuanceAmount;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount,0, preIssuedAmount);
+                                                                      maxIssuanceAmount,0,
+                                                                      &zeroTasks,
+                                                                      preIssuedAmount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const auto hardCap = 10000 * ONE;
     const uint64_t softCap = hardCap / 2;

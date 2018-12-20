@@ -159,8 +159,10 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     std::string details,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
+    uint32_t* allTasks,
     uint64_t initialPreissuanceAmount,
-    uint32_t trailingDigitsCount)
+    uint32_t trailingDigitsCount
+    )
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
@@ -176,13 +178,17 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
         assetCreationRequest.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
         assetCreationRequest.ext.trailingDigitsCount() = trailingDigitsCount;
     }
+    if (allTasks){
+        request.createAssetCreationRequest().allTasks.activate() = *allTasks;
+    }
     return request;
 }
 
 ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     AssetCode code,
     std::string details,
-    uint32_t policies
+    uint32_t policies,
+    uint32_t *allTasks
 )
 {
     ManageAssetOp::_request_t request;
@@ -191,6 +197,9 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     assetUpdateRequest.code = code;
     assetUpdateRequest.details = details;
     assetUpdateRequest.policies = policies;
+    if (allTasks){
+        request.createAssetUpdateRequest().allTasks.activate() = *allTasks;
+    }
     return request;
 }
 
@@ -224,7 +233,9 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         SecretKey& preIssuedSigner,
                                         AssetCode assetCode, Account& root,
                                         uint32_t policies,
-                                        uint32_t trailingDigitsCount)
+                                        uint32_t* allTasks,
+                                        uint32_t trailingDigitsCount
+                                        )
 {
     const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
             AssetFrame::getMinimumAmountFromTrailingDigits(trailingDigitsCount));
@@ -232,7 +243,7 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                                       preIssuedSigner.
                                                       getPublicKey(),
                                                       "{}", maxIssuanceAmount,
-                                                      policies, 0);
+                                                      policies, allTasks, 0);
     if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
     {
         creationRequest.createAssetCreationRequest().createAsset.ext.v(

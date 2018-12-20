@@ -66,7 +66,7 @@ public:
         ReviewRequestOpAction action, std::string rejectReason) override;
     TransactionFramePtr createReviewRequestTxWithTasks(Account& source,
         uint64_t requestID, Hash requestHash, ReviewableRequestType requestType,
-        ReviewRequestOpAction action, std::string rejectReason, uint32_t *tasksToAdd, uint32_t *tasksToRemove);
+        ReviewRequestOpAction action, std::string rejectReason, uint32_t *tasksToAdd, uint32_t *tasksToRemove) override;
 };
 }
 }

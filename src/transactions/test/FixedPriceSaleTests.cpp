@@ -56,7 +56,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     const AssetCode defaultQuoteAsset = "USD";
     auto assetTestHelper = ManageAssetTestHelper(testManager);
     auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(defaultQuoteAsset, root.key.getPublicKey(), "{}", INT64_MAX,
-                                                                           uint32_t(AssetPolicy::BASE_ASSET), INT64_MAX);
+                                                                           uint32_t(AssetPolicy::BASE_ASSET), nullptr, INT64_MAX);
     assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
@@ -78,7 +78,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     const uint64_t preIssuedAmount = maxIssuanceAmount;
     const uint64_t hardCapInBase = 100 * ONE;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount,0, preIssuedAmount);
+                                                                      maxIssuanceAmount,0, nullptr, preIssuedAmount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
 
     SaleType crowdfund = SaleType::CROWD_FUNDING;
@@ -232,7 +232,7 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
     const uint64_t maxIssuanceAmount = 20000 * ONE;
     const auto preIssuedAmount = maxIssuanceAmount/2;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount,0, preIssuedAmount);
+                                                                      maxIssuanceAmount,0, nullptr, preIssuedAmount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const uint64_t hardCap = 1000 * ONE;
     const uint64_t softCap = hardCap / 4;

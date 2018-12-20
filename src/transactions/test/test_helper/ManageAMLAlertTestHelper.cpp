@@ -14,11 +14,14 @@ namespace txtest
     }
 
 TransactionFramePtr ManageAMLAlertTestHelper::createAmlAlertTx(Account& source, const BalanceID balance, const uint64 amount,
-    std::string reason, std::string reference)
+    std::string reason, std::string reference, uint32_t* allTasks)
 {
     Operation op;
     op.body.type(OperationType::CREATE_AML_ALERT);
     op.body.createAMLAlertRequestOp().reference = reference;
+    if (allTasks){
+        op.body.createAMLAlertRequestOp().allTasks.activate() = *allTasks;
+    }
     auto& request = op.body.createAMLAlertRequestOp().amlAlertRequest;
     request.amount = amount;
     request.balanceID = balance;
@@ -28,9 +31,10 @@ TransactionFramePtr ManageAMLAlertTestHelper::createAmlAlertTx(Account& source, 
 
 CreateAMLAlertRequestResult ManageAMLAlertTestHelper::applyCreateAmlAlert(
     Account& source, const BalanceID balance, uint64 amount, const std::string reason, const std::string reference,
+    uint32_t *allTasks,
     CreateAMLAlertRequestResultCode expectedResultCode)
 {
-    auto tx = createAmlAlertTx(source, balance, amount, reason, reference);
+    auto tx = createAmlAlertTx(source, balance, amount, reason, reference, allTasks);
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOps;
     mTestManager->applyCheck(tx, stateBeforeOps);
     auto txResult = tx->getResult();
@@ -50,7 +54,10 @@ CreateAMLAlertRequestResult ManageAMLAlertTestHelper::applyCreateAmlAlert(
     auto balanceBeforeTx = stateHelper.getBalance(balance);
     auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(balance, mTestManager->getDB());
     REQUIRE(balanceBeforeTx->getAmount() == balanceAfterTx->getAmount() + amount);
-    REQUIRE(balanceBeforeTx->getLocked() == balanceAfterTx->getLocked() - amount);
+    if (!amlAlertResult.success().fulfilled)
+    {
+        REQUIRE(balanceBeforeTx->getLocked() == balanceAfterTx->getLocked() - amount);
+    }
     return amlAlertResult;
 }
 }

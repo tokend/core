@@ -56,6 +56,8 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
 
     auto root = Account{ getRoot(), Salt(0) };
 
+    uint32_t zeroTasks = 0;
+
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
     manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
@@ -110,7 +112,9 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
     const uint64_t maxIssuanceAmount = 2000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount, 0, preIssuedAmount);
+                                                                      maxIssuanceAmount, 0,
+                                                                      &zeroTasks,
+                                                                      preIssuedAmount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
 
     uint64_t hardCap = 100000000 * ONE;
@@ -229,8 +233,9 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     bigDivide(xaauBTCPrice, xaauUSDPrice, ONE, btcUSDPrice, ROUND_UP);
     bigDivide(xaauETHPrice, xaauUSDPrice, ONE, ethUSDPrice, ROUND_UP);
 
+    uint32_t zeroTasks = 0;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount, 0, preIssuedAmount);
+                                                                      maxIssuanceAmount, 0, &zeroTasks, preIssuedAmount);
     auto assetResult = assetTestHelper.applyManageAssetTx(syndicate, 0, assetCreationRequest);
     auto saleType = SaleType::FIXED_PRICE;
     auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
@@ -299,6 +304,8 @@ TEST_CASE("Sale", "[tx][sale]")
     const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);
     const uint64_t maxNonDividedAmount = INT64_MAX - (INT64_MAX % precision);
 
+    uint32_t zeroTasks = 0;
+
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
     manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
@@ -341,7 +348,7 @@ TEST_CASE("Sale", "[tx][sale]")
     const uint64_t maxIssuanceAmount = 6000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount, 0, preIssuedAmount, testSet.trailingDigitsCount);
+                                                                      maxIssuanceAmount, 0, &zeroTasks, preIssuedAmount, testSet.trailingDigitsCount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const uint64_t price = 2 * ONE;
     auto hardCap = static_cast<const uint64_t>(bigDivide(preIssuedAmount / 2, price, ONE, ROUND_DOWN));
@@ -850,6 +857,7 @@ TEST_CASE("Sale", "[tx][sale]")
             // Create asset creation request with max issuance 2000 * ONE
             assetCreationRequest = assetTestHelper.createAssetCreationRequest(asset, syndicatePubKey, "{}",
                                                                               maxIssuanceAmount, 0,
+                                                                              &zeroTasks,
                                                                               preIssuedAmount);
             auto assetRequestCreationResult = assetTestHelper.applyManageAssetTx(syndicate, 0, assetCreationRequest);
             auto assetRequestID = assetRequestCreationResult.success().requestID;
@@ -908,6 +916,7 @@ TEST_CASE("Sale", "[tx][sale]")
         // Owner creates asset creation request
         assetCreationRequest = assetTestHelper.createAssetCreationRequest(asset, ownerSyndicatePubKey, "{}",
                                                                           assetMaxIssuanceAmount,0,
+                                                                          &zeroTasks,
                                                                           assetPreIssuedAmount);
         auto ownerRequestCreationResult = assetTestHelper.applyManageAssetTx(ownerSyndicate, 0, assetCreationRequest);
         auto ownerAssetRequestID = ownerRequestCreationResult.success().requestID;
@@ -915,6 +924,7 @@ TEST_CASE("Sale", "[tx][sale]")
         // Thief creates asset creation request
         assetCreationRequest = assetTestHelper.createAssetCreationRequest(asset, thiefSyndicatePubKey, "{}",
                                                                           assetMaxIssuanceAmount,0,
+                                                                          &zeroTasks,
                                                                           assetPreIssuedAmount);
         auto thiefRequestCreationResult = assetTestHelper.applyManageAssetTx(thiefSyndicate, 0, assetCreationRequest);
         auto thiefAssetRequestID = thiefRequestCreationResult.success().requestID;
@@ -963,7 +973,9 @@ TEST_CASE("Sale", "[tx][sale]")
         uint64_t maxIssuanceAmount = 10 * ONE;
         uint32 requiresKYCPolicy = static_cast<uint32>(AssetPolicy::REQUIRES_KYC);
         auto baseAssetRequest = assetTestHelper.createAssetCreationRequest(baseAsset, owner.key.getPublicKey(), "{}",
-                                                                           maxIssuanceAmount, requiresKYCPolicy, maxIssuanceAmount);
+                                                                           maxIssuanceAmount, requiresKYCPolicy,
+                                                                           &zeroTasks,
+                                                                           maxIssuanceAmount);
         assetTestHelper.createApproveRequest(root, owner, baseAssetRequest);
 
         // create participant

@@ -542,8 +542,9 @@ HistoryTests::catchupApplication(uint32_t initLedger,
 void HistoryTests::createBaseAsset(TxSetFramePtr txSet)
 {
     auto basePolicy = static_cast<uint32_t>(AssetPolicy::BASE_ASSET);
+    uint32_t allTasks = 0;
     auto assetCreationRequest = mAssetHelper.createAssetCreationRequest(mBaseAsset, mRoot.key.getPublicKey(), "{}",
-                                                                        UINT64_MAX, basePolicy, UINT64_MAX - 1);
+                                                                        UINT64_MAX, basePolicy, &allTasks, UINT64_MAX - 1);
     txSet->add(mAssetHelper.createManageAssetTx(mRoot, 0, assetCreationRequest));
 }
 

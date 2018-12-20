@@ -44,6 +44,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
 
     auto feeHelper = FeeHelper::Instance();
 
+    uint32_t zeroTasks = 0;
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
     ManageAssetTestHelper manageAssetTestHelper(testManager);
@@ -54,6 +55,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
     auto assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(assetCode, master.key.getPublicKey(),
                                                                                  "{}", UINT64_MAX,
                                                                                  uint32_t(AssetPolicy::BASE_ASSET),
+                                                                                 &zeroTasks,
                                                                                  1000000);
     manageAssetTestHelper.applyManageAssetTx(master, 0, assetCreationRequest);
 
@@ -192,6 +194,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(usdt, master.key.getPublicKey(),
                                                                                 "{}", UINT64_MAX,
                                                                                 uint32_t(AssetPolicy::BASE_ASSET),
+                                                                                &zeroTasks,
                                                                                 1000000);
         manageAssetTestHelper.applyManageAssetTx(master, 0, assetCreationRequest);
 
