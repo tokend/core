@@ -226,7 +226,7 @@ uint64_t ReviewRequestOpFrame::getTotalFee(uint64_t requestID, Fee fee)
 
 bool ReviewRequestOpFrame::removingNotSetTasks(ReviewableRequestEntry &requestEntry) {
 	bool emptyTasksToRemove = mReviewRequest.reviewDetails.tasksToRemove == 0;
-	bool removingTasksPresent = ~requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove;
+	bool removingTasksPresent = (~requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove) != 0;
 
 	return !emptyTasksToRemove && removingTasksPresent;
 }
