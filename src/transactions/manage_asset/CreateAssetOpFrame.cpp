@@ -175,7 +175,7 @@ string CreateAssetOpFrame::getAssetCode() const
     return mAssetCreationRequest.code;
 }
 
-vector<longstring> CreateAssetOpFrame::makeTasksKeyVector() {
+vector<longstring> CreateAssetOpFrame::makeTasksKeyVector(StorageHelper& storageHelper) {
     return std::vector<longstring>{
         ManageKeyValueOpFrame::makeAssetCreateTasksKey()
     };

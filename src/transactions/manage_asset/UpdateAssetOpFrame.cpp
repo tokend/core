@@ -151,7 +151,7 @@ string UpdateAssetOpFrame::getAssetCode() const
     return mAssetUpdateRequest.code;
 }
 
-vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector() {
+vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector(StorageHelper& storageHelper) {
     return std::vector<longstring>{
         ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
     };

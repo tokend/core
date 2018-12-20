@@ -31,7 +31,7 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-	std::vector<longstring> makeTasksKeyVector();
+	std::vector<longstring> makeTasksKeyVector(StorageHelper& storageHelper) override;
 
 protected:
     std::string getAssetCode() const override;
