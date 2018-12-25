@@ -39,6 +39,25 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
     auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     auto manageKVHelper = ManageKeyValueTestHelper(testManager);
 
+    //default tasks
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetCreate = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetCreate)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdate = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdate)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring issuanceKey = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(issuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring withdrawKey = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+    manageKeyValueHelper.setKey(withdrawKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+
     // create asset and make it withdrawable
     const AssetCode asset = "USD";
     const uint64_t preIssuedAmount = 10000 * ONE;

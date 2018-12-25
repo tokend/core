@@ -11,6 +11,8 @@ namespace stellar
 {
 class DeleteSaleParticipationOpFrame : public DeleteOfferOpFrame
 {
+
+    bool mCheckSaleState;
 public:
 
     DeleteSaleParticipationOpFrame(Operation const& op, OperationResult& res,
@@ -23,6 +25,8 @@ public:
 
     static void deleteSaleParticipation(Application& app, LedgerDelta& delta,
         LedgerManager& ledgerManager, OfferFrame::pointer offer, TransactionFrame& parentTx);
+
+    void doNotCheckSaleState();
 
     BalanceID getQuoteBalanceID(OfferFrame::pointer offer, LedgerManager& lm);
 };

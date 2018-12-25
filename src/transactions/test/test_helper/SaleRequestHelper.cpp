@@ -21,8 +21,20 @@ ReviewRequestResult SaleRequestHelper::createApprovedSale(Account& root, Account
                                            const SaleCreationRequest request)
 {
     auto requestCreationResult = applyCreateSaleRequest(source, 0, request);
+    if (requestCreationResult.code() == CreateSaleCreationRequestResultCode::SUCCESS
+        && requestCreationResult.success().fulfilled)
+    {
+        auto result = ReviewRequestResult{};
+        result.code(ReviewRequestResultCode::SUCCESS);
+        result.success().fulfilled = true;
+        result.success().typeExt.requestType(ReviewableRequestType::SALE);
+        result.success().typeExt.saleExtended().saleID = *requestCreationResult.success().saleID;
+        return result;
+    }
+
     auto reviewer = ReviewSaleRequestHelper(mTestManager);
     return reviewer.applyReviewRequestTx(root, requestCreationResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
+
 }
 
 SaleCreationRequestQuoteAsset SaleRequestHelper::createSaleQuoteAsset(AssetCode asset,
@@ -34,15 +46,15 @@ SaleCreationRequestQuoteAsset SaleRequestHelper::createSaleQuoteAsset(AssetCode 
     return result;
 }
 
-CreateSaleCreationRequestResult SaleRequestHelper::applyCreateSaleRequest(
-    Account& source, const uint64_t requestID, const SaleCreationRequest request,
-    CreateSaleCreationRequestResultCode expectedResult)
+CreateSaleCreationRequestResult
+SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t requestID, const SaleCreationRequest request,
+                                          uint32_t *allTasks, CreateSaleCreationRequestResultCode expectedResult)
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
 
 
-    auto txFrame = createSaleRequestTx(source, requestID, request);
+    auto txFrame = createSaleRequestTx(source, requestID, request, allTasks);
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
@@ -55,14 +67,6 @@ CreateSaleCreationRequestResult SaleRequestHelper::applyCreateSaleRequest(
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
         return CreateSaleCreationRequestResult{};
     }
-
-//    if (requestID == 0)
-//    {
-//        REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
-//    } else
-//    {
-        REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
-//    }
 
     return opResult.tr().createSaleCreationRequestResult();
 }
@@ -97,16 +101,15 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
     return opResult.tr().cancelSaleCreationRequestResult();
 }
 
-SaleCreationRequest SaleRequestHelper::createSaleRequest(AssetCode base,
-    AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
-    const uint64_t softCap, const uint64_t hardCap, std::string details,
-    std::vector<SaleCreationRequestQuoteAsset> quoteAssets,
-    uint64_t requiredBaseAssetForHardCap,
-    SaleType saleType)
+SaleCreationRequest
+SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
+                                     const uint64_t softCap, const uint64_t hardCap, std::string details,
+                                     std::vector<SaleCreationRequestQuoteAsset> quoteAssets, uint64_t requiredBaseAssetForHardCap,
+                                     SaleType saleType)
 {
     SaleCreationRequest request;
     request.baseAsset = base;
-     request.defaultQuoteAsset = defaultQuoteAsset;
+    request.defaultQuoteAsset = defaultQuoteAsset;
     request.startTime = startTime;
     request.endTime = endTime;
     request.quoteAssets.clear();
@@ -121,12 +124,15 @@ SaleCreationRequest SaleRequestHelper::createSaleRequest(AssetCode base,
 }
 
 TransactionFramePtr SaleRequestHelper::createSaleRequestTx(Account& source, const uint64_t requestID,
-                                                           const SaleCreationRequest request)
+                                                           const SaleCreationRequest request,
+                                                           uint32_t* allTasks)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_SALE_REQUEST);
     auto& op = baseOp.body.createSaleCreationRequestOp();
     op.request = request;
+    if (allTasks)
+        op.allTasks.activate() = *allTasks;
     op.requestID = requestID;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);

@@ -121,7 +121,7 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t req
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.reviewDetails.tasksToAdd = 0;
-    reviewRequestOp.reviewDetails.tasksToRemove = action == ReviewRequestOpAction::APPROVE ? 8 : 0;
+    reviewRequestOp.reviewDetails.tasksToRemove = 0;
     reviewRequestOp.reviewDetails.externalDetails = "{}";
     reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 
@@ -136,6 +136,22 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t req
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);
 }
 
+    ReviewRequestResult
+    ReviewIssuanceRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                               ReviewableRequestType requestType,
+                                                               ReviewRequestOpAction action, std::string rejectReason,
+                                                               ReviewRequestResultCode expectedResult,
+                                                               uint32_t *tasksToAdd, uint32_t *tasksToRemove) {
+        auto checker = ReviewIssuanceChecker(mTestManager, requestID);
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                                  requestHash, requestType,
+                                                                  action, rejectReason,
+                                                                  expectedResult,
+                                                                  checker,
+                                                                  tasksToAdd,
+                                                                  tasksToRemove
+        );
+    }
 
 }
 

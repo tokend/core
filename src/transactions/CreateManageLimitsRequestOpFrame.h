@@ -30,7 +30,7 @@ public:
 
     CreateManageLimitsRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool createManageLimitsRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager);
+    bool createManageLimitsRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 
     bool updateManageLimitsRequest(Application &app, StorageHelper &storageHelper, LedgerManager &lm);
 

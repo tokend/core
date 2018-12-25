@@ -92,15 +92,14 @@ enum databaseSchemaVersion : unsigned long {
     KEY_VALUE_FIX_MIGRATION = 12,
     EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 13,
     ADD_SALE_ANTE = 14,
-    ADD_SALE_STATE = 15,
-    ADD_LIMITS_V2 = 16,
-    ADD_REVIEWABLE_REQUEST_TASKS = 17,
-    ADD_CONTRACTS = 18,
-    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 19,
-    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 20,
-    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 21,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 22,
-    ADD_ASSET_CUSTOM_PRECISION = 23
+    ADD_LIMITS_V2 = 15,
+    ADD_REVIEWABLE_REQUEST_TASKS = 16,
+    ADD_CONTRACTS = 17,
+    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 18,
+    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 19,
+    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 20,
+    ADD_ACCOUNT_ROLES_AND_POLICIES = 21,
+    ADD_ASSET_CUSTOM_PRECISION = 22
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
@@ -196,9 +195,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_SALE_ANTE:
             SaleAnteHelper::Instance()->dropAll(*this);
-            break;
-        case databaseSchemaVersion::ADD_SALE_STATE:
-            SaleHelper::Instance()->addState(*this);
             break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
             LimitsV2Helper::Instance()->dropAll(*this);

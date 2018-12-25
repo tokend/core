@@ -110,6 +110,32 @@ bool CreateSaleParticipationOpFrame::doCheckValid(Application& app)
     return CreateOfferOpFrame::doCheckValid(app);
 }
 
+bool CreateSaleParticipationOpFrame::isSaleActive(Database& db, LedgerManager& ledgerManager, const SaleFrame::pointer sale)
+{
+    const auto saleState = getSaleState(sale, db, ledgerManager.getCloseTime());
+    switch (saleState)
+    {
+    case SaleFrame::State::ACTIVE:
+        return true;
+        // just fall through
+    case SaleFrame::State::NOT_STARTED_YET:
+    {
+        innerResult().code(ManageOfferResultCode::SALE_IS_NOT_STARTED_YET);
+        return false;
+    }
+    case SaleFrame::State::ENDED:
+    {
+        innerResult().code(ManageOfferResultCode::SALE_ALREADY_ENDED);
+        return false;
+    }
+    default:
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) <<
+            "Unexpected state of the sale: " << static_cast<int32_t>(saleState);
+        throw runtime_error("Unexpected state of the sale");
+    }
+    }
+}
 
 bool
 CreateSaleParticipationOpFrame::tryCreateSaleAnte(Database &db, LedgerDelta &delta, LedgerManager &ledgerManager,
@@ -210,6 +236,11 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
+    if (!isSaleActive(db, ledgerManager, sale))
+    {
+        return false;
+    }
+
     if (!sale->tryLockBaseAsset(mManageOffer.amount))
     {
         innerResult().code(ManageOfferResultCode::ORDER_VIOLATES_HARD_CAP);
@@ -304,6 +335,28 @@ bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer 
     }
 
     return true;
+}
+
+SaleFrame::State CreateSaleParticipationOpFrame::getSaleState(const SaleFrame::pointer sale, Database& db, const uint64_t currentTime)
+{
+    uint64_t currentCap = 0;
+    if (!getSaleCurrentCap(sale, db, currentCap))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate current cap for sale: " << sale->getID();
+        throw runtime_error("Failed to calculate current cap for sale");
+    }
+
+    if (currentCap >= sale->getHardCap() || sale->getEndTime() <= currentTime)
+    {
+        return SaleFrame::State::ENDED;
+    }
+
+    if (sale->getStartTime() > currentTime)
+    {
+        return SaleFrame::State::NOT_STARTED_YET;
+    }
+
+    return SaleFrame::State::ACTIVE;
 }
 
 bool CreateSaleParticipationOpFrame::tryAddSaleCap(Database& db, uint64_t const& amount,

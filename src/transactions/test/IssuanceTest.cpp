@@ -147,6 +147,17 @@ void createPreIssuanceRequestHardPath(TestManager::pointer testManager, Account 
     IssuanceRequestHelper issuanceRequestHelper(testManager);
     CreateAccountTestHelper createAccountTestHelper(testManager);
 
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
     //create one base asset
     AssetCode assetCode = "UAH";
     uint64_t maxIssuanceAmount = UINT64_MAX/2;
@@ -159,7 +170,6 @@ void createPreIssuanceRequestHardPath(TestManager::pointer testManager, Account 
     uint64 amount = 10000;
     std::string reference = SecretKey::random().getStrKeyPublic();
 
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey(assetCode);
     manageKeyValueHelper.setKey(key)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
@@ -281,6 +291,18 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
     IssuanceRequestHelper issuanceRequestHelper = IssuanceRequestHelper(testManager);
     CreateAccountTestHelper createAccountTestHelper(testManager);
 
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
     uint32_t issuanceTasks = 0;
 
     //create one base asset
@@ -318,7 +340,6 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
                                                          CreateIssuanceRequestResultCode::ISSUANCE_TASKS_NOT_FOUND);
     }
 
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey(assetCode);
     manageKeyValueHelper.setKey(key)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
@@ -459,7 +480,20 @@ TEST_CASE("Issuance", "[tx][issuance]")
 	auto testManager = TestManager::make(app);
 	TestManager::upgradeToCurrentLedgerVersion(app);
 
-	auto root = Account{ getRoot(), Salt(0) };
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+
+    auto root = Account{ getRoot(), Salt(0) };
 	SECTION("Root happy path")
 	{
 		createIssuanceRequestHappyPath(testManager, root, root);

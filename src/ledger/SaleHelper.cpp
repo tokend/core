@@ -15,7 +15,7 @@ using xdr::operator<;
 
 const char* selectorSale =
     "SELECT id, owner_id, base_asset, default_quote_asset, start_time, "
-    "end_time, soft_cap, hard_cap, details, base_balance, version, lastmodified, current_cap_in_base, hard_cap_in_base, sale_type, state FROM sale";
+    "end_time, soft_cap, hard_cap, details, base_balance, version, lastmodified, current_cap_in_base, hard_cap_in_base, sale_type FROM sale";
 
 void SaleHelper::dropAll(Database& db)
 {
@@ -45,11 +45,6 @@ void SaleHelper::dropAll(Database& db)
 void SaleHelper::addType(Database& db)
 {
     db.getSession() << "ALTER TABLE sale ADD COLUMN sale_type INT NOT NULL DEFAULT 0";
-}
-
-void SaleHelper::addState(Database & db)
-{
-    db.getSession() << "ALTER TABLE sale ADD column state INT NOT NULL DEFAULT 0";
 }
 
 void SaleHelper::storeAdd(LedgerDelta& delta, Database& db,
@@ -176,17 +171,17 @@ void SaleHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     {
         sql =
             "INSERT INTO sale (id, owner_id, base_asset, default_quote_asset, start_time,"
-            " end_time, soft_cap, hard_cap, details, version, lastmodified, base_balance, current_cap_in_base, hard_cap_in_base, sale_type, state)"
+            " end_time, soft_cap, hard_cap, details, version, lastmodified, base_balance, current_cap_in_base, hard_cap_in_base, sale_type)"
             " VALUES (:id, :owner_id, :base_asset, :default_quote_asset, :start_time,"
-            " :end_time, :soft_cap, :hard_cap, :details, :v, :lm, :base_balance, :current_cap_in_base, :hard_cap_in_base, :sale_type, :state)";
+            " :end_time, :soft_cap, :hard_cap, :details, :v, :lm, :base_balance, :current_cap_in_base, :hard_cap_in_base, :sale_type)";
     }
     else
     {
         sql =
             "UPDATE sale SET owner_id=:owner_id, base_asset = :base_asset, default_quote_asset = :default_quote_asset, start_time = :start_time,"
             " end_time= :end_time, soft_cap = :soft_cap, hard_cap = :hard_cap, details = :details, version=:v, lastmodified=:lm, "
-            " base_balance = :base_balance, current_cap_in_base = :current_cap_in_base, hard_cap_in_base = :hard_cap_in_base, sale_type = :sale_type, "
-            " state = :state WHERE id = :id";
+            " base_balance = :base_balance, current_cap_in_base = :current_cap_in_base, hard_cap_in_base = :hard_cap_in_base, sale_type = :sale_type "
+            " WHERE id = :id";
     }
 
     auto prep = db.getPreparedStatement(sql);
@@ -263,8 +258,6 @@ void SaleHelper::loadSales(Database& db, StatementContext& prep,
         st.exchange(into(oe.maxAmountToBeSold));
         int rawSaleType = 0;
         st.exchange(into(rawSaleType));
-        int rawSaleState = 0;
-        st.exchange(into(rawSaleState));
 
         st.define_and_bind();
         st.execute(true);

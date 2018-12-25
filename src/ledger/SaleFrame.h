@@ -32,6 +32,14 @@ class SaleFrame : public EntryFrame
     static const SaleType DEFAULT_SALE_TYPE = SaleType(0);
 
   public:
+    enum class State : int32_t
+    {
+        ACTIVE = 1,
+        NOT_STARTED_YET = 2,
+        ENDED = 3,
+    };
+
+
     typedef std::shared_ptr<SaleFrame> pointer;
 
     SaleFrame();
@@ -89,6 +97,10 @@ class SaleFrame : public EntryFrame
 
     static void setSaleType(SaleEntry& sale, SaleType saleType);
 
+
     void normalize();
+
+    State getState(int64_t currentTime);
+
 };
 }

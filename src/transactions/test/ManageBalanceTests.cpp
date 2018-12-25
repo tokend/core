@@ -35,6 +35,8 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
 
     auto root = Account{getRoot(), Salt(0)};
 
+    uint32_t zeroTasks = 0;
+
     auto balanceHelper = BalanceHelperLegacy::Instance();
     ManageBalanceTestHelper manageBalanceTestHelper(testManager);
 
@@ -53,7 +55,7 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
 
     auto manageAssetHelper = ManageAssetTestHelper(testManager);
     auto preissuedSigner = SecretKey::random();
-    manageAssetHelper.createAsset(root, preissuedSigner, asset, root, 1);
+    manageAssetHelper.createAsset(root, preissuedSigner, asset, root, 1, &zeroTasks);
 
     SECTION("Can create for account by himself")
     {

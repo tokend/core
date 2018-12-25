@@ -43,6 +43,24 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     ManageLimitsTestHelper manageLimitsTestHelper(testManager);
+
+    //Default tasks
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
+    longstring assetCreate = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetCreate)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdate = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdate)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring issuanceKey = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(issuanceKey)->setUi32Value(0);
+
     // create asset and make it withdrawable
     const AssetCode asset = "USD";
     const uint64_t preIssuedAmount = 10000 * ONE;
@@ -82,11 +100,6 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
 
     // create asset to withdraw to
     const AssetCode withdrawDestAsset = "BTC";
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
-    manageKeyValueHelper.setKey(key)->setUi32Value(0);
-    manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
-
     assetHelper.createAsset(root, root.key, withdrawDestAsset, root, 0);
     const uint64_t price = 2000 * ONE;
     assetPairHelper.createAssetPair(root, withdrawDestAsset, asset, price);
@@ -105,7 +118,7 @@ TEST_CASE("Withdraw with tasks", "[tx][withdraw][tasks]")
                                                                            amountToWithdraw,
                                                                            zeroFee, "{}");
 
-        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
+        auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest);
 
         auto reviewResult = reviewWithdrawHelper.applyReviewRequestTx(root, withdrawResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
 
@@ -175,6 +188,23 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     ManageLimitsTestHelper manageLimitsTestHelper(testManager);
+
+    //Default tasks
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
+    longstring assetCreate = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetCreate)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdate = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdate)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring issuanceKey = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(issuanceKey)->setUi32Value(0);
 
     // create asset and make it withdrawable
     const AssetCode asset = "USD";

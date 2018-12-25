@@ -209,6 +209,24 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
 
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
+    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
     auto root = Account{ getRoot(), Salt(0) };
 
     const AssetCode defaultQuoteAsset = "USD";
@@ -223,6 +241,7 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
     CheckSaleStateHelper checkSaleStateHelper(testManager);
     ManageSaleTestHelper manageSaleHelper(testManager);
     ParticipateInSaleTestHelper participationHelper(testManager);
+
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();

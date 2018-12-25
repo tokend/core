@@ -20,6 +20,7 @@ using xdr::operator==;
 DeleteSaleParticipationOpFrame::DeleteSaleParticipationOpFrame(
     Operation const& op, OperationResult& res, TransactionFrame& parentTx) : DeleteOfferOpFrame(op, res, parentTx)
 {
+    mCheckSaleState = true;
 }
 
 bool DeleteSaleParticipationOpFrame::doCheckValid(Application& app)
@@ -57,6 +58,12 @@ bool DeleteSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
+    if (mCheckSaleState && CreateSaleParticipationOpFrame::getSaleState(sale, db, ledgerManager.getCloseTime()) != SaleFrame::State::ACTIVE)
+    {
+        innerResult().code(ManageOfferResultCode::SALE_IS_NOT_ACTIVE);
+        return false;
+    }
+
     auto quoteBalanceID = getQuoteBalanceID(offer, ledgerManager);
     auto balance = BalanceHelperLegacy::Instance()->mustLoadBalance(quoteBalanceID, db);
     sale->subCurrentCap(balance->getAsset(), offer->getOffer().quoteAmount);
@@ -87,8 +94,8 @@ void DeleteSaleParticipationOpFrame::deleteSaleParticipation(
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::MANAGE_OFFER);
-
     DeleteSaleParticipationOpFrame opFrame(op, opRes, parentTx);
+    opFrame.doNotCheckSaleState();
     const auto offerOwner = AccountHelper::Instance()->mustLoadAccount(offerEntry.ownerID, db);
     opFrame.setSourceAccountPtr(offerOwner);
     if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, delta, ledgerManager))
@@ -96,6 +103,11 @@ void DeleteSaleParticipationOpFrame::deleteSaleParticipation(
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply delete sale participation: offerID" << offer->getOfferID();
         throw runtime_error("Unexpected state: failed to apply delete sale participation");
     }
+}
+
+void DeleteSaleParticipationOpFrame::doNotCheckSaleState()
+{
+    mCheckSaleState = false;
 }
 BalanceID DeleteSaleParticipationOpFrame::getQuoteBalanceID(OfferFrame::pointer offer, LedgerManager& lm)
 {

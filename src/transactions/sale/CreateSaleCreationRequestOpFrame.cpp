@@ -251,17 +251,20 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &stora
     }
 
     bool fulfilled = false;
+    uint64* saleID = nullptr;
     if (autoreview) {
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
-        if (result.code() != ReviewRequestResultCode::SUCCESS) {
-            throw std::runtime_error("Failed to review create asset request");
-        }
-        fulfilled = result.success().fulfilled;
+        fulfilled = result.code() == ReviewRequestResultCode::SUCCESS && result.success().fulfilled;
+        saleID = result.code() == ReviewRequestResultCode::SUCCESS ?
+                &result.success().typeExt.saleExtended().saleID :
+                nullptr;
     }
 
     innerResult().code(CreateSaleCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = request->getRequestID();
     innerResult().success().fulfilled = fulfilled;
+    if (saleID)
+        innerResult().success().saleID.activate() = *saleID;
     return true;
 }
 
@@ -324,7 +327,8 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
         return CreateSaleCreationRequestResultCode::START_END_INVALID;
     }
 
-    if (saleCreationRequest.hardCap < saleCreationRequest.softCap)
+    if (saleCreationRequest.hardCap < saleCreationRequest.softCap
+        || saleCreationRequest.requiredBaseAssetForHardCap == 0)
     {
         return CreateSaleCreationRequestResultCode::INVALID_CAP;
     }

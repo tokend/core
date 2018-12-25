@@ -18,6 +18,7 @@
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ManageBalanceTestHelper.h"
 #include "test_helper/SetOptionsTestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace stellar;
@@ -191,6 +192,11 @@ TEST_CASE("set options", "[tx][set_options]")
         }
         SECTION("can add Trust")
         {
+            ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+            longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+            manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+            manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
             auto trustAccount = Account{ SecretKey::random(), Salt(0) };
             REQUIRE(!trustHelper->exists(testManager->getDB(),
                 trustAccount.key.getPublicKey(), a1.key.getPublicKey()));

@@ -227,6 +227,7 @@ namespace stellar {
         requestEntry.body.updateKYCRequest().accountTypeToSet = mCreateUpdateKYCRequest.updateKYCRequestData.accountTypeToSet;
         requestEntry.body.updateKYCRequest().kycLevel = mCreateUpdateKYCRequest.updateKYCRequestData.kycLevelToSet;
         requestEntry.body.updateKYCRequest().kycData = mCreateUpdateKYCRequest.updateKYCRequestData.kycData;
+        requestEntry.body.updateKYCRequest().externalDetails = xdr::xvector<longstring>{"{}"};
 
         requestEntry.tasks.allTasks = mCreateUpdateKYCRequest.allTasks.get()
                                                         ? mCreateUpdateKYCRequest.allTasks.activate()

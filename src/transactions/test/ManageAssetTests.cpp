@@ -62,9 +62,6 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
             creationRequest, ManageAssetResultCode::SUCCESS);
 
-    REQUIRE(creationResult.success().fulfilled);
-
-
     auto newPreIssuanceSigner = SecretKey::random();
     auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
     auto preissuedSignerAccount = Account{ preissuedSigner, 0 };

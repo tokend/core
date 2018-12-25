@@ -69,11 +69,7 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     }
 
     const uint64_t requiredBaseAssetForHardCap =
-        saleCreationRequest.ext.v() >=
-                LedgerVersion::
-                    ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP
-            ? getRequiredBaseAssetForHardCap(saleCreationRequest)
-            : baseAsset->getMaxIssuanceAmount();
+       getRequiredBaseAssetForHardCap(saleCreationRequest);
 
     if (!baseAsset->lockIssuedAmount(requiredBaseAssetForHardCap))
     {

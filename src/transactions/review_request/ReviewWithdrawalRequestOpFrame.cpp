@@ -141,8 +141,18 @@ bool ReviewWithdrawalRequestOpFrame::doCheckValid(Application &app)
     return ReviewRequestOpFrame::doCheckValid(app);
 }
 
+SourceDetails ReviewWithdrawalRequestOpFrame::getSourceAccountDetails(
+        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
+{
 
-uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
+    auto allowedSigners = static_cast<int32_t>(SignerType::WITHDRAW_MANAGER);
+
+    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE},
+                         mSourceAccount->getHighThreshold(), allowedSigners);
+}
+
+
+    uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
 {
     uint64_t totalFee;
     if (!safeSum(withdrawRequest.fee.percent, withdrawRequest.fee.fixed, totalFee))

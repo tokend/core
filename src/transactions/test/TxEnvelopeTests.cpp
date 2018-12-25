@@ -48,6 +48,14 @@ TEST_CASE("txenvelope", "[tx][envelope]")
 
     SECTION("Transaction fee")
     {
+        ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+        longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+        manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+        manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
         // create asset for tx fee
         AssetCode txFeeAssetCode = "ETH";
         uint64_t preIssuedAmount = 10000 * ONE;

@@ -21,6 +21,7 @@
 #include "transactions/dex/OfferManager.h"
 #include "test_helper/ParticipateInSaleTestHelper.h"
 #include "test_helper/ManageSaleTestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -40,6 +41,23 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     auto root = Account{ getRoot(), Salt(0) };
 
     uint32_t zeroTasks = 0;
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
+    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     const AssetCode defaultQuoteAsset = "USD";
     auto assetTestHelper = ManageAssetTestHelper(testManager);
@@ -83,15 +101,21 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     SECTION("Price must be 1")
     {
         const auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE + 1) }, 0, saleType);
-        saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest,
-            CreateSaleCreationRequestResultCode::INVALID_PRICE);
+                                                                     endTime, softCap, hardCap, "{}",
+                                                                     {saleRequestHelper.createSaleQuoteAsset(quoteAsset,
+                                                                                                                     ONE + 1)},
+                                                                     0, saleType);
+        saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                                                 CreateSaleCreationRequestResultCode::INVALID_PRICE);
     }
     SECTION("Given valid crowdfund")
     {
         auto maxAmountToBeSold = preIssuedAmount / 2;
         const auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE) }, maxAmountToBeSold, saleType);
+                                                                     endTime, softCap, hardCap, "{}",
+                                                                     {saleRequestHelper.createSaleQuoteAsset(quoteAsset,
+                                                                                                                     ONE)},
+                                                                     maxAmountToBeSold, saleType);
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
         auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
         REQUIRE(sales.size() == 1);

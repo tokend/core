@@ -112,7 +112,6 @@ TransactionFramePtr WithdrawRequestHelper::createWithdrawalRequestTx(
     baseOp.body.type(OperationType::CREATE_WITHDRAWAL_REQUEST);
     auto& op = baseOp.body.createWithdrawalRequestOp();
     op.request = request;
-    op.ext.v(LedgerVersion::WITHDRAWAL_TASKS);
     if (allTasks != nullptr)
     {
         op.allTasks.activate() = *allTasks;

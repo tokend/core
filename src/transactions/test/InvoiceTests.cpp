@@ -22,6 +22,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/ReferenceFrame.h"
 #include "test/test_marshaler.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 
 #include "crypto/SHA.h"
 
@@ -57,6 +58,20 @@ TEST_CASE("Invoice", "[tx][invoice]")
     auto root = Account{getRoot(), Salt(0)};
     auto payer = Account{SecretKey::random(), Salt(1)};
     auto recipient = Account{SecretKey::random(), Salt(1)};
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     // create two assets
     AssetCode paymentAsset = "USD";
@@ -267,7 +282,9 @@ TEST_CASE("Invoice", "[tx][invoice]")
             auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(
                     "{\n \"a\": \"Limits request data\" \n}");
             auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(payer,
-                    limitsUpdateRequest);
+                                                                                               limitsUpdateRequest,
+                                                                                               nullptr, nullptr,
+                                                                                               CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
 
             auto removeInvoiceRequestOp = manageInvoiceRequestTestHelper.createRemoveInvoiceRequest(
                     limitsUpdateResult.success().manageLimitsRequestID);
