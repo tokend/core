@@ -1204,5 +1204,33 @@ TEST_CASE("Sale", "[tx][sale]")
                 }
             }
         }
+
+        SECTION("With tasks")
+        {
+            uint32_t allTasks = 1;
+            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, &allTasks);
+            auto requestID = requestCreationResult.success().requestID;
+
+            SECTION("Approve")
+            {
+                uint32_t toAdd = 0, toRemove = 1;
+                auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTxWithTasks(root, requestID,
+                                                                                          ReviewRequestOpAction::APPROVE, "",
+                                                                                          ReviewRequestResultCode::SUCCESS,
+                                                                                          &toAdd, &toRemove);
+                REQUIRE(reviewSaleRequestResult.success().fulfilled);
+                REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
+                        ReviewableRequestType::SALE);
+                REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
+            }
+
+            SECTION("Reject")
+            {
+                auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTxWithTasks(root, requestID,
+                                                                                          ReviewRequestOpAction::PERMANENT_REJECT,
+                                                                                          "very important reason",
+                                                                                          ReviewRequestResultCode::SUCCESS);
+            }
+        }
     }
 }
