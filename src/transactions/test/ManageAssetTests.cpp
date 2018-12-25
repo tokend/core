@@ -43,6 +43,9 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
     manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetCreateKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
@@ -54,13 +57,26 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     const AssetCode assetCode = "EURT";
     const uint64_t maxIssuance = 102030;
     const auto initialPreIssuedAmount = maxIssuance;
-    uint32_t zeroTasks = 0;
     const auto creationRequest = manageAssetHelper.
         createAssetCreationRequest(assetCode,
             preissuedSigner.getPublicKey(),
-            "{}", maxIssuance, 0, &zeroTasks, initialPreIssuedAmount);
+            "{}", maxIssuance, 0, nullptr, initialPreIssuedAmount);
     auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
-            creationRequest, ManageAssetResultCode::SUCCESS);
+        creationRequest);
+
+    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+
+    auto approvingRequest = reviewableRequestHelper->
+        loadRequest(creationResult.success().requestID,
+            testManager->getDB(), nullptr);
+    REQUIRE(approvingRequest);
+    auto reviewRequetHelper = ReviewAssetRequestHelper(testManager);
+    reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
+        getRequestID(),
+        approvingRequest->getHash(),
+        approvingRequest->getType(),
+        ReviewRequestOpAction::
+        APPROVE, "");
 
     auto newPreIssuanceSigner = SecretKey::random();
     auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
