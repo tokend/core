@@ -38,8 +38,6 @@ ManageInvoiceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountI
                                               int32_t ledgerVersion) const
 {
 	return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
-//	return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-//                         static_cast<int32_t>(SignerType::INVOICE_MANAGER));
 }
 
 ManageInvoiceRequestOpFrame::ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res,
