@@ -21,6 +21,12 @@ namespace stellar {
                                  ReviewRequestOpAction action, std::string rejectReason,
                                  ReviewRequestResultCode expectedResult) override;
 
+            ReviewRequestResult applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                              ReviewableRequestType requestType,
+                                                              ReviewRequestOpAction action, std::string rejectReason,
+                                                              ReviewRequestResultCode expectedResult,
+                                                              uint32_t *tasksToAdd, uint32_t *tasksToRemove) override;
+
             using ReviewRequestHelper::applyReviewRequestTx;
         };
     }

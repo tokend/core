@@ -50,12 +50,13 @@ namespace stellar {
         }
 
         auto &requestEntry = requestFrame->getRequestEntry();
-        if (!ensureSaleUpdateDataValid(requestEntry)) {
-            innerResult().code(ManageSaleResultCode::INVALID_UPDATE_DETAILS_REQUEST_DATA);
+        if (!ensureSaleUpdateDataValid(requestFrame)) {
             return false;
         }
 
         requestEntry.body.updateSaleDetailsRequest().newDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
+        requestEntry.body.updateSaleDetailsRequest().sequenceNumber++;
+        requestFrame->setTasks(requestEntry.tasks.allTasks);
 
         requestFrame->recalculateHashRejectReason();
         ReviewableRequestHelper::Instance()->storeChange(*delta, db, requestFrame->mEntry);
@@ -97,6 +98,7 @@ namespace stellar {
         requestEntry.body.type(ReviewableRequestType::UPDATE_SALE_DETAILS);
         requestEntry.body.updateSaleDetailsRequest().saleID = mManageSaleOp.saleID;
         requestEntry.body.updateSaleDetailsRequest().newDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
+        requestEntry.body.updateSaleDetailsRequest().sequenceNumber = 0;
 
         request->recalculateHashRejectReason();
 
@@ -234,13 +236,19 @@ namespace stellar {
         };
     }
 
-    bool ManageSaleOpFrame::ensureSaleUpdateDataValid(stellar::ReviewableRequestEntry &requestEntry)
+    bool ManageSaleOpFrame::ensureSaleUpdateDataValid(ReviewableRequestFrame::pointer request)
     {
-        auto &updateSaleDetailsRequest = requestEntry.body.updateSaleDetailsRequest();
+        auto &updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
         auto updateSaleDetailsRequestData = mManageSaleOp.data.updateSaleDetailsData();
 
         if (updateSaleDetailsRequestData.allTasks)
         {
+            innerResult().code(ManageSaleResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+            return false;
+        }
+
+        if (request->getRejectReason().empty()) {
+            innerResult().code(ManageSaleResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
             return false;
         }
 

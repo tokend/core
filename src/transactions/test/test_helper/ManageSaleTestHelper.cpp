@@ -26,8 +26,9 @@ txtest::ManageSaleTestHelper::ManageSaleTestHelper(
 
 ManageSaleOp::_data_t
 ManageSaleTestHelper::createDataForAction(ManageSaleAction action,
-                                          uint64_t* requestID,
-                                          std::string* newDetails)
+        uint32_t *allTasks,
+        uint64_t* requestID,
+        std::string* newDetails)
 {
     ManageSaleOp::_data_t data;
 
@@ -44,6 +45,10 @@ ManageSaleTestHelper::createDataForAction(ManageSaleAction action,
         data.action(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST);
         data.updateSaleDetailsData().requestID = *requestID;
         data.updateSaleDetailsData().newDetails = *newDetails;
+        if (allTasks)
+        {
+            data.updateSaleDetailsData().allTasks.activate() = *allTasks;
+        }
         break;
     }
     case ManageSaleAction::CANCEL:
@@ -71,6 +76,7 @@ ManageSaleTestHelper::createManageSaleTx(Account& source, uint64_t saleID,
     manageSaleOp.data = data;
     return txFromOperation(source, op, nullptr);
 }
+
 
 ManageSaleResult
 ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
@@ -126,30 +132,33 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     {
     case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
     {
-        auto requestAfterTx = reviewableRequestHelper->loadRequest(
-            manageSaleResult.success().response.requestID(), db);
-        REQUIRE(!!requestAfterTx);
-
-        auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
-
-        REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
-                saleID);
-        REQUIRE(
-            requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails ==
-            data.updateSaleDetailsData().newDetails);
-
-        if (!!requestBeforeTx)
+        if (!manageSaleResult.success().fulfilled)
         {
-            auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
+            auto requestAfterTx = reviewableRequestHelper->loadRequest(
+                    manageSaleResult.success().response.requestID(), db);
+            REQUIRE(!!requestAfterTx);
 
-            REQUIRE(
-                requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
-                requestAfterTxEntry.body.updateSaleDetailsRequest().saleID);
+            auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
 
+            REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
+                    saleID);
             REQUIRE(
-                requestBeforeTxEntry.body.updateSaleDetailsRequest()
-                    .newDetails !=
-                requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails);
+                    requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails ==
+                    data.updateSaleDetailsData().newDetails);
+
+            if (!!requestBeforeTx)
+            {
+                auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
+
+                REQUIRE(
+                        requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
+                        requestAfterTxEntry.body.updateSaleDetailsRequest().saleID);
+
+                REQUIRE(
+                        requestBeforeTxEntry.body.updateSaleDetailsRequest()
+                                .newDetails !=
+                        requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails);
+            }
         }
 
         break;

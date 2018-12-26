@@ -257,7 +257,8 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
     auto accountHelper = AccountHelper::Instance();
     auto assetOwnerFrame = accountHelper->
         loadAccount(assetOwner.key.getPublicKey(), mTestManager->getDB());
-    if (assetOwnerFrame->getAccountType() == AccountType::MASTER)
+    if (creationResult.code() == ManageAssetResultCode::SUCCESS
+        && creationResult.success().fulfilled)
         return;
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -284,7 +285,7 @@ void ManageAssetTestHelper::updateAsset(Account& assetOwner,
                                                         "{}", policies);
     auto updateResult = applyManageAssetTx(assetOwner, 0, updateRequest);
 
-    if (assetOwner.key.getPublicKey() == root.key.getPublicKey())
+    if (updateResult.success().fulfilled)
         return;
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();

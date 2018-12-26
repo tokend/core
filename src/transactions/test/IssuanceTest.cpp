@@ -223,7 +223,8 @@ void createPreIssuanceRequestHardPath(TestManager::pointer testManager, Account 
 
         //syndicate creates it's own asset
         AssetCode syndicateAsset = "USD";
-        manageAssetTestHelper.createAsset(syndicateAccount, preissuedSigner, syndicateAsset, root, 0);
+        auto newRequest = manageAssetTestHelper.createAssetCreationRequest(syndicateAsset, preissuedSigner.getPublicKey(), "{}", INT64_MAX, 0);
+        manageAssetTestHelper.applyManageAssetTx(syndicateAccount, 0, newRequest);
 
         //master tries to preissue it
         issuanceRequestHelper.applyCreatePreIssuanceRequest(root, preissuedSigner, syndicateAsset, amount, reference,
@@ -513,6 +514,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
     {
         auto issuanceRequestHelper = IssuanceRequestHelper(testManager);
         auto manageKeyValueHelper = ManageKeyValueTestHelper(testManager);
+        auto manageAssetTestHelper = ManageAssetTestHelper(testManager);
         AssetCode assetToBeIssued = "EUR";
         uint64_t preIssuedAmount = 10000;
         auto issuerSecret = SecretKey::random();

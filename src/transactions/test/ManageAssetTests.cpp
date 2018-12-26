@@ -64,20 +64,6 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
         creationRequest);
 
-//    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-//
-//    auto approvingRequest = reviewableRequestHelper->
-//        loadRequest(creationResult.success().requestID,
-//            testManager->getDB(), nullptr);
-//    REQUIRE(approvingRequest);
-//    auto reviewRequetHelper = ReviewAssetRequestHelper(testManager);
-//    reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
-//        getRequestID(),
-//        approvingRequest->getHash(),
-//        approvingRequest->getType(),
-//        ReviewRequestOpAction::
-//        APPROVE, "");
-
     auto newPreIssuanceSigner = SecretKey::random();
     auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
     auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
@@ -279,11 +265,12 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         }
         SECTION("Try to review manage asset request from blocked syndicate")
         {
+            uint32_t tasks = 1;
             Account syndicate = Account{SecretKey::random(), Salt(0)};
             createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), AccountType::SYNDICATE);
 
             // create asset creation request
-            auto request = manageAssetHelper.createAssetCreationRequest("USD", syndicate.key.getPublicKey(), "{}", UINT64_MAX, 0, &zeroTasks);
+            auto request = manageAssetHelper.createAssetCreationRequest("USD", syndicate.key.getPublicKey(), "{}", UINT64_MAX, 0, &tasks);
             auto requestID = manageAssetHelper.applyManageAssetTx(syndicate, 0, request).success().requestID;
 
             // block syndicate
@@ -427,6 +414,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
     const uint64_t maxIssuance = 102030;
     const auto initialPreIssuedAmount = maxIssuance;
     uint32_t zeroTasks = 0;
+    uint32_t tasks = 1;
 
     SECTION("Can create asset")
     {
@@ -434,7 +422,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
         auto creationRequest = manageAssetHelper.
             createAssetCreationRequest(assetCode,
                                        preissuedSigner.getPublicKey(),
-                                       "{}", maxIssuance, 0, &zeroTasks, initialPreIssuedAmount);
+                                       "{}", maxIssuance, 0, &tasks, initialPreIssuedAmount);
         auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
                                                                    creationRequest);
 
@@ -448,16 +436,16 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                                                  manageAssetHelper.
                                                  createCancelRequest());
         }
-        SECTION("Can update existing request")
+        SECTION("Can't update pending request")
         {
             creationRequest.createAssetCreationRequest().createAsset.code = "USDT";
-            auto updateResult = manageAssetHelper.applyManageAssetTx(account,
-                                                                     creationResult
-                                                                     .success().
-                                                                      requestID,
-                                                                     creationRequest);
-            REQUIRE(updateResult.success().requestID == creationResult.success()
-                .requestID);
+            manageAssetHelper.applyManageAssetTx(account,
+                                                   creationResult
+                                                   .success().
+                                                   requestID,
+                                                   creationRequest,
+                                                   ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+
         }
         SECTION("Given approved asset")
         {
@@ -466,12 +454,15 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                             testManager->getDB(), nullptr);
             REQUIRE(approvingRequest);
             auto reviewRequetHelper = ReviewAssetRequestHelper(testManager);
-            reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
+            reviewRequetHelper.applyReviewRequestTxWithTasks(root, approvingRequest->
                                                     getRequestID(),
                                                     approvingRequest->getHash(),
                                                     approvingRequest->getType(),
                                                     ReviewRequestOpAction::
-                                                    APPROVE, "");
+                                                    APPROVE, "",
+                                                    ReviewRequestResultCode::SUCCESS,
+                                                    &zeroTasks, &tasks);
+
             SECTION("Can change asset pre issuance signer")
             {
                 auto newPreIssuanceSigner = SecretKey::random();
@@ -506,18 +497,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                                              "{}", 0, &zeroTasks);
                 auto updateResult = manageAssetHelper.
                     applyManageAssetTx(account, 0, updateRequestBody);
-                approvingRequest = reviewableRequestHelper->
-                    loadRequest(updateResult.success().requestID,
-                                testManager->getDB(), nullptr);
-                REQUIRE(approvingRequest);
-                reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
-                                                        getRequestID(),
-                                                        approvingRequest->
-                                                        getHash(),
-                                                        approvingRequest->
-                                                        getType(),
-                                                        ReviewRequestOpAction::
-                                                        APPROVE, "");
+                REQUIRE(updateResult.success().fulfilled);
             }
         }
     }

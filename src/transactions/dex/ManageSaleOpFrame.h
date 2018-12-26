@@ -35,11 +35,9 @@ namespace stellar {
 
         bool doCheckValid(Application &app) override;
 
-        bool ensureSaleUpdateDataValid(ReviewableRequestEntry& requestEntry);
+        bool ensureSaleUpdateDataValid(ReviewableRequestFrame::pointer request);
 
         bool doApply(Application &app, StorageHelper &storageHelper, LedgerManager &lm) override;
-
-        static void checkRequestType(ReviewableRequestFrame::pointer request, ReviewableRequestType requestType);
 
         static void cancelSale(SaleFrame::pointer sale, LedgerDelta &delta, Database &db, LedgerManager &lm);
 

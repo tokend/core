@@ -56,9 +56,8 @@ namespace txtest
 		}
 
         auto createPreIssuanceResult = opResult.tr().createPreIssuanceRequestResult();
-        if (source.key == getRoot())
+        if (createPreIssuanceResult.success().fulfilled)
         {
-            REQUIRE(createPreIssuanceResult.success().fulfilled);
             checker.checkApprove(nullptr);
             return createPreIssuanceResult;
         }
@@ -210,7 +209,8 @@ namespace txtest
 	{
 		auto preIssuanceResult = applyCreatePreIssuanceRequest(assetOwner, preIssuedAssetSigner, assetCode, preIssuedAmount,
 			SecretKey::random().getStrKeyPublic());
-        if (assetOwner.key == getRoot())
+        if (preIssuanceResult.code() == CreatePreIssuanceRequestResultCode::SUCCESS
+        	&& preIssuanceResult.success().fulfilled)
             return;
 		auto reviewPreIssuanceRequestHelper = ReviewPreIssuanceRequestHelper(mTestManager);
 		reviewPreIssuanceRequestHelper.applyReviewRequestTx(root, preIssuanceResult.success().requestID, ReviewRequestOpAction::APPROVE, "");

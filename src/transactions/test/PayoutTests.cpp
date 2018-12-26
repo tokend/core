@@ -101,8 +101,6 @@ TEST_CASE("payout", "[tx][payout]") {
                  preIssuedSigner.getPublicKey(), "{}", maxIssuanceAmount,
                  transferableAssetPolicy, &zeroTasks, preIssuedAmount);
     auto manageAssetResult = manageAssetTestHelper.applyManageAssetTx(owner, 0, assetCreationRequest);
-    reviewAssetRequestHelper.applyReviewRequestTx(root, manageAssetResult.success().requestID,
-                                                  ReviewRequestOpAction::APPROVE, "");
 
     auto ownerBalance = balanceHelper.loadBalance(ownerID, assetCode);
     REQUIRE(ownerBalance);
