@@ -254,7 +254,6 @@ ReviewableRequestFrame::ensureValid() const
 
 void ReviewableRequestFrame::setTasks(uint32_t allTasks)
 {
-    mRequest.ext.v(LedgerVersion::EMPTY_VERSION);
     mRequest.tasks.allTasks = allTasks;
     mRequest.tasks.pendingTasks = allTasks;
 }
