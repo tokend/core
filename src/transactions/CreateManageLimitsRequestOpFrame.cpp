@@ -128,6 +128,12 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
         innerResult().code(CreateManageLimitsRequestResultCode::LIMITS_UPDATE_TASKS_NOT_FOUND);
         return false;
     }
+
+    if (allTasks == 0)
+    {
+        innerResult().code(CreateManageLimitsRequestResultCode::LIMITS_UPDATE_ZERO_TASKS_NOT_ALLOWED);
+        return false;
+    }
     request->setTasks(allTasks);
     EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 

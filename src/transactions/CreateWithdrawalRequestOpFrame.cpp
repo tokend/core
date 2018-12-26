@@ -244,6 +244,12 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &st
         return false;
     }
 
+    if (allTasks == 0)
+    {
+        innerResult().code(CreateWithdrawalRequestResultCode::WITHDRAWAL_ZERO_TASKS_NOT_ALLOWED);
+        return false;
+    }
+
     request->setTasks(allTasks);
     EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
