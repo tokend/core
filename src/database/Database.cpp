@@ -83,23 +83,20 @@ enum databaseSchemaVersion : unsigned long {
 	INITIAL = 3,
 	DROP_BAN = 4,
     REFERENCE_VERSION = 5,
-    ADD_SALE_TYPE = 6,
-	USE_KYC_LEVEL = 7,
-    ADD_ACCOUNT_KYC = 8,
-    ADD_FEE_ASSET = 9,
-    EXTERNAL_POOL_FIX_DB_TYPES = 10,
-    EXTERNAL_POOL_FIX_MIGRATION = 11,
-    KEY_VALUE_FIX_MIGRATION = 12,
-    EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 13,
-    ADD_SALE_ANTE = 14,
-    ADD_LIMITS_V2 = 15,
-    ADD_REVIEWABLE_REQUEST_TASKS = 16,
-    ADD_CONTRACTS = 17,
-    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 18,
-    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 19,
-    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 20,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 21,
-    ADD_ASSET_CUSTOM_PRECISION = 22
+	USE_KYC_LEVEL = 6,
+    ADD_ACCOUNT_KYC = 7,
+    ADD_FEE_ASSET = 8,
+    EXTERNAL_POOL_FIX_DB_TYPES = 9,
+    EXTERNAL_POOL_FIX_MIGRATION = 10,
+    KEY_VALUE_FIX_MIGRATION = 11,
+    EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 12,
+    ADD_SALE_ANTE = 13,
+    ADD_LIMITS_V2 = 14,
+    ADD_REVIEWABLE_REQUEST_TASKS = 15,
+    ADD_CONTRACTS = 16,
+    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 17,
+    ADD_ACCOUNT_ROLES_AND_POLICIES = 18,
+    ADD_ASSET_CUSTOM_PRECISION = 19
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
@@ -199,17 +196,10 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             PendingStatisticsHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
-            ReviewableRequestHelper::Instance()->addTasks(*this);
             PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
             break;
         case databaseSchemaVersion::ADD_CONTRACTS:
             ContractHelper::Instance()->dropAll(*this);
-            break;
-        case databaseSchemaVersion::REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE:
-            ReviewableRequestHelper::Instance()->changeDefaultExternalDetails(*this);
-            break;
-        case databaseSchemaVersion::REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
-            ReviewableRequestHelper::Instance()->setEmptyStringToExternalDetailsInsteadNull(*this);
             break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
             ContractHelper::Instance()->addCustomerDetails(*this);
