@@ -36,15 +36,11 @@ void SaleHelper::dropAll(Database& db)
         "base_balance        VARCHAR(56)   NOT NULL,"
         "version             INT           NOT NULL,"
         "lastmodified        INT           NOT NULL,"
+        "sale_type           INT           NOT NULL DEFAULT 0,"
         "PRIMARY KEY (id)"
         ");";
 
     SaleQuoteAssetHelper::dropAll(db);
-}
-
-void SaleHelper::addType(Database& db)
-{
-    db.getSession() << "ALTER TABLE sale ADD COLUMN sale_type INT NOT NULL DEFAULT 0";
 }
 
 void SaleHelper::storeAdd(LedgerDelta& delta, Database& db,

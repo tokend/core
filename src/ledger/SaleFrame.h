@@ -90,8 +90,6 @@ class SaleFrame : public EntryFrame
     bool tryLockBaseAsset(uint64_t amount);
     void unlockBaseAsset(uint64_t amount);
 
-    void migrateToVersion(LedgerVersion version);
-
     SaleType getSaleType() const;
     static SaleType getSaleType(SaleEntry const& sale);
 

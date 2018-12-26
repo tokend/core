@@ -300,11 +300,6 @@ void SaleFrame::unlockBaseAsset(uint64_t amount)
     mSale.currentCapInBase -= amount;
 }
 
-void SaleFrame::migrateToVersion(LedgerVersion version)
-{
-    return;
-}
-
 SaleType SaleFrame::getSaleType() const
 {
     return getSaleType(mSale);

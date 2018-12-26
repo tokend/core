@@ -167,9 +167,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::DROP_BAN:
             BanManager::dropAll(*this);
             break;
-        case ADD_SALE_TYPE:
-            SaleHelper::Instance()->addType(*this);
-            break;
         case REFERENCE_VERSION:
             ReferenceHelper::addVersion(*this);
             break;
