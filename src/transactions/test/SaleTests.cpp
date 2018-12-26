@@ -135,7 +135,7 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
 
     auto saleCreateResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
     REQUIRE(saleCreateResult.success().fulfilled);
-    const uint64_t saleID = *saleCreateResult.success().saleID;
+    const uint64_t saleID = saleCreateResult.success().saleID;
 
     SECTION("Happy path")
     {

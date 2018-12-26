@@ -64,19 +64,19 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
         creationRequest);
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-
-    auto approvingRequest = reviewableRequestHelper->
-        loadRequest(creationResult.success().requestID,
-            testManager->getDB(), nullptr);
-    REQUIRE(approvingRequest);
-    auto reviewRequetHelper = ReviewAssetRequestHelper(testManager);
-    reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
-        getRequestID(),
-        approvingRequest->getHash(),
-        approvingRequest->getType(),
-        ReviewRequestOpAction::
-        APPROVE, "");
+//    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+//
+//    auto approvingRequest = reviewableRequestHelper->
+//        loadRequest(creationResult.success().requestID,
+//            testManager->getDB(), nullptr);
+//    REQUIRE(approvingRequest);
+//    auto reviewRequetHelper = ReviewAssetRequestHelper(testManager);
+//    reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
+//        getRequestID(),
+//        approvingRequest->getHash(),
+//        approvingRequest->getType(),
+//        ReviewRequestOpAction::
+//        APPROVE, "");
 
     auto newPreIssuanceSigner = SecretKey::random();
     auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());

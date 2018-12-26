@@ -85,16 +85,17 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
     auto assetHelper = AssetHelperLegacy::Instance();
     auto balanceHelper = BalanceHelperLegacy::Instance();
 
-    if (sourceFrame->getAccountType() == AccountType::MASTER)
+    if ((request.action() == ManageAssetAction::CREATE_ASSET_CREATION_REQUEST
+        || request.action() == ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST)
+        && manageAssetResult.success().fulfilled)
     {
-        REQUIRE(reviewableRequestCountAfterTx == reviewableRequestCountBeforeTx)
-        ;
-        REQUIRE(manageAssetResult.success().fulfilled);
+        REQUIRE(reviewableRequestCountAfterTx == reviewableRequestCountBeforeTx);
 
         validateManageAssetEffect(request);
 
         return manageAssetResult;
     }
+
 
     const bool isUpdatingExistingRequest = requestID != 0;
     if (isUpdatingExistingRequest)

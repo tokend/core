@@ -28,7 +28,7 @@ ReviewRequestResult SaleRequestHelper::createApprovedSale(Account& root, Account
         result.code(ReviewRequestResultCode::SUCCESS);
         result.success().fulfilled = true;
         result.success().typeExt.requestType(ReviewableRequestType::SALE);
-        result.success().typeExt.saleExtended().saleID = *requestCreationResult.success().saleID;
+        result.success().typeExt.saleExtended().saleID = requestCreationResult.success().saleID;
         return result;
     }
 

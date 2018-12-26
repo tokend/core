@@ -36,7 +36,6 @@ TEST_CASE("limits update", "[tx][limits_update]")
 
     upgradeToCurrentLedgerVersion(app);
 
-    uint32_t zeroTasks = 0;
     auto root = Account{ getRoot(), Salt(0) };
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto limitsUpdateRequestHelper = LimitsUpdateRequestHelper(testManager);
@@ -57,19 +56,29 @@ TEST_CASE("limits update", "[tx][limits_update]")
     std::string documentData = "{}";
 
 
-    SECTION("Zero tasks") {
-        uint32_t zeroTasks = 0;
+    SECTION("with tasks") {
+        uint32_t allTasks = 2, tasksToAdd = 0, tasksToRemove = 2;
         auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
         auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
-                                                                                           limitsUpdateRequest, &zeroTasks,
+                                                                                           limitsUpdateRequest, &allTasks,
                                                                                            nullptr,
                                                                                            CreateManageLimitsRequestResultCode::SUCCESS);
 
         REQUIRE_FALSE(limitsUpdateResult.success().fulfilled);
+
         SECTION("Happy path") {
             SECTION("Approve") {
-                reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                              ReviewRequestOpAction::APPROVE, "");
+                auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+                REQUIRE(request);
+                auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                                                           request->getHash(),
+                                                                                           request->getRequestType(),
+                                                                                           ReviewRequestOpAction::APPROVE, "",
+                                                                                           ReviewRequestResultCode::SUCCESS,
+                                                                                           &tasksToAdd,
+                                                                                           &tasksToRemove);
+
+                REQUIRE(reviewResult.success().fulfilled);
             }
             SECTION("Reject") {
                 reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
@@ -79,6 +88,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
                 reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                               ReviewRequestOpAction::PERMANENT_REJECT,
                                                               "Invalid document");
+
             }
             SECTION("Approve for account with limits") {
                 auto accountWithLimits = Account{SecretKey::random(), Salt(0)};
@@ -103,11 +113,19 @@ TEST_CASE("limits update", "[tx][limits_update]")
                         documentDataOfAccountWithLimits);
                 limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(accountWithLimits,
                                                                                               limitsUpdateRequest,
-                                                                                              &zeroTasks, nullptr,
+                                                                                              &allTasks, nullptr,
                                                                                               CreateManageLimitsRequestResultCode::SUCCESS);
 
-                reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                              ReviewRequestOpAction::APPROVE, "");
+                REQUIRE_FALSE(limitsUpdateResult.success().fulfilled);
+                auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+                REQUIRE(request);
+                auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                                                           request->getHash(),
+                                                                                           request->getRequestType(),
+                                                                                           ReviewRequestOpAction::APPROVE, "",
+                                                                                           ReviewRequestResultCode::SUCCESS,
+                                                                                           &tasksToAdd,
+                                                                                           &tasksToRemove);
             }
             SECTION("Update limits update request") {
                 std::string newDocumentData = "{\n \"a\": \"New document data\" \n}";
@@ -151,26 +169,8 @@ TEST_CASE("limits update", "[tx][limits_update]")
         }
         SECTION("Approve and create same request for second time")
         {
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::APPROVE, "");
-            limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
-                                                                                          limitsUpdateRequest, nullptr,
-                                                                                          &requestID,
-                                                                                          CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
-        }
-    }
-    SECTION("With tasks"){
-        uint32_t allTasks = 2, tasksToAdd = 0, tasksToRemove = 2;
-        auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
-        auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
-                                                                                           limitsUpdateRequest, &allTasks,
-                                                                                           nullptr,
-                                                                                           CreateManageLimitsRequestResultCode::SUCCESS);
-
-        auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
-        REQUIRE(request);
-
-        SECTION("Approve") {
+            auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+            REQUIRE(request);
             auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                                                        request->getHash(),
                                                                                        request->getRequestType(),
@@ -179,18 +179,10 @@ TEST_CASE("limits update", "[tx][limits_update]")
                                                                                        &tasksToAdd,
                                                                                        &tasksToRemove);
 
-            REQUIRE(reviewResult.success().fulfilled);
-        }
-        SECTION("Reject") {
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::REJECT, "Invalid document");
-        }
-        SECTION("Permanent reject") {
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::PERMANENT_REJECT,
-                                                          "Invalid document");
-
+            limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
+                                                                                          limitsUpdateRequest, nullptr,
+                                                                                          &requestID,
+                                                                                          CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
         }
     }
-
 }
