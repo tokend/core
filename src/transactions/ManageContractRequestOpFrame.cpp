@@ -40,8 +40,6 @@ ManageContractRequestOpFrame::getSourceAccountDetails(
         int32_t ledgerVersion) const
 {
     return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
-//    SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-//                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
 }
 
 ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, OperationResult& res,
