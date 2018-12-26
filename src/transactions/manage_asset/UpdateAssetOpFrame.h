@@ -34,6 +34,9 @@ public:
 
 protected:
     std::string getAssetCode() const override;
+	void updateRequest(ReviewableRequestEntry &requestEntry);
+	bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
+
 
 };
 }

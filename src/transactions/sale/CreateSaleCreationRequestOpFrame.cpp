@@ -97,6 +97,7 @@ createNewUpdateRequest(Application& app, LedgerManager& lm, Database& db, Ledger
     auto& requestEntry = request->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::SALE);
     requestEntry.body.saleCreationRequest() = sale;
+    requestEntry.body.saleCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();
     return request;
 }
@@ -247,24 +248,28 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &stora
 
     } else
     {
+        if (!ensureUpdateRequestValid(request))
+        {
+            return false;
+        }
+        updateRequest(request->getRequestEntry());
         ReviewableRequestHelper::Instance()->storeChange(*delta, db, request->mEntry);
     }
 
     bool fulfilled = false;
-    uint64* saleID = nullptr;
+    uint64 saleID = 0;
     if (autoreview) {
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
         fulfilled = result.code() == ReviewRequestResultCode::SUCCESS && result.success().fulfilled;
         saleID = result.code() == ReviewRequestResultCode::SUCCESS ?
-                &result.success().typeExt.saleExtended().saleID :
-                nullptr;
+                result.success().typeExt.saleExtended().saleID :
+                0;
     }
 
     innerResult().code(CreateSaleCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = request->getRequestID();
     innerResult().success().fulfilled = fulfilled;
-    if (saleID)
-        innerResult().success().saleID.activate() = *saleID;
+    innerResult().success().saleID = saleID;
     return true;
 }
 
@@ -346,6 +351,37 @@ std::vector<longstring> CreateSaleCreationRequestOpFrame::makeTasksKeyVector(Sto
         ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset),
         ManageKeyValueOpFrame::makeSaleCreateTasksKey("*")
     };
+}
+
+bool CreateSaleCreationRequestOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
+{
+    if (request->getRejectReason().empty()) {
+        innerResult().code(CreateSaleCreationRequestResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+        return false;
+    }
+
+    if (mCreateSaleCreationRequest.allTasks)
+    {
+        innerResult().code(CreateSaleCreationRequestResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+        return false;
+    }
+    return true;
+}
+
+void CreateSaleCreationRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)
+{
+    requestEntry.body.saleCreationRequest().details = mCreateSaleCreationRequest.request.details;
+    requestEntry.body.saleCreationRequest().requiredBaseAssetForHardCap = mCreateSaleCreationRequest.request.requiredBaseAssetForHardCap;
+    requestEntry.body.saleCreationRequest().hardCap = mCreateSaleCreationRequest.request.hardCap;
+    requestEntry.body.saleCreationRequest().softCap = mCreateSaleCreationRequest.request.softCap;
+    requestEntry.body.saleCreationRequest().startTime = mCreateSaleCreationRequest.request.startTime;
+    requestEntry.body.saleCreationRequest().endTime = mCreateSaleCreationRequest.request.endTime;
+    requestEntry.body.saleCreationRequest().baseAsset = mCreateSaleCreationRequest.request.baseAsset;
+    requestEntry.body.saleCreationRequest().defaultQuoteAsset= mCreateSaleCreationRequest.request.defaultQuoteAsset;
+    requestEntry.body.saleCreationRequest().quoteAssets= mCreateSaleCreationRequest.request.quoteAssets;
+    requestEntry.body.saleCreationRequest().saleTypeExt = mCreateSaleCreationRequest.request.saleTypeExt;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    requestEntry.body.saleCreationRequest().sequenceNumber++;
 }
 
 }

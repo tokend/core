@@ -21,6 +21,8 @@ class CreateAssetOpFrame : public ManageAssetOpFrame
 
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                           int32_t ledgerVersion) const override;
+	bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
+	void updateRequest(ReviewableRequestEntry &requestEntry);
 
 public:
     CreateAssetOpFrame(Operation const& op, OperationResult& res,

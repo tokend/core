@@ -36,6 +36,9 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
     bool isBaseAssetHasSufficientIssuance(AssetFrame::pointer assetFrame);
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
+
+    bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
+    void updateRequest(ReviewableRequestEntry& entry);
 public:
 
     CreateSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,

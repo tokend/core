@@ -54,7 +54,8 @@ ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewable
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 	requestEntry.body.type(ReviewableRequestType::ASSET_CREATE);
 	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
-	request->recalculateHashRejectReason();
+    requestEntry.body.assetCreationRequest().sequenceNumber = 0;
+    request->recalculateHashRejectReason();
 
 	return request;
 }
@@ -103,7 +104,13 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         autoreview = allTasks == 0;
     }
     else {
-		EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+        if (!ensureUpdateRequestValid(request))
+        {
+            return false;
+        }
+        updateRequest(request->getRequestEntry());
+        request->recalculateHashRejectReason();
+        EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
     }
 
     bool fulfilled = false;
@@ -179,5 +186,28 @@ vector<longstring> CreateAssetOpFrame::makeTasksKeyVector(StorageHelper& storage
     return std::vector<longstring>{
         ManageKeyValueOpFrame::makeAssetCreateTasksKey()
     };
+}
+
+bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
+{
+    if (request->getRejectReason().empty()) {
+        innerResult().code(ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+        return false;
+    }
+
+    if (mManageAsset.request.createAssetCreationRequest().allTasks)
+    {
+        innerResult().code(ManageAssetResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+        return false;
+    }
+    return true;
+}
+
+void CreateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
+    requestEntry.body.assetCreationRequest().code = mManageAsset.request.createAssetCreationRequest().createAsset.code;
+    requestEntry.body.assetCreationRequest().details = mManageAsset.request.createAssetCreationRequest().createAsset.details;
+    requestEntry.body.assetCreationRequest().policies = mManageAsset.request.createAssetCreationRequest().createAsset.policies;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    requestEntry.body.assetCreationRequest().sequenceNumber++;
 }
 }

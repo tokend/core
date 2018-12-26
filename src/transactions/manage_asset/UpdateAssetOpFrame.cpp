@@ -49,6 +49,7 @@ ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewable
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 	requestEntry.body.type(ReviewableRequestType::ASSET_UPDATE);
 	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
+	requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
 	request->recalculateHashRejectReason();
 	return request;
 }
@@ -103,6 +104,13 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
 		autoreview = allTasks == 0;
 	}
 	else {
+
+        if (!ensureUpdateRequestValid(request))
+        {
+            return false;
+        }
+        updateRequest(request->getRequestEntry());
+        request->recalculateHashRejectReason();
 		EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 	}
 
@@ -155,6 +163,30 @@ vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector(StorageHelper& storage
     return std::vector<longstring>{
         ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
     };
+}
+
+
+bool UpdateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
+{
+    if (request->getRejectReason().empty()) {
+        innerResult().code(ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+        return false;
+    }
+
+    if (mManageAsset.request.createAssetUpdateRequest().allTasks)
+    {
+        innerResult().code(ManageAssetResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+        return false;
+    }
+    return true;
+}
+
+void UpdateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
+    requestEntry.body.assetUpdateRequest().code = mManageAsset.request.createAssetUpdateRequest().updateAsset.code;
+    requestEntry.body.assetUpdateRequest().details = mManageAsset.request.createAssetUpdateRequest().updateAsset.details;
+    requestEntry.body.assetUpdateRequest().policies = mManageAsset.request.createAssetUpdateRequest().updateAsset.policies;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    requestEntry.body.assetUpdateRequest().sequenceNumber++;
 }
 
 }
