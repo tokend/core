@@ -112,7 +112,7 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
 
     bool fulfilled = false;
 
-    if (autoreview && getSourceAccount().getAccountType() == AccountType::MASTER) {
+    if (autoreview) {
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS) {
             throw std::runtime_error("Failed to review update asset request");

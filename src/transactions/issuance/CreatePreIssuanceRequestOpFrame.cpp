@@ -91,10 +91,8 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	request->setTasks(allTasks);
 	EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
-    //if source is master then auto review
     bool fulfilled = false;
-
-    if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
+    if (allTasks == 0) {
 		auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
 		if (result.code() != ReviewRequestResultCode::SUCCESS) {
 			throw std::runtime_error("Failed to review preissuance request");

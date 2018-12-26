@@ -202,7 +202,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
 
     bool fulfilled = false;
 
-    if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
+    if (allTasks == 0) {
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS) {
             throw std::runtime_error("Failed to review manage invoice request");

@@ -115,7 +115,7 @@ namespace stellar {
 
         bool fulfilled = false;
 
-        if (allTasks == 0 && getSourceAccount().getAccountType() == AccountType::MASTER) {
+        if (allTasks == 0) {
             auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
             if (result.code() != ReviewRequestResultCode::SUCCESS) {
                 throw std::runtime_error("Failed to review manage sale request");
@@ -225,20 +225,6 @@ namespace stellar {
         }
 
         return true;
-    }
-
-
-
-    void ManageSaleOpFrame::checkRequestType(ReviewableRequestFrame::pointer request,
-                                             ReviewableRequestType requestType) {
-        if (request->getRequestType() != requestType) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected "
-                                                   << xdr::xdr_traits<ReviewableRequestType>::enum_name(requestType)
-                                                   << " but got "
-                                                   << xdr::xdr_traits<ReviewableRequestType>::enum_name(
-                                                           request->getRequestType());
-            throw std::invalid_argument("Unexpected request type");
-        }
     }
 
     std::vector<longstring> ManageSaleOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
