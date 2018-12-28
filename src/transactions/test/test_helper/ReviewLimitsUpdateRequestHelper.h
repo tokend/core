@@ -49,6 +49,11 @@ public:
           ReviewRequestOpAction action, std::string rejectReason) override;
 
     void initializeLimits(AccountID& requestorID);
+
+    ReviewRequestResult applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                      ReviewableRequestType requestType, ReviewRequestOpAction action,
+                                                      std::string rejectReason, ReviewRequestResultCode expectedResult,
+                                                      uint32_t *tasksToAdd, uint32_t *tasksToRemove) override;
 };
 
 }

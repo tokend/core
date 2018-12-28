@@ -563,6 +563,9 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
             LedgerDelta& opDelta = opDeltaImpl;
             StorageHelperImpl storageHelperImpl(app.getDatabase(), &opDelta);
             StorageHelper& storageHelper = storageHelperImpl;
+            storageHelper.begin();
+
+
             bool txRes = op->apply(storageHelper, app);
 
             if (!txRes)

@@ -56,8 +56,7 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
     {
         auto& requestEntry = request->getRequestEntry();
         // if a request has pending tasks - no need to check approval effects
-        if (requestEntry.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST &&
-            requestEntry.ext.tasksExt().pendingTasks != 0)
+        if (requestEntry.tasks.pendingTasks != 0)
         {
             return;
         }
@@ -121,10 +120,10 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t req
     reviewRequestOp.requestHash = requestHash;
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
-    reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    reviewRequestOp.ext.reviewDetails().tasksToAdd = 0;
-    reviewRequestOp.ext.reviewDetails().tasksToRemove = action == ReviewRequestOpAction::APPROVE ? 8 : 0;
-    reviewRequestOp.ext.reviewDetails().externalDetails = "{}";
+    reviewRequestOp.reviewDetails.tasksToAdd = 0;
+    reviewRequestOp.reviewDetails.tasksToRemove = 0;
+    reviewRequestOp.reviewDetails.externalDetails = "{}";
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 
     return txFromOperation(source, op, nullptr);
 }
@@ -137,6 +136,22 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t req
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);
 }
 
+    ReviewRequestResult
+    ReviewIssuanceRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                               ReviewableRequestType requestType,
+                                                               ReviewRequestOpAction action, std::string rejectReason,
+                                                               ReviewRequestResultCode expectedResult,
+                                                               uint32_t *tasksToAdd, uint32_t *tasksToRemove) {
+        auto checker = ReviewIssuanceChecker(mTestManager, requestID);
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                                  requestHash, requestType,
+                                                                  action, rejectReason,
+                                                                  expectedResult,
+                                                                  checker,
+                                                                  tasksToAdd,
+                                                                  tasksToRemove
+        );
+    }
 
 }
 

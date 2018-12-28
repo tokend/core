@@ -19,6 +19,7 @@ public:
     MOCK_CONST_METHOD0(getLedgerDelta, const LedgerDelta*());
     MOCK_METHOD0(commit, void());
     MOCK_METHOD0(rollback, void());
+    MOCK_METHOD0(begin, void());
     MOCK_METHOD0(release, void());
     MOCK_METHOD0(startNestedTransaction, std::unique_ptr<StorageHelper>());
     MOCK_METHOD0(getKeyValueHelper, KeyValueHelper&());

@@ -127,9 +127,10 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
         }
         SECTION("Asset created")
         {
+            uint32_t zeroTasks = 0;
             auto assetTestHelper = ManageAssetTestHelper(testManager);
-            assetTestHelper.createAsset(root, root.key, base, root, 0);
-            assetTestHelper.createAsset(root, root.key, quote, root, 0);
+            assetTestHelper.createAsset(root, root.key, base, root, 0, &zeroTasks);
+            assetTestHelper.createAsset(root, root.key, quote, root, 0, &zeroTasks);
             SECTION("Pair already exists")
             {
                 assetPairTestHelper.applyManageAssetPairTx(root, quote, base,

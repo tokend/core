@@ -36,5 +36,22 @@ namespace stellar {
                                                              expectedResult,
                                                              checker);
         }
+
+        ReviewRequestResult
+        ReviewUpdateSaleDetailsRequestTestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID,
+                                                                                Hash requestHash,
+                                                                                ReviewableRequestType requestType,
+                                                                                ReviewRequestOpAction action,
+                                                                                std::string rejectReason,
+                                                                                ReviewRequestResultCode expectedResult,
+                                                                                uint32_t *tasksToAdd,
+                                                                                uint32_t *tasksToRemove) {
+            auto checker = ReviewUpdateSaleDetailsRequestChecker(mTestManager);
+            return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                             requestHash, requestType,
+                                                             action, rejectReason,
+                                                             expectedResult,
+                                                             checker, tasksToAdd, tasksToRemove);
+        }
     }
 }

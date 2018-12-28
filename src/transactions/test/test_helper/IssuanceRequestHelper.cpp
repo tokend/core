@@ -56,9 +56,8 @@ namespace txtest
 		}
 
         auto createPreIssuanceResult = opResult.tr().createPreIssuanceRequestResult();
-        if (source.key == getRoot())
+        if (createPreIssuanceResult.success().fulfilled)
         {
-            REQUIRE(createPreIssuanceResult.success().fulfilled);
             checker.checkApprove(nullptr);
             return createPreIssuanceResult;
         }
@@ -157,9 +156,8 @@ namespace txtest
 		REQUIRE(!!issuanceRequestFrameAfterTx);
 
 		auto& issuanceRequestEntryAfterTx = issuanceRequestFrameAfterTx->getRequestEntry();
-		REQUIRE(issuanceRequestEntryAfterTx.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-		REQUIRE(issuanceRequestEntryAfterTx.ext.tasksExt().allTasks != 0);
-		REQUIRE(issuanceRequestEntryAfterTx.ext.tasksExt().pendingTasks != 0);
+		REQUIRE(issuanceRequestEntryAfterTx.tasks.allTasks != 0);
+		REQUIRE(issuanceRequestEntryAfterTx.tasks.pendingTasks != 0);
 
 
 		return result;
@@ -174,11 +172,11 @@ namespace txtest
 		CreateIssuanceRequestOp& createIssuanceRequestOp = op.body.createIssuanceRequestOp();
 		createIssuanceRequestOp.request = request;
         createIssuanceRequestOp.reference = reference;
-		createIssuanceRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+		createIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 
         if (allTasks != nullptr)
 		{
-			createIssuanceRequestOp.ext.allTasks().activate() = *allTasks;
+			createIssuanceRequestOp.allTasks.activate() = *allTasks;
 		}
 
 		return txFromOperation(source, op, nullptr);
@@ -202,7 +200,7 @@ namespace txtest
 		auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
 														 ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
 														 : 0;
-		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, trailingDigitsCount);
+		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount);
 		authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
 	}
 
@@ -211,7 +209,8 @@ namespace txtest
 	{
 		auto preIssuanceResult = applyCreatePreIssuanceRequest(assetOwner, preIssuedAssetSigner, assetCode, preIssuedAmount,
 			SecretKey::random().getStrKeyPublic());
-        if (assetOwner.key == getRoot())
+        if (preIssuanceResult.code() == CreatePreIssuanceRequestResultCode::SUCCESS
+        	&& preIssuanceResult.success().fulfilled)
             return;
 		auto reviewPreIssuanceRequestHelper = ReviewPreIssuanceRequestHelper(mTestManager);
 		reviewPreIssuanceRequestHelper.applyReviewRequestTx(root, preIssuanceResult.success().requestID, ReviewRequestOpAction::APPROVE, "");

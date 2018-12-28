@@ -74,5 +74,32 @@ ReviewRequestResult ReviewAmlAlertHelper::applyReviewRequestTx(Account& source,
         expectedResult,
         amlReviewChecker);
 }
+
+    ReviewRequestResult
+    ReviewAmlAlertHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                        ReviewableRequestType requestType, ReviewRequestOpAction action,
+                                                        std::string rejectReason,
+                                                        ReviewRequestResultCode expectedResult, uint32_t *tasksToAdd,
+                                                        uint32_t *tasksToRemove) {
+        auto checker = AmlReviewChecker(mTestManager);
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                                  requestHash, requestType,
+                                                                  action, rejectReason,
+                                                                  expectedResult,
+                                                                  checker,
+                                                                  tasksToAdd,
+                                                                  tasksToRemove
+        );
+    }
+
+    ReviewRequestResult ReviewAmlAlertHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID,
+                                                                            ReviewRequestOpAction action,
+                                                                            std::string rejectReason,
+                                                                            ReviewRequestResultCode expectedResult,
+                                                                            uint32_t *tasksToAdd,
+                                                                            uint32_t *tasksToRemove) {
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID, action, rejectReason,
+                                                                  expectedResult, tasksToAdd, tasksToRemove);
+    }
 }
 }

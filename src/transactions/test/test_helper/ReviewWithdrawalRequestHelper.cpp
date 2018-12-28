@@ -10,13 +10,26 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
+#include "ReviewRequestTestHelper.h"
 
 namespace stellar
 {
 namespace txtest
 {
-WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, const uint64_t requestID) : TwoStepWithdrawReviewChecker(testManager, requestID)
+WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, const uint64_t requestID) : ReviewChecker(testManager)
 {
+    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
+    if (!request || request->getType() != ReviewableRequestType::WITHDRAW) {
+        return;
+    }
+    withdrawalRequest = std::make_shared<WithdrawalRequest>(request->getRequestEntry().body.withdrawalRequest());
+    balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(withdrawalRequest->balance, mTestManager->getDB());
+    auto assetCode = balanceBeforeTx->getAsset();
+    assetBeforeTx = AssetHelperLegacy::Instance()->loadAsset(assetCode, mTestManager->getDB());
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+                                                                             assetCode, testManager->getDB(),
+                                                                             nullptr);
 }
 
 void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
@@ -82,12 +95,12 @@ TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTxWithTasks(
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.requestDetails.withdrawal().externalDetails = "{}";
-    reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
     if ( tasksToAdd != nullptr) {
-        reviewRequestOp.ext.reviewDetails().tasksToAdd = *tasksToAdd;
+        reviewRequestOp.reviewDetails.tasksToAdd = *tasksToAdd;
     }
     if ( tasksToRemove != nullptr) {
-        reviewRequestOp.ext.reviewDetails().tasksToRemove = *tasksToRemove;
+        reviewRequestOp.reviewDetails.tasksToRemove = *tasksToRemove;
     }
     return txFromOperation(source, op, nullptr);
 }

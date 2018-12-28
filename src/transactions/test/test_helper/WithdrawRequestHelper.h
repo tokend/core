@@ -31,9 +31,7 @@ public:
 
     static WithdrawalRequest createWithdrawRequest(BalanceID balance, uint64_t amount,
                                             Fee fee,
-                                            std::string externalDetails,
-                                            AssetCode autoConversionDestAsset,
-                                            uint64_t expectedAutoConversion);
+                                            std::string externalDetails);
 
     TransactionFramePtr createWithdrawalRequestTx(
         Account& source, WithdrawalRequest request, uint32_t *allTasks);

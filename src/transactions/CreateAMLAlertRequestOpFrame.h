@@ -31,7 +31,7 @@ namespace stellar {
         CreateAMLAlertRequestOpFrame(Operation const &op, OperationResult &res,
                                      TransactionFrame &parentTx);
 
-        bool doApply(Application &app, LedgerDelta &delta,
+        bool doApply(Application &app, StorageHelper &storageHelper,
                      LedgerManager &ledgerManager) override;
 
         bool doCheckValid(Application &app) override;
@@ -44,5 +44,7 @@ namespace stellar {
         std::string getInnerResultCodeAsStr() override {
             return xdr::xdr_traits<CreateAMLAlertRequestResultCode>::enum_name(innerResult().code());
         }
+
+        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
     };
 }

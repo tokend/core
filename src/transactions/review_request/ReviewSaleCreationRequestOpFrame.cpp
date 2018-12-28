@@ -31,12 +31,6 @@ ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(
     {
         return request->getRequestEntry().body.saleCreationRequest();
     }
-    case ReviewableRequestType::UPDATE_PROMOTION:
-    {
-        return request->getRequestEntry()
-            .body.promotionUpdateRequest()
-            .newPromotionData;
-    }
     default:
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -75,11 +69,7 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     }
 
     const uint64_t requiredBaseAssetForHardCap =
-        saleCreationRequest.ext.v() >=
-                LedgerVersion::
-                    ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP
-            ? getRequiredBaseAssetForHardCap(saleCreationRequest)
-            : baseAsset->getMaxIssuanceAmount();
+       getRequiredBaseAssetForHardCap(saleCreationRequest);
 
     if (!baseAsset->lockIssuedAmount(requiredBaseAssetForHardCap))
     {
@@ -147,6 +137,16 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
     }
 
     auto& db = app.getDatabase();
+
+
+    handleTasks(db, delta, request);
+
+    if (!request->canBeFulfilled(ledgerManager)){
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
+
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
     auto newSaleID = delta.getHeaderFrame().generateID(LedgerEntryType::SALE);
@@ -161,14 +161,9 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
         return false;
     }
 
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-    {
-        innerResult().success().fulfilled = true;
-        innerResult().success().typeExt.requestType(ReviewableRequestType::SALE);
-        innerResult().success().typeExt.saleExtended().saleID = newSaleID;
-        return true;
-    }
-
+    innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::SALE);
+    innerResult().success().typeExt.saleExtended().saleID = newSaleID;
     return true;
 }
 
@@ -194,18 +189,7 @@ uint64
 ReviewSaleCreationRequestOpFrame::getRequiredBaseAssetForHardCap(
     SaleCreationRequest const& saleCreationRequest)
 {
-    switch (saleCreationRequest.ext.v())
-    {
-    case LedgerVersion::
-        ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP:
-        return saleCreationRequest.ext.extV2().requiredBaseAssetForHardCap;
-    case LedgerVersion::STATABLE_SALES:
-        return saleCreationRequest.ext.extV3().requiredBaseAssetForHardCap;
-    default:
-        throw std::runtime_error("Unexpected operation: trying to get "
-                                 "requiredBaseAssetForHardCap from unknown "
-                                 "version of the request");
-    }
+    return saleCreationRequest.requiredBaseAssetForHardCap;
 }
 
 void

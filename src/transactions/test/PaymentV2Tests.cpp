@@ -7,6 +7,7 @@
 #include <transactions/test/test_helper/SetFeesTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "test_helper/TxHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 #include "main/test.h"
 #include "TxTests.h"
@@ -51,6 +52,20 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     auto root = Account{getRoot(), Salt(0)};
     auto payer = Account{SecretKey::random(), Salt(1)};
     auto recipient = Account{SecretKey::random(), Salt(1)};
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     const AssetCode& paymentAsset = testSet.paymentAsset;
     const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);

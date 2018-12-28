@@ -25,12 +25,12 @@ class CreatePreIssuanceRequestOpFrame : public OperationFrame
 
 	bool isSignatureValid(AssetFrame::pointer asset, LedgerVersion version);
 
-  public:
+public:
 
     CreatePreIssuanceRequestOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper &storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
@@ -45,6 +45,7 @@ class CreatePreIssuanceRequestOpFrame : public OperationFrame
 	}
 
 	static Hash getSignatureData(stellar::string64 const& reference, uint64_t const& amount, AssetCode const& assetCode);
-    
+
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 };
 }

@@ -16,7 +16,7 @@ namespace stellar {
     SourceDetails
     ReviewUpdateKYCRequestOpFrame::getSourceAccountDetails(
             std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const {
-        int32_t superAdminTask = mReviewRequest.requestDetails.updateKYC().tasksToRemove & 1;
+        int32_t superAdminTask = mReviewRequest.reviewDetails.tasksToRemove & 1;
         if (superAdminTask == 1) {
             return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
                                  static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
@@ -36,19 +36,13 @@ namespace stellar {
 
         auto &updateKYCRequest = request->getRequestEntry().body.updateKYCRequest();
 
-        updateKYCRequest.allTasks |= mReviewRequest.requestDetails.updateKYC().tasksToAdd;
-        updateKYCRequest.pendingTasks &= ~mReviewRequest.requestDetails.updateKYC().tasksToRemove;
-        updateKYCRequest.pendingTasks |= mReviewRequest.requestDetails.updateKYC().tasksToAdd;
-        updateKYCRequest.externalDetails.emplace_back(mReviewRequest.requestDetails.updateKYC().externalDetails);
+        auto& requestEntry = request->getRequestEntry();
 
-        auto &requestEntry = request->getRequestEntry();
-        const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);
-        requestEntry.hash = newHash;
+        handleTasks(db, delta, request);
 
-        ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
-
-        if (!canBeFulfilled(requestEntry)) {
+        if (!request->canBeFulfilled(ledgerManager)){
             innerResult().code(ReviewRequestResultCode::SUCCESS);
+            innerResult().success().fulfilled = false;
             return true;
         }
 
@@ -79,19 +73,15 @@ namespace stellar {
         EntryHelperProvider::storeChangeEntry(delta, db, accountToUpdateKYCFrame->mEntry);
 
         innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = true;
         return true;
     }
 
     bool ReviewUpdateKYCRequestOpFrame::handleReject(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
                                                      ReviewableRequestFrame::pointer request) {
-        if (mReviewRequest.requestDetails.updateKYC().tasksToRemove != 0) {
-            if (ledgerManager.shouldUse(LedgerVersion::ERROR_ON_NON_ZERO_TASKS_TO_REMOVE_IN_REJECT_KYC)) {
-                innerResult().code(ReviewRequestResultCode::NON_ZERO_TASKS_TO_REMOVE_NOT_ALLOWED);
-                return false;
-            }
-
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Tasks to remove must be zero.";
-            throw std::runtime_error("Unexpected state. Tasks to remove must be zero.");
+        if (mReviewRequest.reviewDetails.tasksToRemove != 0) {
+            innerResult().code(ReviewRequestResultCode::NON_ZERO_TASKS_TO_REMOVE_NOT_ALLOWED);
+            return false;
         }
 
         request->checkRequestType(ReviewableRequestType::UPDATE_KYC);
@@ -99,24 +89,19 @@ namespace stellar {
         Database &db = ledgerManager.getDatabase();
 
         auto &updateKYCRequest = request->getRequestEntry().body.updateKYCRequest();
-
-        updateKYCRequest.allTasks |= mReviewRequest.requestDetails.updateKYC().tasksToAdd;
-        updateKYCRequest.pendingTasks = updateKYCRequest.allTasks;
+        auto& requestEntry = request->getRequestEntry();
+        requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+        requestEntry.tasks.pendingTasks = mReviewRequest.reviewDetails.tasksToAdd;
         updateKYCRequest.externalDetails.emplace_back(mReviewRequest.requestDetails.updateKYC().externalDetails);
 
         request->setRejectReason(mReviewRequest.reason);
 
-        auto &requestEntry = request->getRequestEntry();
         const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);
         requestEntry.hash = newHash;
         ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
 
         innerResult().code(ReviewRequestResultCode::SUCCESS);
         return true;
-    }
-
-    bool ReviewUpdateKYCRequestOpFrame::canBeFulfilled(ReviewableRequestEntry &requestEntry) {
-        return requestEntry.body.updateKYCRequest().pendingTasks == 0;
     }
 
     bool ReviewUpdateKYCRequestOpFrame::doCheckValid(Application &app) {

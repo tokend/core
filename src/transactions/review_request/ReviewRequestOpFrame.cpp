@@ -25,8 +25,6 @@
 #include "ReviewAMLAlertRequestOpFrame.h"
 #include "ReviewUpdateKYCRequestOpFrame.h"
 #include "ReviewInvoiceRequestOpFrame.h"
-#include "ReviewUpdateSaleEndTimeRequestOpFrame.h"
-#include "ReviewPromotionUpdateRequestOpFrame.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "ReviewASwapBidCreationRequestOpFrame.h"
 #include "ReviewASwapRequestOpFrame.h"
@@ -107,8 +105,6 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 		return new ReviewSaleCreationRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::LIMITS_UPDATE:
 		return new ReviewLimitsUpdateRequestOpFrame(op, res, parentTx);
-    case ReviewableRequestType::TWO_STEP_WITHDRAWAL:
-        return new ReviewTwoStepWithdrawalRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::AML_ALERT:
 		return new ReviewAMLAlertRequestOpFrame(op,res,parentTx);
     case ReviewableRequestType::UPDATE_KYC:
@@ -117,10 +113,6 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 		return new ReviewUpdateSaleDetailsRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::INVOICE:
 		return new ReviewInvoiceRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_SALE_END_TIME:
-		return new ReviewUpdateSaleEndTimeRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_PROMOTION:
-		return new ReviewPromotionUpdateRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CONTRACT:
 		return new ReviewContractRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
@@ -180,6 +172,11 @@ ReviewRequestOpFrame::doApply(Application& app,
 		return false;
 	}
 
+	if (removingNotSetTasks(request->getRequestEntry())){
+		innerResult().code(ReviewRequestResultCode::REMOVING_NOT_SET_TASKS);
+		return false;
+	}
+
 	switch (mReviewRequest.action) {
 	case ReviewRequestOpAction::APPROVE:
 		return handleApprove(app, delta, ledgerManager, request);
@@ -205,7 +202,6 @@ ReviewRequestOpFrame::doCheckValid(Application& app)
 		innerResult().code(ReviewRequestResultCode::INVALID_REASON);
 		return false;
 	}
-    
 
     return true;
 }
@@ -232,6 +228,21 @@ uint64_t ReviewRequestOpFrame::getTotalFee(uint64_t requestID, Fee fee)
     }
 
     return totalFee;
-}    
+}
 
+bool ReviewRequestOpFrame::removingNotSetTasks(ReviewableRequestEntry &requestEntry) {
+	bool emptyTasksToRemove = mReviewRequest.reviewDetails.tasksToRemove == 0;
+	bool removingTasksPresent = (~requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove) != 0;
+
+	return !emptyTasksToRemove && removingTasksPresent;
+}
+
+void ReviewRequestOpFrame::handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request)
+{
+    request->getRequestEntry().tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    request->getRequestEntry().tasks.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
+    request->getRequestEntry().tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    request->getRequestEntry().tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
+    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+}
 }

@@ -15,6 +15,7 @@
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
@@ -230,7 +231,6 @@ OperationFrame::doApply(Application& app, LedgerDelta& delta,
 	LedgerManager& ledgerManager)
 {
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     return doApply(app, storageHelper, ledgerManager);
 }
 
@@ -410,9 +410,40 @@ OperationFrame::checkRolePermissions(Application& app)
 
     const OperationType thisOpType = getOperation().body.type();
     StorageHelperImpl storageHelper(app.getDatabase(), nullptr);
+    static_cast<StorageHelper&>(storageHelper).begin();
     AccountRolePermissionHelperImpl permissionHelper(storageHelper);
     return static_cast<AccountRolePermissionHelper&>(permissionHelper)
         .hasPermission(mSourceAccount, thisOpType);
 }
+
+
+bool
+OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr::pointer<uint32> tasks)
+{
+    if (tasks) {
+        allTasks = *tasks;
+        return true;
+    }
+
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto keys = makeTasksKeyVector(storageHelper);
+    for(auto& key : keys){
+        auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+        if (keyValueFrame)
+        {
+            allTasks = keyValueFrame->mustGetUint32Value();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::vector<longstring>
+OperationFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+{
+    return std::vector<longstring>{};
+};
+
 
 }

@@ -6,7 +6,10 @@
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/ContractHelper.h>
-#include <ledger/KeyValueHelperLegacy.h>
+#include "ledger/KeyValueHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/StorageHelper.h"
+#include "review_request/ReviewRequestHelper.h"
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -34,8 +37,7 @@ SourceDetails
 ManageInvoiceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const
 {
-	return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::INVOICE_MANAGER));
+	return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
 }
 
 ManageInvoiceRequestOpFrame::ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res,
@@ -46,14 +48,16 @@ ManageInvoiceRequestOpFrame::ManageInvoiceRequestOpFrame(Operation const& op, Op
 }
 
 bool
-ManageInvoiceRequestOpFrame::doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
+ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
 	innerResult().code(ManageInvoiceRequestResultCode::SUCCESS);
 
 	if (mManageInvoiceRequest.details.action() == ManageInvoiceRequestAction::CREATE)
 	{
-	    return createManageInvoiceRequest(app, delta, ledgerManager);
+	    return createManageInvoiceRequest(app, storageHelper, ledgerManager);
 	}
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -81,7 +85,7 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledge
 	if (!!invoiceRequest.contractID)
 	{
 	    auto contractHelper = ContractHelper::Instance();
-	    auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, &delta);
+	    auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, delta);
 
 	    if (!contractFrame)
 	    {
@@ -104,10 +108,10 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledge
 	    }
 
 	    invoices.erase(invoicePos);
-	    contractHelper->storeChange(delta, db, contractFrame->mEntry);
+	    contractHelper->storeChange(*delta, db, contractFrame->mEntry);
 	}
 
-	reviewableRequestHelper->storeDelete(delta, db, reviewableRequest->getKey());
+	reviewableRequestHelper->storeDelete(*delta, db, reviewableRequest->getKey());
 
 	innerResult().success().details.action(ManageInvoiceRequestAction::REMOVE);
 
@@ -115,28 +119,30 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledge
 }
 
 bool
-ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, LedgerDelta& delta,
+ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, StorageHelper &storageHelper,
                                                         LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
     auto& invoiceCreationRequest = mManageInvoiceRequest.details.invoiceRequest();
 
-    auto senderBalance = BalanceHelperLegacy::Instance()->loadBalance(invoiceCreationRequest.sender,
-                                                                invoiceCreationRequest.asset, db, &delta);
+    auto senderBalance = storageHelper.getBalanceHelper().loadBalance(invoiceCreationRequest.sender,
+                                                                invoiceCreationRequest.asset);
     if (!senderBalance)
     {
         innerResult().code(ManageInvoiceRequestResultCode::BALANCE_NOT_FOUND);
         return false;
     }
 
-    if (!checkMaxInvoicesForReceiverAccount(app, db, delta))
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    if (!checkMaxInvoicesForReceiverAccount(app, db, keyValueHelper))
         return false;
 
-    if (!checkMaxInvoiceDetailsLength(app, db, delta))
+    if (!checkMaxInvoiceDetailsLength(app, keyValueHelper))
         return false;
 
     auto receiverBalanceID = AccountManager::loadOrCreateBalanceForAsset(getSourceID(),
-                                                                         invoiceCreationRequest.asset, db, delta);
+                                                                         invoiceCreationRequest.asset, db, *delta);
     InvoiceRequest invoiceRequest;
     invoiceRequest.asset = invoiceCreationRequest.asset;
     invoiceRequest.amount = invoiceCreationRequest.amount;
@@ -151,15 +157,15 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Ledger
     body.type(ReviewableRequestType::INVOICE);
     body.invoiceRequest() = invoiceRequest;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), invoiceCreationRequest.sender,
+    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), invoiceCreationRequest.sender,
                                                              nullptr, body, ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 
     if (invoiceCreationRequest.contractID)
     {
         auto contractHelper = ContractHelper::Instance();
-        auto contractFrame = contractHelper->loadContract(*invoiceCreationRequest.contractID, db, &delta);
+        auto contractFrame = contractHelper->loadContract(*invoiceCreationRequest.contractID, db, delta);
 
         if (!contractFrame)
         {
@@ -180,10 +186,32 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Ledger
         }
 
         contractFrame->addInvoice(request->getRequestID());
-        contractHelper->storeChange(delta, db, contractFrame->mEntry);
+        contractHelper->storeChange(*delta, db, contractFrame->mEntry);
+    }
+
+
+    uint32_t allTasks = 0;
+    if (!loadTasks(storageHelper, allTasks, mManageInvoiceRequest.details.invoiceRequest().allTasks))
+    {
+        innerResult().code(ManageInvoiceRequestResultCode::INVOICE_TASKS_NOT_FOUND);
+        return false;
+    }
+
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+
+    bool fulfilled = false;
+
+    if (allTasks == 0) {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review manage invoice request");
+        }
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().success().details.action(ManageInvoiceRequestAction::CREATE);
+    innerResult().success().fulfilled = fulfilled;
     innerResult().success().details.response().requestID = request->getRequestID();
     innerResult().success().details.response().receiverBalance = receiverBalanceID;
     innerResult().success().details.response().senderBalance = senderBalance->getBalanceID();
@@ -192,9 +220,9 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Ledger
 }
 
 bool
-ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app, Database& db, LedgerDelta& delta)
+ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app, Database& db, KeyValueHelper &keyValueHelper)
 {
-    auto maxInvoicesCount = obtainMaxInvoicesCount(app, db, delta);
+    auto maxInvoicesCount = obtainMaxInvoicesCount(app, keyValueHelper);
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::INVOICE, db);
@@ -208,9 +236,9 @@ ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app
 }
 
 bool
-ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, Database& db, LedgerDelta& delta)
+ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper)
 {
-    auto maxInvoiceDetailsLength = obtainMaxInvoiceDetailsLength(app, db, delta);
+    auto maxInvoiceDetailsLength = obtainMaxInvoiceDetailsLength(app, keyValueHelper);
 
     if (mManageInvoiceRequest.details.invoiceRequest().details.size() >= maxInvoiceDetailsLength)
     {
@@ -222,10 +250,10 @@ ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, Data
 }
 
 int64_t
-ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, Database& db, LedgerDelta& delta)
+ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, KeyValueHelper &keyValueHelper)
 {
     auto maxInvoicesCountKey = ManageKeyValueOpFrame::makeMaxInvoicesCountKey();
-    auto maxInvoicesCountKeyValue = KeyValueHelperLegacy::Instance()->loadKeyValue(maxInvoicesCountKey, db, &delta);
+    auto maxInvoicesCountKeyValue = keyValueHelper.loadKeyValue(maxInvoicesCountKey);
 
     if (!maxInvoicesCountKeyValue)
     {
@@ -244,11 +272,10 @@ ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, Database& 
 }
 
 uint64_t
-ManageInvoiceRequestOpFrame::obtainMaxInvoiceDetailsLength(Application& app, Database& db, LedgerDelta& delta)
+ManageInvoiceRequestOpFrame::obtainMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper)
 {
     auto maxInvoicesDetailsLengthKey = ManageKeyValueOpFrame::makeMaxInvoiceDetailLengthKey();
-    auto maxInvoicesDetailsLengthKeyValue = KeyValueHelperLegacy::Instance()->
-            loadKeyValue(maxInvoicesDetailsLengthKey, db, &delta);
+    auto maxInvoicesDetailsLengthKeyValue = keyValueHelper.loadKeyValue(maxInvoicesDetailsLengthKey);
 
     if (!maxInvoicesDetailsLengthKeyValue)
     {
@@ -286,4 +313,9 @@ ManageInvoiceRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
+std::vector<longstring> ManageInvoiceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+    return std::vector<longstring> {
+        ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()
+    };
+}
 }

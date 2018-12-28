@@ -83,9 +83,9 @@ enum databaseSchemaVersion : unsigned long {
 	INITIAL = 3,
 	DROP_BAN = 4,
     REFERENCE_VERSION = 5,
-    ADD_SALE_TYPE = 6,
-	USE_KYC_LEVEL = 7,
-    ADD_ACCOUNT_KYC = 8,
+	USE_KYC_LEVEL = 6,
+    ADD_ACCOUNT_KYC = 7,
+    ADD_FEE_ASSET = 8,
     EXTERNAL_POOL_FIX_DB_TYPES = 9,
     EXTERNAL_POOL_FIX_MIGRATION = 10,
     KEY_VALUE_FIX_MIGRATION = 11,
@@ -158,7 +158,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
     clearPreparedStatementCache();
 
     StorageHelperImpl storageHelper(*this, nullptr);
-    static_cast<StorageHelper&>(storageHelper).release();
     switch (vers) {
         case databaseSchemaVersion::DROP_SCP:
             Herder::dropAll(*this);
@@ -167,9 +166,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::DROP_BAN:
             BanManager::dropAll(*this);
-            break;
-        case ADD_SALE_TYPE:
-            SaleHelper::Instance()->addType(*this);
             break;
         case REFERENCE_VERSION:
             ReferenceHelper::addVersion(*this);
@@ -191,26 +187,16 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_PARENT_DB_TYPE:
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
             break;
-        case databaseSchemaVersion::ADD_SALE_STATE:
-            SaleHelper::Instance()->addState(*this);
-            break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
             LimitsV2Helper::Instance()->dropAll(*this);
             StatisticsV2Helper::Instance()->dropAll(*this);
             PendingStatisticsHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
-            ReviewableRequestHelper::Instance()->addTasks(*this);
             PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
             break;
         case databaseSchemaVersion::ADD_CONTRACTS:
             ContractHelper::Instance()->dropAll(*this);
-            break;
-        case databaseSchemaVersion::REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE:
-            ReviewableRequestHelper::Instance()->changeDefaultExternalDetails(*this);
-            break;
-        case databaseSchemaVersion::REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
-            ReviewableRequestHelper::Instance()->setEmptyStringToExternalDetailsInsteadNull(*this);
             break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
             ContractHelper::Instance()->addCustomerDetails(*this);

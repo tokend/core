@@ -369,7 +369,6 @@ namespace stellar {
     {
         StorageHelperImpl storageHelperImpl(db, &delta);
         StorageHelper& storageHelper = storageHelperImpl;
-        storageHelper.release();
 
         if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
                 frame->getFeeAsset(), frame->getFixedFee()))

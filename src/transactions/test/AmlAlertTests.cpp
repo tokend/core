@@ -7,6 +7,8 @@
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "transactions/ManageKeyValueOpFrame.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/ReviewAMLAlertRequestHelper.h"
 
@@ -30,20 +32,21 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
 
     auto root = Account{ getRoot(), Salt(0) };
     auto amlAlertHelper = ManageAMLAlertTestHelper(testManager);
+    uint32_t zeroTasks = 0;
     SECTION("Empty reason is not allowed")
     {
         BalanceID balanceID;
-        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 0, "", "", CreateAMLAlertRequestResultCode::INVALID_REASON);
+        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 0, "", "", &zeroTasks, CreateAMLAlertRequestResultCode::INVALID_REASON);
     }
     SECTION("Zero amount is not allowed")
     {
         BalanceID balanceID;
-        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 0, "Inalid", "", CreateAMLAlertRequestResultCode::INVALID_AMOUNT);
+        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 0, "Inalid", "", &zeroTasks, CreateAMLAlertRequestResultCode::INVALID_AMOUNT);
     }
     SECTION("Balance does not exists")
     {
         BalanceID balanceID;
-        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 10, "Inalid", "", CreateAMLAlertRequestResultCode::BALANCE_NOT_EXIST);
+        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 10, "Inalid", "", &zeroTasks, CreateAMLAlertRequestResultCode::BALANCE_NOT_EXIST);
     }
 
     auto reference = "Random reference";
@@ -52,6 +55,18 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         auto issuanceHelper = IssuanceRequestHelper(testManager);
         const AssetCode asset = "USD";
         const uint64_t preIssuedAmount = 10000 * ONE;
+
+        ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+        longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+        manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+        manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+        manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
         issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
         ManageAssetTestHelper(testManager).updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
 
@@ -62,30 +77,53 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         uint32_t allTasks = 0;
         issuanceHelper.applyCreateIssuanceRequest(root, asset, preIssuedAmount, balance->getBalanceID(),
                                                   "RANDOM ISSUANCE REFERENCE", &allTasks);
-        SECTION("Insuficient balance")
+        SECTION("Insufficient balance")
         {
-            amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount + 1, "Inalid", reference, CreateAMLAlertRequestResultCode::UNDERFUNDED);
+            amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount + 1, "Inalid", reference,
+                                               &zeroTasks, CreateAMLAlertRequestResultCode::UNDERFUNDED);
         }
         SECTION("Mismatching balance precision and amount")
         {
             ManageAssetTestHelper(testManager).changeAssetTrailingDigits(balance->getAsset(), 0);
-            amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount - 1, "Inalid", reference, CreateAMLAlertRequestResultCode::INCORRECT_PRECISION);
+            amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount - 1, "Inalid", reference, &zeroTasks, CreateAMLAlertRequestResultCode::INCORRECT_PRECISION);
         }
-        SECTION("Given valid aml alert request")
+        SECTION("Autoapprove")
         {
-            const auto requestID = amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount/2, "Inalid", reference,
-                CreateAMLAlertRequestResultCode::SUCCESS).success().requestID;
+            auto result = amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount/2, "Inalid", reference,
+                                               &zeroTasks,
+                                               CreateAMLAlertRequestResultCode::SUCCESS);
+            REQUIRE(result.success().fulfilled);
+        }
+
+        SECTION("Given valid aml alert request with tasks")
+        {
+            uint32_t nonZeroTasks = 2;
+            auto result = amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount/2, "Inalid", reference,
+                &nonZeroTasks,
+                CreateAMLAlertRequestResultCode::SUCCESS);
+            const auto requestID = result.success().requestID;
+
+            REQUIRE_FALSE(result.success().fulfilled);
+
             SECTION("Reference duplication")
             {
-                amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount / 2, "Inalid", reference, CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
+                amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount / 2, "Inalid", reference,
+                        &zeroTasks,
+                        CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
             }
             auto amlReviewHelper = ReviewAmlAlertHelper(testManager);
             SECTION("Approve")
             {
-                amlReviewHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "");
+                uint32_t tasksToAdd = 0, tasksToRemove = 2;
+                auto reviewResult = amlReviewHelper.applyReviewRequestTxWithTasks(root, requestID, ReviewRequestOpAction::APPROVE, "",
+                        ReviewRequestResultCode::SUCCESS, &tasksToAdd, &tasksToRemove);
+
+                REQUIRE(reviewResult.success().fulfilled);
                 SECTION("Reference duplication")
                 {
-                    amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount / 2, "Inalid", reference, CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
+                    amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount / 2, "Inalid", reference,
+                            &zeroTasks,
+                            CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
                 }
             }
             SECTION("Reject is not allowed")
@@ -97,7 +135,9 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
                 amlReviewHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::PERMANENT_REJECT, "Everthing seems to be ok");
                 SECTION("Reference duplication")
                 {
-                    amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount / 2, "Inalid", reference, CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
+                    amlAlertHelper.applyCreateAmlAlert(root, balance->getBalanceID(), preIssuedAmount / 2, "Inalid", reference,
+                            &zeroTasks,
+                            CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
                 }
             }
         }

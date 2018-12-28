@@ -390,7 +390,6 @@ void OfferHelper::checkAmounts(const OfferFrame::pointer& frame, Database& db, L
 {
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
-    storageHelper.release();
 
     const OfferEntry& entry = frame->getOffer();
 

@@ -57,7 +57,6 @@ namespace stellar {
         static longstring makeTransactionFeeAssetKey();
 
         static longstring makeIssuanceTasksKey(AssetCode assetCode);
-
         static longstring makeWithdrawalTasksKey(AssetCode assetCode);
 
         static longstring makeMaxContractDetailLengthKey();
@@ -71,8 +70,22 @@ namespace stellar {
         static longstring makeMaxInvoiceDetailLengthKey();
 
         static longstring makeAtomicSwapTasksKey();
+        static longstring makePreIssuanceTasksKey(AssetCode assetCode);
 
         static longstring makeWithdrawLowerBoundKey(AssetCode assetCode);
+
+        static longstring makeAssetUpdateTasksKey();
+
+        static longstring makeSaleUpdateTasksKey(longstring ID);
+
+        static longstring makeSaleCreateTasksKey(AssetCode assetCode);
+
+        static longstring makeInvoiceCreateTasksKey();
+
+        static longstring makeContractCreateTasksKey();
+
+        static longstring makeAmlAlertCreateTasksKey();
+
 
         static const char * kycRulesPrefix;
         static const char * externalSystemPrefix;
@@ -88,5 +101,13 @@ namespace stellar {
         static const char * withdrawLowerBoundPrefix;
 
         static std::map<std::string, KeyValueEntryType> valueTypes;
+        static char const * preIssuanceTasksPrefix;
+        static char const * assetCreateTasks;
+        static char const * assetUpdateTasks;
+        static char const * saleUpdateDetailsTasksPrefix;
+        static char const * saleCreateTasksPrefix;
+        static char const * invoiceCreateTasks;
+        static char const * contractCreateTasks;
+        static char const * amlAlertCreateTasks;
     };
 }

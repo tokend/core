@@ -101,5 +101,22 @@ ReviewLimitsUpdateRequestHelper::initializeLimits(AccountID& requestorID)
     limitsV2Entry.annualOut = 500;
 }
 
+    ReviewRequestResult
+    ReviewLimitsUpdateRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID,
+                                                                   Hash requestHash, ReviewableRequestType requestType,
+                                                                   ReviewRequestOpAction action,
+                                                                   std::string rejectReason,
+                                                                   ReviewRequestResultCode expectedResult,
+                                                                   uint32_t *tasksToAdd, uint32_t *tasksToRemove) {
+
+        auto checker = LimitsUpdateReviewChecker(mTestManager, requestID);
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                         requestHash, requestType,
+                                                         action, rejectReason,
+                                                         expectedResult,
+                                                         checker,
+                                                         tasksToAdd,
+                                                         tasksToRemove);
+    }
 }
 }

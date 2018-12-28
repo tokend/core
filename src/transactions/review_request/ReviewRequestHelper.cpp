@@ -31,6 +31,7 @@ ReviewRequestResult ReviewRequestHelper::tryApproveRequestWithResult(Transaction
     LedgerDeltaImpl reviewRequestDelta(delta);
     StorageHelperImpl storageHelperImpl(ledgerManager.getDatabase(), &reviewRequestDelta);
     StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.begin();
 
     auto helper = ReviewRequestHelper(app, ledgerManager, reviewRequestDelta, reviewableRequest);
     auto result = helper.tryApproveRequest(parentTx);
@@ -76,18 +77,14 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     reviewRequestOp.requestID = mRequest->getRequestID();
     reviewRequestOp.requestDetails.requestType(mRequest->getRequestType());
 
-    if (mRequest->getRequestType() == ReviewableRequestType::UPDATE_KYC) {
-        reviewRequestOp.requestDetails.updateKYC().tasksToAdd = 0;
-        reviewRequestOp.requestDetails.updateKYC().tasksToRemove = 0;
-        reviewRequestOp.requestDetails.updateKYC().externalDetails = "{}";
-    }
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+    reviewRequestOp.reviewDetails.tasksToAdd = 0;
+    reviewRequestOp.reviewDetails.tasksToRemove = 0;
+    reviewRequestOp.reviewDetails.externalDetails = "{}";
 
-    if (mRequest->getRequestType() == ReviewableRequestType::ISSUANCE_CREATE)
+    if (mRequest->getRequestType() == ReviewableRequestType::UPDATE_KYC)
     {
-        reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-        reviewRequestOp.ext.reviewDetails().tasksToAdd = 0;
-        reviewRequestOp.ext.reviewDetails().tasksToRemove = 0;
-        reviewRequestOp.ext.reviewDetails().externalDetails = "{}";
+        reviewRequestOp.requestDetails.updateKYC().externalDetails = "{}";
     }
 
     OperationResult opRes;
@@ -112,8 +109,6 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
 
     return std::pair<bool, ReviewRequestResult>(isApplied, reviewRequestOpFrame->getResult().tr().reviewRequestResult());
 }
-
-
 
 }
 

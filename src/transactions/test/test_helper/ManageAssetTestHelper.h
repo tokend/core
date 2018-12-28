@@ -32,13 +32,15 @@ namespace txtest
 				std::string details,
 				uint64_t maxIssuanceAmount,
 				uint32_t policies,
+                uint32_t *allTasks = nullptr,
                 uint64_t initialPreissuanceAmount = 0,
                 uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
 
 		ManageAssetOp::_request_t createAssetUpdateRequest(
 				AssetCode code,
 				std::string details,
-				uint32_t policies);
+				uint32_t policies,
+				uint32_t* allTasks = nullptr);
 
 		ManageAssetOp::_request_t createCancelRequest();
 
@@ -49,7 +51,7 @@ namespace txtest
                     AccountID accountID);
 
         void createAsset(Account &assetOwner, SecretKey &preIssuedSigner, AssetCode assetCode, Account &root,
-                uint32_t policies, uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
+                uint32_t policies, uint32_t *allTasks = nullptr, uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
         void updateAsset(Account& assetOwner, AssetCode assetCode, Account& root, uint32_t policies);
         void changeAssetTrailingDigits(AssetCode assetCode, uint32 trailingDigitsCount);
 	};

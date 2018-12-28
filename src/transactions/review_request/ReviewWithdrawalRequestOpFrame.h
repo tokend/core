@@ -6,18 +6,25 @@
 
 #include "ReviewRequestOpFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
-#include "ReviewTwoStepWithdrawalRequestOpFrame.h"
 
 namespace stellar
 {
-class ReviewWithdrawalRequestOpFrame : public ReviewTwoStepWithdrawalRequestOpFrame
+class ReviewWithdrawalRequestOpFrame : public ReviewRequestOpFrame
 {
 protected:
 	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
-	bool handleApproveV1(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
-	bool handleApproveV2(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
-	bool removingNotSetTask(ReviewableRequestEntry &requestEntry);
+
+	// returns total fee to pay, throws exception if overflow
+	uint64_t getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
+	// returns total amount to be charged, throws exception if overflow
+	uint64_t getTotalAmountToCharge(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
+
+    bool rejectWithdrawalRequest(Application& app, LedgerDelta& delta,
+                                 LedgerManager& ledgerManager,
+                                 ReviewableRequestFrame::pointer request,
+                                 WithdrawalRequest& withdrawRequest);
+
 public:
 
 	  ReviewWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
@@ -29,5 +36,8 @@ protected:
     bool handlePermanentReject(Application& app, LedgerDelta& delta,
         LedgerManager& ledgerManager,
         ReviewableRequestFrame::pointer request) override;
+
+    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
+                                          int32_t ledgerVersion) const override;
 };
 }

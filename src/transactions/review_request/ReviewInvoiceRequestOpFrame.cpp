@@ -34,8 +34,6 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    innerResult().code(ReviewRequestResultCode::SUCCESS);
-
     if (request->getRequestType() != ReviewableRequestType::INVOICE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected INVOICE, but got "
@@ -53,6 +51,14 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
     }
 
     Database& db = ledgerManager.getDatabase();
+
+    handleTasks(db, delta, request);
+
+    if (!request->canBeFulfilled(ledgerManager)){
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
 
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto senderBalance = balanceHelper->mustLoadBalance(invoiceRequest.senderBalance, db, &delta);
@@ -91,6 +97,8 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
 
     balanceHelper->storeChange(delta, db, receiverBalance->mEntry);
 
+    innerResult().code(ReviewRequestResultCode::SUCCESS);
+    innerResult().success().fulfilled = true;
     return true;
 }
 
@@ -195,19 +203,11 @@ ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &del
     paymentOpV2Frame.setSourceAccountPtr(mSourceAccount);
 
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     if (!paymentOpV2Frame.doCheckValid(app) || !paymentOpV2Frame.doApply(app, storageHelper, ledgerManager))
     {
         auto resultCode = PaymentOpV2Frame::getInnerCode(opRes);
         trySetErrorCode(resultCode);
         return false;
-    }
-
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_REVIEW_INVOICE_REQUEST_PAYMENT_RESPONSE))
-    {
-        innerResult().success().typeExt.requestType(ReviewableRequestType::INVOICE);
-        innerResult().success().typeExt.invoiceExtended().paymentV2Response =
-                opRes.tr().paymentV2Result().paymentV2Response();
     }
 
     return true;

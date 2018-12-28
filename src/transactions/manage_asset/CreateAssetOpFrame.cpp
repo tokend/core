@@ -7,8 +7,11 @@
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateAssetOpFrame.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/AccountHelper.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/KeyValueHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 
 namespace stellar
@@ -20,7 +23,7 @@ using xdr::operator==;
 CreateAssetOpFrame::CreateAssetOpFrame(Operation const& op,
                                            OperationResult& res,
                                            TransactionFrame& parentTx)
-    : ManageAssetOpFrame(op, res, parentTx), mAssetCreationRequest(mManageAsset.request.createAsset())
+    : ManageAssetOpFrame(op, res, parentTx), mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
 {
 
 }
@@ -51,14 +54,16 @@ ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewable
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 	requestEntry.body.type(ReviewableRequestType::ASSET_CREATE);
 	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
-	request->recalculateHashRejectReason();
+    requestEntry.body.assetCreationRequest().sequenceNumber = 0;
+    request->recalculateHashRejectReason();
 
 	return request;
 }
 
-bool CreateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager)
+bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper, LedgerManager & ledgerManager)
 {
-	Database& db = ledgerManager.getDatabase();
+	auto & db = storageHelper.getDatabase();
+	auto delta = storageHelper.getLedgerDelta();
 
 	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     if (mManageAsset.requestID == 0 && reviewableRequestHelper->exists(db, getSourceID(), mAssetCreationRequest.code)) {
@@ -66,46 +71,55 @@ bool CreateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
         return false;
     }
 
-	auto assetHelper = AssetHelperLegacy::Instance();
+	auto& assetHelper = storageHelper.getAssetHelper();
 
-    if (policiesIncompatible()) {
-        innerResult().code(ManageAssetResultCode::INCOMPATIBLE_POLICIES);
-        return false;
-    }
-
-    auto isAssetExist = assetHelper->exists(db, mAssetCreationRequest.code);
+    auto isAssetExist = assetHelper.exists(mAssetCreationRequest.code);
     if (isAssetExist) {
         innerResult().code(ManageAssetResultCode::ASSET_ALREADY_EXISTS);
         return false;
     }
 
     bool isStats = isSetFlag(mAssetCreationRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
-    if (isStats && !!assetHelper->loadStatsAsset(db)) {
+    if (isStats && !!assetHelper.loadStatsAsset()) {
         innerResult().code(ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
         return false;
     }
 
-	auto request = getUpdatedOrCreateReviewableRequest(app, db, delta);
+	auto request = getUpdatedOrCreateReviewableRequest(app, db, *delta);
 	if (!request) {
         innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
 		return false;
 	}
 
+	bool autoreview = true;
     if (mManageAsset.requestID == 0) {
-        EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+        uint32_t allTasks = 0;
+        if (!loadTasks(storageHelper, allTasks, mManageAsset.request.createAssetCreationRequest().allTasks))
+        {
+            innerResult().code(ManageAssetResultCode::ASSET_CREATE_TASKS_NOT_FOUND);
+            return false;
+        }
+        request->setTasks(allTasks);
+        EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+        autoreview = allTasks == 0;
     }
     else {
-		EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
+        if (!ensureUpdateRequestValid(request))
+        {
+            return false;
+        }
+        updateRequest(request->getRequestEntry());
+        request->recalculateHashRejectReason();
+        EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
     }
 
     bool fulfilled = false;
-    if (getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, request);
-
-        if (resultCode != ReviewRequestResultCode::SUCCESS) {
+    if (autoreview) {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
             throw std::runtime_error("Failed to review create asset request");
         }
-        fulfilled = true;
+        fulfilled = result.success().fulfilled;
     }
 
     innerResult().code(ManageAssetResultCode::SUCCESS);
@@ -163,16 +177,37 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
 	return true;
 }
 
-bool CreateAssetOpFrame::policiesIncompatible() {
-    return (isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE) ||
-            isSetFlag(mAssetCreationRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL)) &&
-            isSetFlag(mAssetCreationRequest.policies, AssetPolicy::WITHDRAWABLE_V2);
-
-}
-
 string CreateAssetOpFrame::getAssetCode() const
 {
     return mAssetCreationRequest.code;
 }
 
+vector<longstring> CreateAssetOpFrame::makeTasksKeyVector(StorageHelper& storageHelper) {
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeAssetCreateTasksKey()
+    };
+}
+
+bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
+{
+    if (request->getRejectReason().empty()) {
+        innerResult().code(ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+        return false;
+    }
+
+    if (mManageAsset.request.createAssetCreationRequest().allTasks)
+    {
+        innerResult().code(ManageAssetResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+        return false;
+    }
+    return true;
+}
+
+void CreateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
+    requestEntry.body.assetCreationRequest().code = mManageAsset.request.createAssetCreationRequest().createAsset.code;
+    requestEntry.body.assetCreationRequest().details = mManageAsset.request.createAssetCreationRequest().createAsset.details;
+    requestEntry.body.assetCreationRequest().policies = mManageAsset.request.createAssetCreationRequest().createAsset.policies;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    requestEntry.body.assetCreationRequest().sequenceNumber++;
+}
 }

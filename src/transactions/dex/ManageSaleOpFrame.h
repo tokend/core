@@ -25,38 +25,19 @@ namespace stellar {
         SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                 int32_t ledgerVersion) const override;
 
-        void trySetFulfilled(LedgerManager &lm, bool fulfilled);
-
     public:
         ManageSaleOpFrame(Operation const &op, OperationResult &opRes, TransactionFrame &parentTx);
 
-        bool createUpdateSaleDetailsRequest(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-                                            Database &db);
+        bool createUpdateSaleDetailsRequest(Application &app, StorageHelper &storageHelper,
+                                            LedgerManager &ledgerManager);
 
-        bool amendUpdateSaleDetailsRequest(LedgerManager &lm, Database &db, LedgerDelta &delta);
-
-        bool createUpdateEndTimeRequest(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-                                        Database &db);
-
-        bool amendUpdateEndTimeRequest(LedgerManager &lm, Database &db, LedgerDelta &delta);
-
-        bool setSaleState(SaleFrame::pointer sale, Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-                          Database &db);
-
-        bool isPromotionUpdateDataValid(Application &app);
-
-        bool createPromotionUpdateRequest(Application &app, LedgerDelta &delta, Database &db, SaleState saleState);
-
-        void tryAutoApprove(Application &app, Database &db, LedgerDelta &delta,
-                            ReviewableRequestFrame::pointer requestFrame);
-
-        bool amendPromotionUpdateRequest(LedgerManager &lm, Database &db, LedgerDelta &delta);
+        bool amendUpdateSaleDetailsRequest(Application &app, LedgerManager &lm, StorageHelper &storageHelper);
 
         bool doCheckValid(Application &app) override;
 
-        bool doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) override;
+        bool ensureSaleUpdateDataValid(ReviewableRequestFrame::pointer request);
 
-        static void checkRequestType(ReviewableRequestFrame::pointer request, ReviewableRequestType requestType);
+        bool doApply(Application &app, StorageHelper &storageHelper, LedgerManager &lm) override;
 
         static void cancelSale(SaleFrame::pointer sale, LedgerDelta &delta, Database &db, LedgerManager &lm);
 
@@ -65,22 +46,9 @@ namespace stellar {
 
         static void deleteAllAntesForSale(uint64_t saleID, LedgerDelta &delta, Database &db);
 
-        static bool isSaleStateValid(LedgerManager &lm, SaleState saleState);
-
         std::string getUpdateSaleDetailsRequestReference() const {
             const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_SALE_DETAILS,
                                                         mManageSaleOp.saleID));
-            return binToHex(hash);
-        }
-
-        std::string getUpdateSaleEndTimeRequestReference() const {
-            const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_SALE_END_TIME,
-                                                        mManageSaleOp.saleID));
-            return binToHex(hash);
-        }
-
-        std::string getPromotionUpdateRequestReference() const {
-            const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_PROMOTION, mManageSaleOp.saleID));
             return binToHex(hash);
         }
 
@@ -91,5 +59,8 @@ namespace stellar {
         std::string getInnerResultCodeAsStr() override {
             return xdr::xdr_traits<ManageSaleResultCode>::enum_name(innerResult().code());
         }
+
+        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+
     };
 }

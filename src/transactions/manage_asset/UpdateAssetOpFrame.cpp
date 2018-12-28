@@ -8,6 +8,10 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/KeyValueHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 
 #include "database/Database.h"
 
@@ -45,18 +49,20 @@ ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewable
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 	requestEntry.body.type(ReviewableRequestType::ASSET_UPDATE);
 	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
+	requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
 	request->recalculateHashRejectReason();
 	return request;
 }
 
 UpdateAssetOpFrame::UpdateAssetOpFrame(Operation const & op, OperationResult & res, TransactionFrame & parentTx) :
-	ManageAssetOpFrame(op, res, parentTx), mAssetUpdateRequest(mManageAsset.request.updateAsset())
+	ManageAssetOpFrame(op, res, parentTx), mAssetUpdateRequest(mManageAsset.request.createAssetUpdateRequest().updateAsset)
 {
 }
 
-bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager)
+bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper, LedgerManager & ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     bool isRequestReferenceCheckNeeded = mManageAsset.requestID == 0 && ledgerManager.shouldUse(LedgerVersion::ASSET_UPDATE_CHECK_REFERENCE_EXISTS);
     if (isRequestReferenceCheckNeeded && reviewableRequestHelper->exists(db, getSourceID(), mAssetUpdateRequest.code)) {
@@ -64,49 +70,62 @@ bool UpdateAssetOpFrame::doApply(Application & app, LedgerDelta & delta, LedgerM
         return false;
     }
 
-    auto request = getUpdatedOrCreateReviewableRequest(app, db, delta);
+    auto request = getUpdatedOrCreateReviewableRequest(app, db, *delta);
     if (!request) {
         innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
         return false;
     }
 
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto assetFrame = assetHelper->loadAsset(mAssetUpdateRequest.code, getSourceID(), db, &delta);
+	auto& assetHelper = storageHelper.getAssetHelper();
+	auto assetFrame = assetHelper.loadAsset(mAssetUpdateRequest.code, getSourceID());
 	if (!assetFrame) {
 		innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);
 		return false;
 	}
 
-    if (policiesIncompatible(assetFrame)) {
-        innerResult().code(ManageAssetResultCode::INCOMPATIBLE_POLICIES);
-        return false;
-    }
-
     bool isStats = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
     if (isStats) {
-        auto statsAssetFrame = assetHelper->loadStatsAsset(db);
+        auto statsAssetFrame = assetHelper.loadStatsAsset();
         if (statsAssetFrame && mAssetUpdateRequest.code != statsAssetFrame->getCode()) {
             innerResult().code(ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
             return false;
         }
     }
-
+    bool autoreview = true;
 	if (mManageAsset.requestID == 0) {
-		EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+        uint32_t allTasks = 0;
+        if (!loadTasks(storageHelper, allTasks, mManageAsset.request.createAssetUpdateRequest().allTasks)){
+            innerResult().code(ManageAssetResultCode::ASSET_UPDATE_TASKS_NOT_FOUND);
+            return false;
+        }
+
+        request->setTasks(allTasks);
+		EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+		autoreview = allTasks == 0;
 	}
 	else {
-		EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
+
+        if (!ensureUpdateRequestValid(request))
+        {
+            return false;
+        }
+        updateRequest(request->getRequestEntry());
+        request->recalculateHashRejectReason();
+		EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 	}
+
+
+
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
 
     bool fulfilled = false;
 
-    if (getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, request);
-
-        if (resultCode != ReviewRequestResultCode::SUCCESS) {
-            throw std::runtime_error("Failed to approve review request");
+    if (autoreview) {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review update asset request");
         }
-        fulfilled = true;
+        fulfilled = result.success().fulfilled;
     }
 
 	innerResult().code(ManageAssetResultCode::SUCCESS);
@@ -135,21 +154,39 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 	return true;
 }
 
-bool UpdateAssetOpFrame::policiesIncompatible(AssetFrame::pointer assetFrame) {
-    bool oldWay = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE) ||
-            isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::TWO_STEP_WITHDRAWAL) ||
-            assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE) ||
-            assetFrame->isPolicySet(AssetPolicy::TWO_STEP_WITHDRAWAL);
-
-    bool newWay = assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE_V2) || isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::WITHDRAWABLE_V2);
-
-    return oldWay && newWay;
-
-}
-
 string UpdateAssetOpFrame::getAssetCode() const
 {
     return mAssetUpdateRequest.code;
+}
+
+vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector(StorageHelper& storageHelper) {
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
+    };
+}
+
+
+bool UpdateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
+{
+    if (request->getRejectReason().empty()) {
+        innerResult().code(ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+        return false;
+    }
+
+    if (mManageAsset.request.createAssetUpdateRequest().allTasks)
+    {
+        innerResult().code(ManageAssetResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+        return false;
+    }
+    return true;
+}
+
+void UpdateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
+    requestEntry.body.assetUpdateRequest().code = mManageAsset.request.createAssetUpdateRequest().updateAsset.code;
+    requestEntry.body.assetUpdateRequest().details = mManageAsset.request.createAssetUpdateRequest().updateAsset.details;
+    requestEntry.body.assetUpdateRequest().policies = mManageAsset.request.createAssetUpdateRequest().updateAsset.policies;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    requestEntry.body.assetUpdateRequest().sequenceNumber++;
 }
 
 }

@@ -25,11 +25,9 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
-    BalanceFrame::pointer tryLoadBalance(Database& db, LedgerDelta& delta) const;
+    BalanceFrame::pointer tryLoadBalance(StorageHelper& storageHelper) const;
 
     bool isFeeMatches(AccountManager& accountManager, BalanceFrame::pointer balance) const;
-
-    bool isConvertedAmountMatches(BalanceFrame::pointer balance, Database& db);
 
     bool tryLockBalance(BalanceFrame::pointer balance);
 
@@ -50,7 +48,7 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
                   const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
 
     ReviewableRequestFrame::pointer
-    tryCreateWithdrawalRequest(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    tryCreateWithdrawalRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager,
                                BalanceFrame::pointer balanceFrame,
                                AssetFrame::pointer assetFrame);
 
@@ -62,29 +60,16 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     approveRequest(AccountManager& accountManager, LedgerDelta& delta, LedgerManager& ledgerManager,
                    Database& db, const AssetFrame::pointer assetFrame, const BalanceFrame::pointer balanceFrame);
 
-
-    bool loadWithdrawalTasks(Database &db, uint32_t &allTasks,
-                                                             LedgerManager& lm);
-
-    bool loadDefaultWithdrawalTasks(Database &db, uint32_t &allTasks,
-                                                             LedgerManager& lm);
-
 public:
 
     CreateWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
-    bool doApply(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager) override;
-    bool doApplyV1(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager,
-                   BalanceFrame::pointer balanceFrame,
-                   AssetFrame::pointer assetFrame);
-    bool doApplyV2(Application& app, LedgerDelta& delta,
-                 LedgerManager& ledgerManager,
-                   BalanceFrame::pointer balanceFrame,
-                   AssetFrame::pointer assetFrame);
+    bool doApply (Application& app, StorageHelper& storageHelper,
+    LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
+
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
     static CreateWithdrawalRequestResultCode getInnerCode(
         OperationResult const& res)

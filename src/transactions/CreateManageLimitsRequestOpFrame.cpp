@@ -2,6 +2,8 @@
 #include <ledger/ReviewableRequestFrame.h>
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include "ledger/StorageHelper.h"
+#include "review_request/ReviewRequestHelper.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "CreateManageLimitsRequestOpFrame.h"
 #include "main/Application.h"
@@ -46,13 +48,22 @@ CreateManageLimitsRequestOpFrame::getLimitsManageRequestDetailsReference(longstr
     return binToHex(hash);
 }
 
-bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(LedgerManager &lm, Database &db, LedgerDelta &delta) {
+bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &app, StorageHelper &storageHelper, LedgerManager &lm) {
+    auto delta = storageHelper.getLedgerDelta();
+    auto& db = storageHelper.getDatabase();
+
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.ext.requestID(), getSourceID(),
-                                                             ReviewableRequestType::LIMITS_UPDATE, db, &delta);
+                                                             ReviewableRequestType::LIMITS_UPDATE, db, delta);
     if (!requestFrame)
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
+        return false;
+    }
+
+    if (!ensureLimitsUpdateValid())
+    {
+        innerResult().code(CreateManageLimitsRequestResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
         return false;
     }
 
@@ -60,18 +71,21 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(LedgerManager &
     limitsUpdateRequest.ext.details() = mCreateManageLimitsRequest.manageLimitsRequest.ext.details();
 
     requestFrame->recalculateHashRejectReason();
-    reviewableRequestHelper->storeChange(delta, db, requestFrame->mEntry);
+    reviewableRequestHelper->storeChange(*delta, db, requestFrame->mEntry);
 
+    innerResult().success().fulfilled = false;
     innerResult().code(CreateManageLimitsRequestResultCode::SUCCESS);
+    innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     innerResult().success().manageLimitsRequestID = requestFrame->getRequestID();
 
     return true;
 }
 
-bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &app, LedgerDelta &delta,
+bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &app, StorageHelper& storageHelper,
                                                                  LedgerManager &ledgerManager)
 {
     Database& db = ledgerManager.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
 
     longstring reference;
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
@@ -104,28 +118,44 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
         body.limitsUpdateRequest().deprecatedDocumentHash =
                 mCreateManageLimitsRequest.manageLimitsRequest.deprecatedDocumentHash;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), app.getMasterID(), referencePtr,
+    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), app.getMasterID(), referencePtr,
                                                              body, ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
 
+    uint32_t allTasks = 0;
+    if (!loadTasks(storageHelper, allTasks, mCreateManageLimitsRequest.allTasks))
+    {
+        innerResult().code(CreateManageLimitsRequestResultCode::LIMITS_UPDATE_TASKS_NOT_FOUND);
+        return false;
+    }
+
+    if (allTasks == 0)
+    {
+        innerResult().code(CreateManageLimitsRequestResultCode::LIMITS_UPDATE_ZERO_TASKS_NOT_ALLOWED);
+        return false;
+    }
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+
+    innerResult().code(CreateManageLimitsRequestResultCode::SUCCESS);
     innerResult().success().manageLimitsRequestID = request->getRequestID();
+    innerResult().success().fulfilled = false;
 
     return true;
 }
 
 bool
-CreateManageLimitsRequestOpFrame::doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
+CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
     if(!ledgerManager.shouldUse(mCreateManageLimitsRequest.ext.v()))
     {
         innerResult().code(CreateManageLimitsRequestResultCode::INVALID_MANAGE_LIMITS_REQUEST_VERSION);
         return false;
     }
-
+    auto delta = storageHelper.getLedgerDelta();
     if (!ledgerManager.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS))
     {
-        return createManageLimitsRequest(app, delta, ledgerManager);
+        return createManageLimitsRequest(app, storageHelper, ledgerManager);
     }
 
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
@@ -144,15 +174,24 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, LedgerDelta& delta, 
                       mCreateManageLimitsRequest.ext.requestID() != 0;
     if (isUpdating)
     {
-        auto& db = app.getDatabase();
-        return updateManageLimitsRequest(ledgerManager, db, delta);
+        return updateManageLimitsRequest(app, storageHelper, ledgerManager);
     }
 
-    return createManageLimitsRequest(app, delta, ledgerManager);
+    return createManageLimitsRequest(app, storageHelper, ledgerManager);
 }
 
 bool CreateManageLimitsRequestOpFrame::doCheckValid(Application& app)
 {
+    return true;
+}
+
+bool CreateManageLimitsRequestOpFrame::ensureLimitsUpdateValid()
+{
+    if (mCreateManageLimitsRequest.allTasks)
+    {
+        return false;
+    }
+
     return true;
 }
 

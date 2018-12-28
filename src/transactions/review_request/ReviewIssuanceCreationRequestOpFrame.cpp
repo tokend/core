@@ -15,76 +15,8 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-bool ReviewIssuanceCreationRequestOpFrame::handleApproveV1(Application &app, LedgerDelta &delta,
-														   LedgerManager &ledgerManager,
-														   ReviewableRequestFrame::pointer request)
-{
-    request->checkRequestType(ReviewableRequestType::ISSUANCE_CREATE);
-
-	auto& issuanceRequest = request->getRequestEntry().body.issuanceRequest();
-	Database& db = ledgerManager.getDatabase();
-	createReference(delta, db, request->getRequestor(), request->getReference());
-
-	auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(issuanceRequest.asset, db, &delta);
-
-	if (asset->willExceedMaxIssuanceAmount(issuanceRequest.amount)) {
-		innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
-		return false;
-	}
-
-	if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount)) {
-		innerResult().code(ReviewRequestResultCode::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT);
-		return false;
-	}
-
-	if (!asset->tryIssue(issuanceRequest.amount)) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Failed to fulfill request: "
-                                               << xdr::xdr_to_string(request->getRequestEntry());
-		throw std::runtime_error("Unexpected issuance result. Expected to be able to issue");
-	}
-
-	EntryHelperProvider::storeChangeEntry(delta, db, asset->mEntry);
-
-	auto receiver = BalanceHelperLegacy::Instance()->mustLoadBalance(issuanceRequest.receiver, db, &delta);
-
-	uint64_t totalFee = 0;
-	if (!safeSum(issuanceRequest.fee.fixed, issuanceRequest.fee.percent, totalFee)) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "totalFee overflows uint64 for request: " << request->getRequestID();
-		throw std::runtime_error("totalFee overflows uint64");
-	}
-
-	if (totalFee >= issuanceRequest.amount) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. totalFee exceeds amount for request: "
-											   << request->getRequestID();
-		throw std::runtime_error("Unexpected state. totalFee exceeds amount");
-	}
-
-	auto receiverAccount = AccountHelper::Instance()->mustLoadAccount(receiver->getAccountID(), db);
-	if (AccountManager::isAllowedToReceive(receiver->getBalanceID(), db) != AccountManager::SUCCESS) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Asset requires receiver account to have KYC or be VERIFIED "
-											   << request->getRequestID();
-		throw std::runtime_error("Unexpected state. Asset requires KYC or VERIFIED but account is NOT_VERIFIED");
-	}
-
-	//transfer fee
-	AccountManager accountManager(app, db, delta, ledgerManager);
-	accountManager.transferFee(issuanceRequest.asset, totalFee);
-
-	const uint64_t destinationReceive = issuanceRequest.amount - totalFee;
-	if (receiver->tryFundAccount(destinationReceive) != BalanceFrame::Result::SUCCESS) {
-		innerResult().code(ReviewRequestResultCode::FULL_LINE);
-		return false;
-	}
-
-	EntryHelperProvider::storeChangeEntry(delta, db, receiver->mEntry);
-
-	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
-	innerResult().code(ReviewRequestResultCode::SUCCESS);
-	return true;
-}
-
 bool ReviewIssuanceCreationRequestOpFrame::
-handleApproveV2(Application &app, LedgerDelta &delta,
+handleApprove(Application &app, LedgerDelta &delta,
 														   LedgerManager &ledgerManager,
 														   ReviewableRequestFrame::pointer request)
 {
@@ -110,21 +42,21 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 		throw std::runtime_error("Expected only system tasks, got more");
 	}
 
-    requestEntry.ext.tasksExt().allTasks |= systemTasksToAdd;
-	requestEntry.ext.tasksExt().pendingTasks |= systemTasksToAdd;
+    requestEntry.tasks.allTasks |= systemTasksToAdd;
+	requestEntry.tasks.pendingTasks |= systemTasksToAdd;
 
-	requestEntry.ext.tasksExt().allTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-	requestEntry.ext.tasksExt().pendingTasks &= ~mReviewRequest.ext.reviewDetails().tasksToRemove;
-	requestEntry.ext.tasksExt().pendingTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-	requestEntry.ext.tasksExt().externalDetails.emplace_back(mReviewRequest.ext.reviewDetails().externalDetails);
+    handleTasks(db, delta, request);
 
-	ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+    if (!request->canBeFulfilled(ledgerManager)){
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
 
 	if (!request->canBeFulfilled(ledgerManager))
 	{
 		innerResult().code(ReviewRequestResultCode::SUCCESS);
         innerResult().success().fulfilled = false;
-		innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
 		return true;
 	}
 
@@ -185,20 +117,6 @@ handleApproveV2(Application &app, LedgerDelta &delta,
 	return true;
 }
 
-
-bool ReviewIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta,
-                                                         LedgerManager & ledgerManager,
-                                                         ReviewableRequestFrame::pointer request)
-{
-	if (ledgerManager.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST) &&
-        mReviewRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST &&
-        request->getRequestEntry().ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return handleApproveV2(app, delta, ledgerManager, request);
-    }
-	return handleApproveV1(app, delta, ledgerManager, request);
-}
-
 bool ReviewIssuanceCreationRequestOpFrame::handleReject(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager,
                                                         ReviewableRequestFrame::pointer request)
 {
@@ -229,8 +147,8 @@ SourceDetails ReviewIssuanceCreationRequestOpFrame::getSourceAccountDetails(std:
                              allowedSigners);
     }
 
-    if ((mReviewRequest.ext.reviewDetails().tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
-    (mReviewRequest.ext.reviewDetails().tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
+    if ((mReviewRequest.reviewDetails.tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
+    (mReviewRequest.reviewDetails.tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
     {
         return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
                 static_cast<int32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
@@ -257,14 +175,14 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
 	int32_t systemTasks = CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT |
 			              CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
 
-	if ((mReviewRequest.ext.reviewDetails().tasksToAdd & systemTasks) != 0 ||
-        (mReviewRequest.ext.reviewDetails().tasksToRemove & systemTasks) != 0)
+	if ((mReviewRequest.reviewDetails.tasksToAdd & systemTasks) != 0 ||
+        (mReviewRequest.reviewDetails.tasksToRemove & systemTasks) != 0)
 	{
 		innerResult().code(ReviewRequestResultCode::SYSTEM_TASKS_NOT_ALLOWED);
 		return false;
 	}
 
-	if (!isValidJson(mReviewRequest.ext.reviewDetails().externalDetails))
+	if (!isValidJson(mReviewRequest.reviewDetails.externalDetails))
 	{
 		innerResult().code(ReviewRequestResultCode::INVALID_EXTERNAL_DETAILS);
 		return false;
@@ -331,7 +249,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		}
 		else
 		{
-			requestEntry.ext.tasksExt().pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
+			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
 		}
 
 		if (!addStatistics(db, localDelta, ledgerManager,
@@ -342,7 +260,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		}
 		else
 		{
-			requestEntry.ext.tasksExt().pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
 		}
 
 		if (allTasks == 0)

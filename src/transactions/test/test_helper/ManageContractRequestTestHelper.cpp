@@ -21,12 +21,12 @@ ManageContractRequestTestHelper::createContractRequest(AccountID customer, Accou
 {
     ManageContractRequestOp result;
     result.details.action(ManageContractRequestAction::CREATE);
-    result.details.contractRequest().customer = customer;
-    result.details.contractRequest().escrow = escrow;
-    result.details.contractRequest().startTime = startTime;
-    result.details.contractRequest().endTime = endTime;
-    result.details.contractRequest().details = details;
-    result.details.contractRequest().ext.v(LedgerVersion::EMPTY_VERSION);
+    result.details.createContractRequest().contractRequest.customer = customer;
+    result.details.createContractRequest().contractRequest.escrow = escrow;
+    result.details.createContractRequest().contractRequest.startTime = startTime;
+    result.details.createContractRequest().contractRequest.endTime = endTime;
+    result.details.createContractRequest().contractRequest.details = details;
+    result.details.createContractRequest().contractRequest.ext.v(LedgerVersion::EMPTY_VERSION);
     result.ext.v(LedgerVersion::EMPTY_VERSION);
 
     return result;

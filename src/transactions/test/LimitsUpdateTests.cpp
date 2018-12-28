@@ -16,6 +16,7 @@
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
 #include "test_helper/ReviewLimitsUpdateRequestHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace stellar;
@@ -31,6 +32,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
     Application& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
+    auto& db = testManager->getDB();
 
     upgradeToCurrentLedgerVersion(app);
 
@@ -38,6 +40,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto limitsUpdateRequestHelper = LimitsUpdateRequestHelper(testManager);
     auto reviewLimitsUpdateHelper = ReviewLimitsUpdateRequestHelper(testManager);
+    auto reviewRequestHelper = ReviewableRequestHelper::Instance();
     auto manageLimitsTestHelper = ManageLimitsTestHelper(testManager);
 
     // create requestor
@@ -52,97 +55,134 @@ TEST_CASE("limits update", "[tx][limits_update]")
     // prepare data for request
     std::string documentData = "{}";
 
-    // create LimitsUpdateRequest
-    auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
-    auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor, limitsUpdateRequest);
 
-    SECTION("Happy path")
-    {
-        SECTION("Approve")
-        {
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::APPROVE, "");
-        }
-        SECTION("Reject")
-        {
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::REJECT, "Invalid document");
-        }
-        SECTION("Permanent reject")
-        {
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::PERMANENT_REJECT, "Invalid document");
-        }
-        SECTION("Approve for account with limits")
-        {
-            auto accountWithLimits = Account {SecretKey::random(), Salt(0)};
-            AccountID accountWithoutLimitsID = accountWithLimits.key.getPublicKey();
-            createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID,
-                                                         AccountType::GENERAL);
-            ManageLimitsOp manageLimitsOp;
-            manageLimitsOp.details.action(ManageLimitsAction::CREATE);
-            manageLimitsOp.details.limitsCreateDetails().accountID.activate() = accountWithoutLimitsID;
-            manageLimitsOp.details.limitsCreateDetails().assetCode = "USD";
-            manageLimitsOp.details.limitsCreateDetails().statsOpType = StatsOpType::PAYMENT_OUT;
-            manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = false;
-            manageLimitsOp.details.limitsCreateDetails().dailyOut = 10;
-            manageLimitsOp.details.limitsCreateDetails().weeklyOut = 20;
-            manageLimitsOp.details.limitsCreateDetails().monthlyOut = 30;
-            manageLimitsOp.details.limitsCreateDetails().annualOut = 50;
-            manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
+    SECTION("with tasks") {
+        uint32_t allTasks = 2, tasksToAdd = 0, tasksToRemove = 2;
+        auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
+        auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
+                                                                                           limitsUpdateRequest, &allTasks,
+                                                                                           nullptr,
+                                                                                           CreateManageLimitsRequestResultCode::SUCCESS);
 
-            std::string documentDataOfAccountWithLimits = "{\n \"a\": \"I have a lot of money\" \n}";
+        REQUIRE_FALSE(limitsUpdateResult.success().fulfilled);
 
-            limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentDataOfAccountWithLimits);
-            limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(accountWithLimits,
-                                                                                          limitsUpdateRequest);
+        SECTION("Happy path") {
+            SECTION("Approve") {
+                auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+                REQUIRE(request);
+                auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                                                           request->getHash(),
+                                                                                           request->getRequestType(),
+                                                                                           ReviewRequestOpAction::APPROVE, "",
+                                                                                           ReviewRequestResultCode::SUCCESS,
+                                                                                           &tasksToAdd,
+                                                                                           &tasksToRemove);
 
-            reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                          ReviewRequestOpAction::APPROVE, "");
+                REQUIRE(reviewResult.success().fulfilled);
+            }
+            SECTION("Reject") {
+                reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                              ReviewRequestOpAction::REJECT, "Invalid document");
+            }
+            SECTION("Permanent reject") {
+                reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                              ReviewRequestOpAction::PERMANENT_REJECT,
+                                                              "Invalid document");
+
+            }
+            SECTION("Approve for account with limits") {
+                auto accountWithLimits = Account{SecretKey::random(), Salt(0)};
+                AccountID accountWithoutLimitsID = accountWithLimits.key.getPublicKey();
+                createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID,
+                                                             AccountType::GENERAL);
+                ManageLimitsOp manageLimitsOp;
+                manageLimitsOp.details.action(ManageLimitsAction::CREATE);
+                manageLimitsOp.details.limitsCreateDetails().accountID.activate() = accountWithoutLimitsID;
+                manageLimitsOp.details.limitsCreateDetails().assetCode = "USD";
+                manageLimitsOp.details.limitsCreateDetails().statsOpType = StatsOpType::PAYMENT_OUT;
+                manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = false;
+                manageLimitsOp.details.limitsCreateDetails().dailyOut = 10;
+                manageLimitsOp.details.limitsCreateDetails().weeklyOut = 20;
+                manageLimitsOp.details.limitsCreateDetails().monthlyOut = 30;
+                manageLimitsOp.details.limitsCreateDetails().annualOut = 50;
+                manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
+
+                std::string documentDataOfAccountWithLimits = "{\n \"a\": \"I have a lot of money\" \n}";
+
+                limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(
+                        documentDataOfAccountWithLimits);
+                limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(accountWithLimits,
+                                                                                              limitsUpdateRequest,
+                                                                                              &allTasks, nullptr,
+                                                                                              CreateManageLimitsRequestResultCode::SUCCESS);
+
+                REQUIRE_FALSE(limitsUpdateResult.success().fulfilled);
+                auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+                REQUIRE(request);
+                auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                                                           request->getHash(),
+                                                                                           request->getRequestType(),
+                                                                                           ReviewRequestOpAction::APPROVE, "",
+                                                                                           ReviewRequestResultCode::SUCCESS,
+                                                                                           &tasksToAdd,
+                                                                                           &tasksToRemove);
+            }
+            SECTION("Update limits update request") {
+                std::string newDocumentData = "{\n \"a\": \"New document data\" \n}";
+                limitsUpdateRequest.ext.details() = newDocumentData;
+                uint64_t limitsUpdateRequestID = limitsUpdateResult.success().manageLimitsRequestID;
+                limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
+                                                                                              limitsUpdateRequest,
+                                                                                              nullptr,
+                                                                                              &limitsUpdateRequestID,
+                                                                                              CreateManageLimitsRequestResultCode::SUCCESS);
+            }
         }
-        SECTION("Update limits update request")
+        uint64_t requestID = 0;
+
+        SECTION("Invalid details")
         {
-            std::string newDocumentData = "{\n \"a\": \"New document data\" \n}";
-            limitsUpdateRequest.ext.details() = newDocumentData;
-            uint64_t limitsUpdateRequestID = limitsUpdateResult.success().manageLimitsRequestID;
+            limitsUpdateRequest.ext.details() = "Some document data, huge data, very huge data to check convert to string64"
+                                                " when get reference to write to database information about request";
             limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
-                                                                                          limitsUpdateRequest,
-                                                                                          &limitsUpdateRequestID);
+                                                                                          limitsUpdateRequest, nullptr,
+                                                                                          &requestID,
+                                                                                          CreateManageLimitsRequestResultCode::INVALID_DETAILS);
         }
-    }
 
-    uint64_t requestID = 0;
+        SECTION("Update non existing request")
+        {
+            requestID = 42;
+            limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
+                                                                                          limitsUpdateRequest, nullptr,
+                                                                                          &requestID,
+                                                                                          CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
 
-    SECTION("Invalid details")
-    {
-        limitsUpdateRequest.ext.details() = "Some document data, huge data, very huge data to check convert to string64"
-                       " when get reference to write to database information about request";
-        limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor, limitsUpdateRequest,
-                                                                                      &requestID,
-                                               CreateManageLimitsRequestResultCode::INVALID_DETAILS);
-    }
+        }
 
-    SECTION("Update non existing request")
-    {
-        requestID = 42;
-        limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor, limitsUpdateRequest,
-                                                                                      &requestID,
-        CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
+        SECTION("Create same request for second time")
+        {
+            limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
+                                                                                          limitsUpdateRequest, nullptr,
+                                                                                          &requestID,
+                                                                                          CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
+        }
+        SECTION("Approve and create same request for second time")
+        {
+            auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+            REQUIRE(request);
+            auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                                                       request->getHash(),
+                                                                                       request->getRequestType(),
+                                                                                       ReviewRequestOpAction::APPROVE, "",
+                                                                                       ReviewRequestResultCode::SUCCESS,
+                                                                                       &tasksToAdd,
+                                                                                       &tasksToRemove);
 
-    }
-
-    SECTION("Create same request for second time")
-    {
-        limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor, limitsUpdateRequest,
-                                                                                      &requestID,
-                             CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
-    }
-    SECTION("Approve and create same request for second time")
-    {
-        reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
-                                                      ReviewRequestOpAction::APPROVE, "");
-        limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor, limitsUpdateRequest,
-                                                                                      &requestID,
-                             CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
+            limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
+                                                                                          limitsUpdateRequest, nullptr,
+                                                                                          &requestID,
+                                                                                          CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
+        }
     }
 }

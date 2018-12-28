@@ -94,17 +94,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
 }
 
 WithdrawalRequest WithdrawRequestHelper::createWithdrawRequest(
-    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails,
-    AssetCode autoConversionDestAsset, const uint64_t expectedAutoConversion)
+    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails)
 {
     WithdrawalRequest result;
     result.balance = balance;
     result.amount = amount;
     result.fee = fee;
     result.externalDetails = externalDetails;
-    result.details.withdrawalType(WithdrawalType::AUTO_CONVERSION);
-    result.details.autoConversion().destAsset = autoConversionDestAsset;
-    result.details.autoConversion().expectedAmount = expectedAutoConversion;
     result.ext.v(LedgerVersion::EMPTY_VERSION);
     return result;
 }
@@ -116,10 +112,9 @@ TransactionFramePtr WithdrawRequestHelper::createWithdrawalRequestTx(
     baseOp.body.type(OperationType::CREATE_WITHDRAWAL_REQUEST);
     auto& op = baseOp.body.createWithdrawalRequestOp();
     op.request = request;
-    op.ext.v(LedgerVersion::WITHDRAWAL_TASKS);
     if (allTasks != nullptr)
     {
-        op.ext.allTasks().activate() = *allTasks;
+        op.allTasks.activate() = *allTasks;
     }
     return txFromOperation(source, baseOp, nullptr);
 }
@@ -131,9 +126,6 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
     uint64_t universalAmount = 0;
     switch (withdrawRequest->getRequestType())
     {
-    case ReviewableRequestType::TWO_STEP_WITHDRAWAL:
-        universalAmount = withdrawRequest->getRequestEntry().body.twoStepWithdrawalRequest().universalAmount;
-        break;
     case ReviewableRequestType::WITHDRAW:
         universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
         break;

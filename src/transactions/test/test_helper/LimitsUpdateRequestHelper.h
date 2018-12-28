@@ -18,14 +18,15 @@ class LimitsUpdateRequestHelper : TxHelper
 public:
     explicit LimitsUpdateRequestHelper(TestManager::pointer testManager);
 
-    CreateManageLimitsRequestResult applyCreateLimitsUpdateRequest(
-            Account& source, LimitsUpdateRequest request, uint64_t* requestID = 0,
-            CreateManageLimitsRequestResultCode expectedResult =
-            CreateManageLimitsRequestResultCode::SUCCESS);
+    CreateManageLimitsRequestResult
+    applyCreateLimitsUpdateRequest(Account &source, LimitsUpdateRequest request, uint32_t *allTasks,
+                                       uint64_t *requestID = 0,
+                                       CreateManageLimitsRequestResultCode expectedResult = CreateManageLimitsRequestResultCode::SUCCESS);
 
     static LimitsUpdateRequest createLimitsUpdateRequest(longstring details);
 
     TransactionFramePtr createLimitsUpdateRequestTx(Account& source, LimitsUpdateRequest request,
+                                                    uint32_t* allTasks,
                                                     uint64_t* requestID = 0);
 };
 }

@@ -6,7 +6,9 @@
 #include "util/asio.h"
 #include "CreatePreIssuanceRequestOpFrame.h"
 #include "transactions/SignatureValidatorImpl.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "transactions/ManageKeyValueOpFrame.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
@@ -33,9 +35,10 @@ CreatePreIssuanceRequestOpFrame::CreatePreIssuanceRequestOpFrame(Operation const
 
 bool
 CreatePreIssuanceRequestOpFrame::doApply(Application& app,
-                            LedgerDelta& delta, LedgerManager& ledgerManager)
+                            StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
 
 	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
 	if (reviewableRequestHelper->isReferenceExist(db, getSourceID(), mCreatePreIssuanceRequest.request.reference)) {
@@ -43,8 +46,8 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 		return false;
 	}
 
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto asset = assetHelper->loadAsset(mCreatePreIssuanceRequest.request.asset, db);
+	auto& assetHelper = storageHelper.getAssetHelper();
+	auto asset = assetHelper.loadAsset(mCreatePreIssuanceRequest.request.asset);
 	if (!asset) {
 		innerResult().code(CreatePreIssuanceRequestResultCode::ASSET_NOT_FOUND);
 		return false;
@@ -74,23 +77,31 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	ReviewableRequestEntry::_body_t requestBody;
 	requestBody.type(ReviewableRequestType::PRE_ISSUANCE_CREATE);
 	requestBody.preIssuanceRequest() = mCreatePreIssuanceRequest.request;
-	auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), app.getMasterID(), reference,
+	auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), app.getMasterID(), reference,
                                                              requestBody, ledgerManager.getCloseTime());
-	EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+	EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 
-    //if source is master then auto review
-    bool isFulfilled = false;
-    if (getSourceAccount().getAccountType() == AccountType::MASTER) {
-        auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, request);
-        if (result != ReviewRequestResultCode::SUCCESS) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to approve request: " << request->getRequestID();
-            throw std::runtime_error("Failed to approve request");
-        }
-        isFulfilled = true;
+	uint32_t allTasks = 0;
+	if (!loadTasks(storageHelper, allTasks, mCreatePreIssuanceRequest.allTasks))
+	{
+		innerResult().code(CreatePreIssuanceRequestResultCode::PREISSUANCE_TASKS_NOT_FOUND);
+		return false;
+	}
+
+	request->setTasks(allTasks);
+	EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+
+    bool fulfilled = false;
+    if (allTasks == 0) {
+		auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+		if (result.code() != ReviewRequestResultCode::SUCCESS) {
+			throw std::runtime_error("Failed to review preissuance request");
+		}
+		fulfilled = result.success().fulfilled;
     }
 	innerResult().code(CreatePreIssuanceRequestResultCode::SUCCESS);
 	innerResult().success().requestID = request->getRequestID();
-    innerResult().success().fulfilled = isFulfilled;
+    innerResult().success().fulfilled = fulfilled;
 	return true;
 }
 
@@ -144,6 +155,13 @@ bool CreatePreIssuanceRequestOpFrame::isSignatureValid(AssetFrame::pointer asset
 	const int VALID_SIGNATURES_REQUIRED = 1;
 	SignatureValidator::Result result = signatureValidator.check({ asset->getPreIssuedAssetSigner() }, VALID_SIGNATURES_REQUIRED, version);
 	return result == SignatureValidator::Result::SUCCESS;
+}
+
+std::vector<longstring> CreatePreIssuanceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
+	return std::vector<longstring>{
+		ManageKeyValueOpFrame::makePreIssuanceTasksKey(mCreatePreIssuanceRequest.request.asset),
+		ManageKeyValueOpFrame::makePreIssuanceTasksKey("*")
+	};
 }
 
 }
