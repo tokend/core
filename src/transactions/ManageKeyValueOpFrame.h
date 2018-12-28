@@ -58,6 +58,8 @@ namespace stellar {
 
         static longstring makeIssuanceTasksKey(AssetCode assetCode);
 
+        static longstring makeWithdrawalTasksKey(AssetCode assetCode);
+
         static longstring makeMaxContractDetailLengthKey();
 
         static longstring makeMaxContractInitialDetailLengthKey();
@@ -76,6 +78,7 @@ namespace stellar {
         static const char * externalSystemPrefix;
         static const char * transactionFeeAssetPrefix;
         static const char * issuanceTasksPrefix;
+        static const char * withdrawalTasksPrefix;
         static const char * maxContractDetailLengthPrefix;
         static const char * maxContractInitialDetailLengthPrefix;
         static const char * maxContractsCountPrefix;

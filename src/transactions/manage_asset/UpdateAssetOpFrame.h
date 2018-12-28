@@ -31,5 +31,7 @@ public:
     bool doCheckValid(Application& app) override;
 protected:
     std::string getAssetCode() const override;
+	bool policiesIncompatible(AssetFrame::pointer assetFrame);
+
 };
 }

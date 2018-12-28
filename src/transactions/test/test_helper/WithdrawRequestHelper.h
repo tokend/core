@@ -25,6 +25,7 @@ public:
 
     CreateWithdrawalRequestResult applyCreateWithdrawRequest(
         Account& source, WithdrawalRequest request,
+        uint32_t *allTasks = nullptr,
         CreateWithdrawalRequestResultCode expectedResult =
             CreateWithdrawalRequestResultCode::SUCCESS);
 
@@ -35,7 +36,7 @@ public:
                                             uint64_t expectedAutoConversion);
 
     TransactionFramePtr createWithdrawalRequestTx(
-        Account& source, WithdrawalRequest request);
+        Account& source, WithdrawalRequest request, uint32_t *allTasks);
 };
 }
 }
