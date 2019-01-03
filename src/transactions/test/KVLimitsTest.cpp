@@ -39,6 +39,12 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
     auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     auto manageKVHelper = ManageKeyValueTestHelper(testManager);
 
+    manageKVHelper.assetOpWithoutReview();
+
+    longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
+    manageKVHelper.setKey(key)->setUi32Value(1);
+    manageKVHelper.doApply(app, ManageKVAction::PUT, true);
+
     // create asset and make it withdrawable
     const AssetCode asset = "USD";
     const uint64_t preIssuedAmount = 10000 * ONE;
@@ -84,8 +90,7 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
         zeroFee.fixed = 0;
         zeroFee.percent = 0;
         auto withdrawRequest = withdrawRequestHelper.createWithdrawRequest(withdrawerBalance->getBalanceID(), amountToWithdraw,
-                                                                           zeroFee, "{}", withdrawDestAsset,
-                                                                           expectedAmountInDestAsset);
+                                                                           zeroFee, "{}");
 
         auto key = ManageKeyValueOpFrame::makeWithdrawLowerBoundKey("USD");
 

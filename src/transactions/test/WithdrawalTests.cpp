@@ -212,7 +212,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             SECTION("Reject")
             {
                 uint64 lowerLimits = 2000 * ONE;
-                manageKeyValueHelper.setKey("WithdrawLowerBound:USD");
+                manageKeyValueHelper.setKey(ManageKeyValueOpFrame::makeWithdrawLowerBoundKey("USD"));
                 manageKeyValueHelper.setUi64Value(lowerLimits);
                 manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
                 withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,

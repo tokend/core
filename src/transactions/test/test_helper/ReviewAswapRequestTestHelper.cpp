@@ -121,11 +121,10 @@ ReviewASwapRequestHelper::createReviewRequestTx(Account &source, uint64_t reques
     reviewRequestOp.requestHash = requestHash;
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
-    reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    reviewRequestOp.ext.reviewDetails().tasksToAdd = 0;
-    reviewRequestOp.ext.reviewDetails().tasksToRemove =
+    reviewRequestOp.reviewDetails.tasksToAdd = 0;
+    reviewRequestOp.reviewDetails.tasksToRemove =
             action == ReviewRequestOpAction::APPROVE ? 2 : 0;
-    reviewRequestOp.ext.reviewDetails().externalDetails = "";
+    reviewRequestOp.reviewDetails.externalDetails = "";
 
     return txFromOperation(source, op, nullptr);
 }

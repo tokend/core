@@ -57,15 +57,7 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         const uint64_t preIssuedAmount = 10000 * ONE;
 
         ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-        longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
-        manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
-        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-        longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
-        manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
-        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-        longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
-        manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
-        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        manageKeyValueHelper.assetOpWithoutReview();
 
         issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
         ManageAssetTestHelper(testManager).updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));

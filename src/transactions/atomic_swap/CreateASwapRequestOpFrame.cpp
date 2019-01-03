@@ -153,9 +153,8 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     {
         return false;
     }
-    requestEntry.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    requestEntry.ext.tasksExt().allTasks = allTasks;
-    requestEntry.ext.tasksExt().pendingTasks = allTasks;
+    requestEntry.tasks.allTasks = allTasks;
+    requestEntry.tasks.pendingTasks = allTasks;
 
     requestFrame->recalculateHashRejectReason();
 

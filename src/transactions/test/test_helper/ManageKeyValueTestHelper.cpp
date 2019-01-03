@@ -74,6 +74,26 @@ namespace stellar {
             }
         }
 
+        void
+        ManageKeyValueTestHelper::assetOpWithoutReview()
+        {
+            longstring assetKey =
+                ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+            setKey(assetKey)->setUi32Value(0);
+            doApply(mTestManager->getApp(),
+                                         ManageKVAction::PUT, true);
+            longstring preissuanceKey =
+                ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+            setKey(preissuanceKey)->setUi32Value(0);
+            doApply(mTestManager->getApp(),
+                                         ManageKVAction::PUT, true);
+            longstring assetUpdateKey =
+                ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+            setKey(assetUpdateKey)->setUi32Value(0);
+            doApply(mTestManager->getApp(),
+                                         ManageKVAction::PUT, true);
+        }
+
 
         Operation ManageKeyValueTestBuilder::buildOp()
         {

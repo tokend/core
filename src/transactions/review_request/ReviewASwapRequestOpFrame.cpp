@@ -109,13 +109,13 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 {
     request->checkRequestType(ReviewableRequestType::ATOMIC_SWAP);
 
-    auto& requestTasksExt = request->getRequestEntry().ext.tasksExt();
+    auto& requestTasksExt = request->getRequestEntry().tasks;
 
-    requestTasksExt.allTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
-    requestTasksExt.pendingTasks &= ~mReviewRequest.ext.reviewDetails().tasksToRemove;
-    requestTasksExt.pendingTasks |= mReviewRequest.ext.reviewDetails().tasksToAdd;
+    requestTasksExt.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    requestTasksExt.pendingTasks &= ~mReviewRequest.reviewDetails.tasksToRemove;
+    requestTasksExt.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
     requestTasksExt.externalDetails.emplace_back(
-            mReviewRequest.ext.reviewDetails().externalDetails);
+            mReviewRequest.reviewDetails.externalDetails);
 
     auto& requestEntry = request->getRequestEntry();
     const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);

@@ -195,6 +195,8 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
             PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
             break;
+        case databaseSchemaVersion::ADD_FEE_ASSET:
+            break;
         case databaseSchemaVersion::ADD_CONTRACTS:
             ContractHelper::Instance()->dropAll(*this);
             break;
@@ -211,6 +213,14 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
+            break;
+        case databaseSchemaVersion::ADD_SALE_STATE:
+            break;
+        case databaseSchemaVersion::
+        REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE:
+            break;
+        case databaseSchemaVersion::
+        REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");

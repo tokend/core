@@ -29,6 +29,8 @@ namespace stellar{
             void doApply(Application &app, ManageKVAction action, bool require, KeyValueEntryType type =
                                                                                 KeyValueEntryType::UINT32);
 
+            void assetOpWithoutReview();
+
         private:
 
             KeyValueEntryValue value;

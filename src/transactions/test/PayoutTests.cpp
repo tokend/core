@@ -119,7 +119,7 @@ TEST_CASE("payout", "[tx][payout]") {
     {
         // create holders and give them some amount of asset
         auto holdersCount = 5;
-        HolderAmount holdersAmounts[holdersCount];
+        std::vector<HolderAmount> holdersAmounts;
         for (auto i = 0; i < holdersCount; i++)
         {
             auto newAccount = Account{SecretKey::random(), Salt(0)};
@@ -136,7 +136,7 @@ TEST_CASE("payout", "[tx][payout]") {
             issuanceRequestHelper.applyCreateIssuanceRequest(owner, assetCode,
                                        holderAmount, newBalance->getBalanceID(),
                                        reference, &issuanceTasks);
-            holdersAmounts[i] = {newAccount, holderAmount};
+            holdersAmounts.push_back({newAccount, holderAmount});
         }
 
         auto assetFrame = assetHelper.loadAsset(assetCode);
@@ -147,12 +147,12 @@ TEST_CASE("payout", "[tx][payout]") {
         {
             uint64_t maxPayoutAmount = assetOwnerAmount / 10;
 
-            BalanceFrame::pointer holdersBalancesBefore[holdersCount];
+            std::vector<BalanceFrame::pointer> holdersBalancesBefore;
             for (auto i = 0; i < holdersCount; i++)
             {
-                holdersBalancesBefore[i] = balanceHelper.loadBalance(
+                holdersBalancesBefore.push_back(balanceHelper.loadBalance(
                         holdersAmounts[i].account.key.getPublicKey(),
-                        assetCode);
+                        assetCode));
             }
 
             auto receiversCount = 0;

@@ -18,7 +18,7 @@ namespace stellar {
 
     char const * ManageKeyValueOpFrame::kycRulesPrefix = "kyc_lvlup_rules";
     char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
-    char const * ManageKeyValueOpFrame::transactionFeeAssetPrefix = "tx_fee_asset";
+    char const * ManageKeyValueOpFrame::transactionFeeAssetKey = "tx_fee_asset";
     char const * ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
     char const * ManageKeyValueOpFrame::withdrawalTasksPrefix = "withdrawal_tasks";
     char const * ManageKeyValueOpFrame::preIssuanceTasksPrefix = "preissuance_tasks";
@@ -34,8 +34,14 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
     char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
-    char const * ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_tasks";
-    char const * ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
+    char const* ManageKeyValueOpFrame::transactionFeeAssetPrefix =
+        "tx_fee_asset";
+    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix =
+        "atomic_swap_tasks";
+    char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix =
+        "withdraw_lower_bound";
+
+
     map<std::string, KeyValueEntryType> ManageKeyValueOpFrame::valueTypes = {
         {kycRulesPrefix, KeyValueEntryType::UINT32},
         {externalSystemPrefix, KeyValueEntryType::UINT32},

@@ -74,6 +74,8 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
             .setRecovery(SecretKey::random().getPublicKey());
     createAccountHelper.applyTx(createAccountTestBuilder);
 
+    manageKeyValueHelper.assetOpWithoutReview();
+
     // create base asset
     AssetCode baseAsset = "DL0TICKETS";
     issuanceTestHelper.createAssetWithPreIssuedAmount(seller, baseAsset,

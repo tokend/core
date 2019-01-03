@@ -109,9 +109,6 @@
     <Filter Include="transactions\test\helper">
       <UniqueIdentifier>{23c65bbc-34e6-486b-91bf-1fd7959df62d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="exsysidgen">
-      <UniqueIdentifier>{fc723017-8941-498f-b5ed-a37fe1f55483}</UniqueIdentifier>
-    </Filter>
     <Filter Include="transactions\dex">
       <UniqueIdentifier>{4671c235-b187-4df4-afb6-7cd5fdcdea26}</UniqueIdentifier>
     </Filter>
@@ -136,11 +133,14 @@
     <Filter Include="transactions\test\unit">
       <UniqueIdentifier>{acd017e7-ed50-4d24-b65d-90d039fd5123}</UniqueIdentifier>
     </Filter>
+    <Filter Include="transactions\sale">
+      <UniqueIdentifier>{25862e4c-13d3-4777-b970-57722d16fd4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="transactions\atomic_swap">
+      <UniqueIdentifier>{75d3b342-b932-4f0d-aee1-e42910463e17}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\ledger\LedgerManagerImpl.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\Application.cpp">
       <Filter>main</Filter>
     </ClCompile>
@@ -219,9 +219,6 @@
     <ClCompile Include="..\..\lib\json\jsoncpp.cpp">
       <Filter>lib\json</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerDelta.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\history\HistoryArchive.cpp">
       <Filter>history</Filter>
     </ClCompile>
@@ -261,18 +258,6 @@
     <ClCompile Include="..\..\lib\xdrpp\tests\srpc.cc">
       <Filter>lib\xdrpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\EntryFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\TransactionFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\SetOptionsOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\crypto\Hex.cpp">
       <Filter>crypto</Filter>
     </ClCompile>
@@ -296,9 +281,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\util\Uint128Tests.cpp">
       <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerHeaderFrame.cpp">
-      <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\history\HistoryTests.cpp">
       <Filter>history\tests</Filter>
@@ -363,9 +345,6 @@
     <ClCompile Include="..\..\src\main\PersistentState.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\OperationFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\scp\SCP.cpp">
       <Filter>scp</Filter>
     </ClCompile>
@@ -395,9 +374,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\util\HashOfHash.cpp">
       <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\CreateAccountOpFrame.cpp">
-      <Filter>transactions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\simulation\LoadGenerator.cpp">
       <Filter>simulation</Filter>
@@ -519,63 +495,6 @@
     <ClCompile Include="..\..\src\util\StatusManager.cpp">
       <Filter>util</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\SignatureValidator.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\FeeFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\SetFeesOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\ManageAccountOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\BalanceFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\PaymentRequestFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AssetFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\ManageBalanceOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountTypeLimitsFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\StatisticsFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\AccountManager.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AssetPairFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\ManageAssetPairOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\OfferFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountLimitsFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\TrustFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\DirectDebitOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\InvoiceFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\ManageInvoiceOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\invariant\CacheIsConsistentWithDatabase.cpp">
       <Filter>invariant</Filter>
     </ClCompile>
@@ -588,68 +507,8 @@
     <ClCompile Include="..\..\src\invariant\Invariants.cpp">
       <Filter>invariant</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ReferenceFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ReviewableRequestFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\database\Marshaler.cpp">
       <Filter>database</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAssetRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\TestManager.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\TxHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\AccountManagerTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\CreateAccountTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\DirectDebitTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\FlexibleFeesTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageAccountTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageAssetPairTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageAssetTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageBalanceTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageInvoiceTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\OfferTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\PaymentTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\SetFeesTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\SetOptionsTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\TxEnvelopeTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\TxTests.cpp">
-      <Filter>transactions\test</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\manage_asset\CancelAssetRequestOpFrame.cpp">
       <Filter>transactions\manage_asset</Filter>
@@ -666,212 +525,17 @@
     <ClCompile Include="..\..\src\transactions\issuance\CreatePreIssuanceRequestOpFrame.cpp">
       <Filter>transactions\issuance</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetCreationRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewPaymentRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewPreIssuanceCreationRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\transactions\issuance\CreateIssuanceRequestOpFrame.cpp">
       <Filter>transactions\issuance</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewIssuanceCreationRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\AuthorizePreIssuedAssetTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewPreIssuanceRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewIssuanceRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\IssuanceTest.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountID.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\exsysidgen\BTCIDGenerator.cpp">
-      <Filter>exsysidgen</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\exsysidgen\ETHIDGenerator.cpp">
-      <Filter>exsysidgen</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\exsysidgen\ExternalSystemIDGenerators.cpp">
-      <Filter>exsysidgen</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\exsysidgen\Generator.cpp">
-      <Filter>exsysidgen</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewRequestHelper.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewRequestTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\EntryHelperLegacy.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountLimitsHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountTypeLimitsHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AssetHelperLegacy.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AssetPairHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\BalanceHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\FeeHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\InvoiceHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\OfferHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\PaymentRequestHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ReferenceHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ReviewableRequestHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\StatisticsHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\TrustHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDHelperLegacy.cpp">
-      <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\manage_asset\ManageAssetHelper.cpp">
       <Filter>transactions\manage_asset</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAssetTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\CreateWithdrawalRequestOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewWithdrawalRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\WithdrawalTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\WithdrawRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewWithdrawalRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateAccountTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\SaleFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\SaleHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\CreateSaleCreationRequestOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\SaleRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewSaleRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\SaleTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAssetPairTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageOfferTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\transactions\dex\OfferExchange.cpp">
       <Filter>transactions\dex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\CheckSaleStateOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\transactions\dex\OfferManager.cpp">
       <Filter>transactions\dex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\FeesManager.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\CheckSaleStateTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageBalanceTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\CoinKey.cpp">
-      <Filter>lib\coincore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hdkeys.cpp">
-      <Filter>lib\coincore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\secp256k1_openssl.cpp">
-      <Filter>lib\coincore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hashfunc\blake.c">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hashfunc\bmw.c">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hashfunc\groestl.c">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hashfunc\jh.c">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hashfunc\keccak.c">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\lib\coincore\src\hashfunc\skein.c">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\exsysidgen\Secp256k1IDGenerator.cpp">
-      <Filter>exsysidgen</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\dex\CreateOfferOpFrame.cpp">
       <Filter>transactions\dex</Filter>
@@ -888,119 +552,17 @@
     <ClCompile Include="..\..\src\transactions\dex\ManageOfferOpFrame.cpp">
       <Filter>transactions\dex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewTwoStepWithdrawalRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewTwoStepWithdrawalRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewLimitsUpdateRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\SetOptionsTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\SaleQuoteAssetHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\CrowdfundTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\CreateAMLAlertRequestOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAMLAlertTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAMLAlertRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\StateBeforeTxHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\AmlAlertTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\transactions\manage_asset\ChangeAssetPreIssuerOpFrame.cpp">
       <Filter>transactions\manage_asset</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountKYCFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountKYCHelper.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\transactions\kyc\CreateKYCReviewableRequestOpFrame.cpp">
       <Filter>transactions\kyc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\payment\PaymentOpFrame.cpp">
       <Filter>transactions\payment</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\payment\PaymentOpV2Frame.cpp">
       <Filter>transactions\payment</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\SetFeesTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntry.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelperLegacy.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\KeyValueEntryFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\KeyValueHelperLegacy.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\ManageKeyValueOpFrame.cpp">
-      <Filter>transactions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\BindExternalSystemAccountIdTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateKYCReviewableRequestTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageExternalSystemAccountIDPoolEntryTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageKeyValueTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSaleTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewLimitsUpdateRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewUpdateKYCRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewUpdateSaleDetailsRequestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\BindExternalSystemAccountIdOpFrame.cpp">
-      <Filter>transactions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\manage_external_system_account_id_pool\CreateExternalSystemAccountIDPoolEntryOpFrame.cpp">
       <Filter>transactions\manage_external_system_account_id_pool</Filter>
@@ -1011,34 +573,142 @@
     <ClCompile Include="..\..\src\transactions\manage_external_system_account_id_pool\ManageExternalSystemAccountIDPoolEntryOpFrame.cpp">
       <Filter>transactions\manage_external_system_account_id_pool</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\BindExternalSystemAccountIdTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\CreateKYCReviewableRequestTest.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\LimitsUpdateTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageExternalSystemAccountIDPoolEntryTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\ManageKeyValueTests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\PaymentV2Tests.cpp">
-      <Filter>transactions\test</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\transactions\manage_asset\ChangeAssetMaxIssuanceOpFrame.cpp">
       <Filter>transactions\manage_asset</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\dex\ManageSaleOpFrame.cpp">
       <Filter>transactions\dex</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\SaleAnteFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\test\unit\BindExternalSystemAccountIdUnitTests.cpp">
+      <Filter>transactions\test\unit</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountFrame.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\SaleAnteHelper.cpp">
+    <ClCompile Include="..\..\src\ledger\AccountHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountKYCFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountKYCHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountLimitsFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountLimitsHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountRoleFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountRoleHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountRolePermissionFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountRolePermissionHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountTypeLimitsFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountTypeLimitsHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AssetFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AssetHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AssetHelperLegacy.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AssetPairFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AssetPairHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AtomicSwapBidFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AtomicSwapBidHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AtomicSwapBidQuoteAssetHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\BalanceFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\BalanceHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\BalanceHelperLegacy.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ContractFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ContractHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\EntryFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\EntryHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\EntryHelperLegacy.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountID.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDHelperLegacy.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntry.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelperLegacy.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\FeeFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\FeeHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\KeyValueEntryFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\KeyValueHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\KeyValueHelperLegacy.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerDeltaImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerHeaderFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerHeaderFrameImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerManagerImpl.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\LimitsV2Frame.cpp">
@@ -1047,13 +717,43 @@
     <ClCompile Include="..\..\src\ledger\LimitsV2Helper.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ledger\OfferFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\OfferHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\ledger\PendingStatisticsFrame.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\PendingStatisticsHelper.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\StatisticsTests.cpp">
+    <ClCompile Include="..\..\src\ledger\ReferenceFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ReferenceHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ReviewableRequestFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\ReviewableRequestHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\SaleFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\SaleHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\SaleQuoteAssetHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\StatisticsFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\StatisticsHelper.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\StatisticsV2Frame.cpp">
@@ -1062,53 +762,407 @@
     <ClCompile Include="..\..\src\ledger\StatisticsV2Helper.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\StatisticsV2Processor.cpp">
+    <ClCompile Include="..\..\src\ledger\StorageHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\TrustFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\TrustHelper.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\AccountManager.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\BindExternalSystemAccountIdOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\CheckSaleStateOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\CreateAccountOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\CreateAMLAlertRequestOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\CreateManageLimitsRequestOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\CreateWithdrawalRequestOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\DirectDebitOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\FeesManager.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageAccountOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageAccountRoleOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageAccountRolePermissionOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageAssetPairOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageBalanceOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageContractOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageContractRequestOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageInvoiceRequestOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\ManageKeyValueOpFrame.cpp">
       <Filter>transactions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\ManageLimitsOpFrame.cpp">
       <Filter>transactions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageLimitsTestHelper.cpp">
-      <Filter>transactions\test\helper</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transactions\CreateManageLimitsRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\OperationFrame.cpp">
       <Filter>transactions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\transactions\PayoutOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\SetFeesOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\SetOptionsOpFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\SignatureValidatorImpl.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\StatisticsV2Processor.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\TransactionFrame.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\TransactionFrameImpl.cpp">
+      <Filter>transactions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetCreationRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapBidCreationRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewContractRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewInvoiceRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewIssuanceCreationRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewLimitsUpdateRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewPreIssuanceCreationRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewRequestHelper.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewWithdrawalRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\AccountManagerTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\AccountRolePermissionTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\AccountRoleTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\AmlAlertTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\AtomicSwapTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\AuthorizePreIssuedAssetTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\BindExternalSystemAccountIdTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\CreateAccountTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\CreateKYCReviewableRequestTest.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\CrowdfundTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\DirectDebitTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\FixedPriceSaleTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\FlexibleFeesTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\IssuanceTest.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\KVLimitsTest.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\LimitsUpdateTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\ManageAccountTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\ManageAssetPairTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\ManageAssetTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\ManageBalanceTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\ManageExternalSystemAccountIDPoolEntryTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\ManageKeyValueTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\ManageLimitsV2Tests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\OfferTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\PaymentTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\PaymentV2Tests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\PayoutTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\SaleTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\SetFeesTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\SetOptionsTests.cpp">
       <Filter>transactions\test</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\StatisticsV2Tests.cpp">
       <Filter>transactions\test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewPromotionUpdateRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
+    <ClCompile Include="..\..\src\transactions\test\TxEnvelopeTests.cpp">
+      <Filter>transactions\test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateSaleEndTimeRequestOpFrame.cpp">
-      <Filter>transactions\review_request</Filter>
+    <ClCompile Include="..\..\src\transactions\test\TxTests.cpp">
+      <Filter>transactions\test</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewPromotionUpdateRequestTestHelper.cpp">
+    <ClCompile Include="..\..\src\transactions\test\WithdrawalTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\BindExternalSystemAccountIdTestHelper.cpp">
       <Filter>transactions\test\helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewUpdateSaleEndTimeRequestHelper.cpp">
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CancelASwapBidTestHelper.cpp">
       <Filter>transactions\test\helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\unit\BindExternalSystemAccountIdUnitTests.cpp">
-      <Filter>transactions\test\unit</Filter>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CheckSaleStateTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\TransactionFrameImpl.cpp">
-      <Filter>transactions</Filter>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateAccountTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\StorageHelperImpl.cpp">
-      <Filter>ledger</Filter>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapBidCreationRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateKYCReviewableRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRolePermissionTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAMLAlertTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAssetPairTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAssetTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageBalanceTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageContractRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageContractTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageExternalSystemAccountIDPoolEntryTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageInvoiceRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageKeyValueTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageLimitsTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageOfferTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSaleTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAMLAlertRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAssetRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewASwapBidCreationRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAswapRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewContractRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewInvoiceRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewIssuanceRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewLimitsUpdateRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewPreIssuanceRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewRequestTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewSaleRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewUpdateKYCRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewUpdateSaleDetailsRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewWithdrawalRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\SaleRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\SetFeesTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\SetOptionsTestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\StateBeforeTxHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\TestManager.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\TxHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\WithdrawRequestHelper.cpp">
+      <Filter>transactions\test\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\sale\CancelSaleCreationRequestOpFrame.cpp">
+      <Filter>transactions\sale</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\sale\CreateSaleCreationRequestOpFrame.cpp">
+      <Filter>transactions\sale</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.cpp">
+      <Filter>transactions\atomic_swap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.cpp">
+      <Filter>transactions\atomic_swap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapRequestOpFrame.cpp">
+      <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\ledger\LedgerManager.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\LedgerManagerImpl.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\Application.h">
       <Filter>main</Filter>
     </ClInclude>
@@ -1193,29 +1247,14 @@
     <ClInclude Include="..\..\src\util\Timer.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\LedgerDelta.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\history\HistoryArchive.h">
       <Filter>history</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\database\Database.h">
       <Filter>database</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\EntryFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\types.h">
       <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\TransactionFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\SetOptionsOpFrame.h">
-      <Filter>transactions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\crypto\ByteSlice.h">
       <Filter>crypto</Filter>
@@ -1243,9 +1282,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\util\must_use.h">
       <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\LedgerHeaderFrame.h">
-      <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\test.h">
       <Filter>main\tests</Filter>
@@ -1301,9 +1337,6 @@
     <ClInclude Include="..\..\src\main\PersistentState.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\OperationFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\json\json.h">
       <Filter>lib\json</Filter>
     </ClInclude>
@@ -1345,9 +1378,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\util\HashOfHash.h">
       <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CreateAccountOpFrame.h">
-      <Filter>transactions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\scp\BallotProtocol.h">
       <Filter>scp</Filter>
@@ -1502,35 +1532,11 @@
     <ClInclude Include="src\generated\xdr\Stellar-operation-set-options.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\SignatureValidator.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
     <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
     <ClInclude Include="src\generated\xdr\Stellar-operation-manage-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\FeeFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\SetFeesOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageAccountOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\BalanceFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\PaymentRequestFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AssetFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageBalanceOpFrame.h">
-      <Filter>transactions</Filter>
     </ClInclude>
     <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-account-type-limits.h">
       <Filter>xdr\generated</Filter>
@@ -1604,47 +1610,8 @@
     <ClInclude Include="src\generated\xdr\Stellar-operation-upload-preemissions.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountTypeLimitsFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\StatisticsFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\AccountManager.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
     <ClInclude Include="src\generated\StellarCoreVersion.h">
       <Filter>xdr\generated</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AssetPairFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageAssetPairOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\OfferFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountLimitsFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\TrustFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\DirectDebitOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\InvoiceFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageInvoiceOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CounterpartyDetails.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\SourceDetails.h">
-      <Filter>transactions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\invariant\CacheIsConsistentWithDatabase.h">
       <Filter>invariant</Filter>
@@ -1658,29 +1625,8 @@
     <ClInclude Include="..\..\src\invariant\Invariants.h">
       <Filter>invariant</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ReferenceFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ReviewableRequestFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\database\Marshaler.h">
       <Filter>database</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\Account.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAssetRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\TestManager.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\TxHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\TxTests.h">
-      <Filter>transactions\test</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\manage_asset\CancelAssetRequestOpFrame.h">
       <Filter>transactions\manage_asset</Filter>
@@ -1697,233 +1643,20 @@
     <ClInclude Include="..\..\src\transactions\issuance\CreatePreIssuanceRequestOpFrame.h">
       <Filter>transactions\issuance</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetCreationRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewPaymentRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewPreIssuanceCreationRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\transactions\issuance\CreateIssuanceRequestOpFrame.h">
       <Filter>transactions\issuance</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewIssuanceCreationRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewPreIssuanceRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewIssuanceRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\lib\catcher.cpp">
       <Filter>lib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountID.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\exsysidgen\BTCIDGenerator.h">
-      <Filter>exsysidgen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\exsysidgen\ETHIDGenerator.h">
-      <Filter>exsysidgen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\exsysidgen\ExternalSystemIDGenerators.h">
-      <Filter>exsysidgen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\exsysidgen\Generator.h">
-      <Filter>exsysidgen</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewRequestHelper.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewRequestTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\EntryHelperLegacy.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountLimitsHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountTypeLimitsHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AssetHelperLegacy.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AssetPairHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\BalanceHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\FeeHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\InvoiceHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\OfferHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\PaymentRequestHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ReferenceHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ReviewableRequestHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\StatisticsHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\TrustHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDHelperLegacy.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\transactions\manage_asset\ManageAssetHelper.h">
       <Filter>transactions\manage_asset</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAssetTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CreateWithdrawalRequestOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewWithdrawalRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\WithdrawRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewWithdrawalRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateAccountTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\SaleFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\SaleHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CreateSaleCreationRequestOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\SaleRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewSaleRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAssetPairTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageOfferTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\dex\OfferExchange.h">
       <Filter>transactions\dex</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CheckSaleStateOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\transactions\dex\OfferManager.h">
       <Filter>transactions\dex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\FeesManager.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\CheckSaleStateTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageBalanceTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\Base58Check.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\BigInt.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\CoinKey.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\encodings.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hash.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hdkeys.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\HexCheck.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\numericdata.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\secp256k1_openssl.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\typedefs.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\uchar_vector.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\uint256.h">
-      <Filter>lib\coincore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_blake.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_bmw.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_groestl.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_jh.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_keccak.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_skein.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\lib\coincore\src\hashfunc\sph_types.h">
-      <Filter>lib\coincore\hashfunc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\exsysidgen\Secp256k1IDGenerator.h">
-      <Filter>exsysidgen</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\dex\CreateOfferOpFrame.h">
       <Filter>transactions\dex</Filter>
@@ -1940,53 +1673,11 @@
     <ClInclude Include="..\..\src\transactions\dex\ManageOfferOpFrame.h">
       <Filter>transactions\dex</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewTwoStepWithdrawalRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewTwoStepWithdrawalRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewLimitsUpdateRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\SetOptionsTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\SaleQuoteAssetHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CreateAMLAlertRequestOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAMLAlertTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAMLAlertRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\StateBeforeTxHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\transactions\manage_asset\ChangeAssetPreIssuerOpFrame.h">
       <Filter>transactions\manage_asset</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountKYCFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountKYCHelper.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\transactions\kyc\CreateKYCReviewableRequestOpFrame.h">
       <Filter>transactions\kyc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\PaymentOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\payment\PaymentOpFrame.h">
@@ -1994,60 +1685,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\payment\PaymentOpV2Frame.h">
       <Filter>transactions\payment</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\SetFeesTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntry.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelperLegacy.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\KeyValueEntryFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\KeyValueHelperLegacy.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageKeyValueOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\BindExternalSystemAccountIdTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateKYCReviewableRequestTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageExternalSystemAccountIDPoolEntryTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageKeyValueTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSaleTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewLimitsUpdateRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewUpdateKYCRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewUpdateSaleDetailsRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\BindExternalSystemAccountIdOpFrame.h">
-      <Filter>transactions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\manage_external_system_account_id_pool\CreateExternalSystemAccountIDPoolEntryOpFrame.h">
       <Filter>transactions\manage_external_system_account_id_pool</Filter>
@@ -2064,10 +1701,169 @@
     <ClInclude Include="..\..\src\transactions\dex\ManageSaleOpFrame.h">
       <Filter>transactions\dex</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\SaleAnteFrame.h">
+    <ClInclude Include="..\..\src\transactions\test\mocks\MockApplication.h">
+      <Filter>transactions\test\mocks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\mocks\MockLedgerManager.h">
+      <Filter>transactions\test\mocks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\mocks\MockTransactionFrame.h">
+      <Filter>transactions\test\mocks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\mocks\MockDatabase.h">
+      <Filter>transactions\test\mocks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountFrame.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\SaleAnteHelper.h">
+    <ClInclude Include="..\..\src\ledger\AccountHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountKYCFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountKYCHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountLimitsFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountLimitsHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountRoleFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountRoleHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountRolePermissionFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountRolePermissionHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountRolePermissionHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountTypeLimitsFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountTypeLimitsHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AssetFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AssetHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AssetHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AssetHelperLegacy.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AssetPairFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AssetPairHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AtomicSwapBidFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AtomicSwapBidHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AtomicSwapBidQuoteAssetHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\BalanceFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\BalanceHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\BalanceHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\BalanceHelperLegacy.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ContractFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ContractHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\EntryFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\EntryHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\EntryHelperLegacy.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountID.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDHelperLegacy.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntry.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDPoolEntryHelperLegacy.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\FeeFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\FeeHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\KeyValueEntryFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\KeyValueHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\KeyValueHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\KeyValueHelperLegacy.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerDelta.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerDeltaImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerHeaderFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerHeaderFrameImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerManager.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerManagerImpl.h">
       <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\LimitsV2Frame.h">
@@ -2076,10 +1872,43 @@
     <ClInclude Include="..\..\src\ledger\LimitsV2Helper.h">
       <Filter>ledger</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\ledger\OfferFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\OfferHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\ledger\PendingStatisticsFrame.h">
       <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\PendingStatisticsHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ReferenceFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ReferenceHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ReviewableRequestFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\ReviewableRequestHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\SaleFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\SaleHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\SaleQuoteAssetHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\StatisticsFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\StatisticsHelper.h">
       <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\StatisticsV2Frame.h">
@@ -2088,50 +1917,320 @@
     <ClInclude Include="..\..\src\ledger\StatisticsV2Helper.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\StatisticsV2Processor.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageLimitsOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageLimitsTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\CreateManageLimitsRequestOpFrame.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewPromotionUpdateRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateSaleEndTimeRequestOpFrame.h">
-      <Filter>transactions\review_request</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewPromotionUpdateRequestTestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewUpdateSaleEndTimeRequestHelper.h">
-      <Filter>transactions\test\helper</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\mocks\MockApplication.h">
-      <Filter>transactions\test\mocks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\mocks\MockLedgerManager.h">
-      <Filter>transactions\test\mocks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\TransactionFrameImpl.h">
-      <Filter>transactions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\mocks\MockTransactionFrame.h">
-      <Filter>transactions\test\mocks</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\mocks\MockDatabase.h">
-      <Filter>transactions\test\mocks</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\ledger\StorageHelper.h">
       <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\StorageHelperImpl.h">
       <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\TrustFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\TrustHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\AccountManager.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\BindExternalSystemAccountIdOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\CheckSaleStateOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\CounterpartyDetails.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\CreateAccountOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\CreateAMLAlertRequestOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\CreateManageLimitsRequestOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\CreateWithdrawalRequestOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\DirectDebitOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\FeesManager.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageAccountOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageAccountRoleOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageAccountRolePermissionOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageAssetPairOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageBalanceOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageContractOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageContractRequestOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageInvoiceRequestOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageKeyValueOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\ManageLimitsOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\OperationFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\PayoutOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\SetFeesOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\SetOptionsOpFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\SignatureValidator.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\SignatureValidatorImpl.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\SourceDetails.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\StatisticsV2Processor.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\TransactionFrame.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\TransactionFrameImpl.h">
+      <Filter>transactions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetCreationRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapBidCreationRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewContractRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewInvoiceRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewIssuanceCreationRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewLimitsUpdateRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewPreIssuanceCreationRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewRequestHelper.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewWithdrawalRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\TxTests.h">
+      <Filter>transactions\test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\Account.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\BindExternalSystemAccountIdTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CancelASwapBidTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CheckSaleStateTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateAccountTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapBidCreationRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateKYCReviewableRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRolePermissionTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAMLAlertTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAssetPairTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAssetTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageBalanceTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageContractRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageContractTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageExternalSystemAccountIDPoolEntryTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageInvoiceRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageKeyValueTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageLimitsTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageOfferTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSaleTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAMLAlertRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAssetRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewASwapBidCreationRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAswapRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewContractRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewInvoiceRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewIssuanceRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewLimitsUpdateRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewPreIssuanceRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewRequestTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewSaleRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewUpdateKYCRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewUpdateSaleDetailsRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewWithdrawalRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\SaleRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\SetFeesTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\SetOptionsTestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\StateBeforeTxHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\TestManager.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\TxHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\WithdrawRequestHelper.h">
+      <Filter>transactions\test\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\sale\CancelSaleCreationRequestOpFrame.h">
+      <Filter>transactions\sale</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\sale\CreateSaleCreationRequestOpFrame.h">
+      <Filter>transactions\sale</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.h">
+      <Filter>transactions\atomic_swap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.h">
+      <Filter>transactions\atomic_swap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapRequestOpFrame.h">
+      <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2157,12 +2256,6 @@
     </None>
     <None Include="..\..\src\history\readme.md">
       <Filter>history</Filter>
-    </None>
-    <None Include="..\..\src\ledger\readme.md">
-      <Filter>ledger</Filter>
-    </None>
-    <None Include="..\..\src\transactions\readme.md">
-      <Filter>transactions</Filter>
     </None>
     <None Include="..\..\src\overlay\readme.md">
       <Filter>overlay</Filter>
@@ -2221,200 +2314,158 @@
     <Text Include="..\..\INSTALL-Windows.txt" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-account.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-account-limits.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-account-type-limits.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-asset.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-asset-pair.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-balance.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-fee.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-invoice.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-offer.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-payment-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-statistics.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-account.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-direct-debit.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-account.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-asset.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-asset-pair.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-balance.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-invoice.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-offer.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-payment.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-review-payment-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-set-fees.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-set-options.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-overlay.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-SCP.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-transaction.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-types.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-asset.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-reviewable-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-review-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-issuance.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-preissuance-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-reference.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-issuance-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-external-system-id.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-withdrawal-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-withdrawal.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-sale.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-sale-creation-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-sale.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-check-sale-state.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-limits-update.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-AML-alert-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-AML-alert.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-account-KYC.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-update-KYC.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-KYC-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-payment-v2.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-update-sale-details.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-external-system-id-pool-entry.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-external-system-id-pool-entry.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-bind-external-system-id.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-sale.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-key-value.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-key-value.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-sale-ante.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-limits-v2.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-pending-statistics.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-ledger-entries-statistics-v2.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-manage-limits.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-operation-create-manage-limits-request.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-update-sale-end-time.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\src\xdr\Stellar-reviewable-request-update-promotion.x">
-      <Filter>xdr</Filter>
-    </CustomBuild>
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
   </ItemGroup>
 </Project>
