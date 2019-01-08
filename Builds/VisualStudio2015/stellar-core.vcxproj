@@ -482,6 +482,7 @@
     <ClCompile Include="..\..\src\transactions\test\TxTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\unit\BindExternalSystemAccountIdUnitTests.cpp" />
     <ClCompile Include="..\..\lib\util\crc16.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\unit\PayoutUnitTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\WithdrawalTests.cpp" />
     <ClCompile Include="..\..\src\transactions\TransactionFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\TransactionFrameImpl.cpp" />
