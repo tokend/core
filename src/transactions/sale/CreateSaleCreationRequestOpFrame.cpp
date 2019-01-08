@@ -153,7 +153,7 @@ bool CreateSaleCreationRequestOpFrame::isPriceValid(SaleCreationRequestQuoteAsse
         return false;
     }
 
-    bool isCrowdfunding = saleCreationRequest.saleTypeExt.typedSale.saleType() == SaleType::CROWD_FUNDING;
+    bool isCrowdfunding = saleCreationRequest.saleTypeExt.saleType() == SaleType::CROWD_FUNDING;
     if (isCrowdfunding)
     {
         return quoteAsset.price == ONE;
@@ -277,7 +277,7 @@ bool CreateSaleCreationRequestOpFrame::ensureEnoughAvailable(Application& app,
                                                              const SaleCreationRequest& saleCreationRequest,
                                                              AssetFrame::pointer baseAsset)
 {
-    if (saleCreationRequest.saleTypeExt.typedSale.saleType() != SaleType::FIXED_PRICE)
+    if (saleCreationRequest.saleTypeExt.saleType() != SaleType::FIXED_PRICE)
         return true;
 
     return baseAsset->getAvailableForIssuance() >= saleCreationRequest.requiredBaseAssetForHardCap;

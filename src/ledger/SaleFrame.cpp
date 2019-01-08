@@ -230,8 +230,8 @@ SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &own
             sale.quoteAssets.push_back(saleQuoteAsset);
         }
         sale.baseBalance = balances[request.baseAsset];
-        const auto saleType = request.saleTypeExt.typedSale.saleType();
-        sale.saleTypeExt.typedSale.saleType(saleType);
+        const auto saleType = request.saleTypeExt.saleType();
+        sale.saleTypeExt.saleType(saleType);
 
         return std::make_shared<SaleFrame>(entry);
     } catch (...)
@@ -307,12 +307,12 @@ SaleType SaleFrame::getSaleType() const
 
 SaleType SaleFrame::getSaleType(SaleEntry const& sale)
 {
-    return sale.saleTypeExt.typedSale.saleType();
+    return sale.saleTypeExt.saleType();
 }
 
 void SaleFrame::setSaleType(SaleEntry& sale, const SaleType saleType)
 {
-    sale.saleTypeExt.typedSale.saleType(saleType);
+    sale.saleTypeExt.saleType(saleType);
 }
 
 void SaleFrame::normalize()
