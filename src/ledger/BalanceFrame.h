@@ -108,7 +108,8 @@ class BalanceFrame : public EntryFrame
     // Charges amount from current account.
     Result tryCharge(uint64_t amountToCharge);
 
-    static pointer createNew(BalanceID id, AccountID owner, AssetCode asset);
+    static pointer createNew(BalanceID id, AccountID owner, AssetCode asset,
+                             uint64 sequentialID);
 
   private:
     // Returns false if the amount provided is too precise for precision that

@@ -3,6 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
+#include <ledger/LedgerHeaderFrame.h>
 #include "transactions/CreateAccountOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "database/Database.h"
@@ -106,6 +107,9 @@ namespace stellar {
                                              LedgerManager &ledgerManager) {
         auto &db = app.getDatabase();
         auto destAccountFrame = make_shared<AccountFrame>(mCreateAccount.destination);
+        auto& accountEntry = destAccountFrame->getAccount();
+        accountEntry.sequentialID =
+            delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
         buildAccount(app, delta, destAccountFrame);
 
         //save recovery accountID

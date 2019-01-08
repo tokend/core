@@ -157,5 +157,15 @@ LedgerHeaderFrame::dropAll(Database& db)
 
     db.getSession()
         << "CREATE INDEX ledgersbyseq ON ledgerheaders ( ledgerseq );";
+
+    db.getSession()
+        << "CREATE OR REPLACE FUNCTION new_ledgers_seq_notify() RETURNS "
+           "trigger AS $$ DECLARE payload varchar; mid uuid; "
+           "BEGIN payload = CAST(NEW.ledgerseq AS text); PERFORM "
+           "pg_notify('new_ledgers_seq', payload); RETURN NEW; END; $$ "
+           "LANGUAGE plpgsql;";
+    db.getSession()
+        << "CREATE TRIGGER ledgers_insert AFTER INSERT ON ledgerheaders FOR "
+           "EACH ROW EXECUTE PROCEDURE new_ledgers_seq_notify();";
 }
 }

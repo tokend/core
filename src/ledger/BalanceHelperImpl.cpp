@@ -15,7 +15,7 @@ using xdr::operator<;
 static const char* balanceColumnSelector =
         "SELECT balance.balance_id, balance.asset, balance.amount, balance.locked, "
         "balance.account_id, asset.trailing_digits, balance.lastmodified, "
-        "balance.version, asset.version "
+        "balance.version, asset.version, balance.sequential_id "
         "FROM balance INNER JOIN asset ON asset.code = balance.asset";
 
 BalanceHelperImpl::BalanceHelperImpl(StorageHelper& storageHelper)
@@ -38,6 +38,7 @@ BalanceHelperImpl::dropAll()
            "locked                   BIGINT      NOT NULL CHECK (locked >= 0),"
            "lastmodified             INT         NOT NULL, "
            "version                  INT         NOT NULL DEFAULT 0,"
+           "sequential_id            BIGINT      UNIQUE NOT NULL,"
            "PRIMARY KEY (balance_id)"
            ");";
 }
@@ -147,14 +148,14 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     if (insert)
     {
         sql = "INSERT INTO balance (balance_id, asset, amount, locked, "
-              "                     account_id, lastmodified, version) "
-              "VALUES (:id, :as, :am, :ld, :aid, :lm, :v)";
+              "                     account_id, lastmodified, version, sequential_id) "
+              "VALUES (:id, :as, :am, :ld, :aid, :lm, :v, :seqid)";
     }
     else
     {
         sql = "UPDATE balance "
               "SET    asset = :as, amount=:am, locked=:ld, account_id=:aid, "
-              "lastmodified=:lm, version=:v "
+              "lastmodified=:lm, version=:v, sequential_id = :seqid "
               "WHERE  balance_id = :id";
     }
 
@@ -168,6 +169,7 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     st.exchange(use(accountID, "aid"));
     st.exchange(use(balanceFrame->mEntry.lastModifiedLedgerSeq, "lm"));
     st.exchange(use(version, "v"));
+    st.exchange(use(balanceEntry.sequentialID, "seqid"));
     st.define_and_bind();
 
     auto timer = insert ? db.getInsertTimer("insert-balance")
@@ -383,7 +385,7 @@ BalanceHelperImpl::loadBalances(vector<AccountID> accountIDs,
     string sql = "SELECT DISTINCT ON (balance.account_id) "
                  "balance.balance_id, balance.asset, balance.amount, "
                  "balance.locked, balance.account_id, asset.trailing_digits, "
-                 "balance.lastmodified, balance.version, asset.version "
+                 "balance.lastmodified, balance.version, asset.version, balance.sequential_id "
                  "FROM balance INNER JOIN asset ON balance.asset = "
                  "asset.code "
                  "WHERE balance.asset = :asset AND balance.account_id IN (" +
@@ -427,6 +429,7 @@ BalanceHelperImpl::loadBalances(StatementContext& prep,
     st.exchange(into(le.lastModifiedLedgerSeq));
     st.exchange(into(balanceVersion));
     st.exchange(into(assetVersion));
+    st.exchange(into(oe.sequentialID));
     st.define_and_bind();
     st.execute(true);
     while (st.got_data())

@@ -118,7 +118,7 @@ SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset
     request.hardCap = hardCap;
     request.details = details;
 
-    request.saleTypeExt.typedSale.saleType(saleType);
+    request.saleTypeExt.saleType(saleType);
     request.requiredBaseAssetForHardCap = requiredBaseAssetForHardCap;
     return request;
 }
