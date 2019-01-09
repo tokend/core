@@ -14,17 +14,19 @@ class ManageAccountRolePermissionTestHelper : TxHelper
         TestManager::pointer testManager);
 
     TransactionFramePtr createSetAccountRolePermissionTx(
-        Account& source, AccountRolePermissionEntry permissionEntry,
+        Account& source, AccountRuleEntry permissionEntry,
         ManageAccountRolePermissionOpAction action);
 
-    void applySetIdentityPermissionTx(
-        Account& source, AccountRolePermissionEntry& permissionEntry,
+    ManageAccountRolePermissionResult
+    applySetIdentityPermissionTx(Account& source,
+                                 AccountRuleEntry& permissionEntry,
         ManageAccountRolePermissionOpAction action,
         ManageAccountRolePermissionResultCode expectedResult =
             ManageAccountRolePermissionResultCode::SUCCESS);
 
-    AccountRolePermissionEntry
-    createAccountRolePermissionEntry(uint64_t id, OperationType operationType);
+    AccountRuleEntry
+    createAccountRolePermissionEntry(uint64_t id, AccountRuleResource resource,
+                                     std::string action, bool isForbid);
 };
 
 } // namespace txtest

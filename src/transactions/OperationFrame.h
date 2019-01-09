@@ -31,6 +31,13 @@ class KeyValueHelper;
 
 class TransactionFrame;
 
+struct OperationCondition
+{
+    AccountRuleResource resource;
+    longstring action;
+    AccountFrame::pointer account;
+};
+
 class OperationFrame
 {
 
@@ -64,6 +71,8 @@ class OperationFrame
                                                       int32_t ledgerVersion) const = 0;
     virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
         int32_t ledgerVersion, Database& db) const;
+
+    virtual std::vector<OperationCondition> getOperationConditions() const;
 
 	// returns true if operation is allowed in the system
 	virtual bool isAllowed() const;

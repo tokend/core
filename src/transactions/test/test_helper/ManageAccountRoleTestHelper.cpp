@@ -14,11 +14,14 @@ ManageAccountRoleTestHelper::ManageAccountRoleTestHelper(
 }
 
 ManageAccountRoleOp
-ManageAccountRoleTestHelper::createCreationOpInput(const std::string& name)
+ManageAccountRoleTestHelper::createCreationOpInput(const std::string& name,
+                                                   std::vector<uint64_t> ruleIDs)
 {
     ManageAccountRoleOp opData;
     opData.data.action(ManageAccountRoleOpAction::CREATE);
     opData.data.createData().name = name;
+    opData.data.createData().accountRuleIDs.clear();
+    opData.data.createData().accountRuleIDs.append(&ruleIDs[0], ruleIDs.size());
     return opData;
 }
 

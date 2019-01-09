@@ -33,4 +33,22 @@ EntryHelper::putCachedEntry(LedgerKey const& key,
     getDatabase().getEntryCache().put(s, p);
 }
 
+std::string
+EntryHelper::obtainSqlIDsString(std::vector<uint64_t> ids)
+{
+    if (ids.empty())
+    {
+        return "";
+    }
+
+    std::string result;
+    for (auto id : ids)
+    {
+        result += std::to_string(id);
+        result += ", ";
+    }
+
+    return result.substr(0, result.size() - 2);
+}
+
 } // namespace stellar

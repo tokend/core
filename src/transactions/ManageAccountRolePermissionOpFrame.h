@@ -42,7 +42,7 @@ class ManageAccountRolePermissionOpFrame : public OperationFrame
     }
 
   private:
-    ManageAccountRolePermissionOp const& mManageAccountRolePermission;
+    ManageAccountRuleOp const& mManageAccountRolePermission;
 
     ManageAccountRolePermissionResult&
     innerResult()

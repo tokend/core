@@ -1,7 +1,7 @@
 #include "ManageAccountRoleOpFrame.h"
 #include "ledger/AccountHelper.h"
-#include "ledger/AccountRoleHelper.h"
-#include "ledger/AccountRolePermissionHelperImpl.h"
+#include "ledger/AccountRoleHelperImpl.h"
+#include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include <xdr/Stellar-operation-manage-account-role.h>
@@ -40,8 +40,6 @@ bool
 ManageAccountRoleOpFrame::createAccountRole(Application& app,
                                             StorageHelper& storageHelper)
 {
-    auto& data = mManageAccountRole.data.createData();
-
     if (!storageHelper.getLedgerDelta())
     {
         throw std::runtime_error(
@@ -52,7 +50,7 @@ ManageAccountRoleOpFrame::createAccountRole(Application& app,
     auto newAccountRoleID =
         delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_ROLE);
     auto frame = AccountRoleFrame::createNew(newAccountRoleID,
-                                             data.name, delta);
+                                             mManageAccountRole.data.createData());
 
     storageHelper.getAccountRoleHelper().storeAdd(frame->mEntry);
 
@@ -69,7 +67,7 @@ ManageAccountRoleOpFrame::deleteAccountRole(Application& app,
 
     LedgerKey ledgerKey;
     ledgerKey.type(LedgerEntryType::ACCOUNT_ROLE);
-    ledgerKey.accountRole().accountRoleID = data.accountRoleID;
+    ledgerKey.accountRole().id = data.accountRoleID;
 
     auto& accountRoleHelper = storageHelper.getAccountRoleHelper();
     auto result = accountRoleHelper.storeLoad(ledgerKey);

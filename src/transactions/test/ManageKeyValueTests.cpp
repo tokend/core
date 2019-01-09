@@ -1,6 +1,5 @@
 #include <transactions/test/test_helper/TestManager.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
-#include <transactions/ManageKeyValueOpFrame.h>
 #include "overlay/LoopbackPeer.h"
 #include "main/test.h"
 #include "ledger/KeyValueHelperLegacy.h"

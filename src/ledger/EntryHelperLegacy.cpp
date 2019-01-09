@@ -7,7 +7,7 @@
 #include "LedgerManager.h"
 #include "ledger/AccountFrame.h"
 #include "ledger/AccountHelper.h"
-#include "ledger/AccountRoleHelper.h"
+#include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/StatisticsFrame.h"
@@ -50,6 +50,7 @@
 #include "PendingStatisticsHelper.h"
 #include "ContractHelper.h"
 #include "BalanceHelperLegacy.h"
+#include "AccountRuleHelperImpl.h"
 
 namespace stellar
 {
@@ -60,9 +61,9 @@ namespace stellar
         switch (entryType)
         {
             case LedgerEntryType::ACCOUNT_ROLE:
-                return std::make_shared<AccountRoleHelper>(storageHelper);
-            case LedgerEntryType::ACCOUNT_ROLE_PERMISSION:
-                return std::make_shared<AccountRolePermissionHelperImpl>(storageHelper);
+                return std::make_shared<AccountRoleHelperImpl>(storageHelper);
+            case LedgerEntryType::ACCOUNT_RULE:
+                return std::make_shared<AccountRuleHelperImpl>(storageHelper);
             default:
                 return nullptr;
         }
@@ -71,7 +72,7 @@ namespace stellar
     LedgerKey LedgerEntryKey(LedgerEntry const &e)
     {
         // TODO: move this to helpers somehow
-        if (e.data.type() == LedgerEntryType::ACCOUNT_ROLE || e.data.type() == LedgerEntryType::ACCOUNT_ROLE_PERMISSION)
+        if (e.data.type() == LedgerEntryType::ACCOUNT_ROLE || e.data.type() == LedgerEntryType::ACCOUNT_RULE)
         {
             LedgerKey key;
             key.type(e.data.type());
@@ -79,13 +80,13 @@ namespace stellar
             {
                 case LedgerEntryType::ACCOUNT_ROLE:
                 {
-                    key.accountRole().accountRoleID = e.data.accountRole().accountRoleID;
+                    key.accountRole().id = e.data.accountRole().id;
                     break;
                 }
-                case LedgerEntryType::ACCOUNT_ROLE_PERMISSION:
+                case LedgerEntryType::ACCOUNT_RULE:
                 {
                     auto& sourceData = e.data.accountRolePermission();
-                    key.accountRolePermission().permissionID = sourceData.permissionID;
+                    key.accountRolePermission().id = sourceData.id;
                     break;
                 }
                 default:

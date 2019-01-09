@@ -40,13 +40,19 @@ class AccountRoleFrame : public EntryFrame
     uint64_t
     getID() const
     {
-        return mAccountRole.accountRoleID;
+        return mAccountRole.id;
+    }
+
+    std::vector<uint64_t> const
+    getRuleIDs() const
+    {
+        return mAccountRole.ruleIDs;
     }
 
     std::string
-    getName() const
+    getDetails() const
     {
-        return mAccountRole.accountRoleName;
+        return mAccountRole.details;
     }
 
     static void ensureValid(const LedgerEntry& entry);
@@ -54,7 +60,6 @@ class AccountRoleFrame : public EntryFrame
     void ensureValid() const;
 
     static pointer createNew(uint64_t id,
-                             std::string const& name,
-                             LedgerDelta& delta);
+                             CreateAccountRoleData data);
 };
 } // namespace stellar

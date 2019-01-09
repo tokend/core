@@ -1,8 +1,6 @@
 #pragma once
 
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountRoleHelper.h"
-#include "ledger/AccountRolePermissionHelperImpl.h"
 #include "BalanceHelperLegacy.h"
 #include <memory>
 
@@ -19,6 +17,8 @@ class BalanceHelper;
 class AssetHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
+class AccountRoleHelper;
+class AccountRuleHelper;
 
 class StorageHelperImpl : public StorageHelper
 {
@@ -46,7 +46,7 @@ class StorageHelperImpl : public StorageHelper
     ExternalSystemAccountIDPoolEntryHelper&
     getExternalSystemAccountIDPoolEntryHelper() override;
     AccountRoleHelper& getAccountRoleHelper() override;
-    AccountRolePermissionHelperImpl& getAccountRolePermissionHelper() override;
+    AccountRuleHelper& getAccountRuleHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -62,6 +62,6 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<ExternalSystemAccountIDPoolEntryHelper>
         mExternalSystemAccountIDPoolEntryHelper;
     std::unique_ptr<AccountRoleHelper> mAccountRoleHelper;
-    std::unique_ptr<AccountRolePermissionHelperImpl> mAccountRolePermissionHelper;
+    std::unique_ptr<AccountRuleHelper> mAccountRuleHelper;
 };
 } // namespace stellar

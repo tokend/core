@@ -5,6 +5,8 @@
 #include "ledger/LedgerDeltaImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
+#include "AccountRuleHelperImpl.h"
+#include "AccountRoleHelperImpl.h"
 
 namespace stellar
 {
@@ -175,18 +177,18 @@ StorageHelperImpl::getAccountRoleHelper()
 {
     if (!mAccountRoleHelper)
     {
-        mAccountRoleHelper = std::make_unique<AccountRoleHelper>(*this);
+        mAccountRoleHelper = std::make_unique<AccountRoleHelperImpl>(*this);
     }
     return *mAccountRoleHelper;
 }
-AccountRolePermissionHelperImpl&
-StorageHelperImpl::getAccountRolePermissionHelper()
+AccountRuleHelper&
+StorageHelperImpl::getAccountRuleHelper()
 {
-    if (!mAccountRolePermissionHelper)
+    if (!mAccountRuleHelper)
     {
-        mAccountRolePermissionHelper = std::make_unique<AccountRolePermissionHelperImpl>(*this);
+        mAccountRuleHelper = std::make_unique<AccountRuleHelperImpl>(*this);
     }
-    return *mAccountRolePermissionHelper;
+    return *mAccountRuleHelper;
 }
 
 } // namespace stellar

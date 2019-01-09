@@ -119,7 +119,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     }
     SECTION("Happy path with policies check")
     {
-        app.resumeCheckingPolicies();
+        /*app.resumeCheckingPolicies();
 
         ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
         ManageAccountRolePermissionTestHelper setAccountRolePolicyTestHelper(testManager);
@@ -148,6 +148,6 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
                                                                                                 "Some data");
         bindExternalSystemAccountIdTestHelper.applyBindExternalSystemAccountIdTx(binder, ERC20_TokenExternalSystemType);
 
-        app.stopCheckingPolicies();
+        app.stopCheckingPolicies();*/
     }
 }

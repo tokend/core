@@ -1,11 +1,9 @@
 #include "ManageAccountRolePermissionOpFrame.h"
 #include "database/Database.h"
-#include "ledger/AccountRolePermissionHelperImpl.h"
+#include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 
 namespace stellar
 {
@@ -16,8 +14,7 @@ using xdr::operator==;
 ManageAccountRolePermissionOpFrame::ManageAccountRolePermissionOpFrame(
     const Operation& op, OperationResult& res, TransactionFrame& parentTx)
     : OperationFrame(op, res, parentTx)
-    , mManageAccountRolePermission(
-          mOperation.body.manageAccountRolePermissionOp())
+    , mManageAccountRolePermission(mOperation.body.manageAccountRolePermissionOp())
 {
 }
 
@@ -72,37 +69,39 @@ ManageAccountRolePermissionOpFrame::createOrUpdatePolicy(
     }
     LedgerHeaderFrame& headerFrame =
         storageHelper.getLedgerDelta()->getHeaderFrame();
-    auto& helper = storageHelper.getAccountRolePermissionHelper();
+    auto& helper = storageHelper.getAccountRuleHelper();
 
     LedgerEntry le;
-    le.data.type(LedgerEntryType::ACCOUNT_ROLE_PERMISSION);
+    le.data.type(LedgerEntryType::ACCOUNT_RULE);
 
     auto& lePermission = le.data.accountRolePermission();
     switch (mManageAccountRolePermission.data.action())
     {
     case ManageAccountRolePermissionOpAction::CREATE:
-        lePermission.permissionID =
-            headerFrame.generateID(LedgerEntryType::ACCOUNT_ROLE_PERMISSION);
-        lePermission.accountRoleID =
-            mManageAccountRolePermission.data.createData().roleID;
-        lePermission.opType =
-            mManageAccountRolePermission.data.createData().opType;
+        lePermission.id = headerFrame.generateID(LedgerEntryType::ACCOUNT_RULE);
+        lePermission.resource =
+            mManageAccountRolePermission.data.createData().resource;
+        lePermission.action =
+            mManageAccountRolePermission.data.createData().action;
+        lePermission.isForbid = mManageAccountRolePermission.data.createData().isForbid;
+        lePermission.details = mManageAccountRolePermission.data.createData().details;
         break;
     case ManageAccountRolePermissionOpAction::UPDATE:
-        lePermission.permissionID =
-            mManageAccountRolePermission.data.updateData().permissionID;
-        lePermission.accountRoleID =
-            mManageAccountRolePermission.data.updateData().roleID;
-        lePermission.opType =
-            mManageAccountRolePermission.data.updateData().opType;
+        lePermission.id =
+            mManageAccountRolePermission.data.updateData().accountRuleID;
+        lePermission.resource =
+                mManageAccountRolePermission.data.updateData().resource;
+        lePermission.action =
+                mManageAccountRolePermission.data.updateData().action;
+        lePermission.isForbid = mManageAccountRolePermission.data.updateData().isForbid;
+        lePermission.details = mManageAccountRolePermission.data.updateData().details;
         break;
     default:
         throw std::runtime_error("Unexpected action type.");
     }
 
     innerResult().code(ManageAccountRolePermissionResultCode::SUCCESS);
-    innerResult().success().permissionID =
-        le.data.accountRolePermission().permissionID;
+    innerResult().success().permissionID = le.data.accountRolePermission().id;
 
     if (helper.exists(helper.getLedgerKey(le)))
     {
@@ -121,21 +120,19 @@ ManageAccountRolePermissionOpFrame::deleteAccountPolicy(
     Application& app, StorageHelper& storageHelper)
 {
     LedgerKey key;
-    key.type(LedgerEntryType::ACCOUNT_ROLE_PERMISSION);
-    key.accountRolePermission().permissionID =
-        mManageAccountRolePermission.data.removeData().permissionID;
+    key.type(LedgerEntryType::ACCOUNT_RULE);
+    key.accountRolePermission().id = mManageAccountRolePermission.data.removeData().accountRuleID;
 
-    auto frame = storageHelper.getAccountRolePermissionHelper().storeLoad(key);
+    auto frame = storageHelper.getAccountRuleHelper().storeLoad(key);
     if (!frame)
     {
         innerResult().code(ManageAccountRolePermissionResultCode::NOT_FOUND);
         return false;
     }
 
-    storageHelper.getAccountRolePermissionHelper().storeDelete(frame->getKey());
+    storageHelper.getAccountRuleHelper().storeDelete(frame->getKey());
     innerResult().code(ManageAccountRolePermissionResultCode::SUCCESS);
-    innerResult().success().permissionID =
-        key.accountRolePermission().permissionID;
+    innerResult().success().permissionID = key.accountRolePermission().id;
     return true;
 }
 

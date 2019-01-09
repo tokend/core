@@ -1,27 +1,22 @@
 #include "TxTests.h"
 #include "crypto/SHA.h"
 #include "ledger/AccountHelper.h"
-#include "ledger/AccountRolePermissionHelperImpl.h"
+#include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "main/Application.h"
 #include "main/test.h"
 #include "overlay/LoopbackPeer.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
-#include "test_helper/ManageAssetPairTestHelper.h"
-#include "test_helper/ManageAssetTestHelper.h"
-#include "transactions/ManageAccountRolePermissionOpFrame.h"
 #include "transactions/test/test_helper/ManageAccountRolePermissionTestHelper.h"
 #include "util/make_unique.h"
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
+#include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 
 using namespace stellar;
 using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
-
-static const OperationType kOperationType = OperationType::CREATE_AML_ALERT;
 
 TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
 {
@@ -32,6 +27,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     Application& app = *appPtr;
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
+    //TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
 
     Database& db = app.getDatabase();
 
@@ -52,27 +48,50 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     auto accountKey = SecretKey::random();
     auto account = Account{accountKey, Salt(1)};
 
-    createAccountTestHelper.applyCreateAccountTx(
-        master, accountKey.getPublicKey(), AccountType::GENERAL);
+    auto policyEntry =
+            manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
+                    0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "*", false);
+    auto createRuleResult = manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+            master, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
+            ManageAccountRolePermissionResultCode::SUCCESS);
 
-    // create account role
+    auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("key_value_manager", {createRuleResult.success().permissionID});
+
+    auto result = setAccountRoleTestHelper.applySetAccountRole(master, createAccountRoleOp);
+
+    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+
+    auto createAccountTestBuilder = CreateAccountTestBuilder()
+            .setSource(master)
+            .setToPublicKey(accountKey.getPublicKey())
+            .setType(AccountType::NOT_VERIFIED)
+            .setRecovery(SecretKey::random().getPublicKey())
+            .setRoleID(1);
+
+    createAccountTestHelper.applyTx(createAccountTestBuilder);
+
+  /*  // create account role
     auto accountRoleID =
         setAccountRoleTestHelper
             .applySetAccountRole(
                 master,
                 setAccountRoleTestHelper.createCreationOpInput("regular"))
             .success()
-            .accountRoleID;
+            .accountRoleID;*/
 
     SECTION("Successful creation")
     {
-        auto policyEntry =
-            manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
-                accountRoleID, kOperationType);
-        manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-            account, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
-            ManageAccountRolePermissionResultCode::SUCCESS);
-        SECTION("Successful updating")
+
+        ManageKeyValueTestHelper testHelper(testManager);
+
+        ManageKeyValueOp op;
+        op.key = "some_key";
+        op.action.action(ManageKVAction::PUT);
+        op.action.value().type(KeyValueEntryType::UINT32);
+        op.action.value().ui32Value() = 30;
+        testHelper.applyTx(account, op);
+
+        /*SECTION("Successful updating")
         {
             policyEntry.opType = OperationType::CREATE_ACCOUNT;
             manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
@@ -86,9 +105,9 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
                 account, policyEntry,
                 ManageAccountRolePermissionOpAction::REMOVE,
                 ManageAccountRolePermissionResultCode::SUCCESS);
-        }
+        }*/
     }
-    SECTION("Invalid operation type")
+    /*SECTION("Invalid operation type")
     {
         auto policyEntryResourceAndAction =
             manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
@@ -105,5 +124,5 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
         manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
             account, policyEntry, ManageAccountRolePermissionOpAction::REMOVE,
             ManageAccountRolePermissionResultCode::NOT_FOUND);
-    }
+    }*/
 }

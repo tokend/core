@@ -55,6 +55,7 @@
 #include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
 #include "atomic_swap/CancelASwapBidOpFrame.h"
 #include "atomic_swap/CreateASwapRequestOpFrame.h"
+#include "AccountRuleVerifierImpl.h"
 
 namespace stellar
 {
@@ -136,7 +137,7 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_ROLE:
         return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
-    case OperationType::MANAGE_ACCOUNT_ROLE_PERMISSION:
+    case OperationType::MANAGE_ACCOUNT_RULE:
         return shared_ptr<OperationFrame>(new ManageAccountRolePermissionOpFrame(op, res, tx));
     default:
         ostringstream err;
@@ -185,6 +186,12 @@ bool OperationFrame::isAllowed() const
 {
 	// by default all operations are allowed
 	return true;
+}
+
+std::vector<OperationCondition>
+OperationFrame::getOperationConditions() const
+{
+    return {};
 }
 
 int64_t OperationFrame::getPaidFee() const {
@@ -401,19 +408,28 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
 bool
 OperationFrame::checkRolePermissions(Application& app)
 {
-    const bool shouldCheckPolicies = app.isCheckingPolicies();
-    const bool isSourceAccountMaster = xdr::operator==(mSourceAccount->getID(), app.getMasterID());
-    if (!shouldCheckPolicies || isSourceAccountMaster)
+    auto operationConditions = getOperationConditions();
+    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
+    static_cast<StorageHelper&>(storageHelperImpl).begin();
+
+    auto accountRuleVerifierImpl = std::make_unique<AccountRuleVerifierImpl>(storageHelperImpl);
+    AccountRuleVerifier& accountRuleVerifier = *accountRuleVerifierImpl;
+
+    bool result = true;
+
+    for (auto& condition : operationConditions)
     {
-        return true;
+        // maybe check in other loop (near)
+        if (!condition.account)
+        {
+            mResult.code(OperationResultCode::opNO_ACCOUNT);
+            return false;
+        }
+
+        result = result && accountRuleVerifier.isAllowed(condition);
     }
 
-    const OperationType thisOpType = getOperation().body.type();
-    StorageHelperImpl storageHelper(app.getDatabase(), nullptr);
-    static_cast<StorageHelper&>(storageHelper).begin();
-    AccountRolePermissionHelperImpl permissionHelper(storageHelper);
-    return static_cast<AccountRolePermissionHelper&>(permissionHelper)
-        .hasPermission(mSourceAccount, thisOpType);
+    return result;
 }
 
 

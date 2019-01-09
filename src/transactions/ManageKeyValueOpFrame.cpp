@@ -15,6 +15,7 @@
 namespace stellar {
     using namespace std;
     using xdr::operator==;
+    class OperationFrame;
 
     char const * ManageKeyValueOpFrame::kycRulesPrefix = "kyc_lvlup_rules";
     char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
@@ -132,6 +133,19 @@ namespace stellar {
 
         return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
                              static_cast<int32_t>(SignerType::KEY_VALUE_MANAGER));
+    }
+
+    std::vector<OperationCondition>
+    ManageKeyValueOpFrame::getOperationConditions() const
+    {
+        AccountRuleResource resource;
+        resource.type(LedgerEntryType::KEY_VALUE);
+
+        longstring action = xdr::xdr_traits<ManageKVAction>::enum_name(
+                mOperation.body.manageKeyValueOp().action.action());
+        std::transform(action.begin(), action.end(), action.begin(), ::tolower);
+
+        return {{resource, action, mSourceAccount}};
     }
 
     longstring

@@ -28,7 +28,7 @@
 #include "ledger/OfferFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ExternalSystemAccountID.h"
-#include "ledger/AccountRoleHelper.h"
+#include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "ledger/StorageHelperImpl.h"
 #include "overlay/OverlayManager.h"
@@ -49,7 +49,7 @@
 #include <sstream>
 #include <thread>
 #include <ledger/AccountKYCHelper.h>
-#include <ledger/AccountRolePermissionHelperImpl.h>
+#include <ledger/AccountRuleHelperImpl.h>
 #include <ledger/AssetHelperImpl.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/LimitsV2Helper.h>
@@ -207,9 +207,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             AtomicSwapBidHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES:
-            std::make_unique<AccountRoleHelper>(storageHelper)->dropAll();
+            std::unique_ptr<AccountRoleHelper>(new AccountRoleHelperImpl(storageHelper))->dropAll();
             AccountHelper::Instance()->addAccountRole(*this);
-            std::unique_ptr<AccountRolePermissionHelper>(new AccountRolePermissionHelperImpl(storageHelper))->dropAll();
+            std::unique_ptr<AccountRuleHelper>(new AccountRuleHelperImpl(storageHelper))->dropAll();
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();

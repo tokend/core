@@ -11,7 +11,8 @@ class ManageAccountRoleTestHelper : TxHelper
   public:
     explicit ManageAccountRoleTestHelper(TestManager::pointer testManager);
 
-    ManageAccountRoleOp createCreationOpInput(const std::string& name);
+    ManageAccountRoleOp createCreationOpInput(const std::string& name,
+                                              std::vector<uint64_t> ruleIDs);
 
     ManageAccountRoleOp createDeletionOpInput(uint64_t accountRoleID);
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AccountRolePermissionFrame.h"
-#include "ledger/AccountRolePermissionHelper.h"
+#include "AccountRuleFrame.h"
+#include "ledger/AccountRuleHelper.h"
 #include "ledger/StorageHelper.h"
 #include "xdr/Stellar-types.h"
 
@@ -9,10 +9,10 @@ namespace stellar
 {
 class LedgerManager;
 
-class AccountRolePermissionHelperImpl : public AccountRolePermissionHelper
+class AccountRuleHelperImpl : public AccountRuleHelper
 {
   public:
-    explicit AccountRolePermissionHelperImpl(StorageHelper& storageHelper);
+    explicit AccountRuleHelperImpl(StorageHelper& storageHelper);
 
   private:
     void dropAll() override;
@@ -24,15 +24,21 @@ class AccountRolePermissionHelperImpl : public AccountRolePermissionHelper
     EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
     EntryFrame::pointer storeLoad(LedgerKey const& ledgerKey) override;
     uint64_t countObjects() override;
-    bool hasPermission(const AccountFrame::pointer initiatorAccountFrame,
-                       const OperationType opType) override;
 
     Database& getDatabase() override;
 
-    bool checkPermission(uint32 accountRole, const OperationType opType);
+    std::vector<AccountRuleFrame::pointer>
+    loadAccountRules(std::vector<uint64_t> const ruleIDs) override;
+
+    void
+    load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
+
     void storeUpdate(LedgerEntry const& entry, bool insert);
+
     Database& mDb;
     LedgerDelta* mLedgerDelta{nullptr};
+
+    const char* mAccountRuleSelector;
 };
 
 } // namespace stellar
