@@ -102,12 +102,6 @@ public:
     static BalanceID loadOrCreateBalanceForAsset(AccountID const& account, AssetCode const& asset, Database& db, LedgerDelta& delta);
     static BalanceFrame::pointer loadOrCreateBalanceFrameForAsset(AccountID const& account, AssetCode const& asset, Database& db, LedgerDelta& delta);
 
-    static Result isAllowedToReceive(BalanceID receivingBalance, Database& db);
-
-    static Result isAllowedToReceive(BalanceFrame::pointer balanceFrame, Database& db);
-
-    static Result isAllowedToReceive(AccountFrame::pointer account, BalanceFrame::pointer balance, Database& db);
-
     static void unlockPendingIssuanceForSale(const SaleFrame::pointer sale, LedgerDelta &delta, Database &db,
                                              LedgerManager &lm);
 

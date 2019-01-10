@@ -311,12 +311,9 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
     uint64_t maxIssuanceAmount = UINT64_MAX/2;
     SecretKey preissuedSigner = SecretKey::random();
     uint32 baseAssetPolicy = static_cast<uint32>(AssetPolicy::BASE_ASSET);
-    uint32 requiresKYCPolicy = static_cast<uint32>(AssetPolicy::REQUIRES_KYC);
-    auto requiresVerificationPolicy = static_cast<uint32>(AssetPolicy::REQUIRES_VERIFICATION);
     auto assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(assetCode, preissuedSigner.getPublicKey(),
                                                                                  "{}", maxIssuanceAmount,
-                                                                                 baseAssetPolicy | requiresKYCPolicy |
-                                                                                 requiresVerificationPolicy);
+                                                                                 baseAssetPolicy);
     manageAssetTestHelper.applyManageAssetTx(assetOwner, 0, assetCreationRequest);
 
     //pre-issue some amount
@@ -426,9 +423,8 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
         auto notVerifiedKP = SecretKey::random();
         AssetCode localAsset = "USD";
 
-        assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(localAsset, preissuedSigner.getPublicKey(),
-                                                                                     "{}", maxIssuanceAmount,
-                                                                                     baseAssetPolicy | requiresKYCPolicy);
+        assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(localAsset,
+                preissuedSigner.getPublicKey(), "{}", maxIssuanceAmount, baseAssetPolicy);
         manageAssetTestHelper.applyManageAssetTx(assetOwner, 0, assetCreationRequest);
 
         createAccountTestHelper.applyCreateAccountTx(root, notVerifiedKP.getPublicKey(), AccountType::NOT_VERIFIED);

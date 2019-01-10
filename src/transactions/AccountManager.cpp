@@ -397,34 +397,6 @@ namespace stellar {
         return balance;
     }
 
-    AccountManager::Result AccountManager::isAllowedToReceive(BalanceID balanceID, Database& db){
-        auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(balanceID, db);
-        if (!balanceFrame)
-            return AccountManager::Result::BALANCE_NOT_FOUND;
-
-        return isAllowedToReceive(balanceFrame, db);
-    }
-
-    AccountManager::Result  AccountManager::isAllowedToReceive(BalanceFrame::pointer balanceFrame, Database& db){
-        auto accountID = balanceFrame->getAccountID();
-        auto accountFrame = AccountHelper::Instance()->mustLoadAccount(accountID, db);
-        return isAllowedToReceive(accountFrame, balanceFrame, db);
-    }
-    AccountManager::Result  AccountManager::isAllowedToReceive(AccountFrame::pointer account, BalanceFrame::pointer balance, Database& db){
-        auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(balance->getAsset(), db);
-
-        if (asset->isRequireVerification() && account->getAccountType() == AccountType::NOT_VERIFIED)
-            return AccountManager::Result::REQUIRED_VERIFICATION;
-
-        if (asset->isRequireKYC()){
-            if (account->getAccountType() == AccountType::NOT_VERIFIED ||
-            account->getAccountType() == AccountType::VERIFIED)
-                return AccountManager::Result::REQUIRED_KYC;
-        }
-
-        return AccountManager::Result::SUCCESS;
-    }
-
     void AccountManager::unlockPendingIssuanceForSale(SaleFrame::pointer const sale, LedgerDelta &delta, Database &db,
                                                       LedgerManager &lm) {
         auto baseAsset = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db, &delta);

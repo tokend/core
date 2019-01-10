@@ -237,10 +237,6 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 		return nullptr;
 	}
 
-    if (!isAllowedToReceive(balance->getBalanceID(), db)) {
-        return nullptr;
-    }
-
     Fee feeToPay;
     if (!calculateFee(balance->getAccountID(), db, feeToPay)) {
         innerResult().code(CreateIssuanceRequestResultCode::FEE_EXCEEDS_AMOUNT);
@@ -306,29 +302,6 @@ CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
 	issuanceRequestOp.allTasks.activate() = allTasks;
 
     return issuanceRequestOp;
-}
-
-bool
-CreateIssuanceRequestOpFrame::isAllowedToReceive(BalanceID receivingBalance, Database &db)
-{
-	const auto result = AccountManager::isAllowedToReceive(receivingBalance, db);
-	switch (result){
-		case AccountManager::SUCCESS:
-			return true;
-		case AccountManager::BALANCE_NOT_FOUND:
-			innerResult().code(CreateIssuanceRequestResultCode::NO_COUNTERPARTY);
-			return false;
-		case AccountManager::REQUIRED_VERIFICATION:
-			innerResult().code(CreateIssuanceRequestResultCode::REQUIRES_VERIFICATION);
-			return false;
-		case AccountManager::REQUIRED_KYC:
-			innerResult().code(CreateIssuanceRequestResultCode::REQUIRES_KYC);
-			return false;
-		default:
-			CLOG(ERROR, Logging::OPERATION_LOGGER)
-					<< "Unexpected isAllowedToReceive method result from accountManager:" << result;
-			throw std::runtime_error("Unexpected isAllowedToReceive method result from accountManager");
-	}
 }
 
 std::vector<longstring> CreateIssuanceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {

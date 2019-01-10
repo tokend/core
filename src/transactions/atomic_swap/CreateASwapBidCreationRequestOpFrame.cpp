@@ -176,25 +176,6 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
         return false;
     }
 
-    auto& sourceAccount = getSourceAccount();
-
-    if (baseAssetFrame->isRequireVerification() &&
-        sourceAccount.getAccountType() == AccountType::NOT_VERIFIED)
-    {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
-    if (baseAssetFrame->isRequireKYC() &&
-        (sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
-         sourceAccount.getAccountType() == AccountType::VERIFIED))
-    {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
     auto lockResult = baseBalanceFrame->tryLock(aSwapBidCreationRequest.amount);
     if (lockResult != BalanceFrame::Result::SUCCESS)
     {

@@ -55,7 +55,7 @@ ManageAccountRoleOpFrame::createAccountRole(Application& app,
     storageHelper.getAccountRoleHelper().storeAdd(frame->mEntry);
 
     innerResult().code(ManageAccountRoleResultCode::SUCCESS);
-    innerResult().success().accountRoleID = newAccountRoleID;
+    innerResult().success().roleID = newAccountRoleID;
     return true;
 }
 
@@ -77,7 +77,7 @@ ManageAccountRoleOpFrame::deleteAccountRole(Application& app,
         accountRoleHelper.storeDelete(ledgerKey);
 
         innerResult().code(ManageAccountRoleResultCode::SUCCESS);
-        innerResult().success().accountRoleID = data.accountRoleID;
+        innerResult().success().roleID = data.accountRoleID;
         return true;
     }
     else
@@ -96,9 +96,9 @@ ManageAccountRoleOpFrame::doApply(Application& app,
 
     switch (mManageAccountRole.data.action())
     {
-    case ManageAccountRoleOpAction::CREATE:
+    case ManageAccountRoleAction::CREATE:
         return createAccountRole(app, storageHelper);
-    case ManageAccountRoleOpAction::REMOVE:
+    case ManageAccountRoleAction::REMOVE:
         return deleteAccountRole(app, storageHelper);
     default:
         throw std::runtime_error("Unknown action.");

@@ -117,23 +117,6 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         throw runtime_error("Unexpected state: expected base asset to exist");
     }
 
-    auto& sourceAccount = getSourceAccount();
-
-    if (baseAssetFrame->isRequireVerification() &&
-        sourceAccount.getAccountType() == AccountType::NOT_VERIFIED)
-    {
-        innerResult().code(CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
-    if (baseAssetFrame->isRequireKYC() &&
-        (sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
-         sourceAccount.getAccountType() == AccountType::VERIFIED))
-    {
-        innerResult().code(CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
     if (!bidFrame->tryLockAmount(aSwapRequest.baseAmount))
     {
         innerResult().code(CreateASwapRequestResultCode::BID_UNDERFUNDED);

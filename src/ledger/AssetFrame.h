@@ -136,16 +136,6 @@ public:
         return isSetFlag(mAsset.policies, policy);
     }
 
-    bool isRequireKYC() const
-    {
-        return isPolicySet(AssetPolicy::REQUIRES_KYC);
-    }
-
-    bool isRequireVerification() const
-    {
-        return isPolicySet(AssetPolicy::REQUIRES_VERIFICATION);
-    }
-
     uint64 getMinimumAmount() const;
     static uint64 getMinimumAmountFromTrailingDigits(uint32 trailingDigitsCount);
 

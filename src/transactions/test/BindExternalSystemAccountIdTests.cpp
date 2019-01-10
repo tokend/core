@@ -11,7 +11,7 @@
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/ManageExternalSystemAccountIDPoolEntryTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
-#include "transactions/test/test_helper/ManageAccountRolePermissionTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace stellar;
@@ -122,32 +122,32 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     SECTION("Happy path with policies check")
     {
         ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
-        ManageAccountRolePermissionTestHelper setAccountRolePolicyTestHelper(testManager);
+        ManageAccountRuleTestHelper setAccountRolePolicyTestHelper(testManager);
 
         // create policy (just entry)
         auto policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
                 AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "bind", false);
         // write this entry to DB
-        auto createRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-                root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
-                ManageAccountRolePermissionResultCode::SUCCESS);
+        auto createRuleResult = setAccountRolePolicyTestHelper.applyTx(
+                root, policyEntry, ManageAccountRuleAction::CREATE,
+                ManageAccountRuleResultCode::SUCCESS);
 
-        std::vector<uint64_t> ruleIDs{createRuleResult.success().permissionID};
+        std::vector<uint64_t> ruleIDs{createRuleResult.success().ruleID};
 
         policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
                 AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID), "manage", false);
         // write this entry to DB
-        createRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-                root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
-                ManageAccountRolePermissionResultCode::SUCCESS);
+        createRuleResult = setAccountRolePolicyTestHelper.applyTx(
+                root, policyEntry, ManageAccountRuleAction::CREATE,
+                ManageAccountRuleResultCode::SUCCESS);
 
-        ruleIDs.emplace_back(createRuleResult.success().permissionID);
+        ruleIDs.emplace_back(createRuleResult.success().ruleID);
 
         // create account role using root as source
         auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("external_pool_binder", ruleIDs);
 
         auto accountRoleID = setAccountRoleTestHelper.applySetAccountRole(
-                root, createAccountRoleOp).success().accountRoleID;
+                root, createAccountRoleOp).success().roleID;
 
         manageExternalSystemAccountIDPoolEntryTestHelper
                 .createExternalSystemAccountIdPoolEntry(root,

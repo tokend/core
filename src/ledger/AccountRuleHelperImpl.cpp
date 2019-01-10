@@ -113,9 +113,6 @@ AccountRuleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 
     auto prep = mDb.getPreparedStatement(sql);
 
-    CLOG(INFO, Logging::ENTRY_LOGGER) << "Account rule id: " << accountRuleEntry.id;
-    CLOG(INFO, Logging::ENTRY_LOGGER) << "version: " << version;
-
     soci::statement& st = prep.statement();
     st.exchange(use(accountRuleEntry.id, "id"));
     st.exchange(use(strResource, "res"));
@@ -147,8 +144,6 @@ AccountRuleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
             mLedgerDelta->modEntry(*accountRuleFrame);
         }
     }
-
-    CLOG(INFO, Logging::ENTRY_LOGGER) << "Account rule is written to db";
 }
 
 bool
@@ -198,16 +193,12 @@ AccountRuleHelperImpl::storeLoad(LedgerKey const& key)
         throw std::runtime_error("Not a role permission entry.");
     }
 
-    CLOG(INFO, Logging::ENTRY_LOGGER) << "Account rule is going to load from db";
-
     if (cachedEntryExists(key))
     {
         auto cachedEntry = getCachedEntry(key);
         return cachedEntry ? std::make_shared<AccountRuleFrame>(*cachedEntry)
                            : nullptr;
     }
-
-    CLOG(INFO, Logging::ENTRY_LOGGER) << "Account rule is going to load from db exactly";
 
     std::string sql = mAccountRuleSelector;
     sql += "WHERE id =:id";

@@ -83,12 +83,9 @@ AccountRuleVerifierImpl::isResourceMatches(
     switch (conditionResource.type())
     {
         case LedgerEntryType::ASSET:
-            if (conditionResource.asset().assetType != actualResource.asset().assetType)
-            {
-                return false;
-            }
-
-            return isStringMatches(conditionResource.asset().assetCode,
+            return isAssetTypeMatches(conditionResource.asset().assetType,
+                                      actualResource.asset().assetType) &&
+                   isStringMatches(conditionResource.asset().assetCode,
                                    actualResource.asset().assetCode);
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:

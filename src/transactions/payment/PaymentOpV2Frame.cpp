@@ -233,7 +233,8 @@ namespace stellar {
     }
 
     bool PaymentOpV2Frame::isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db) {
-        if (from->getAsset() != to->getAsset()) {
+        if (from->getAsset() != to->getAsset())
+        {
             innerResult().code(PaymentV2ResultCode::BALANCE_ASSETS_MISMATCHED);
             return false;
         }
@@ -241,28 +242,6 @@ namespace stellar {
         // is transfer allowed by asset policy
         auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(from->getAsset(), db);
         if (!asset->isPolicySet(AssetPolicy::TRANSFERABLE)) {
-            innerResult().code(PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-            return false;
-        }
-
-        // is holding asset require KYC or VERIFICATION
-        if (!asset->isRequireKYC() && !asset->isRequireVerification()) {
-            return true;
-        }
-
-        auto &sourceAccount = getSourceAccount();
-        auto destAccount = AccountHelper::Instance()->mustLoadAccount(to->getAccountID(), db);
-
-        if ((sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
-            destAccount->getAccountType() == AccountType::NOT_VERIFIED) && asset->isRequireVerification()) {
-            innerResult().code(PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-            return false;
-        }
-
-        if (sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
-            sourceAccount.getAccountType() == AccountType::VERIFIED ||
-            destAccount->getAccountType() == AccountType::NOT_VERIFIED ||
-            destAccount->getAccountType() == AccountType::VERIFIED) {
             innerResult().code(PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
             return false;
         }

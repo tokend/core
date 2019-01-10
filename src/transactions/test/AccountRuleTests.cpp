@@ -8,7 +8,7 @@
 #include "overlay/LoopbackPeer.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
-#include "transactions/test/test_helper/ManageAccountRolePermissionTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "util/make_unique.h"
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
@@ -41,7 +41,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
     ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
-    ManageAccountRolePermissionTestHelper manageAccountRolePolicyTestHelper(
+    ManageAccountRuleTestHelper manageAccountRolePolicyTestHelper(
         testManager);
 
     // create account for further tests
@@ -51,11 +51,11 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     auto policyEntry =
             manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
                     0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "*", false);
-    auto createRuleResult = manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-            master, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
-            ManageAccountRolePermissionResultCode::SUCCESS);
+    auto createRuleResult = manageAccountRolePolicyTestHelper.applyTx(
+            master, policyEntry, ManageAccountRuleAction::CREATE,
+            ManageAccountRuleResultCode::SUCCESS);
 
-    auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("key_value_manager", {createRuleResult.success().permissionID});
+    auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("key_value_manager", {createRuleResult.success().ruleID});
 
     auto result = setAccountRoleTestHelper.applySetAccountRole(master, createAccountRoleOp);
 
@@ -66,7 +66,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
             .setToPublicKey(accountKey.getPublicKey())
             .setType(AccountType::NOT_VERIFIED)
             .setRecovery(SecretKey::random().getPublicKey())
-            .setRoleID(result.success().accountRoleID);
+            .setRoleID(result.success().roleID);
 
     createAccountTestHelper.applyTx(createAccountTestBuilder);
 
@@ -101,7 +101,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
         }
         SECTION("Successful deletion")
         {
-            manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+            manageAccountRolePolicyTestHelper.applyTx(
                 account, policyEntry,
                 ManageAccountRolePermissionOpAction::REMOVE,
                 ManageAccountRolePermissionResultCode::SUCCESS);
@@ -121,7 +121,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
         auto policyEntry =
             manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
                 accountRoleID, kOperationType);
-        manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+        manageAccountRolePolicyTestHelper.applyTx(
             account, policyEntry, ManageAccountRolePermissionOpAction::REMOVE,
             ManageAccountRolePermissionResultCode::NOT_FOUND);
     }*/

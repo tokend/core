@@ -1029,7 +1029,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.cpp">
       <Filter>transactions\test\helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRolePermissionTestHelper.cpp">
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRuleTestHelper.cpp">
       <Filter>transactions\test\helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.cpp">
@@ -2103,7 +2103,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.h">
       <Filter>transactions\test\helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRolePermissionTestHelper.h">
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRuleTestHelper.h">
       <Filter>transactions\test\helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.h">

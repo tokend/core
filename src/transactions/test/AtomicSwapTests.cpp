@@ -274,7 +274,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
         REQUIRE(firstBuyerBalance);
         manageAssetTestHelper.updateAsset(
                 seller, baseAsset, root,
-                static_cast<uint32_t>(AssetPolicy::REQUIRES_KYC) |
                 static_cast<uint32_t>(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP));
         auto request = aSwapBidCreationRequestHelper.createASwapBidCreationRequest(
                 firstBuyerBalance->getBalanceID(), ONE, details, quoteAssets);
@@ -392,7 +391,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                     {
                         manageAssetTestHelper.updateAsset(
                                 seller, baseAsset, root,
-                                static_cast<uint32_t>(AssetPolicy::REQUIRES_KYC) |
                                 static_cast<uint32_t>(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP));
                         auto aSwapRequest =
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(

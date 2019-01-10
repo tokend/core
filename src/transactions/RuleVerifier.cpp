@@ -17,4 +17,11 @@ RuleVerifier::isStringMatches(std::string const &expectedStr,
     return (expectedStr == actualStr) || (actualStr == "*");
 }
 
+bool
+RuleVerifier::isAssetTypeMatches(uint64_t const expectedType,
+                                 uint64_t const actualType) const
+{
+    return (expectedType == actualType) || (actualType == UINT64_MAX);
+}
+
 } // namespace stellar

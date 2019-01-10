@@ -7,12 +7,10 @@
 #include <transactions/test/test_helper/SetFeesTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
-#include <transactions/test/test_helper/ManageAccountRolePermissionTestHelper.h>
-#include "test_helper/TxHelper.h"
+#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 #include "main/test.h"
-#include "TxTests.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -190,8 +188,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
             manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                         static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
-                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET) |
-                                                                        static_cast<uint32_t>(AssetPolicy::REQUIRES_VERIFICATION));
+                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
             auto newPayer = Account{SecretKey::random(), Salt(1)};
             createAccountTestHelper.applyCreateAccountTx(root, newPayer.key.getPublicKey(), AccountType::NOT_VERIFIED);
             payerBalance = balanceHelper->loadBalance(newPayer.key.getPublicKey(), paymentAsset, db, nullptr);
@@ -203,8 +200,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
             manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                         static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
-                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET) |
-                                                                        static_cast<uint32_t>(AssetPolicy::REQUIRES_KYC));
+                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
             paymentV2TestHelper.applyPaymentV2Tx(newPayer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
@@ -271,40 +267,42 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             SECTION("Happy path using account rule and rules")
             {
                 ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
-                ManageAccountRolePermissionTestHelper setAccountRolePolicyTestHelper(testManager);
+                ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
                 // create policy (just entry)
                 AccountRuleResource assetResource(LedgerEntryType::ASSET);
                 assetResource.asset().assetType = 7;
                 assetResource.asset().assetCode = paymentAsset;
 
-                auto policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
+                auto policyEntry = manageAccountRuleTestHelper.createAccountRolePermissionEntry(0,
                                    assetResource, "send", false);
                 // write this entry to DB
-                auto createSenderRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-                        root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
-                        ManageAccountRolePermissionResultCode::SUCCESS);
+                auto createSenderRuleResult = manageAccountRuleTestHelper.applyTx(
+                        root, policyEntry,
+                        ManageAccountRuleAction::CREATE,
+                        ManageAccountRuleResultCode::SUCCESS);
 
-                policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
+                policyEntry = manageAccountRuleTestHelper.createAccountRolePermissionEntry(0,
                                   assetResource, "receive", false);
                 // write this entry to DB
-                auto createUserRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-                        root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
-                        ManageAccountRolePermissionResultCode::SUCCESS);
+                auto createUserRuleResult = manageAccountRuleTestHelper.applyTx(
+                        root, policyEntry,
+                        ManageAccountRuleAction::CREATE,
+                        ManageAccountRuleResultCode::SUCCESS);
 
                 // create account role using root as source
                 auto createSenderAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput(
-                        "usd_sender", {createSenderRuleResult.success().permissionID});
+                        "usd_sender", {createSenderRuleResult.success().ruleID});
 
                 auto senderAccountRoleID = setAccountRoleTestHelper.applySetAccountRole(
-                        root, createSenderAccountRoleOp).success().accountRoleID;
+                        root, createSenderAccountRoleOp).success().roleID;
 
                 // create account role using root as source
                 auto createUserAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput(
-                        "usd_receiver", {createUserRuleResult.success().permissionID});
+                        "usd_receiver", {createUserRuleResult.success().ruleID});
 
                 auto userAccountRoleID = setAccountRoleTestHelper.applySetAccountRole(
-                        root, createUserAccountRoleOp).success().accountRoleID;
+                        root, createUserAccountRoleOp).success().roleID;
 
                 payer = Account{SecretKey::random(), Salt(1)};
                 recipient = Account{SecretKey::random(), Salt(1)};

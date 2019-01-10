@@ -18,7 +18,7 @@ ManageAccountRoleTestHelper::createCreationOpInput(const std::string& name,
                                                    std::vector<uint64_t> ruleIDs)
 {
     ManageAccountRoleOp opData;
-    opData.data.action(ManageAccountRoleOpAction::CREATE);
+    opData.data.action(ManageAccountRoleAction::CREATE);
     opData.data.createData().name = name;
     opData.data.createData().accountRuleIDs.clear();
     opData.data.createData().accountRuleIDs.append(&ruleIDs[0], ruleIDs.size());
@@ -29,7 +29,7 @@ ManageAccountRoleOp
 ManageAccountRoleTestHelper::createDeletionOpInput(uint64_t accountRoleID)
 {
     ManageAccountRoleOp opData;
-    opData.data.action(ManageAccountRoleOpAction::REMOVE);
+    opData.data.action(ManageAccountRoleAction::REMOVE);
     opData.data.removeData().accountRoleID = accountRoleID;
     return opData;
 }

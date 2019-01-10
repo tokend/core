@@ -439,7 +439,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateKYCReviewableRequestTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.cpp" />
-    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRolePermissionTestHelper.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRuleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAMLAlertTestHelper.cpp" />
@@ -766,7 +766,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateKYCReviewableRequestTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.h" />
-    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRolePermissionTestHelper.h" />
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRuleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAMLAlertTestHelper.h" />

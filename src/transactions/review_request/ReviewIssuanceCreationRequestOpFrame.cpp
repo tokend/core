@@ -88,14 +88,6 @@ handleApprove(Application &app, LedgerDelta &delta,
 		throw std::runtime_error("Unexpected state. totalFee exceeds amount");
 	}
 
-	auto receiverAccount = AccountHelper::Instance()->mustLoadAccount(receiver->getAccountID(), db);
-	if (AccountManager::isAllowedToReceive(receiver->getBalanceID(), db) != AccountManager::SUCCESS)
-	{
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Asset requires receiver account to have KYC or be VERIFIED "
-											   << request->getRequestID();
-		throw std::runtime_error("Unexpected state. Asset requires KYC or VERIFIED but account is NOT_VERIFIED");
-	}
-
 	//transfer fee
 	AccountManager accountManager(app, db, delta, ledgerManager);
 	accountManager.transferFee(issuanceRequest.asset, totalFee);

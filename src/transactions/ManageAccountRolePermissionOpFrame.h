@@ -28,26 +28,25 @@ class ManageAccountRolePermissionOpFrame : public OperationFrame
                                 counterpartiesDetails,
                             int32_t ledgerVersion) const override;
 
-    static ManageAccountRolePermissionResultCode
+    static ManageAccountRuleResultCode
     getInnerCode(OperationResult const& res)
     {
-        return res.tr().manageAccountRolePermissionResult().code();
+        return res.tr().manageAccountRuleResult().code();
     }
 
     std::string
     getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<ManageAccountRolePermissionResultCode>::
-            enum_name(innerResult().code());
+        return xdr::xdr_traits<ManageAccountRuleResultCode>::enum_name(innerResult().code());
     }
 
   private:
     ManageAccountRuleOp const& mManageAccountRolePermission;
 
-    ManageAccountRolePermissionResult&
+    ManageAccountRuleResult&
     innerResult()
     {
-        return mResult.tr().manageAccountRolePermissionResult();
+        return mResult.tr().manageAccountRuleResult();
     }
 
     bool createOrUpdatePolicy(Application& app, StorageHelper& storageHelper);

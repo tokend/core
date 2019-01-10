@@ -918,9 +918,8 @@ TEST_CASE("Sale", "[tx][sale]")
         // create base asset
         const AssetCode baseAsset = "ETH";
         uint64_t maxIssuanceAmount = 10 * ONE;
-        uint32 requiresKYCPolicy = static_cast<uint32>(AssetPolicy::REQUIRES_KYC);
         auto baseAssetRequest = assetTestHelper.createAssetCreationRequest(baseAsset, owner.key.getPublicKey(), "{}",
-                                                                           maxIssuanceAmount, requiresKYCPolicy,
+                                                                           maxIssuanceAmount, 0,
                                                                            nullptr,
                                                                            maxIssuanceAmount);
         assetTestHelper.createApproveRequest(root, owner, baseAssetRequest);

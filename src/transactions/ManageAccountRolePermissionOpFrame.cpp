@@ -14,7 +14,7 @@ using xdr::operator==;
 ManageAccountRolePermissionOpFrame::ManageAccountRolePermissionOpFrame(
     const Operation& op, OperationResult& res, TransactionFrame& parentTx)
     : OperationFrame(op, res, parentTx)
-    , mManageAccountRolePermission(mOperation.body.manageAccountRolePermissionOp())
+    , mManageAccountRolePermission(mOperation.body.manageAccountRuleOp())
 {
 }
 
@@ -25,10 +25,10 @@ ManageAccountRolePermissionOpFrame::doApply(Application& app,
 {
     switch (mManageAccountRolePermission.data.action())
     {
-    case ManageAccountRolePermissionOpAction::CREATE:
-    case ManageAccountRolePermissionOpAction::UPDATE:
+    case ManageAccountRuleAction::CREATE:
+    case ManageAccountRuleAction::UPDATE:
         return createOrUpdatePolicy(app, storageHelper);
-    case ManageAccountRolePermissionOpAction::REMOVE:
+    case ManageAccountRuleAction::REMOVE:
         return deleteAccountPolicy(app, storageHelper);
     default:
         throw std::runtime_error("Unknown action.");
@@ -77,7 +77,7 @@ ManageAccountRolePermissionOpFrame::createOrUpdatePolicy(
     auto& lePermission = le.data.accountRolePermission();
     switch (mManageAccountRolePermission.data.action())
     {
-    case ManageAccountRolePermissionOpAction::CREATE:
+    case ManageAccountRuleAction::CREATE:
         lePermission.id = headerFrame.generateID(LedgerEntryType::ACCOUNT_RULE);
         lePermission.resource =
             mManageAccountRolePermission.data.createData().resource;
@@ -86,7 +86,7 @@ ManageAccountRolePermissionOpFrame::createOrUpdatePolicy(
         lePermission.isForbid = mManageAccountRolePermission.data.createData().isForbid;
         lePermission.details = mManageAccountRolePermission.data.createData().details;
         break;
-    case ManageAccountRolePermissionOpAction::UPDATE:
+    case ManageAccountRuleAction::UPDATE:
         lePermission.id =
             mManageAccountRolePermission.data.updateData().accountRuleID;
         lePermission.resource =
@@ -100,8 +100,8 @@ ManageAccountRolePermissionOpFrame::createOrUpdatePolicy(
         throw std::runtime_error("Unexpected action type.");
     }
 
-    innerResult().code(ManageAccountRolePermissionResultCode::SUCCESS);
-    innerResult().success().permissionID = le.data.accountRolePermission().id;
+    innerResult().code(ManageAccountRuleResultCode::SUCCESS);
+    innerResult().success().ruleID = le.data.accountRolePermission().id;
 
     if (helper.exists(helper.getLedgerKey(le)))
     {
@@ -126,13 +126,13 @@ ManageAccountRolePermissionOpFrame::deleteAccountPolicy(
     auto frame = storageHelper.getAccountRuleHelper().storeLoad(key);
     if (!frame)
     {
-        innerResult().code(ManageAccountRolePermissionResultCode::NOT_FOUND);
+        innerResult().code(ManageAccountRuleResultCode::NOT_FOUND);
         return false;
     }
 
     storageHelper.getAccountRuleHelper().storeDelete(frame->getKey());
-    innerResult().code(ManageAccountRolePermissionResultCode::SUCCESS);
-    innerResult().success().permissionID = key.accountRolePermission().id;
+    innerResult().code(ManageAccountRuleResultCode::SUCCESS);
+    innerResult().success().ruleID = key.accountRolePermission().id;
     return true;
 }
 

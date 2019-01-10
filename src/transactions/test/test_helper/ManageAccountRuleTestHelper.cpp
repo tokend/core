@@ -1,4 +1,4 @@
-#include "ManageAccountRolePermissionTestHelper.h"
+#include "ManageAccountRuleTestHelper.h"
 #include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/ManageAccountRolePermissionOpFrame.h"
@@ -11,39 +11,39 @@ namespace txtest
 
 using xdr::operator==;
 
-ManageAccountRolePermissionTestHelper::ManageAccountRolePermissionTestHelper(
+ManageAccountRuleTestHelper::ManageAccountRuleTestHelper(
     TestManager::pointer testManager)
     : TxHelper(testManager)
 {
 }
 
 TransactionFramePtr
-ManageAccountRolePermissionTestHelper::createSetAccountRolePermissionTx(
-    Account& source, AccountRuleEntry permissionEntry,
-    ManageAccountRolePermissionOpAction action)
+ManageAccountRuleTestHelper::createManageAccountRuleTx(
+        Account &source, AccountRuleEntry permissionEntry,
+        ManageAccountRuleAction action)
 {
     Operation op;
     op.body.type(OperationType::MANAGE_ACCOUNT_RULE);
     ManageAccountRuleOp& manageAccountRolePermissionOp =
-        op.body.manageAccountRolePermissionOp();
+        op.body.manageAccountRuleOp();
     manageAccountRolePermissionOp.data.action(action);
 
     switch (action)
     {
-    case ManageAccountRolePermissionOpAction::CREATE:
+    case ManageAccountRuleAction::CREATE:
         manageAccountRolePermissionOp.data.createData().resource = permissionEntry.resource;
         manageAccountRolePermissionOp.data.createData().action = permissionEntry.action;
         manageAccountRolePermissionOp.data.createData().isForbid = permissionEntry.isForbid;
         manageAccountRolePermissionOp.data.createData().details = permissionEntry.details;
         break;
-    case ManageAccountRolePermissionOpAction::UPDATE:
+    case ManageAccountRuleAction::UPDATE:
         manageAccountRolePermissionOp.data.updateData().accountRuleID = permissionEntry.id;
         manageAccountRolePermissionOp.data.updateData().resource = permissionEntry.resource;
         manageAccountRolePermissionOp.data.updateData().action = permissionEntry.action;
         manageAccountRolePermissionOp.data.updateData().isForbid = permissionEntry.isForbid;
         manageAccountRolePermissionOp.data.updateData().details = permissionEntry.details;
         break;
-    case ManageAccountRolePermissionOpAction::REMOVE:
+    case ManageAccountRuleAction::REMOVE:
         manageAccountRolePermissionOp.data.removeData().accountRuleID = permissionEntry.id;
         break;
     default:
@@ -54,14 +54,14 @@ ManageAccountRolePermissionTestHelper::createSetAccountRolePermissionTx(
     return TxHelper::txFromOperation(source, op, nullptr);
 }
 
-ManageAccountRolePermissionResult
-ManageAccountRolePermissionTestHelper::applySetIdentityPermissionTx(
-    Account& source, AccountRuleEntry& permissionEntry,
-    ManageAccountRolePermissionOpAction action,
-    ManageAccountRolePermissionResultCode expectedResult)
+ManageAccountRuleResult
+ManageAccountRuleTestHelper::applyTx(
+        Account &source, AccountRuleEntry &permissionEntry,
+        ManageAccountRuleAction action,
+        ManageAccountRuleResultCode expectedResult)
 {
     TransactionFramePtr txFrame =
-        createSetAccountRolePermissionTx(source, permissionEntry, action);
+            createManageAccountRuleTx(source, permissionEntry, action);
     mTestManager->applyCheck(txFrame);
 
     auto txResult = txFrame->getResult();
@@ -76,25 +76,25 @@ ManageAccountRolePermissionTestHelper::applySetIdentityPermissionTx(
 
     REQUIRE(actualResult == expectedResult);
 
-    if (actualResult != ManageAccountRolePermissionResultCode::SUCCESS)
+    if (actualResult != ManageAccountRuleResultCode::SUCCESS)
     {
-        return ManageAccountRolePermissionResult();
+        return ManageAccountRuleResult();
     }
 
-    ManageAccountRolePermissionResult result =
-        txResult.result.results()[0].tr().manageAccountRolePermissionResult();
+    ManageAccountRuleResult result =
+        txResult.result.results()[0].tr().manageAccountRuleResult();
 
     StorageHelperImpl storageHelperImpl(mTestManager->getDB(), nullptr);
     static_cast<StorageHelper&>(storageHelperImpl).begin();
     AccountRuleHelperImpl rolePermissionHelper(storageHelperImpl);
     LedgerKey affectedPermissionKey;
     affectedPermissionKey.type(LedgerEntryType::ACCOUNT_RULE);
-    affectedPermissionKey.accountRolePermission().id = result.success().permissionID;
+    affectedPermissionKey.accountRolePermission().id = result.success().ruleID;
 
     EntryFrame::pointer affectedPermission =
         static_cast<AccountRuleHelper&>(rolePermissionHelper)
             .storeLoad(affectedPermissionKey);
-    if (action == ManageAccountRolePermissionOpAction::REMOVE)
+    if (action == ManageAccountRuleAction::REMOVE)
     {
         REQUIRE(!affectedPermission);
     }
@@ -115,7 +115,7 @@ ManageAccountRolePermissionTestHelper::applySetIdentityPermissionTx(
 }
 
 AccountRuleEntry
-ManageAccountRolePermissionTestHelper::createAccountRolePermissionEntry(
+ManageAccountRuleTestHelper::createAccountRolePermissionEntry(
     uint64_t id, AccountRuleResource resource, std::string action, bool isForbid)
 {
     LedgerEntry le;
