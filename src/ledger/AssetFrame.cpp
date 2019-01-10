@@ -60,6 +60,7 @@ AssetFrame::pointer AssetFrame::create(AssetCreationRequest const& request,
     asset.maxIssuanceAmount = request.maxIssuanceAmount;
     asset.owner = owner;
     asset.policies = request.policies;
+    asset.type = request.type;
     asset.preissuedAssetSigner = request.preissuedAssetSigner;
     asset.pendingIssuance = 0;
     if (request.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
