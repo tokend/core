@@ -66,7 +66,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
             .setToPublicKey(accountKey.getPublicKey())
             .setType(AccountType::NOT_VERIFIED)
             .setRecovery(SecretKey::random().getPublicKey())
-            .setRoleID(1);
+            .setRoleID(result.success().accountRoleID);
 
     createAccountTestHelper.applyTx(createAccountTestBuilder);
 

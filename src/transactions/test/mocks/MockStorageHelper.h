@@ -31,6 +31,7 @@ public:
                  ExternalSystemAccountIDPoolEntryHelper&());
     MOCK_METHOD0(getAccountRoleHelper, AccountRoleHelper&());
     MOCK_METHOD0(getAccountRuleHelper, AccountRuleHelper&());
+    MOCK_METHOD0(getAccountHelper, AccountHelper*());
 };
 
 }  // namespace stellar

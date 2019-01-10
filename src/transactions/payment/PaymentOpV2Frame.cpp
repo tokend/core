@@ -9,6 +9,8 @@
 #include <ledger/FeeHelper.h>
 #include <ledger/LedgerHeaderFrame.h>
 #include <ledger/ReferenceHelper.h>
+#include <ledger/BalanceHelper.h>
+#include <ledger/AssetHelper.h>
 
 namespace stellar {
     using namespace std;
@@ -52,6 +54,65 @@ namespace stellar {
         return SourceDetails(allowedAccountTypes, mSourceAccount->getMediumThreshold(), signerType,
                              static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
                              static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
+    }
+
+    std::vector<OperationCondition>
+    PaymentOpV2Frame::getOperationConditions(StorageHelper& storageHelper) const
+    {
+        auto& balanceHelper = storageHelper.getBalanceHelper();
+        auto senderBalanceFrame = balanceHelper.loadBalance(mPayment.sourceBalanceID);
+        if (!senderBalanceFrame)
+        {
+            return {{AccountRuleResource(LedgerEntryType::ANY), "*", nullptr}};
+        }
+
+        auto& assetHelper = storageHelper.getAssetHelper();
+        auto assetFrame = assetHelper.mustLoadAsset(senderBalanceFrame->getAsset());
+
+        AccountRuleResource resource(LedgerEntryType::ASSET);
+        resource.asset().assetType = static_cast<int64>(assetFrame->getAsset().policies); // add asset type
+        resource.asset().assetCode = assetFrame->getCode();
+
+        std::string senderAction = "send";
+
+        auto accountHelper = storageHelper.getAccountHelper();
+        auto senderAccountFrame = accountHelper->loadAccount(senderBalanceFrame->getAccountID(), storageHelper.getDatabase());
+        getSourceAccount()
+
+        auto destinationAccountFrame = tryLoadDestinationAccount(storageHelper);
+
+        std::string destinationAction = "receive";
+
+        return {{resource, senderAction, senderAccountFrame}, {resource, destinationAction, destinationAccountFrame}};
+    }
+
+    AccountFrame::pointer
+    PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
+    {
+        AccountID accountID;
+        switch (mPayment.destination.type())
+        {
+            case PaymentDestinationType::ACCOUNT:
+            {
+                accountID = mPayment.destination.accountID();
+                break;
+            }
+            case PaymentDestinationType::BALANCE:
+            {
+                auto destinationBalanceFrame = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
+                if (!destinationBalanceFrame)
+                {
+                    return nullptr;
+                }
+
+                accountID = destinationBalanceFrame->getAccountID();
+                break;
+            }
+            default:
+                throw std::runtime_error("Unexpected destination type on payment v2 when load account");
+        }
+
+        return storageHelper.getAccountHelper()->loadAccount(accountID, storageHelper.getDatabase());
     }
 
     bool PaymentOpV2Frame::processTransfer(AccountManager &accountManager, AccountFrame::pointer payer,

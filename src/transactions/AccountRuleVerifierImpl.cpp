@@ -47,10 +47,9 @@ AccountRuleVerifierImpl::isAllowed(OperationCondition& condition)
             continue;
         }
 
-        bool actionAppropriate = isActionAppropriate(
-                condition.action, accountRuleFrame->getAction());
+        bool actionMatches = isActionMatches(condition.action, accountRuleFrame->getAction());
 
-        if (!actionAppropriate)
+        if (!actionMatches)
         {
             continue;
         }
@@ -83,6 +82,16 @@ AccountRuleVerifierImpl::isResourceMatches(
 
     switch (conditionResource.type())
     {
+        case LedgerEntryType::ASSET:
+            if (conditionResource.asset().assetType != actualResource.asset().assetType)
+            {
+                return false;
+            }
+
+            return isStringMatches(conditionResource.asset().assetCode,
+                                   actualResource.asset().assetCode);
+        case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
+        case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         case LedgerEntryType::KEY_VALUE:
             return true;
         default:

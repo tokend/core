@@ -47,6 +47,7 @@ class StorageHelperImpl : public StorageHelper
     getExternalSystemAccountIDPoolEntryHelper() override;
     AccountRoleHelper& getAccountRoleHelper() override;
     AccountRuleHelper& getAccountRuleHelper() override;
+    AccountHelper* getAccountHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -61,6 +62,7 @@ class StorageHelperImpl : public StorageHelper
         mExternalSystemAccountIDHelper;
     std::unique_ptr<ExternalSystemAccountIDPoolEntryHelper>
         mExternalSystemAccountIDPoolEntryHelper;
+    AccountHelper* mAccountHelper;
     std::unique_ptr<AccountRoleHelper> mAccountRoleHelper;
     std::unique_ptr<AccountRuleHelper> mAccountRuleHelper;
 };

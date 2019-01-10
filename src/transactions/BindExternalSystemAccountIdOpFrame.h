@@ -19,6 +19,8 @@ class BindExternalSystemAccountIdOpFrame : public OperationFrame
                                           int32_t ledgerVersion) const override;
     int getExpiresAt(StorageHelper& storageHelper, LedgerManager &ledgerManager, int32 externalSystemType);
 
+    std::vector<OperationCondition> getOperationConditions(StorageHelper& sh) const override;
+
 public:
     BindExternalSystemAccountIdOpFrame(Operation const& op, OperationResult& res,
                                        TransactionFrame& parentTx);

@@ -136,7 +136,7 @@ namespace stellar {
     }
 
     std::vector<OperationCondition>
-    ManageKeyValueOpFrame::getOperationConditions() const
+    ManageKeyValueOpFrame::getOperationConditions(StorageHelper& sh) const
     {
         AccountRuleResource resource;
         resource.type(LedgerEntryType::KEY_VALUE);

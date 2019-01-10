@@ -41,6 +41,12 @@ namespace stellar {
 
         bool isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID);
 
+        std::vector<OperationCondition>
+        getOperationConditions(StorageHelper& storageHelper) const override;
+
+        AccountFrame::pointer
+        tryLoadDestinationAccount(StorageHelper& storageHelper) const;
+
     public:
         PaymentOpV2Frame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
 

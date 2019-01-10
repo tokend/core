@@ -38,6 +38,21 @@ BindExternalSystemAccountIdOpFrame::getSourceAccountDetails(
                          static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
 }
 
+std::vector<OperationCondition>
+BindExternalSystemAccountIdOpFrame::getOperationConditions(StorageHelper& sh) const
+{
+    AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
+    std::string poolAction = "bind";
+
+    AccountRuleResource externalAccountResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID);
+    std::string externalAccountAction = "manage";
+
+    // maybe here use method which will load Accounts
+
+    return {{poolResource, poolAction, mSourceAccount},
+            {externalAccountResource, externalAccountAction, mSourceAccount}};
+}
+
 BindExternalSystemAccountIdOpFrame::BindExternalSystemAccountIdOpFrame(
     Operation const& op, OperationResult& res, TransactionFrame& parentTx)
     : OperationFrame(op, res, parentTx)

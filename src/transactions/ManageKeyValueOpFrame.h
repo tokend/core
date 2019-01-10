@@ -29,7 +29,7 @@ namespace stellar {
         SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
-        std::vector<OperationCondition> getOperationConditions() const override;
+        std::vector<OperationCondition> getOperationConditions(StorageHelper& sh) const override;
 
         static ManageKeyValueResultCode
         getInnerCode(OperationResult const& res)

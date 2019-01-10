@@ -72,7 +72,8 @@ class OperationFrame
     virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
         int32_t ledgerVersion, Database& db) const;
 
-    virtual std::vector<OperationCondition> getOperationConditions() const;
+    virtual std::vector<OperationCondition>
+    getOperationConditions(StorageHelper& storageHelper) const;
 
 	// returns true if operation is allowed in the system
 	virtual bool isAllowed() const;

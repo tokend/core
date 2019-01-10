@@ -12,6 +12,7 @@ class AssetHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
 class EntryHelper;
+class AccountHelper;
 class AccountRoleHelper;
 class AccountRuleHelper;
 
@@ -41,6 +42,7 @@ class StorageHelper
     getExternalSystemAccountIDHelper() = 0;
     virtual ExternalSystemAccountIDPoolEntryHelper&
     getExternalSystemAccountIDPoolEntryHelper() = 0;
+    virtual AccountHelper* getAccountHelper() = 0;
     virtual AccountRoleHelper& getAccountRoleHelper() = 0;
     virtual AccountRuleHelper& getAccountRuleHelper() = 0;
 };

@@ -189,7 +189,7 @@ bool OperationFrame::isAllowed() const
 }
 
 std::vector<OperationCondition>
-OperationFrame::getOperationConditions() const
+OperationFrame::getOperationConditions(StorageHelper& storageHelper) const
 {
     return {};
 }
@@ -408,9 +408,9 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
 bool
 OperationFrame::checkRolePermissions(Application& app)
 {
-    auto operationConditions = getOperationConditions();
     StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
     static_cast<StorageHelper&>(storageHelperImpl).begin();
+    auto operationConditions = getOperationConditions(storageHelperImpl);
 
     auto accountRuleVerifierImpl = std::make_unique<AccountRuleVerifierImpl>(storageHelperImpl);
     AccountRuleVerifier& accountRuleVerifier = *accountRuleVerifierImpl;

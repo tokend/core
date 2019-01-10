@@ -6,6 +6,8 @@
 #include <transactions/test/test_helper/PaymentV2TestHelper.h>
 #include <transactions/test/test_helper/SetFeesTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRolePermissionTestHelper.h>
 #include "test_helper/TxHelper.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
@@ -265,6 +267,77 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                      paymentAmount, paymentFeeData, "", "",
                                                      &paymentV2Delta);
             }
+
+            SECTION("Happy path using account rule and rules")
+            {
+                ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
+                ManageAccountRolePermissionTestHelper setAccountRolePolicyTestHelper(testManager);
+
+                // create policy (just entry)
+                AccountRuleResource assetResource(LedgerEntryType::ASSET);
+                assetResource.asset().assetType = 7;
+                assetResource.asset().assetCode = paymentAsset;
+
+                auto policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
+                                   assetResource, "send", false);
+                // write this entry to DB
+                auto createSenderRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+                        root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
+                        ManageAccountRolePermissionResultCode::SUCCESS);
+
+                policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
+                                  assetResource, "use", false);
+                // write this entry to DB
+                auto createUserRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+                        root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
+                        ManageAccountRolePermissionResultCode::SUCCESS);
+
+                // create account role using root as source
+                auto createSenderAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput(
+                        "usd_sender", {createSenderRuleResult.success().permissionID});
+
+                auto senderAccountRoleID = setAccountRoleTestHelper.applySetAccountRole(
+                        root, createSenderAccountRoleOp).success().accountRoleID;
+
+                // create account role using root as source
+                auto createUserAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput(
+                        "usd_receiver", {createUserRuleResult.success().permissionID});
+
+                auto userAccountRoleID = setAccountRoleTestHelper.applySetAccountRole(
+                        root, createUserAccountRoleOp).success().accountRoleID;
+
+                payer = Account{SecretKey::random(), Salt(1)};
+                recipient = Account{SecretKey::random(), Salt(1)};
+
+                TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+
+                createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                        .setSource(root)
+                                                        .setType(AccountType::GENERAL)
+                                                        .setToPublicKey(payer.key.getPublicKey())
+                                                        .setRoleID(senderAccountRoleID));
+
+                createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                        .setSource(root)
+                                                        .setType(AccountType::GENERAL)
+                                                        .setToPublicKey(recipient.key.getPublicKey())
+                                                        .setRoleID(userAccountRoleID));
+
+                TestManager::upgradeToLedgerVersion(app, LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+                // find payer
+                payerBalance = balanceHelper->loadBalance(payer.key.getPublicKey(), paymentAsset, db, nullptr);
+                REQUIRE(payerBalance);
+
+                issuanceTestHelper.applyCreateIssuanceRequest(root, paymentAsset, emissionAmount, payerBalance->getBalanceID(),
+                                                              SecretKey::random().getStrKeyPublic(), &issuanceTasks);
+
+                TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+
+                destination = paymentV2TestHelper.createDestinationForAccount(recipient.key.getPublicKey());
+                paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,
+                                                     paymentAmount, paymentFeeData, "", "");
+            }
+
             SECTION("Incorrect amount precision") {
                 if (testSet.paymentAsset == "USDN") {
                     paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,

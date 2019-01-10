@@ -29,7 +29,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     auto& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
-    testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+    testManager->upgradeToLedgerVersion(app, LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
 
     LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                           app.getDatabase());
@@ -112,6 +112,8 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
                         .setSource(root)
                         .setToPublicKey(binder.key.getPublicKey()));
 
+        testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+
         REQUIRE_FALSE(testManager->applyCheck(bindExternalSystemAccountIdTestHelper.createBindExternalSystemAccountIdTx(
                 account, ERC20_TokenExternalSystemType)));
 
@@ -119,35 +121,48 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     }
     SECTION("Happy path with policies check")
     {
-        /*app.resumeCheckingPolicies();
-
         ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
         ManageAccountRolePermissionTestHelper setAccountRolePolicyTestHelper(testManager);
 
-        // create account role using root as source
-        auto accountRoleID = setAccountRoleTestHelper.applySetAccountRole(
-                root, setAccountRoleTestHelper.createCreationOpInput("regular")).success().accountRoleID;
-        // create binder with this role using root as source
-        auto binder = Account {SecretKey::random(), Salt(0)};
-        createAccountTestHelper.applyTx(
-                CreateAccountTestBuilder()
-                .setSource(root)
-                .setToPublicKey(binder.key.getPublicKey())
-                .setRoleID(accountRoleID));
         // create policy (just entry)
-        auto policyEntry =
-                setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
-                        accountRoleID, OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID);
+        auto policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
+                AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "bind", false);
         // write this entry to DB
-        setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+        auto createRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
                 root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
                 ManageAccountRolePermissionResultCode::SUCCESS);
 
-        manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
-                                                                                                ERC20_TokenExternalSystemType,
-                                                                                                "Some data");
+        std::vector<uint64_t> ruleIDs{createRuleResult.success().permissionID};
+
+        policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
+                AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID), "manage", false);
+        // write this entry to DB
+        createRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
+                root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
+                ManageAccountRolePermissionResultCode::SUCCESS);
+
+        ruleIDs.emplace_back(createRuleResult.success().permissionID);
+
+        // create account role using root as source
+        auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("external_pool_binder", ruleIDs);
+
+        auto accountRoleID = setAccountRoleTestHelper.applySetAccountRole(
+                root, createAccountRoleOp).success().accountRoleID;
+
+        manageExternalSystemAccountIDPoolEntryTestHelper
+                .createExternalSystemAccountIdPoolEntry(root,
+                                                        ERC20_TokenExternalSystemType,
+                                                        "Some data");
+        testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+
+        // create binder with this role using root as source
+        auto binder = Account {SecretKey::random(), Salt(0)};
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                        .setSource(root)
+                        .setToPublicKey(binder.key.getPublicKey())
+                        .setRoleID(accountRoleID));
+
         bindExternalSystemAccountIdTestHelper.applyBindExternalSystemAccountIdTx(binder, ERC20_TokenExternalSystemType);
 
-        app.stopCheckingPolicies();*/
     }
 }
