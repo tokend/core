@@ -73,17 +73,9 @@ namespace stellar {
         resource.asset().assetType = static_cast<int64>(assetFrame->getAsset().policies); // add asset type
         resource.asset().assetCode = assetFrame->getCode();
 
-        std::string senderAction = "send";
-
-        auto accountHelper = storageHelper.getAccountHelper();
-        auto senderAccountFrame = accountHelper->loadAccount(senderBalanceFrame->getAccountID(), storageHelper.getDatabase());
-        getSourceAccount()
-
         auto destinationAccountFrame = tryLoadDestinationAccount(storageHelper);
 
-        std::string destinationAction = "receive";
-
-        return {{resource, senderAction, senderAccountFrame}, {resource, destinationAction, destinationAccountFrame}};
+        return {{resource, "send", mSourceAccount}, {resource, "receive", destinationAccountFrame}};
     }
 
     AccountFrame::pointer

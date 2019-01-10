@@ -286,7 +286,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                         ManageAccountRolePermissionResultCode::SUCCESS);
 
                 policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
-                                  assetResource, "use", false);
+                                  assetResource, "receive", false);
                 // write this entry to DB
                 auto createUserRuleResult = setAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
                         root, policyEntry, ManageAccountRolePermissionOpAction::CREATE,
