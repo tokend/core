@@ -70,7 +70,7 @@ namespace stellar {
         auto assetFrame = assetHelper.mustLoadAsset(senderBalanceFrame->getAsset());
 
         AccountRuleResource resource(LedgerEntryType::ASSET);
-        resource.asset().assetType = static_cast<int64>(assetFrame->getAsset().policies); // add asset type
+        resource.asset().assetType = assetFrame->getAsset().type; // add asset type
         resource.asset().assetCode = assetFrame->getCode();
 
         auto destinationAccountFrame = tryLoadDestinationAccount(storageHelper);

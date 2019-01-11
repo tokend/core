@@ -162,7 +162,8 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     uint32_t policies,
     uint32_t* allTasks,
     uint64_t initialPreissuanceAmount,
-    uint32_t trailingDigitsCount
+    uint32_t trailingDigitsCount,
+    uint64_t assetType
     )
 {
     ManageAssetOp::_request_t request;
@@ -174,6 +175,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;
     assetCreationRequest.initialPreissuedAmount = initialPreissuanceAmount;
+    assetCreationRequest.type = assetType;
     if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
     {
         assetCreationRequest.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
@@ -235,7 +237,8 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         AssetCode assetCode, Account& root,
                                         uint32_t policies,
                                         uint32_t* allTasks,
-                                        uint32_t trailingDigitsCount
+                                        uint32_t trailingDigitsCount,
+                                        uint64_t assetType
                                         )
 {
     const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
@@ -244,7 +247,9 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                                       preIssuedSigner.
                                                       getPublicKey(),
                                                       "{}", maxIssuanceAmount,
-                                                      policies, allTasks, 0);
+                                                      policies, allTasks, 0,
+                                                      AssetFrame::kMaximumTrailingDigits,
+                                                      assetType);
     if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
     {
         creationRequest.createAssetCreationRequest().createAsset.ext.v(

@@ -56,7 +56,8 @@ class IssuanceRequestHelper : TxHelper
                                         AssetCode assetCode,
                                         uint64_t preIssuedAmount,
                                         Account& root,
-                                        uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
+                                        uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
+                                        uint64_t assetType = 0);
 
     void authorizePreIssuedAmount(Account& assetOwner,
                                   SecretKey& preIssuedAssetSigner,

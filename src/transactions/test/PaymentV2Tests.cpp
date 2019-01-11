@@ -72,7 +72,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     const uint64_t preIssuedAmount = INT64_MAX - (INT64_MAX % precision);
 
     // create asset
-    issuanceTestHelper.createAssetWithPreIssuedAmount(root, paymentAsset, preIssuedAmount, root, testSet.trailingDigitsCount);
+    issuanceTestHelper.createAssetWithPreIssuedAmount(root, paymentAsset, preIssuedAmount, root, testSet.trailingDigitsCount, 1);
     manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                 static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
                                                                 static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
@@ -271,7 +271,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
                 // create policy (just entry)
                 AccountRuleResource assetResource(LedgerEntryType::ASSET);
-                assetResource.asset().assetType = 7;
+                assetResource.asset().assetType = 1;
                 assetResource.asset().assetCode = paymentAsset;
 
                 auto policyEntry = manageAccountRuleTestHelper.createAccountRolePermissionEntry(0,
