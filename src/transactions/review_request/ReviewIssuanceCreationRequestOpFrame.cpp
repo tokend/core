@@ -129,12 +129,6 @@ SourceDetails ReviewIssuanceCreationRequestOpFrame::getSourceAccountDetails(std:
 {
     auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
 
-    auto newSingersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSingersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ISSUANCE_MANAGER);
-    }
-
 	if (ledgerVersion < static_cast<int32_t>(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
 	{
         return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);

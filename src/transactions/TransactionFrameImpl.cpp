@@ -573,17 +573,8 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
                 errorEncountered = true;
             }
             stateBeforeOp.push_back(opDelta.getState());
-            auto detailedChangesVersion =
-                static_cast<uint32_t>(LedgerVersion::DETAILED_LEDGER_CHANGES);
-            if (app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion >=
-                detailedChangesVersion)
-            {
-                meta.operations().emplace_back(opDelta.getAllChanges());
-            }
-            else
-            {
-                meta.operations().emplace_back(opDelta.getChanges());
-            }
+            meta.operations().emplace_back(opDelta.getAllChanges());
+
             storageHelper.commit();
         }
 
