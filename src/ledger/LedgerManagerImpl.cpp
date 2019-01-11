@@ -144,8 +144,8 @@ LedgerManagerImpl::getStateHuman() const
     return std::string(stateStrings[getState()]);
 }
 
-void
-LedgerManagerImpl::addAdminRoleAndRule(LedgerDelta& delta)
+uint64_t
+LedgerManagerImpl::createAdminRole(LedgerDelta& delta)
 {
     StorageHelperImpl storageHelperImpl(getDatabase(), &delta);
     StorageHelper& storageHelper = storageHelperImpl;
@@ -170,9 +170,12 @@ LedgerManagerImpl::addAdminRoleAndRule(LedgerDelta& delta)
     adminRole.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_ROLE);
 
     LedgerEntry ledgerRoleEntry;
-    ledgerRuleEntry.data.accountRole() = adminRole;
+    ledgerRoleEntry.data.type(LedgerEntryType::ACCOUNT_ROLE);
+    ledgerRoleEntry.data.accountRole() = adminRole;
 
     storageHelper.getAccountRoleHelper().storeAdd(ledgerRoleEntry);
+
+    return adminRole.id;
 }
 
 void
@@ -180,24 +183,6 @@ LedgerManagerImpl::startNewLedger()
 {
     DBTimeExcluder qtExclude(mApp);
     auto ledgerTime = mLedgerClose.TimeScope();
-
-	std::vector<AccountFrame::pointer> systemAccounts;
-	{
-		AccountFrame::pointer operationalAccount = make_shared<AccountFrame>(
-			mApp.getOperationalID());
-		operationalAccount->getAccount().accountType = AccountType::OPERATIONAL;
-		systemAccounts.push_back(operationalAccount);
-
-		AccountFrame::pointer masterAccount = make_shared<AccountFrame>(mApp.getMasterID());
-		masterAccount->getAccount().accountType = AccountType::MASTER;
-		masterAccount->getAccount().roleID = 1;
-		systemAccounts.push_back(masterAccount);
-
-		AccountFrame::pointer commissionAccount = make_shared<AccountFrame>(
-			mApp.getCommissionID());
-		commissionAccount->getAccount().accountType = AccountType::COMMISSION;
-		systemAccounts.push_back(commissionAccount);
-	}
 
     LedgerHeader genesisHeader;
     // all fields are initialized by default to 0
@@ -211,6 +196,26 @@ LedgerManagerImpl::startNewLedger()
 
     LedgerDeltaImpl deltaImpl(genesisHeader, getDatabase());
     LedgerDelta& delta = deltaImpl;
+
+    auto roleID = createAdminRole(delta);
+
+    std::vector<AccountFrame::pointer> systemAccounts;
+    {
+        AccountFrame::pointer operationalAccount = make_shared<AccountFrame>(
+                mApp.getOperationalID());
+        operationalAccount->getAccount().accountType = AccountType::OPERATIONAL;
+        systemAccounts.push_back(operationalAccount);
+
+        AccountFrame::pointer masterAccount = make_shared<AccountFrame>(mApp.getMasterID());
+        masterAccount->getAccount().accountType = AccountType::MASTER;
+        masterAccount->getAccount().roleID = roleID;
+        systemAccounts.push_back(masterAccount);
+
+        AccountFrame::pointer commissionAccount = make_shared<AccountFrame>(
+                mApp.getCommissionID());
+        commissionAccount->getAccount().accountType = AccountType::COMMISSION;
+        systemAccounts.push_back(commissionAccount);
+    }
 
 	AccountManager accountManager(mApp, this->getDatabase(), delta, mApp.getLedgerManager());
 	for (auto systemAccount : systemAccounts)

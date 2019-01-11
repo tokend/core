@@ -287,7 +287,6 @@ AccountRuleHelperImpl::load(StatementContext &prep,
             xdr::xdr_argpack_archive(unmarshaler, accountRuleEntry.resource);
             unmarshaler.done();
 
-            CLOG(INFO, Logging::ENTRY_LOGGER) << "Loaded version: " << version;
             accountRuleEntry.isForbid = isForbid > 0;
             accountRuleEntry.ext.v(static_cast<LedgerVersion>(version));
 

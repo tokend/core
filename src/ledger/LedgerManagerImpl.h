@@ -62,7 +62,8 @@ class LedgerManagerImpl : public LedgerManager
     void closeLedgerHelper(LedgerDelta const& delta);
     void advanceLedgerPointers();
 
-    void addAdminRoleAndRule(LedgerDelta& delta);
+    // returns roleID
+    uint64_t createAdminRole(LedgerDelta& delta);
 
     State mState;
 
