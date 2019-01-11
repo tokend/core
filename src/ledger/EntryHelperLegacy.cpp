@@ -85,8 +85,8 @@ namespace stellar
                 }
                 case LedgerEntryType::ACCOUNT_RULE:
                 {
-                    auto& sourceData = e.data.accountRolePermission();
-                    key.accountRolePermission().id = sourceData.id;
+                    auto& sourceData = e.data.accountRule();
+                    key.accountRule().id = sourceData.id;
                     break;
                 }
                 default:

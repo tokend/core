@@ -5,13 +5,13 @@ namespace stellar
 
 AccountRuleFrame::AccountRuleFrame()
     : EntryFrame(LedgerEntryType::ACCOUNT_RULE)
-    , mAccountRuleEntry(mEntry.data.accountRolePermission())
+    , mAccountRuleEntry(mEntry.data.accountRule())
 {
 }
 
 AccountRuleFrame::AccountRuleFrame(LedgerEntry const& from)
     : EntryFrame(from)
-    , mAccountRuleEntry(mEntry.data.accountRolePermission())
+    , mAccountRuleEntry(mEntry.data.accountRule())
 {
 }
 

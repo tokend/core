@@ -196,8 +196,8 @@ struct LedgerEntryIdCmp
             }
             case LedgerEntryType::ACCOUNT_RULE:
             {
-                auto const& aarp = a.accountRolePermission();
-                auto const& barp = b.accountRolePermission();
+                auto const& aarp = a.accountRule();
+                auto const& barp = b.accountRule();
                 return aarp.id < barp.id;
             }
             default:

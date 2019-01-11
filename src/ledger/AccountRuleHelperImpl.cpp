@@ -64,7 +64,7 @@ AccountRuleHelperImpl::storeDelete(LedgerKey const& key)
         "DELETE FROM account_role_permissions WHERE id=:id");
     auto& st = prep.statement();
 
-    st.exchange(use(key.accountRolePermission().id));
+    st.exchange(use(key.accountRule().id));
     st.define_and_bind();
     st.execute(true);
 
@@ -156,7 +156,7 @@ AccountRuleHelperImpl::exists(LedgerKey const& key)
         "WHERE id=:id)");
     auto& st = prep.statement();
 
-    st.exchange(use(key.accountRolePermission().id));
+    st.exchange(use(key.accountRule().id));
     st.exchange(into(exists));
 
     st.define_and_bind();
@@ -175,7 +175,7 @@ AccountRuleHelperImpl::getLedgerKey(LedgerEntry const& from)
 
     LedgerKey ledgerKey;
     ledgerKey.type(LedgerEntryType::ACCOUNT_RULE);
-    ledgerKey.accountRolePermission().id = from.data.accountRolePermission().id;
+    ledgerKey.accountRule().id = from.data.accountRule().id;
     return ledgerKey;
 }
 
@@ -204,7 +204,7 @@ AccountRuleHelperImpl::storeLoad(LedgerKey const& key)
     sql += "WHERE id =:id";
     auto prep = mDb.getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(key.accountRolePermission().id));
+    st.exchange(use(key.accountRule().id));
 
     AccountRuleFrame::pointer result;
     auto timer = mDb.getSelectTimer("select_account_rule");
@@ -262,7 +262,7 @@ AccountRuleHelperImpl::load(StatementContext &prep,
     {
         LedgerEntry le;
         le.data.type(LedgerEntryType::ACCOUNT_RULE);
-        auto& accountRuleEntry = le.data.accountRolePermission();
+        auto& accountRuleEntry = le.data.accountRule();
 
         string strResource;
         int32_t isForbid;

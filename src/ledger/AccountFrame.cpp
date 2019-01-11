@@ -125,15 +125,8 @@ AccountFrame::getKYCLevel() const
     {
         return mAccountEntry.ext.kycLevel();
     }
-    else if (mAccountEntry.ext.v() ==
-             LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
-    {
-        return mAccountEntry.ext.accountEntryExt().kycLevel;
-    }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 void
 AccountFrame::setKYCLevel(uint32 kycLevel)
@@ -142,41 +135,20 @@ AccountFrame::setKYCLevel(uint32 kycLevel)
     {
         mAccountEntry.ext.kycLevel() = kycLevel;
     }
-    else if (mAccountEntry.ext.v() ==
-             LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
-    {
-        mAccountEntry.ext.accountEntryExt().kycLevel = kycLevel;
-    }
     else if (kycLevel != 0)
     {
         throw std::runtime_error("Could not read KYC Level");
     }
 }
-xdr::pointer<uint64>
+uint64_t
 AccountFrame::getAccountRole() const
 {
-    if (mAccountEntry.ext.v() ==
-        LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
-    {
-        return mAccountEntry.ext.accountEntryExt().accountRole;
-    }
-    else
-    {
-        return xdr::pointer<uint64>();
-    }
+    return mAccountEntry.roleID;
 }
 void
-AccountFrame::setAccountRole(xdr::pointer<uint64> accountRole)
+AccountFrame::setAccountRole(uint64_t accountRoleID)
 {
-    if (mAccountEntry.ext.v() ==
-        LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
-    {
-        mAccountEntry.ext.accountEntryExt().accountRole = accountRole;
-    }
-    else if (accountRole)
-    {
-        throw std::runtime_error("Could not set account role");
-    }
+   mAccountEntry.roleID = accountRoleID;
 }
 
 } // namespace stellar

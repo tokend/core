@@ -125,8 +125,11 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         ManageAccountRuleTestHelper setAccountRolePolicyTestHelper(testManager);
 
         // create policy (just entry)
-        auto policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
-                AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "bind", false);
+        auto policyEntry = setAccountRolePolicyTestHelper.createAccountRuleEntry(
+                0,
+                AccountRuleResource(
+                        LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY),
+                "bind", false);
         // write this entry to DB
         auto createRuleResult = setAccountRolePolicyTestHelper.applyTx(
                 root, policyEntry, ManageAccountRuleAction::CREATE,
@@ -134,8 +137,11 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
 
         std::vector<uint64_t> ruleIDs{createRuleResult.success().ruleID};
 
-        policyEntry = setAccountRolePolicyTestHelper.createAccountRolePermissionEntry(0,
-                AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID), "manage", false);
+        policyEntry = setAccountRolePolicyTestHelper.createAccountRuleEntry(0,
+                                                                            AccountRuleResource(
+                                                                                    LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID),
+                                                                            "manage",
+                                                                            false);
         // write this entry to DB
         createRuleResult = setAccountRolePolicyTestHelper.applyTx(
                 root, policyEntry, ManageAccountRuleAction::CREATE,

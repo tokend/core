@@ -10,10 +10,10 @@
 namespace stellar
 {
 
-class ManageAccountRolePermissionOpFrame : public OperationFrame
+class ManageAccountRuleOpFrame : public OperationFrame
 {
   public:
-    ManageAccountRolePermissionOpFrame(Operation const& op,
+    ManageAccountRuleOpFrame(Operation const& op,
                                        OperationResult& res,
                                        TransactionFrame& parentTx);
 
@@ -41,7 +41,7 @@ class ManageAccountRolePermissionOpFrame : public OperationFrame
     }
 
   private:
-    ManageAccountRuleOp const& mManageAccountRolePermission;
+    ManageAccountRuleOp const& mManageAccountRule;
 
     ManageAccountRuleResult&
     innerResult()
@@ -49,8 +49,8 @@ class ManageAccountRolePermissionOpFrame : public OperationFrame
         return mResult.tr().manageAccountRuleResult();
     }
 
-    bool createOrUpdatePolicy(Application& app, StorageHelper& storageHelper);
-    bool deleteAccountPolicy(Application& app, StorageHelper& storageHelper);
+    bool createOrUpdateRule(Application &app, StorageHelper &storageHelper);
+    bool deleteAccountRule(Application &app, StorageHelper &storageHelper);
 };
 
 } // namespace stellar

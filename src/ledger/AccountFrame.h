@@ -161,8 +161,8 @@ class AccountFrame : public EntryFrame
 
     uint32 getKYCLevel() const;
     void setKYCLevel(uint32 kycLevel);
-    xdr::pointer<uint64> getAccountRole() const;
-    void setAccountRole(xdr::pointer<uint64> accountRole);
+    uint64_t getAccountRole() const;
+    void setAccountRole(uint64_t accountRoleIDb  );
 
     // compare signers, ignores weight
     static bool signerCompare(Signer const& s1, Signer const& s2);

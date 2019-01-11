@@ -194,11 +194,6 @@ namespace stellar {
         destAccount.accountType = mCreateAccount.accountType;
         trySetReferrer(app, db, destAccountFrame);
         destAccount.policies = mCreateAccount.policies;
-        if (mCreateAccount.ext.v() == LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES &&
-            mCreateAccount.ext.opExt().roleID)
-        {
-            destAccount.ext.v(LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
-            destAccount.ext.accountEntryExt().accountRole.activate() = *mCreateAccount.ext.opExt().roleID;
-        }
+        destAccount.roleID = mCreateAccount.roleID;
     }
 }

@@ -23,8 +23,8 @@ class ManageAccountRuleTestHelper : TxHelper
             ManageAccountRuleResultCode::SUCCESS);
 
     AccountRuleEntry
-    createAccountRolePermissionEntry(uint64_t id, AccountRuleResource resource,
-                                     std::string action, bool isForbid);
+    createAccountRuleEntry(uint64_t id, AccountRuleResource resource,
+                           std::string action, bool isForbid);
 };
 
 } // namespace txtest

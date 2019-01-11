@@ -40,7 +40,7 @@
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
 #include "transactions/kyc/CreateKYCReviewableRequestOpFrame.h"
 #include "transactions/dex/ManageSaleOpFrame.h"
-#include "transactions/ManageAccountRolePermissionOpFrame.h"
+#include "transactions/ManageAccountRuleOpFrame.h"
 #include "transactions/ManageAccountRoleOpFrame.h"
 #include "database/Database.h"
 #include "medida/meter.h"
@@ -138,7 +138,7 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
     case OperationType::MANAGE_ACCOUNT_ROLE:
         return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_RULE:
-        return shared_ptr<OperationFrame>(new ManageAccountRolePermissionOpFrame(op, res, tx));
+        return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
     default:
         ostringstream err;
         err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

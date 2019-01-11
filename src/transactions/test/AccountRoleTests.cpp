@@ -9,7 +9,7 @@
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "transactions/BindExternalSystemAccountIdOpFrame.h"
-#include "transactions/ManageAccountRolePermissionOpFrame.h"
+#include "transactions/ManageAccountRuleOpFrame.h"
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
 #include "util/make_unique.h"

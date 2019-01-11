@@ -21,6 +21,9 @@
 #include "medida/metrics_registry.h"
 #include "xdrpp/printer.h"
 #include "BalanceHelperLegacy.h"
+#include "StorageHelperImpl.h"
+#include "AccountRuleHelperImpl.h"
+#include "AccountRoleHelperImpl.h"
 
 /*
 The ledger module:
@@ -142,6 +145,37 @@ LedgerManagerImpl::getStateHuman() const
 }
 
 void
+LedgerManagerImpl::addAdminRoleAndRule(LedgerDelta& delta)
+{
+    StorageHelperImpl storageHelperImpl(getDatabase(), &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.begin();
+
+    AccountRuleEntry adminRule;
+    adminRule.resource = AccountRuleResource(LedgerEntryType::ANY);
+    adminRule.action = "*";
+    adminRule.details = "admin";
+    adminRule.isForbid = false;
+    adminRule.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_RULE);
+
+    LedgerEntry ledgerRuleEntry;
+    ledgerRuleEntry.data.type(LedgerEntryType::ACCOUNT_RULE);
+    ledgerRuleEntry.data.accountRule() = adminRule;
+
+    storageHelper.getAccountRuleHelper().storeAdd(ledgerRuleEntry);
+
+    AccountRoleEntry adminRole;
+    adminRole.ruleIDs = {adminRule.id};
+    adminRole.details = "admin";
+    adminRole.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_ROLE);
+
+    LedgerEntry ledgerRoleEntry;
+    ledgerRuleEntry.data.accountRole() = adminRole;
+
+    storageHelper.getAccountRoleHelper().storeAdd(ledgerRoleEntry);
+}
+
+void
 LedgerManagerImpl::startNewLedger()
 {
     DBTimeExcluder qtExclude(mApp);
@@ -156,6 +190,7 @@ LedgerManagerImpl::startNewLedger()
 
 		AccountFrame::pointer masterAccount = make_shared<AccountFrame>(mApp.getMasterID());
 		masterAccount->getAccount().accountType = AccountType::MASTER;
+		masterAccount->getAccount().roleID = 1;
 		systemAccounts.push_back(masterAccount);
 
 		AccountFrame::pointer commissionAccount = make_shared<AccountFrame>(

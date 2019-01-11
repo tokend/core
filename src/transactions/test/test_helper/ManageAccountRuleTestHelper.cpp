@@ -1,7 +1,7 @@
 #include "ManageAccountRuleTestHelper.h"
 #include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/StorageHelperImpl.h"
-#include "transactions/ManageAccountRolePermissionOpFrame.h"
+#include "transactions/ManageAccountRuleOpFrame.h"
 #include <lib/catch.hpp>
 
 namespace stellar
@@ -72,7 +72,7 @@ ManageAccountRuleTestHelper::applyTx(
 
     REQUIRE(opResult.code() == OperationResultCode::opINNER);
 
-    auto actualResult = ManageAccountRolePermissionOpFrame::getInnerCode(opResult);
+    auto actualResult = ManageAccountRuleOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResult == expectedResult);
 
@@ -89,7 +89,7 @@ ManageAccountRuleTestHelper::applyTx(
     AccountRuleHelperImpl rolePermissionHelper(storageHelperImpl);
     LedgerKey affectedPermissionKey;
     affectedPermissionKey.type(LedgerEntryType::ACCOUNT_RULE);
-    affectedPermissionKey.accountRolePermission().id = result.success().ruleID;
+    affectedPermissionKey.accountRule().id = result.success().ruleID;
 
     EntryFrame::pointer affectedPermission =
         static_cast<AccountRuleHelper&>(rolePermissionHelper)
@@ -115,20 +115,21 @@ ManageAccountRuleTestHelper::applyTx(
 }
 
 AccountRuleEntry
-ManageAccountRuleTestHelper::createAccountRolePermissionEntry(
-    uint64_t id, AccountRuleResource resource, std::string action, bool isForbid)
+ManageAccountRuleTestHelper::createAccountRuleEntry(
+        uint64_t id, AccountRuleResource resource, std::string action,
+        bool isForbid)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::ACCOUNT_RULE);
-    auto permissionEntry = le.data.accountRolePermission();
+    auto ruleEntry = le.data.accountRule();
 
-    permissionEntry.id = id;
-    permissionEntry.resource = resource;
-    permissionEntry.action = action;
-    permissionEntry.isForbid = isForbid;
-    permissionEntry.details = "some_details";
+    ruleEntry.id = id;
+    ruleEntry.resource = resource;
+    ruleEntry.action = action;
+    ruleEntry.isForbid = isForbid;
+    ruleEntry.details = "some_details";
 
-    return permissionEntry;
+    return ruleEntry;
 }
 
 } // namespace txtest

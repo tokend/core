@@ -40,7 +40,6 @@ namespace stellar {
             AccountID *referrer = nullptr;
             int32 policies = -1;
             uint64_t roleID = 0;
-            bool isRoleIDSpecified = false;
             CreateAccountResultCode expectedResult = CreateAccountResultCode::SUCCESS;
         };
 

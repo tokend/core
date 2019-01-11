@@ -49,8 +49,9 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     auto account = Account{accountKey, Salt(1)};
 
     auto policyEntry =
-            manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
-                    0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "*", false);
+            manageAccountRolePolicyTestHelper.createAccountRuleEntry(
+                    0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "*",
+                    false);
     auto createRuleResult = manageAccountRolePolicyTestHelper.applyTx(
             master, policyEntry, ManageAccountRuleAction::CREATE,
             ManageAccountRuleResultCode::SUCCESS);
@@ -119,7 +120,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     SECTION("Identity policy not found when trying to delete it")
     {
         auto policyEntry =
-            manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
+            manageAccountRolePolicyTestHelper.createAccountRuleEntry(
                 accountRoleID, kOperationType);
         manageAccountRolePolicyTestHelper.applyTx(
             account, policyEntry, ManageAccountRolePermissionOpAction::REMOVE,

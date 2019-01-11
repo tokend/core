@@ -78,16 +78,8 @@ namespace stellar
 			st.exchange(use(newAccountPolicies, "p"));
 			st.exchange(use(kycLevel, "kyc"));
 			st.exchange(use(newAccountVersion, "v"));
-                        st.exchange(use(accountEntry.sequentialID, "seqid"));
-
-            indicator roleIndicator = indicator::i_null;
-            uint32 roleValue = 0;
-            if (accountFrame->getAccountRole())
-            {
-                roleIndicator = indicator::i_ok;
-                roleValue = *accountFrame->getAccountRole();
-            }
-            st.exchange(use(roleValue, roleIndicator, "ar"));
+			st.exchange(use(accountEntry.sequentialID, "seqid"));
+            st.exchange(use(accountEntry.roleID, "ar"));
 
 			st.define_and_bind();
 			{
@@ -285,14 +277,12 @@ namespace stellar
 		}
 	}
 	void
-		AccountHelper::addKYCLevel(Database & db) {
+    AccountHelper::addKYCLevel(Database & db) {
 		db.getSession() << "ALTER TABLE accounts ADD kyc_level INT DEFAULT 0";
 	}
 	void AccountHelper::addAccountRole(Database& db)
     {
-        db.getSession() << "ALTER TABLE accounts ADD account_role BIGINT "
-                           "REFERENCES account_roles(role_id) ON DELETE CASCADE "
-						   "ON UPDATE CASCADE";
+        db.getSession() << "ALTER TABLE accounts ADD account_role BIGINT NOT NULL";
     }
 	void
 	AccountHelper::dropAll(Database& db)
@@ -311,7 +301,7 @@ namespace stellar
 			"referrer           VARCHAR(56)  NOT NULL,"
 			"policies           INT          NOT NULL           DEFAULT 0,"
 			"version            INT          NOT NULL           DEFAULT 0,"
-                       "sequential_id       BIGINT       UNIQUE NOT NULL"
+            "sequential_id      BIGINT       UNIQUE NOT NULL"
 			");";
 		db.getSession() << "CREATE TABLE signers"
 			"("
@@ -428,8 +418,6 @@ namespace stellar
 		AccountEntry& account = res->getAccount();
 
 		int32 accountType;
-		uint64 accountRole;
-		soci::indicator isAccountRolePresent;
 		uint32 accountPolicies;
 		uint32 kycLevel;
 		int32_t accountVersion;
@@ -443,7 +431,7 @@ namespace stellar
 		st.exchange(into(thresholds));
 		st.exchange(into(res->mEntry.lastModifiedLedgerSeq));
 		st.exchange(into(accountType));
-		st.exchange(into(accountRole, isAccountRolePresent));
+		st.exchange(into(account.roleID));
 		st.exchange(into(account.blockReasons));
 		st.exchange(into(referrer));
 		st.exchange(into(accountPolicies));
@@ -466,14 +454,6 @@ namespace stellar
 		account.ext.v((LedgerVersion)accountVersion);
 		account.policies = accountPolicies;
 		res->setKYCLevel(kycLevel);
-		if (isAccountRolePresent == soci::i_null)
-		{
-			res->setAccountRole(nullptr);
-		}
-		else
-		{
-			res->setAccountRole(xdr::pointer<uint64>(new uint64(accountRole)));
-		}
 		if (referrer != "")
 			account.referrer.activate() = PubKeyUtils::fromStrKey(referrer);
 		bn::decode_b64(thresholds.begin(), thresholds.end(),

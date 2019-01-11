@@ -27,7 +27,8 @@ namespace stellar {
                                              PaymentOpV2::_destination_t destination, uint64_t amount,
                                              PaymentFeeDataV2 feeData, std::string subject, std::string reference,
                                              PaymentV2Delta *paymentDelta = nullptr,
-                                             PaymentV2ResultCode expectedResultCode = PaymentV2ResultCode::SUCCESS);
+                                             PaymentV2ResultCode expectedResultCode = PaymentV2ResultCode::SUCCESS,
+                                             OperationResultCode expectedOpResultCode = OperationResultCode::opINNER);
 
             PaymentOpV2::_destination_t createDestinationForAccount(AccountID destAccountID);
 

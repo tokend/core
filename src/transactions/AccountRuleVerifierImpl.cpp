@@ -19,17 +19,12 @@ AccountRuleVerifierImpl::isAllowed(OperationCondition& condition)
     auto& accountRoleHelper = mStorageHelper.getAccountRoleHelper();
     auto& accountRuleHelper = mStorageHelper.getAccountRuleHelper();
 
-    if (!condition.account->getAccountRole())
-    {
-        return false; // accounts with no role assigned will fail the check
-    }
-
-    auto accountRoleFrame = accountRoleHelper.loadAccountRole(*condition.account->getAccountRole());
+    auto accountRoleFrame = accountRoleHelper.loadAccountRole(condition.account->getAccountRole());
     if (!accountRoleFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. "
                      << "Expected account role entry to exists. AccountRoleID: "
-                     << *condition.account->getAccountRole();
+                     << condition.account->getAccountRole();
         throw std::runtime_error("Unexpected state. Expected account role entry to exists.");
     }
 

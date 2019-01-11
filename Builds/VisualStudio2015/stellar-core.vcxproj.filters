@@ -804,7 +804,7 @@
     <ClCompile Include="..\..\src\transactions\ManageAccountRoleOpFrame.cpp">
       <Filter>transactions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\ManageAccountRolePermissionOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\ManageAccountRuleOpFrame.cpp">
       <Filter>transactions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\ManageAssetPairOpFrame.cpp">
@@ -1968,7 +1968,7 @@
     <ClInclude Include="..\..\src\transactions\ManageAccountRoleOpFrame.h">
       <Filter>transactions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\ManageAccountRolePermissionOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\ManageAccountRuleOpFrame.h">
       <Filter>transactions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\ManageAssetPairOpFrame.h">
