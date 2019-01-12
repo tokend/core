@@ -1,7 +1,5 @@
 #include "util/asio.h"
 #include "transactions/PayoutOpFrame.h"
-#include "ledger/AssetHelper.h"
-#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include <ledger/LedgerHeaderFrame.h>
 #include "ledger/StorageHelper.h"
@@ -15,6 +13,12 @@ PayoutOpFrame::PayoutOpFrame(Operation const &op, OperationResult &res,
                              TransactionFrame &parentTx)
         : OperationFrame(op, res, parentTx), mPayout(mOperation.body.payoutOp())
 {
+}
+
+bool
+PayoutOpFrame::isAllowed() const
+{
+    return false;
 }
 
 std::unordered_map<AccountID, CounterpartyDetails>
@@ -32,6 +36,12 @@ PayoutOpFrame::getSourceAccountDetails(
     return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE},
                          mSourceAccount->getHighThreshold(),
                          static_cast<int32_t>(SignerType::BALANCE_MANAGER));
+}
+
+std::vector<OperationCondition>
+PayoutOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+{
+
 }
 
 Fee

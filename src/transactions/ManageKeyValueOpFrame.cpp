@@ -2,20 +2,13 @@
 #include "ManageKeyValueOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/KeyValueHelperLegacy.h"
-#include "database/Database.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
-#include <string>
 #include <ledger/AccountHelper.h>
-#include <transactions/kyc/CreateKYCReviewableRequestOpFrame.h>
 #include "xdrpp/printer.h"
-#include <map>
 
 namespace stellar {
     using namespace std;
     using xdr::operator==;
-    class OperationFrame;
 
     char const * ManageKeyValueOpFrame::kycRulesPrefix = "kyc_lvlup_rules";
     char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";

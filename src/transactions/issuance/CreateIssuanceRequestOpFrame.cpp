@@ -45,6 +45,13 @@ CreateIssuanceRequestOpFrame::CreateIssuanceRequestOpFrame(Operation const& op,
     mIsFeeRequired = true;
 }
 
+std::vector<OperationCondition>
+CreateIssuanceRequestOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+{
+	// only asset owner can do issuance, it will be handled in doApply
+	return {};
+}
+
 bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
 	auto delta = storageHelper.getLedgerDelta();

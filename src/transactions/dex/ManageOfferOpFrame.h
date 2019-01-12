@@ -31,6 +31,9 @@ protected:
     SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
+    std::vector<OperationCondition>
+    getOperationConditions(StorageHelper& storageHelper) const override;
+
 public:
     static const uint64_t SECONDARY_MARKET_ORDER_BOOK_ID = 0;
     ManageOfferOpFrame(Operation const& op, OperationResult& res,

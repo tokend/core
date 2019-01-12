@@ -8,10 +8,7 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "database/Database.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 
 namespace stellar
 {

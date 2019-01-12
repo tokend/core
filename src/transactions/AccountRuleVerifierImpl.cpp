@@ -82,6 +82,12 @@ AccountRuleVerifierImpl::isResourceMatches(
                                       actualResource.asset().assetType) &&
                    isStringMatches(conditionResource.asset().assetCode,
                                    actualResource.asset().assetCode);
+        case LedgerEntryType::REVIEWABLE_REQUEST:
+            return (actualResource.reviewableRequest().requestType ==
+                    conditionResource.reviewableRequest().requestType) ||
+                   (actualResource.reviewableRequest().requestType ==
+                    ReviewableRequestType::ANY);
+        case LedgerEntryType::OFFER_ENTRY:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         case LedgerEntryType::KEY_VALUE:

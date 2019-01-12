@@ -2,21 +2,17 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "util/asio.h"
+#include <ledger/AssetHelper.h>
 #include "ManageOfferOpFrame.h"
 #include "OfferExchange.h"
-#include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
-#include "ledger/AssetPairHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "main/Application.h"
-#include "util/Logging.h"
-#include "util/types.h"
 #include "DeleteOfferOpFrame.h"
 #include "CreateOfferOpFrame.h"
 #include "DeleteSaleParticipationOpFrame.h"
 #include "CreateSaleParticipationOpFrame.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
@@ -83,5 +79,35 @@ const
                          mSourceAccount->getMediumThreshold(),
                          static_cast<int32_t>(SignerType::BALANCE_MANAGER),
                          allowedBlockedReasons);
+}
+
+std::vector<OperationCondition>
+ManageOfferOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    std::vector<OperationCondition> result;
+    std::vector<BalanceID> balances{mManageOffer.baseBalance, mManageOffer.quoteBalance};
+    for (auto& balanceID : balances)
+    {
+        auto balance = balanceHelper.loadBalance(balanceID);
+        if (!balance)
+        {
+            return {{AccountRuleResource(), "", nullptr}};
+        }
+
+        auto quoteAsset = assetHelper.mustLoadAsset(balance->getAsset());
+
+        AccountRuleResource resource(LedgerEntryType::ASSET);
+        resource.asset().assetType = quoteAsset->getAsset().type;
+        resource.asset().assetCode = quoteAsset->getCode();
+
+        result.emplace_back(resource, "exchange", mSourceAccount);
+    }
+
+    result.emplace_back(AccountRuleResource(LedgerEntryType::OFFER_ENTRY), "manage", mSourceAccount);
+
+    return result;
 }
 }

@@ -25,6 +25,9 @@ class ManageAssetPairOpFrame : public OperationFrame
 
 	bool createNewAssetPair(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair);
 
+	std::vector<OperationCondition>
+    getOperationConditions(StorageHelper& storageHelper) const override;
+
   public:
     
     ManageAssetPairOpFrame(Operation const& op, OperationResult& res,

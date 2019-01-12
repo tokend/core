@@ -8,19 +8,12 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/AssetPairHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
-#include "database/Database.h"
-#include "main/Application.h"
-#include "medida/metrics_registry.h"
-#include "xdrpp/printer.h"
-#include "StatisticsV2Processor.h"
-#include "ManageKeyValueOpFrame.h"
 
 namespace stellar
 {
@@ -33,6 +26,25 @@ CreateWithdrawalRequestOpFrame::getCounterpartyDetails(
 {
     // source account is only counterparty
     return {};
+}
+
+std::vector<OperationCondition>
+CreateWithdrawalRequestOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+{
+
+    auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
+    if (!balance)
+    {
+        return {{AccountRuleResource(), "", nullptr}};
+    }
+
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
+
+    AccountRuleResource assetResource(LedgerEntryType::ASSET);
+    assetResource.asset().assetType = asset->getAsset().type;
+    assetResource.asset().assetCode = asset->getCode();
+
+    return {{assetResource, "withdraw", mSourceAccount}};
 }
 
 SourceDetails CreateWithdrawalRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
@@ -110,24 +122,6 @@ CreateWithdrawalRequestOpFrame::CreateWithdrawalRequestOpFrame(
 {
 }
 
-
-ReviewableRequestFrame::pointer
-CreateWithdrawalRequestOpFrame::createRequest(LedgerDelta& delta, LedgerManager& ledgerManager,
-                                              Database& db, const AssetFrame::pointer assetFrame,
-                                              const uint64_t universalAmount)
-{
-    auto request = ReviewableRequestFrame::createNew(delta, getSourceID(), assetFrame->getOwner(), nullptr,
-                                                     ledgerManager.getCloseTime());
-    ReviewableRequestEntry &requestEntry = request->getRequestEntry();
-    requestEntry.body.type(ReviewableRequestType::WITHDRAW);
-    requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
-    requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
-
-    request->recalculateHashRejectReason();
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, request->mEntry);
-    return request;
-}
-
 ReviewableRequestFrame::pointer
 CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
                                                             StorageHelper &storageHelper,
@@ -197,25 +191,6 @@ CreateWithdrawalRequestOpFrame::storeChangeRequest(LedgerDelta& delta, Reviewabl
 
     request->recalculateHashRejectReason();
     ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
-}
-
-ReviewableRequestFrame::pointer
-CreateWithdrawalRequestOpFrame::approveRequest(AccountManager& accountManager, LedgerDelta& delta,
-                                               LedgerManager& ledgerManager, Database& db,
-                                               const AssetFrame::pointer assetFrame,
-                                               const BalanceFrame::pointer balanceFrame)
-{
-    uint64_t universalAmount = 0;
-    auto request = createRequest(delta, ledgerManager, db, assetFrame, universalAmount);
-
-    if (!processStatistics(accountManager, db, delta, ledgerManager, balanceFrame,
-                           mCreateWithdrawalRequest.request.amount, universalAmount, request->getRequestID()))
-    {
-        return nullptr;
-    }
-    storeChangeRequest(delta, request, db, universalAmount);
-
-    return request;
 }
 
 bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper,

@@ -8,6 +8,8 @@ namespace stellar
 {
 class PayoutOpFrame : public OperationFrame
 {
+    bool
+    isAllowed() const override;
 
     PayoutResult &innerResult() {
         return mResult.tr().payoutResult();
@@ -22,6 +24,9 @@ class PayoutOpFrame : public OperationFrame
     getSourceAccountDetails(std::unordered_map<AccountID,
                             CounterpartyDetails> counterpartiesDetails,
                             int32_t ledgerVersion) const override;
+
+    std::vector<OperationCondition>
+    getOperationConditions(StorageHelper& storageHelper) const override;
 
     Fee
     getActualFee(AssetCode const& asset, uint64_t amount, uint64_t precisionStep, Database& db);

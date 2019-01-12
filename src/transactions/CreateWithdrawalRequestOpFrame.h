@@ -44,10 +44,6 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     bool exceedsLowerBound(Database &db, AssetCode& code);
 
     ReviewableRequestFrame::pointer
-    createRequest(LedgerDelta& delta, LedgerManager& ledgerManager, Database& db,
-                  const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
-
-    ReviewableRequestFrame::pointer
     tryCreateWithdrawalRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager,
                                BalanceFrame::pointer balanceFrame,
                                AssetFrame::pointer assetFrame);
@@ -56,9 +52,8 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
                        Database& db, const uint64_t universalAmount);
 
-    ReviewableRequestFrame::pointer
-    approveRequest(AccountManager& accountManager, LedgerDelta& delta, LedgerManager& ledgerManager,
-                   Database& db, const AssetFrame::pointer assetFrame, const BalanceFrame::pointer balanceFrame);
+    std::vector<OperationCondition>
+    getOperationConditions(StorageHelper& storageHelper) const override;
 
 public:
 

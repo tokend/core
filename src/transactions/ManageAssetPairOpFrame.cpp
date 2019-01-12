@@ -47,6 +47,12 @@ SourceDetails ManageAssetPairOpFrame::getSourceAccountDetails(std::unordered_map
 	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), signerType);
 }
 
+std::vector<OperationCondition>
+ManageAssetPairOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+{
+	return {{AccountRuleResource(LedgerEntryType::ASSET_PAIR), "manage", mSourceAccount}};
+}
+
 bool ManageAssetPairOpFrame::createNewAssetPair(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair)
 {
 	Database& db = ledgerManager.getDatabase();

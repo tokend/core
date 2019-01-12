@@ -154,7 +154,7 @@ LedgerManagerImpl::createAdminRole(LedgerDelta& delta)
     AccountRuleEntry adminRule;
     adminRule.resource = AccountRuleResource(LedgerEntryType::ANY);
     adminRule.action = "*";
-    adminRule.details = "admin";
+    adminRule.details = "{}";
     adminRule.isForbid = false;
     adminRule.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_RULE);
 
@@ -166,7 +166,7 @@ LedgerManagerImpl::createAdminRole(LedgerDelta& delta)
 
     AccountRoleEntry adminRole;
     adminRole.ruleIDs = {adminRule.id};
-    adminRole.details = "admin";
+    adminRole.details = "{}";
     adminRole.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_ROLE);
 
     LedgerEntry ledgerRoleEntry;
@@ -174,6 +174,8 @@ LedgerManagerImpl::createAdminRole(LedgerDelta& delta)
     ledgerRoleEntry.data.accountRole() = adminRole;
 
     storageHelper.getAccountRoleHelper().storeAdd(ledgerRoleEntry);
+
+    storageHelper.commit();
 
     return adminRole.id;
 }
@@ -220,8 +222,8 @@ LedgerManagerImpl::startNewLedger()
 	AccountManager accountManager(mApp, this->getDatabase(), delta, mApp.getLedgerManager());
 	for (auto systemAccount : systemAccounts)
 	{
-            auto& accountEntry = systemAccount->getAccount();
-            accountEntry.sequentialID =
+	    auto& accountEntry = systemAccount->getAccount();
+	    accountEntry.sequentialID =
                 delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 		EntryHelperProvider::storeAddEntry(delta, this->getDatabase(), systemAccount->mEntry);
 		accountManager.createStats(systemAccount);
