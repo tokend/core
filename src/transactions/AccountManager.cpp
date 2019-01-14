@@ -426,8 +426,7 @@ namespace stellar {
     void AccountManager::unlockPendingIssuanceForSale(SaleFrame::pointer const sale, LedgerDelta &delta, Database &db,
                                                       LedgerManager &lm) {
         auto baseAsset = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db, &delta);
-        const auto baseAmount = lm.shouldUse(LedgerVersion::ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP)
-                                ? sale->getSaleEntry().maxAmountToBeSold : baseAsset->getPendingIssuance();
+        const auto baseAmount = sale->getSaleEntry().maxAmountToBeSold;
         baseAsset->mustUnlockIssuedAmount(baseAmount);
         AssetHelperLegacy::Instance()->storeChange(delta, db, baseAsset->mEntry);
     }
