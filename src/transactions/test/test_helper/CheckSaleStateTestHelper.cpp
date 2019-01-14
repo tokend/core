@@ -154,7 +154,7 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
     }
 
     // commission balance change
-    auto commissionAfter = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getCommissionID(),
+    auto commissionAfter = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getAdminID(),
         saleQuoteAsset.quoteAsset, mTestManager->getDB(),
         nullptr);
     REQUIRE(commissionAfter);

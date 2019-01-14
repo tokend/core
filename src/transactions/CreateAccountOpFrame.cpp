@@ -80,7 +80,7 @@ namespace stellar {
         }
 
         const auto referrerAccountID = *mCreateAccount.referrer;
-        if (referrerAccountID == app.getMasterID())
+        if (referrerAccountID == app.getAdminID())
             return;
 
         if (!AccountHelper::Instance()->exists(referrerAccountID, db))

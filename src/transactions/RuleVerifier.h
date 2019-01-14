@@ -2,9 +2,16 @@
 
 #include <string>
 #include <vector>
+#include <xdr/Stellar-types.h>
 
 namespace stellar
 {
+
+struct AssetFields
+{
+    AssetCode code;
+    uint64_t  type;
+};
 
 class RuleVerifier {
 protected:
@@ -16,6 +23,9 @@ protected:
 
     bool
     isAssetTypeMatches(uint64_t const expectedType, uint64_t const actualType) const;
+
+    bool
+    isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const;
 };
 
 } // namespace stellar

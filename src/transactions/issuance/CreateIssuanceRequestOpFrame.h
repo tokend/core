@@ -22,10 +22,6 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
     }
 
 	CreateIssuanceRequestOp const& mCreateIssuanceRequest;
-	
-	std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
 
 	bool isAuthorizedToRequestIssuance(AssetFrame::pointer assetFrame);
 
@@ -33,8 +29,9 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
 	ReviewableRequestFrame::pointer tryCreateIssuanceRequest(Application& app, LedgerDelta& delta,
 		LedgerManager& ledgerManager);
 
-    std::vector<OperationCondition>
-    getOperationConditions(StorageHelper& storageHelper) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
 public:
 

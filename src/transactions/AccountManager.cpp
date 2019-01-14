@@ -342,7 +342,7 @@ namespace stellar {
             return;
 
         // load commission balance and transfer fee
-        auto commissionBalance = loadOrCreateBalanceFrameForAsset(mApp.getCommissionID(), asset, mDb, mDelta);
+        auto commissionBalance = loadOrCreateBalanceFrameForAsset(mApp.getAdminID(), asset, mDb, mDelta);
 
         const BalanceFrame::Result commissionBalanceFundResult = commissionBalance->tryFundAccount(totalFee);
         if (commissionBalanceFundResult != BalanceFrame::Result::SUCCESS) {

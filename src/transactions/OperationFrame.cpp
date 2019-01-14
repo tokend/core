@@ -175,11 +175,26 @@ OperationFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta, int32_t
     return getCounterpartyDetails(db, delta);
 }
 
+std::unordered_map<AccountID, CounterpartyDetails>
+OperationFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const
+{
+    return {};
+}
+
 SourceDetails OperationFrame::getSourceAccountDetails(
     std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
     int32_t ledgerVersion, Database& db) const
 {
     return getSourceAccountDetails(counterpartiesDetails, ledgerVersion);
+}
+
+SourceDetails
+OperationFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
+                                        int32_t ledgerVersion) const
+{
+    return SourceDetails(getAllAccountTypes(),
+                         mSourceAccount->getHighThreshold(),
+                         getAnySignerType());
 }
 
 bool OperationFrame::isAllowed() const
@@ -188,10 +203,12 @@ bool OperationFrame::isAllowed() const
 	return true;
 }
 
-std::vector<OperationCondition>
-OperationFrame::getOperationConditions(StorageHelper& storageHelper) const
+bool
+OperationFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                std::vector<OperationCondition> &result) const
 {
-    return {};
+    // method must be overridden
+    return false;
 }
 
 int64_t OperationFrame::getPaidFee() const {
@@ -331,9 +348,10 @@ OperationFrame::checkValid(Application& app, LedgerDelta* delta)
 
     if (ledgerVersion >= (uint32)LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
     {
-        if (!checkRolePermissions(app))
+        AccountRuleVerifierImpl accountRuleVerifier;
+
+        if (!checkRolePermissions(app, accountRuleVerifier))
         {
-            mResult.code(OperationResultCode::opNO_ROLE_PERMISSION);
             return false;
         }
     }
@@ -406,30 +424,32 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
 }
 
 bool
-OperationFrame::checkRolePermissions(Application& app)
+OperationFrame::checkRolePermissions(Application& app, AccountRuleVerifier& accountRuleVerifier)
 {
     StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
-    static_cast<StorageHelper&>(storageHelperImpl).begin();
-    auto operationConditions = getOperationConditions(storageHelperImpl);
 
-    auto accountRuleVerifierImpl = std::make_unique<AccountRuleVerifierImpl>(storageHelperImpl);
-    AccountRuleVerifier& accountRuleVerifier = *accountRuleVerifierImpl;
-
-    bool result = true;
+    std::vector<OperationCondition> operationConditions;
+    if (!tryGetOperationConditions(storageHelperImpl, operationConditions))
+    {
+        return false;
+    }
 
     for (auto& condition : operationConditions)
     {
-        // maybe check in other loop (near)
         if (!condition.account)
         {
-            mResult.code(OperationResultCode::opNO_ACCOUNT);
+            mResult.code(OperationResultCode::opNO_COUNTERPARTY);
             return false;
         }
 
-        result = result && accountRuleVerifier.isAllowed(condition);
+        if (!accountRuleVerifier.isAllowed(condition, storageHelperImpl))
+        {
+            mResult.code(OperationResultCode::opNO_ROLE_PERMISSION);
+            return false;
+        }
     }
 
-    return result;
+    return true;
 }
 
 

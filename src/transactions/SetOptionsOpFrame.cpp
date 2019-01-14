@@ -112,7 +112,7 @@ bool SetOptionsOpFrame::tryUpdateSigners(Application& app, LedgerManager& ledger
 
 	// add new
 	const size_t MAX_SIGNERS = 30;
-	if (signers.size() == MAX_SIGNERS && !(getSourceID() == app.getMasterID()))
+	if (signers.size() == MAX_SIGNERS && !(getSourceID() == app.getAdminID()))
 	{
 		app.getMetrics().NewMeter({ "op-set-options", "failure",
 			"too-many-signers" },
@@ -152,7 +152,8 @@ SetOptionsOpFrame::tryCreateUpdateLimitsRequest(Application& app, LedgerDelta& d
     body.type(ReviewableRequestType::LIMITS_UPDATE);
     body.limitsUpdateRequest().deprecatedDocumentHash = mSetOptions.limitsUpdateRequestData->documentHash;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), app.getMasterID(), referencePtr, body,
+    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),
+                                                             app.getAdminID(), referencePtr, body,
                                                              ledgerManager.getCloseTime());
 
     EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);

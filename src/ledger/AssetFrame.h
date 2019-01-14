@@ -62,6 +62,12 @@ public:
         return mAsset.code;
     }
 
+    uint64_t const
+    getType() const
+    {
+        return mAsset.type;
+    }
+
     AccountID const& getOwner() const
     {
         return mAsset.owner;

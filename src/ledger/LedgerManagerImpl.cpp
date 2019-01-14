@@ -199,45 +199,21 @@ LedgerManagerImpl::startNewLedger()
     LedgerDeltaImpl deltaImpl(genesisHeader, getDatabase());
     LedgerDelta& delta = deltaImpl;
 
-    auto roleID = createAdminRole(delta);
+    LedgerEntry adminAccount;
+    adminAccount.data.type(LedgerEntryType::ACCOUNT);
+    adminAccount.data.account().accountID = mApp.getAdminID();
+    adminAccount.data.account().roleID = createAdminRole(delta);
+    adminAccount.data.account().accountType = AccountType::MASTER;
+    adminAccount.data.account().sequentialID =
+            delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 
-    std::vector<AccountFrame::pointer> systemAccounts;
-    {
-        AccountFrame::pointer operationalAccount = make_shared<AccountFrame>(
-                mApp.getOperationalID());
-        operationalAccount->getAccount().accountType = AccountType::OPERATIONAL;
-        systemAccounts.push_back(operationalAccount);
-
-        AccountFrame::pointer masterAccount = make_shared<AccountFrame>(mApp.getMasterID());
-        masterAccount->getAccount().accountType = AccountType::MASTER;
-        masterAccount->getAccount().roleID = roleID;
-        systemAccounts.push_back(masterAccount);
-
-        AccountFrame::pointer commissionAccount = make_shared<AccountFrame>(
-                mApp.getCommissionID());
-        commissionAccount->getAccount().accountType = AccountType::COMMISSION;
-        systemAccounts.push_back(commissionAccount);
-    }
-
-	AccountManager accountManager(mApp, this->getDatabase(), delta, mApp.getLedgerManager());
-	for (auto systemAccount : systemAccounts)
-	{
-	    auto& accountEntry = systemAccount->getAccount();
-	    accountEntry.sequentialID =
-                delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
-		EntryHelperProvider::storeAddEntry(delta, this->getDatabase(), systemAccount->mEntry);
-		accountManager.createStats(systemAccount);
-		
-	}
-
+    EntryHelperProvider::storeAddEntry(delta, getDatabase(), adminAccount);
     delta.commit();
 
     mCurrentLedger = make_shared<LedgerHeaderFrameImpl>(genesisHeader);
 	
 	CLOG(INFO, "Ledger") << "Established genesis ledger, ";
-    CLOG(INFO, "Ledger") << "Master account id: " << PubKeyUtils::toStrKey(mApp.getMasterID());
-	CLOG(INFO, "Ledger") << "Commission account id: " << PubKeyUtils::toStrKey(mApp.getCommissionID());
-	CLOG(INFO, "Ledger") << "Operational account id: " << PubKeyUtils::toStrKey(mApp.getOperationalID());
+    CLOG(INFO, "Ledger") << "Admin account id: " << PubKeyUtils::toStrKey(mApp.getAdminID());
     closeLedgerHelper(delta);
 }
 

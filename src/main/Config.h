@@ -216,7 +216,7 @@ class Config : public std::enable_shared_from_this<Config>
     bool resolveNodeID(std::string const& s, PublicKey& retKey) const;
 
 	std::vector<PublicKey> getSystemAccounts() const {
-		return{ masterID, commissionID, operationalID };
+		return{ masterID };
 	}
 
     static std::vector<std::string> readStrVector(std::string name, std::shared_ptr<cpptoml::toml_base> values);

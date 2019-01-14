@@ -533,7 +533,7 @@ TEST_CASE("manage offer", "[tx][offer]")
                     - sellerMatchFee);
 
                 auto commissionQuoteBalance = balanceHelper->
-                    loadBalance(app.getCommissionID(), quote, db, &delta);
+                    loadBalance(app.getAdminID(), quote, db, &delta);
                 REQUIRE(commissionQuoteBalance);
                 REQUIRE(commissionQuoteBalance->getAmount() == buyerOfferFee +
                     sellerMatchFee);
@@ -689,7 +689,7 @@ TEST_CASE("manage offer", "[tx][offer]")
             == baseAssetAmount);
 
         auto comissionAccount = balanceHelper->
-            loadBalance(app.getCommissionID(), quote, db, nullptr);
+            loadBalance(app.getAdminID(), quote, db, nullptr);
         REQUIRE(comissionAccount);
         REQUIRE(comissionAccount->getAmount() + quoteBuyerBalance->getAmount() +
             quoteSellerBalance->getAmount() == quoteAssetAmount);

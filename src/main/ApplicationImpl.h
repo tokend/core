@@ -130,11 +130,7 @@ namespace stellar {
 
         virtual Hash const &getNetworkID() const override;
 
-        virtual AccountID getMasterID() const override;
-
-        virtual AccountID getCommissionID() const override;
-
-        virtual AccountID getOperationalID() const override;
+        virtual AccountID getAdminID() const override;
 
         virtual std::vector<PublicKey> getSystemAccounts() const override;
 

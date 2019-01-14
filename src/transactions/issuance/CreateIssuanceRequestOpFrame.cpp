@@ -45,11 +45,12 @@ CreateIssuanceRequestOpFrame::CreateIssuanceRequestOpFrame(Operation const& op,
     mIsFeeRequired = true;
 }
 
-std::vector<OperationCondition>
-CreateIssuanceRequestOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+bool
+CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+									 	std::vector<OperationCondition>& result) const
 {
 	// only asset owner can do issuance, it will be handled in doApply
-	return {};
+	return true;
 }
 
 bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
@@ -169,32 +170,6 @@ CreateIssuanceRequestOpFrame::doCheckValid(Application& app)
 	}
 	
     return true;
-}
-
-std::unordered_map<AccountID, CounterpartyDetails> CreateIssuanceRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-	// no counterparties
-	return{};
-}
-
-SourceDetails CreateIssuanceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                    int32_t ledgerVersion) const
-{
-	if (ledgerVersion < static_cast<int32_t>(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-	{
-		return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-							 static_cast<int32_t>(SignerType::ISSUANCE_MANAGER));
-	}
-
-	if (!mCreateIssuanceRequest.allTasks)
-	{
-		return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-							 static_cast<uint32_t>(SignerType::ISSUANCE_MANAGER) |
-							 static_cast<uint32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
-	}
-
-	return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-						 static_cast<uint32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
 }
 
 bool CreateIssuanceRequestOpFrame::isAuthorizedToRequestIssuance(AssetFrame::pointer assetFrame)

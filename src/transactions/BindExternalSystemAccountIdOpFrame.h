@@ -13,13 +13,11 @@ class BindExternalSystemAccountIdOpFrame : public OperationFrame
         return mResult.tr().bindExternalSystemAccountIdResult();
     }
     BindExternalSystemAccountIdOp const& mBindExternalSystemAccountId;
-
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
     int getExpiresAt(StorageHelper& storageHelper, LedgerManager &ledgerManager, int32 externalSystemType);
 
-    std::vector<OperationCondition> getOperationConditions(StorageHelper& sh) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& sh,
+                              std::vector<OperationCondition>& result) const override;
 
 public:
     BindExternalSystemAccountIdOpFrame(Operation const& op, OperationResult& res,

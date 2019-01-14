@@ -8,16 +8,12 @@
 namespace stellar
 {
 
-AccountRuleVerifierImpl::AccountRuleVerifierImpl(StorageHelper &storageHelper)
-        : mStorageHelper(storageHelper)
-{
-}
-
 bool
-AccountRuleVerifierImpl::isAllowed(OperationCondition& condition)
+AccountRuleVerifierImpl::isAllowed(OperationCondition& condition,
+                                   StorageHelper& storageHelper)
 {
-    auto& accountRoleHelper = mStorageHelper.getAccountRoleHelper();
-    auto& accountRuleHelper = mStorageHelper.getAccountRuleHelper();
+    auto& accountRoleHelper = storageHelper.getAccountRoleHelper();
+    auto& accountRuleHelper = storageHelper.getAccountRuleHelper();
 
     auto accountRoleFrame = accountRoleHelper.loadAccountRole(condition.account->getAccountRole());
     if (!accountRoleFrame)
@@ -88,6 +84,20 @@ AccountRuleVerifierImpl::isResourceMatches(
                    (actualResource.reviewableRequest().requestType ==
                     ReviewableRequestType::ANY);
         case LedgerEntryType::OFFER_ENTRY:
+        {
+            AssetFields expectedBase{conditionResource.offer().baseAssetCode,
+                                     conditionResource.offer().baseAssetType};
+            AssetFields expectedQuote{conditionResource.offer().quoteAssetCode,
+                                      conditionResource.offer().quoteAssetType};
+            AssetFields actualBase{actualResource.offer().baseAssetCode,
+                                   actualResource.offer().baseAssetType};
+            AssetFields actualQuote{actualResource.offer().quoteAssetCode,
+                                    actualResource.offer().quoteAssetType};
+            return (isAssetMatches(expectedBase, actualBase) &&
+                    isAssetMatches(expectedQuote, actualQuote)) ||
+                   (isAssetMatches(expectedBase, actualQuote) &&
+                    isAssetMatches(expectedQuote, actualBase));
+        }
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         case LedgerEntryType::KEY_VALUE:

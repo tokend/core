@@ -109,36 +109,13 @@ namespace stellar {
         return true;
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    ManageKeyValueOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        return unordered_map<AccountID, CounterpartyDetails>();
-    }
-
-    SourceDetails ManageKeyValueOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
+    bool
+    ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& sh,
+                                 std::vector<OperationCondition>& result) const
     {
-        auto prefix = getPrefix();
+        result.emplace_back(AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", mSourceAccount);
 
-        if(strcmp(prefix.c_str(),kycRulesPrefix) == 0) {
-            return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                                 static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
-        }
-
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::KEY_VALUE_MANAGER));
-    }
-
-    std::vector<OperationCondition>
-    ManageKeyValueOpFrame::getOperationConditions(StorageHelper& sh) const
-    {
-        AccountRuleResource resource;
-        resource.type(LedgerEntryType::KEY_VALUE);
-
-        longstring action = xdr::xdr_traits<ManageKVAction>::enum_name(
-                mOperation.body.manageKeyValueOp().action.action());
-        std::transform(action.begin(), action.end(), action.begin(), ::tolower);
-
-        return {{resource, action, mSourceAccount}};
+        return true;
     }
 
     longstring

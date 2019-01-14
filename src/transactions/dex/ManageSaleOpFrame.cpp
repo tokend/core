@@ -91,8 +91,9 @@ namespace stellar {
             return false;
         }
 
-        auto request = ReviewableRequestFrame::createNew(*delta, getSourceID(), app.getMasterID(),
-                                                              referencePtr, ledgerManager.getCloseTime());
+        auto request = ReviewableRequestFrame::createNew(*delta, getSourceID(),
+                                                         app.getAdminID(),
+                                                         referencePtr, ledgerManager.getCloseTime());
         auto &requestEntry = request->getRequestEntry();
         requestEntry.body.type(ReviewableRequestType::UPDATE_SALE_DETAILS);
         requestEntry.body.updateSaleDetailsRequest().saleID = mManageSaleOp.saleID;

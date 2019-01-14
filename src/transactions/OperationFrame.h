@@ -28,14 +28,20 @@ class LedgerManager;
 class LedgerDelta;
 class StorageHelper;
 class KeyValueHelper;
+class AccountRuleVerifier;
 
 class TransactionFrame;
 
 struct OperationCondition
 {
     AccountRuleResource resource;
-    longstring action;
+    string256 action;
     AccountFrame::pointer account;
+
+    OperationCondition(AccountRuleResource res, string256 act, AccountFrame::pointer acc)
+            : resource(res), action(act), account(acc)
+    {
+    }
 };
 
 class OperationFrame
@@ -43,7 +49,7 @@ class OperationFrame
 
   private:
 	bool checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties);
-	bool checkRolePermissions(Application& app);
+	bool checkRolePermissions(Application& app,  AccountRuleVerifier& accountRuleVerifier);
   
   protected:
 
@@ -64,16 +70,17 @@ class OperationFrame
   public:
     virtual ~OperationFrame() = default;
 
-    virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const = 0;
+    virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const;
     virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta,
                                                                                       int32_t ledgerVersion) const;
     virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                      int32_t ledgerVersion) const = 0;
+                                                      int32_t ledgerVersion) const;
     virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
         int32_t ledgerVersion, Database& db) const;
 
-    virtual std::vector<OperationCondition>
-    getOperationConditions(StorageHelper& storageHelper) const;
+    virtual bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const;
 
 	// returns true if operation is allowed in the system
 	virtual bool isAllowed() const;

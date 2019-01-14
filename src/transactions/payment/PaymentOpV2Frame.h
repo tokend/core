@@ -10,13 +10,6 @@ namespace stellar {
 
         PaymentOpV2 const &mPayment;
 
-        std::unordered_map<AccountID, CounterpartyDetails>
-        getCounterpartyDetails(Database &db, LedgerDelta *delta) const override;
-
-        SourceDetails
-        getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                int32_t ledgerVersion) const override;
-
         bool isRecipientFeeNotRequired();
 
         bool isDestinationFeeValid();
@@ -41,8 +34,9 @@ namespace stellar {
 
         bool isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID);
 
-        std::vector<OperationCondition>
-        getOperationConditions(StorageHelper& storageHelper) const override;
+        bool
+        tryGetOperationConditions(StorageHelper& storageHelper,
+                                  std::vector<OperationCondition>& result) const override;
 
         AccountFrame::pointer
         tryLoadDestinationAccount(StorageHelper& storageHelper) const;

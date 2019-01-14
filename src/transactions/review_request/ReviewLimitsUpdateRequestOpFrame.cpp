@@ -77,7 +77,7 @@ namespace stellar {
         ManageLimitsOpFrame manageLimitsOpFrame(op, opRes, mParentTx);
 
         auto accountHelper = AccountHelper::Instance();
-        auto master = accountHelper->mustLoadAccount(app.getMasterID(), db);
+        auto master = accountHelper->mustLoadAccount(app.getAdminID(), db);
         manageLimitsOpFrame.setSourceAccountPtr(master);
 
         if (!manageLimitsOpFrame.doCheckValid(app) || !manageLimitsOpFrame.doApply(app, delta, ledgerManager))

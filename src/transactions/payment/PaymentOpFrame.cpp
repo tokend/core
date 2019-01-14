@@ -262,8 +262,8 @@ bool PaymentOpFrame::processFees_v1(Application& app, LedgerDelta& delta,
     Database& db)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto commissionBalanceFrame = balanceHelper->loadBalance(app.getCommissionID(),
-        mSourceBalance->getAsset(), app.getDatabase(), &delta);
+    auto commissionBalanceFrame = balanceHelper->loadBalance(app.getAdminID(),
+    		mSourceBalance->getAsset(), app.getDatabase(), &delta);
     if (!commissionBalanceFrame)
     {
         throw runtime_error("Unexpected state: failed to load commission balance for transfer");
@@ -300,7 +300,7 @@ bool PaymentOpFrame::processFees_v2(Application& app, LedgerDelta& delta,
         return true;
     }
 
-    auto balance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getCommissionID(), mSourceBalance->getAsset(), db, delta);
+    auto balance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getAdminID(), mSourceBalance->getAsset(), db, delta);
     if (balance->tryFundAccount(totalFees) != BalanceFrame::Result::SUCCESS)
     {
         app.getMetrics().NewMeter({ "op-payment", "failure", "commission-full-line" }, "operation").Mark();

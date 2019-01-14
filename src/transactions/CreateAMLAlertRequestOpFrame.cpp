@@ -103,7 +103,7 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     const auto referencePtr = xdr::pointer<string64>(new string64(mCreateAMLAlertRequest.reference));
     auto request = ReviewableRequestFrame::createNew(requestID,
                                                           getSourceID(),
-                                                          app.getMasterID(),
+                                                     app.getAdminID(),
                                                           referencePtr,
                                                           ledgerManager.
                                                           getCloseTime());

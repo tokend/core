@@ -223,7 +223,8 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     innerResult().code(ManageOfferResultCode::SUCCESS);
 
-    const BalanceFrame::pointer commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getCommissionID(), mAssetPair->getQuoteAsset(), db, delta);
+    const auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
+            app.getAdminID(), mAssetPair->getQuoteAsset(), db, delta);
 
     AccountManager accountManager(app, db, delta, ledgerManager);
 

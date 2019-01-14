@@ -74,9 +74,7 @@ class MockApplication : public Application
     MOCK_CONST_METHOD0(getNetworkID, Hash const&());
     MOCK_METHOD0(newDB, void());
 
-    MOCK_CONST_METHOD0(getMasterID, AccountID());
-    MOCK_CONST_METHOD0(getCommissionID, AccountID());
-    MOCK_CONST_METHOD0(getOperationalID, AccountID());
+    MOCK_CONST_METHOD0(getAdminID, AccountID());
     MOCK_CONST_METHOD0(getSystemAccounts, std::vector<PublicKey>());
     MOCK_CONST_METHOD0(getBaseExchangeName, std::string());
     MOCK_CONST_METHOD0(getTxExpirationPeriod, uint64());

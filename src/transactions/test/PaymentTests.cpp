@@ -121,7 +121,7 @@ TEST_CASE("payment", "[dep_tx][payment]")
                        paymentFee, true, "", "");
 
         auto commissionBalance = balanceHelper->loadBalance(
-            app.getCommissionID(), assetCode, testManager->getDB(), nullptr);
+            app.getAdminID(), assetCode, testManager->getDB(), nullptr);
         REQUIRE(!!commissionBalance);
         REQUIRE(commissionBalance->getAmount() == fixedFee * 2);
     }

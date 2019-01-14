@@ -27,7 +27,7 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(withdrawalRequest->balance, mTestManager->getDB());
     auto assetCode = balanceBeforeTx->getAsset();
     assetBeforeTx = AssetHelperLegacy::Instance()->loadAsset(assetCode, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                              assetCode, testManager->getDB(),
                                                                              nullptr);
 }

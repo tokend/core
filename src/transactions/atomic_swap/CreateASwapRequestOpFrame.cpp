@@ -124,7 +124,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-                                                          app.getMasterID(), nullptr,
+                                                          app.getAdminID(), nullptr,
                                                           ledgerManager.getCloseTime());
 
     auto& requestEntry = requestFrame->getRequestEntry();

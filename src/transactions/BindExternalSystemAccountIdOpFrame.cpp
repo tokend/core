@@ -16,41 +16,15 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-std::unordered_map<AccountID, CounterpartyDetails>
-BindExternalSystemAccountIdOpFrame::getCounterpartyDetails(
-    Database& db, LedgerDelta* delta) const
-{
-    // no counterparties
-    return std::unordered_map<AccountID, CounterpartyDetails>();
-}
-
-SourceDetails
-BindExternalSystemAccountIdOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
-{
-    std::vector<AccountType> allowedSourceAccounts;
-    allowedSourceAccounts = { AccountType::GENERAL, AccountType::NOT_VERIFIED, AccountType::SYNDICATE,
-                              AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR,
-                              AccountType::VERIFIED};
-    return SourceDetails(allowedSourceAccounts, mSourceAccount->getLowThreshold(),
-                         static_cast<int32_t >(SignerType::BALANCE_MANAGER),
-                         static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
-}
-
-std::vector<OperationCondition>
-BindExternalSystemAccountIdOpFrame::getOperationConditions(StorageHelper& sh) const
+bool
+BindExternalSystemAccountIdOpFrame::tryGetOperationConditions(StorageHelper& sh,
+                                  std::vector<OperationCondition>& result) const
 {
     AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
-    std::string poolAction = "bind";
 
-    AccountRuleResource externalAccountResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID);
-    std::string externalAccountAction = "manage";
+    result.emplace_back(poolResource, "bind", mSourceAccount);
 
-    // maybe here use method which will load Accounts
-
-    return {{poolResource, poolAction, mSourceAccount},
-            {externalAccountResource, externalAccountAction, mSourceAccount}};
+    return true;
 }
 
 BindExternalSystemAccountIdOpFrame::BindExternalSystemAccountIdOpFrame(

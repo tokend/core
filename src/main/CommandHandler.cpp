@@ -448,9 +448,7 @@ CommandHandler::info(std::string const& params, std::string& retStr)
     info["ledger"]["age"] = (int)lm.secondsSinceLastLedgerClose();
     info["numPeers"] = (int)mApp.getOverlayManager().getPeers().size();
     info["network"] = mApp.getConfig().NETWORK_PASSPHRASE;
-	info["master_account_id"] = PubKeyUtils::toStrKey(mApp.getMasterID());
-	info["commission_account_id"] = PubKeyUtils::toStrKey(mApp.getCommissionID());
-	info["operational_account_id"] = PubKeyUtils::toStrKey(mApp.getOperationalID());
+	info["admin_account_id"] = PubKeyUtils::toStrKey(mApp.getAdminID());
     info["base_exchange_name"] = mApp.getConfig().BASE_EXCHANGE_NAME;
 
     auto assetHelper = AssetHelperLegacy::Instance();

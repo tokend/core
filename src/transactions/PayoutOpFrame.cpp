@@ -38,12 +38,6 @@ PayoutOpFrame::getSourceAccountDetails(
                          static_cast<int32_t>(SignerType::BALANCE_MANAGER));
 }
 
-std::vector<OperationCondition>
-PayoutOpFrame::getOperationConditions(StorageHelper &storageHelper) const
-{
-
-}
-
 Fee
 PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
                             uint64_t precisionStep, Database& db)

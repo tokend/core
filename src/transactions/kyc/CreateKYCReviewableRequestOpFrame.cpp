@@ -148,7 +148,7 @@ namespace stellar {
         auto reference = getReference();
         const auto referencePtr = xdr::pointer<string64>(new string64(reference));
         auto requestFrame = ReviewableRequestFrame::createNew(delta, updateKYCRequestData.accountToUpdateKYC,
-                                                              app.getMasterID(),
+                                                              app.getAdminID(),
                                                               referencePtr, ledgerManager.getCloseTime());
 
         auto requestHelper = ReviewableRequestHelper::Instance();

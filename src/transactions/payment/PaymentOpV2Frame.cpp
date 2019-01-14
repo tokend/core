@@ -22,60 +22,35 @@ namespace stellar {
 
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    PaymentOpV2Frame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        // there are no restrictions for counterparty to receive payment on current stage,
-        // so no need to load it.
-        return {};
-    }
-
-    SourceDetails
-    PaymentOpV2Frame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const {
-        int32_t signerType = static_cast<int32_t >(SignerType::BALANCE_MANAGER);
-        switch (mSourceAccount->getAccountType()) {
-            case AccountType::OPERATIONAL:
-                signerType = static_cast<int32_t >(SignerType::OPERATIONAL_BALANCE_MANAGER);
-                break;
-            case AccountType::COMMISSION:
-                signerType = static_cast<int32_t >(SignerType::COMMISSION_BALANCE_MANAGER);
-                break;
-            default:
-                break;
-        }
-
-        std::vector<AccountType> allowedAccountTypes = {AccountType::NOT_VERIFIED, AccountType::GENERAL,
-                                                        AccountType::OPERATIONAL, AccountType::COMMISSION,
-                                                        AccountType::SYNDICATE, AccountType::EXCHANGE,
-                                                        AccountType::ACCREDITED_INVESTOR,
-                                                        AccountType::INSTITUTIONAL_INVESTOR,
-                                                        AccountType::VERIFIED};
-
-        return SourceDetails(allowedAccountTypes, mSourceAccount->getMediumThreshold(), signerType,
-                             static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
-                             static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
-    }
-
-    std::vector<OperationCondition>
-    PaymentOpV2Frame::getOperationConditions(StorageHelper& storageHelper) const
+    bool
+    PaymentOpV2Frame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                        std::vector<OperationCondition>& result) const
     {
         auto& balanceHelper = storageHelper.getBalanceHelper();
         auto senderBalanceFrame = balanceHelper.loadBalance(mPayment.sourceBalanceID);
         if (!senderBalanceFrame)
         {
-            return {{AccountRuleResource(LedgerEntryType::ANY), "*", nullptr}};
+            mResult.code(OperationResultCode::opNO_BALANCE);
+            return false;
+        }
+
+        auto destinationAccountFrame = tryLoadDestinationAccount(storageHelper);
+        if (!destinationAccountFrame)
+        {
+            return false;
         }
 
         auto& assetHelper = storageHelper.getAssetHelper();
         auto assetFrame = assetHelper.mustLoadAsset(senderBalanceFrame->getAsset());
 
         AccountRuleResource resource(LedgerEntryType::ASSET);
-        resource.asset().assetType = assetFrame->getAsset().type; // add asset type
+        resource.asset().assetType = assetFrame->getType();
         resource.asset().assetCode = assetFrame->getCode();
 
-        auto destinationAccountFrame = tryLoadDestinationAccount(storageHelper);
+        result.emplace_back(resource, "send", mSourceAccount);
+        result.emplace_back(resource, "receive", destinationAccountFrame);
 
-        return {{resource, "send", mSourceAccount}, {resource, "receive", destinationAccountFrame}};
+        return true;
     }
 
     AccountFrame::pointer
@@ -94,6 +69,7 @@ namespace stellar {
                 auto destinationBalanceFrame = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
                 if (!destinationBalanceFrame)
                 {
+                    mResult.code(OperationResultCode::opNO_BALANCE);
                     return nullptr;
                 }
 
@@ -104,7 +80,14 @@ namespace stellar {
                 throw std::runtime_error("Unexpected destination type on payment v2 when load account");
         }
 
-        return storageHelper.getAccountHelper()->loadAccount(accountID, storageHelper.getDatabase());
+        auto account = storageHelper.getAccountHelper()->loadAccount(accountID, storageHelper.getDatabase());
+        if (!account)
+        {
+            mResult.code(OperationResultCode::opNO_COUNTERPARTY);
+            return nullptr;
+        }
+
+        return account;
     }
 
     bool PaymentOpV2Frame::processTransfer(AccountManager &accountManager, AccountFrame::pointer payer,
@@ -330,7 +313,7 @@ namespace stellar {
                                       PaymentFeeType::OUTGOING, db, ledgerManager);
 
         if (!processTransferFee(accountManager, sourceAccount, sourceBalance, mPayment.feeData.sourceFee, sourceFee,
-                                app.getCommissionID(), db, delta, false, sourceSentUniversal)) {
+                                app.getAdminID(), db, delta, false, sourceSentUniversal)) {
             return false;
         }
 
@@ -349,7 +332,7 @@ namespace stellar {
             uint64_t destFeeUniversalAmount = 0;
 
             if (!processTransferFee(accountManager, destFeePayer, destFeePayerBalance, mPayment.feeData.destinationFee,
-                                    destFee, app.getCommissionID(), db, delta, true, destFeeUniversalAmount)) {
+                                    destFee, app.getAdminID(), db, delta, true, destFeeUniversalAmount)) {
                 return false;
             }
 

@@ -163,7 +163,7 @@ TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
     }
 
     auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
-        app.getCommissionID(), txFeeAssetCode, db, *delta);
+        app.getAdminID(), txFeeAssetCode, db, *delta);
 
     const BalanceFrame::Result sourceChargeResult = sourceBalance->tryCharge(totalFeeAmount);
     if (sourceChargeResult != BalanceFrame::Result::SUCCESS)

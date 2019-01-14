@@ -8,17 +8,18 @@ class StorageHelper;
 
 class AccountRuleVerifierImpl : public AccountRuleVerifier {
 private:
-    StorageHelper& mStorageHelper;
-
     bool
-    isAllowed(OperationCondition& operationCondition) override;
+    isAllowed(OperationCondition& operationCondition,
+              StorageHelper& storageHelper) override;
 
     bool
     isResourceMatches(AccountRuleResource const conditionResource,
                       AccountRuleResource const actualResource);
 
 public:
-    AccountRuleVerifierImpl(StorageHelper& storageHelper);
+    AccountRuleVerifierImpl()
+    {
+    }
 
     virtual ~AccountRuleVerifierImpl()
     {

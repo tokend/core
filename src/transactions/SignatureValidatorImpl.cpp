@@ -62,7 +62,7 @@ vector<Signer> SignatureValidatorImpl::getSigners(Application& app, Database& db
         isSystemAccountType(account.getAccountType()))
     {
         auto accountHelper = AccountHelper::Instance();
-        auto master = accountHelper->loadAccount(app.getMasterID(), db);
+        auto master = accountHelper->loadAccount(app.getAdminID(), db);
         assert(master);
         return getSigners(app, db, *master);
     }

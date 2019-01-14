@@ -25,9 +25,6 @@ class PayoutOpFrame : public OperationFrame
                             CounterpartyDetails> counterpartiesDetails,
                             int32_t ledgerVersion) const override;
 
-    std::vector<OperationCondition>
-    getOperationConditions(StorageHelper& storageHelper) const override;
-
     Fee
     getActualFee(AssetCode const& asset, uint64_t amount, uint64_t precisionStep, Database& db);
 

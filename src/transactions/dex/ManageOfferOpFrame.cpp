@@ -57,57 +57,38 @@ std::string ManageOfferOpFrame::getInnerResultCodeAsStr()
     return xdr::xdr_traits<ManageOfferResultCode>::enum_name(code);
 }
 
-std::unordered_map<AccountID, CounterpartyDetails> ManageOfferOpFrame::
-getCounterpartyDetails(Database& db, LedgerDelta* delta) const
-{
-    // no counterparties
-    return {};
-}
-
-SourceDetails ManageOfferOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                          int32_t ledgerVersion)
-const
-{
-    uint32_t allowedBlockedReasons = 0;
-    if (mManageOffer.offerID != 0 && mManageOffer.amount == 0)
-        allowedBlockedReasons = getAnyBlockReason();
-    return SourceDetails({
-                             AccountType::GENERAL, AccountType::NOT_VERIFIED,
-                             AccountType::SYNDICATE, AccountType::EXCHANGE, AccountType::VERIFIED,
-                             AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR
-                         },
-                         mSourceAccount->getMediumThreshold(),
-                         static_cast<int32_t>(SignerType::BALANCE_MANAGER),
-                         allowedBlockedReasons);
-}
-
-std::vector<OperationCondition>
-ManageOfferOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+bool
+ManageOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                              std::vector<OperationCondition> &result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    std::vector<OperationCondition> result;
-    std::vector<BalanceID> balances{mManageOffer.baseBalance, mManageOffer.quoteBalance};
-    for (auto& balanceID : balances)
+    auto baseBalance = balanceHelper.loadBalance(mManageOffer.baseBalance);
+    if (!baseBalance)
     {
-        auto balance = balanceHelper.loadBalance(balanceID);
-        if (!balance)
-        {
-            return {{AccountRuleResource(), "", nullptr}};
-        }
-
-        auto quoteAsset = assetHelper.mustLoadAsset(balance->getAsset());
-
-        AccountRuleResource resource(LedgerEntryType::ASSET);
-        resource.asset().assetType = quoteAsset->getAsset().type;
-        resource.asset().assetCode = quoteAsset->getCode();
-
-        result.emplace_back(resource, "exchange", mSourceAccount);
+        mResult.code(OperationResultCode::opNO_BALANCE);
+        return false;
     }
 
-    result.emplace_back(AccountRuleResource(LedgerEntryType::OFFER_ENTRY), "manage", mSourceAccount);
+    auto quoteBalance = balanceHelper.loadBalance(mManageOffer.quoteBalance);
+    if (!quoteBalance)
+    {
+        mResult.code(OperationResultCode::opNO_BALANCE);
+        return false;
+    }
 
-    return result;
+    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
+    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+
+    AccountRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    resource.offer().baseAssetCode = baseAsset->getCode();
+    resource.offer().quoteAssetCode = quoteAsset->getCode();
+    resource.offer().baseAssetType = baseAsset->getType();
+    resource.offer().quoteAssetType = quoteAsset->getType();
+
+    result.emplace_back(resource, "manage", mSourceAccount);
+
+    return true;
 }
 }

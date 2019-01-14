@@ -24,4 +24,11 @@ RuleVerifier::isAssetTypeMatches(uint64_t const expectedType,
     return (expectedType == actualType) || (actualType == UINT64_MAX);
 }
 
+bool
+RuleVerifier::isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const
+{
+    return isAssetTypeMatches(expectedAsset.type, actualAsset.type) &&
+           isStringMatches(expectedAsset.code, actualAsset.code);
+}
+
 } // namespace stellar

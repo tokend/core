@@ -92,7 +92,8 @@ createNewUpdateRequest(Application& app, LedgerManager& lm, Database& db, Ledger
         auto reference = getReference(sale);
         referencePtr = xdr::pointer<string64>(new string64(reference));
     }
-    auto request = ReviewableRequestFrame::createNew(mCreateSaleCreationRequest.requestID, getSourceID(), app.getMasterID(),
+    auto request = ReviewableRequestFrame::createNew(mCreateSaleCreationRequest.requestID, getSourceID(),
+                                                     app.getAdminID(),
         referencePtr, closedAt);
     auto& requestEntry = request->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::SALE);

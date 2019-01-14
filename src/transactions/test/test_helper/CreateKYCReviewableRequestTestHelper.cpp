@@ -23,7 +23,7 @@ namespace stellar {
         CreateKYCRequestTestHelper::createReviewableChangeKYCRequest(UpdateKYCRequest request, uint64 requestID) {
             auto referencePtr = getReference();
             auto frame = ReviewableRequestFrame::createNew(requestID, request.accountToUpdateKYC,
-                                                           mTestManager->getApp().getMasterID(),
+                                                           mTestManager->getApp().getAdminID(),
                                                            referencePtr,
                                                            mTestManager->getLedgerManager().getCloseTime());
             frame->mEntry.data.reviewableRequest().body.updateKYCRequest() = request;

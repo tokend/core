@@ -19,23 +19,16 @@ namespace stellar
 {
 using xdr::operator==;
 
-
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateWithdrawalRequestOpFrame::getCounterpartyDetails(
-    Database& db, LedgerDelta* delta) const
-{
-    // source account is only counterparty
-    return {};
-}
-
-std::vector<OperationCondition>
-CreateWithdrawalRequestOpFrame::getOperationConditions(StorageHelper &storageHelper) const
+bool
+CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                                          std::vector<OperationCondition>& result) const
 {
 
     auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
     if (!balance)
     {
-        return {{AccountRuleResource(), "", nullptr}};
+        mResult.code(OperationResultCode::opNO_BALANCE);
+        return false;
     }
 
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
@@ -44,21 +37,9 @@ CreateWithdrawalRequestOpFrame::getOperationConditions(StorageHelper &storageHel
     assetResource.asset().assetType = asset->getAsset().type;
     assetResource.asset().assetCode = asset->getCode();
 
-    return {{assetResource, "withdraw", mSourceAccount}};
-}
+    result.emplace_back(assetResource, "withdraw", mSourceAccount);
 
-SourceDetails CreateWithdrawalRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                      int32_t ledgerVersion)
-const
-{
-    return SourceDetails({
-                             AccountType::GENERAL, AccountType::SYNDICATE,
-                             AccountType::OPERATIONAL, AccountType::EXCHANGE, AccountType::NOT_VERIFIED,
-                             AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR,
-                             AccountType::VERIFIED
-                         }, mSourceAccount->getMediumThreshold(),
-                         static_cast<int32_t>(SignerType::BALANCE_MANAGER),
-                         static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS));
+    return true;
 }
 
 BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelper &storageHelper) const

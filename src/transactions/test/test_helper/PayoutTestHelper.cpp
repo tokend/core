@@ -44,7 +44,7 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
     BalanceFrame::pointer commissionBalanceBefore;
     if (ownerBalanceBefore)
         commissionBalanceBefore = balanceHelper->
-            loadBalance(mTestManager->getApp().getCommissionID(),
+            loadBalance(mTestManager->getApp().getAdminID(),
                         ownerBalanceBefore->getAsset(), db);
 
     auto assetHoldersBefore = balanceHelper->loadAssetHolders(asset,
@@ -106,7 +106,7 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
     BalanceFrame::pointer commissionBalanceAfter;
     if (ownerBalanceBefore != nullptr)
         commissionBalanceAfter = balanceHelper->
-            loadBalance(mTestManager->getApp().getCommissionID(),
+            loadBalance(mTestManager->getApp().getAdminID(),
                         ownerBalanceBefore->getAsset(), db);
 
     uint64_t commissionAmountBefore = 0;

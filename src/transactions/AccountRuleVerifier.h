@@ -9,7 +9,8 @@ namespace stellar
 class AccountRuleVerifier : public RuleVerifier
 {
 public:
-    virtual bool isAllowed(OperationCondition& operationCondition) = 0;
+    virtual bool isAllowed(OperationCondition& operationCondition,
+                           StorageHelper& storageHelper) = 0;
 };
 
 } // namespace stellar

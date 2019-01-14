@@ -485,7 +485,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
 
-        auto commissionBalance = BalanceHelperLegacy::Instance()->loadBalance(app.getCommissionID(),  quoteAsset, db, nullptr);
+        auto commissionBalance = BalanceHelperLegacy::Instance()->loadBalance(app.getAdminID(),  quoteAsset, db, nullptr);
         REQUIRE(!!commissionBalance);
         REQUIRE(commissionBalance->getAmount() == feeToPay + feeToPayBySyndicate);
     }

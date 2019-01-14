@@ -185,7 +185,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
     }
 
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-                                                          app.getMasterID(), nullptr,
+                                                          app.getAdminID(), nullptr,
                                                           ledgerManager.getCloseTime());
     auto& requestEntry = requestFrame->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);

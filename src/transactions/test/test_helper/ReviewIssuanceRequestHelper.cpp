@@ -32,7 +32,7 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
     issuanceRequest = std::make_shared<IssuanceRequest>(request->getRequestEntry().body.issuanceRequest());
     assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                        issuanceRequest->asset, testManager->getDB(),
                                                                        nullptr);    
 }
@@ -44,7 +44,7 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
     issuanceRequest = request;
     assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                        issuanceRequest->asset, testManager->getDB(),
                                                                        nullptr);
 }
@@ -80,7 +80,7 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
                                               assetFrameAfterTx->getMinimumAmount()));
         totalFee += feeFrame->getFee().fixedFee;
         REQUIRE(!!commissionBalanceBeforeTx);
-        auto commissionBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getCommissionID(),
+        auto commissionBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getAdminID(),
                                                                                issuanceRequest->asset, mTestManager->getDB(),
                                                                                nullptr);
         REQUIRE(!!commissionBalanceAfterTx);

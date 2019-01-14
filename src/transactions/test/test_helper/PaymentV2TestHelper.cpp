@@ -79,7 +79,7 @@ namespace stellar {
             }
 
             std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
-            balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), commissionBalancesBeforeTx, db);
+            balanceHelper->loadBalances(mTestManager->getApp().getAdminID(), commissionBalancesBeforeTx, db);
 
             std::unordered_map<std::string, BalanceFrame::pointer> commissionBalancesBeforeTxByAsset;
             for (auto& balanceFrame : commissionBalancesBeforeTx)
@@ -160,7 +160,7 @@ namespace stellar {
                 if (commissionBalancesBeforeTxByAsset.count(item.asset) > 0)
                     commissionBalanceBeforeTx = commissionBalancesBeforeTxByAsset[item.asset];
 
-                auto commissionBalanceAfterTx = balanceHelper->loadBalance(mTestManager->getApp().getCommissionID(),
+                auto commissionBalanceAfterTx = balanceHelper->loadBalance(mTestManager->getApp().getAdminID(),
                                                                            item.asset, db, nullptr);
                 if (!commissionBalanceBeforeTx) {
                     REQUIRE(commissionBalanceAfterTx->getAmount() == item.amountDelta);
