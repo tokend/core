@@ -64,7 +64,7 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
     auto& db = storageHelper.getDatabase();
     auto delta = storageHelper.getLedgerDelta();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    bool isRequestReferenceCheckNeeded = mManageAsset.requestID == 0 && ledgerManager.shouldUse(LedgerVersion::ASSET_UPDATE_CHECK_REFERENCE_EXISTS);
+    bool isRequestReferenceCheckNeeded = mManageAsset.requestID == 0;
     if (isRequestReferenceCheckNeeded && reviewableRequestHelper->exists(db, getSourceID(), mAssetUpdateRequest.code)) {
         innerResult().code(ManageAssetResultCode::REQUEST_ALREADY_EXISTS);
         return false;

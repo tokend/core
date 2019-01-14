@@ -248,12 +248,7 @@ bool PaymentOpFrame::isAllowedToTransfer(Database& db, AssetFrame::pointer asset
 
 bool PaymentOpFrame::processFees(Application& app, LedgerManager& lm, LedgerDelta& delta, Database& db)
 {
-    if (lm.shouldUse(LedgerVersion::AUTO_CREATE_COMMISSION_BALANCE_ON_TRANSFER))
-    {
-        return processFees_v2(app, delta, db);
-    }
-
-    return processFees_v1(app, delta, db);
+	return processFees_v2(app, delta, db);
 }
 
 bool PaymentOpFrame::processFees_v1(Application& app, LedgerDelta& delta,
