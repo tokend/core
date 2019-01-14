@@ -44,7 +44,7 @@ TEST_CASE("create KYC request", "[tx][create_KYC_request]") {
     ManageKeyValueTestHelper manageKVHelper(testManager);
 
     longstring kycData = "{}";
-    uint32 kycLevel = 2;
+    uint32 kycLevel = 0; // FIXME ???
     uint64 requestID = 0;
     uint32 tasks = 0;
     ReviewKYCRequestTestHelper reviewKYCRequestTestHelper(testManager);
