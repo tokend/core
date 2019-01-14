@@ -105,10 +105,7 @@ SignatureValidatorImpl::Result SignatureValidatorImpl::check(
                 PubKeyUtils::verifySig(*it, sig.signature, mContentHash))
             {
                 signaturesRequired--;
-                if (ledgerVersion >= LedgerVersion::CHANGE_ASSET_ISSUER_BAD_AUTH_EXTRA_FIXED)
-                {
-                    mUsedSignatures[i] = true;
-                }
+                mUsedSignatures[i] = true;
 
                 if (signaturesRequired == 0)
                 {

@@ -121,11 +121,7 @@ AccountFrame::getLowThreshold() const
 uint32
 AccountFrame::getKYCLevel() const
 {
-    if (mAccountEntry.ext.v() == LedgerVersion::USE_KYC_LEVEL)
-    {
-        return mAccountEntry.ext.kycLevel();
-    }
-    else if (mAccountEntry.ext.v() ==
+    if (mAccountEntry.ext.v() ==
              LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
     {
         return mAccountEntry.ext.accountEntryExt().kycLevel;
@@ -138,11 +134,7 @@ AccountFrame::getKYCLevel() const
 void
 AccountFrame::setKYCLevel(uint32 kycLevel)
 {
-    if (mAccountEntry.ext.v() == LedgerVersion::USE_KYC_LEVEL)
-    {
-        mAccountEntry.ext.kycLevel() = kycLevel;
-    }
-    else if (mAccountEntry.ext.v() ==
+    if (mAccountEntry.ext.v() ==
              LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
     {
         mAccountEntry.ext.accountEntryExt().kycLevel = kycLevel;

@@ -102,14 +102,12 @@ SourceDetails PaymentOpFrame::getSourceAccountDetails(std::unordered_map<Account
 	default:
 		break;
 	}
-        std::vector<AccountType> allowedAccountTypes;
-    if (ledgerVersion >= int32_t(LedgerVersion::USE_KYC_LEVEL))
-    {
-        allowedAccountTypes = { AccountType::NOT_VERIFIED, AccountType::GENERAL, AccountType::OPERATIONAL,
-                                AccountType::COMMISSION, AccountType::SYNDICATE, AccountType::EXCHANGE,
-                                AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR,
-                                AccountType::VERIFIED};
-    }
+	std::vector<AccountType> allowedAccountTypes;
+	allowedAccountTypes = { AccountType::NOT_VERIFIED, AccountType::GENERAL, AccountType::OPERATIONAL,
+							AccountType::COMMISSION, AccountType::SYNDICATE, AccountType::EXCHANGE,
+							AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR,
+							AccountType::VERIFIED};
+
 	return SourceDetails(allowedAccountTypes, mSourceAccount->getMediumThreshold(), signerType,
 						 static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
                          static_cast<uint32_t>(BlockReasons::WITHDRAWAL));

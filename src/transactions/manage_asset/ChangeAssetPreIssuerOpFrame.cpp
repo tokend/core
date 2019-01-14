@@ -44,11 +44,6 @@ SourceDetails ChangeAssetPreIssuerOpFrame::getSourceAccountDetails(
         signers.push_back(assetFrame->getPreIssuedAssetSigner());
     }
 
-    if (ledgerVersion >= int32_t(LedgerVersion::ASSET_PREISSUER_MIGRATION) && ledgerVersion < int32_t(LedgerVersion::ASSET_PREISSUER_MIGRATED))
-    {
-        signers.push_back(assetFrame->getOwner());
-    }
-
     return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, 1, 0, 0, signers);
 }
 
