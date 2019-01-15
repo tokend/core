@@ -310,85 +310,8 @@ bool
 PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                         LedgerManager& ledgerManager)
 {
-    if (ledgerManager.shouldUse(LedgerVersion::USE_ONLY_PAYMENT_V2))
-    {
-        innerResult().code(PaymentResultCode::PAYMENT_V1_NO_LONGER_SUPPORTED);
-        return false;
-    }
-
-    app.getMetrics().NewMeter({"op-payment", "success", "apply"}, "operation").Mark();
-    innerResult().code(PaymentResultCode::SUCCESS);
-    
-    Database& db = ledgerManager.getDatabase();
-    LedgerDelta& delta = *storageHelper.getLedgerDelta();
-    
-	if (!tryLoadBalances(app, db, delta))
-	{
-		// failed to load balances
-		return false;
-	}
-
-	auto assetHelper = AssetHelperLegacy::Instance();
-    auto assetFrame = assetHelper->loadAsset(mSourceBalance->getAsset(), db);
-    assert(assetFrame);
-    if (!isAllowedToTransfer(db, assetFrame) ||
-        AccountManager::isAllowedToReceive(mPayment.destinationBalanceID, db) != AccountManager::SUCCESS)
-    {
-        app.getMetrics().NewMeter({ "op-payment", "failure", "not-allowed-by-asset-policy" }, "operation").Mark();
-        innerResult().code(PaymentResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
-	if (!checkFees(app, db, delta))
-	{
-		return false;
-	}
-
-    AccountManager accountManager(app, db, delta, ledgerManager);
-
-    uint64 paymentID = delta.getHeaderFrame().generateID(LedgerEntryType::PAYMENT_REQUEST);
-
-    if (mPayment.reference.size() != 0)
-    {
-		AccountID sourceAccountID = mSourceAccount->getID();
-		
-		auto referenceHelper = ReferenceHelper::Instance();
-        if (referenceHelper->exists(db, mPayment.reference, sourceAccountID))
-        {
-            app.getMetrics().NewMeter({ "op-payment", "failure", "reference-duplication" }, "operation").Mark();
-            innerResult().code(PaymentResultCode::REFERENCE_DUPLICATION);
-            return false;
-        }
-        createReferenceEntry(mPayment.reference, storageHelper);
-    }
-
-    int64 sourceSentUniversal;
-    auto transferResult = accountManager.processTransfer(mSourceAccount, mSourceBalance,
-        sourceSent, sourceSentUniversal);
-
-    if (!processBalanceChange(app, transferResult))
-        return false;
-
-	if (mDestBalance->tryFundAccount(destReceived) != BalanceFrame::Result::SUCCESS)
-	{
-		app.getMetrics().NewMeter({ "op-payment", "failure", "full-line" }, "operation").Mark();
-		innerResult().code(PaymentResultCode::LINE_FULL);
-		return false;
-	}
-
-	if (!processFees(app, ledgerManager, delta, db))
-	{
-            return false;
-	}
-
-    innerResult().paymentResponse().destination = mDestBalance->getAccountID();
-    innerResult().paymentResponse().asset = mDestBalance->getAsset();
-    EntryHelperProvider::storeChangeEntry(delta, db, mSourceBalance->mEntry);
-	EntryHelperProvider::storeChangeEntry(delta, db, mDestBalance->mEntry);
-
-    innerResult().paymentResponse().paymentID = paymentID;
-
-    return true;
+	innerResult().code(PaymentResultCode::PAYMENT_V1_NO_LONGER_SUPPORTED);
+	return false;
 }
 
 bool
