@@ -118,16 +118,7 @@ bool CheckSaleStateOpFrame::handleCancel(SaleFrame::pointer sale, LedgerManager&
 
 void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, LedgerManager& lm, Database& db, LedgerDelta& delta, BalanceFrame::pointer balanceBefore){
     auto balanceAfter = BalanceHelperLegacy::Instance()->loadBalance(sale->getBaseBalanceID(), db);
-    if(!lm.shouldUse(LedgerVersion::ALLOW_CLOSE_SALE_WITH_NON_ZERO_BALANCE)) {
-        
-        if (balanceAfter->getAmount() > ONE)
-        {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: after sale close issuer endup with balance > ONE: " << sale->getID();
-            throw runtime_error("Unexpected state: after sale close issuer endup with balance > ONE");
-        }
-        return;
-    }
-    
+
     auto balanceDelta = safeDelta(balanceBefore->getAmount(), balanceAfter->getAmount());
     if (balanceDelta > ONE) {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -246,33 +237,7 @@ void CheckSaleStateOpFrame::updateMaxIssuance(const SaleFrame::pointer sale,
     LedgerDelta& delta, Database& db, LedgerManager& lm)
 {
     // no need to update max issuance
-    if (lm.shouldUse(LedgerVersion::FIX_UPDATE_MAX_ISSUANCE))
-    {
-        return;
-    }
-
-    auto baseAsset = AssetHelperLegacy::Instance()->loadAsset(sale->getBaseAsset(), db, &delta);
-
-    uint64_t updatedMaxIssuance = 0;
-
-    if (lm.shouldUse(LedgerVersion::FIX_SET_SALE_STATE_AND_CHECK_SALE_STATE_OPS))
-    {
-        uint64_t issued = baseAsset->getIssued();
-        uint64_t pendingIssuance = baseAsset->getPendingIssuance();
-        if (!safeSum(issued, pendingIssuance, updatedMaxIssuance))
-        {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: overflow on new max issuance amount calculation: "
-                                                      << xdr::xdr_to_string(sale->getSaleEntry());
-            throw runtime_error("Unexpected state: overflow on new max issuance amount calculation");
-        }
-    }
-    else
-    {
-        updatedMaxIssuance = baseAsset->getIssued();
-    }
-
-    baseAsset->setMaxIssuance(updatedMaxIssuance);
-    AssetHelperLegacy::Instance()->storeChange(delta, db, baseAsset->mEntry);
+    return;
 }
 
 void CheckSaleStateOpFrame::updateAvailableForIssuance(const SaleFrame::pointer sale, LedgerDelta &delta,
