@@ -100,14 +100,6 @@ ReviewSaleCreationRequestOpFrame::loadAsset(LedgerManager& ledgerManager,
 {
     AssetFrame::pointer retAsset;
 
-    if (!ledgerManager.shouldUse(
-            LedgerVersion::ALLOW_TO_UPDATE_VOTING_SALES_AS_PROMOTION))
-    {
-        retAsset =
-            AssetHelperLegacy::Instance()->loadAsset(code, requestor, db, delta);
-        return retAsset;
-    }
-
     auto requestorFrame =
         AccountHelper::Instance()->mustLoadAccount(requestor, db);
 

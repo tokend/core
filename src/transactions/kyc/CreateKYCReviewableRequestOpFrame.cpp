@@ -174,13 +174,7 @@ namespace stellar {
         innerResult().success().requestID = requestFrame->getRequestID();
         innerResult().success().fulfilled = false;
 
-        bool canAutoApprove = requestFrame->canBeFulfilled(ledgerManager);
-
-        if (!ledgerManager.shouldUse(LedgerVersion::FIX_CREATE_KYC_REQUEST_AUTO_APPROVE))
-            canAutoApprove = canAutoApprove &&
-                             mSourceAccount->getAccountType() == AccountType::MASTER;
-
-        if (canAutoApprove)
+        if (requestFrame->canBeFulfilled(ledgerManager))
             tryAutoApprove(db, delta, app, requestFrame);
 
         return true;

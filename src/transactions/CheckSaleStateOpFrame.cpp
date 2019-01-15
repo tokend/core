@@ -94,11 +94,11 @@ void CheckSaleStateOpFrame::issueBaseTokens(const SaleFrame::pointer sale, const
         throw runtime_error("Unexpected state; issuance request was not fulfilled on check sale state");
     }
 
-    if (action == RESTRICT || (!lm.shouldUse(LedgerVersion::ALLOW_TO_ISSUE_AFTER_SALE)))
+    if (action == RESTRICT)
     {
         restrictIssuanceAfterSale(sale, delta, db, lm);
     }
-    if (action == DESTROY)
+    else if (action == DESTROY)
     {
         updateAvailableForIssuance(sale, delta, db);
     }
@@ -126,10 +126,6 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
             << sale->getID();
         throw runtime_error(
             "Unexpected state: after sale close issuer endup with balance different from before sale");
-    }
-
-    if (!lm.shouldUse(LedgerVersion::ALLOW_TO_ISSUE_AFTER_SALE)) {
-        return;
     }
 
     // return delta back to the asset
