@@ -145,18 +145,16 @@ LedgerManagerImpl::getStateHuman() const
 }
 
 uint64_t
-LedgerManagerImpl::createAdminRole(LedgerDelta& delta)
+LedgerManagerImpl::createAdminRole(StorageHelper& storageHelper)
 {
-    StorageHelperImpl storageHelperImpl(getDatabase(), &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
-    storageHelper.begin();
+    auto& ledgerHeader = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
     AccountRuleEntry adminRule;
     adminRule.resource = AccountRuleResource(LedgerEntryType::ANY);
     adminRule.action = "*";
     adminRule.details = "{}";
     adminRule.isForbid = false;
-    adminRule.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_RULE);
+    adminRule.id = ledgerHeader.generateID(LedgerEntryType::ACCOUNT_RULE);
 
     LedgerEntry ledgerRuleEntry;
     ledgerRuleEntry.data.type(LedgerEntryType::ACCOUNT_RULE);
@@ -167,15 +165,13 @@ LedgerManagerImpl::createAdminRole(LedgerDelta& delta)
     AccountRoleEntry adminRole;
     adminRole.ruleIDs = {adminRule.id};
     adminRole.details = "{}";
-    adminRole.id = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_ROLE);
+    adminRole.id = ledgerHeader.generateID(LedgerEntryType::ACCOUNT_ROLE);
 
     LedgerEntry ledgerRoleEntry;
     ledgerRoleEntry.data.type(LedgerEntryType::ACCOUNT_ROLE);
     ledgerRoleEntry.data.accountRole() = adminRole;
 
     storageHelper.getAccountRoleHelper().storeAdd(ledgerRoleEntry);
-
-    storageHelper.commit();
 
     return adminRole.id;
 }
@@ -198,17 +194,20 @@ LedgerManagerImpl::startNewLedger()
 
     LedgerDeltaImpl deltaImpl(genesisHeader, getDatabase());
     LedgerDelta& delta = deltaImpl;
+    StorageHelperImpl storageHelperImpl(getDatabase(), &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.begin();
 
-    LedgerEntry adminAccount;
-    adminAccount.data.type(LedgerEntryType::ACCOUNT);
-    adminAccount.data.account().accountID = mApp.getAdminID();
-    adminAccount.data.account().roleID = createAdminRole(delta);
-    adminAccount.data.account().accountType = AccountType::MASTER;
-    adminAccount.data.account().sequentialID =
-            delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
+    auto adminAccount = std::make_shared<AccountFrame>(mApp.getAdminID());
+    auto& accountEntry = adminAccount->getAccount();
+    accountEntry.accountID = mApp.getAdminID();
+    accountEntry.roleID = createAdminRole(storageHelperImpl);
+    accountEntry.accountType = AccountType::MASTER;
+    accountEntry.sequentialID = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 
-    EntryHelperProvider::storeAddEntry(delta, getDatabase(), adminAccount);
-    delta.commit();
+    // use new account helper, when it will be possible
+    AccountHelper::Instance()->storeAdd(delta, getDatabase(), adminAccount->mEntry);
+    storageHelper.commit();
 
     mCurrentLedger = make_shared<LedgerHeaderFrameImpl>(genesisHeader);
 	

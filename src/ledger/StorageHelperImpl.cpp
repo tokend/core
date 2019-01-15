@@ -55,6 +55,27 @@ StorageHelperImpl::getLedgerDelta() const
     return mLedgerDelta;
 }
 
+LedgerDelta&
+StorageHelperImpl::mustGetLedgerDelta()
+{
+    if (mLedgerDelta != nullptr)
+    {
+        return *mLedgerDelta;
+    }
+
+    throw std::runtime_error("Expected ledger delta to exists");
+}
+const LedgerDelta&
+StorageHelperImpl::mustGetLedgerDelta() const
+{
+    if (mLedgerDelta != nullptr)
+    {
+        return *mLedgerDelta;
+    }
+
+    throw std::runtime_error("Expected ledger delta to exists");
+}
+
 void
 StorageHelperImpl::begin()
 {
@@ -172,16 +193,6 @@ StorageHelperImpl::getExternalSystemAccountIDPoolEntryHelper()
             std::make_unique<ExternalSystemAccountIDPoolEntryHelperImpl>(*this);
     }
     return *mExternalSystemAccountIDPoolEntryHelper;
-}
-AccountHelper*
-StorageHelperImpl::getAccountHelper()
-{
-    if (mAccountHelper == nullptr)
-    {
-
-        mAccountHelper = AccountHelper::Instance();
-    }
-    return mAccountHelper;
 }
 AccountRoleHelper&
 StorageHelperImpl::getAccountRoleHelper()

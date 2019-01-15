@@ -63,7 +63,7 @@ class LedgerManagerImpl : public LedgerManager
     void advanceLedgerPointers();
 
     // returns roleID
-    uint64_t createAdminRole(LedgerDelta& delta);
+    uint64_t createAdminRole(StorageHelper& storageHelper);
 
     State mState;
 

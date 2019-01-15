@@ -80,7 +80,7 @@ namespace stellar {
                 throw std::runtime_error("Unexpected destination type on payment v2 when load account");
         }
 
-        auto account = storageHelper.getAccountHelper()->loadAccount(accountID, storageHelper.getDatabase());
+        auto account = AccountHelper::Instance()->loadAccount(accountID, storageHelper.getDatabase());
         if (!account)
         {
             mResult.code(OperationResultCode::opNO_COUNTERPARTY);

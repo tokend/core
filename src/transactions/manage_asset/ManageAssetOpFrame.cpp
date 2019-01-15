@@ -11,6 +11,8 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "main/Application.h"
 #include "ChangeAssetPreIssuerOpFrame.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -37,6 +39,37 @@ SourceDetails ManageAssetOpFrame::getSourceAccountDetails(std::unordered_map<Acc
 {
 	return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
 						 static_cast<int32_t>(SignerType::ASSET_MANAGER));
+}
+
+bool
+ManageAssetOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+											  std::vector<OperationCondition> &result) const
+{
+	AccountRuleResource resource(LedgerEntryType::ASSET);
+	switch (mManageAsset.request.action())
+	{
+		case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
+			resource.asset().assetType = mManageAsset.request.createAssetCreationRequest().createAsset.type;
+			resource.asset().assetCode = mManageAsset.request.createAssetCreationRequest().createAsset.code;
+			result.emplace_back(resource, "manage", mSourceAccount);
+		case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
+		{
+			auto asset = storageHelper.getAssetHelper().loadAsset(
+					mManageAsset.request.createAssetUpdateRequest().updateAsset.code);
+
+			if (!asset)
+			{
+				mResult.code(OperationResultCode::opNO_ASSET);
+				return false;
+			}
+
+			resource.asset().assetType = asset->getType();
+			resource.asset().assetCode = asset->getCode();
+			result.emplace_back(resource, "manage", mSourceAccount);
+		}
+	}
+
+	return true;
 }
 
 ManageAssetOpFrame* ManageAssetOpFrame::makeHelper(Operation const & op, OperationResult & res, TransactionFrame & parentTx)

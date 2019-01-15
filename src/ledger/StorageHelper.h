@@ -27,6 +27,8 @@ class StorageHelper
     virtual const Database& getDatabase() const = 0;
     virtual LedgerDelta* getLedgerDelta() = 0;
     virtual const LedgerDelta* getLedgerDelta() const = 0;
+    virtual LedgerDelta& mustGetLedgerDelta() = 0;
+    virtual const LedgerDelta& mustGetLedgerDelta() const = 0;
 
     virtual void commit() = 0;
     virtual void rollback() = 0;
@@ -42,7 +44,6 @@ class StorageHelper
     getExternalSystemAccountIDHelper() = 0;
     virtual ExternalSystemAccountIDPoolEntryHelper&
     getExternalSystemAccountIDPoolEntryHelper() = 0;
-    virtual AccountHelper* getAccountHelper() = 0;
     virtual AccountRoleHelper& getAccountRoleHelper() = 0;
     virtual AccountRuleHelper& getAccountRuleHelper() = 0;
 };

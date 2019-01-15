@@ -17,6 +17,8 @@ public:
     MOCK_CONST_METHOD0(getDatabase, const Database&());
     MOCK_METHOD0(getLedgerDelta, LedgerDelta*());
     MOCK_CONST_METHOD0(getLedgerDelta, const LedgerDelta*());
+    MOCK_METHOD0(mustGetLedgerDelta, LedgerDelta&());
+    MOCK_CONST_METHOD0(mustGetLedgerDelta, const LedgerDelta&());
     MOCK_METHOD0(commit, void());
     MOCK_METHOD0(rollback, void());
     MOCK_METHOD0(begin, void());

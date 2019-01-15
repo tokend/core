@@ -244,15 +244,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                     createSenderRuleResult.success().ruleID, assetResource, "send", false);
             // write this entry to DB
             manageAccountRuleTestHelper.applyTx(root, ruleEntry, ManageAccountRuleAction::UPDATE);
-            auto newPayer = Account{SecretKey::random(), Salt(1)};
-            createAccountTestHelper.applyTx(CreateAccountTestBuilder()
-                                                    .setSource(root)
-                                                    .setType(AccountType::NOT_VERIFIED)
-                                                    .setToPublicKey(newPayer.key.getPublicKey())
-                                                    .setRoleID(senderAccountRoleID));
-            payerBalance = balanceHelper->loadBalance(newPayer.key.getPublicKey(), paymentAsset, db, nullptr);
-            REQUIRE(!!payerBalance);
-            paymentV2TestHelper.applyPaymentV2Tx(newPayer, payerBalance->getBalanceID(),
+            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
                                                  PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY,

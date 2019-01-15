@@ -18,22 +18,13 @@ ManageAccountRoleOpFrame::ManageAccountRoleOpFrame(Operation const& op,
 {
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-ManageAccountRoleOpFrame::getCounterpartyDetails(Database& db,
-                                                 LedgerDelta* delta) const
+bool
+ManageAccountRoleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                    std::vector<OperationCondition> &result) const
 {
-    // no counterparties
-    return {};
-}
+    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT_ROLE), "manage", mSourceAccount);
 
-SourceDetails
-ManageAccountRoleOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
-{
-    return SourceDetails(
-        getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-        static_cast<int32_t>(SignerType::ACCOUNT_ROLE_PERMISSION_MANAGER));
+    return true;
 }
 
 bool

@@ -41,22 +41,13 @@ ManageAccountRuleOpFrame::doCheckValid(Application& app)
     return isValidEnumValue(mManageAccountRule.data.action());
 }
 
-SourceDetails
-ManageAccountRuleOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ManageAccountRuleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                    std::vector<OperationCondition> &result) const
 {
-    // allow for any user
-    return SourceDetails(
-        getAllAccountTypes(), mSourceAccount->getMediumThreshold(),
-        static_cast<int32_t>(SignerType::ACCOUNT_ROLE_PERMISSION_MANAGER));
-}
+    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT_RULE), "manage", mSourceAccount);
 
-std::unordered_map<AccountID, CounterpartyDetails>
-ManageAccountRuleOpFrame::getCounterpartyDetails(
-    Database& db, LedgerDelta* delta) const
-{
-    return {};
+    return true;
 }
 
 bool

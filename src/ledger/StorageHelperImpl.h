@@ -31,6 +31,9 @@ class StorageHelperImpl : public StorageHelper
     virtual const Database& getDatabase() const;
     virtual LedgerDelta* getLedgerDelta();
     virtual const LedgerDelta* getLedgerDelta() const;
+    LedgerDelta& mustGetLedgerDelta() override;
+    const LedgerDelta& mustGetLedgerDelta() const override;
+
 
     virtual void commit();
     virtual void rollback();
@@ -47,7 +50,6 @@ class StorageHelperImpl : public StorageHelper
     getExternalSystemAccountIDPoolEntryHelper() override;
     AccountRoleHelper& getAccountRoleHelper() override;
     AccountRuleHelper& getAccountRuleHelper() override;
-    AccountHelper* getAccountHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -62,7 +64,6 @@ class StorageHelperImpl : public StorageHelper
         mExternalSystemAccountIDHelper;
     std::unique_ptr<ExternalSystemAccountIDPoolEntryHelper>
         mExternalSystemAccountIDPoolEntryHelper;
-    AccountHelper* mAccountHelper;
     std::unique_ptr<AccountRoleHelper> mAccountRoleHelper;
     std::unique_ptr<AccountRuleHelper> mAccountRuleHelper;
 };
