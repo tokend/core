@@ -100,8 +100,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
         return txFromOperation(source, baseOp, nullptr);
     }
 
-    op.ext.v(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS);
-    op.ext.requestID() = *requestID;
+    op.requestID = *requestID;
 
     return txFromOperation(source, baseOp, nullptr);
 }

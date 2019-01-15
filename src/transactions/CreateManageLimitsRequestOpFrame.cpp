@@ -53,7 +53,7 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     auto& db = storageHelper.getDatabase();
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.ext.requestID(), getSourceID(),
+    auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.requestID, getSourceID(),
                                                              ReviewableRequestType::LIMITS_UPDATE, db, delta);
     if (!requestFrame)
     {
@@ -139,11 +139,6 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
         innerResult().code(CreateManageLimitsRequestResultCode::INVALID_MANAGE_LIMITS_REQUEST_VERSION);
         return false;
     }
-    auto delta = storageHelper.getLedgerDelta();
-    if (!ledgerManager.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS))
-    {
-        return createManageLimitsRequest(app, storageHelper, ledgerManager);
-    }
 
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
 
@@ -154,9 +149,7 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
     }
 
     // required for the new flow, when source have to specify request id for creation or update of the request
-    bool isUpdating = mCreateManageLimitsRequest.ext.v() ==
-                      LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS &&
-                      mCreateManageLimitsRequest.ext.requestID() != 0;
+    bool isUpdating = mCreateManageLimitsRequest.requestID != 0;
     if (isUpdating)
     {
         return updateManageLimitsRequest(app, storageHelper, ledgerManager);
