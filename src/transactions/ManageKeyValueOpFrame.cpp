@@ -92,10 +92,7 @@ namespace stellar {
             return true;
         }
 
-        if (ledgerManager.shouldUse(LedgerVersion::KEY_VALUE_UPDATE))
-        {
-            keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
-        }
+        keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
         keyValueHelper->storeChange(delta, db, keyValueFrame->mEntry);
 
         return true;

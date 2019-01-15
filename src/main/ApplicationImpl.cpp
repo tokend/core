@@ -239,7 +239,7 @@ namespace stellar {
     }
 
     uint64 ApplicationImpl::getWithdrawalDetailsMaxLength() const {
-        return this->mLedgerManager->shouldUse(LedgerVersion::DETAILS_MAX_LENGTH_EXTENDED) ? 20000 : 1000;
+        return 20000;
     }
 
 	uint64 ApplicationImpl::getIssuanceDetailsMaxLength() const {
@@ -247,7 +247,7 @@ namespace stellar {
 	}
 
 	uint64 ApplicationImpl::getRejectReasonMaxLength() const {
-        return this->mLedgerManager->shouldUse(LedgerVersion::DETAILS_MAX_LENGTH_EXTENDED) ? 2000 : 256;
+        return 2000;
     }
 
     int32 ApplicationImpl::getKYCSuperAdminMask() const {

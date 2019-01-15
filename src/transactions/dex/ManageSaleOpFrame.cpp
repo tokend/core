@@ -24,11 +24,7 @@ namespace stellar {
     SourceDetails
     ManageSaleOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                                int32_t ledgerVersion) const {
-        std::vector<AccountType> allowedSourceAccountTypes = {AccountType::SYNDICATE};
-
-        if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_MASTER_TO_MANAGE_SALE)) {
-            allowedSourceAccountTypes.push_back(AccountType::MASTER);
-        }
+        std::vector<AccountType> allowedSourceAccountTypes = {AccountType::SYNDICATE, AccountType::MASTER};
 
         return SourceDetails(allowedSourceAccountTypes, mSourceAccount->getHighThreshold(),
                              static_cast<int32_t>(SignerType::ASSET_MANAGER));

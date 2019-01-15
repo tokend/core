@@ -153,22 +153,6 @@ namespace stellar {
     AccountManager::processStatistics(AccountFrame::pointer from, BalanceFrame::pointer fromBalance,
                                       uint64_t amount, uint64_t& universalAmount)
     {
-        if (!mLm.shouldUse(LedgerVersion::CREATE_ONLY_STATISTICS_V2))
-        {
-            auto stats = StatisticsHelper::Instance()->mustLoadStatistics(fromBalance->getAccountID(), mDb, &mDelta);
-
-            auto now = mLm.getCloseTime();
-            if (!stats->add(universalAmount, now)) {
-                return ProcessTransferResult(Result::STATS_OVERFLOW, 0);
-            }
-
-            if (!validateStats(from, fromBalance, stats)) {
-                return ProcessTransferResult(Result::LIMITS_EXCEEDED, 0);
-            }
-
-            EntryHelperProvider::storeChangeEntry(mDelta, mDb, stats->mEntry);
-        }
-
         universalAmount = 0;
         auto statsV2Result = tryAddStatsV2(from, fromBalance, amount, universalAmount);
 
