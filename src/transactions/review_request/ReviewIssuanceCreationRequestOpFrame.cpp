@@ -129,18 +129,6 @@ SourceDetails ReviewIssuanceCreationRequestOpFrame::getSourceAccountDetails(std:
 {
     auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
 
-	if (ledgerVersion < static_cast<int32_t>(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-	{
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
-	}
-
-	// TODO: maybe must be refactored
-    if (mReviewRequest.ext.v() != LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-                             allowedSigners);
-    }
-
     if ((mReviewRequest.reviewDetails.tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
     (mReviewRequest.reviewDetails.tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
     {
@@ -160,12 +148,6 @@ ReviewIssuanceCreationRequestOpFrame::ReviewIssuanceCreationRequestOpFrame(Opera
 
 bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
 {
-    if (!app.getLedgerManager().shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST) ||
-        mReviewRequest.ext.v() != LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return true;
-    }
-
 	int32_t systemTasks = CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT |
 			              CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
 
