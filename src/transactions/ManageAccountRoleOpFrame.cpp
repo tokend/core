@@ -27,14 +27,41 @@ ManageAccountRoleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper
 }
 
 bool
+ManageAccountRoleOpFrame::checkRulesExisting(StorageHelper &storageHelper, std::vector<uint64_t> ruleIDs)
+{
+    auto& ruleHelper = storageHelper.getAccountRuleHelper();
+
+    for (auto const ruleID : ruleIDs)
+    {
+        LedgerKey ruleKey(LedgerEntryType::ACCOUNT_RULE);
+        ruleKey.accountRule().id = ruleID;
+
+        if (!ruleHelper.exists(ruleKey))
+        {
+            innerResult().code(ManageAccountRoleResultCode::NO_SUCH_RULE);
+            innerResult().ruleID() = ruleID;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
 ManageAccountRoleOpFrame::createAccountRole(Application& app,
                                             StorageHelper& storageHelper)
 {
+    auto creationData =  mManageAccountRole.data.createData();
+
+    if (!checkRulesExisting(storageHelper, creationData.accountRuleIDs))
+    {
+        return false;
+    }
+
     auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
     auto newAccountRoleID = headerFrame.generateID(LedgerEntryType::ACCOUNT_ROLE);
-    auto frame = AccountRoleFrame::createNew(newAccountRoleID,
-                                             mManageAccountRole.data.createData());
+    auto frame = AccountRoleFrame::createNew(newAccountRoleID, creationData);
 
     storageHelper.getAccountRoleHelper().storeAdd(frame->mEntry);
 

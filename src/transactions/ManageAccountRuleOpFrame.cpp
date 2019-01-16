@@ -4,6 +4,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "main/Application.h"
+#include "ledger/AccountRoleHelper.h"
 
 namespace stellar
 {
@@ -39,7 +40,7 @@ ManageAccountRuleOpFrame::doApply(Application& app,
 bool
 ManageAccountRuleOpFrame::doCheckValid(Application& app)
 {
-    switch (mManageAccountRule.data.action()) 
+    switch (mManageAccountRule.data.action())
     {
         case ManageAccountRuleAction::CREATE:
             return isValidJson(mManageAccountRule.data.createData().details);
@@ -121,7 +122,8 @@ ManageAccountRuleOpFrame::deleteAccountRule(Application &app,
 {
     LedgerKey key;
     key.type(LedgerEntryType::ACCOUNT_RULE);
-    key.accountRule().id = mManageAccountRule.data.removeData().accountRuleID;
+    auto ruleID = mManageAccountRule.data.removeData().accountRuleID;
+    key.accountRule().id = ruleID;
 
     auto frame = storageHelper.getAccountRuleHelper().storeLoad(key);
     if (!frame)
@@ -130,10 +132,29 @@ ManageAccountRuleOpFrame::deleteAccountRule(Application &app,
         return false;
     }
 
+    if (isRuleUsed(storageHelper, ruleID))
+    {
+        return false;
+    }
+
     storageHelper.getAccountRuleHelper().storeDelete(frame->getKey());
     innerResult().code(ManageAccountRuleResultCode::SUCCESS);
     innerResult().success().ruleID = key.accountRule().id;
     return true;
+}
+
+bool
+ManageAccountRuleOpFrame::isRuleUsed(StorageHelper &storageHelper, uint64_t ruleID)
+{
+    auto& roleHelper = storageHelper.getAccountRoleHelper();
+
+    if (roleHelper.isRuleUsed(ruleID))
+    {
+        innerResult().code(ManageAccountRuleResultCode::RULE_IS_USED);
+        return true;
+    }
+
+    return false;
 }
 
 } // namespace stellar

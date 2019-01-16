@@ -3,6 +3,7 @@
 #include "ledger/AccountRoleFrame.h"
 #include "ledger/LedgerManager.h"
 #include "AccountRoleHelper.h"
+#include "AccountRoleRulesHelper.h"
 
 namespace soci
 {
@@ -36,11 +37,15 @@ private:
     AccountRoleFrame::pointer
     loadAccountRole(uint64_t const roleID) override;
 
+    bool
+    isRuleUsed(uint64_t const ruleID) override;
+
     void
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
 
     void storeUpdate(LedgerEntry const &entry, bool insert);
     StorageHelper& mStorageHelper;
+    AccountRoleRulesHelper mAccountRoleRulesHelper;
 
     const char* mAccountRoleSelector;
 };

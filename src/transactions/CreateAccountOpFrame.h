@@ -37,6 +37,8 @@ namespace stellar {
 
         void createBalance(LedgerDelta& delta, Database &db);
 
+        bool checkRoleExisting(StorageHelper& storageHelper);
+
         bool
         tryGetOperationConditions(StorageHelper& storageHelper,
                                   std::vector<OperationCondition>& result) const override;

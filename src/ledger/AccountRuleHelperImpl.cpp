@@ -308,7 +308,7 @@ AccountRuleHelperImpl::countObjects()
 {
     auto timer = mDb.getSelectTimer("account_role_permission_count");
     auto prep = mDb.getPreparedStatement(
-        "SELECT COUNT(*) FROM account_role_permissions");
+        "SELECT COUNT(*) FROM account_rules");
     auto& st = prep.statement();
 
     uint64_t count;

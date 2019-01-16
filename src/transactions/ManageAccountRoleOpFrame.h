@@ -44,5 +44,7 @@ class ManageAccountRoleOpFrame : public OperationFrame
     bool createAccountRole(Application& app, StorageHelper& storageHelper);
     bool updateAccountRole(Application& app, StorageHelper& storageHelper);
     bool deleteAccountRole(Application& app, StorageHelper& storageHelper);
+
+    bool checkRulesExisting(StorageHelper& storageHelper, std::vector<uint64_t> ruleIDs);
 };
 } // namespace stellar

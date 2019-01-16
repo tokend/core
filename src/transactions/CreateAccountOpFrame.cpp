@@ -4,12 +4,11 @@
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
 #include <ledger/LedgerHeaderFrame.h>
+#include <ledger/StorageHelperImpl.h>
 #include "transactions/CreateAccountOpFrame.h"
-#include "ledger/LedgerDelta.h"
-#include "database/Database.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "main/Application.h"
+#include "ledger/AccountRoleHelper.h"
 
 namespace stellar {
     using namespace std;
@@ -64,6 +63,13 @@ namespace stellar {
     bool CreateAccountOpFrame::createAccount(Application &app, LedgerDelta &delta,
                                              LedgerManager &ledgerManager) {
         auto &db = app.getDatabase();
+        StorageHelperImpl storageHelper(db, &delta);
+
+        if (!checkRoleExisting(storageHelper))
+        {
+            return false;
+        }
+
         auto destAccountFrame = make_shared<AccountFrame>(mCreateAccount.destination);
         auto& accountEntry = destAccountFrame->getAccount();
         accountEntry.sequentialID =
@@ -87,6 +93,22 @@ namespace stellar {
         for (const auto &baseAsset : baseAssets) {
             ManageAssetHelper::createBalanceForAccount(mCreateAccount.destination, baseAsset->getCode(), db, delta);
         }
+    }
+
+    bool
+    CreateAccountOpFrame::checkRoleExisting(StorageHelper& storageHelper)
+    {
+        LedgerKey roleKey(LedgerEntryType::ACCOUNT_ROLE);
+        roleKey.accountRole().id = mCreateAccount.roleID;
+
+        auto& roleHelper = storageHelper.getAccountRoleHelper();
+        if (!roleHelper.exists(roleKey))
+        {
+            innerResult().code(CreateAccountResultCode::NO_SUCH_ROLE);
+            return false;
+        }
+
+        return true;
     }
 
     bool

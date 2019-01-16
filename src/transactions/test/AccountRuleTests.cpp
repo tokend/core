@@ -61,6 +61,18 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
             manageAccountRuleTestHelper.applyTx(master, ruleEntry,
                                                 ManageAccountRuleAction::REMOVE);
         }
+
+        SECTION("cannot delete cause of role use rule")
+        {
+            auto creationRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+                    "{}", {ruleEntry.id});
+            manageAccountRoleTestHelper.applyTx(master, creationRoleOp);
+
+            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                                ManageAccountRuleAction::REMOVE,
+                                                ManageAccountRuleResultCode::RULE_IS_USED,
+                                                TransactionResultCode::txFAILED);
+        }
     }
 
     SECTION("Rule not found when trying to delete it")

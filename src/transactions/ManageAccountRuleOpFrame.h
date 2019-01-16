@@ -49,6 +49,8 @@ class ManageAccountRuleOpFrame : public OperationFrame
     bool createRule(Application& app, StorageHelper& storageHelper);
     bool updateRule(Application &app, StorageHelper &storageHelper);
     bool deleteAccountRule(Application &app, StorageHelper &storageHelper);
+
+    bool isRuleUsed(StorageHelper &storageHelper, uint64_t ruleID);
 };
 
 } // namespace stellar

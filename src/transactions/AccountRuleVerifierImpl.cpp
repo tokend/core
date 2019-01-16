@@ -98,6 +98,9 @@ AccountRuleVerifierImpl::isResourceMatches(
                    (isAssetMatches(expectedBase, actualQuote) &&
                     isAssetMatches(expectedQuote, actualBase));
         }
+        case LedgerEntryType::ACCOUNT:
+        case LedgerEntryType::ACCOUNT_RULE:
+        case LedgerEntryType::ACCOUNT_ROLE:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         case LedgerEntryType::KEY_VALUE:

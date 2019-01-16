@@ -17,7 +17,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("Account role tests", "[tx][set_account_roles]")
+TEST_CASE("Account role tests", "[tx][manage_account_roles]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
@@ -89,5 +89,18 @@ TEST_CASE("Account role tests", "[tx][set_account_roles]")
             manageAccountRoleHelper.applyTx(master, removeRoleOp,
                                             ManageAccountRoleResultCode::ROLE_IS_USED);
         }
+    }
+    
+    SECTION("no such rule") 
+    {
+        uint64_t nonExistingRuleID = 1408;
+        
+        auto createAccountRoleOp = manageAccountRoleHelper.buildCreateRoleOp(
+                R"({"data": "new_details"})", {nonExistingRuleID});
+
+        ManageAccountRoleResult result = manageAccountRoleHelper.applyTx(master,
+                createAccountRoleOp, ManageAccountRoleResultCode::NO_SUCH_RULE);
+        
+        REQUIRE(result.ruleID() == nonExistingRuleID);
     }
 }

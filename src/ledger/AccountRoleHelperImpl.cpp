@@ -1,4 +1,3 @@
-#include <lib/xdrpp/xdrpp/marshal.h>
 #include <lib/util/basen.h>
 #include "AccountRoleHelperImpl.h"
 #include "LedgerDelta.h"
@@ -19,21 +18,21 @@ AccountRoleHelperImpl::dropAll()
     db.getSession() << "DROP TABLE IF EXISTS account_roles;";
     db.getSession() << "CREATE TABLE account_roles "
            "("
-           "role_id                 BIGINT      NOT NULL CHECK (role_id >= 0), "
-           "rule_ids                TEXT        NOT NULL, "
-           "role_name               TEXT        NOT NULL, "
-           "lastmodified            INT         NOT NULL, "
-           "version                 INT         NOT NULL DEFAULT 0, "
-           "PRIMARY KEY (role_id)"
+           "id                 BIGINT      NOT NULL CHECK (id >= 0), "
+           "details            TEXT        NOT NULL, "
+           "lastmodified       INT         NOT NULL, "
+           "version            INT         NOT NULL DEFAULT 0, "
+           "PRIMARY KEY (id)"
            ");";
+
+    mAccountRoleRulesHelper.dropAll();
 }
 
 AccountRoleHelperImpl::AccountRoleHelperImpl(StorageHelper& storageHelper)
-    : mStorageHelper(storageHelper)
+    : mStorageHelper(storageHelper), mAccountRoleRulesHelper(storageHelper)
 {
-    mAccountRoleSelector = "SELECT role_id, rule_ids, role_name, "
-                                  "       lastmodified, version "
-                                  "FROM   account_roles ";
+    mAccountRoleSelector = "SELECT id, details, lastmodified, version "
+                           "FROM   account_roles ";
 }
 
 void
@@ -52,16 +51,15 @@ AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     string sql;
     if (insert)
     {
-        sql = "INSERT INTO account_roles (role_id, rule_ids, role_name, "
-              "                           lastmodified, version) "
-              "VALUES (:id, :rule_ids, :rn, :lm, :v)";
+        sql = "INSERT INTO account_roles (id, details, lastmodified, version) "
+              "VALUES (:id, :det, :lm, :v)";
     }
     else
     {
         sql = "UPDATE account_roles "
-              "SET role_id = :id, rule_ids = :rule_ids, role_name = :rn,"
+              "SET id = :id, details = :det,"
               "lastmodified = :lm, version = :v "
-              "WHERE role_id = :id";
+              "WHERE id = :id";
     }
 
     auto prep = mStorageHelper.getDatabase().getPreparedStatement(sql);
@@ -69,23 +67,21 @@ AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 
     uint64_t accountRoleID = accountRoleFrame->getID();
     auto version = static_cast<int32_t>(accountRoleEntry.ext.v());
-    auto ruleIDsBytes = xdr::xdr_to_opaque(accountRoleEntry.ruleIDs);
-    auto strRuleIDs = bn::encode_b64(ruleIDsBytes);
 
     st.exchange(use(accountRoleID, "id"));
-    st.exchange(use(strRuleIDs, "rule_ids"));
-    st.exchange(use(accountRoleEntry.details, "rn"));
+    st.exchange(use(accountRoleEntry.details, "det"));
     st.exchange(use(accountRoleFrame->mEntry.lastModifiedLedgerSeq, "lm"));
     st.exchange(use(version, "v"));
     st.define_and_bind();
 
-    auto timer =
-        insert ? mStorageHelper.getDatabase().getInsertTimer("account-role")
-               : mStorageHelper.getDatabase().getUpdateTimer("account-role");
+    auto timer = insert ? getDatabase().getInsertTimer("account-role")
+                        : getDatabase().getUpdateTimer("account-role");
     st.execute(true);
 
     if (st.get_affected_rows() != 1)
         throw runtime_error("could not update SQL");
+
+    mAccountRoleRulesHelper.storeUpdate(accountRoleID, accountRoleEntry.ruleIDs, insert);
 
     if (mStorageHelper.getLedgerDelta())
     {
@@ -115,7 +111,7 @@ AccountRoleHelperImpl::storeDelete(LedgerKey const& key)
 
     auto timer = db.getDeleteTimer("account-role");
     auto prep = db.getPreparedStatement(
-        "DELETE FROM account_roles WHERE role_id = :id");
+        "DELETE FROM account_roles WHERE id = :id");
     auto& st = prep.statement();
     auto accountRoleID = key.accountRole().id;
     st.exchange(use(accountRoleID, "id"));
@@ -123,6 +119,8 @@ AccountRoleHelperImpl::storeDelete(LedgerKey const& key)
     st.execute(true);
 
     flushCachedEntry(key);
+
+    mAccountRoleRulesHelper.storeDelete(accountRoleID);
 
     if (mStorageHelper.getLedgerDelta())
     {
@@ -144,7 +142,7 @@ AccountRoleHelperImpl::exists(LedgerKey const& key)
     auto timer = db.getSelectTimer("account-role-exists");
     auto prep = db.getPreparedStatement(
         "SELECT EXISTS (SELECT NULL FROM account_roles WHERE "
-        "role_id = :id)");
+        "id = :id)");
     auto& st = prep.statement();
     uint64 accountRoleID = key.accountRole().id;
     st.exchange(use(accountRoleID, "id"));
@@ -173,15 +171,14 @@ AccountRoleFrame::pointer
 AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
 {
     string sql = mAccountRoleSelector;
-    sql += " WHERE role_id = :id";
+    sql += " WHERE id = :id";
     auto prep = mStorageHelper.getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();
 
     st.exchange(use(roleID, "id"));
 
-
     AccountRoleFrame::pointer result;
-    auto timer = mStorageHelper.getDatabase().getSelectTimer("select_account_role");
+    auto timer = getDatabase().getSelectTimer("select_account_role");
     load(prep, [&result](LedgerEntry const& entry)
     {
         result = make_shared<AccountRoleFrame>(entry);
@@ -216,12 +213,10 @@ AccountRoleHelperImpl::load(StatementContext &prep,
         le.data.type(LedgerEntryType::ACCOUNT_ROLE);
         auto& accountRoleEntry = le.data.accountRole();
 
-        std::string strRuleIDs;
         int32_t version;
 
         auto& st = prep.statement();
         st.exchange(into(accountRoleEntry.id));
-        st.exchange(into(strRuleIDs));
         st.exchange(into(accountRoleEntry.details));
         st.exchange(into(le.lastModifiedLedgerSeq));
         st.exchange(into(version));
@@ -230,11 +225,8 @@ AccountRoleHelperImpl::load(StatementContext &prep,
 
         while (st.got_data())
         {
-            std::vector<uint8_t> decoded;
-            bn::decode_b64(strRuleIDs, decoded);
-            xdr::xdr_get unmarshaler(&decoded.front(), &decoded.back() + 1);
-            xdr::xdr_argpack_archive(unmarshaler, accountRoleEntry.ruleIDs);
-            unmarshaler.done();
+            auto ruleIDs = mAccountRoleRulesHelper.loadRuleIDs(accountRoleEntry.id);
+            accountRoleEntry.ruleIDs.assign(ruleIDs.begin(), ruleIDs.end());
 
             accountRoleEntry.ext.v(static_cast<LedgerVersion>(version));
 
@@ -276,5 +268,11 @@ AccountRoleHelperImpl::countObjects()
         into(count);
 
     return count;
+}
+
+bool
+AccountRoleHelperImpl::isRuleUsed(uint64_t const ruleID)
+{
+    return  mAccountRoleRulesHelper.isRuleUsed(ruleID);
 }
 } // namespace stellar
