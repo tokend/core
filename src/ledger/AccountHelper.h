@@ -54,6 +54,8 @@ namespace stellar
 
 		AccountFrame::pointer mustLoadAccount(AccountID const& accountID, Database& db);
 
+		bool isRoleIDUsed(uint64_t roleID, Database& db);
+
 		// loads all accounts from database and checks for consistency (slow!)
 		std::unordered_map<AccountID, AccountFrame::pointer> checkDB(Database& db);
 

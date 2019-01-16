@@ -150,9 +150,10 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         ruleIDs.emplace_back(createRuleResult.success().ruleID);
 
         // create account role using root as source
-        auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("external_pool_binder", ruleIDs);
+        auto createAccountRoleOp = setAccountRoleTestHelper.buildCreateRoleOp(
+                "external_pool_binder", ruleIDs);
 
-        auto accountRoleID = setAccountRoleTestHelper.applySetAccountRole(
+        auto accountRoleID = setAccountRoleTestHelper.applyTx(
                 root, createAccountRoleOp).success().roleID;
 
         manageExternalSystemAccountIDPoolEntryTestHelper

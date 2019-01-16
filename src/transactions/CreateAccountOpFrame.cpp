@@ -21,55 +21,13 @@ namespace stellar {
             : OperationFrame(op, res, parentTx), mCreateAccount(mOperation.body.createAccountOp()) {
     }
 
-    unordered_map<AccountID, CounterpartyDetails> CreateAccountOpFrame::
-    getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        return {
-                {mCreateAccount.destination, CounterpartyDetails({AccountType::NOT_VERIFIED, AccountType::GENERAL,
-                                                                  AccountType::SYNDICATE, AccountType::EXCHANGE,
-                                                                  AccountType::VERIFIED}, true, false)}
-        };
-    }
+    bool
+    CreateAccountOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                    std::vector<OperationCondition> &result) const
+    {
+        result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT), "create", mSourceAccount);
 
-    SourceDetails CreateAccountOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                    int32_t ledgerVersion)
-    const {
-        const auto threshold = mSourceAccount->getMediumThreshold();
-        uint32_t allowedSignerClass = 0;
-        switch (mCreateAccount.accountType) {
-            case AccountType::NOT_VERIFIED:
-                allowedSignerClass = static_cast<int32_t>(SignerType::
-                NOT_VERIFIED_ACC_MANAGER);
-                break;
-            case AccountType::VERIFIED:
-            case AccountType::GENERAL:
-                if (mCreateAccount.policies != 0) {
-                    allowedSignerClass = static_cast<int32_t>(SignerType::
-                    GENERAL_ACC_MANAGER);
-                    break;
-                }
-                allowedSignerClass = static_cast<int32_t>(SignerType::
-                GENERAL_ACC_MANAGER) |
-                                     static_cast<int32_t>(SignerType::
-                                     NOT_VERIFIED_ACC_MANAGER);
-                break;
-            case AccountType::SYNDICATE:
-                if (mCreateAccount.policies != 0) {
-                    allowedSignerClass = static_cast<int32_t>(SignerType::SYNDICATE_ACC_MANAGER);
-                    break;
-                }
-                allowedSignerClass = static_cast<int32_t>(SignerType::SYNDICATE_ACC_MANAGER) |
-                                     static_cast<int32_t>(SignerType::NOT_VERIFIED_ACC_MANAGER);
-                break;
-            case AccountType::EXCHANGE:
-                allowedSignerClass = static_cast<int32_t>(SignerType::EXCHANGE_ACC_MANAGER);
-                break;
-
-            default:
-                // it is not allowed to create or update any other account types
-                allowedSignerClass = 0;
-                break;
-        }
-        return SourceDetails({AccountType::MASTER}, threshold, allowedSignerClass);
+        return true;
     }
 
     void CreateAccountOpFrame::trySetReferrer(Application &app, Database &db,

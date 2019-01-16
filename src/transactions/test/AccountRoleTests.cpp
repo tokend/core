@@ -1,9 +1,7 @@
-/*
 #include "TxTests.h"
 #include "crypto/SHA.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "main/Application.h"
 #include "main/test.h"
 #include "overlay/LoopbackPeer.h"
 #include "test/test_marshaler.h"
@@ -19,10 +17,6 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-static const std::string kRoleName = "some role";
-static const std::string kAnotherRoleName = "another role";
-static const uint64_t kInvalidRoleID = 999999;
-
 TEST_CASE("Account role tests", "[tx][set_account_roles]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
@@ -31,7 +25,7 @@ TEST_CASE("Account role tests", "[tx][set_account_roles]")
     Application::pointer appPtr = Application::create(clock, cfg);
     Application& app = *appPtr;
     app.start();
-    TestManager::upgradeToCurrentLedgerVersion(app);
+    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
 
     Database& db = app.getDatabase();
 
@@ -45,50 +39,55 @@ TEST_CASE("Account role tests", "[tx][set_account_roles]")
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleHelper(testManager);
-    ManageAccountRuleTestHelper setIdentityPolicyHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
-    // create account for further tests
-    auto accountKey = SecretKey::random();
-    auto account = Account{accountKey, Salt(1)};
-
-    createAccountTestHelper.applyTx(CreateAccountTestBuilder()
-                                            .setSource(master)
-                                            .setToPublicKey(accountKey.getPublicKey())
-                                            .setType(AccountType::NOT_VERIFIED)
-                                            .setRecovery(SecretKey::random().getPublicKey()));
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+    auto createRuleResult = manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::CREATE);
 
     SECTION("Create account role")
     {
-        ManageAccountRoleResult result = manageAccountRoleHelper.applySetAccountRole(
-            account, manageAccountRoleHelper.createCreationOpInput(kRoleName));
-        SECTION("Create another role")
+        std::vector<uint64> ruleIDs{createRuleResult.success().ruleID};
+
+        auto createAccountRoleOp = manageAccountRoleHelper.buildCreateRoleOp(R"({"data": "new_details"})", ruleIDs);
+
+        ManageAccountRoleResult result = manageAccountRoleHelper.applyTx(master,
+                createAccountRoleOp);
+        auto accountRoleID = result.success().roleID;
+
+        SECTION("update")
         {
-            manageAccountRoleHelper.applySetAccountRole(
-                account,
-                manageAccountRoleHelper.createCreationOpInput(kAnotherRoleName));
+            auto updateRoleOp = manageAccountRoleHelper.buildUpdateRoleOp(
+                    accountRoleID, "{}", ruleIDs);
+
+            manageAccountRoleHelper.applyTx(master, updateRoleOp);
         }
-        SECTION("Create another role with duplicate ID")
-        {
-            manageAccountRoleHelper.applySetAccountRole(
-                account, manageAccountRoleHelper.createCreationOpInput(kRoleName));
-        }
-        SECTION("Create another role with duplicate name")
-        {
-            manageAccountRoleHelper.applySetAccountRole(
-                account, manageAccountRoleHelper.createCreationOpInput(kRoleName));
-        }
+
+        auto removeRoleOp = manageAccountRoleHelper.buildRemoveRoleOp(accountRoleID);
         SECTION("Delete account role")
         {
-            manageAccountRoleHelper.applySetAccountRole(
-                account, manageAccountRoleHelper.createDeletionOpInput(
-                             result.success().accountRoleID));
+            manageAccountRoleHelper.applyTx(master, removeRoleOp);
+
+            SECTION("Delete non-existing account role")
+            {
+                manageAccountRoleHelper.applyTx(master, removeRoleOp,
+                        ManageAccountRoleResultCode::NOT_FOUND);
+            }
         }
-        SECTION("Delete non-existing account role")
+
+        SECTION("Cannot delete role that is used")
         {
-            manageAccountRoleHelper.applySetAccountRole(
-                account,
-                manageAccountRoleHelper.createDeletionOpInput(kInvalidRoleID),
-                ManageAccountRoleResultCode::NOT_FOUND);
+            auto randomAccount = SecretKey::random();
+            createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                    .setSource(master)
+                                                    .setToPublicKey(randomAccount.getPublicKey())
+                                                    .setType(AccountType::NOT_VERIFIED)
+                                                    .setRecovery(SecretKey::random().getPublicKey())
+                                                    .setRoleID(accountRoleID));
+
+            manageAccountRoleHelper.applyTx(master, removeRoleOp,
+                                            ManageAccountRoleResultCode::ROLE_IS_USED);
         }
     }
-}*/
+}

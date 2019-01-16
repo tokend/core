@@ -58,7 +58,7 @@ AccountRoleFrame::createNew(uint64_t id, CreateAccountRoleData data)
     entry.data.type(LedgerEntryType::ACCOUNT_ROLE);
     auto& accountRole = entry.data.accountRole();
     accountRole.id = id;
-    accountRole.details = data.name;
+    accountRole.details = data.details;
     accountRole.ruleIDs = data.accountRuleIDs;
 
     return make_shared<AccountRoleFrame>(entry);

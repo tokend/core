@@ -37,6 +37,12 @@ class AccountRoleFrame : public EntryFrame
         return mAccountRole;
     }
 
+    AccountRoleEntry&
+    getAccountRole()
+    {
+        return mAccountRole;
+    }
+
     uint64_t
     getID() const
     {

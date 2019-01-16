@@ -58,7 +58,8 @@ ManageAccountRuleResult
 ManageAccountRuleTestHelper::applyTx(
         Account &source, AccountRuleEntry &permissionEntry,
         ManageAccountRuleAction action,
-        ManageAccountRuleResultCode expectedResult)
+        ManageAccountRuleResultCode expectedResult,
+        TransactionResultCode expectedTxResult)
 {
     TransactionFramePtr txFrame =
             createManageAccountRuleTx(source, permissionEntry, action);
@@ -66,7 +67,7 @@ ManageAccountRuleTestHelper::applyTx(
 
     auto txResult = txFrame->getResult();
 
-    REQUIRE(txResult.result.code() == TransactionResultCode::txSUCCESS);
+    REQUIRE(txResult.result.code() == expectedTxResult);
 
     auto opResult = txResult.result.results()[0];
 
@@ -127,7 +128,7 @@ ManageAccountRuleTestHelper::createAccountRuleEntry(
     ruleEntry.resource = resource;
     ruleEntry.action = action;
     ruleEntry.isForbid = isForbid;
-    ruleEntry.details = "some_details";
+    ruleEntry.details = "{\"data\": \"some_details\"}";
 
     return ruleEntry;
 }

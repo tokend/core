@@ -98,17 +98,17 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             root, ruleEntry, ManageAccountRuleAction::CREATE);
 
     // create account role using root as source
-    auto createSenderAccountRoleOp = manageAccountRoleTestHelper.createCreationOpInput(
+    auto createSenderAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
             "usd_sender", {createSenderRuleResult.success().ruleID});
 
-    auto senderAccountRoleID = manageAccountRoleTestHelper.applySetAccountRole(
+    auto senderAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createSenderAccountRoleOp).success().roleID;
 
     // create account role using root as source
-    auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.createCreationOpInput(
+    auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
             "usd_receiver", {createReceiverRuleResult.success().ruleID});
 
-    auto recipientAccountRoleID = manageAccountRoleTestHelper.applySetAccountRole(
+    auto recipientAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createReceiverAccountRoleOp).success().roleID;
 
     payer = Account{SecretKey::random(), Salt(1)};

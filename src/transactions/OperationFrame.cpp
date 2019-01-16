@@ -8,6 +8,7 @@
 #include "xdrpp/marshal.h"
 #include <string>
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
+#include <ledger/LedgerDeltaImpl.h>
 #include "util/Logging.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeFrame.h"

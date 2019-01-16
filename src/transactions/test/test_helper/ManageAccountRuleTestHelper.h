@@ -20,7 +20,9 @@ class ManageAccountRuleTestHelper : TxHelper
     applyTx(Account &source, AccountRuleEntry &permissionEntry,
             ManageAccountRuleAction action,
             ManageAccountRuleResultCode expectedResult =
-            ManageAccountRuleResultCode::SUCCESS);
+            ManageAccountRuleResultCode::SUCCESS,
+            TransactionResultCode expectedTxResult =
+            TransactionResultCode::txSUCCESS);
 
     AccountRuleEntry
     createAccountRuleEntry(uint64_t id, AccountRuleResource resource,

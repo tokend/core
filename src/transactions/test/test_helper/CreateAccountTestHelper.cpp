@@ -129,6 +129,7 @@ namespace stellar {
         CreateAccountChecker::doCheck(CreateAccountTestBuilder builder, TransactionFramePtr txFrame) {
 
             auto txResult = txFrame->getResult();
+            REQUIRE(txResult.result.code() == TransactionResultCode::txSUCCESS);
             auto opResult = txResult.result.results()[0];
             auto actualResultCode = CreateAccountOpFrame::getInnerCode(opResult);
             REQUIRE(actualResultCode == builder.expectedResult);

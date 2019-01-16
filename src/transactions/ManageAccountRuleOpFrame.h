@@ -46,7 +46,8 @@ class ManageAccountRuleOpFrame : public OperationFrame
         return mResult.tr().manageAccountRuleResult();
     }
 
-    bool createOrUpdateRule(Application &app, StorageHelper &storageHelper);
+    bool createRule(Application& app, StorageHelper& storageHelper);
+    bool updateRule(Application &app, StorageHelper &storageHelper);
     bool deleteAccountRule(Application &app, StorageHelper &storageHelper);
 };
 

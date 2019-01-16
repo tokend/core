@@ -564,6 +564,24 @@ namespace stellar
 		return exists != 0;
 	}
 
+	bool
+	AccountHelper::isRoleIDUsed(uint64_t roleID, Database &db)
+	{
+		int exists = 0;
+		{
+			auto timer = db.getSelectTimer("account-role-used");
+			auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM accounts "
+											"WHERE account_role=:v1)");
+			auto& st = prep.statement();
+			st.exchange(use(roleID));
+			st.exchange(into(exists));
+			st.define_and_bind();
+			st.execute(true);
+		}
+
+		return exists != 0;
+	}
+
 	void AccountHelper::ensureExists(AccountID const &accountID, Database &db) {
 		if (!exists(accountID, db))
 		{

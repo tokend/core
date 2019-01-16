@@ -122,6 +122,8 @@ AccountRoleHelperImpl::storeDelete(LedgerKey const& key)
     st.define_and_bind();
     st.execute(true);
 
+    flushCachedEntry(key);
+
     if (mStorageHelper.getLedgerDelta())
     {
         mStorageHelper.getLedgerDelta()->deleteEntry(key);

@@ -18,7 +18,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
+TEST_CASE("Set role policy", "[tx][manage_account_rule]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
@@ -26,8 +26,7 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     Application::pointer appPtr = Application::create(clock, cfg);
     Application& app = *appPtr;
     app.start();
-    TestManager::upgradeToCurrentLedgerVersion(app);
-    //TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
 
     Database& db = app.getDatabase();
 
@@ -39,91 +38,48 @@ TEST_CASE("Set role policy", "[tx][set_account_role_permissions]")
     // set up world
     auto master = Account{getRoot(), Salt(1)};
 
-    CreateAccountTestHelper createAccountTestHelper(testManager);
-    ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
-    ManageAccountRuleTestHelper manageAccountRolePolicyTestHelper(
-        testManager);
-
-    // create account for further tests
-    auto accountKey = SecretKey::random();
-    auto account = Account{accountKey, Salt(1)};
-
-    auto policyEntry =
-            manageAccountRolePolicyTestHelper.createAccountRuleEntry(
-                    0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "*",
-                    false);
-    auto createRuleResult = manageAccountRolePolicyTestHelper.applyTx(
-            master, policyEntry, ManageAccountRuleAction::CREATE,
-            ManageAccountRuleResultCode::SUCCESS);
-
-    auto createAccountRoleOp = setAccountRoleTestHelper.createCreationOpInput("key_value_manager", {createRuleResult.success().ruleID});
-
-    auto result = setAccountRoleTestHelper.applySetAccountRole(master, createAccountRoleOp);
-
-    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
-
-    auto createAccountTestBuilder = CreateAccountTestBuilder()
-            .setSource(master)
-            .setToPublicKey(accountKey.getPublicKey())
-            .setType(AccountType::NOT_VERIFIED)
-            .setRecovery(SecretKey::random().getPublicKey())
-            .setRoleID(result.success().roleID);
-
-    createAccountTestHelper.applyTx(createAccountTestBuilder);
-
-  /*  // create account role
-    auto accountRoleID =
-        setAccountRoleTestHelper
-            .applySetAccountRole(
-                master,
-                setAccountRoleTestHelper.createCreationOpInput("regular"))
-            .success()
-            .accountRoleID;*/
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     SECTION("Successful creation")
     {
+        auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+                0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+        auto createRuleResult = manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::CREATE);
 
-        ManageKeyValueTestHelper testHelper(testManager);
+        ruleEntry.id = createRuleResult.success().ruleID;
 
-        ManageKeyValueOp op;
-        op.key = "some_key";
-        op.action.action(ManageKVAction::PUT);
-        op.action.value().type(KeyValueEntryType::UINT32);
-        op.action.value().ui32Value() = 30;
-        testHelper.applyTx(account, op);
-
-        /*SECTION("Successful updating")
+        SECTION("Successful updating")
         {
-            policyEntry.opType = OperationType::CREATE_ACCOUNT;
-            manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-                account, policyEntry,
-                ManageAccountRolePermissionOpAction::UPDATE,
-                ManageAccountRolePermissionResultCode::SUCCESS);
+            ruleEntry.action = "*";
+            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                                ManageAccountRuleAction::UPDATE);
         }
         SECTION("Successful deletion")
         {
-            manageAccountRolePolicyTestHelper.applyTx(
-                account, policyEntry,
-                ManageAccountRolePermissionOpAction::REMOVE,
-                ManageAccountRolePermissionResultCode::SUCCESS);
-        }*/
+            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                                ManageAccountRuleAction::REMOVE);
+        }
     }
-    /*SECTION("Invalid operation type")
+
+    SECTION("Rule not found when trying to delete it")
     {
-        auto policyEntryResourceAndAction =
-            manageAccountRolePolicyTestHelper.createAccountRolePermissionEntry(
-                accountRoleID, static_cast<OperationType>(-1));
-        REQUIRE_THROWS(manageAccountRolePolicyTestHelper.applySetIdentityPermissionTx(
-            account, policyEntryResourceAndAction,
-            ManageAccountRolePermissionOpAction::CREATE));
+        auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+        manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                        ManageAccountRuleAction::REMOVE,
+                                        ManageAccountRuleResultCode::NOT_FOUND,
+                                        TransactionResultCode::txFAILED);
     }
-    SECTION("Identity policy not found when trying to delete it")
+
+    SECTION("Rule not found for update")
     {
-        auto policyEntry =
-            manageAccountRolePolicyTestHelper.createAccountRuleEntry(
-                accountRoleID, kOperationType);
-        manageAccountRolePolicyTestHelper.applyTx(
-            account, policyEntry, ManageAccountRolePermissionOpAction::REMOVE,
-            ManageAccountRolePermissionResultCode::NOT_FOUND);
-    }*/
+        auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+        manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                            ManageAccountRuleAction::UPDATE,
+                                            ManageAccountRuleResultCode::NOT_FOUND,
+                                            TransactionResultCode::txFAILED);
+    }
 }

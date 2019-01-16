@@ -61,12 +61,14 @@ AccountRuleHelperImpl::storeDelete(LedgerKey const& key)
 
     auto timer = mDb.getDeleteTimer("account_role_permission");
     auto prep = mDb.getPreparedStatement(
-        "DELETE FROM account_role_permissions WHERE id=:id");
+        "DELETE FROM account_rules WHERE id=:id");
     auto& st = prep.statement();
 
     st.exchange(use(key.accountRule().id));
     st.define_and_bind();
     st.execute(true);
+
+    flushCachedEntry(key);
 
     if (mLedgerDelta)
     {

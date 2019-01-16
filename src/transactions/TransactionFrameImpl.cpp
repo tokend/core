@@ -565,7 +565,6 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
             StorageHelper& storageHelper = storageHelperImpl;
             storageHelper.begin();
 
-
             bool txRes = op->apply(storageHelper, app);
 
             if (!txRes)

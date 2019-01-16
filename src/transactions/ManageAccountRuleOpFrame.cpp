@@ -20,25 +20,36 @@ ManageAccountRuleOpFrame::ManageAccountRuleOpFrame(
 
 bool
 ManageAccountRuleOpFrame::doApply(Application& app,
-                                            StorageHelper& storageHelper,
-                                            LedgerManager& ledgerManager)
+                                  StorageHelper& storageHelper,
+                                  LedgerManager& ledgerManager)
 {
     switch (mManageAccountRule.data.action())
     {
     case ManageAccountRuleAction::CREATE:
+        return createRule(app, storageHelper);
     case ManageAccountRuleAction::UPDATE:
-        return createOrUpdateRule(app, storageHelper);
+        return updateRule(app, storageHelper);
     case ManageAccountRuleAction::REMOVE:
         return deleteAccountRule(app, storageHelper);
     default:
-        throw std::runtime_error("Unknown action.");
+        throw std::runtime_error("Unknown action in manage account rule");
     }
 }
 
 bool
 ManageAccountRuleOpFrame::doCheckValid(Application& app)
 {
-    return isValidEnumValue(mManageAccountRule.data.action());
+    switch (mManageAccountRule.data.action()) 
+    {
+        case ManageAccountRuleAction::CREATE:
+            return isValidJson(mManageAccountRule.data.createData().details);
+        case ManageAccountRuleAction::UPDATE:
+            return isValidJson(mManageAccountRule.data.updateData().details);
+        case ManageAccountRuleAction::REMOVE:
+            return true;
+        default:
+            throw std::runtime_error("Unexpected action in manage account rule");
+    }
 }
 
 bool
@@ -51,52 +62,55 @@ ManageAccountRuleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper
 }
 
 bool
-ManageAccountRuleOpFrame::createOrUpdateRule(Application &app,
-                                             StorageHelper &storageHelper)
+ManageAccountRuleOpFrame::updateRule(Application &app,
+                                     StorageHelper &storageHelper)
 {
-    if (!storageHelper.getLedgerDelta())
-    {
-        throw std::runtime_error("Unable to process policy without ledger.");
-    }
-    LedgerHeaderFrame& headerFrame =
-        storageHelper.getLedgerDelta()->getHeaderFrame();
+    LedgerKey ruleKey(LedgerEntryType::ACCOUNT_RULE);
+    ruleKey.accountRule().id = mManageAccountRule.data.updateData().accountRuleID;
+
     auto& helper = storageHelper.getAccountRuleHelper();
+    if (!helper.exists(ruleKey))
+    {
+        innerResult().code(ManageAccountRuleResultCode::NOT_FOUND);
+        return false;
+    }
 
     LedgerEntry le;
     le.data.type(LedgerEntryType::ACCOUNT_RULE);
-
     auto& rule = le.data.accountRule();
-    switch (mManageAccountRule.data.action())
-    {
-    case ManageAccountRuleAction::CREATE:
-        rule.id = headerFrame.generateID(LedgerEntryType::ACCOUNT_RULE);
-        rule.resource = mManageAccountRule.data.createData().resource;
-        rule.action = mManageAccountRule.data.createData().action;
-        rule.isForbid = mManageAccountRule.data.createData().isForbid;
-        rule.details = mManageAccountRule.data.createData().details;
-        break;
-    case ManageAccountRuleAction::UPDATE:
-        rule.id = mManageAccountRule.data.updateData().accountRuleID;
-        rule.resource = mManageAccountRule.data.updateData().resource;
-        rule.action = mManageAccountRule.data.updateData().action;
-        rule.isForbid = mManageAccountRule.data.updateData().isForbid;
-        rule.details = mManageAccountRule.data.updateData().details;
-        break;
-    default:
-        throw std::runtime_error("Unexpected action type.");
-    }
+    rule.id = mManageAccountRule.data.updateData().accountRuleID;
+    rule.resource = mManageAccountRule.data.updateData().resource;
+    rule.action = mManageAccountRule.data.updateData().action;
+    rule.isForbid = mManageAccountRule.data.updateData().isForbid;
+    rule.details = mManageAccountRule.data.updateData().details;
+
+    helper.storeChange(le);
 
     innerResult().code(ManageAccountRuleResultCode::SUCCESS);
     innerResult().success().ruleID = le.data.accountRule().id;
 
-    if (helper.exists(helper.getLedgerKey(le)))
-    {
-        helper.storeChange(le);
-    }
-    else
-    {
-        helper.storeAdd(le);
-    }
+    return true;
+}
+
+bool
+ManageAccountRuleOpFrame::createRule(Application &app,
+                                     StorageHelper &storageHelper)
+{
+    auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
+
+    LedgerEntry le;
+    le.data.type(LedgerEntryType::ACCOUNT_RULE);
+    auto& rule = le.data.accountRule();
+    rule.id = headerFrame.generateID(LedgerEntryType::ACCOUNT_RULE);
+    rule.resource = mManageAccountRule.data.createData().resource;
+    rule.action = mManageAccountRule.data.createData().action;
+    rule.isForbid = mManageAccountRule.data.createData().isForbid;
+    rule.details = mManageAccountRule.data.createData().details;
+
+    storageHelper.getAccountRuleHelper().storeAdd(le);
+
+    innerResult().code(ManageAccountRuleResultCode::SUCCESS);
+    innerResult().success().ruleID = rule.id;
 
     return true;
 }

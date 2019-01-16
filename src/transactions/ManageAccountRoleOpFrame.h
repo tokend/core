@@ -42,6 +42,7 @@ class ManageAccountRoleOpFrame : public OperationFrame
                               std::vector<OperationCondition>& result) const override;
 
     bool createAccountRole(Application& app, StorageHelper& storageHelper);
+    bool updateAccountRole(Application& app, StorageHelper& storageHelper);
     bool deleteAccountRole(Application& app, StorageHelper& storageHelper);
 };
 } // namespace stellar
