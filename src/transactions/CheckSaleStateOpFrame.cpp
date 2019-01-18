@@ -252,12 +252,7 @@ CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(const AccountFrame::pointer
                                                      AssetCode const& asset, int64_t amount,
                                                      LedgerManager& lm, Database& db) const
 {
-    if (lm.shouldUse(LedgerVersion::ADD_CAPITAL_DEPLOYMENT_FEE_TYPE))
-    {
-        return FeeManager::calculateCapitalDeploymentFeeForAccount(saleOwnerAccount, asset, amount, db);
-    }
-
-    return FeeManager::calculateOfferFeeForAccount(saleOwnerAccount, asset, amount, db);
+    return FeeManager::calculateCapitalDeploymentFeeForAccount(saleOwnerAccount, asset, amount, db);
 }
 
 ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(

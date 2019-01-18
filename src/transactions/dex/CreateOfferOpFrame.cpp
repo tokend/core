@@ -159,11 +159,10 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 FeeManager::FeeResult
 CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const
 {
-    if (lm.shouldUse(LedgerVersion::ADD_CAPITAL_DEPLOYMENT_FEE_TYPE) && isCapitalDeployment)
-    {
-        return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
+    if (isCapitalDeployment) {
+        return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount,
+                                                                   db);
     }
-
     return FeeManager::calculateOfferFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
 }
 
