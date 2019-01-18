@@ -85,21 +85,9 @@ TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
 {
     auto& ledgerManager = app.getLedgerManager();
 
-    if (!ledgerManager.shouldUse(LedgerVersion::ADD_TRANSACTION_FEE))
-    {
-        return true;
-    }
-
     if (getSourceAccount().getAccountType() == AccountType::MASTER)
     {
         return true;
-    }
-
-    uint64_t maxTotalFee = UINT64_MAX;
-
-    if (mEnvelope.tx.ext.v() == LedgerVersion::ADD_TRANSACTION_FEE)
-    {
-        maxTotalFee = mEnvelope.tx.ext.maxTotalFee();
     }
 
     auto& db = app.getDatabase();
@@ -110,8 +98,7 @@ TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
         return true;
     }
 
-    getResult().ext.v(LedgerVersion::ADD_TRANSACTION_FEE);
-    getResult().ext.transactionFee().assetCode = txFeeAssetCode;
+    getResult().transactionFee.assetCode = txFeeAssetCode;
 
     std::map<OperationType, uint64_t> feesForOpTypes;
     uint64_t totalFeeAmount = 0;
@@ -141,10 +128,10 @@ TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
         OperationFee opFee;
         opFee.operationType = opType;
         opFee.amount = opFeeAmount;
-        getResult().ext.transactionFee().operationFees.push_back(opFee);
+        getResult().transactionFee.operationFees.push_back(opFee);
     }
 
-    if (totalFeeAmount > maxTotalFee)
+    if (totalFeeAmount > mEnvelope.tx.maxTotalFee)
     {
         app.getMetrics()
             .NewMeter({"transaction", "invalid", "insufficient-fee"},

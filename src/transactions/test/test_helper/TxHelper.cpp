@@ -41,10 +41,14 @@ namespace txtest
         tx.timeBounds.minTime = 0;
         tx.timeBounds.maxTime = INT64_MAX / 2;
 
+
         if (maxTotalFee != nullptr)
         {
-            tx.ext.v(LedgerVersion::ADD_TRANSACTION_FEE);
-            tx.ext.maxTotalFee() = *maxTotalFee;
+            tx.maxTotalFee = *maxTotalFee;
+        }
+        else
+        {
+            tx.maxTotalFee = INT64_MAX;
         }
 
         for (auto& op : ops)

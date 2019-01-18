@@ -152,13 +152,10 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
     auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
-    {
-        auto allRequests = ReviewableRequestHelper::Instance()->
-                loadRequests(getSourceID(), ReviewableRequestType::CONTRACT, db);
+    auto allRequests = ReviewableRequestHelper::Instance()->
+            loadRequests(getSourceID(), ReviewableRequestType::CONTRACT, db);
 
-        contractsCount += allRequests.size();
-    }
+    contractsCount += allRequests.size();
 
     if (contractsCount >= maxContractsCount)
     {
