@@ -443,14 +443,8 @@ BalanceHelperImpl::loadBalances(StatementContext& prep,
         }
 
         auto balanceFrame = std::make_shared<BalanceFrame>(le);
-        if (assetVersion >= (uint32)LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-        {
-            balanceFrame->setPrecisionForAmounts(AssetFrame::kMaximumTrailingDigits - trailingDigits);
-        }
-        else
-        {
-            balanceFrame->setPrecisionForAmounts(0);
-        }
+        balanceFrame->setPrecisionForAmounts(AssetFrame::kMaximumTrailingDigits - trailingDigits);
+
 
         if (mStorageHelper.getLedgerDelta())
         {
