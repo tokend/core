@@ -16,19 +16,12 @@ CancelASwapBidOpFrame::CancelASwapBidOpFrame(Operation const &op, OperationResul
 {
 }
 
-unordered_map<AccountID, CounterpartyDetails>
-CancelASwapBidOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const
+bool
+CancelASwapBidOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                 std::vector<OperationCondition> &result) const
 {
-    // no counterparties
-    return {};
-}
-
-SourceDetails CancelASwapBidOpFrame::getSourceAccountDetails(
-        unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
+    // only bid owner can do this
+    return true;
 }
 
 bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,

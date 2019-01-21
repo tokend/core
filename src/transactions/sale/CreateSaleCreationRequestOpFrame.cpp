@@ -26,23 +26,12 @@ namespace stellar
 {
 using xdr::operator==;
 
-
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateSaleCreationRequestOpFrame::getCounterpartyDetails(
-    Database& db, LedgerDelta* delta) const
+bool
+CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                            std::vector<OperationCondition>& result) const
 {
-    // source account is only counterparty
-    return {};
-}
-
-SourceDetails CreateSaleCreationRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                        int32_t ledgerVersion)
-const
-{
-    return SourceDetails({
-                             AccountType::SYNDICATE,
-                         }, mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    // only asset owner can create sale
+    return true;
 }
 
 AssetFrame::pointer

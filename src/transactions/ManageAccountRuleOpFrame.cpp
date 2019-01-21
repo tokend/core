@@ -40,17 +40,29 @@ ManageAccountRuleOpFrame::doApply(Application& app,
 bool
 ManageAccountRuleOpFrame::doCheckValid(Application& app)
 {
+    std::string details;
+
     switch (mManageAccountRule.data.action())
     {
         case ManageAccountRuleAction::CREATE:
-            return isValidJson(mManageAccountRule.data.createData().details);
+            details = mManageAccountRule.data.createData().details;
+            break;
         case ManageAccountRuleAction::UPDATE:
-            return isValidJson(mManageAccountRule.data.updateData().details);
+            details = mManageAccountRule.data.updateData().details;
+            break;
         case ManageAccountRuleAction::REMOVE:
             return true;
         default:
             throw std::runtime_error("Unexpected action in manage account rule");
     }
+
+    if (!isValidJson(details))
+    {
+        innerResult().code(ManageAccountRuleResultCode::INVALID_DETAILS);
+        return false;
+    }
+
+    return true;
 }
 
 bool

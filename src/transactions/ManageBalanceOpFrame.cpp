@@ -8,6 +8,7 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -15,40 +16,18 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-std::unordered_map<AccountID, CounterpartyDetails> ManageBalanceOpFrame::
-getCounterpartyDetails(Database& db, LedgerDelta* delta) const
-{
-    const std::vector<AccountType> allowedCounterparties = {
-        AccountType::GENERAL, AccountType::NOT_VERIFIED, AccountType::SYNDICATE, AccountType::VERIFIED,
-        AccountType::EXCHANGE, AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR
-    };
 
-    return {
-        {
-            mManageBalance.destination,
-            CounterpartyDetails(allowedCounterparties, true, true)
-        }
-    };
-}
-
-SourceDetails ManageBalanceOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const
 {
-    std::vector<AccountType> allowedSourceAccounts;
-    if (getSourceID() == mManageBalance.destination)
-        allowedSourceAccounts = {
-            AccountType::GENERAL, AccountType::NOT_VERIFIED,
-            AccountType::SYNDICATE, AccountType::EXCHANGE, AccountType::VERIFIED,
-            AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR
-        };
-    else
-        allowedSourceAccounts = {AccountType::MASTER};
-    return SourceDetails(allowedSourceAccounts,
-                         mSourceAccount->getLowThreshold(),
-                         static_cast<int32_t>(SignerType::BALANCE_MANAGER),
-                         static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
-                         static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
+    if (!(getSourceID() == mManageBalance.destination))
+    {
+        result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create", mSourceAccount);
+    }
+
+    // account can create balance for him self without special rule
+    return true;
 }
 
 ManageBalanceOpFrame::ManageBalanceOpFrame(Operation const& op,

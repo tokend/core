@@ -1,17 +1,6 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include <ledger/LimitsV2Helper.h>
 #include "transactions/ManageLimitsOpFrame.h"
-#include "ledger/AccountTypeLimitsFrame.h"
-#include "ledger/AccountTypeLimitsHelper.h"
-#include "ledger/AccountLimitsFrame.h"
-#include "ledger/AccountLimitsHelper.h"
-#include "database/Database.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 
@@ -26,38 +15,13 @@ ManageLimitsOpFrame::ManageLimitsOpFrame(Operation const& op, OperationResult& r
 {
 }
 
-
-std::unordered_map<AccountID, CounterpartyDetails>
-ManageLimitsOpFrame::getCounterpartyDetails(Database & db, LedgerDelta* delta) const
+bool
+ManageLimitsOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                std::vector<OperationCondition>& result) const
 {
-    switch (mManageLimits.details.action())
-    {
-        case ManageLimitsAction::CREATE:
-            if (!mManageLimits.details.limitsCreateDetails().accountID)
-                return{};
-            return{
-                    {*mManageLimits.details.limitsCreateDetails().accountID,
-                            CounterpartyDetails(getAllAccountTypes(), true, true)}
-            };
-        case ManageLimitsAction::REMOVE:
-            return {
-                {mSourceAccount->getID(), CounterpartyDetails({AccountType::MASTER}, true, true)}
-            };
-        default:
-            throw std::runtime_error("Unexpected manage limits action while get counterparty details. "
-                                     "Expected UPDATE or REMOVE");
-    }
+    result.emplace_back(AccountRuleResource(LedgerEntryType::LIMITS_V2), "manage", mSourceAccount);
 
-}
-
-SourceDetails
-ManageLimitsOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                             int32_t ledgerVersion) const
-{
-	auto signerType = static_cast<int32_t>(SignerType::LIMITS_MANAGER);
-	int32_t threshold = mSourceAccount->getHighThreshold();
-
-	return SourceDetails({AccountType::MASTER}, threshold, signerType);
+    return true;
 }
 
 std::string

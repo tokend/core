@@ -2,6 +2,9 @@
 #include "database/Database.h"
 #include <transactions/dex/OfferManager.h>
 #include <ledger/LedgerDelta.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/ReviewableRequestFrame.h>
@@ -22,20 +25,29 @@ CreateASwapBidCreationRequestOpFrame::CreateASwapBidCreationRequestOpFrame(
 {
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateASwapBidCreationRequestOpFrame::getCounterpartyDetails(Database &db,
-                                                          LedgerDelta *delta) const
+bool
+CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
+                                StorageHelper &storageHelper,
+                                std::vector<OperationCondition> &result) const
 {
-    // no counterparties
-    return {};
-}
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balance = balanceHelper.loadBalance(mCreateASwapBidCreationRequest.request.baseBalance);
+    if (!balance)
+    {
+        mResult.code(OperationResultCode::opNO_BALANCE);
+        return false;
+    }
 
-SourceDetails CreateASwapBidCreationRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(balance->getAsset());
+
+    AccountRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    resource.atomicSwapBid().assetType = asset->getType();
+    resource.atomicSwapBid().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "create", mSourceAccount);
+
+    return true;
 }
 
 CreateASwapBidCreationRequestResultCode

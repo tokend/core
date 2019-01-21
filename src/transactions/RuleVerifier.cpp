@@ -31,4 +31,10 @@ RuleVerifier::isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset)
            isStringMatches(expectedAsset.code, actualAsset.code);
 }
 
+bool
+RuleVerifier::isTasksMatch(uint32_t const expectedTasks, uint32_t const actualTasks) const
+{
+    return (expectedTasks | actualTasks) == expectedTasks;
+}
+
 } // namespace stellar

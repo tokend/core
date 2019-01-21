@@ -6,26 +6,20 @@
 #include "review_request/ReviewRequestHelper.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "CreateManageLimitsRequestOpFrame.h"
-#include "main/Application.h"
 
 namespace stellar
 {
 
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateManageLimitsRequestOpFrame::getCounterpartyDetails(Database& db, LedgerDelta* delta) const
+bool
+CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                        std::vector<OperationCondition>& result) const
 {
-    return {};
-}
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().requestType = ReviewableRequestType::LIMITS_UPDATE;
 
-SourceDetails
-CreateManageLimitsRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getMediumThreshold(),
-                         static_cast<int32_t>(SignerType::LIMITS_MANAGER),
-                         static_cast<uint32_t>(BlockReasons::WITHDRAWAL)
-    );
+    result.emplace_back(resource, "create", mSourceAccount);
+
+    return true;
 }
 
 CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(

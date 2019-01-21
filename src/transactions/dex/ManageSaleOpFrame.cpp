@@ -1,38 +1,25 @@
 #include "ManageSaleOpFrame.h"
 #include "OfferManager.h"
-#include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include <ledger/BalanceHelperLegacy.h>
 #include <ledger/OfferHelper.h>
 #include <ledger/KeyValueHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
 #include <ledger/SaleHelper.h>
 #include <ledger/StorageHelper.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
 
-namespace stellar {
+namespace stellar
+{
     ManageSaleOpFrame::ManageSaleOpFrame(Operation const &op, OperationResult &opRes, TransactionFrame &parentTx)
             : OperationFrame(op, opRes, parentTx), mManageSaleOp(mOperation.body.manageSaleOp()) {
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    ManageSaleOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        // no counterparties
-        return {};
-    }
-
-    SourceDetails
-    ManageSaleOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                               int32_t ledgerVersion) const {
-        std::vector<AccountType> allowedSourceAccountTypes = {AccountType::SYNDICATE};
-
-        if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_MASTER_TO_MANAGE_SALE)) {
-            allowedSourceAccountTypes.push_back(AccountType::MASTER);
-        }
-
-        return SourceDetails(allowedSourceAccountTypes, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::ASSET_MANAGER));
-    }
+bool
+ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                std::vector<OperationCondition>& result) const
+{
+    // only sale owner or admin can manage sale
+    return true;
+}
 
     bool ManageSaleOpFrame::amendUpdateSaleDetailsRequest(Application &app, LedgerManager &lm, StorageHelper &storageHelper) {
 

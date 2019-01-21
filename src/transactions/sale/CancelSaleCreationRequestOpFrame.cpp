@@ -6,23 +6,12 @@ namespace stellar
 {
 using xdr::operator==;
 
-
-std::unordered_map<AccountID, CounterpartyDetails>
-CancelSaleCreationRequestOpFrame::getCounterpartyDetails(
-        Database& db, LedgerDelta* delta) const
+bool
+CancelSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                            std::vector<OperationCondition>& result) const
 {
-    // source account is only counterparty
-    return {};
-}
-
-SourceDetails
-CancelSaleCreationRequestOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
-{
-    return SourceDetails({AccountType::SYNDICATE},
-                         mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    // only request creator can remove it
+    return true;
 }
 
 CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(
@@ -32,7 +21,6 @@ CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(
         mCancelSaleCreationRequest(mOperation.body.cancelSaleCreationRequestOp())
 {
 }
-
 
 bool
 CancelSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,

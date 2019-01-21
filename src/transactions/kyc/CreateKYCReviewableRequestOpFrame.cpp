@@ -1,13 +1,10 @@
 #include <transactions/ManageKeyValueOpFrame.h>
-#include "CreateKYCReviewableRequestOpFrame.h"
 #include "ledger/AccountHelper.h"
 #include "main/Application.h"
-
 #include "bucket/BucketApplicator.h"
 #include "xdrpp/printer.h"
 #include "ledger/LedgerDelta.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
-#include "transactions/review_request/ReviewUpdateKYCRequestOpFrame.h"
 #include "ledger/KeyValueHelperLegacy.h"
 
 namespace stellar {
@@ -22,56 +19,20 @@ namespace stellar {
 
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    CreateUpdateKYCRequestOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        throw std::runtime_error("Get counterparty details for CreateUpdateKYCRequestOpFrame is not implemented");
+bool
+CreateUpdateKYCRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                        std::vector<OperationCondition>& result) const
+{
+    auto destAccountID = mCreateUpdateKYCRequest.updateKYCRequestData.accountToUpdateKYC;
+
+    if (!(getSourceID() == destAccountID) || (mCreateUpdateKYCRequest.allTasks))
+    {
+        result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT_KYC), "create", mSourceAccount);
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    CreateUpdateKYCRequestOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta, int32_t ledgerVersion) const {
-        std::vector<AccountType> allowedAccountTypes = {AccountType::GENERAL, AccountType::NOT_VERIFIED,
-                                                        AccountType::ACCREDITED_INVESTOR,
-                                                        AccountType::INSTITUTIONAL_INVESTOR,
-                                                        AccountType::VERIFIED};
-        if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_SYNDICATE_TO_UPDATE_KYC)) {
-            allowedAccountTypes.push_back(AccountType::SYNDICATE);
-        }
-        return {{mCreateUpdateKYCRequest.updateKYCRequestData.accountToUpdateKYC,
-                        CounterpartyDetails(allowedAccountTypes, true, true)}
-        };
-    }
-
-    SourceDetails
-    CreateUpdateKYCRequestOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-            int32_t ledgerVersion) const {
-        if (mCreateUpdateKYCRequest.allTasks) {
-            return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                                 static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
-        }
-        if (getSourceID() == mCreateUpdateKYCRequest.updateKYCRequestData.accountToUpdateKYC) {
-            int32_t allowedSignerTypes = static_cast<int32_t>(SignerType::KYC_ACC_MANAGER);
-            if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_ACCOUNT_MANAGER_TO_CHANGE_KYC))
-            {
-                allowedSignerTypes |= static_cast<int32_t>(SignerType::ACCOUNT_MANAGER);
-            }
-
-            std::vector<AccountType> allowedAccountTypes = {AccountType::GENERAL, AccountType::NOT_VERIFIED,
-                                                            AccountType::ACCREDITED_INVESTOR,
-                                                            AccountType::INSTITUTIONAL_INVESTOR,
-                                                            AccountType::VERIFIED};
-
-            if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_SYNDICATE_TO_UPDATE_KYC))
-            {
-                allowedAccountTypes.push_back(AccountType::SYNDICATE);
-            }
-
-            return SourceDetails(allowedAccountTypes, mSourceAccount->getHighThreshold(), allowedSignerTypes);
-        }
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::KYC_ACC_MANAGER) |
-                             static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
-    }
+    // account do not need any rules to update role for him self with default tasks
+    return true;
+}
 
     bool CreateUpdateKYCRequestOpFrame::ensureUpdateKYCDataValid(ReviewableRequestEntry &requestEntry) {
         auto &updateKYCRequest = requestEntry.body.updateKYCRequest();

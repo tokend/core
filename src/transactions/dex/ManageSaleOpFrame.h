@@ -19,11 +19,9 @@ namespace stellar {
             return mResult.tr().manageSaleResult();
         }
 
-        std::unordered_map<AccountID, CounterpartyDetails>
-        getCounterpartyDetails(Database &db, LedgerDelta *delta) const override;
-
-        SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                int32_t ledgerVersion) const override;
+        bool
+        tryGetOperationConditions(StorageHelper& storageHelper,
+                                  std::vector<OperationCondition>& result) const override;
 
     public:
         ManageSaleOpFrame(Operation const &op, OperationResult &opRes, TransactionFrame &parentTx);
@@ -43,8 +41,6 @@ namespace stellar {
 
         static void cancelAllOffersForQuoteAsset(SaleFrame::pointer sale, SaleQuoteAsset const &saleQuoteAsset,
                                      LedgerDelta &delta, Database &db);
-
-        static void deleteAllAntesForSale(uint64_t saleID, LedgerDelta &delta, Database &db);
 
         std::string getUpdateSaleDetailsRequestReference() const {
             const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_SALE_DETAILS,

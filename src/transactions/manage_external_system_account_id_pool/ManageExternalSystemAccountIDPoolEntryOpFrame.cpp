@@ -1,31 +1,23 @@
 #include "ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "CreateExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "DeleteExternalSystemAccountIDPoolEntryOpFrame.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/AccountHelper.h"
-#include "main/Application.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    ManageExternalSystemAccountIdPoolEntryOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-    {
-        // no counterparties
-        return std::unordered_map<AccountID, CounterpartyDetails>();
-    }
+bool
+ManageExternalSystemAccountIdPoolEntryOpFrame::tryGetOperationConditions(
+                                StorageHelper& storageHelper,
+                                std::vector<OperationCondition>& result) const
+{
+    result.emplace_back(AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY),
+                        "manage", mSourceAccount);
 
-    SourceDetails
-    ManageExternalSystemAccountIdPoolEntryOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-    {
-        vector<AccountType> allowedSourceAccounts;
-        allowedSourceAccounts = { AccountType::MASTER };
-        return SourceDetails(allowedSourceAccounts, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_MANAGER));
-    }
+    return true;
+}
 
     ManageExternalSystemAccountIdPoolEntryOpFrame::ManageExternalSystemAccountIdPoolEntryOpFrame(Operation const &op,
                                                                                                  OperationResult &res,

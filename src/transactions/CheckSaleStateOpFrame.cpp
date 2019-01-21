@@ -62,17 +62,13 @@ CheckSaleStateOpFrame::SaleState CheckSaleStateOpFrame::getSaleState(
     return NOT_READY;
 }
 
-unordered_map<AccountID, CounterpartyDetails> CheckSaleStateOpFrame::
-getCounterpartyDetails(Database& db, LedgerDelta* delta) const
+bool
+CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                std::vector<OperationCondition>& result) const
 {
-    // no counterparties
-    return {};
-}
+    result.emplace_back(AccountRuleResource(LedgerEntryType::SALE), "check", mSourceAccount);
 
-SourceDetails CheckSaleStateOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails>, int32_t ledgerVersion)
-const
-{
-    return SourceDetails({ AccountType::MASTER }, mSourceAccount->getLowThreshold(), int32_t(SignerType::EVENTS_CHECKER));
+    return true;
 }
 
 void CheckSaleStateOpFrame::issueBaseTokens(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,

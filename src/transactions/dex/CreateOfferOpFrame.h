@@ -25,8 +25,6 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
 
     bool lockSellingAmount(OfferEntry const& offer);
 
-    bool isAllowedToReceive(BalanceID receivingBalance, Database &db);
-
     FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
 
 protected:

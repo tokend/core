@@ -134,17 +134,12 @@ Hash CreatePreIssuanceRequestOpFrame::getSignatureData(stellar::string64 const &
 	return Hash(sha256(rawSignatureData));
 }
 
-std::unordered_map<AccountID, CounterpartyDetails> CreatePreIssuanceRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
+bool
+CreatePreIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+							  			std::vector<OperationCondition>& result) const
 {
-	// no counterparties
-	return{};
-}
-
-SourceDetails CreatePreIssuanceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                       int32_t ledgerVersion) const
-{
-	return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-						 static_cast<int32_t>(SignerType::ISSUANCE_MANAGER));
+	// only asset pre issuer can do pre issuance;
+	return true;
 }
 
 bool CreatePreIssuanceRequestOpFrame::isSignatureValid(AssetFrame::pointer asset, LedgerVersion version)

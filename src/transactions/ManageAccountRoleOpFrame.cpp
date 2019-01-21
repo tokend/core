@@ -151,16 +151,28 @@ ManageAccountRoleOpFrame::doApply(Application& app,
 bool
 ManageAccountRoleOpFrame::doCheckValid(Application& app)
 {
+    std::string details;
+
     switch (mManageAccountRole.data.action())
     {
         case ManageAccountRoleAction::CREATE:
-            return isValidJson(mManageAccountRole.data.createData().details);
+            details = mManageAccountRole.data.createData().details;
+            break;
         case ManageAccountRoleAction::UPDATE:
-            return isValidJson(mManageAccountRole.data.updateData().details);
+            details = mManageAccountRole.data.updateData().details;
+            break;
         case ManageAccountRoleAction::REMOVE:
             return true;
         default:
             throw std::runtime_error("Unexpected action in manage account role");
     }
+
+    if (!isValidJson(details))
+    {
+        innerResult().code(ManageAccountRoleResultCode::INVALID_DETAILS);
+        return false;
+    }
+
+    return true;
 }
 } // namespace stellar

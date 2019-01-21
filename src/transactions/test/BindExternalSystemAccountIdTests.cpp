@@ -29,7 +29,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     auto& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
-    testManager->upgradeToLedgerVersion(app, LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
+    testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
 
     LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                           app.getDatabase());
@@ -38,10 +38,38 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
 
     BindExternalSystemAccountIdTestHelper bindExternalSystemAccountIdTestHelper(testManager);
     CreateAccountTestHelper createAccountTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
     ManageExternalSystemAccountIDPoolEntryTestHelper manageExternalSystemAccountIDPoolEntryTestHelper(testManager);
 
+    // create policy (just entry)
+    AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
+
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, poolResource, "manage", false);
+    // write this entry to DB
+    auto createManagePoolRuleResult = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE);
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, poolResource, "bind", false);
+    // write this entry to DB
+    auto createBindPoolRuleResult = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE);
+
+    auto createPoolManagerRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            R"({"name": "pool_manager"})", {createManagePoolRuleResult.success().ruleID,
+                             createBindPoolRuleResult.success().ruleID});
+
+    auto roleID = manageAccountRoleTestHelper.applyTx(
+            root, createPoolManagerRoleOp).success().roleID;
+
     auto account = Account { SecretKey::random(), Salt(0) };
-    createAccountTestHelper.applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                            .setSource(root)
+                                            .setType(AccountType::GENERAL)
+                                            .setToPublicKey(account.key.getPublicKey())
+                                            .setRoleID(roleID));
 
     testManager->advanceToTime(BindExternalSystemAccountIdOpFrame::dayInSeconds);
 
@@ -72,7 +100,11 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     SECTION("All external system account ids of this type are bound")
     {
         auto binder = Account { SecretKey::random(), Salt(0) };
-        createAccountTestHelper.applyCreateAccountTx(root, binder.key.getPublicKey(), AccountType::GENERAL);
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                .setSource(root)
+                                                .setType(AccountType::GENERAL)
+                                                .setToPublicKey(binder.key.getPublicKey())
+                                                .setRoleID(roleID));
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
                                                                                                 ERC20_TokenExternalSystemType,
@@ -86,7 +118,11 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     SECTION("Bind expired external system account id")
     {
         auto binder = Account {SecretKey::random(), Salt(0)};
-        createAccountTestHelper.applyCreateAccountTx(root, binder.key.getPublicKey(), AccountType::GENERAL);
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                .setSource(root)
+                                                .setType(AccountType::GENERAL)
+                                                .setToPublicKey(binder.key.getPublicKey())
+                                                .setRoleID(roleID));
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
                                                                                                 ERC20_TokenExternalSystemType,
@@ -97,79 +133,5 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         testManager->advanceToTime(BindExternalSystemAccountIdOpFrame::dayInSeconds * 3);
 
         bindExternalSystemAccountIdTestHelper.applyBindExternalSystemAccountIdTx(account, ERC20_TokenExternalSystemType);
-    }
-    SECTION("Cannot proceed frame due to policies")
-    {
-        app.resumeCheckingPolicies();
-
-        manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
-                                                                                                ERC20_TokenExternalSystemType,
-                                                                                                "Some data");
-
-        auto binder = Account {SecretKey::random(), Salt(0)};
-        createAccountTestHelper.applyTx(
-                CreateAccountTestBuilder()
-                        .setSource(root)
-                        .setToPublicKey(binder.key.getPublicKey()));
-
-        testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
-
-        REQUIRE_FALSE(testManager->applyCheck(bindExternalSystemAccountIdTestHelper.createBindExternalSystemAccountIdTx(
-                account, ERC20_TokenExternalSystemType)));
-
-        app.stopCheckingPolicies();
-    }
-    SECTION("Happy path with policies check")
-    {
-        ManageAccountRoleTestHelper setAccountRoleTestHelper(testManager);
-        ManageAccountRuleTestHelper setAccountRolePolicyTestHelper(testManager);
-
-        // create policy (just entry)
-        auto policyEntry = setAccountRolePolicyTestHelper.createAccountRuleEntry(
-                0,
-                AccountRuleResource(
-                        LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY),
-                "bind", false);
-        // write this entry to DB
-        auto createRuleResult = setAccountRolePolicyTestHelper.applyTx(
-                root, policyEntry, ManageAccountRuleAction::CREATE,
-                ManageAccountRuleResultCode::SUCCESS);
-
-        std::vector<uint64_t> ruleIDs{createRuleResult.success().ruleID};
-
-        policyEntry = setAccountRolePolicyTestHelper.createAccountRuleEntry(0,
-                                                                            AccountRuleResource(
-                                                                                    LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID),
-                                                                            "manage",
-                                                                            false);
-        // write this entry to DB
-        createRuleResult = setAccountRolePolicyTestHelper.applyTx(
-                root, policyEntry, ManageAccountRuleAction::CREATE,
-                ManageAccountRuleResultCode::SUCCESS);
-
-        ruleIDs.emplace_back(createRuleResult.success().ruleID);
-
-        // create account role using root as source
-        auto createAccountRoleOp = setAccountRoleTestHelper.buildCreateRoleOp(
-                "external_pool_binder", ruleIDs);
-
-        auto accountRoleID = setAccountRoleTestHelper.applyTx(
-                root, createAccountRoleOp).success().roleID;
-
-        manageExternalSystemAccountIDPoolEntryTestHelper
-                .createExternalSystemAccountIdPoolEntry(root,
-                                                        ERC20_TokenExternalSystemType,
-                                                        "Some data");
-        testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
-
-        // create binder with this role using root as source
-        auto binder = Account {SecretKey::random(), Salt(0)};
-        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
-                        .setSource(root)
-                        .setToPublicKey(binder.key.getPublicKey())
-                        .setRoleID(accountRoleID));
-
-        bindExternalSystemAccountIdTestHelper.applyBindExternalSystemAccountIdTx(binder, ERC20_TokenExternalSystemType);
-
     }
 }

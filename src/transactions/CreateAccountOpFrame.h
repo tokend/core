@@ -15,8 +15,6 @@ namespace stellar {
 
         bool doCheckValid(Application &app) override;
         bool doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) override;
-        bool tryUpdateAccountType(Application &app, LedgerDelta &delta, Database &db,
-                                  AccountFrame::pointer &destAccountFrame);
 
         static CreateAccountResultCode getInnerCode(OperationResult const &res) {
             return res.tr().createAccountResult().code();
@@ -29,8 +27,6 @@ namespace stellar {
 
         void buildAccount(Application &app, LedgerDelta &delta, AccountFrame::pointer destAccountFrame);
         void trySetReferrer(Application &app, Database &db, AccountFrame::pointer destAccount) const;
-
-        bool isAllowedToUpdateAccountType(AccountFrame::pointer destAccount) const;
 
         bool createAccount(Application &app, LedgerDelta &delta,
                            LedgerManager &ledgerManager);

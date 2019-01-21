@@ -18,10 +18,9 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
 
     CreateSaleCreationRequestOp const& mCreateSaleCreationRequest;
 
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(
-        Database& db, LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
     // tryLoadAssetOrRequest - tries to load base asset or request. If fails returns nullptr. If request exists - creates asset frame wrapper for it
     static AssetFrame::pointer tryLoadBaseAssetOrRequest(SaleCreationRequest const& request, Database& db, AccountID const& source);

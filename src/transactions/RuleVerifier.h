@@ -26,6 +26,9 @@ protected:
 
     bool
     isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const;
+
+    bool
+    isTasksMatch(uint32_t const expectedTasks, uint32_t const actualTasks) const;
 };
 
 } // namespace stellar
