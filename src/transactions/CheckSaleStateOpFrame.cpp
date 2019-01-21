@@ -76,7 +76,7 @@ const
 }
 
 void CheckSaleStateOpFrame::issueBaseTokens(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,
-    LedgerDelta& delta, Database& db, LedgerManager& lm, TokenAction action) const
+    LedgerDelta& delta, Database& db, LedgerManager& lm) const
 {
     AccountManager::unlockPendingIssuanceForSale(sale, delta, db, lm);
 
@@ -92,15 +92,6 @@ void CheckSaleStateOpFrame::issueBaseTokens(const SaleFrame::pointer sale, const
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state; issuance request was not fulfilled on check sale state" << "saleID: " << sale->getID();
         throw runtime_error("Unexpected state; issuance request was not fulfilled on check sale state");
-    }
-
-    if (action == RESTRICT)
-    {
-        restrictIssuanceAfterSale(sale, delta, db, lm);
-    }
-    else if (action == DESTROY)
-    {
-        updateAvailableForIssuance(sale, delta, db);
     }
 }
 
@@ -222,31 +213,6 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     return createIssuanceRequestOpFrame.getResult().tr().createIssuanceRequestResult();
 }
 
-void CheckSaleStateOpFrame::restrictIssuanceAfterSale(SaleFrame::pointer sale, LedgerDelta & delta, Database & db, LedgerManager & lm)
-{
-    updateAvailableForIssuance(sale, delta, db);
-
-    updateMaxIssuance(sale, delta, db, lm);
-}
-
-void CheckSaleStateOpFrame::updateMaxIssuance(const SaleFrame::pointer sale,
-    LedgerDelta& delta, Database& db, LedgerManager& lm)
-{
-    // no need to update max issuance
-    return;
-}
-
-void CheckSaleStateOpFrame::updateAvailableForIssuance(const SaleFrame::pointer sale, LedgerDelta &delta,
-                                                       Database &db)
-{
-    auto baseAsset = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db);
-
-    // destroy remaining assets (difference between hardCap and currentCap)
-    baseAsset->setAvailableForIssuance(0);
-
-    EntryHelperProvider::storeChangeEntry(delta, db, baseAsset->mEntry);
-}
-
 FeeManager::FeeResult
 CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
                                                      AssetCode const& asset, int64_t amount,
@@ -266,7 +232,6 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
     const uint64_t baseAmountByCap = sale->getBaseAmountForCurrentCap(saleQuoteAsset.quoteAsset, baseBalance->getMinimumAmount());
     uint64_t baseAmount = min(baseAmountByCap, static_cast<uint64_t>(baseBalance->getAmount()));
     int64_t quoteAmount = OfferManager::calculateQuoteAmount(baseAmount, saleQuoteAsset.price, quoteBalance->getMinimumAmount());
-    auto saleType = sale->getSaleType();
     auto baseAsset = sale->getBaseAsset();
     auto price = saleQuoteAsset.price;
 

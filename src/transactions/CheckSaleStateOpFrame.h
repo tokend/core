@@ -42,16 +42,13 @@ class CheckSaleStateOpFrame : public OperationFrame
                                               int32_t ledgerVersion) const override;
 
     void issueBaseTokens(SaleFrame::pointer sale, AccountFrame::pointer saleOwnerAccount, Application& app,
-                        LedgerDelta& delta, Database& db, LedgerManager& lm, TokenAction action = NOTHING) const;
+                        LedgerDelta& delta, Database& db, LedgerManager& lm) const;
 
     bool handleCancel(SaleFrame::pointer sale, LedgerManager& lm, LedgerDelta& delta, Database& db);
     bool handleClose(SaleFrame::pointer sale, Application& app, LedgerManager& lm, LedgerDelta& delta, Database& db);
 
     CreateIssuanceRequestResult applyCreateIssuanceRequest(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,
         LedgerDelta& delta, LedgerManager& lm) const;
-
-    static void restrictIssuanceAfterSale(SaleFrame::pointer sale, LedgerDelta& delta, Database& db, LedgerManager& lm);
-    static void updateMaxIssuance(SaleFrame::pointer sale, LedgerDelta& delta, Database& db, LedgerManager& lm);
 
     FeeManager::FeeResult obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
                                                         AssetCode const& asset, int64_t amount,
@@ -86,8 +83,6 @@ public:
     }
 
     std::string getInnerResultCodeAsStr() override;
-
-    static void updateAvailableForIssuance(const SaleFrame::pointer sale, LedgerDelta &delta, Database &db);
 
 private:
     static uint64 getMinimumAssetAmount(const AssetCode& balance, Database& db, LedgerDelta* delta);
