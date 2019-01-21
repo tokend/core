@@ -105,5 +105,7 @@ class LedgerManagerImpl : public LedgerManager
     void checkDbState() override;
 
     bool shouldUse(const LedgerVersion version);
+
+    virtual bool isLicenseValid();
 };
 }

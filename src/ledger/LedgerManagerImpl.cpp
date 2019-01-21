@@ -12,6 +12,8 @@
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
+#include "ledger/LicenseHelper.h"
+#include "StorageHelperImpl.h"
 
 #include "overlay/OverlayManager.h"
 #include "util/make_unique.h"
@@ -692,6 +694,13 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
                                  " email: enterprise@distributedlab.com");
     }
 #endif
+
+    if(!isLicenseValid())
+    {
+        CLOG(FATAL, "Ledger") << "Invalid license, signatures mismatch" ;
+        throw std::runtime_error("invalid license");
+    }
+
     DBTimeExcluder qtExclude(mApp);
     CLOG(DEBUG, "Ledger") << "starting closeLedger() on ledgerSeq="
                           << mCurrentLedger->getHeader().ledgerSeq;
@@ -995,5 +1004,34 @@ LedgerManagerImpl::closeLedgerHelper(LedgerDelta const& delta)
 
     bool LedgerManagerImpl::shouldUse(const LedgerVersion version) {
         return getCurrentLedgerHeader().ledgerVersion >= static_cast<int32_t>(version);
+    }
+
+    //TODO refactor
+    bool LedgerManagerImpl::isLicenseValid() {
+        uint64_t  DEFAULT_ADMIN_COUNT = 2;
+        auto& db = getDatabase();
+        auto accountHelper = AccountHelper::Instance();
+        StorageHelperImpl storageHelper(db, nullptr);
+        LicenseHelper licenseHelper(storageHelper);
+        auto licenseEntry = licenseHelper.loadCurrentLicense();
+        auto licenseFrame = std::make_shared<LicenseFrame>(licenseEntry->mEntry);
+        auto license = licenseFrame->mEntry.data.license();
+
+        if (!licenseFrame->isLicenseValid(mApp, getCurrentLedgerHeader().ledgerVersion)) {
+            return false;
+        }
+
+        auto masterAcc = accountHelper->loadAccount(mApp.getMasterID(), db);
+        if (!licenseFrame->isLicenseExpired(mApp) &&
+                masterAcc->getAccount().signers.size() > license.adminCount)
+        {
+            return false;
+        }
+
+        if (licenseFrame->isLicenseExpired(mApp) &&
+                masterAcc->getAccount().signers.size() > DEFAULT_ADMIN_COUNT)
+        {
+            return false;
+        }
     }
 }

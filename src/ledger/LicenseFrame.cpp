@@ -1,5 +1,7 @@
 #include "LicenseFrame.h"
-#include "xdrpp/printer.h"
+#include "crypto/SHA.h"
+#include "xdrpp/marshal.h"
+#include "transactions/SignatureValidatorImpl.h"
 
 using namespace soci;
 using namespace std;
@@ -43,6 +45,7 @@ LicenseFrame::pointer LicenseFrame::createNew(stellar::Hash ledgerHash, stellar:
         LedgerEntry entry;
         entry.data.type(LedgerEntryType::LICENSE);
         entry.data.license().ledgerHash = ledgerHash;
+        entry.data.license().prevLicenseHash = licenseHash;
         entry.data.license().adminCount = adminCount;
         entry.data.license().dueDate = dueDate;
         entry.data.license().signatures = signatures;
@@ -54,4 +57,27 @@ LicenseFrame::pointer LicenseFrame::createNew(stellar::Hash ledgerHash, stellar:
     }
 
 }
+
+bool LicenseFrame::isLicenseValid(Application &app, uint32_t ledgerVersion)
+{
+    auto contentsHash = sha256(xdr::xdr_to_opaque(
+            mLicense.adminCount, mLicense.dueDate,
+            mLicense.ledgerHash, mLicense.prevLicenseHash
+            ));
+
+    SignatureValidatorImpl signatureValidator(contentsHash, {mLicense.signatures[0], mLicense.signatures[1]});
+
+    const int VALID_SIGNATURES_REQUIRED = 2;
+    SignatureValidator::Result result =
+            signatureValidator.check({app.getConfig().firstLicenseID, app.getConfig().secondLicenseID},
+                                     VALID_SIGNATURES_REQUIRED,
+                                     LedgerVersion(ledgerVersion));
+    return result == SignatureValidator::Result::SUCCESS;
+}
+
+bool LicenseFrame::isLicenseExpired(Application &app, uint32_t ledgerVersion)
+{
+    return app.timeNow() > mLicense.dueDate;
+}
+
 }

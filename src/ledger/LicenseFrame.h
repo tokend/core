@@ -1,4 +1,5 @@
 #include "EntryFrame.h"
+#include "main/Application.h"
 
 namespace soci
 {
@@ -30,5 +31,8 @@ namespace stellar
             return EntryFrame::pointer(new LicenseFrame(*this));
         }
         LicenseEntry& getLicenseEntry();
+
+        bool isLicenseValid(Application& app, uint32 ledgerVersion);
+        bool isLicenseExpired(Application& app);
     };
 }

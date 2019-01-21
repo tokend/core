@@ -55,6 +55,7 @@ LicenseOpFrame::doApply(Application& app,
 
     auto oldLicenseEntry = licenseHelper.loadCurrentLicense();
     auto le = oldLicenseEntry->mEntry.data.license();
+
     if (le.dueDate > app.timeNow() &&
         le.adminCount > mLicense.adminCount)
     {
@@ -62,8 +63,11 @@ LicenseOpFrame::doApply(Application& app,
         return false;
     }
 
+    auto newLicense = LicenseFrame::createNew(mLicense.blockHash,
+                                              mLicense.oldLicenseHash, mLicense.adminCount, mLicense.dueDate, mLicense.signatures);
 
-    if(!isSignatureValid(app, ledgerManager)){
+    if(!newLicense->isLicenseValid(app, ledgerManager.getCurrentLedgerHeader().ledgerVersion))
+    {
         innerResult().code(LicenseResultCode::INVALID_SIGNATURE);
         return false;
     }
@@ -71,8 +75,6 @@ LicenseOpFrame::doApply(Application& app,
     auto prevLicenseKey = licenseHelper.getLedgerKey(oldLicenseEntry->mEntry);
     licenseHelper.storeDelete(prevLicenseKey);
 
-    auto newLicense = LicenseFrame::createNew(mLicense.blockHash,
-            mLicense.oldLicenseHash, mLicense.adminCount, mLicense.dueDate, mLicense.signatures);
 
     licenseHelper.storeAdd(newLicense->mEntry);
     return true;
@@ -89,21 +91,6 @@ LicenseOpFrame::doCheckValid(Application& app)
     }
 
     return true;
-}
-
-bool LicenseOpFrame::isSignatureValid(Application& app, LedgerManager& lm)
-{
-    auto choppedLicenseHash = sha256(xdr::xdr_to_opaque(mLicense.adminCount,
-                                                        mLicense.dueDate, mLicense.blockHash, mLicense.oldLicenseHash));
-
-    SignatureValidatorImpl signatureValidator(choppedLicenseHash, {mLicense.signatures[0], mLicense.signatures[1]});
-
-    const int VALID_SIGNATURES_REQUIRED = 2;
-    SignatureValidator::Result result =
-            signatureValidator.check({app.getConfig().firstLicenseID, app.getConfig().secondLicenseID},
-                                                                  VALID_SIGNATURES_REQUIRED,
-                                                                  LedgerVersion(lm.getCurrentLedgerHeader().ledgerVersion));
-    return result == SignatureValidator::Result::SUCCESS;
 }
 
 } // namespace stellar
