@@ -16,7 +16,7 @@ PayoutOpFrame::PayoutOpFrame(Operation const &op, OperationResult &res,
 }
 
 bool
-PayoutOpFrame::isAllowed() const
+PayoutOpFrame::isSupported() const
 {
     return false;
 }

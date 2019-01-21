@@ -46,20 +46,6 @@ namespace stellar {
         destAccountFrame->setReferrer(referrerAccountID);
     }
 
-    bool CreateAccountOpFrame::isAllowedToUpdateAccountType(
-            const AccountFrame::pointer destAccount) const {
-        const auto accountType = destAccount->getAccountType();
-        if (accountType == mCreateAccount.accountType)
-            return true;
-        if (accountType != AccountType::NOT_VERIFIED)
-            return false;
-        // it is only allowed to change account type from not verified to general or syndicate or verified
-        return mCreateAccount.accountType == AccountType::SYNDICATE ||
-               mCreateAccount.accountType == AccountType::GENERAL ||
-               mCreateAccount.accountType == AccountType::EXCHANGE ||
-               mCreateAccount.accountType == AccountType::VERIFIED;
-    }
-
     bool CreateAccountOpFrame::createAccount(Application &app, LedgerDelta &delta,
                                              LedgerManager &ledgerManager) {
         auto &db = app.getDatabase();
@@ -122,24 +108,13 @@ namespace stellar {
             return false;
         }
 
-        auto destAccountFrame = AccountHelper::Instance()->loadAccount(delta, mCreateAccount.destination, db);
-        if (!destAccountFrame) {
-            return createAccount(app, delta, ledgerManager);
-        }
-
-        return tryUpdateAccountType(app, delta, db, destAccountFrame);
-    }
-
-    bool CreateAccountOpFrame::tryUpdateAccountType(Application &app, LedgerDelta &delta, Database &db,
-                                                    AccountFrame::pointer &destAccountFrame) {
-        if (!isAllowedToUpdateAccountType(destAccountFrame)) {
-            innerResult().code(CreateAccountResultCode::TYPE_NOT_ALLOWED);
+        if (AccountHelper::Instance()->exists(mCreateAccount.destination, db))
+        {
+            innerResult().code(CreateAccountResultCode::ALREADY_EXISTS);
             return false;
         }
 
-        buildAccount(app, delta, destAccountFrame);
-        EntryHelperProvider::storeChangeEntry(delta, db, destAccountFrame->mEntry);
-        return true;
+        return createAccount(app, delta, ledgerManager);
     }
 
     bool CreateAccountOpFrame::doCheckValid(Application &app) {

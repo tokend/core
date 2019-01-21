@@ -17,7 +17,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("Account role tests", "[tx][manage_account_roles]")
+TEST_CASE("Account role tests", "[tx][manage_account_role]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 

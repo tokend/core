@@ -24,13 +24,12 @@ ChangeAssetMaxIssuanceOpFrame::ChangeAssetMaxIssuanceOpFrame(Operation const& op
     mUpdateMaxIssuance = mManageAsset.request.updateMaxIssuance();
 }
 
-SourceDetails ChangeAssetMaxIssuanceOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    // No one is allowed to perform such operation
-    return SourceDetails({}, mSourceAccount->getHighThreshold(),
-        static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    // only asset owner can do it
+    return true;
 }
 
 bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta,
@@ -38,7 +37,7 @@ bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta
 {
     Database& db = ledgerManager.getDatabase();
     auto assetFrame = AssetHelperLegacy::Instance()->
-        loadAsset(mUpdateMaxIssuance.assetCode, db, &delta);
+        loadAsset(mUpdateMaxIssuance.assetCode, getSourceID(), db, &delta);
     if (!assetFrame)
     {
         innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);

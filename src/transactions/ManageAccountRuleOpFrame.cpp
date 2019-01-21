@@ -148,9 +148,12 @@ ManageAccountRuleOpFrame::isRuleUsed(StorageHelper &storageHelper, uint64_t rule
 {
     auto& roleHelper = storageHelper.getAccountRoleHelper();
 
-    if (roleHelper.isRuleUsed(ruleID))
+    auto roleIDs = roleHelper.loadRoleIDsByRule(ruleID);
+
+    if (!roleIDs.empty())
     {
         innerResult().code(ManageAccountRuleResultCode::RULE_IS_USED);
+        innerResult().roleIDs().assign(roleIDs.begin(), roleIDs.end());
         return true;
     }
 

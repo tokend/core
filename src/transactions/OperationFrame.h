@@ -83,7 +83,7 @@ class OperationFrame
                               std::vector<OperationCondition> &result) const;
 
 	// returns true if operation is allowed in the system
-	virtual bool isAllowed() const;
+	virtual bool isSupported() const;
 
 	// returns fee paid for operation.
 	// default fee for all operations is 0, finantial operations must override this function

@@ -68,10 +68,13 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
                     "{}", {ruleEntry.id});
             manageAccountRoleTestHelper.applyTx(master, creationRoleOp);
 
-            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+            auto result = manageAccountRuleTestHelper.applyTx(master, ruleEntry,
                                                 ManageAccountRuleAction::REMOVE,
                                                 ManageAccountRuleResultCode::RULE_IS_USED,
                                                 TransactionResultCode::txFAILED);
+
+            REQUIRE(result.roleIDs().size() == 1);
+            REQUIRE(result.roleIDs()[0] == ruleEntry.id);
         }
     }
 

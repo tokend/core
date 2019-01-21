@@ -15,16 +15,9 @@ class ChangeAssetPreIssuerOpFrame : public ManageAssetOpFrame
 
 	AssetChangePreissuedSigner const& mAssetChangePreissuedSigner;
 
-	// Returns update already existing request from db or creates new one.
-	// if fails to load request, returns nullptr
-	ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
-
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
-
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion, Database& db) const override;
-
+	bool
+	tryGetOperationConditions(StorageHelper& storageHelper,
+							  std::vector<OperationCondition>& result) const override;
 public:
     ChangeAssetPreIssuerOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);

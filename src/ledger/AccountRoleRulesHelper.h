@@ -33,8 +33,8 @@ public:
     void
     storeDelete(uint64_t const roleID);
 
-    bool
-    isRuleUsed(uint64_t const ruleID);
+    std::vector<uint64_t>
+    loadRolesByRule(uint64_t const ruleID);
 private:
 
     void

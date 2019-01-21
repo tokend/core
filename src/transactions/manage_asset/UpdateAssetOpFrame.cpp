@@ -23,20 +23,12 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-SourceDetails UpdateAssetOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                          int32_t ledgerVersion) const
+bool
+UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    vector<AccountType> allowedAccountTypes = {AccountType::MASTER};
-
-    bool isBaseAsset = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::BASE_ASSET);
-    bool isStatsAsset = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
-    if (!isBaseAsset && !isStatsAsset)
-    {
-        allowedAccountTypes.push_back(AccountType::SYNDICATE);
-    }
-
-    return SourceDetails(allowedAccountTypes, mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    // only asset owner can update asset
+    return true;
 }
 
 ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)

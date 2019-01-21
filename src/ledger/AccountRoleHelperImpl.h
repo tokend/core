@@ -37,8 +37,8 @@ private:
     AccountRoleFrame::pointer
     loadAccountRole(uint64_t const roleID) override;
 
-    bool
-    isRuleUsed(uint64_t const ruleID) override;
+    std::vector<uint64_t>
+    loadRoleIDsByRule(uint64_t const ruleID) override;
 
     void
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);

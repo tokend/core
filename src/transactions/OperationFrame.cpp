@@ -198,9 +198,9 @@ OperationFrame::getSourceAccountDetails(std::unordered_map<AccountID, Counterpar
                          getAnySignerType());
 }
 
-bool OperationFrame::isAllowed() const
+bool OperationFrame::isSupported() const
 {
-	// by default all operations are allowed
+	// by default all operations are supported
 	return true;
 }
 
@@ -314,10 +314,10 @@ OperationFrame::getResultCode() const
 bool
 OperationFrame::checkValid(Application& app, LedgerDelta* delta)
 {
-    if (!isAllowed())
+    if (!isSupported())
     {
 		app.getMetrics().NewMeter({ "operation", "invalid", "not-allowed" }, "operation").Mark();
-		mResult.code(OperationResultCode::opNOT_ALLOWED);
+		mResult.code(OperationResultCode::opNOT_SUPPORTED);
 		return false;
     }
 

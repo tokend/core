@@ -24,32 +24,12 @@ ChangeAssetPreIssuerOpFrame::ChangeAssetPreIssuerOpFrame(Operation const& op,
 {
 }
 
-SourceDetails ChangeAssetPreIssuerOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ChangeAssetPreIssuerOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    throw std::
-        runtime_error("Get source details for ChangeAssetPreIssuerOpFrame is not implemented");
-}
-
-SourceDetails ChangeAssetPreIssuerOpFrame::getSourceAccountDetails(
-    unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    const int32_t ledgerVersion, Database& db) const
-{
-    const auto assetFrame = AssetHelperLegacy::Instance()->
-        loadAsset(mAssetChangePreissuedSigner.code, db);
-    vector<PublicKey> signers;
-    if (!!assetFrame)
-    {
-        signers.push_back(assetFrame->getPreIssuedAssetSigner());
-    }
-
-    if (ledgerVersion >= int32_t(LedgerVersion::ASSET_PREISSUER_MIGRATION) && ledgerVersion < int32_t(LedgerVersion::ASSET_PREISSUER_MIGRATED))
-    {
-        signers.push_back(assetFrame->getOwner());
-    }
-
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, 1, 0, 0, signers);
+    // will be handled on signer level
+    return true;
 }
 
 bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, LedgerDelta& delta,

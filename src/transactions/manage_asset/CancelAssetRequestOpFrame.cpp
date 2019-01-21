@@ -29,6 +29,14 @@ CancelAssetRequestOpFrame::CancelAssetRequestOpFrame(Operation const& op,
 }
 
 bool
+CancelAssetRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+						  std::vector<OperationCondition>& result) const
+{
+	// only request creator can cancel it
+	return true;
+}
+
+bool
 CancelAssetRequestOpFrame::doApply(Application& app,
                               LedgerDelta& delta, LedgerManager& ledgerManager)
 {

@@ -19,8 +19,8 @@ AccountRoleRulesHelper::dropAll()
     mDatabase.getSession() << "DROP TABLE IF EXISTS account_role_rules;";
     mDatabase.getSession() << "CREATE TABLE account_role_rules"
                        "("
-                       "role_id BIGINT NOT NULL CHECK (role_id > 0),"
-                       "rule_id BIGINT NOT NULL CHECK (rule_id > 0),"
+                       "role_id BIGINT NOT NULL, "
+                       "rule_id BIGINT NOT NULL, "
                        "PRIMARY KEY (role_id, rule_id)"
                        ");";
 }
@@ -83,14 +83,16 @@ AccountRoleRulesHelper::craftRowsValues(uint64_t const roleID,
         throw std::runtime_error("Expected rule ids not be empty");
     }
 
-    std::string result = "";
+    std::stringstream ss;
 
     for (auto const ruleID : ruleIDs)
     {
-        result += "(" + std::to_string(roleID) + ", " + std::to_string(ruleID) + "), ";
+        ss << "(" << roleID << ", " << ruleID << ")" << ", ";
     }
 
-    return result.substr(0, result.size() - 2);
+    auto result = ss.str();
+
+    return result.erase(result.size()-2);
 }
 
 void
@@ -129,21 +131,22 @@ AccountRoleRulesHelper::loadRuleIDs(uint64_t const roleID)
     return result;
 }
 
-bool
-AccountRoleRulesHelper::isRuleUsed(uint64_t const ruleID)
+std::vector<uint64_t>
+AccountRoleRulesHelper::loadRolesByRule(uint64_t const ruleID)
 {
-    int exists = 0;
-    auto timer = mDatabase.getSelectTimer("account-rule-used");
     auto prep = mDatabase.getPreparedStatement(
-            "SELECT EXISTS (SELECT NULL FROM account_role_rules WHERE "
-            "rule_id = :id)");
+            "SELECT role_id FROM account_role_rules WHERE rule_id = :id");
     auto& st = prep.statement();
     st.exchange(use(ruleID, "id"));
-    st.exchange(into(exists));
-    st.define_and_bind();
-    st.execute(true);
 
-    return exists != 0;
+    std::vector<uint64_t> result;
+    auto timer = mDatabase.getSelectTimer("select_role_ids");
+    load(prep, [&result](uint64_t const& ruleID)
+    {
+        result.emplace_back(ruleID);
+    });
+
+    return result;
 }
 
 }

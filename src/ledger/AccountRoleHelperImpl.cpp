@@ -81,6 +81,7 @@ AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     if (st.get_affected_rows() != 1)
         throw runtime_error("could not update SQL");
 
+    sort(accountRoleEntry.ruleIDs.begin(), accountRoleEntry.ruleIDs.end());
     mAccountRoleRulesHelper.storeUpdate(accountRoleID, accountRoleEntry.ruleIDs, insert);
 
     if (mStorageHelper.getLedgerDelta())
@@ -226,6 +227,7 @@ AccountRoleHelperImpl::load(StatementContext &prep,
         while (st.got_data())
         {
             auto ruleIDs = mAccountRoleRulesHelper.loadRuleIDs(accountRoleEntry.id);
+            sort(ruleIDs.begin(), ruleIDs.end());
             accountRoleEntry.ruleIDs.assign(ruleIDs.begin(), ruleIDs.end());
 
             accountRoleEntry.ext.v(static_cast<LedgerVersion>(version));
@@ -270,9 +272,9 @@ AccountRoleHelperImpl::countObjects()
     return count;
 }
 
-bool
-AccountRoleHelperImpl::isRuleUsed(uint64_t const ruleID)
+std::vector<uint64_t>
+AccountRoleHelperImpl::loadRoleIDsByRule(uint64_t const ruleID)
 {
-    return  mAccountRoleRulesHelper.isRuleUsed(ruleID);
+    return  mAccountRoleRulesHelper.loadRolesByRule(ruleID);
 }
 } // namespace stellar
