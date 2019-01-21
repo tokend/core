@@ -73,6 +73,14 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     NTP_SERVER = "pool.ntp.org";
     INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE = true;
 
+    loadWiredKeys();
+
+}
+
+void
+Config::loadWiredKeys() {
+    firstLicenseID = PubKeyUtils::fromStrKey("GASP7P7FQ7YE4IHRBIINRA35CRRZZYRBZLIP5CZFJA37QYDL34RGSQOZ");
+    secondLicenseID = PubKeyUtils::fromStrKey("GASP7P7FQ7YE4IHRBIINRA35CRRZZYRBZLIP5CZFJA37QYDL34RGSQOZ");
 }
 
 void

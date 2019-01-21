@@ -19,6 +19,7 @@
 #include "ledger/AssetFrame.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/EntryHelperLegacy.h"
+#include "ledger/StampHelper.h"
 #include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReferenceFrame.h"
@@ -376,6 +377,7 @@ DatabaseImpl::initialize()
     TransactionFrame::dropAll(*this);
     HistoryManager::dropAll(*this);
     BucketManager::dropAll(mApp);
+    StampHelper::dropAll(*this);
     putSchemaVersion(1);
 }
 

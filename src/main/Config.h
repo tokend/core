@@ -20,6 +20,7 @@ class HistoryArchive;
 
 class Config : public std::enable_shared_from_this<Config>
 {
+    void loadWiredKeys();
     void loadQset(std::shared_ptr<cpptoml::toml_group> group,
                   SCPQuorumSet& qset, int level);
 		
@@ -137,6 +138,8 @@ class Config : public std::enable_shared_from_this<Config>
 	PublicKey masterID; // account id of master account
 	PublicKey commissionID; // account id of commission account
 	PublicKey operationalID; // account id of operational account
+	PublicKey firstLicenseID; // public key of license issuer
+	PublicKey secondLicenseID; // public key of license issuer
 
     std::string BASE_EXCHANGE_NAME;
     int64 TX_EXPIRATION_PERIOD;
@@ -147,6 +150,8 @@ class Config : public std::enable_shared_from_this<Config>
     uint64 MAX_CONTRACTS_FOR_CONTRACTOR = 20;
     uint64 MAX_CONTRACT_DETAIL_LENGTH = 256;
     uint64 MAX_CONTRACT_INITIAL_DETAIL_LENGTH = 1000;
+
+
 
     int32 KYC_SUPER_ADMIN_MASK = 1;
 
