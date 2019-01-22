@@ -114,15 +114,6 @@ applyManageAssetTx(Application& app, SecretKey& source, Salt seq,
 				   ManageAssetAction action  = ManageAssetAction::CREATE_ASSET_CREATION_REQUEST,
 				   ManageAssetResultCode result = ManageAssetResultCode::SUCCESS);
 
-TransactionFramePtr createDirectDebitTx(Hash const& networkID, SecretKey& source,
-                                          Salt seq, AccountID from, PaymentOpV2 paymentOp);
-
-DirectDebitResult
-applyDirectDebitTx(Application& app, SecretKey& source, Salt seq,
-        AccountID from, PaymentOpV2 paymentOp,
-        DirectDebitResultCode result = DirectDebitResultCode::SUCCESS);
-
-
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from,
     BalanceID fromBalanceID, BalanceID toBalanceID, Salt seq, int64_t amount,
     PaymentFeeDataV2 paymentFee, bool isSourceFee = false, std::string subject = "",
