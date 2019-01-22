@@ -23,10 +23,10 @@ ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 {
     if (!(getSourceID() == mManageBalance.destination))
     {
-        result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create", mSourceAccount);
+        result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create_for_other", mSourceAccount);
     }
 
-    // account can create balance for him self without special rule
+    result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create", mSourceAccount);
     return true;
 }
 

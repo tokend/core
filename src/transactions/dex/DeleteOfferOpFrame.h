@@ -15,6 +15,10 @@ namespace stellar
 {
 class DeleteOfferOpFrame : public ManageOfferOpFrame
 {
+    bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const override;
+
 public:
     DeleteOfferOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx);

@@ -30,7 +30,13 @@ bool
 CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                             std::vector<OperationCondition>& result) const
 {
-    // only asset owner can create sale
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::SALE);
+    resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
+
+    result.emplace_back(resource, "create", mSourceAccount);
+
+    // only asset owner can create sale, but restrict him to create sale - feature
     return true;
 }
 

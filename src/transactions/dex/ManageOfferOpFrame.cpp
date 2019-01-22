@@ -56,39 +56,4 @@ std::string ManageOfferOpFrame::getInnerResultCodeAsStr()
     const auto code = getInnerCode(result);
     return xdr::xdr_traits<ManageOfferResultCode>::enum_name(code);
 }
-
-bool
-ManageOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                              std::vector<OperationCondition> &result) const
-{
-    auto& balanceHelper = storageHelper.getBalanceHelper();
-    auto& assetHelper = storageHelper.getAssetHelper();
-
-    auto baseBalance = balanceHelper.loadBalance(mManageOffer.baseBalance);
-    if (!baseBalance)
-    {
-        mResult.code(OperationResultCode::opNO_BALANCE);
-        return false;
-    }
-
-    auto quoteBalance = balanceHelper.loadBalance(mManageOffer.quoteBalance);
-    if (!quoteBalance)
-    {
-        mResult.code(OperationResultCode::opNO_BALANCE);
-        return false;
-    }
-
-    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
-    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
-
-    AccountRuleResource resource(LedgerEntryType::OFFER_ENTRY);
-    resource.offer().baseAssetCode = baseAsset->getCode();
-    resource.offer().quoteAssetCode = quoteAsset->getCode();
-    resource.offer().baseAssetType = baseAsset->getType();
-    resource.offer().quoteAssetType = quoteAsset->getType();
-
-    result.emplace_back(resource, "manage", mSourceAccount);
-
-    return true;
-}
 }

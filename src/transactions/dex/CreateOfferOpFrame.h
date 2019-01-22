@@ -33,6 +33,10 @@ protected:
         BalanceID const& balanceID,
         Database& db, LedgerDelta& delta);
 
+    bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const override;
+
 public:
     bool isCapitalDeployment = false;
 

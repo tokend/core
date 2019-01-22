@@ -66,7 +66,18 @@ bool
 CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                 std::vector<OperationCondition>& result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::SALE), "check", mSourceAccount);
+    auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
+    if (!sale)
+    {
+        mResult.code(OperationResultCode::opNO_SALE);
+        return false;
+    }
+
+    AccountRuleResource resource(LedgerEntryType::SALE);
+    resource.sale().saleID = sale->getID();
+    resource.sale().saleType = sale->getType();
+
+    result.emplace_back(sale, "check", mSourceAccount);
 
     return true;
 }

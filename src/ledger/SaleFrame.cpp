@@ -133,6 +133,11 @@ uint64_t SaleFrame::getID() const
     return mSale.saleID;
 }
 
+uint64_t SaleFrame::getType() const
+{
+    return mSale.saleType;
+}
+
 uint64_t SaleFrame::getPrice(AssetCode const& code)
 {
     return getSaleQuoteAsset(code).price;
@@ -209,6 +214,7 @@ SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &own
         entry.data.type(LedgerEntryType::SALE);
         auto& sale = entry.data.sale();
         sale.saleID = id;
+        sale.saleType = request.saleType;
         sale.ownerID = ownerID;
         sale.baseAsset = request.baseAsset;
         sale.defaultQuoteAsset = request.defaultQuoteAsset;

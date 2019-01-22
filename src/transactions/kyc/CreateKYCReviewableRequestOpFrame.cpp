@@ -25,12 +25,15 @@ CreateUpdateKYCRequestOpFrame::tryGetOperationConditions(StorageHelper& storageH
 {
     auto destAccountID = mCreateUpdateKYCRequest.updateKYCRequestData.accountToUpdateKYC;
 
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_KYC);
+
     if (!(getSourceID() == destAccountID) || (mCreateUpdateKYCRequest.allTasks))
     {
-        result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT_KYC), "create", mSourceAccount);
+        result.emplace_back(resource, "create_with_tasks", mSourceAccount);
     }
 
-    // account do not need any rules to update role for him self with default tasks
+    result.emplace_back(resource, "create", mSourceAccount);
     return true;
 }
 

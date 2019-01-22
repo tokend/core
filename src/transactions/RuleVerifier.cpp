@@ -18,16 +18,30 @@ RuleVerifier::isStringMatches(std::string const &expectedStr,
 }
 
 bool
-RuleVerifier::isAssetTypeMatches(uint64_t const expectedType,
-                                 uint64_t const actualType) const
+RuleVerifier::isTypeMatches(uint64_t const expectedType,
+                            uint64_t const actualType) const
 {
-    return (expectedType == actualType) || (actualType == UINT64_MAX);
+    return isNumberMatches(expectedType, actualType);
+}
+
+bool
+RuleVerifier::isIDMatches(uint64_t const expectedID,
+                          uint64_t const actualID) const
+{
+    return isNumberMatches(expectedID, actualID);
+}
+
+bool
+RuleVerifier::isNumberMatches(uint64_t const expectedNum,
+                              uint64_t const actualNum) const
+{
+    return (expectedNum == actualNum) || (actualNum == UINT64_MAX);
 }
 
 bool
 RuleVerifier::isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const
 {
-    return isAssetTypeMatches(expectedAsset.type, actualAsset.type) &&
+    return isTypeMatches(expectedAsset.type, actualAsset.type) &&
            isStringMatches(expectedAsset.code, actualAsset.code);
 }
 

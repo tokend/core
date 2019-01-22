@@ -6,6 +6,7 @@
 #include <ledger/FeeHelper.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/KeyValueHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include "util/asio.h"
 #include "CreateIssuanceRequestOpFrame.h"
 #include "ledger/AccountHelper.h"
@@ -49,6 +50,28 @@ bool
 CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
 									 	std::vector<OperationCondition>& result) const
 {
+	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
+	if (!asset)
+	{
+		mResult.code(OperationResultCode::opNO_ASSET);
+		return false;
+	}
+
+	auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateIssuanceRequest.request.receiver);
+	if (!balance)
+	{
+	    mResult.code(OperationResultCode::opNO_BALANCE);
+	    return false;
+	}
+
+	auto account = AccountHelper::Instance()->mustLoadAccount(balance->getAccountID(), storageHelper.getDatabase());
+
+	AccountRuleResource resource(LedgerEntryType::ASSET);
+	resource.asset().assetCode = asset->getCode();
+	resource.asset().assetType = asset->getType();
+
+	result.emplace_back(resource, "receive", account);
+
 	// only asset owner can do issuance, it will be handled in doApply
 	return true;
 }

@@ -22,7 +22,13 @@ protected:
     isStringMatches(std::string const& a, std::string const& b) const;
 
     bool
-    isAssetTypeMatches(uint64_t const expectedType, uint64_t const actualType) const;
+    isTypeMatches(uint64_t const expectedType, uint64_t const actualType) const;
+
+    bool
+    isIDMatches(uint64_t const expectedID, uint64_t const actualID) const;
+
+    bool
+    isNumberMatches(uint64_t const expectedNum, uint64_t const actualNum) const;
 
     bool
     isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const;

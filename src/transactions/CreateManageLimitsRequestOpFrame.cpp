@@ -15,7 +15,7 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
                                         std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().requestType = ReviewableRequestType::LIMITS_UPDATE;
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::LIMITS_UPDATE);
 
     result.emplace_back(resource, "create", mSourceAccount);
 

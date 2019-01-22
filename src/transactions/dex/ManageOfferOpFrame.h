@@ -26,10 +26,6 @@ protected:
 
     ManageOfferOp const& mManageOffer;
 
-    bool
-    tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const override;
-
 public:
     static const uint64_t SECONDARY_MARKET_ORDER_BOOK_ID = 0;
     ManageOfferOpFrame(Operation const& op, OperationResult& res,

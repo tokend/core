@@ -12,6 +12,10 @@ namespace stellar
 class ReviewRequestOpFrame : public OperationFrame
 {
 	bool isRejectReasonValid(Application& app);
+
+	bool
+	tryGetOperationConditions(StorageHelper& storageHelper,
+							  std::vector<OperationCondition>& result) const override;
 protected:
     ReviewRequestResult&
     innerResult()

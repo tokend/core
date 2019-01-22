@@ -74,15 +74,31 @@ AccountRuleVerifierImpl::isResourceMatches(
     switch (conditionResource.type())
     {
         case LedgerEntryType::ASSET:
-            return isAssetTypeMatches(conditionResource.asset().assetType,
-                                      actualResource.asset().assetType) &&
+            return isTypeMatches(conditionResource.asset().assetType,
+                                 actualResource.asset().assetType) &&
                    isStringMatches(conditionResource.asset().assetCode,
                                    actualResource.asset().assetCode);
         case LedgerEntryType::REVIEWABLE_REQUEST:
-            return (actualResource.reviewableRequest().requestType ==
-                    conditionResource.reviewableRequest().requestType) ||
-                   (actualResource.reviewableRequest().requestType ==
-                    ReviewableRequestType::ANY);
+        {
+            auto expectedDetails = conditionResource.reviewableRequest().details;
+            auto actualDetails = actualResource.reviewableRequest().details;
+            if (actualDetails.requestType() == ReviewableRequestType::ANY) {
+                return true;
+            }
+
+            if (actualDetails.requestType() != expectedDetails.requestType()) {
+                return false;
+            }
+
+            switch (expectedDetails.requestType())
+            {
+                case ReviewableRequestType::SALE:
+                    return isTypeMatches(expectedDetails.sale().type,
+                                         actualDetails.sale().type);
+                default:
+                    return true;
+            }
+        }
         case LedgerEntryType::OFFER_ENTRY:
         {
             AssetFields expectedBase{conditionResource.offer().baseAssetCode,
@@ -98,6 +114,11 @@ AccountRuleVerifierImpl::isResourceMatches(
                    (isAssetMatches(expectedBase, actualQuote) &&
                     isAssetMatches(expectedQuote, actualBase));
         }
+        case LedgerEntryType::SALE:
+            return isTypeMatches(conditionResource.sale().saleType,
+                                 actualResource.sale().saleType) &&
+                   isIDMatches(conditionResource.sale().saleType,
+                               actualResource.sale().saleType);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:

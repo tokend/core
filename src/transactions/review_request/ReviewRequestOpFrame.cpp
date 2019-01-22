@@ -35,6 +35,14 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
+bool
+ReviewRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+							  std::vector<OperationCondition>& result) const
+{
+	// only reviewer can review request
+	return true;
+}
+
 bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database & db, LedgerDelta & delta)
 {
     auto requestorAccount = AccountHelper::Instance()->loadAccount(request->getRequestor(), db, &delta);

@@ -23,6 +23,14 @@ DeleteOfferOpFrame::DeleteOfferOpFrame(Operation const& op,
 }
 
 bool
+DeleteOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                std::vector<OperationCondition> &result) const
+{
+    // only offer owner can remove it
+    return true;
+}
+
+bool
 DeleteOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
                             LedgerManager& ledgerManager)
 {
