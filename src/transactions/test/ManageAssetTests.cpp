@@ -25,7 +25,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
 TEST_CASE("manage asset", "[tx][manage_asset]")
 {
     auto cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    auto updateMaxIssuanceTxHash = "6b3d779a2171e2757908c4271bfa3f2531b594f0ffca0814a55168e1c01919b3";
+    auto updateMaxIssuanceTxHash = "1096aef9c1847621e7ce3e6e1c1568932a65ec1b91ba6532086d8e98193ed63d";
     cfg.TX_SKIP_SIG_CHECK.emplace(updateMaxIssuanceTxHash);
     VirtualClock clock;
     const auto appPtr = Application::create(clock, cfg);

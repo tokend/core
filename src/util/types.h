@@ -62,7 +62,6 @@ bool isSystemAccountType(AccountType accountType);
 std::vector<FeeType> getAllFeeTypes();
 // returns true, if passed opType is valid operation type
 
-bool isFeeValid(FeeData const& fee);
 bool isFeeTypeValid(FeeType feeType);
 
 int32_t getManagerType(AccountType accountType);
