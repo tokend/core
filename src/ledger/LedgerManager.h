@@ -176,9 +176,6 @@ class LedgerManager
     virtual void checkDbState() = 0;
 
     virtual bool shouldUse(const LedgerVersion version) = 0;
-
-    virtual bool isLicenseValid() = 0;
-
     virtual ~LedgerManager()
     {
     }
