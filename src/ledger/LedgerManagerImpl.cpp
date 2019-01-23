@@ -1009,29 +1009,39 @@ LedgerManagerImpl::closeLedgerHelper(LedgerDelta const& delta)
     //TODO refactor
     bool LedgerManagerImpl::isLicenseValid() {
         uint64_t  DEFAULT_ADMIN_COUNT = 2;
+
         auto& db = getDatabase();
         auto accountHelper = AccountHelper::Instance();
+        auto masterAcc = accountHelper->loadAccount(mApp.getMasterID(), db);
+
         StorageHelperImpl storageHelper(db, nullptr);
         LicenseHelper licenseHelper(storageHelper);
         auto licenseEntry = licenseHelper.loadCurrentLicense();
+        if (!licenseEntry && masterAcc->getAccount().signers.size() > DEFAULT_ADMIN_COUNT)
+        {
+            CLOG(WARNING, "License")
+                    << "Too many admins in trial mode";
+            return false;
+        }
+
         auto licenseFrame = std::make_shared<LicenseFrame>(licenseEntry->mEntry);
-        auto license = licenseFrame->mEntry.data.license();
+        auto allowedAdminCount = licenseFrame->isExpired(mApp)
+                                 ? DEFAULT_ADMIN_COUNT
+                                 : licenseFrame->mEntry.data.license().adminCount;
 
-        if (!licenseFrame->isLicenseValid(mApp, getCurrentLedgerHeader().ledgerVersion)) {
-            return false;
-        }
-
-        auto masterAcc = accountHelper->loadAccount(mApp.getMasterID(), db);
-        if (!licenseFrame->isLicenseExpired(mApp) &&
-                masterAcc->getAccount().signers.size() > license.adminCount)
+        if (masterAcc->getAccount().signers.size() > allowedAdminCount)
         {
+            CLOG(WARNING, "License")
+                    << "Too many admins";
             return false;
         }
 
-        if (licenseFrame->isLicenseExpired(mApp) &&
-                masterAcc->getAccount().signers.size() > DEFAULT_ADMIN_COUNT)
-        {
+        if (!licenseFrame->isSignatureValid(mApp)) {
+            CLOG(WARNING, "License")
+                    << "Invalid license signature";
             return false;
         }
+
+        return true;
     }
 }

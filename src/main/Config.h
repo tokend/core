@@ -20,7 +20,6 @@ class HistoryArchive;
 
 class Config : public std::enable_shared_from_this<Config>
 {
-    void loadWiredKeys();
     void loadQset(std::shared_ptr<cpptoml::toml_group> group,
                   SCPQuorumSet& qset, int level);
 		
@@ -33,7 +32,8 @@ class Config : public std::enable_shared_from_this<Config>
   public:
     typedef std::shared_ptr<Config> pointer;
 
-	void validateConfig();
+    std::vector<PublicKey> getWiredKeys() const;
+    void validateConfig();
 
     enum TestDbMode
     {
@@ -138,8 +138,6 @@ class Config : public std::enable_shared_from_this<Config>
 	PublicKey masterID; // account id of master account
 	PublicKey commissionID; // account id of commission account
 	PublicKey operationalID; // account id of operational account
-	PublicKey firstLicenseID; // public key of license issuer
-	PublicKey secondLicenseID; // public key of license issuer
 
     std::string BASE_EXCHANGE_NAME;
     int64 TX_EXPIRATION_PERIOD;

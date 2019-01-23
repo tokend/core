@@ -53,28 +53,20 @@ LicenseOpFrame::doApply(Application& app,
         return false;
     }
 
-    auto oldLicenseEntry = licenseHelper.loadCurrentLicense();
-    auto le = oldLicenseEntry->mEntry.data.license();
-
-    if (le.dueDate > app.timeNow() &&
-        le.adminCount > mLicense.adminCount)
-    {
-        innerResult().code(LicenseResultCode::DOWNGRADE_NOT_ALLOWED);
-        return false;
-    }
-
     auto newLicense = LicenseFrame::createNew(mLicense.blockHash,
                                               mLicense.oldLicenseHash, mLicense.adminCount, mLicense.dueDate, mLicense.signatures);
 
-    if(!newLicense->isLicenseValid(app, ledgerManager.getCurrentLedgerHeader().ledgerVersion))
+    if(!newLicense->isSignatureValid(app))
     {
         innerResult().code(LicenseResultCode::INVALID_SIGNATURE);
         return false;
     }
 
-    auto prevLicenseKey = licenseHelper.getLedgerKey(oldLicenseEntry->mEntry);
-    licenseHelper.storeDelete(prevLicenseKey);
-
+    auto oldLicenseEntry = licenseHelper.loadCurrentLicense();
+    if (oldLicenseEntry){
+        auto prevLicenseKey = licenseHelper.getLedgerKey(oldLicenseEntry->mEntry);
+        licenseHelper.storeDelete(prevLicenseKey);
+    }
 
     licenseHelper.storeAdd(newLicense->mEntry);
     return true;

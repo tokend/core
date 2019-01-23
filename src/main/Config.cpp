@@ -73,14 +73,26 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     NTP_SERVER = "pool.ntp.org";
     INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE = true;
 
-    loadWiredKeys();
-
 }
 
-void
-Config::loadWiredKeys() {
-    firstLicenseID = PubKeyUtils::fromStrKey("GASP7P7FQ7YE4IHRBIINRA35CRRZZYRBZLIP5CZFJA37QYDL34RGSQOZ");
-    secondLicenseID = PubKeyUtils::fromStrKey("GASP7P7FQ7YE4IHRBIINRA35CRRZZYRBZLIP5CZFJA37QYDL34RGSQOZ");
+std::vector<PublicKey>
+Config::getWiredKeys() const
+{
+    std::vector<PublicKey> keys;
+    auto ledgerVersion = LedgerVersion(LEDGER_PROTOCOL_VERSION);
+    switch (ledgerVersion)
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            keys.emplace_back(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
+            keys.emplace_back(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
+            break;
+        default:
+            keys.emplace_back(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
+            keys.emplace_back(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
+            break;
+    }
+
+    return keys;
 }
 
 void

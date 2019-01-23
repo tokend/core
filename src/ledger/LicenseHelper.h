@@ -19,14 +19,15 @@ namespace stellar
 
         LedgerKey getLedgerKey(LedgerEntry const &from) override;
         EntryFrame::pointer fromXDR(LedgerEntry const &from) override;
-        uint64_t countObjects() override;
         Database &getDatabase() override;
         bool exists(LedgerKey const &key) override;
         void storeAdd(LedgerEntry const &entry) override;
         void storeDelete(LedgerKey const &key) override;
         EntryFrame::pointer storeLoad(LedgerKey const &ledgerKey) override;
         EntryFrame::pointer loadCurrentLicense();
+        bool trialOnly();
     private:
+        uint64_t countObjects() override;
         EntryFrame::pointer loadLicense(LedgerKey const &key);
         void loadLicenses(StatementContext& prep,
         std::function<void(LedgerEntry const&)> license);

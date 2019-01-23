@@ -55,6 +55,10 @@ namespace stellar
         return count;
     }
 
+    bool LicenseHelper::trialOnly() {
+        return countObjects() == 0;
+    }
+
     Database &LicenseHelper::getDatabase() {
         return mStorageHelper.getDatabase();
     }
@@ -184,7 +188,10 @@ namespace stellar
     EntryFrame::pointer LicenseHelper::loadCurrentLicense()
     {
         auto& db = getDatabase();
-        auto prep = db.getPreparedStatement(selectorLicense);
+        string sql = selectorLicense;
+        sql += "ORDER BY id DESC LIMIT 1";
+
+        auto prep = db.getPreparedStatement(sql);
         LicenseFrame::pointer retLicense;
         loadLicenses(prep, [&retLicense](LedgerEntry const &entry) {
             retLicense = make_shared<LicenseFrame>(entry);

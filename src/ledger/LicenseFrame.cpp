@@ -58,7 +58,7 @@ LicenseFrame::pointer LicenseFrame::createNew(stellar::Hash ledgerHash, stellar:
 
 }
 
-bool LicenseFrame::isLicenseValid(Application &app, uint32_t ledgerVersion)
+bool LicenseFrame::isSignatureValid(Application &app)
 {
     auto contentsHash = sha256(xdr::xdr_to_opaque(
             mLicense.adminCount, mLicense.dueDate,
@@ -68,14 +68,17 @@ bool LicenseFrame::isLicenseValid(Application &app, uint32_t ledgerVersion)
     SignatureValidatorImpl signatureValidator(contentsHash, {mLicense.signatures[0], mLicense.signatures[1]});
 
     const int VALID_SIGNATURES_REQUIRED = 2;
+    const auto config = app.getConfig();
+    auto keys = config.getWiredKeys();
+
     SignatureValidator::Result result =
-            signatureValidator.check({app.getConfig().firstLicenseID, app.getConfig().secondLicenseID},
+            signatureValidator.check(keys,
                                      VALID_SIGNATURES_REQUIRED,
-                                     LedgerVersion(ledgerVersion));
+                                     LedgerVersion(app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion));
     return result == SignatureValidator::Result::SUCCESS;
 }
 
-bool LicenseFrame::isLicenseExpired(Application &app, uint32_t ledgerVersion)
+bool LicenseFrame::isExpired(Application &app)
 {
     return app.timeNow() > mLicense.dueDate;
 }

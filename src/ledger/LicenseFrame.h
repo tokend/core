@@ -32,7 +32,7 @@ namespace stellar
         }
         LicenseEntry& getLicenseEntry();
 
-        bool isLicenseValid(Application& app, uint32 ledgerVersion);
-        bool isLicenseExpired(Application& app);
+        bool isSignatureValid(Application &app);
+        bool isExpired(Application &app);
     };
 }
