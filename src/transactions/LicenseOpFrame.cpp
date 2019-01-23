@@ -28,7 +28,8 @@ LicenseOpFrame::getSourceAccountDetails(
     unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
     int32_t ledgerVersion) const
 {
-//    return SourceDetails();
+    return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
+                         static_cast<int32_t>(SignerType::TX_SENDER));
 }
 
 LicenseOpFrame::LicenseOpFrame(
@@ -47,14 +48,14 @@ LicenseOpFrame::doApply(Application& app,
     StampHelper stampHelper(storageHelper);
     LicenseHelper licenseHelper(storageHelper);
 
-    if (!stampHelper.exists(mLicense.blockHash, mLicense.oldLicenseHash))
+    if (!stampHelper.exists(mLicense.ledgerHash, mLicense.prevLicenseHash))
     {
         innerResult().code(LicenseResultCode::INVALID_STAMP);
         return false;
     }
 
-    auto newLicense = LicenseFrame::createNew(mLicense.blockHash,
-                                              mLicense.oldLicenseHash, mLicense.adminCount, mLicense.dueDate, mLicense.signatures);
+    auto newLicense = LicenseFrame::createNew(mLicense.ledgerHash,
+                                              mLicense.prevLicenseHash, mLicense.adminCount, mLicense.dueDate, mLicense.signatures);
 
     if(!newLicense->isSignatureValid(app))
     {

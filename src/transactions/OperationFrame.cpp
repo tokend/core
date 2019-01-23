@@ -17,6 +17,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
+#include "ledger/LicenseHelper.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/payment/PaymentOpFrame.h"
@@ -42,6 +43,8 @@
 #include "transactions/dex/ManageSaleOpFrame.h"
 #include "transactions/ManageAccountRolePermissionOpFrame.h"
 #include "transactions/ManageAccountRoleOpFrame.h"
+#include "transactions/StampOpFrame.h"
+#include "transactions/LicenseOpFrame.h"
 #include "database/Database.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
@@ -138,6 +141,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_ROLE_PERMISSION:
         return shared_ptr<OperationFrame>(new ManageAccountRolePermissionOpFrame(op, res, tx));
+    case OperationType::STAMP:
+        return shared_ptr<OperationFrame>(new StampOpFrame(op, res, tx));
+    case OperationType::LICENSE:
+        return shared_ptr<OperationFrame>(new LicenseOpFrame(op, res, tx));
     default:
         ostringstream err;
         err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
@@ -158,10 +165,54 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
     {
         return false;
     }
+    if (!canBeApplied(app, storageHelper))
+    {
+        mResult.code(OperationResultCode::opNOT_ALLOWED); //?
+        return false;
+    }
+
     bool isApplied =
         doApply(app, *storageHelper.getLedgerDelta(), app.getLedgerManager());
 	app.getMetrics().NewMeter({ "operation", isApplied ? "applied" : "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
 	return isApplied;
+}
+
+bool
+OperationFrame::canBeApplied(Application &app, StorageHelper &storageHelper)
+{
+    auto& db = storageHelper.getDatabase();
+    auto accountHelper = AccountHelper::Instance();
+    auto acc = accountHelper->loadAccount(*mOperation.sourceAccount, db);
+    auto isAdmin = acc->getAccountType() == AccountType::MASTER;
+
+    return !isAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
+}
+
+bool
+OperationFrame::checkOp(Application &app, StorageHelper &storageHelper)
+{
+    auto opType = mOperation.body.type();
+
+
+    bool opAllowed = (opType == OperationType::LICENSE
+            || opType == OperationType::STAMP
+            || opType == OperationType::SET_OPTIONS);
+
+    return opAllowed;
+}
+
+bool
+OperationFrame::checkAdminCount(Application &app, StorageHelper &storageHelper)
+{
+    LicenseHelper licenseHelper(storageHelper);
+    auto allowedAdmins = licenseHelper.getAllowedAdmins(app);
+
+    auto& db = storageHelper.getDatabase();
+    auto accountHelper = AccountHelper::Instance();
+    auto masterAcc = accountHelper->loadAccount(app.getMasterID(), db);
+    const auto adminCount = masterAcc->getAccount().signers.size();
+
+    return adminCount <= allowedAdmins;
 }
 
 std::string OperationFrame::getInnerResultCodeAsStr() {

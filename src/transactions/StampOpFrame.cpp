@@ -27,8 +27,8 @@ StampOpFrame::getSourceAccountDetails(
     std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
     int32_t ledgerVersion) const
 {
-//    return SourceDetails();
-}
+    return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
+                         static_cast<int32_t>(SignerType::TX_SENDER));}
 
 StampOpFrame::StampOpFrame(
     Operation const& op, OperationResult& res, TransactionFrame& parentTx)

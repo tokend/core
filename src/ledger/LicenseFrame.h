@@ -18,7 +18,7 @@ namespace stellar
         typedef std::shared_ptr<LicenseFrame> pointer;
 
         static pointer createNew(Hash ledgerHash, Hash licenseHash,
-                uint64_t adminCount, uint64_t dueDate, xdr::xvector<DecoratedSignature, 2> signatures);
+                uint64_t adminCount, uint64_t dueDate, xdr::xvector<DecoratedSignature> signatures);
 
         LicenseFrame();
         LicenseFrame(LedgerEntry const& from);

@@ -37,6 +37,9 @@ class OperationFrame
   private:
 	bool checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties);
 	bool checkRolePermissions(Application& app);
+	bool canBeApplied(Application& app, StorageHelper& storageHelper);
+	bool checkAdminCount(Application& app, StorageHelper& storageHelper);
+	bool checkOp(Application& app, StorageHelper& storageHelper);
   
   protected:
 

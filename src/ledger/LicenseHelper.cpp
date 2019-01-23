@@ -55,10 +55,6 @@ namespace stellar
         return count;
     }
 
-    bool LicenseHelper::trialOnly() {
-        return countObjects() == 0;
-    }
-
     Database &LicenseHelper::getDatabase() {
         return mStorageHelper.getDatabase();
     }
@@ -199,5 +195,23 @@ namespace stellar
         return retLicense;
     }
 
+    uint64_t LicenseHelper::getAllowedAdmins(Application& app)
+    {
+        const uint64_t DEFAULT_ADMIN_COUNT = 2;
+
+        auto licenseEntry = loadCurrentLicense();
+        if(!licenseEntry){
+            return DEFAULT_ADMIN_COUNT;
+        }
+
+        auto licenseFrame = std::make_shared<LicenseFrame>(licenseEntry->mEntry);
+
+        if(!licenseFrame->isSignatureValid(app) || licenseFrame->isExpired(app))
+        {
+            return DEFAULT_ADMIN_COUNT;
+        }
+
+        return licenseFrame->mEntry.data.license().adminCount;
+    }
 }
 

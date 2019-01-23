@@ -38,7 +38,7 @@ LicenseEntry& LicenseFrame::getLicenseEntry()
 }
 
 LicenseFrame::pointer LicenseFrame::createNew(stellar::Hash ledgerHash, stellar::Hash licenseHash, uint64_t adminCount,
-                                              uint64_t dueDate, xdr::xvector<DecoratedSignature, 2> signatures)
+                                              uint64_t dueDate, xdr::xvector<DecoratedSignature> signatures)
 {
     try
     {
@@ -60,21 +60,30 @@ LicenseFrame::pointer LicenseFrame::createNew(stellar::Hash ledgerHash, stellar:
 
 bool LicenseFrame::isSignatureValid(Application &app)
 {
+    const int VALID_SIGNATURES_REQUIRED = 2;
+
+    if(mLicense.signatures.size() != VALID_SIGNATURES_REQUIRED)
+    {
+        return false;
+    }
+
     auto contentsHash = sha256(xdr::xdr_to_opaque(
             mLicense.adminCount, mLicense.dueDate,
             mLicense.ledgerHash, mLicense.prevLicenseHash
             ));
+    xdr::xvector<DecoratedSignature, 20> signatures;
+    signatures.append(mLicense.signatures.data(), mLicense.signatures.size());
 
-    SignatureValidatorImpl signatureValidator(contentsHash, {mLicense.signatures[0], mLicense.signatures[1]});
+    SignatureValidatorImpl signatureValidator(contentsHash, signatures);
 
-    const int VALID_SIGNATURES_REQUIRED = 2;
+    LedgerVersion ledgerVersion = LedgerVersion(app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion);
     const auto config = app.getConfig();
-    auto keys = config.getWiredKeys();
+    auto keys = config.getWiredKeys(ledgerVersion);
 
     SignatureValidator::Result result =
             signatureValidator.check(keys,
                                      VALID_SIGNATURES_REQUIRED,
-                                     LedgerVersion(app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion));
+                                     ledgerVersion);
     return result == SignatureValidator::Result::SUCCESS;
 }
 
