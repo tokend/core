@@ -175,7 +175,7 @@ bool isSystemAccountType(AccountType accountType)
 
 std::vector<AccountType> getSystemAccountTypes()
 {
-	return{ AccountType::MASTER, AccountType::COMMISSION, AccountType::OPERATIONAL };
+	return{ AccountType::MASTER};
 }
 
 std::vector<SignerType> getAllSignerTypes()

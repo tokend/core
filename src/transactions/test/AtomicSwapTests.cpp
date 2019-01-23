@@ -9,6 +9,8 @@
 #include <transactions/test/test_helper/ReviewAswapRequestTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
+#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "test/test_marshaler.h"
 #include "main/test.h"
 
@@ -25,7 +27,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     Application::pointer appPtr = Application::create(clock, cfg);
     Application &app = *appPtr;
     app.start();
-    TestManager::upgradeToCurrentLedgerVersion(app);
+    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
     auto testManager = TestManager::make(app);
     Database &db = testManager->getDB();
 
@@ -40,9 +42,8 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     CreateASwapReviewableRequestTestHelper createASwapReviewableRequestTestHelper(testManager);
     ReviewASwapRequestHelper reviewAswapRequestHelper(testManager);
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-
-    // db helpers
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     // create seller and buyer accounts
     auto root = Account{getRoot(), Salt(0)};
@@ -53,42 +54,88 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     auto firstBuyerPubKey = firstBuyer.key.getPublicKey();
     auto secondBuyerPubKey = secondBuyer.key.getPublicKey();
 
+    AssetCode baseAsset = "DL0TICKETS";
+    AssetCode firstQuoteAsset = "XRP";
+    AssetCode secondQuoteAsset = "LTC";
+
+    // create roles and rules
+    AccountRuleResource assetResource(LedgerEntryType::ASSET);
+    assetResource.asset().assetCode = baseAsset;
+    assetResource.asset().assetType = UINT64_MAX;
+
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, assetResource, "*", false);
+    auto baseAssetOwnerRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    AccountRuleResource bidResource(LedgerEntryType::ATOMIC_SWAP_BID);
+    bidResource.atomicSwapBid().assetCode = baseAsset;
+    bidResource.atomicSwapBid().assetType = UINT64_MAX;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, bidResource, "create", false);
+    auto baseAssetASwapBidCreationRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, assetResource, "receive", false);
+    auto baseAssetReceiverRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, AccountRuleResource(LedgerEntryType::BALANCE), "create", false);
+    auto ownBalanceCreationRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    auto createSellerAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            R"({"name":"base_asset_seller"})", {baseAssetOwnerRuleID, ownBalanceCreationRuleID, baseAssetASwapBidCreationRuleID});
+    auto sellerAccountRoleID = manageAccountRoleTestHelper.applyTx(
+            root, createSellerAccountRoleOp).success().roleID;
+
+    auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            R"({"name":"usd_receiver"})", {baseAssetReceiverRuleID, ownBalanceCreationRuleID});
+    auto receiverAccountRoleID = manageAccountRoleTestHelper.applyTx(
+            root, createReceiverAccountRoleOp).success().roleID;
+
+    // db helpers
+    auto balanceHelper = BalanceHelperLegacy::Instance();
+
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(sellerPubKey)
             .setType(AccountType::SYNDICATE)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setRecovery(SecretKey::random().getPublicKey())
+            .setRoleID(sellerAccountRoleID);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(firstBuyerPubKey)
             .setType(AccountType::NOT_VERIFIED)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setRecovery(SecretKey::random().getPublicKey())
+            .setRoleID(receiverAccountRoleID);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(secondBuyerPubKey)
             .setType(AccountType::NOT_VERIFIED)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setRecovery(SecretKey::random().getPublicKey())
+            .setRoleID(receiverAccountRoleID);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     manageKeyValueHelper.assetOpWithoutReview();
 
     // create base asset
-    AssetCode baseAsset = "DL0TICKETS";
     issuanceTestHelper.createAssetWithPreIssuedAmount(seller, baseAsset,
-                                                      1000 * ONE, root);
+                                                      1000 * ONE, root, 6, 1);
     manageAssetTestHelper.updateAsset(seller, baseAsset, root,
               static_cast<uint32_t>(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP));
 
     // create quote assets
-    AssetCode firstQuoteAsset = "XRP";
     manageAssetTestHelper.createAsset(root, root.key, firstQuoteAsset, root,
               static_cast<uint32_t>(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP));
 
-    AssetCode secondQuoteAsset = "LTC";
     manageAssetTestHelper.createAsset(root, root.key, secondQuoteAsset, root,
               static_cast<uint32_t>(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP));
 
@@ -167,17 +214,9 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
 
     SECTION("Base asset cannot be swapped")
     {
-        AssetCode fakeBaseAsset = "FAKE0TICKETS";
-        manageAssetTestHelper.createAsset(seller, root.key, fakeBaseAsset,
-                                          root, 0);
-        manageBalanceTestHelper.createBalance(seller, sellerPubKey,
-                                              fakeBaseAsset);
-        auto fakeSellerBalance = balanceHelper->loadBalance(sellerPubKey,
-                                                            fakeBaseAsset, db,
-                                                            nullptr);
+        manageAssetTestHelper.updateAsset(seller, baseAsset, root, 0);
         auto request = aSwapBidCreationRequestHelper.
-                createASwapBidCreationRequest(fakeSellerBalance->getBalanceID(),
-                                              baseAssetAmount,
+                createASwapBidCreationRequest(sellerBalanceID, baseAssetAmount,
                                               details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
@@ -226,7 +265,8 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 absentBalanceID, baseAssetAmount, details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND);
+                CreateASwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND,
+                OperationResultCode::opNO_BALANCE);
     }
 
     SECTION("Base and quote assets are equal")
@@ -272,14 +312,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
         auto firstBuyerBalance = balanceHelper->loadBalance(firstBuyerPubKey,
                                                             baseAsset, db, nullptr);
         REQUIRE(firstBuyerBalance);
-        manageAssetTestHelper.updateAsset(
-                seller, baseAsset, root,
-                static_cast<uint32_t>(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP));
         auto request = aSwapBidCreationRequestHelper.createASwapBidCreationRequest(
                 firstBuyerBalance->getBalanceID(), ONE, details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 firstBuyer, request,
-                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
+                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
+                OperationResultCode::opNO_ROLE_PERMISSION);
     }
 
     SECTION("Atomic swap bid creation request created")
@@ -337,7 +375,8 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(
                                         0, firstQuoteAsset, amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
-                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND);
+                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND,
+                                OperationResultCode::opNO_BID);
                     }
 
                     SECTION("Try to create aswap request for own bid")
@@ -385,20 +424,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                 firstBuyer, aSwapRequest,
                                 CreateASwapRequestResultCode::BID_UNDERFUNDED);
-                    }
-
-                    SECTION("Not allowed by asset policy")
-                    {
-                        manageAssetTestHelper.updateAsset(
-                                seller, baseAsset, root,
-                                static_cast<uint32_t>(AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP));
-                        auto aSwapRequest =
-                                createASwapReviewableRequestTestHelper.createASwapRequestOp(
-                                        bidID, firstQuoteAsset, amountToBuy);
-
-                        createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
-                                firstBuyer, aSwapRequest,
-                                CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
                     }
 
                     SECTION("Atomic swap tasks not found")

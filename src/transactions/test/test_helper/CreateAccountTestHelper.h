@@ -34,12 +34,16 @@ namespace stellar {
 
             CreateAccountTestBuilder setResultCode(CreateAccountResultCode expectedResult);
 
+            CreateAccountTestBuilder setTxResultCode(
+                    TransactionResultCode expectedResult);
+
             PublicKey to;
             PublicKey recovery;
             AccountType accountType = AccountType::GENERAL;
             AccountID *referrer = nullptr;
             int32 policies = -1;
             uint64_t roleID = 0;
+            TransactionResultCode expectedTxResult = TransactionResultCode::txSUCCESS;
             CreateAccountResultCode expectedResult = CreateAccountResultCode::SUCCESS;
         };
 

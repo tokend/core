@@ -77,13 +77,12 @@ ManageAccountRuleTestHelper::applyTx(
 
     REQUIRE(actualResult == expectedResult);
 
+    ManageAccountRuleResult result = opResult.tr().manageAccountRuleResult();
+
     if (actualResult != ManageAccountRuleResultCode::SUCCESS)
     {
-        return ManageAccountRuleResult();
+        return result;
     }
-
-    ManageAccountRuleResult result =
-        txResult.result.results()[0].tr().manageAccountRuleResult();
 
     StorageHelperImpl storageHelperImpl(mTestManager->getDB(), nullptr);
     static_cast<StorageHelper&>(storageHelperImpl).begin();

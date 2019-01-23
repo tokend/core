@@ -24,6 +24,7 @@ ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     if (!(getSourceID() == mManageBalance.destination))
     {
         result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create_for_other", mSourceAccount);
+        return true;
     }
 
     result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create", mSourceAccount);

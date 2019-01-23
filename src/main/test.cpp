@@ -81,7 +81,6 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         thisConfig.FORCE_SCP = true;
 
 		thisConfig.masterID = getMasterKP().getPublicKey();
-		thisConfig.commissionID = getCommissionKP().getPublicKey();
 
         thisConfig.PEER_PORT =
             static_cast<unsigned short>(DEFAULT_PEER_PORT + instanceNumber * 2);

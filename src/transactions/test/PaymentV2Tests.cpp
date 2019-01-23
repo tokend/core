@@ -99,14 +99,14 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     // create account role using root as source
     auto createSenderAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            "usd_sender", {createSenderRuleResult.success().ruleID});
+            R"({"name":"usd_sender"})", {createSenderRuleResult.success().ruleID});
 
     auto senderAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createSenderAccountRoleOp).success().roleID;
 
     // create account role using root as source
     auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            "usd_receiver", {createReceiverRuleResult.success().ruleID});
+            R"({"name":"usd_receiver"})", {createReceiverRuleResult.success().ruleID});
 
     auto recipientAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createReceiverAccountRoleOp).success().roleID;

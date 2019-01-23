@@ -78,6 +78,11 @@ AccountRuleVerifierImpl::isResourceMatches(
                                  actualResource.asset().assetType) &&
                    isStringMatches(conditionResource.asset().assetCode,
                                    actualResource.asset().assetCode);
+        case LedgerEntryType::ATOMIC_SWAP_BID:
+            return isTypeMatches(conditionResource.atomicSwapBid().assetType,
+                                 actualResource.atomicSwapBid().assetType) &&
+                   isStringMatches(conditionResource.atomicSwapBid().assetCode,
+                                   actualResource.atomicSwapBid().assetCode);
         case LedgerEntryType::REVIEWABLE_REQUEST:
         {
             auto expectedDetails = conditionResource.reviewableRequest().details;

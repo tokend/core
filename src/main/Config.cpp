@@ -18,16 +18,14 @@ namespace stellar
 using xdr::operator<;
 
 Config::Config() : NODE_SEED(SecretKey::random()), 
-masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
-commissionID(PubKeyUtils::fromStrKey("GAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHV4")), 
-operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABVCX"))
+masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"))
 {
     // fill in defaults
 
     // non configurable
     FORCE_SCP = false;
     LEDGER_PROTOCOL_VERSION = static_cast<int32_t >(
-            LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT);
+            LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
     OVERLAY_PROTOCOL_VERSION = 5;
 

@@ -47,7 +47,8 @@ CreateASwapBidCreationRequestHelper::createCreateASwapBidCreationRequestTx(
 CreateASwapBidCreationRequestResult
 CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
         Account &source, ASwapBidCreationRequest request,
-        CreateASwapBidCreationRequestResultCode expectedResult)
+        CreateASwapBidCreationRequestResultCode expectedResult,
+        OperationResultCode expectedOpResCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -63,6 +64,14 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(expectedOpResCode == opResult.code());
+
+    if (expectedOpResCode != OperationResultCode::opINNER)
+    {
+        return CreateASwapBidCreationRequestResult();
+    }
+
     auto actualResultCode = CreateASwapBidCreationRequestOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResult);

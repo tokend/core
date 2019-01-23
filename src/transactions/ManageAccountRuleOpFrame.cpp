@@ -162,14 +162,14 @@ ManageAccountRuleOpFrame::isRuleUsed(StorageHelper &storageHelper, uint64_t rule
 
     auto roleIDs = roleHelper.loadRoleIDsByRule(ruleID);
 
-    if (!roleIDs.empty())
+    if (roleIDs.empty())
     {
-        innerResult().code(ManageAccountRuleResultCode::RULE_IS_USED);
-        innerResult().roleIDs().assign(roleIDs.begin(), roleIDs.end());
-        return true;
+        return false;
     }
 
-    return false;
+    innerResult().code(ManageAccountRuleResultCode::RULE_IS_USED);
+    innerResult().roleIDs().assign(roleIDs.begin(), roleIDs.end());
+    return true;
 }
 
 } // namespace stellar

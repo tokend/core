@@ -39,7 +39,7 @@ void
 AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 {
     auto accountRoleFrame = make_shared<AccountRoleFrame>(entry);
-    auto accountRoleEntry = accountRoleFrame->getAccountRole();
+    auto& accountRoleEntry = accountRoleFrame->getAccountRole();
 
     if (mStorageHelper.getLedgerDelta())
     {

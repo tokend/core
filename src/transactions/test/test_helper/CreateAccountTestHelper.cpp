@@ -73,6 +73,14 @@ namespace stellar {
             return newTestHelper;
         }
 
+        CreateAccountTestBuilder CreateAccountTestBuilder::setTxResultCode(
+                TransactionResultCode expectedResult)
+        {
+            auto newTestHelper = copy();
+            newTestHelper.expectedTxResult = expectedResult;
+            return newTestHelper;
+        }
+
         CreateAccountTestBuilder CreateAccountTestBuilder::setRecovery(const PublicKey& recovery) {
             auto newTestHelper = copy();
             newTestHelper.recovery = recovery;
@@ -129,7 +137,7 @@ namespace stellar {
         CreateAccountChecker::doCheck(CreateAccountTestBuilder builder, TransactionFramePtr txFrame) {
 
             auto txResult = txFrame->getResult();
-            REQUIRE(txResult.result.code() == TransactionResultCode::txSUCCESS);
+            REQUIRE(txResult.result.code() == builder.expectedTxResult);
             auto opResult = txResult.result.results()[0];
             auto actualResultCode = CreateAccountOpFrame::getInnerCode(opResult);
             REQUIRE(actualResultCode == builder.expectedResult);

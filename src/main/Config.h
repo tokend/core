@@ -135,8 +135,6 @@ class Config : public std::enable_shared_from_this<Config>
     std::string NETWORK_PASSPHRASE; // identifier for the network
 
 	PublicKey masterID; // account id of master account
-	PublicKey commissionID; // account id of commission account
-	PublicKey operationalID; // account id of operational account
 
     std::string BASE_EXCHANGE_NAME;
     int64 TX_EXPIRATION_PERIOD;
