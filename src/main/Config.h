@@ -32,7 +32,7 @@ class Config : public std::enable_shared_from_this<Config>
   public:
     typedef std::shared_ptr<Config> pointer;
 
-    std::vector<PublicKey> getWiredKeys() const;
+    std::vector<PublicKey> getWiredKeys(LedgerVersion ledgerVersion) const;
     void validateConfig();
 
     enum TestDbMode

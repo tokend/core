@@ -76,10 +76,9 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 }
 
 std::vector<PublicKey>
-Config::getWiredKeys() const
+Config::getWiredKeys(LedgerVersion ledgerVersion) const
 {
     std::vector<PublicKey> keys;
-    auto ledgerVersion = LedgerVersion(LEDGER_PROTOCOL_VERSION);
     switch (ledgerVersion)
     {
         case LedgerVersion::EMPTY_VERSION:
