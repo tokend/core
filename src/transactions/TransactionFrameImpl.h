@@ -26,6 +26,8 @@ class TransactionFrameImpl : public TransactionFrame
   private:
 	SignatureValidator::pointer mSignatureValidator;
 
+	bool notLicenseOp();
+
   protected:
     TransactionEnvelope mEnvelope;
     TransactionResult mResult;

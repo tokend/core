@@ -362,6 +362,14 @@ TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
 }
 
 bool
+TransactionFrameImpl::notLicenseOp()
+{
+    return mOperations.size() == 1
+    && mEnvelope.tx.operations.size() == 1
+    && mEnvelope.tx.operations[0].body.type() == OperationType::LICENSE;
+}
+
+bool
 TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
 {
     if (mOperations.size() == 0)
@@ -387,8 +395,9 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
         return false;
     }
     if (mEnvelope.tx.timeBounds.maxTime < closeTime ||
-        mEnvelope.tx.timeBounds.maxTime - closeTime >
+            (notLicenseOp() && mEnvelope.tx.timeBounds.maxTime - closeTime >
             lm.getTxExpirationPeriod())
+            )
     {
         app.getMetrics()
             .NewMeter({"transaction", "invalid", "too-late"}, "transaction")
