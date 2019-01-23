@@ -109,7 +109,7 @@ LedgerDeltaImpl::recordEntry(EntryFrame const& entry)
 }
 
 void
-LedgerDeltaImpl::addEntry(EntryFrame::pointer entry)
+LedgerDeltaImpl::addEntry(EntryFrame::pointer entry, bool mustAddToAllChanges)
 {
     checkState();
     auto k = entry->getKey();
@@ -127,9 +127,11 @@ LedgerDeltaImpl::addEntry(EntryFrame::pointer entry)
         mNew[k] = entry;
     }
 
-    // add to detailed changes
-    mAllChanges.emplace_back(LedgerEntryChangeType::CREATED);
-    mAllChanges.back().created() = entry->mEntry;
+    if (mustAddToAllChanges) {
+        // add to detailed changes
+        mAllChanges.emplace_back(LedgerEntryChangeType::CREATED);
+        mAllChanges.back().created() = entry->mEntry;
+    }
 }
 
 void
@@ -139,9 +141,7 @@ LedgerDeltaImpl::deleteEntry(EntryFrame::pointer entry)
     deleteEntry(k);
 }
 
-void
-LedgerDeltaImpl::deleteEntry(LedgerKey const& k)
-{
+void LedgerDeltaImpl::deleteEntry(LedgerKey const& k, bool mustAddToAllChanges) {
     checkState();
     auto new_it = mNew.find(k);
     if (new_it != mNew.end())
@@ -159,13 +159,21 @@ LedgerDeltaImpl::deleteEntry(LedgerKey const& k)
         mMod.erase(k);
     }
 
-    // add key to detailed changes
-    mAllChanges.emplace_back(LedgerEntryChangeType::REMOVED);
-    mAllChanges.back().removed() = k;
+    if (mustAddToAllChanges) {
+        // add key to detailed changes
+        mAllChanges.emplace_back(LedgerEntryChangeType::REMOVED);
+        mAllChanges.back().removed() = k;
+    }
 }
 
 void
-LedgerDeltaImpl::modEntry(EntryFrame::pointer entry)
+LedgerDeltaImpl::deleteEntry(LedgerKey const& k)
+{
+    deleteEntry(k, true);
+}
+
+void
+LedgerDeltaImpl::modEntry(EntryFrame::pointer entry, bool mustAddToAllChanges)
 {
     checkState();
     auto k = entry->getKey();
@@ -190,9 +198,11 @@ LedgerDeltaImpl::modEntry(EntryFrame::pointer entry)
         }
     }
 
-    // add to detailed changes
-    mAllChanges.emplace_back(LedgerEntryChangeType::UPDATED);
-    mAllChanges.back().updated() = entry->mEntry;
+    if (mustAddToAllChanges) {
+        // add to detailed changes
+        mAllChanges.emplace_back(LedgerEntryChangeType::UPDATED);
+        mAllChanges.back().updated() = entry->mEntry;
+    }
 }
 
 void
@@ -214,7 +224,7 @@ LedgerDeltaImpl::mergeEntries(LedgerDelta& other)
     // propagates mPrevious for deleted & modified entries
     for (auto& d : other.getDeletionFramesSet())
     {
-        deleteEntry(d);
+        deleteEntry(d, true);
         auto it = other.getPreviousFrames().find(d);
         if (it != other.getPreviousFrames().end())
         {
@@ -234,6 +244,8 @@ LedgerDeltaImpl::mergeEntries(LedgerDelta& other)
             recordEntry(*it->second);
         }
     }
+
+    mOuterDelta->getChanges().insert(mOuterDelta->getChanges().end(), mAllChanges.begin(), mAllChanges.end());
 }
 
 void
