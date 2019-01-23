@@ -138,7 +138,7 @@ void
 LedgerDeltaImpl::deleteEntry(EntryFrame::pointer entry)
 {
     auto k = entry->getKey();
-    deleteEntry(k);
+    deleteEntry(k, true);
 }
 
 void LedgerDeltaImpl::deleteEntry(LedgerKey const& k, bool mustAddToAllChanges) {
