@@ -1,7 +1,3 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include <lib/json/json.h>
 #include "ReviewableRequestFrame.h"
 #include "database/Database.h"
@@ -13,7 +9,6 @@
 #include "xdrpp/marshal.h"
 #include "crypto/SHA.h"
 #include "SaleFrame.h"
-#include "util/types.h"
 
 using namespace soci;
 using namespace std;
@@ -167,13 +162,11 @@ void ReviewableRequestFrame::ensureAMLAlertValid(AMLAlertRequest const &request)
 
 }
 
-void ReviewableRequestFrame::ensureUpdateKYCValid(UpdateKYCRequest const &request) {
+void
+ReviewableRequestFrame::ensureChangeRoleValid(const ChangeRoleRequest &request)
+{
 	if (!isValidJson(request.kycData)) {
 		throw std::runtime_error("KYC data is invalid");
-	}
-	bool res = isValidEnumValue(request.accountTypeToSet);
-	if (!res) {
-		throw runtime_error("invalid account type");
 	}
 }
 
@@ -262,8 +255,8 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
         case ReviewableRequestType::AML_ALERT:
             ensureAMLAlertValid(oe.body.amlAlertRequest());
             return;
-		case ReviewableRequestType::UPDATE_KYC:
-            ensureUpdateKYCValid(oe.body.updateKYCRequest());
+		case ReviewableRequestType::CHANGE_ROLE:
+            ensureChangeRoleValid(oe.body.changeRoleRequest());
 			return;
         case ReviewableRequestType::UPDATE_SALE_DETAILS:
             ensureUpdateSaleDetailsValid(oe.body.updateSaleDetailsRequest());

@@ -23,7 +23,7 @@
 #include "main/Application.h"
 #include "ReviewSaleCreationRequestOpFrame.h"
 #include "ReviewAMLAlertRequestOpFrame.h"
-#include "ReviewUpdateKYCRequestOpFrame.h"
+#include "ReviewChangeRoleRequestOpFrame.h"
 #include "ReviewInvoiceRequestOpFrame.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "ReviewASwapBidCreationRequestOpFrame.h"
@@ -115,8 +115,8 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 		return new ReviewLimitsUpdateRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::AML_ALERT:
 		return new ReviewAMLAlertRequestOpFrame(op,res,parentTx);
-    case ReviewableRequestType::UPDATE_KYC:
-        return new ReviewUpdateKYCRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CHANGE_ROLE:
+        return new ReviewChangeRoleRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::UPDATE_SALE_DETAILS:
 		return new ReviewUpdateSaleDetailsRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::INVOICE:
@@ -130,12 +130,6 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 	default:
 		throw std::runtime_error("Unexpected request type for review request op");
 	}
-}
-
-std::unordered_map<AccountID, CounterpartyDetails> ReviewRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-	// no counterparties
-	return std::unordered_map<AccountID, CounterpartyDetails>();
 }
 
 bool ReviewRequestOpFrame::handleReject(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
@@ -180,7 +174,8 @@ ReviewRequestOpFrame::doApply(Application& app,
 		return false;
 	}
 
-	if (removingNotSetTasks(request->getRequestEntry())){
+	if (!removingExistingTasks(request->getRequestEntry()))
+	{
 		innerResult().code(ReviewRequestResultCode::REMOVING_NOT_SET_TASKS);
 		return false;
 	}
@@ -238,11 +233,10 @@ uint64_t ReviewRequestOpFrame::getTotalFee(uint64_t requestID, Fee fee)
     return totalFee;
 }
 
-bool ReviewRequestOpFrame::removingNotSetTasks(ReviewableRequestEntry &requestEntry) {
-	bool emptyTasksToRemove = mReviewRequest.reviewDetails.tasksToRemove == 0;
-	bool removingTasksPresent = (~requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove) != 0;
-
-	return !emptyTasksToRemove && removingTasksPresent;
+bool
+ReviewRequestOpFrame::removingExistingTasks(ReviewableRequestEntry &requestEntry)
+{
+	return (requestEntry.tasks.pendingTasks | mReviewRequest.reviewDetails.tasksToRemove) == requestEntry.tasks.pendingTasks;
 }
 
 void ReviewRequestOpFrame::handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request)

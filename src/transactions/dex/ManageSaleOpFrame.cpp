@@ -6,6 +6,7 @@
 #include <ledger/SaleHelper.h>
 #include <ledger/StorageHelper.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
+#include <ledger/ReviewableRequestHelper.h>
 
 namespace stellar
 {

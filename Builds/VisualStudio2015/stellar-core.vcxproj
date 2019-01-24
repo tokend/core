@@ -390,7 +390,7 @@
     <ClCompile Include="..\..\src\transactions\review_request\ReviewRequestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.cpp" />
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewWithdrawalRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\sale\CancelSaleCreationRequestOpFrame.cpp" />
@@ -740,7 +740,7 @@
     <ClInclude Include="..\..\src\transactions\review_request\ReviewRequestHelper.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.h" />
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewWithdrawalRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\sale\CancelSaleCreationRequestOpFrame.h" />

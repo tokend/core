@@ -1,6 +1,6 @@
 #pragma once
 
-#include <transactions/kyc/CreateKYCReviewableRequestOpFrame.h>
+#include <transactions/CreateChangeRoleRequestOpFrame.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar {
@@ -49,7 +49,8 @@ namespace stellar {
             return prefix;
         }
 
-        static longstring makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet, uint32 kycLevelToSet);
+        static longstring
+        makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet);
 
         static longstring makeExternalSystemExpirationPeriodKey(int32 externalSystemType);
 
@@ -87,7 +88,7 @@ namespace stellar {
         static longstring makeAmlAlertCreateTasksKey();
 
 
-        static const char * kycRulesPrefix;
+        static const char * changeRoleTasks;
         static const char * externalSystemPrefix;
         static const char * transactionFeeAssetKey;
         static const char * transactionFeeAssetPrefix;

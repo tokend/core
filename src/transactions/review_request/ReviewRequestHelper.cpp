@@ -82,11 +82,6 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     reviewRequestOp.reviewDetails.tasksToRemove = 0;
     reviewRequestOp.reviewDetails.externalDetails = "{}";
 
-    if (mRequest->getRequestType() == ReviewableRequestType::UPDATE_KYC)
-    {
-        reviewRequestOp.requestDetails.updateKYC().externalDetails = "{}";
-    }
-
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::REVIEW_REQUEST);

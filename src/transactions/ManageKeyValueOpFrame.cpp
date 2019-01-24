@@ -10,7 +10,7 @@ namespace stellar {
     using namespace std;
     using xdr::operator==;
 
-    char const * ManageKeyValueOpFrame::kycRulesPrefix = "kyc_lvlup_rules";
+    char const * ManageKeyValueOpFrame::changeRoleTasks = "change_role_tasks";
     char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
     char const * ManageKeyValueOpFrame::transactionFeeAssetKey = "tx_fee_asset";
     char const * ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
@@ -37,7 +37,7 @@ namespace stellar {
 
 
     map<std::string, KeyValueEntryType> ManageKeyValueOpFrame::valueTypes = {
-        {kycRulesPrefix, KeyValueEntryType::UINT32},
+        {changeRoleTasks, KeyValueEntryType::UINT32},
         {externalSystemPrefix, KeyValueEntryType::UINT32},
         {issuanceTasksPrefix, KeyValueEntryType::UINT32},
         {maxContractDetailLengthPrefix, KeyValueEntryType::UINT32},
@@ -119,10 +119,9 @@ namespace stellar {
     }
 
     longstring
-    ManageKeyValueOpFrame::makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet,
-                                          uint32 kycLevelToSet) {
-        return string(kycRulesPrefix) + ":" + to_string(static_cast<uint32 >(accountType)) + ":" + to_string(kycLevel) + ":"
-               + to_string(static_cast<uint32>(accountTypeToSet)) + ":" + to_string(kycLevelToSet);
+    ManageKeyValueOpFrame::makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet)
+    {
+        return string(changeRoleTasks) + ":" + to_string(currentRoleID) + ":" + to_string(roleIDToSet);
     }
 
     longstring

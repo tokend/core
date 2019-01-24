@@ -891,7 +891,7 @@
     <ClCompile Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.cpp">
@@ -2061,7 +2061,7 @@
     <ClInclude Include="..\..\src\transactions\review_request\ReviewSaleCreationRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateKYCRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\review_request\ReviewUpdateSaleDetailsRequestOpFrame.h">
