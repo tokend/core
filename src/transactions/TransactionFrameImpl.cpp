@@ -362,7 +362,7 @@ TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
 }
 
 bool
-TransactionFrameImpl::notLicenseOp()
+TransactionFrameImpl::isLicenseOp()
 {
     return mOperations.size() == 1
     && mEnvelope.tx.operations.size() == 1
@@ -395,7 +395,7 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
         return false;
     }
     if (mEnvelope.tx.timeBounds.maxTime < closeTime ||
-            (notLicenseOp() && mEnvelope.tx.timeBounds.maxTime - closeTime >
+            (!isLicenseOp() && mEnvelope.tx.timeBounds.maxTime - closeTime >
             lm.getTxExpirationPeriod())
             )
     {
