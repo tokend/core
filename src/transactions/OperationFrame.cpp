@@ -183,9 +183,9 @@ OperationFrame::canBeApplied(Application &app, StorageHelper &storageHelper)
     auto& db = storageHelper.getDatabase();
     auto accountHelper = AccountHelper::Instance();
     auto acc = accountHelper->loadAccount(*mOperation.sourceAccount, db);
-    auto isAdmin = acc->getAccountType() == AccountType::MASTER;
+    auto notAdmin = acc->getAccountType() != AccountType::MASTER;
 
-    return !isAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
+    return notAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
 }
 
 bool
