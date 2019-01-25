@@ -567,7 +567,7 @@ createPaymentTx(Hash const& networkID, SecretKey& from, BalanceID fromBalanceID,
                 Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
 {
     Operation op;
-    op.body.type(OperationType::PAYMENT);
+    op.body.type(OperationType::PAYMENT_V2);
     op.body.paymentOpV2().amount = amount;
 	op.body.paymentOpV2().feeData = paymentFee;
     op.body.paymentOpV2().subject = subject;
