@@ -180,10 +180,7 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
 bool
 OperationFrame::canBeApplied(Application &app, StorageHelper &storageHelper)
 {
-    auto& db = storageHelper.getDatabase();
-    auto accountHelper = AccountHelper::Instance();
-    auto acc = accountHelper->loadAccount(*mOperation.sourceAccount, db);
-    auto notAdmin = acc->getAccountType() != AccountType::MASTER;
+    auto notAdmin = mSourceAccount->getAccountType() != AccountType::MASTER;
 
     return notAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
 }

@@ -70,6 +70,8 @@ LicenseOpFrame::doApply(Application& app,
     }
 
     licenseHelper.storeAdd(newLicense->mEntry);
+    StampHelper::clearAll(storageHelper.getDatabase());
+    innerResult().code(LicenseResultCode::SUCCESS);
     return true;
 }
 

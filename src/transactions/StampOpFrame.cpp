@@ -48,7 +48,7 @@ StampOpFrame::doApply(Application& app,
     LicenseHelper licenseHelper(storageHelper);
 
     auto ledgerHash = ledgerManager.getLastClosedLedgerHeader().hash;
-    Hash oldLicenseHash = sha256(xdr::xdr_to_opaque());
+    Hash oldLicenseHash;
     auto license = licenseHelper.loadCurrentLicense();
     if (license)
     {
@@ -58,6 +58,10 @@ StampOpFrame::doApply(Application& app,
     auto newStamp = StampFrame::createNew(ledgerHash, oldLicenseHash);
 
     stampHelper.storeAdd(newStamp->mEntry);
+
+    innerResult().code(StampResultCode::SUCCESS);
+    innerResult().success().licenseHash = oldLicenseHash;
+    innerResult().success().ledgerHash = ledgerHash;
     return true;
 }
 

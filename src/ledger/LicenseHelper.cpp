@@ -64,7 +64,8 @@ namespace stellar
         auto timer = db.getSelectTimer("license_exists");
         auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM license WHERE hash=:hash)");
         auto& st = prep.statement();
-        st.exchange(use(xdr::xdr_to_string(key.license().licenseHash)));
+        auto hash = binToHex(key.license().licenseHash);
+        st.exchange(use(hash, "hash"));
         auto exists = 0;
         st.exchange(into(exists));
         st.define_and_bind();
@@ -88,14 +89,17 @@ namespace stellar
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
         auto ID = delta->getHeaderFrame().generateID(LedgerEntryType::LICENSE);
-        auto hash = sha256(xdr::xdr_to_opaque(le.adminCount, le.dueDate, le.ledgerHash, le.prevLicenseHash, le.signatures));
+        auto fullHash = sha256(xdr::xdr_to_opaque(le.adminCount, le.dueDate, le.ledgerHash, le.prevLicenseHash, le.signatures));
 
         st.exchange(use(ID));
-        st.exchange(use(le.adminCount));
-        st.exchange(use(le.dueDate));
-        st.exchange(use(binToHex(le.ledgerHash)));
-        st.exchange(use(binToHex(le.prevLicenseHash)));
-        st.exchange(use(binToHex(hash)));
+        st.exchange(use(le.adminCount, "admin_count"));
+        st.exchange(use(le.dueDate, "due_date"));
+        auto ledgerHash = binToHex(le.ledgerHash);
+        st.exchange(use(ledgerHash, "ledgerHash"));
+        auto licenseHash = binToHex(le.prevLicenseHash);
+        st.exchange(use(licenseHash, "license_hash"));
+        auto hash = binToHex(fullHash);
+        st.exchange(use(hash, "hash"));
         st.define_and_bind();
         st.execute(true);
 
@@ -114,10 +118,11 @@ namespace stellar
         auto &db = getDatabase();
 
         string sql = selectorLicense;
-        sql += "WHERE hash = :hash";
+        sql += " WHERE hash = :hash";
         auto prep = db.getPreparedStatement(sql);
         auto &st = prep.statement();
-        st.exchange(use(xdr::xdr_to_string(ledgerKey.license().licenseHash)));
+        auto hash = binToHex(ledgerKey.license().licenseHash);
+        st.exchange(use(hash, "hash"));
 
         auto timer = db.getSelectTimer("load-license");
         LicenseFrame::pointer retLicense;
@@ -175,7 +180,8 @@ namespace stellar
         auto timer = db.getDeleteTimer("license");
         auto prep = db.getPreparedStatement("DELETE FROM license WHERE hash=:hash");
         auto& st = prep.statement();
-        st.exchange(use(binToHex(key.license().licenseHash)));
+        auto hash = binToHex(key.license().licenseHash);
+        st.exchange(use(hash, "hash"));
         st.define_and_bind();
         st.execute(true);
         delta->deleteEntry(key);
@@ -185,7 +191,7 @@ namespace stellar
     {
         auto& db = getDatabase();
         string sql = selectorLicense;
-        sql += "ORDER BY id DESC LIMIT 1";
+        sql += " ORDER BY id DESC LIMIT 1";
 
         auto prep = db.getPreparedStatement(sql);
         LicenseFrame::pointer retLicense;

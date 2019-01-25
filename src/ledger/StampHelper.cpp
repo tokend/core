@@ -17,8 +17,7 @@ namespace stellar
         db.getSession() << "CREATE TABLE stamp"
                            "("
                            "ledger_hash           VARCHAR(256) NOT NULL,"
-                           "license_hash           VARCHAR(256) NOT NULL,"
-                           "PRIMARY KEY (license_hash)"
+                           "license_hash           VARCHAR(256)"
                            ");";
     }
 
@@ -42,9 +41,10 @@ namespace stellar
         auto sql = "INSERT INTO stamp (ledger_hash, license_hash) VALUES (:ledger_hash, :license_hash)";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
-
-        st.exchange(use(binToHex(stampEntry.ledgerHash)));
-        st.exchange(use(binToHex(stampEntry.licenseHash)));
+        auto ledgerHash = binToHex(stampEntry.ledgerHash);
+        auto licenseHash = binToHex(stampEntry.licenseHash);
+        st.exchange(use(ledgerHash, "ledger_hash"));
+        st.exchange(use(licenseHash, "license_hash"));
         st.define_and_bind();
         st.execute(true);
     }
