@@ -32,7 +32,7 @@
 using namespace stellar;
 using namespace testing;
 
-TEST_CASE("payout - unit test", "[tx][payout]")
+TEST_CASE("payout - unit test", "[dep_tx][payout]")
 {
     MockApplication appMock;
     MockLedgerManager ledgerManagerMock;

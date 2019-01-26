@@ -7,25 +7,16 @@
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/BalanceHelper.h>
-#include "util/asio.h"
 #include "CreateIssuanceRequestOpFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/StorageHelperImpl.h"
-#include "ledger/StorageHelper.h"
-#include "util/Logging.h"
-#include "util/types.h"
-#include "database/Database.h"
-#include "ledger/LedgerDelta.h"
-#include "main/Application.h"
 #include "crypto/SHA.h"
 #include "xdrpp/marshal.h"
-#include "xdrpp/printer.h"
 
 namespace stellar
 {
@@ -70,7 +61,7 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	resource.asset().assetCode = asset->getCode();
 	resource.asset().assetType = asset->getType();
 
-	result.emplace_back(resource, "receive", account);
+	result.emplace_back(resource, "receive_from_issuance", account);
 
 	// only asset owner can do issuance, it will be handled in doApply
 	return true;

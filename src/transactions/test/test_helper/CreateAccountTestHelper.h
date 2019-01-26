@@ -42,7 +42,7 @@ namespace stellar {
             AccountType accountType = AccountType::GENERAL;
             AccountID *referrer = nullptr;
             int32 policies = -1;
-            uint64_t roleID = 0;
+            uint64_t roleID = 1;
             TransactionResultCode expectedTxResult = TransactionResultCode::txSUCCESS;
             CreateAccountResultCode expectedResult = CreateAccountResultCode::SUCCESS;
         };

@@ -69,7 +69,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
                                             .setSource(root)
                                             .setType(AccountType::GENERAL)
                                             .setToPublicKey(account.key.getPublicKey())
-                                            .setRoleID(roleID));
+                                            .setRoleID(1));
 
     testManager->advanceToTime(BindExternalSystemAccountIdOpFrame::dayInSeconds);
 
@@ -104,7 +104,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
                                                 .setSource(root)
                                                 .setType(AccountType::GENERAL)
                                                 .setToPublicKey(binder.key.getPublicKey())
-                                                .setRoleID(roleID));
+                                                .setRoleID(1));
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
                                                                                                 ERC20_TokenExternalSystemType,
@@ -122,7 +122,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
                                                 .setSource(root)
                                                 .setType(AccountType::GENERAL)
                                                 .setToPublicKey(binder.key.getPublicKey())
-                                                .setRoleID(roleID));
+                                                .setRoleID(1));
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
                                                                                                 ERC20_TokenExternalSystemType,

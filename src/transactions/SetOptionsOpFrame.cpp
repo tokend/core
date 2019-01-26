@@ -9,8 +9,6 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "crypto/SHA.h"
-#include "database/Database.h"
-#include "main/Application.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "xdrpp/marshal.h"
@@ -18,6 +16,14 @@
 namespace stellar
 {
 using xdr::operator==;
+
+bool
+SetOptionsOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                std::vector<OperationCondition>& result) const
+{
+    // signers will be added only for source account
+    return true;
+}
 
 std::unordered_map<AccountID, CounterpartyDetails> SetOptionsOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
 {

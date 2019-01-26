@@ -5,7 +5,6 @@
 #include <lib/xdrpp/xdrpp/printer.h>
 #include "transactions/SetFeesOpFrame.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"

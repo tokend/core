@@ -58,7 +58,13 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     resource.offer().baseAssetType = baseAsset->getType();
     resource.offer().quoteAssetType = quoteAsset->getType();
 
-    result.emplace_back(resource, "create", mSourceAccount);
+    std::string action = "create_to_sell";
+    if (mManageOffer.isBuy)
+    {
+        action = "create_to_buy";
+    }
+
+    result.emplace_back(resource, action, mSourceAccount);
 
     return true;
 }

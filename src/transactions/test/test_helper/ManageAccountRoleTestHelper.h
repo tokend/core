@@ -27,6 +27,8 @@ class ManageAccountRoleTestHelper : TxHelper
     applyTx(Account &source, const ManageAccountRoleOp &op,
             ManageAccountRoleResultCode expectedResultCode =
             ManageAccountRoleResultCode::SUCCESS);
+
+    uint64_t createTxSenderRole(Account& root);
 };
 } // namespace txtest
 } // namespace stellar

@@ -12,6 +12,11 @@ bool
 AccountRuleVerifierImpl::isAllowed(OperationCondition& condition,
                                    StorageHelper& storageHelper)
 {
+    if (!condition.account) 
+    {
+        throw std::runtime_error("Expected account ro exists on account rule verifying");
+    }
+    
     auto& accountRoleHelper = storageHelper.getAccountRoleHelper();
     auto& accountRuleHelper = storageHelper.getAccountRuleHelper();
 
@@ -132,6 +137,10 @@ AccountRuleVerifierImpl::isResourceMatches(
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         case LedgerEntryType::KEY_VALUE:
+        case LedgerEntryType::FEE:
+        case LedgerEntryType::LIMITS_V2:
+        case LedgerEntryType::ASSET_PAIR:
+        case LedgerEntryType::TRANSACTION:
             return true;
         default:
             return false;

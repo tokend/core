@@ -25,7 +25,8 @@ WithdrawRequestHelper(TestManager::pointer testManager) : TxHelper(testManager)
 CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     Account& source, WithdrawalRequest request,
     uint32_t *allTasks,
-    CreateWithdrawalRequestResultCode expectedResult)
+    CreateWithdrawalRequestResultCode expectedResult,
+    OperationResultCode expectedOpResultCode)
 {
     Database& db = mTestManager->getDB();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -55,6 +56,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == expectedOpResultCode);
+    if (expectedOpResultCode != OperationResultCode::opINNER)
+    {
+        return CreateWithdrawalRequestResult();
+    }
+
     auto actualResultCode = CreateWithdrawalRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 

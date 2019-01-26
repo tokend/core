@@ -86,27 +86,33 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     assetResource.asset().assetCode = paymentAsset;
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, "send", false);
+            0, assetResource, "*", false);
     // write this entry to DB
     auto createSenderRuleResult = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE);
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, "receive", false);
+            0, assetResource, "*", false);
     // write this entry to DB
     auto createReceiverRuleResult = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE);
 
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, AccountRuleResource(LedgerEntryType::TRANSACTION), "send", false);
+    // write this entry to DB
+    auto sendTxRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
     // create account role using root as source
     auto createSenderAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            R"({"name":"usd_sender"})", {createSenderRuleResult.success().ruleID});
+            R"({"name":"usd_sender"})", {createSenderRuleResult.success().ruleID, sendTxRuleID});
 
     auto senderAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createSenderAccountRoleOp).success().roleID;
 
     // create account role using root as source
     auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            R"({"name":"usd_receiver"})", {createReceiverRuleResult.success().ruleID});
+            R"({"name":"usd_receiver"})", {createReceiverRuleResult.success().ruleID, sendTxRuleID});
 
     auto recipientAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createReceiverAccountRoleOp).success().roleID;
@@ -208,7 +214,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  accountDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
+                                                 PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
+                                                 OperationResultCode::opNO_COUNTERPARTY);
         }
         SECTION("Destination balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
@@ -216,14 +223,16 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  balanceDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND);
+                                                 PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND,
+                                                 OperationResultCode::opNO_BALANCE);
         }
         SECTION("Source balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
             paymentV2TestHelper.applyPaymentV2Tx(payer, nonExistingBalance,
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND);
+                                                 PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND,
+                                                 OperationResultCode::opNO_BALANCE);
         }
         SECTION("Not allowed by asset policy")
         {

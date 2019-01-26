@@ -58,7 +58,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
             .setToPublicKey(account.key.getPublicKey())
             .setType(AccountType::NOT_VERIFIED)
             .setRecovery(SecretKey::random().getPublicKey())
-            .setRoleID(emptyAccountRoleID);
+            .setRoleID(1);
 
     accountTestHelper.applyTx(createAccountTestBuilder);
 
@@ -81,11 +81,15 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
 
     //make KYC_RULE key
     longstring key = ManageKeyValueOpFrame::makeChangeRoleKey(emptyAccountRoleID, tokenOwnerRoleID);
+    longstring anotherKey = ManageKeyValueOpFrame::makeChangeRoleKey(1, tokenOwnerRoleID);
 
     SECTION("success")
     {
         //store KV record into DB
         manageKVHelper.setKey(key)->setUi32Value(tasks);
+        manageKVHelper.doApply(app, ManageKVAction::PUT, true);
+
+        manageKVHelper.setKey(anotherKey)->setUi32Value(tasks);
         manageKVHelper.doApply(app, ManageKVAction::PUT, true);
 
         SECTION("source master, create and approve")
@@ -131,7 +135,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
         }
         SECTION("set the same type")
         {
-            key = ManageKeyValueOpFrame::makeChangeRoleKey(emptyAccountRoleID, emptyAccountRoleID);
+            key = ManageKeyValueOpFrame::makeChangeRoleKey(1, emptyAccountRoleID);
             manageKVHelper.setKey(key)->doApply(app, ManageKVAction::PUT, true);
 
             changeRoleRequestHelper.applyCreateChangeRoleRequest(master, 0,
@@ -149,6 +153,9 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
         }
 
         manageKVHelper.setKey(key)->setUi32Value(tasks);
+        manageKVHelper.doApply(app, ManageKVAction::PUT, true);
+
+        manageKVHelper.setKey(anotherKey)->setUi32Value(tasks);
         manageKVHelper.doApply(app, ManageKVAction::PUT, true);
 
 

@@ -27,7 +27,8 @@ public:
         Account& source, WithdrawalRequest request,
         uint32_t *allTasks = nullptr,
         CreateWithdrawalRequestResultCode expectedResult =
-            CreateWithdrawalRequestResultCode::SUCCESS);
+            CreateWithdrawalRequestResultCode::SUCCESS,
+        OperationResultCode expectedOpResultCode = OperationResultCode::opINNER);
 
     static WithdrawalRequest createWithdrawRequest(BalanceID balance, uint64_t amount,
                                             Fee fee,

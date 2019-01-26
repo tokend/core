@@ -1,6 +1,7 @@
 #include "ManageAccountRoleTestHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/ManageAccountRoleOpFrame.h"
+#include "ManageAccountRuleTestHelper.h"
 
 namespace stellar
 {
@@ -79,6 +80,22 @@ ManageAccountRoleTestHelper::applyTx(
     auto opResult = txResult.result.results()[0].tr().manageAccountRoleResult();
 
     return opResult;
+}
+
+uint64_t
+ManageAccountRoleTestHelper::createTxSenderRole(Account &root)
+{
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(mTestManager);
+
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+            AccountRuleResource(LedgerEntryType::TRANSACTION), "send", false);
+
+    auto ruleID = manageAccountRuleTestHelper.applyTx(root, ruleEntry,
+            ManageAccountRuleAction::CREATE).success().ruleID;
+
+    auto op = buildCreateRoleOp(R"({"name":"tx_sender"})", {ruleID});
+
+    return applyTx(root, op).success().roleID;
 }
 } // namespace txtest
 } // namespace stellar

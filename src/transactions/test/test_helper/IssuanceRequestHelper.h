@@ -41,7 +41,8 @@ class IssuanceRequestHelper : TxHelper
         BalanceID receiver, std::string reference, uint32_t* allTasks = nullptr,
         CreateIssuanceRequestResultCode expectedResult =
             CreateIssuanceRequestResultCode::SUCCESS,
-        std::string externalDetails = "{}");
+        std::string externalDetails = "{}",
+        OperationResultCode expectedOpCode = OperationResultCode::opINNER);
 
     TransactionFramePtr createIssuanceRequestTx(Account& source,
                                                 const IssuanceRequest& request,

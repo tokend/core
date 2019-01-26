@@ -48,7 +48,7 @@ namespace stellar {
         resource.asset().assetCode = assetFrame->getCode();
 
         result.emplace_back(resource, "send", mSourceAccount);
-        result.emplace_back(resource, "receive", destinationAccountFrame);
+        result.emplace_back(resource, "receive_from_payment", destinationAccountFrame);
 
         return true;
     }

@@ -15,6 +15,10 @@ class SetOptionsOpFrame : public OperationFrame
 	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
+	bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
     SetOptionsResult&
     innerResult()
     {

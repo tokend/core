@@ -32,7 +32,7 @@ struct HolderAmount{
     uint64_t amount;
 };
 
-TEST_CASE("payout", "[tx][payout]") {
+TEST_CASE("payout", "[dep_tx][payout]") {
     using xdr::operator==;
 
     Config const &cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);

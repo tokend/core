@@ -108,22 +108,25 @@ TEST_CASE("create account", "[tx][create_account]") {
         );
     }
 
-    SECTION("Root account can create account") {
+    SECTION("referrer not found")
+    {
         auto account = SecretKey::random();
+        AccountID invalidReferrer = SecretKey::random().getPublicKey();
+        createAccountHelper.applyTx(
+                createAccountTestBuilder
+                        .setToPublicKey(account.getPublicKey())
+                        .setReferrer(&invalidReferrer)
+                        .setType(AccountType::GENERAL)
+                        .setRoleID(emptyAccountRoleID)
+        );
+        auto accountFrame = AccountHelper::Instance()->loadAccount(account.getPublicKey(), app.getDatabase());
+        REQUIRE(accountFrame);
+        REQUIRE(!accountFrame->getReferrer());
+    }
 
-        SECTION("referrer not found") {
-            AccountID invalidReferrer = SecretKey::random().getPublicKey();
-            createAccountHelper.applyTx(
-                    createAccountTestBuilder
-                            .setToPublicKey(account.getPublicKey())
-                            .setReferrer(&invalidReferrer)
-                            .setType(AccountType::GENERAL)
-                            .setRoleID(emptyAccountRoleID)
-            );
-            auto accountFrame = AccountHelper::Instance()->loadAccount(account.getPublicKey(), app.getDatabase());
-            REQUIRE(accountFrame);
-            REQUIRE(!accountFrame->getReferrer());
-        }
+    SECTION("Root account can create account")
+    {
+        auto account = SecretKey::random();
 
         AccountID validReferrer = root.key.getPublicKey();
         auto accountTestBuilder = createAccountTestBuilder
@@ -162,18 +165,20 @@ TEST_CASE("create account", "[tx][create_account]") {
                 accountType == static_cast<int32_t >(AccountType::INSTITUTIONAL_INVESTOR))
                 continue;
 
+            auto emptyRoleID = manageAccountRoleTestHelper.createTxSenderRole(root);
             auto accountCreator = SecretKey::random();
             auto notAllowedBuilder = createAccountTestBuilder
                     .setToPublicKey(accountCreator.getPublicKey())
-                    .setType(accountType);
+                    .setType(accountType)
+                    .setRoleID(emptyRoleID);
             createAccountHelper.applyTx(notAllowedBuilder);
-            auto accountCreatorSeq = 1;
             auto notRoot = Account{accountCreator, Salt(1)};
             auto toBeCreated = SecretKey::random();
             auto toBeCreatedHelper = notAllowedBuilder.setToPublicKey(toBeCreated.getPublicKey())
                     .setSource(notRoot)
                     .setType(AccountType::GENERAL)
-                    .setOperationResultCode(OperationResultCode::opNO_ROLE_PERMISSION);
+                    .setOperationResultCode(OperationResultCode::opNO_ROLE_PERMISSION)
+                    .setTxResultCode(TransactionResultCode::txFAILED);
             createAccountHelper.applyTx(toBeCreatedHelper);
         }
     }

@@ -105,10 +105,11 @@ SaleCreationRequest
 SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
                                      const uint64_t softCap, const uint64_t hardCap, std::string details,
                                      std::vector<SaleCreationRequestQuoteAsset> quoteAssets, uint64_t requiredBaseAssetForHardCap,
-                                     SaleType saleType)
+                                     SaleType saleType, uint64_t saleTypeInt)
 {
     SaleCreationRequest request;
     request.baseAsset = base;
+    request.saleType = saleTypeInt;
     request.defaultQuoteAsset = defaultQuoteAsset;
     request.startTime = startTime;
     request.endTime = endTime;

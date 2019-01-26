@@ -233,15 +233,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         }
 
-        SECTION("Account with block reason 'WITHDRAWAL' not allowed")
-        {
-            manageAccountTestHelper.applyManageAccount(root, withdrawer.key.getPublicKey(), AccountType::GENERAL,
-                                                       {BlockReasons::WITHDRAWAL}, {});
-            auto createWithdrawRequestTx = withdrawRequestHelper.createWithdrawalRequestTx(withdrawer, withdrawRequest, nullptr);
-            REQUIRE(!testManager->applyCheck(createWithdrawRequestTx));
-            auto opResult = getFirstResultCode(*createWithdrawRequestTx);
-            REQUIRE(opResult == OperationResultCode::opACCOUNT_BLOCKED);
-        }
         SECTION("Try to withdraw zero amount")
         {
             withdrawRequest.amount = 0;
@@ -308,7 +299,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
             withdrawRequest.balance = nonExistingBalance;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
+                                                             CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND,
+                                                             OperationResultCode::opNO_BALANCE);
         }
 
         SECTION("try to withdraw from not my balance")
@@ -352,38 +344,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             withdrawRequest.amount = enoughToOverflow;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::STATS_OVERFLOW);
-        }
-
-        SECTION("try to review withdrawal request of blocked user") {
-            // successfully create withdraw request
-            auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                                                                              nullptr);
-            auto requestID = withdrawResult.success().requestID;
-
-            // block withdrawer
-            manageAccountTestHelper.applyManageAccount(root, withdrawerKP.getPublicKey(), AccountType::GENERAL,
-                                                       {BlockReasons::SUSPICIOUS_BEHAVIOR}, {});
-
-            // try to review withdrawal request
-            reviewWithdrawHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "",
-                                                      ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
-
-            // unlock withdrawer
-            manageAccountTestHelper.applyManageAccount(root, withdrawerKP.getPublicKey(), AccountType::GENERAL, {},
-                                                       {BlockReasons::SUSPICIOUS_BEHAVIOR});
-
-            uint32_t toAdd = 0;
-            uint32_t toRemove = 1;
-            auto reviewResult = reviewWithdrawHelper.applyReviewRequestTxWithTasks(root,
-                                                                                   withdrawResult.success().requestID,
-                                                                                   ReviewRequestOpAction::APPROVE,
-                                                                                   "",
-                                                                                   ReviewRequestResultCode::SUCCESS,
-                                                                                   &toAdd,
-                                                                                   &toRemove
-            );
-
-            REQUIRE(reviewResult.success().fulfilled);
         }
 
         SECTION("exceed limits")

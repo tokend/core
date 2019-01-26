@@ -2,16 +2,12 @@
 #include "transactions/ManageInvoiceRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include <crypto/SHA.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/ContractHelper.h>
 #include "ledger/KeyValueHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
 #include "review_request/ReviewRequestHelper.h"
-#include "medida/metrics_registry.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ManageKeyValueOpFrame.h"
 

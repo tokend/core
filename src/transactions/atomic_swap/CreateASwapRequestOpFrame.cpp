@@ -42,7 +42,7 @@ CreateASwapRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelpe
     resource.asset().assetType = asset->getType();
     resource.asset().assetCode = asset->getCode();
     
-    result.emplace_back(resource, "receive", mSourceAccount);
+    result.emplace_back(resource, "receive_from_atomic_swap", mSourceAccount);
     
     return true;
 }

@@ -40,6 +40,8 @@ class TransactionFrameImpl : public TransactionFrame
 
     bool loadAccount(LedgerDelta* delta, Database& app);
     bool commonValid(Application& app, LedgerDelta* delta);
+    bool checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
+                         StorageHelper& storageHelper);
 
 	bool checkAllSignaturesUsed();
 	void resetSignatureTracker();

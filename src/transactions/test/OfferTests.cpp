@@ -123,7 +123,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     // basic create account builder
     auto createAccountBuilder = CreateAccountTestBuilder()
             .setSource(rootAccount)
-            .setRoleID(exchangeRoleID)
+            .setRoleID(1)
             .setRecovery(SecretKey::random().getPublicKey());
 
     auto fundAccount = [&issuanceHelper, &rootAccount](AssetCode code, uint64_t amount, BalanceID receiver)
