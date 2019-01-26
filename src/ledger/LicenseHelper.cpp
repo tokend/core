@@ -13,7 +13,7 @@ using namespace std;
 namespace stellar
 {
 
-    const char* selectorLicense = "SELECT id, admin_count, due_date, ledger_hash, prev_hash FROM license";
+    const char* selectorLicense = "SELECT admin_count, due_date, ledger_hash, prev_hash, hash FROM license";
 
     LicenseHelper::LicenseHelper(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
@@ -24,12 +24,11 @@ namespace stellar
         db.getSession() << "DROP TABLE IF EXISTS license;";
         db.getSession() << "CREATE TABLE license"
                            "("
-                           "id             BIGINT NOT NULL CHECK (id >= 0),"
                            "admin_count    BIGINT NOT NULL,"
                            "due_date       BIGINT NOT NULL,"
                            "ledger_hash    VARCHAR(64) NOT NULL,"
                            "prev_hash      VARCHAR(64) NOT NULL,"
-                           "hash           VARCHAR(64) NOT NULL,"
+                           "hash           VARCHAR(64) NOT NULL UNIQUE,"
                            "PRIMARY KEY (hash)"
                            ");";
     }
@@ -84,14 +83,12 @@ namespace stellar
 
         const auto le = licenseFrame->getLicenseEntry();
 
-        auto sql = "INSERT INTO license (id, admin_count, due_date, ledger_hash, prev_hash, hash) "
-                   "VALUES (:id, :admin_count, :due_date, :ledger_hash, :prev_hash, :hash)";
+        auto sql = "INSERT INTO license (admin_count, due_date, ledger_hash, prev_hash, hash) "
+                   "VALUES (:admin_count, :due_date, :ledger_hash, :prev_hash, :hash)";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
-        auto ID = delta->getHeaderFrame().generateID(LedgerEntryType::LICENSE);
-        auto fullHash = sha256(xdr::xdr_to_opaque(le.adminCount, le.dueDate, le.ledgerHash, le.prevLicenseHash, le.signatures));
+        auto fullHash = licenseFrame->getFullHash();
 
-        st.exchange(use(ID));
         st.exchange(use(le.adminCount, "admin_count"));
         st.exchange(use(le.dueDate, "due_date"));
         auto ledgerHash = binToHex(le.ledgerHash);
@@ -105,7 +102,7 @@ namespace stellar
 
         for(DecoratedSignature sig : le.signatures)
         {
-            sigHelper.storeAdd(ID, sig);
+            sigHelper.storeAdd(hash, sig);
         }
     }
 
@@ -144,23 +141,21 @@ namespace stellar
 
         LicenseSignatureHelper sigHelper(mStorageHelper);
 
-        string ledgerHash, prevLicenseHash;
-        uint64_t id;
+        string hash, ledgerHash, prevLicenseHash;
         auto st = prep.statement();
-        st.exchange(into(id));
         st.exchange(into(le.adminCount));
         st.exchange(into(le.dueDate));
         st.exchange(into(ledgerHash));
         st.exchange(into(prevLicenseHash));
+        st.exchange(into(hash));
         st.define_and_bind();
         st.execute(true);
 
         while (st.got_data())
         {
-            auto signatures = sigHelper.loadSignatures(id);
+            auto signatures = sigHelper.loadSignatures(hash);
             le.ledgerHash = hexToBin256(ledgerHash);
             le.prevLicenseHash = hexToBin256(prevLicenseHash);
-
             licenseProcessor(entry);
             st.fetch();
         }

@@ -16,8 +16,8 @@ namespace stellar
         db.getSession() << "DROP TABLE IF EXISTS stamp;";
         db.getSession() << "CREATE TABLE stamp"
                            "("
-                           "ledger_hash           VARCHAR(256) NOT NULL,"
-                           "license_hash           VARCHAR(256)"
+                           "ledger_hash           VARCHAR(64) NOT NULL,"
+                           "license_hash          VARCHAR(64)"
                            ");";
     }
 

@@ -17,9 +17,8 @@ namespace stellar
         static void dropAll(Database& db);
 
         Database &getDatabase();
-        void storeAdd(uint64_t licenseID, DecoratedSignature sig);
-        void deleteForLicense(uint64_t licenseID);
-        xdr::xvector<DecoratedSignature> loadSignatures(uint64_t licenseID);
+        void storeAdd(std::string licenseHash, DecoratedSignature sig);
+        xdr::xvector<DecoratedSignature> loadSignatures(std::string licenseHash);
     private:
         void loadSignatures(StatementContext& prep,
         std::function<void(DecoratedSignature const&)> processor);

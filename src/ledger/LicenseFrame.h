@@ -15,14 +15,14 @@ namespace stellar
         LicenseFrame(LicenseFrame const& from);
 
     public:
-        typedef std::shared_ptr<LicenseFrame> pointer;
 
+        typedef std::shared_ptr<LicenseFrame> pointer;
         static pointer createNew(Hash ledgerHash, Hash licenseHash,
                 uint64_t adminCount, uint64_t dueDate, xdr::xvector<DecoratedSignature> signatures);
 
         LicenseFrame();
-        LicenseFrame(LedgerEntry const& from);
 
+        LicenseFrame(LedgerEntry const& from);
         LicenseFrame& operator=(LicenseFrame const& other);
 
         EntryFrame::pointer
@@ -30,9 +30,12 @@ namespace stellar
         {
             return EntryFrame::pointer(new LicenseFrame(*this));
         }
-        LicenseEntry& getLicenseEntry();
 
+        LicenseEntry& getLicenseEntry();
         bool isSignatureValid(Application &app);
+
         bool isExpired(Application &app);
+        Hash getSignatureData();
+        Hash getFullHash();
     };
 }

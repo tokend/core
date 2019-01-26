@@ -21,6 +21,7 @@
 #include "ledger/EntryHelperLegacy.h"
 #include "ledger/StampHelper.h"
 #include "ledger/LicenseHelper.h"
+#include "ledger/LicenseSignatureHelper.h"
 #include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReferenceFrame.h"
@@ -380,6 +381,7 @@ DatabaseImpl::initialize()
     BucketManager::dropAll(mApp);
     StampHelper::dropAll(*this);
     LicenseHelper::dropAll(*this);
+    LicenseSignatureHelper::dropAll(*this);
     putSchemaVersion(1);
 }
 

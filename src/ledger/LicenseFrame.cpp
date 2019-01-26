@@ -1,6 +1,7 @@
 #include "LicenseFrame.h"
 #include "crypto/SHA.h"
 #include "xdrpp/marshal.h"
+#include "crypto/StrKey.h"
 #include "transactions/SignatureValidatorImpl.h"
 
 using namespace soci;
@@ -67,10 +68,7 @@ bool LicenseFrame::isSignatureValid(Application &app)
         return false;
     }
 
-    auto contentsHash = sha256(xdr::xdr_to_opaque(
-            mLicense.adminCount, mLicense.dueDate,
-            mLicense.ledgerHash, mLicense.prevLicenseHash
-            ));
+    auto contentsHash = getSignatureData();
     xdr::xvector<DecoratedSignature, 20> signatures;
     signatures.append(mLicense.signatures.data(), mLicense.signatures.size());
 
@@ -90,6 +88,36 @@ bool LicenseFrame::isSignatureValid(Application &app)
 bool LicenseFrame::isExpired(Application &app)
 {
     return app.timeNow() > mLicense.dueDate;
+}
+
+Hash LicenseFrame::getSignatureData()
+{
+    std::string ledgerHash = binToHex(mLicense.ledgerHash);
+    std::string prevLicenseHash = binToHex(mLicense.prevLicenseHash);
+
+    std::string rawSignatureData = std::to_string(mLicense.adminCount)
+            + ":" + std::to_string(mLicense.dueDate)
+            + ":" + ledgerHash
+            + ":" + prevLicenseHash;
+
+    return Hash(sha256(rawSignatureData));
+}
+
+Hash LicenseFrame::getFullHash()
+{
+    std::string ledgerHash = binToHex(mLicense.ledgerHash);
+    std::string prevLicenseHash = binToHex(mLicense.prevLicenseHash);
+    std::string fullData = std::to_string(mLicense.adminCount)
+                                   + ":" + std::to_string(mLicense.dueDate)
+                                   + ":" + ledgerHash
+                                   + ":" + prevLicenseHash;
+    for(DecoratedSignature s : mLicense.signatures)
+    {
+        std::string sig = strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, s.signature);
+        fullData += ":" + sig;
+    }
+
+    return Hash(sha256(fullData));
 }
 
 }

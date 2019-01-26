@@ -52,8 +52,8 @@ StampOpFrame::doApply(Application& app,
     auto license = licenseHelper.loadCurrentLicense();
     if (license)
     {
-        auto le = license->mEntry.data.license();
-        oldLicenseHash = sha256(xdr::xdr_to_opaque(le.adminCount, le.dueDate, le.ledgerHash, le.prevLicenseHash, le.signatures));
+        auto licenseFrame = make_shared<LicenseFrame>(license->mEntry);
+        oldLicenseHash = licenseFrame->getSignatureData();
     }
     auto newStamp = StampFrame::createNew(ledgerHash, oldLicenseHash);
 
