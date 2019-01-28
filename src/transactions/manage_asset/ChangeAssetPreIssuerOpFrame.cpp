@@ -81,7 +81,7 @@ Hash
 ChangeAssetPreIssuerOpFrame::getSignatureData(AssetCode const & assetCode,
                                               AccountID const& newPreIssuer)
 {
-    std::string rawSignatureData = assetCode + PubKeyUtils::toStrKey(newPreIssuer);
+    std::string rawSignatureData = assetCode + ":" + PubKeyUtils::toStrKey(newPreIssuer);
     return Hash(sha256(rawSignatureData));
 }
 

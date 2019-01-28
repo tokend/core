@@ -4,6 +4,7 @@
 
 #include <transactions/test/TxTests.h>
 #include <cstdint>
+#include <crypto/SHA.h>
 #include "ManageAssetTestHelper.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
@@ -223,13 +224,20 @@ ManageAssetOp::_request_t ManageAssetTestHelper::updateMaxAmount(AssetCode asset
 }
 
 ManageAssetOp::_request_t ManageAssetTestHelper::createChangeSignerRequest(
-    AssetCode code, AccountID accountID)
+        Account& account, AssetCode code, AccountID accountID)
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER);
     request.changePreissuedSigner().accountID = accountID;
     request.changePreissuedSigner().code = code;
+
+    DecoratedSignature sig;
+    sig.signature = account.key.sign(Hash(sha256(std::string(code) + ":" + PubKeyUtils::toStrKey(accountID))));
+    sig.hint = PubKeyUtils::getHint(account.key.getPublicKey());
+    request.changePreissuedSigner().signature = sig;
+
     return request;
+
 }
 
 void ManageAssetTestHelper::createAsset(Account& assetOwner,

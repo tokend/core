@@ -47,9 +47,9 @@ namespace txtest
 
                 ManageAssetOp::_request_t updateMaxAmount(AssetCode asset, uint64 amount);
 
-                ManageAssetOp::_request_t createChangeSignerRequest(
-                    AssetCode code,
-                    AccountID accountID);
+		ManageAssetOp::_request_t createChangeSignerRequest(Account& account,
+															AssetCode code,
+															AccountID accountID);
 
         void createAsset(Account &assetOwner, SecretKey &preIssuedSigner, AssetCode assetCode, Account &root,
                 uint32_t policies, uint32_t *allTasks = nullptr,

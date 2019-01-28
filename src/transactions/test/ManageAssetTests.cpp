@@ -8,11 +8,9 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "TxTests.h"
 #include "transactions/test/test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ReviewAssetRequestHelper.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
-#include "transactions/ManageKeyValueOpFrame.h"
 #include "test/test_marshaler.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
 
@@ -65,12 +63,14 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
         creationRequest);
 
     auto newPreIssuanceSigner = SecretKey::random();
-    auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
     auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
+    auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(
+            preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());
     auto txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
     SECTION("Owner is not able to change signer")
     {
-        changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
+        changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(
+                account, assetCode, newPreIssuanceSigner.getPublicKey());
         txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
         testManager->applyCheck(txFrame);
         auto txResult = txFrame->getResult();
@@ -118,13 +118,6 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(assetCode, testManager->getDB());
         REQUIRE(!!assetFrame);
 
-        SECTION("Not able to update max issuance")
-        {
-            auto updateIssuanceRequest = manageAssetHelper.updateMaxAmount(assetCode, 1);
-            manageAssetHelper.applyManageAssetTx(root, 0,
-                updateIssuanceRequest, ManageAssetResultCode::SUCCESS, OperationResultCode::opNOT_ALLOWED);
-
-        }
         SECTION("Able to change max issuance with fork") {
             auto maxIssuanceAmount = 0;
             auto updateIssuanceRequest = manageAssetHelper.updateMaxAmount(assetCode, maxIssuanceAmount);
@@ -469,9 +462,10 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 auto newPreIssuanceSigner = SecretKey::random();
                 auto signer = Signer(preissuedSigner.getPublicKey(), 1, int32_t(SignerType::TX_SENDER), 0, "", Signer::_ext_t{});
                 applySetOptions(testManager->getApp(), account.key, 0, nullptr, &signer);
-                auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
                 auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
-                auto txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
+                auto changePreIssuanceSigner = manageAssetHelper.createChangeSignerRequest(
+                        preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());
+                auto txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssuanceSigner);
                 txFrame->getEnvelope().signatures.clear();
                 txFrame->addSignature(preissuedSigner);
                 testManager->applyCheck(txFrame);
@@ -483,8 +477,8 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 REQUIRE(assetFrame->getPreIssuedAssetSigner() == newPreIssuanceSigner.getPublicKey());
                 SECTION("Owner is not able to change signer")
                 {
-                    changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
-                    txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
+                    changePreIssuanceSigner = manageAssetHelper.createChangeSignerRequest(account, assetCode, preissuedSigner.getPublicKey());
+                    txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssuanceSigner);
                     testManager->applyCheck(txFrame);
                     auto txResult = txFrame->getResult();
                     const auto opResult = txResult.result.results()[0];
