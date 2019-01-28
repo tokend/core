@@ -21,7 +21,7 @@ namespace stellar
     }
 
     void LicenseHelper::dropAll(Database& db) {
-        db.getSession() << "DROP TABLE IF EXISTS license;";
+        db.getSession() << "DROP TABLE IF EXISTS license CASCADE";
         db.getSession() << "CREATE TABLE license"
                            "("
                            "admin_count    BIGINT NOT NULL,"
@@ -31,13 +31,14 @@ namespace stellar
                            "hash           VARCHAR(64) NOT NULL UNIQUE,"
                            "PRIMARY KEY (hash)"
                            ");";
+        LicenseSignatureHelper::dropAll(db);
     }
 
     LedgerKey LicenseHelper::getLedgerKey(LedgerEntry const &from) {
             LedgerKey ledgerKey;
             ledgerKey.type(from.data.type());
-            auto& le = from.data.license();
-            auto hash = sha256(xdr::xdr_to_opaque(le.adminCount, le.dueDate, le.ledgerHash, le.prevLicenseHash, le.signatures));
+            auto licenseFrame = std::make_shared<LicenseFrame>(from);
+            auto hash = licenseFrame->getFullHash();
             ledgerKey.license().licenseHash = hash;
             return ledgerKey;
     }
@@ -92,17 +93,17 @@ namespace stellar
         st.exchange(use(le.adminCount, "admin_count"));
         st.exchange(use(le.dueDate, "due_date"));
         auto ledgerHash = binToHex(le.ledgerHash);
-        st.exchange(use(ledgerHash, "ledgerHash"));
+        st.exchange(use(ledgerHash, "ledger_hash"));
         auto licenseHash = binToHex(le.prevLicenseHash);
-        st.exchange(use(licenseHash, "license_hash"));
+        st.exchange(use(licenseHash, "prev_hash"));
         auto hash = binToHex(fullHash);
         st.exchange(use(hash, "hash"));
         st.define_and_bind();
         st.execute(true);
 
-        for(DecoratedSignature sig : le.signatures)
+        for(int i = 0; i < le.signatures.size(); i++)
         {
-            sigHelper.storeAdd(hash, sig);
+            sigHelper.storeAdd(hash, i, le.signatures[i]);
         }
     }
 
@@ -156,6 +157,7 @@ namespace stellar
             auto signatures = sigHelper.loadSignatures(hash);
             le.ledgerHash = hexToBin256(ledgerHash);
             le.prevLicenseHash = hexToBin256(prevLicenseHash);
+            le.signatures = signatures;
             licenseProcessor(entry);
             st.fetch();
         }
@@ -186,7 +188,6 @@ namespace stellar
     {
         auto& db = getDatabase();
         string sql = selectorLicense;
-        sql += " ORDER BY id DESC LIMIT 1";
 
         auto prep = db.getPreparedStatement(sql);
         LicenseFrame::pointer retLicense;

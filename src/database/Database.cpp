@@ -381,7 +381,6 @@ DatabaseImpl::initialize()
     BucketManager::dropAll(mApp);
     StampHelper::dropAll(*this);
     LicenseHelper::dropAll(*this);
-    LicenseSignatureHelper::dropAll(*this);
     putSchemaVersion(1);
 }
 
