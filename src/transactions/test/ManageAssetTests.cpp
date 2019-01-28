@@ -68,16 +68,16 @@ TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
     auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
     auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
     auto txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
-    // TODO when new signer proccesing flow will be implemented
-    /*SECTION("Owner is not able to change signer")
+    SECTION("Owner is not able to change signer")
     {
         changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
         txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
         testManager->applyCheck(txFrame);
         auto txResult = txFrame->getResult();
         const auto opResult = txResult.result.results()[0];
-        REQUIRE(opResult.code() == OperationResultCode::opBAD_AUTH);
-    }*/
+        REQUIRE(opResult.code() == OperationResultCode::opINNER);
+        REQUIRE(opResult.tr().manageAssetResult().code() == ManageAssetResultCode::INVALID_SIGNATURE);
+    }
 }
 
 TEST_CASE("manage asset", "[tx][manage_asset]")
@@ -118,14 +118,13 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(assetCode, testManager->getDB());
         REQUIRE(!!assetFrame);
 
-        // TODO
-       /* SECTION("Not able to update max issuance")
+        SECTION("Not able to update max issuance")
         {
             auto updateIssuanceRequest = manageAssetHelper.updateMaxAmount(assetCode, 1);
             manageAssetHelper.applyManageAssetTx(root, 0,
                 updateIssuanceRequest, ManageAssetResultCode::SUCCESS, OperationResultCode::opNOT_ALLOWED);
 
-        }*/
+        }
         SECTION("Able to change max issuance with fork") {
             auto maxIssuanceAmount = 0;
             auto updateIssuanceRequest = manageAssetHelper.updateMaxAmount(assetCode, maxIssuanceAmount);
@@ -482,15 +481,16 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 REQUIRE(actualResultCode == ManageAssetResultCode::SUCCESS);
                 auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(assetCode, testManager->getDB());
                 REQUIRE(assetFrame->getPreIssuedAssetSigner() == newPreIssuanceSigner.getPublicKey());
-               /* SECTION("Owner is not able to change signer")
+                SECTION("Owner is not able to change signer")
                 {
                     changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(assetCode, newPreIssuanceSigner.getPublicKey());
                     txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
                     testManager->applyCheck(txFrame);
                     auto txResult = txFrame->getResult();
                     const auto opResult = txResult.result.results()[0];
-                    REQUIRE(opResult.code() == OperationResultCode::opBAD_AUTH);
-                }*/
+                    REQUIRE(opResult.code() == OperationResultCode::opINNER);
+                    REQUIRE(opResult.tr().manageAssetResult().code() == ManageAssetResultCode::INVALID_SIGNATURE);
+                }
             }
             SECTION("Can update asset")
             {

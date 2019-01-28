@@ -6,8 +6,10 @@
 #include <transactions/review_request/ReviewIssuanceCreationRequestOpFrame.h>
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
+#include <ledger/StorageHelper.h>
 #include "ChangeAssetMaxIssuanceOpFrame.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 
 namespace stellar
@@ -28,7 +30,20 @@ bool
 ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                           std::vector<OperationCondition>& result) const
 {
-    // only asset owner can do it
+    auto asset = storageHelper.getAssetHelper().loadAsset(mUpdateMaxIssuance.assetCode);
+    if (!asset)
+    {
+        mResult.code(OperationResultCode::opNO_ASSET);
+        return false;
+    }
+
+    AccountRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update_max_issuance", mSourceAccount);
+
+    // only asset owner can do it, but it is useful to restrict him
     return true;
 }
 

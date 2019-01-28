@@ -38,5 +38,6 @@ class MockLedgerManager : public LedgerManager
     MOCK_METHOD3(deleteOldEntries, void(Database&, uint32_t, uint64_t));
     MOCK_METHOD0(checkDbState, void());
     MOCK_METHOD1(shouldUse, bool(LedgerVersion const));
+	MOCK_METHOD0(getLedgerVersion, LedgerVersion());
 };
 }

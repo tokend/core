@@ -134,7 +134,7 @@ CreatePreIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper& storag
 bool CreatePreIssuanceRequestOpFrame::isSignatureValid(AssetFrame::pointer asset, LedgerVersion version)
 {
 	auto& request = mCreatePreIssuanceRequest.request;
-	auto signatureData = getSignatureData(mCreatePreIssuanceRequest.request.reference, request.amount, request.asset);
+	auto signatureData = getSignatureData(request.reference, request.amount, request.asset);
 	auto signatureValidator = SignatureValidatorImpl(signatureData, { request.signature });
 
 	const int VALID_SIGNATURES_REQUIRED = 1;

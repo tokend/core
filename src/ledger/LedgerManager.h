@@ -177,6 +177,8 @@ class LedgerManager
 
     virtual bool shouldUse(const LedgerVersion version) = 0;
 
+    virtual LedgerVersion getLedgerVersion() = 0;
+
     virtual ~LedgerManager()
     {
     }

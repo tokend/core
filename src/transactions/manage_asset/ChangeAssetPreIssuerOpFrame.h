@@ -18,6 +18,13 @@ class ChangeAssetPreIssuerOpFrame : public ManageAssetOpFrame
 	bool
 	tryGetOperationConditions(StorageHelper& storageHelper,
 							  std::vector<OperationCondition>& result) const override;
+
+	bool
+	isSignatureValid(AssetFrame::pointer asset, LedgerVersion version);
+
+	Hash
+	getSignatureData(AssetCode const& assetCode, AccountID const& newPreIssuer);
+
 public:
     ChangeAssetPreIssuerOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
