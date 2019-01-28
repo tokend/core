@@ -24,8 +24,7 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<int32_t >(
-            LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+    LEDGER_PROTOCOL_VERSION = static_cast<int32_t>(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
     OVERLAY_PROTOCOL_VERSION = 5;
 

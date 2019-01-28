@@ -466,9 +466,10 @@ TransactionFrameImpl::checkValid(Application& app)
         return res;
     }
 
+    AccountRuleVerifierImpl accountRuleVerifier;
     for (auto& op : mOperations)
     {
-        if (!op->checkValid(app))
+        if (!op->checkValid(app, accountRuleVerifier))
         {
             // it's OK to just fast fail here and not try to call
             // checkValid on all operations as the resulting object

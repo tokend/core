@@ -195,12 +195,6 @@ SignatureValidatorImpl::Result SignatureValidatorImpl::check(
         return ACCOUNT_BLOCKED;
 
     const uint32 ledgerVersion = app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion;
-    if (ledgerVersion < (uint32)LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES &&
-        !isAccountTypeAllowed(account, sourceDetails.mAllowedSourceAccountTypes))
-    {
-        return INVALID_ACCOUNT_TYPE;
-    }
-
     if (!sourceDetails.mSpecificSigners.empty())
     {
         return check(sourceDetails.mSpecificSigners,

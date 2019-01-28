@@ -2,6 +2,7 @@
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"
 #include "ledger/LedgerHeaderFrame.h"
+#include "transactions/AccountRuleVerifier.h"
 #include "main/CommandHandler.h"
 #include "main/PersistentState.h"
 #include "medida/meter.h"
@@ -14,6 +15,7 @@
 #include "transactions/BindExternalSystemAccountIdOpFrame.h"
 #include "transactions/test/mocks/MockApplication.h"
 #include "transactions/test/mocks/MockDatabase.h"
+#include "transactions/test/mocks/MockAccountRuleVerifier.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDHelper.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
@@ -46,6 +48,7 @@ TEST_CASE("bind external system account_id - unit test",
     MockDatabase dbMock;
     MockStorageHelper storageHelperMock;
     MockKeyValueHelper keyValueHelperMock;
+    MockAccountRuleVerifier accountRuleVerifierMock;
     MockExternalSystemAccountIDHelper externalSystemAccountIDHelperMock;
     MockExternalSystemAccountIDPoolEntryHelper
         externalSystemAccountIDPoolEntryHelperMock;
@@ -90,6 +93,8 @@ TEST_CASE("bind external system account_id - unit test",
         .WillByDefault(ReturnRef(externalSystemAccountIDHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDPoolEntryHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDPoolEntryHelperMock));
+    ON_CALL(accountRuleVerifierMock, isAllowed(_, _))
+            .WillByDefault(Return(true));
 
     BindExternalSystemAccountIdOpFrame opFrame(operation, operationResult,
                                                transactionFrameMock);
@@ -99,7 +104,7 @@ TEST_CASE("bind external system account_id - unit test",
                     loadAccount(&ledgerDeltaMock, Ref(dbMock),
                                 *operation.sourceAccount))
             .WillOnce(Return(accountFrameFake));
-        REQUIRE(opFrame.checkValid(appMock, &ledgerDeltaMock));
+        REQUIRE(opFrame.checkValid(appMock, accountRuleVerifierMock, &ledgerDeltaMock));
 
         SECTION("Apply, no pool entry to bind")
         {

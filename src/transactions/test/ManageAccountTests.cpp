@@ -1,6 +1,7 @@
 // Copyright 2014 Stellar Development Foundation and contributors. Licensed
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
+#include <transactions/AccountRuleVerifierImpl.h>
 #include "main/Application.h"
 #include "util/Timer.h"
 #include "main/Config.h"
@@ -42,7 +43,8 @@ TEST_CASE("Manage account", "[dep_tx][manage_account]")
 			auto tx = createManageAccount(app.getNetworkID(), rootKP, account, rootSeq++, 0, 0);
 			tx->checkValid(app);
 			auto op = tx->getOperations()[0];
-			op->checkValid(app, &delta);
+			AccountRuleVerifierImpl accountRuleVerifier;
+			op->checkValid(app, accountRuleVerifier, &delta);
 			// Master is only source
 			auto sourceDetails = op->getSourceAccountDetails({}, 0);
 			auto allowedSources = sourceDetails.mAllowedSourceAccountTypes;
@@ -64,7 +66,8 @@ TEST_CASE("Manage account", "[dep_tx][manage_account]")
 			auto tx = createManageAccount(app.getNetworkID(), rootKP, rootKP, rootSeq++, 0, 0, AccountType::MASTER);
 			tx->checkValid(app);
 			auto op = tx->getOperations()[0];
-			op->checkValid(app, &delta);
+			AccountRuleVerifierImpl accountRuleVerifier;
+			op->checkValid(app, accountRuleVerifier, &delta);
 			// Master is only source
 			auto sourceDetails = op->getSourceAccountDetails({}, 0);
 			auto allowedSources = sourceDetails.mAllowedSourceAccountTypes;

@@ -236,8 +236,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
         }
         SECTION("Not allowed by asset policy")
         {
-            TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
-
             manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET));
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
@@ -310,7 +308,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
             SECTION("Happy path using account rule and rules")
             {
-                TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
                 paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,
                                                      paymentAmount, paymentFeeData, "", "");
             }

@@ -132,7 +132,8 @@ class OperationFrame
     }
     OperationResultCode getResultCode() const;
 
-    bool checkValid(Application& app, LedgerDelta* delta = nullptr);
+    bool checkValid(Application& app, AccountRuleVerifier& accountRuleVerifier,
+                    LedgerDelta* delta = nullptr);
 
     bool apply(StorageHelper& storageHelper, Application& app);
 

@@ -156,7 +156,8 @@ OperationFrame::OperationFrame(Operation const& op, OperationResult& res,
 bool
 OperationFrame::apply(StorageHelper& storageHelper, Application& app)
 {
-    if (!storageHelper.getLedgerDelta() || !checkValid(app, storageHelper.getLedgerDelta()))
+    AccountRuleVerifierImpl accountRuleVerifier;
+    if (!storageHelper.getLedgerDelta() || !checkValid(app, accountRuleVerifier, storageHelper.getLedgerDelta()))
     {
         return false;
     }
@@ -312,7 +313,9 @@ OperationFrame::getResultCode() const
 // make sure sig is correct
 // verifies that the operation is well formed (operation specific)
 bool
-OperationFrame::checkValid(Application& app, LedgerDelta* delta)
+OperationFrame::checkValid(Application& app,
+                           AccountRuleVerifier& accountRuleVerifier,
+                           LedgerDelta* delta)
 {
     if (!isSupported())
     {
@@ -347,14 +350,9 @@ OperationFrame::checkValid(Application& app, LedgerDelta* delta)
 		return false;
 	}
 
-    if (ledgerVersion >= (uint32)LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES)
+    if (!checkRolePermissions(app, accountRuleVerifier))
     {
-        AccountRuleVerifierImpl accountRuleVerifier;
-
-        if (!checkRolePermissions(app, accountRuleVerifier))
-        {
-            return false;
-        }
+        return false;
     }
 
     auto sourceDetails = getSourceAccountDetails(counterpartiesDetails, ledgerVersion, db);

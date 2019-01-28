@@ -27,7 +27,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     Application::pointer appPtr = Application::create(clock, cfg);
     Application &app = *appPtr;
     app.start();
-    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+    TestManager::upgradeToCurrentLedgerVersion(app);
     auto testManager = TestManager::make(app);
     Database &db = testManager->getDB();
 

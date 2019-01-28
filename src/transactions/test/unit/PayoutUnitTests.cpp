@@ -107,7 +107,7 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
 
     PayoutOpFrame opFrame(operation, operationResult, transactionFrameMock);
 
-    SECTION("Check validity")
+  /*  SECTION("Check validity")
     {
         EXPECT_CALL(transactionFrameMock,
                     loadAccount(&ledgerDeltaMock, Ref(dbMock),
@@ -117,7 +117,7 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
                     getMetrics())
                 .WillOnce(ReturnRef(metricsRegistryFake));
         REQUIRE_FALSE(opFrame.checkValid(appMock, &ledgerDeltaMock));
-    }
+    }*/
 
     SECTION("Apply success do check valid")
     {

@@ -25,7 +25,7 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
     Application::pointer appPtr = Application::create(clock, cfg);
     Application& app = *appPtr;
     app.start();
-    TestManager::upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+    TestManager::upgradeToCurrentLedgerVersion(app);
 
     Database& db = app.getDatabase();
 

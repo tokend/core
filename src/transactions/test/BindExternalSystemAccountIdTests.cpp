@@ -29,7 +29,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     auto& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
-    testManager->upgradeToLedgerVersion(app, LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
+    testManager->upgradeToCurrentLedgerVersion(app);
 
     LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                           app.getDatabase());
