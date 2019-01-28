@@ -113,7 +113,7 @@ Hash LicenseFrame::getFullHash()
                                    + ":" + prevLicenseHash;
     for(DecoratedSignature s : mLicense.signatures)
     {
-        std::string sig = strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, s.signature);
+        std::string sig = binToHex(s.signature);
         fullData += ":" + sig;
     }
 

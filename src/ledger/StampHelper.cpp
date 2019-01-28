@@ -63,8 +63,10 @@ namespace stellar
         auto timer = db.getSelectTimer("stamp_exists");
         auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM stamp WHERE ledger_hash=:ledger_hash and license_hash=:license_hash)");
         auto& st = prep.statement();
-        st.exchange(use(binToHex(key.stamp().ledgerHash), "ledger_hash"));
-        st.exchange(use(binToHex(key.stamp().licenseHash), "license_hash"));
+        std::string ledgerHash = binToHex(key.stamp().ledgerHash);
+        st.exchange(use(ledgerHash, "ledger_hash"));
+        std::string licenseHash = binToHex(key.stamp().licenseHash);
+        st.exchange(use(licenseHash, "license_hash"));
         auto exists = 0;
         st.exchange(into(exists));
         st.define_and_bind();
