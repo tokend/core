@@ -10,7 +10,7 @@ using namespace std;
 namespace stellar
 {
 
-    const char* selectorSignatures = "SELECT signature FROM license_signatures";
+    const char* selectorSignatures = "SELECT signature, hint FROM license_signatures";
 
     LicenseSignatureHelper::LicenseSignatureHelper(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
@@ -21,8 +21,10 @@ namespace stellar
         db.getSession() << "DROP TABLE IF EXISTS license_signatures;";
         db.getSession() << "CREATE TABLE license_signatures"
                            "("
-                           "license_hash           VARCHAR(64) NOT NULL,"
-                           "signature      VARCHAR(256) NOT NULL,"
+                           "id                  INT NOT NULL,"
+                           "license_hash        VARCHAR(64) NOT NULL,"
+                           "signature           VARCHAR(256) NOT NULL,"
+                           "hint                VARCHAR(8) NOT NULL,"
                            "PRIMARY KEY (license_hash, signature),"
                            "FOREIGN KEY(license_hash) REFERENCES license(hash) ON DELETE CASCADE"
                            ");";
@@ -32,16 +34,18 @@ namespace stellar
         return mStorageHelper.getDatabase();
     }
 
-    void LicenseSignatureHelper::storeAdd(std::string licenseHash, DecoratedSignature sig) {
+    void LicenseSignatureHelper::storeAdd(std::string licenseHash, uint8_t ID, DecoratedSignature sig) {
         auto& db = getDatabase();
-        auto sql = "INSERT INTO license_signatures (license_hash, signature) "
-                   "VALUES (:license_hash, :signature)";
+        auto sql = "INSERT INTO license_signatures (id, license_hash, signature, hint) "
+                   "VALUES (:id, :license_hash, :signature, :hint)";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
-
+        st.exchange(use(ID, "id"));
         st.exchange(use(licenseHash, "license_hash"));
         auto signature = binToHex(sig.signature);
         st.exchange(use(signature, "signature"));
+        auto hint= binToHex(sig.hint);
+        st.exchange(use(hint, "hint"));
         st.define_and_bind();
         st.execute(true);
     }
@@ -50,7 +54,7 @@ namespace stellar
         auto &db = getDatabase();
 
         string sql = selectorSignatures;
-        sql += " WHERE license_hash = :license_hash";
+        sql += " WHERE license_hash = :license_hash ORDER BY id ASC";
         auto prep = db.getPreparedStatement(sql);
         auto &st = prep.statement();
         st.exchange(use(licenseHash, "license_hash"));
@@ -69,9 +73,10 @@ namespace stellar
                                 function<void(DecoratedSignature const&)> processor)
     {
         DecoratedSignature sig;
-        string signature;
+        string signature, hint;
         auto st = prep.statement();
         st.exchange(into(signature));
+        st.exchange(into(hint));
         st.define_and_bind();
         st.execute(true);
 
@@ -79,11 +84,14 @@ namespace stellar
         {
             auto temp = hexToBin(signature);
             xdr::xvector<uint8_t, 64> s;
-            for(uint8_t byte : temp)
-            {
-                s.push_back(byte);
-            }
+            s.append(temp.data(), temp.size());
+            temp = hexToBin(hint);
+            xdr::opaque_array<4> h;
+            for (int i = 0; i < temp.size(); i++)
+                h[i] = temp[i];
+
             sig.signature = Signature(s);
+            sig.hint = SignatureHint(h);
 
             processor(sig);
             st.fetch();
