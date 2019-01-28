@@ -167,7 +167,7 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
     }
     if (!canBeApplied(app, storageHelper))
     {
-        mResult.code(OperationResultCode::opNOT_ALLOWED); //?
+        mResult.code(OperationResultCode::opLICENSE_VIOLATION);
         return false;
     }
 
