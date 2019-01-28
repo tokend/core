@@ -257,7 +257,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             manageAssetHelper.applyManageAssetTx(root, 0, request,
                                                  ManageAssetResultCode::INVALID_DETAILS);
         }
-        SECTION("Try to review manage asset request from blocked syndicate")
+        /*SECTION("Try to review manage asset request from blocked syndicate")
         {
             uint32_t tasks = 1;
             Account syndicate = Account{SecretKey::random(), Salt(0)};
@@ -274,7 +274,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             auto reviewHelper = ReviewAssetRequestHelper(testManager);
             reviewHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "",
                                               ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
-        }
+        }*/
     }
     SECTION("Asset update request")
     {
