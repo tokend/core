@@ -53,7 +53,7 @@ StampOpFrame::doApply(Application& app,
     if (license)
     {
         auto licenseFrame = make_shared<LicenseFrame>(license->mEntry);
-        oldLicenseHash = licenseFrame->getSignatureData();
+        oldLicenseHash = licenseFrame->getFullHash();
     }
     auto newStamp = StampFrame::createNew(ledgerHash, oldLicenseHash);
 
