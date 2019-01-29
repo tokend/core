@@ -99,16 +99,13 @@ ManageBalanceOpFrame::doApply(Application& app,
         return false;
     }
 
+    auto sequentialID =
+        delta.getHeaderFrame().generateID(LedgerEntryType ::BALANCE);
     const BalanceID newBalanceID = BalanceKeyUtils::forAccount(mManageBalance.
-                                                               destination,
-                                                               delta.
-                                                               getHeaderFrame().
-                                                               generateID(LedgerEntryType
-                                                                          ::
-                                                                          BALANCE));
+                                                               destination, sequentialID);
     balanceFrame = BalanceFrame::createNew(newBalanceID,
                                            mManageBalance.destination,
-                                           mManageBalance.asset);
+                                mManageBalance.asset, sequentialID);
     EntryHelperProvider::storeAddEntry(delta, db, balanceFrame->mEntry);
     innerResult().success().balanceID = newBalanceID;
     innerResult().code(ManageBalanceResultCode::SUCCESS);

@@ -180,6 +180,9 @@ LedgerManagerImpl::startNewLedger()
 	AccountManager accountManager(mApp, this->getDatabase(), delta, mApp.getLedgerManager());
 	for (auto systemAccount : systemAccounts)
 	{
+            auto& accountEntry = systemAccount->getAccount();
+            accountEntry.sequentialID =
+                delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 		EntryHelperProvider::storeAddEntry(delta, this->getDatabase(), systemAccount->mEntry);
 		accountManager.createStats(systemAccount);
 		

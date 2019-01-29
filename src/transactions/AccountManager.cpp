@@ -372,9 +372,11 @@ namespace stellar {
             throw runtime_error("Unexpected db state: expected asset to exist");
         }
 
-        auto newBalanceID = BalanceKeyUtils::forAccount(account,
-                                                        delta.getHeaderFrame().generateID(LedgerEntryType::BALANCE));
-        balance = BalanceFrame::createNew(newBalanceID, account, asset);
+        auto sequentialID =
+            delta.getHeaderFrame().generateID(LedgerEntryType::BALANCE);
+        auto newBalanceID = BalanceKeyUtils::forAccount(account, sequentialID);
+        balance =
+            BalanceFrame::createNew(newBalanceID, account, asset, sequentialID);
         EntryHelperProvider::storeAddEntry(delta, db, balance->mEntry);
         return balance;
     }

@@ -35,8 +35,12 @@ void ManageAssetHelper::createBalanceForAccount(AccountID account,
         auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(account, assetCode, db, &delta);
         if (!!balanceFrame)
             return;
-        const BalanceID balanceID = BalanceKeyUtils::forAccount(account, delta.getHeaderFrame().generateID(LedgerEntryType::BALANCE));
-        balanceFrame = BalanceFrame::createNew(balanceID, account, assetCode);
+        auto sequentialID =
+            delta.getHeaderFrame().generateID(LedgerEntryType::BALANCE);
+        const BalanceID balanceID =
+            BalanceKeyUtils::forAccount(account, sequentialID);
+        balanceFrame = BalanceFrame::createNew(balanceID, account, assetCode,
+                                               sequentialID);
 
         EntryHelperProvider::storeAddEntry(delta, db, balanceFrame->mEntry);
     }

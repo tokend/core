@@ -48,15 +48,15 @@ namespace stellar
         {
             sql = std::string(
                 "INSERT INTO accounts (accountid, recoveryid, thresholds, lastmodified, account_type, account_role,"
-                "block_reasons, referrer, policies, kyc_level, version) "
-                "VALUES (:id, :rid, :th, :lm, :type, :ar, :br, :ref, :p, :kyc, :v)");
+                "block_reasons, referrer, policies, kyc_level, version, sequential_id) "
+                "VALUES (:id, :rid, :th, :lm, :type, :ar, :br, :ref, :p, :kyc, :v, :seqid)");
         }
         else
         {
             sql = std::string(
                 "UPDATE accounts "
                 "SET    recoveryid=:rid, thresholds=:th, lastmodified=:lm, account_type=:type, account_role=:ar, "
-                "       block_reasons=:br, referrer=:ref, policies=:p, kyc_level=:kyc, version=:v "
+                "       block_reasons=:br, referrer=:ref, policies=:p, kyc_level=:kyc, version=:v, sequential_id = :seqid "
                 "WHERE  accountid=:id");
         }
 
@@ -78,6 +78,7 @@ namespace stellar
 			st.exchange(use(newAccountPolicies, "p"));
 			st.exchange(use(kycLevel, "kyc"));
 			st.exchange(use(newAccountVersion, "v"));
+                        st.exchange(use(accountEntry.sequentialID, "seqid"));
 
             indicator roleIndicator = indicator::i_null;
             uint32 roleValue = 0;
@@ -309,7 +310,8 @@ namespace stellar
 			"block_reasons      INT          NOT NULL,"
 			"referrer           VARCHAR(56)  NOT NULL,"
 			"policies           INT          NOT NULL           DEFAULT 0,"
-			"version            INT          NOT NULL           DEFAULT 0"
+			"version            INT          NOT NULL           DEFAULT 0,"
+                       "sequential_id       BIGINT       UNIQUE NOT NULL"
 			");";
 		db.getSession() << "CREATE TABLE signers"
 			"("
@@ -433,7 +435,7 @@ namespace stellar
 		int32_t accountVersion;
 		auto prep =
 			db.getPreparedStatement("SELECT recoveryid, thresholds, lastmodified, account_type, account_role, "
-				"block_reasons, referrer, policies, kyc_level, version "
+				"block_reasons, referrer, policies, kyc_level, version, sequential_id "
 				"FROM   accounts "
 				"WHERE  accountid=:v1");
 		auto& st = prep.statement();
@@ -447,6 +449,7 @@ namespace stellar
 		st.exchange(into(accountPolicies));
 		st.exchange(into(kycLevel));
 		st.exchange(into(accountVersion));
+                st.exchange(into(account.sequentialID));
 		st.exchange(use(actIDStrKey));
 		st.define_and_bind();
 		{
