@@ -1,7 +1,7 @@
 #include "ManageAccountTestHelper.h"
 #include "StateBeforeTxHelper.h"
 #include <transactions/ManageAccountOpFrame.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "test/test_marshaler.h"
 
 namespace stellar
@@ -37,7 +37,7 @@ namespace txtest
         StateBeforeTxHelper stateHelper(stateBeforeOps[0]);
         auto accountBeforeTx = stateHelper.getAccount(destination);
         REQUIRE(accountBeforeTx);
-        auto accountAfterTx = AccountHelper::Instance()->loadAccount(destination, db);
+        auto accountAfterTx = AccountHelperLegacy::Instance()->loadAccount(destination, db);
 
         uint32_t expectedBlockReasons = (accountBeforeTx->getBlockReasons() | sumBlockReasons(toAdd)) & ~sumBlockReasons(toRemove);
         REQUIRE(accountAfterTx->getBlockReasons() == expectedBlockReasons);

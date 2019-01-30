@@ -20,18 +20,11 @@ using xdr::operator<;
 AccountFrame::AccountFrame()
     : EntryFrame(LedgerEntryType::ACCOUNT), mAccountEntry(mEntry.data.account())
 {
-    mAccountEntry.thresholds[0] = 1; // by default, master key's weight is 1
-    mUpdateSigners = true;
 }
 
 AccountFrame::AccountFrame(LedgerEntry const& from)
     : EntryFrame(from), mAccountEntry(mEntry.data.account())
 {
-    // we cannot make any assumption on mUpdateSigners:
-    // it's possible we're constructing an account with no signers
-    // but that the database's state had a previous version with signers
-    mUpdateSigners = true;
-    mAccountEntry.limits = nullptr;
 }
 
 AccountFrame::AccountFrame(AccountFrame const& from) : AccountFrame(from.mEntry)
@@ -41,6 +34,19 @@ AccountFrame::AccountFrame(AccountFrame const& from) : AccountFrame(from.mEntry)
 AccountFrame::AccountFrame(AccountID const& id) : AccountFrame()
 {
     mAccountEntry.accountID = id;
+}
+
+LedgerKey const&
+AccountFrame::getKey() const
+{
+    if (!mKeyCalculated)
+    {
+        mKey = LedgerKey(LedgerEntryType::ACCOUNT);
+        mKey.account().accountID = getID();
+        mKeyCalculated = true;
+    }
+
+    return mKey;
 }
 
 AccountFrame::pointer
@@ -54,21 +60,6 @@ bool
 AccountFrame::signerCompare(Signer const& s1, Signer const& s2)
 {
     return s1.pubKey < s2.pubKey;
-}
-
-void
-AccountFrame::normalize()
-{
-    std::sort(mAccountEntry.signers.begin(), mAccountEntry.signers.end(),
-              &AccountFrame::signerCompare);
-}
-
-bool
-AccountFrame::isValid()
-{
-    auto const& a = mAccountEntry;
-    return std::is_sorted(a.signers.begin(), a.signers.end(),
-                          &AccountFrame::signerCompare);
 }
 
 bool
@@ -90,56 +81,6 @@ AccountFrame::getID() const
     return (mAccountEntry.accountID);
 }
 
-uint32_t
-AccountFrame::getMasterWeight() const
-{
-    return mAccountEntry
-        .thresholds[static_cast<int32_t>(ThresholdIndexes::MASTER_WEIGHT)];
-}
-
-uint32_t
-AccountFrame::getHighThreshold() const
-{
-    return mAccountEntry
-        .thresholds[static_cast<int32_t>(ThresholdIndexes::HIGH)];
-}
-
-uint32_t
-AccountFrame::getMediumThreshold() const
-{
-    return mAccountEntry
-        .thresholds[static_cast<int32_t>(ThresholdIndexes::MED)];
-}
-
-uint32_t
-AccountFrame::getLowThreshold() const
-{
-    return mAccountEntry
-        .thresholds[static_cast<int32_t>(ThresholdIndexes::LOW)];
-}
-
-uint32
-AccountFrame::getKYCLevel() const
-{
-    if (mAccountEntry.ext.v() == LedgerVersion::USE_KYC_LEVEL)
-    {
-        return mAccountEntry.ext.kycLevel();
-    }
-
-    return 0;
-}
-void
-AccountFrame::setKYCLevel(uint32 kycLevel)
-{
-    if (mAccountEntry.ext.v() == LedgerVersion::USE_KYC_LEVEL)
-    {
-        mAccountEntry.ext.kycLevel() = kycLevel;
-    }
-    else if (kycLevel != 0)
-    {
-        throw std::runtime_error("Could not read KYC Level");
-    }
-}
 uint64_t
 AccountFrame::getAccountRole() const
 {

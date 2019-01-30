@@ -1,7 +1,7 @@
 #include "ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "CreateExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "DeleteExternalSystemAccountIDPoolEntryOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 
 namespace stellar
 {

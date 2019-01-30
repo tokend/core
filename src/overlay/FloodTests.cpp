@@ -11,7 +11,7 @@
 #include "overlay/OverlayManager.h"
 #include "simulation/Topologies.h"
 #include "herder/Herder.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "herder/HerderImpl.h"
 #include "test/test_marshaler.h"
@@ -52,7 +52,7 @@ TEST_CASE("Flooding", "[flood][overlay]")
 
         SecretKey root = getRoot();
 		
-		auto accountHelper = AccountHelper::Instance();
+		auto accountHelper = AccountHelperLegacy::Instance();
         auto rootA =
 			accountHelper->loadAccount(root.getPublicKey(), app0->getDatabase());
 

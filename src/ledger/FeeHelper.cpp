@@ -14,9 +14,9 @@ using namespace std;
 namespace stellar {
     using xdr::operator<;
 
-    const int32 EMPTY_VALUE = -1;
+    const uint64_t EMPTY_VALUE = 0;
 
-    static const char* feeColumnSelector = "SELECT fee_type, asset, fixed, percent, account_id, account_type, subtype, "
+    static const char* feeColumnSelector = "SELECT fee_type, asset, fixed, percent, account_id, account_role, subtype, "
             "lower_bound, upper_bound, hash, lastmodified, version "
             "FROM   fee_state";
 
@@ -29,7 +29,7 @@ namespace stellar {
                 "fixed          BIGINT       NOT NULL,"
                 "percent        BIGINT       NOT NULL,"
                 "account_id     VARCHAR(56),"
-                "account_type   INT,"
+                "account_role   BIGINT,"
                 "subtype        BIGINT       NOT NULL,"
                 "lower_bound    BIGINT,"
                 "upper_bound    BIGINT,"
@@ -124,7 +124,7 @@ namespace stellar {
 
         if (insert)
         {
-            sql = "INSERT INTO fee_state (fee_type, asset, fixed, percent, account_id, account_type, subtype, "
+            sql = "INSERT INTO fee_state (fee_type, asset, fixed, percent, account_id, account_role, subtype, "
                     "lastmodified, lower_bound, upper_bound, hash, version) "
                     "VALUES (:ft, :as, :f, :p, :aid, :at, :subt, :lm, :lb, :ub, :hash, :v)";
         }
@@ -132,7 +132,7 @@ namespace stellar {
         {
             sql = "UPDATE fee_state "
                     "SET    fee_type=:ft, asset=:as, fixed=:f, percent=:p, account_id=:aid, "
-                    "account_type=:at, subtype=:subt, lastmodified=:lm, version=:v "
+                    "account_role=:at, subtype=:subt, lastmodified=:lm, version=:v "
                     "WHERE  lower_bound=:lb AND upper_bound=:ub AND hash=:hash";
         }
 
@@ -153,10 +153,10 @@ namespace stellar {
         }
         st.exchange(use(actIDStrKey, "aid"));
 
-        int32_t accountType = EMPTY_VALUE;
-        if(feeEntry.accountType)
-            accountType = static_cast<int32_t >(*feeEntry.accountType);
-        st.exchange(use(accountType, "at"));
+        uint64_t accountRole = EMPTY_VALUE;
+        if(feeEntry.accountRole)
+            accountRole = *feeEntry.accountRole;
+        st.exchange(use(accountRole, "at"));
         st.exchange(use(feeEntry.subtype, "subt"));
         st.exchange(use(feeFrame->mEntry.lastModifiedLedgerSeq, "lm"));
         st.exchange(use(feeEntry.lowerBound, "lb"));
@@ -190,9 +190,9 @@ namespace stellar {
     }
 
     FeeFrame::pointer
-    FeeHelper::loadFee(FeeType feeType, AssetCode asset, AccountID *accountID, AccountType *accountType,
+    FeeHelper::loadFee(FeeType feeType, AssetCode asset, AccountID *accountID, uint64_t* accountRole,
                        int64_t subtype, int64_t lowerBound, int64_t upperBound, Database &db, LedgerDelta *delta) {
-        Hash hash = FeeFrame::calcHash(feeType, asset, accountID, accountType, subtype);
+        Hash hash = FeeFrame::calcHash(feeType, asset, accountID, accountRole, subtype);
         return loadFee(hash, lowerBound, upperBound, db, delta);
     }
 
@@ -204,7 +204,7 @@ namespace stellar {
         string rawAsset;
 
         std::string actIDStrKey, rawHash;
-        int32_t accountType;
+        uint64_t accountType;
         int32_t feeVersion = 0;
 
         auto& st = prep.statement();
@@ -235,7 +235,7 @@ namespace stellar {
                 le.data.feeState().accountID.activate() = PubKeyUtils::fromStrKey(actIDStrKey);
 
             if (accountType != EMPTY_VALUE)
-                le.data.feeState().accountType.activate() = AccountType(accountType);
+                le.data.feeState().accountRole.activate() = accountType;
 
             le.data.feeState().hash = hexToBin256(rawHash);
 
@@ -308,10 +308,10 @@ namespace stellar {
                               int64_t amount, Database &db, LedgerDelta *delta) {
         if (!accountFrame)
             throw std::runtime_error("Expected accountFrame not to be nullptr");
-        auto accountType = accountFrame->getAccountType();
+        auto accountRole = accountFrame->getAccountRole();
         auto accountID = accountFrame->getID();
         Hash hash1 = FeeFrame::calcHash(feeType, asset, &accountID, nullptr, subtype);
-        Hash hash2 = FeeFrame::calcHash(feeType, asset, nullptr, &accountType, subtype);
+        Hash hash2 = FeeFrame::calcHash(feeType, asset, nullptr, &accountRole, subtype);
         Hash hash3 = FeeFrame::calcHash(feeType, asset, nullptr, nullptr, subtype);
 
         std::string sql = feeColumnSelector;

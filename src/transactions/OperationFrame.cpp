@@ -14,7 +14,7 @@
 #include "ledger/FeeFrame.h"
 #include "ledger/AccountTypeLimitsFrame.h"
 #include "ledger/ReferenceFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
@@ -22,7 +22,6 @@
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/payment/PaymentOpV2Frame.h"
-#include "transactions/SetOptionsOpFrame.h"
 #include "transactions/SetFeesOpFrame.h"
 #include "transactions/ManageAccountOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
@@ -74,8 +73,6 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new CreateAccountOpFrame(op, res, tx));
     case OperationType::PAYMENT:
         return shared_ptr<OperationFrame>(new PaymentOpFrame(op, res, tx));
-    case OperationType::SET_OPTIONS:
-        return shared_ptr<OperationFrame>(new SetOptionsOpFrame(op, res, tx));
     case OperationType::CREATE_ISSUANCE_REQUEST:
 		return shared_ptr<OperationFrame>(new CreateIssuanceRequestOpFrame(op, res, tx));
     case OperationType::SET_FEES:
@@ -194,9 +191,7 @@ SourceDetails
 OperationFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                         int32_t ledgerVersion) const
 {
-    return SourceDetails(getAllAccountTypes(),
-                         mSourceAccount->getHighThreshold(),
-                         getAnySignerType());
+    return SourceDetails(getAllAccountTypes(), 0, getAnySignerType());
 }
 
 bool OperationFrame::isSupported() const
@@ -388,7 +383,7 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
 
     for (auto& counterpartyPair : counterparties)
     {
-		auto accountHelper = AccountHelper::Instance();
+		auto accountHelper = AccountHelperLegacy::Instance();
 		counterpartyPair.second.mAccount  = accountHelper->loadAccount(counterpartyPair.first, db);
 		bool isExists = !!counterpartyPair.second.mAccount;
 
@@ -406,14 +401,6 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
         {
             app.getMetrics().NewMeter({ "operation", "invalid", "blocked-counterparty" }, "operation").Mark();
             mResult.code(OperationResultCode::opCOUNTERPARTY_BLOCKED);
-            return false;
-        }
-
-		auto& allowedTypes = counterpartyPair.second.mAllowedAccountTypes;
-        if(std::find(allowedTypes.begin(), allowedTypes.end(), counterpartyPair.second.mAccount->getAccountType()) == allowedTypes.end())
-        {
-            app.getMetrics().NewMeter({ "operation", "invalid", "wrong-counterparty-type" }, "operation").Mark();
-            mResult.code(OperationResultCode::opCOUNTERPARTY_WRONG_TYPE);
             return false;
         }
 

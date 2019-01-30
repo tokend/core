@@ -1,7 +1,3 @@
-//
-// Created by artem on 08.06.18.
-//
-
 #include "ManageLimitsTestHelper.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "test/test_marshaler.h"
@@ -17,12 +13,12 @@ namespace txtest
                         StatsOpType type, bool isConvertNeeded, uint64_t daily,
                         uint64_t weekly, uint64_t monthly, uint64_t annual,
                         xdr::pointer<AccountID> accountID,
-                        xdr::pointer<AccountType> accountType)
+                        uint64_t* accountType)
     {
         ManageLimitsOp manageLimitsOp;
         manageLimitsOp.details.action(ManageLimitsAction::CREATE);
         manageLimitsOp.details.limitsCreateDetails().accountID = accountID;
-        manageLimitsOp.details.limitsCreateDetails().accountType = accountType;
+        manageLimitsOp.details.limitsCreateDetails().accountRole = xdr::pointer<uint64>(accountType);
         manageLimitsOp.details.limitsCreateDetails().assetCode = asset;
         manageLimitsOp.details.limitsCreateDetails().statsOpType = type;
         manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = isConvertNeeded;

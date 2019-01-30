@@ -25,9 +25,6 @@ namespace stellar {
             return mResult.tr().createAccountResult();
         }
 
-        void buildAccount(Application &app, LedgerDelta &delta, AccountFrame::pointer destAccountFrame);
-        void trySetReferrer(Application &app, Database &db, AccountFrame::pointer destAccount) const;
-
         bool createAccount(Application &app, LedgerDelta &delta,
                            LedgerManager &ledgerManager);
 

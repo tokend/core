@@ -6,7 +6,7 @@
 #include <ledger/LedgerHeaderFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "transactions/CreateAccountOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AccountRoleHelper.h"
 
@@ -29,23 +29,6 @@ namespace stellar {
         return true;
     }
 
-    void CreateAccountOpFrame::trySetReferrer(Application &app, Database &db,
-                                              AccountFrame::pointer
-                                              destAccountFrame) const {
-        if (!mCreateAccount.referrer) {
-            return;
-        }
-
-        const auto referrerAccountID = *mCreateAccount.referrer;
-        if (referrerAccountID == app.getAdminID())
-            return;
-
-        if (!AccountHelper::Instance()->exists(referrerAccountID, db))
-            return;
-
-        destAccountFrame->setReferrer(referrerAccountID);
-    }
-
     bool CreateAccountOpFrame::createAccount(Application &app, LedgerDelta &delta,
                                              LedgerManager &ledgerManager) {
         auto &db = app.getDatabase();
@@ -59,15 +42,13 @@ namespace stellar {
         auto destAccountFrame = make_shared<AccountFrame>(mCreateAccount.destination);
         auto& accountEntry = destAccountFrame->getAccount();
         accountEntry.sequentialID =
-            delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
-        buildAccount(app, delta, destAccountFrame);
+                delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
+        accountEntry.roleID = mCreateAccount.roleID;
 
         //save recovery accountID
         destAccountFrame->setRecoveryID(mCreateAccount.recoveryKey);
 
         EntryHelperProvider::storeAddEntry(delta, db, destAccountFrame->mEntry);
-        AccountManager accountManager(app, db, delta, ledgerManager);
-        accountManager.createStats(destAccountFrame);
         // create balance for all available base assets
         createBalance(delta, db);
         return true;
@@ -108,7 +89,7 @@ namespace stellar {
             return false;
         }
 
-        if (AccountHelper::Instance()->exists(mCreateAccount.destination, db))
+        if (AccountHelperLegacy::Instance()->exists(mCreateAccount.destination, db))
         {
             innerResult().code(CreateAccountResultCode::ALREADY_EXISTS);
             return false;
@@ -140,15 +121,5 @@ namespace stellar {
         }
 
         return true;
-    }
-
-    void
-    CreateAccountOpFrame::buildAccount(Application &app, LedgerDelta &delta, AccountFrame::pointer destAccountFrame) {
-        auto &db = app.getDatabase();
-        auto &destAccount = destAccountFrame->getAccount();
-        destAccount.accountType = mCreateAccount.accountType;
-        trySetReferrer(app, db, destAccountFrame);
-        destAccount.policies = mCreateAccount.policies;
-        destAccount.roleID = mCreateAccount.roleID;
     }
 }

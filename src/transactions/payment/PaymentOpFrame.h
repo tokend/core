@@ -25,8 +25,6 @@ class PaymentOpFrame : public OperationFrame
 	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const override;
 
-	bool isRecipeintFeeNotRequired(Database& db);
-
 	bool isAllowedToTransfer(Database& db, AssetFrame::pointer asset);
     bool processFees(Application& app, LedgerManager& lm, LedgerDelta& delta, Database& db);
     bool processFees_v1(Application& app, LedgerDelta& delta, Database& db);
@@ -53,9 +51,6 @@ protected:
     bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
-
-    bool
-    processInvoice(Application& app, LedgerDelta& delta, Database& db);
 
     static bool isTransferFeeMatch(AccountFrame::pointer account, AssetCode const& assetCode, FeeData const& feeData, int64_t const& amount, Database& db, LedgerDelta& delta);
 

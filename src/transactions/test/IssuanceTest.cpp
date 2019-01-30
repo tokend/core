@@ -4,7 +4,7 @@
 #include <transactions/test/test_helper/ManageAssetTestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <ledger/FeeHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include "overlay/LoopbackPeer.h"
 #include "main/test.h"
@@ -78,7 +78,7 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
         auto feeEntry = createFeeEntry(FeeType::ISSUANCE_FEE, fixedFee, percentFee, assetToBeIssued, &account, nullptr);
         applySetFees(testManager->getApp(), root.key, root.getNextSalt(), &feeEntry, false);
 
-        auto accountFrame = AccountHelper::Instance()->loadAccount(account, testManager->getDB());
+        auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(account, testManager->getDB());
         auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, assetToBeIssued, FeeFrame::SUBTYPE_ANY,
                                                               accountFrame, preIssuedAmount, testManager->getDB());
         REQUIRE(feeFrame);

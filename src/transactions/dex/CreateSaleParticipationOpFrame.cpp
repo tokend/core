@@ -9,7 +9,7 @@
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
 #include "OfferManager.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelperLegacy.h"

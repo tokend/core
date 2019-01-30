@@ -33,7 +33,7 @@ SourceDetails
 ManageInvoiceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                               int32_t ledgerVersion) const
 {
-	return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
+	return SourceDetails({}, 0, 0);
 }
 
 ManageInvoiceRequestOpFrame::ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res,

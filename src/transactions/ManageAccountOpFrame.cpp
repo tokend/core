@@ -4,7 +4,7 @@
 
 #include "transactions/ManageAccountOpFrame.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "database/Database.h"
 
 #include "main/Application.h"
@@ -30,7 +30,7 @@ std::unordered_map<AccountID, CounterpartyDetails> ManageAccountOpFrame::getCoun
 SourceDetails ManageAccountOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                                             int32_t ledgerVersion) const
 {
-	int32_t threshold = mSourceAccount->getMediumThreshold();
+	int32_t threshold = 0;
 
 	uint32_t allowedSignerClass = 0;
 	// check for account type mismatched performed in doApply
@@ -75,16 +75,9 @@ ManageAccountOpFrame::doApply(Application& app,
 {
     Database& db = ledgerManager.getDatabase();
 
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
 	auto account = accountHelper->loadAccount(delta, mManageAccount.account, db);
 	assert(account);
-
-	if (account->getAccountType() != mManageAccount.accountType)
-	{
-		app.getMetrics().NewMeter({ "op-manage-account", "failure", "type-mismatch" }, "operation").Mark();
-		innerResult().code(ManageAccountResultCode::TYPE_MISMATCH);
-		return false;
-	}
 
     account->setBlockReasons(mManageAccount.blockReasonsToAdd, mManageAccount.blockReasonsToRemove);
 	EntryHelperProvider::storeChangeEntry(delta, db, account->mEntry);

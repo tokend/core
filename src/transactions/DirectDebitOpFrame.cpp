@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "database/Database.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/TrustFrame.h"
@@ -40,7 +40,7 @@ SourceDetails DirectDebitOpFrame::getSourceAccountDetails(std::unordered_map<Acc
                                                 AccountType::COMMISSION, AccountType::EXCHANGE, AccountType::VERIFIED,
                                                 AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR};
     // disallowed
-	return SourceDetails({}, mSourceAccount->getMediumThreshold(),
+	return SourceDetails({}, 0,
                          static_cast<int32_t >(SignerType::DIRECT_DEBIT_OPERATOR),
                          static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
                          static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
@@ -78,7 +78,7 @@ DirectDebitOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     opRes.tr().type(OperationType::PAYMENT);
     PaymentOpFrame payment(op, opRes, mParentTx);
     
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
     auto fromAccount = accountHelper->loadAccount(
         mDirectDebit.from, db, storageHelper.getLedgerDelta());
     

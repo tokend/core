@@ -1,7 +1,7 @@
 #include "ReviewChangeRoleRequestOpFrame.h"
 #include "ReviewRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountKYCHelper.h"
 
 namespace stellar
@@ -36,7 +36,7 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     auto& changeRoleRequest = requestEntry.body.changeRoleRequest();
     auto destinationAccount = changeRoleRequest.destinationAccount;
-    auto destinationAccountFrame = AccountHelper::Instance()->loadAccount(destinationAccount, db);
+    auto destinationAccountFrame = AccountHelperLegacy::Instance()->loadAccount(destinationAccount, db);
     if (!destinationAccountFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Requestor account not found.";

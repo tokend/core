@@ -5,7 +5,7 @@
 #include "ledger/StatisticsHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/ReviewableRequestFrame.h"

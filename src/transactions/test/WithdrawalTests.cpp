@@ -4,7 +4,7 @@
 
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAssetPairTestHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/test/test_helper/ManageAccountTestHelper.h>

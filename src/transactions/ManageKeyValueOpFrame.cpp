@@ -3,7 +3,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "main/Application.h"
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "xdrpp/printer.h"
 
 namespace stellar {

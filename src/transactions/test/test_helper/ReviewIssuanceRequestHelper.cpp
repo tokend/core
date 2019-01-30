@@ -4,7 +4,7 @@
 
 #include <transactions/review_request/ReviewRequestOpFrame.h>
 #include <ledger/FeeHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "ReviewIssuanceRequestHelper.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
@@ -70,7 +70,7 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
     REQUIRE(assetFrameAfterTx->getAvailableForIssuance() == assetFrameBeforeTx->getAvailableForIssuance() - issuanceRequest->amount);
     REQUIRE(assetFrameAfterTx->getIssued() == assetFrameBeforeTx->getIssued() + issuanceRequest->amount);
     REQUIRE(!!balanceBeforeTx);
-    auto receiverFrame = AccountHelper::Instance()->loadAccount(balanceBeforeTx->getAccountID(), mTestManager->getDB());
+    auto receiverFrame = AccountHelperLegacy::Instance()->loadAccount(balanceBeforeTx->getAccountID(), mTestManager->getDB());
     auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, issuanceRequest->asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame, issuanceRequest->amount,
                                                           mTestManager->getDB());

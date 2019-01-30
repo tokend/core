@@ -49,7 +49,7 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
         ReviewableRequestHelper::Instance()->storeChange(*delta, db, requestFrame->mEntry);
 
         bool fulfilled = false;
-        if (getSourceAccount().getAccountType() == AccountType::MASTER) {
+        if (getSourceID() == app.getAdminID()) {
             auto resultCode = ReviewRequestHelper::tryApproveRequest(mParentTx, app, lm, *delta, requestFrame);
 
             if (resultCode == ReviewRequestResultCode::SUCCESS) {
@@ -143,7 +143,7 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
         auto &db = storageHelper.getDatabase();
         auto delta = storageHelper.getLedgerDelta();
 
-        auto saleFrame = getSourceAccount().getAccountType() == AccountType::MASTER
+        auto saleFrame = getSourceID() == app.getAdminID()
                          ? SaleHelper::Instance()->loadSale(mManageSaleOp.saleID, db, delta)
                          : SaleHelper::Instance()->loadSale(mManageSaleOp.saleID, getSourceID(), db, delta);
 

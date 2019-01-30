@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "crypto/SHA.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "main/Application.h"

@@ -12,7 +12,7 @@
 #include "main/Application.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "xdrpp/printer.h"
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/ManageAssetPairOpFrame.h>
 
 namespace stellar
@@ -108,15 +108,6 @@ ReviewSaleCreationRequestOpFrame::loadAsset(LedgerManager& ledgerManager,
         return retAsset;
     }
 
-    auto requestorFrame =
-        AccountHelper::Instance()->mustLoadAccount(requestor, db);
-
-    if (requestorFrame->getAccountType() == AccountType::MASTER)
-    {
-        retAsset = AssetHelperLegacy::Instance()->loadAsset(code, db, delta);
-        return retAsset;
-    }
-
     retAsset = AssetHelperLegacy::Instance()->loadAsset(code, requestor, db, delta);
     return retAsset;
 }
@@ -165,24 +156,6 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
     innerResult().success().typeExt.requestType(ReviewableRequestType::SALE);
     innerResult().success().typeExt.saleExtended().saleID = newSaleID;
     return true;
-}
-
-SourceDetails
-ReviewSaleCreationRequestOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    auto newSignersVersion =
-        static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSignersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ASSET_MANAGER);
-    }
-
-    return SourceDetails({AccountType::MASTER},
-                         mSourceAccount->getHighThreshold(), allowedSigners);
 }
 
 uint64

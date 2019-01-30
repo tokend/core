@@ -1,4 +1,4 @@
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/issuance/CreateIssuanceRequestOpFrame.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/PendingStatisticsHelper.h>
@@ -114,40 +114,6 @@ bool ReviewIssuanceCreationRequestOpFrame::handleReject(Application & app, Ledge
 {
 	innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
 	return false;
-}
-
-SourceDetails ReviewIssuanceCreationRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                            int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    auto newSingersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSingersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ISSUANCE_MANAGER);
-    }
-
-	if (ledgerVersion < static_cast<int32_t>(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-	{
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
-	}
-
-	// TODO: maybe must be refactored
-    if (mReviewRequest.ext.v() != LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-                             allowedSigners);
-    }
-
-    if ((mReviewRequest.reviewDetails.tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
-    (mReviewRequest.reviewDetails.tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
-    {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                static_cast<int32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
-    }
-
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-                         allowedSigners);
 }
 
 ReviewIssuanceCreationRequestOpFrame::ReviewIssuanceCreationRequestOpFrame(Operation const & op, OperationResult & res,

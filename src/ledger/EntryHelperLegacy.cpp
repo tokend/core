@@ -6,7 +6,7 @@
 #include "ledger/EntryHelperLegacy.h"
 #include "LedgerManager.h"
 #include "ledger/AccountFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
@@ -245,7 +245,7 @@ namespace stellar
 	}
 
 	EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
-		{ LedgerEntryType::ACCOUNT, AccountHelper::Instance() },
+		{ LedgerEntryType::ACCOUNT, AccountHelperLegacy::Instance() },
 		{ LedgerEntryType::ACCOUNT_LIMITS, AccountLimitsHelper::Instance() },
 		{ LedgerEntryType::ACCOUNT_TYPE_LIMITS, AccountTypeLimitsHelper::Instance() },
 		{ LedgerEntryType::ASSET, AssetHelperLegacy::Instance() },

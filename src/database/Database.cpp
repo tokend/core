@@ -39,7 +39,7 @@
 #include "transactions/TransactionFrame.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "medida/metrics_registry.h"
 #include "medida/timer.h"
 #include "medida/counter.h"
@@ -171,7 +171,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             ReferenceHelper::addVersion(*this);
             break;
         case databaseSchemaVersion::USE_KYC_LEVEL:
-            AccountHelper::Instance()->addKYCLevel(*this);
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
             AccountKYCHelper::Instance()->dropAll(*this);
@@ -208,7 +207,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES:
             std::unique_ptr<AccountRoleHelper>(new AccountRoleHelperImpl(storageHelper))->dropAll();
-            AccountHelper::Instance()->addAccountRole(*this);
             std::unique_ptr<AccountRuleHelper>(new AccountRuleHelperImpl(storageHelper))->dropAll();
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:

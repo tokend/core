@@ -89,7 +89,7 @@ FeeFrame::isValid(FeeEntry const& oe)
 }
 
 Hash
-FeeFrame::calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, AccountType* accountType, int64_t subtype)
+FeeFrame::calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, uint64_t* accountRole, int64_t subtype)
 {
     std::string data = "";
 
@@ -112,8 +112,8 @@ FeeFrame::calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, Accou
         buffAsStdStr = buff;
         data += buffAsStdStr;
     }
-    if (accountType) {
-        snprintf(buff, sizeof(buff), "accountType:%i", static_cast<int32_t>(*accountType));
+    if (accountRole) {
+        snprintf(buff, sizeof(buff), "accountRole:%i", static_cast<int32_t>(*accountRole));
         buffAsStdStr = buff;
         data += buffAsStdStr;
     }

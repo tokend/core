@@ -10,7 +10,7 @@
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/LedgerManagerImpl.h"
 #include "ledger/AssetPairFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 
 #include "overlay/OverlayManager.h"
@@ -202,11 +202,10 @@ LedgerManagerImpl::startNewLedger()
     auto& accountEntry = adminAccount->getAccount();
     accountEntry.accountID = mApp.getAdminID();
     accountEntry.roleID = createAdminRole(storageHelperImpl);
-    accountEntry.accountType = AccountType::MASTER;
     accountEntry.sequentialID = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 
     // use new account helper, when it will be possible
-    AccountHelper::Instance()->storeAdd(delta, getDatabase(), adminAccount->mEntry);
+    AccountHelperLegacy::Instance()->storeAdd(delta, getDatabase(), adminAccount->mEntry);
     storageHelper.commit();
 
     mCurrentLedger = make_shared<LedgerHeaderFrameImpl>(genesisHeader);
@@ -852,11 +851,6 @@ void
 LedgerManagerImpl::checkDbState()
 {
     Database& db = getDatabase();
-
-	// TODO move to invariant
-	auto accountHelper = AccountHelper::Instance();
-    std::unordered_map<AccountID, AccountFrame::pointer> aData =
-		accountHelper->checkDB(db);
 
     auto allAssetsWithIssued = AssetHelperLegacy::Instance()->loadIssuedForAssets(db);
 

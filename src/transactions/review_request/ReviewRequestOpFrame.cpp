@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "util/asio.h"
 #include "ReviewRequestOpFrame.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
@@ -45,7 +45,7 @@ ReviewRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database & db, LedgerDelta & delta)
 {
-    auto requestorAccount = AccountHelper::Instance()->loadAccount(request->getRequestor(), db, &delta);
+    auto requestorAccount = AccountHelperLegacy::Instance()->loadAccount(request->getRequestor(), db, &delta);
     // just go through old flow
     if (!lm.shouldUse(LedgerVersion::ALLOW_REJECT_REQUEST_OF_BLOCKED_REQUESTOR)) {
         if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {

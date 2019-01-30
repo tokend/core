@@ -9,7 +9,7 @@
 #include <crypto/SHA.h>
 #include <transactions/SignatureValidatorImpl.h>
 #include "ChangeAssetPreIssuerOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 
 namespace stellar

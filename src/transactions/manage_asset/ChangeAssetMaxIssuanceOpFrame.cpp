@@ -8,7 +8,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include <ledger/StorageHelper.h>
 #include "ChangeAssetMaxIssuanceOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 

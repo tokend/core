@@ -28,8 +28,6 @@ namespace stellar {
 
             CreateAccountTestBuilder setPolicies(int32 policies);
 
-            CreateAccountTestBuilder setPolicies(AccountPolicies policies);
-
             CreateAccountTestBuilder setRoleID(uint64_t roleID);
 
             CreateAccountTestBuilder setResultCode(CreateAccountResultCode expectedResult);

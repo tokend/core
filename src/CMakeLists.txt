@@ -31,6 +31,7 @@ set(NOT_COMMON_SOURCE_FILES
         bucket/LedgerCmp.h
         bucket/BucketManager.h
         ledger/LedgerManager.h
+        ledger/AccountHelper.h
         history/HistoryManager.h
         overlay/BanManager.h
         overlay/StellarXDR.h

@@ -4,7 +4,7 @@
 
 #include "util/asio.h"
 #include <set>
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "transactions/SignatureValidatorImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "main/Application.h"
@@ -41,27 +41,15 @@ void SignatureValidatorImpl::resetSignatureTracker()
     mUsedSignatures = vector<bool>(mSignatures.size());
 }
 
-bool SignatureValidatorImpl::isAccountTypeAllowed(AccountFrame& account,
-                                              vector<AccountType>
-                                              allowedAccountTypes)
-{
-    auto sourceAccountType = account.getAccountType();
-    for (auto allowedAccountType : allowedAccountTypes)
-    {
-        if (allowedAccountType == sourceAccountType)
-            return true;
-    }
-    return false;
-}
-
 vector<Signer> SignatureValidatorImpl::getSigners(Application& app, Database& db,
                                               AccountFrame& account)
 {
-    // system accounts use master's signers
+    // TODO use signer helper
+    /*// system accounts use master's signers
     if (account.getAccountType() != AccountType::MASTER &&
         isSystemAccountType(account.getAccountType()))
     {
-        auto accountHelper = AccountHelper::Instance();
+        auto accountHelper = AccountHelperLegacy::Instance();
         auto master = accountHelper->loadAccount(app.getAdminID(), db);
         assert(master);
         return getSigners(app, db, *master);
@@ -84,7 +72,7 @@ vector<Signer> SignatureValidatorImpl::getSigners(Application& app, Database& db
 
     auto accountSigners = account.getAccount().signers;
     signers.insert(signers.end(), accountSigners.begin(), accountSigners.end());
-    return signers;
+    return signers;*/
 }
 
 SignatureValidatorImpl::Result SignatureValidatorImpl::check(

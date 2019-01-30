@@ -8,7 +8,7 @@
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "overlay/LoopbackPeer.h"
 #include "main/test.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/ExternalSystemAccountID.h"
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"
 #include "test/test_marshaler.h"
@@ -81,18 +81,6 @@ TEST_CASE("create account", "[tx][create_account]") {
         }
     }
 
-    SECTION("Can create account with policies") {
-        auto account = SecretKey::random();
-        AccountID validReferrer = root.key.getPublicKey();
-
-        auto accountTestBuilder = createAccountTestBuilder
-                .setToPublicKey(account.getPublicKey())
-                .setReferrer(&validReferrer);
-
-        createAccountHelper.applyTx(accountTestBuilder.setType(AccountType::GENERAL)
-                                            .setPolicies(AccountPolicies::ALLOW_TO_CREATE_USER_VIA_API));
-    }
-
     SECTION("Can't create account with non-zero policies and NON_VERYFIED type") {
         auto account = SecretKey::random();
         AccountID validReferrer = root.key.getPublicKey();
@@ -106,22 +94,6 @@ TEST_CASE("create account", "[tx][create_account]") {
                         .setResultCode(CreateAccountResultCode::NOT_VERIFIED_CANNOT_HAVE_POLICIES)
                         .setTxResultCode(TransactionResultCode::txFAILED)
         );
-    }
-
-    SECTION("referrer not found")
-    {
-        auto account = SecretKey::random();
-        AccountID invalidReferrer = SecretKey::random().getPublicKey();
-        createAccountHelper.applyTx(
-                createAccountTestBuilder
-                        .setToPublicKey(account.getPublicKey())
-                        .setReferrer(&invalidReferrer)
-                        .setType(AccountType::GENERAL)
-                        .setRoleID(emptyAccountRoleID)
-        );
-        auto accountFrame = AccountHelper::Instance()->loadAccount(account.getPublicKey(), app.getDatabase());
-        REQUIRE(accountFrame);
-        REQUIRE(!accountFrame->getReferrer());
     }
 
     SECTION("Root account can create account")

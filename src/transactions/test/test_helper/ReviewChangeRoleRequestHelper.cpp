@@ -1,7 +1,7 @@
 #include "ReviewChangeRoleRequestHelper.h"
 #include "test/test_marshaler.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountKYCHelper.h"
 #include "transactions/CreateChangeRoleRequestOpFrame.h"
 
@@ -12,7 +12,7 @@ namespace txtest
 {
 void ReviewChangeRoleRequestChecker::checkApprove(ReviewableRequestFrame::pointer request) {
     auto updateKYCRequest = request->getRequestEntry().body.changeRoleRequest();
-    auto accountAfterTx = AccountHelper::Instance()->loadAccount(updateKYCRequest.destinationAccount, mTestManager->getDB());
+    auto accountAfterTx = AccountHelperLegacy::Instance()->loadAccount(updateKYCRequest.destinationAccount, mTestManager->getDB());
     REQUIRE(!!accountAfterTx);
     REQUIRE(accountAfterTx->getAccountRole() == updateKYCRequest.accountRoleToSet);
 

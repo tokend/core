@@ -8,7 +8,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateAssetOpFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelper.h"

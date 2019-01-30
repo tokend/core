@@ -6,7 +6,7 @@
 #include "CreateOfferOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"

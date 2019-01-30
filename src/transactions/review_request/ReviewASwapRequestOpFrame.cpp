@@ -19,14 +19,6 @@ stellar::ReviewASwapRequestOpFrame::ReviewASwapRequestOpFrame(
 {
 }
 
-SourceDetails ReviewASwapRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails({ AccountType::MASTER }, mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
-}
-
 bool ReviewASwapRequestOpFrame::handleReject(Application &app, LedgerDelta &delta,
                                              LedgerManager &ledgerManager,
                                              ReviewableRequestFrame::pointer request)

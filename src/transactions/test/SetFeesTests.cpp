@@ -16,7 +16,7 @@
 #include "test_helper/ManageAssetPairTestHelper.h"
 #include "test_helper/SetFeesTestHelper.h"
 #include "test/test_marshaler.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -80,7 +80,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
     // create account for further tests
     auto account = SecretKey::random();
     createAccountTestHelper.applyCreateAccountTx(master, account.getPublicKey(), AccountType::GENERAL);
-    auto accountFrame = AccountHelper::Instance()->loadAccount(account.getPublicKey(), db);
+    auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(account.getPublicKey(), db);
 
     auto accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
                                                 accountFrame, 0, db);
@@ -94,7 +94,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         REQUIRE(accountFee->getFee() == feeEntry);
     }
     SECTION("AccountType is set") {
-        auto accountType = accountFrame->getAccountType();
+        auto accountType = accountFrame->getAccountRole();
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 10, 20, nullptr,
                                                          &accountType);
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false);
@@ -105,7 +105,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
 
     SECTION("Both cannot be set") {
         auto accountID = accountFrame->getID();
-        auto accountType = accountFrame->getAccountType();
+        auto accountType = accountFrame->getAccountRole();
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0, &accountID,
                                                          &accountType);
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false, SetFeesResultCode::MALFORMED);

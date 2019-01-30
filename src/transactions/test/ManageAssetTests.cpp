@@ -461,7 +461,6 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             {
                 auto newPreIssuanceSigner = SecretKey::random();
                 auto signer = Signer(preissuedSigner.getPublicKey(), 1, int32_t(SignerType::TX_SENDER), 0, "", Signer::_ext_t{});
-                applySetOptions(testManager->getApp(), account.key, 0, nullptr, &signer);
                 auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
                 auto changePreIssuanceSigner = manageAssetHelper.createChangeSignerRequest(
                         preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());

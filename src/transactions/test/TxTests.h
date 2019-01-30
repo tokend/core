@@ -11,7 +11,6 @@
 #include "util/optional.h"
 #include "ledger/FeeFrame.h"
 #include "herder/LedgerCloseData.h"
-#include "test_helper/SetOptionsTestHelper.h"
 
 namespace stellar
 {
@@ -27,7 +26,7 @@ typedef std::vector<std::pair<TransactionResultPair, LedgerEntryChanges>>
     TxSetResultMeta;
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
-    AssetCode asset, AccountID* accountID = nullptr, AccountType* accountType = nullptr,
+    AssetCode asset, AccountID* accountID = nullptr, uint64_t* accountType = nullptr,
     int64_t subtype = FeeFrame::SUBTYPE_ANY, int64_t lowerBound = 0, int64_t upperBound = INT64_MAX);
 
 PaymentFeeData getNoPaymentFee();
@@ -148,21 +147,6 @@ PaymentResult applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
 TransactionFramePtr
 createReviewPaymentRequestTx(Hash const& networkID, SecretKey& exchange,
                 Salt seq, int64 paymentID,  bool accept = true);
-
-TransactionFramePtr createSetOptions(Hash const& networkID, SecretKey& source, Salt seq,
-                                     ThresholdSetter* thrs, Signer* signer,
-                                     TrustData* trustData = nullptr);
-
-void applySetOptions(Application& app, SecretKey& source, Salt seq, ThresholdSetter* thrs,
-                     Signer* signer, TrustData* trustData = nullptr,
-                     SetOptionsResultCode targetResult = SetOptionsResultCode::SUCCESS, SecretKey* txSiger = nullptr);
-
-/*TransactionFramePtr createUploadPreemissions(Hash const& networkID, SecretKey& source, Salt seq,
-	std::vector<PreEmission> preEmissions);
-
-void applyUploadPreemissions(Application& app, SecretKey& source, Salt seq,
-	std::vector<PreEmission> preEmissions,
-	UploadPreemissionsResultCode targetResult = UPLOAD_PREEMISSIONS_SUCCESS);*/
 
 
 TransactionFramePtr createManageAccount(Hash const& networkID,

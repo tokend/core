@@ -1,6 +1,6 @@
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "main/Application.h"
 #include "bucket/BucketApplicator.h"
 #include "xdrpp/printer.h"
@@ -108,7 +108,7 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, Le
         return updateChangeRoleRequest(db, delta, app);
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto accountFrame = accountHelper->loadAccount(delta,
             mCreateChangeRoleRequestOp.destinationAccount, db);
     if (!accountFrame)
@@ -152,10 +152,6 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, Le
     innerResult().success().fulfilled = false;
 
     bool canAutoApprove = requestFrame->canBeFulfilled(ledgerManager);
-
-    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CREATE_KYC_REQUEST_AUTO_APPROVE))
-        canAutoApprove = canAutoApprove &&
-                         mSourceAccount->getAccountType() == AccountType::MASTER;
 
     if (canAutoApprove)
         tryAutoApprove(db, delta, app, requestFrame);

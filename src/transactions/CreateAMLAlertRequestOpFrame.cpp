@@ -4,7 +4,7 @@
 #include "main/Application.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "review_request/ReviewRequestHelper.h"

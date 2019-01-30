@@ -10,7 +10,6 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "transactions/SetOptionsOpFrame.h"
 #include "test/test_marshaler.h"
 
 namespace stellar

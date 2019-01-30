@@ -4,8 +4,9 @@
 #include "ledger/KeyValueHelper.h"
 #include "ledger/ExternalSystemAccountIDHelper.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
-#include "ledger/AccountRoleHelperImpl.h"
-#include "ledger/AccountRuleHelperImpl.h"
+#include "ledger/AccountRoleHelper.h"
+#include "ledger/AccountRuleHelper.h"
+#include "ledger/AccountHelper.h"
 
 namespace stellar
 {
@@ -33,7 +34,7 @@ public:
                  ExternalSystemAccountIDPoolEntryHelper&());
     MOCK_METHOD0(getAccountRoleHelper, AccountRoleHelper&());
     MOCK_METHOD0(getAccountRuleHelper, AccountRuleHelper&());
-    MOCK_METHOD0(getAccountHelper, AccountHelper*());
+    MOCK_METHOD0(getAccountHelper, AccountHelper&());
 };
 
 }  // namespace stellar

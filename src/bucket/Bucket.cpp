@@ -22,7 +22,7 @@
 #include "ledger/EntryFrame.h"
 #include "ledger/EntryHelperLegacy.h"
 #include "ledger/AccountFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetPairFrame.h"

@@ -12,7 +12,7 @@
 #include "ledger/OfferHelper.h"
 #include "dex/OfferManager.h"
 #include "FeesManager.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "xdrpp/printer.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "issuance/CreateIssuanceRequestOpFrame.h"
@@ -173,7 +173,7 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     LedgerManager& lm, LedgerDelta& delta, Database& db)
 {
     updateOfferPrices(sale, delta, db);
-    const auto saleOwnerAccount = AccountHelper::Instance()->loadAccount(sale->getOwnerID(), db, &delta);
+    const auto saleOwnerAccount = AccountHelperLegacy::Instance()->loadAccount(sale->getOwnerID(), db, &delta);
     if (!saleOwnerAccount)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state: expected sale owner to exist: " << PubKeyUtils::toStrKey(sale->getOwnerID());

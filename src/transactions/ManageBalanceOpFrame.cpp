@@ -5,7 +5,7 @@
 #include "transactions/ManageBalanceOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/StorageHelper.h"
@@ -60,7 +60,7 @@ ManageBalanceOpFrame::doApply(Application& app,
         }
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     const AccountFrame::pointer destAccountFrame = accountHelper->
         loadAccount(delta, mManageBalance.destination, db);
     if (!destAccountFrame)

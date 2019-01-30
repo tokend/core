@@ -1,4 +1,4 @@
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/CreateAccountOpFrame.h>
 #include <ledger/StatisticsHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
@@ -54,10 +54,6 @@ namespace stellar {
             auto newTestHelper = copy();
             newTestHelper.policies = policies;
             return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setPolicies(AccountPolicies policies) {
-            return setPolicies(static_cast<int32_t>(policies));
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setRoleID(uint64_t roleID)
@@ -144,7 +140,7 @@ namespace stellar {
             REQUIRE(txResult.feeCharged == mTestManager->getApp().getLedgerManager().getTxFee());
             Database& db = mTestManager->getDB();
 
-            auto accountHelper = AccountHelper::Instance();
+            auto accountHelper = AccountHelperLegacy::Instance();
             AccountFrame::pointer fromAccount = accountHelper->loadAccount(builder.source.key.getPublicKey(), db);
             AccountFrame::pointer toAccount = accountHelper->loadAccount(builder.to, db);
 
@@ -164,20 +160,6 @@ namespace stellar {
             }
             REQUIRE(toAccountAfter);
             REQUIRE(!toAccountAfter->isBlocked());
-            REQUIRE(toAccountAfter->getAccountType() == builder.accountType);
-            REQUIRE(toAccountAfter->getAccount().recoveryID == builder.recovery);
-            if (builder.policies != -1){
-                REQUIRE(toAccountAfter->getPolicies() == builder.policies);
-            }
-
-            auto statisticsHelper = StatisticsHelper::Instance();
-            auto statisticsFrame = statisticsHelper->loadStatistics(builder.to, db);
-            REQUIRE(statisticsFrame);
-            auto statistics = statisticsFrame->getStatistics();
-            REQUIRE(statistics.dailyOutcome == 0);
-            REQUIRE(statistics.weeklyOutcome == 0);
-            REQUIRE(statistics.monthlyOutcome == 0);
-            REQUIRE(statistics.annualOutcome == 0);
 
             if (!toAccount)
             {

@@ -25,8 +25,6 @@ class LedgerManager;
 
 class AccountFrame : public EntryFrame
 {
-    bool mUpdateSigners;
-
     AccountEntry& mAccountEntry;
 
     AccountFrame(AccountFrame const& from);
@@ -47,50 +45,9 @@ class AccountFrame : public EntryFrame
         return EntryFrame::pointer(new AccountFrame(*this));
     }
 
-    void normalize();
-
-    bool isValid();
-
-    static bool
-    isLimitsValid(Limits const& limits)
-    {
-        if (limits.dailyOut < 0)
-            return false;
-        return limits.dailyOut <= limits.weeklyOut &&
-               limits.weeklyOut <= limits.monthlyOut &&
-               limits.monthlyOut <= limits.annualOut;
-    }
-
-    void
-    setUpdateSigners(bool updateSigners)
-    {
-        normalize();
-        mUpdateSigners = updateSigners;
-    }
-
-    void
-    initLoaded(bool updateSigners)
-    {
-        setUpdateSigners(updateSigners);
-        assert(isValid());
-        clearCached();
-    }
-
     bool isBlocked() const;
     void setBlockReasons(uint32 reasonsToAdd, uint32 reasonsToRemove);
     AccountID const& getID() const;
-
-    bool
-    checkPolicy(AccountPolicies policy) const
-    {
-        auto policyValue = static_cast<int32_t>(policy);
-        return (mAccountEntry.policies & policyValue) == policyValue;
-    }
-
-    uint32_t getMasterWeight() const;
-    uint32_t getHighThreshold() const;
-    uint32_t getMediumThreshold() const;
-    uint32_t getLowThreshold() const;
 
     AccountEntry const&
     getAccount() const
@@ -105,62 +62,28 @@ class AccountFrame : public EntryFrame
         return mAccountEntry;
     }
 
-    bool
-    getUpdateSigners() const
-    {
-        return mUpdateSigners;
-    }
-
-    AccountType
-    getAccountType() const
-    {
-        return mAccountEntry.accountType;
-    }
-
     uint32
     getBlockReasons() const
     {
         return mAccountEntry.blockReasons;
     }
 
-    void
-    setAccountType(AccountType accountType)
-    {
-        mAccountEntry.accountType = accountType;
-    }
-
-    void
-    setReferrer(AccountID referrer)
-    {
-        mAccountEntry.referrer.activate() = referrer;
-    }
-
-    AccountID*
-    getReferrer() const
-    {
-        return mAccountEntry.referrer.get();
-    }
+    LedgerKey const&
+    getKey() const override;
 
     AccountID
     getRecoveryID() const
     {
-        return mAccountEntry.recoveryID;
+        CLOG(ERROR, "FIXME!!!!!!!!!!!!") << "RECOVERY will be implemented on signer level (getter)";
+        return PubKeyUtils::random();
     }
 
     void
     setRecoveryID(const AccountID& recovery)
     {
-        mAccountEntry.recoveryID = recovery;
+        CLOG(ERROR, "FIXME!!!!!!!!!!!!") << "RECOVERY will be implemented on signer level";
     }
 
-    int32_t
-    getPolicies() const
-    {
-        return mAccountEntry.policies;
-    }
-
-    uint32 getKYCLevel() const;
-    void setKYCLevel(uint32 kycLevel);
     uint64_t getAccountRole() const;
     void setAccountRole(uint64_t accountRoleID);
 

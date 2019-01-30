@@ -4,7 +4,7 @@
 
 #include "PaymentOpFrame.h"
 #include "database/Database.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
@@ -63,7 +63,7 @@ bool PaymentOpFrame::tryLoadBalances(Application& app, Database& db, LedgerDelta
 		return false;
 	}
 
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
 	mDestAccount = accountHelper->loadAccount(mDestBalance->getAccountID(), db);
 	if (!mDestAccount)
 		throw std::runtime_error("Invalid database state - can't load account for balance");
@@ -91,7 +91,7 @@ SourceDetails PaymentOpFrame::getSourceAccountDetails(std::unordered_map<Account
                                                       int32_t ledgerVersion) const
 {
 	int32_t signerType = static_cast<int32_t >(SignerType::BALANCE_MANAGER);
-	switch (mSourceAccount->getAccountType())
+	switch (AccountType::MASTER)
 	{
 	case AccountType::OPERATIONAL:
 		signerType = static_cast<int32_t >(SignerType::OPERATIONAL_BALANCE_MANAGER);
@@ -110,24 +110,13 @@ SourceDetails PaymentOpFrame::getSourceAccountDetails(std::unordered_map<Account
                                 AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR,
                                 AccountType::VERIFIED};
     }
-	return SourceDetails(allowedAccountTypes, mSourceAccount->getMediumThreshold(), signerType,
+	return SourceDetails(allowedAccountTypes, 0, signerType,
 						 static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
                          static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
 }
 
-bool PaymentOpFrame::isRecipeintFeeNotRequired(Database& db)
-{
-	if (mSourceAccount->getAccountType() == AccountType::COMMISSION)
-		return true;
-
-	return false;
-}
-
 bool PaymentOpFrame::checkFees(Application& app, Database& db, LedgerDelta& delta)
 {
-	bool areFeesNotRequired = isSystemAccountType(mSourceAccount->getAccountType());
-	if (areFeesNotRequired)
-		return true;
 
 	AssetCode asset = mSourceBalance->getAsset();
 	if (!isTransferFeeMatch(mSourceAccount, asset, mPayment.feeData.sourceFee, mPayment.amount, db, delta))
@@ -135,11 +124,6 @@ bool PaymentOpFrame::checkFees(Application& app, Database& db, LedgerDelta& delt
 		app.getMetrics().NewMeter({ "op-payment", "failure", "source-mismatched-fee" }, "operation").Mark();
 		innerResult().code(PaymentResultCode::FEE_MISMATCHED);
 		return false;
-	}
-
-	if (isRecipeintFeeNotRequired(db))
-	{
-		return true;
 	}
 
 	if (!isTransferFeeMatch(mDestAccount, asset, mPayment.feeData.destinationFee, mPayment.amount, db, delta))
@@ -154,10 +138,6 @@ bool PaymentOpFrame::checkFees(Application& app, Database& db, LedgerDelta& delt
 
 bool PaymentOpFrame::checkFeesV1(Application& app, Database& db, LedgerDelta& delta)
 {
-	if (isRecipeintFeeNotRequired(db))
-	{
-		return true;
-	}
 	
 	AssetCode asset = mSourceBalance->getAsset();
 	
@@ -269,7 +249,7 @@ bool PaymentOpFrame::processFees_v1(Application& app, LedgerDelta& delta,
         throw runtime_error("Unexpected state: failed to load commission balance for transfer");
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto commissionAccount = accountHelper->loadAccount(delta, commissionBalanceFrame->getAccountID(), db);
     auto feeData = mPayment.feeData;
     auto totalFee = feeData.sourceFee.paymentFee + feeData.sourceFee.fixedFee +

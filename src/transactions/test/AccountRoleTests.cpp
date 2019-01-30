@@ -1,6 +1,6 @@
 #include "TxTests.h"
 #include "crypto/SHA.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "main/test.h"
 #include "overlay/LoopbackPeer.h"

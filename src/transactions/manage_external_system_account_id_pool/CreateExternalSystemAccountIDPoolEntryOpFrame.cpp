@@ -3,7 +3,7 @@
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateExternalSystemAccountIDPoolEntryOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
 

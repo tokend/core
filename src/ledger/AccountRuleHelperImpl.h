@@ -9,7 +9,7 @@ namespace stellar
 {
 class LedgerManager;
 
-class AccountRuleHelperImpl : public AccountRuleHelper
+class AccountRuleHelperImpl : public AccountRuleHelper, NonCopyable
 {
   public:
     explicit AccountRuleHelperImpl(StorageHelper& storageHelper);

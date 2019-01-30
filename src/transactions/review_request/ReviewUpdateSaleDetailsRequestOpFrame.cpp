@@ -10,12 +10,6 @@ namespace stellar {
 
     }
 
-    SourceDetails ReviewUpdateSaleDetailsRequestOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::ASSET_MANAGER));
-    }
-
     bool ReviewUpdateSaleDetailsRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,
                                                               LedgerManager &ledgerManager,
                                                               ReviewableRequestFrame::pointer request) {

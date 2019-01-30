@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <crypto/SHA.h>
 #include "ManageAssetTestHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetHelperImpl.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -78,7 +78,7 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
         return ManageAssetResult{};
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto sourceFrame = accountHelper->loadAccount(source.key.getPublicKey(),
                                                   mTestManager->getDB());
     auto manageAssetResult = opResult.tr().manageAssetResult();
@@ -267,7 +267,7 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
     }
     auto creationResult = applyManageAssetTx(assetOwner, 0, creationRequest);
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto assetOwnerFrame = accountHelper->
         loadAccount(assetOwner.key.getPublicKey(), mTestManager->getDB());
     if (creationResult.code() == ManageAssetResultCode::SUCCESS

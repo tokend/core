@@ -8,24 +8,16 @@
 #include "util/make_unique.h"
 #include "main/test.h"
 #include "test/test_marshaler.h"
-#include "util/Logging.h"
-#include "crypto/ByteSlice.h"
 #include "TxTests.h"
-#include "util/types.h"
-#include "transactions/TransactionFrame.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/FeeFrame.h"
-#include "ledger/StatisticsFrame.h"
 #include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
-#include "transactions/SetOptionsOpFrame.h"
 #include "transactions/DirectDebitOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/ManageInvoiceRequestOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/StatisticsHelper.h"
 #include "crypto/SHA.h"
@@ -41,7 +33,7 @@ using xdr::operator==;
 
 namespace txtest
 {
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
 	auto assetHelper = AssetHelperLegacy::Instance();
 	auto balanceHelper = BalanceHelperLegacy::Instance();
 	auto feeHelper = FeeHelper::Instance();
@@ -49,7 +41,7 @@ namespace txtest
 
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
-    AssetCode asset, AccountID* accountID, AccountType* accountType, int64_t subtype,
+    AssetCode asset, AccountID* accountID, uint64_t* accountType, int64_t subtype,
     int64_t lowerBound, int64_t upperBound)
 {
 	FeeEntry fee;
@@ -62,7 +54,7 @@ FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
         fee.accountID.activate() = *accountID;
     }
     if (accountType) {
-        fee.accountType.activate() = *accountType;
+        fee.accountRole.activate() = *accountType;
     }
     fee.lowerBound = lowerBound;
     fee.upperBound = upperBound;
@@ -459,7 +451,6 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     {
         REQUIRE(toAccountAfter);
 		REQUIRE(!toAccountAfter->isBlocked());
-		REQUIRE(toAccountAfter->getAccountType() == accountType);
         
         auto statisticsFrame = statisticsHelper->loadStatistics(to.getPublicKey(), app.getDatabase());
         REQUIRE(statisticsFrame);
@@ -629,70 +620,6 @@ applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID,
 }
 
 TransactionFramePtr
-createSetOptions(Hash const& networkID, SecretKey& source, Salt seq, ThresholdSetter* thrs, Signer* signer, TrustData* trustData)
-{
-    Operation op;
-    op.body.type(OperationType::SET_OPTIONS);
-
-    SetOptionsOp& setOp = op.body.setOptionsOp();
-
-    if (thrs)
-    {
-        if (thrs->masterWeight)
-        {
-            setOp.masterWeight.activate() = *thrs->masterWeight;
-        }
-        if (thrs->lowThreshold)
-        {
-            setOp.lowThreshold.activate() = *thrs->lowThreshold;
-        }
-        if (thrs->medThreshold)
-        {
-            setOp.medThreshold.activate() = *thrs->medThreshold;
-        }
-        if (thrs->highThreshold)
-        {
-            setOp.highThreshold.activate() = *thrs->highThreshold;
-        }
-    }
-
-    if (signer)
-    {
-        setOp.signer.activate() = *signer;
-    }
-
-	if (trustData)
-	{
-		setOp.trustData.activate() = *trustData;
-	}
-
-    return transactionFromOperation(networkID, source, seq, op);
-}
-
-void
-applySetOptions(Application& app, SecretKey& source, Salt seq,
-                ThresholdSetter* thrs, Signer* signer, TrustData* trustData,
-                SetOptionsResultCode result, SecretKey* txSiger)
-{
-    TransactionFramePtr txFrame;
-
-    txFrame = createSetOptions(app.getNetworkID(), source, seq, thrs, signer, trustData);
-	if (txSiger)
-	{
-		txFrame->getEnvelope().signatures.clear();
-		txFrame->addSignature(*txSiger);
-	}
-
-    LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-                      app.getDatabase());
-    applyCheck(txFrame, delta, app);
-
-    checkTransaction(*txFrame);
-    REQUIRE(SetOptionsOpFrame::getInnerCode(
-                txFrame->getResult().result.results()[0]) == result);
-}
-
-TransactionFramePtr
 createDirectDebitTx(Hash const& networkID, SecretKey& source, Salt seq, AccountID from,
 	PaymentOp paymentOp)
 {
@@ -798,7 +725,7 @@ void applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry* fee, 
 		if (fee)
 		{
 			auto storedFee = feeHelper->loadFee(fee->feeType, fee->asset,
-				fee->accountID.get(), fee->accountType.get(), fee->subtype, fee->lowerBound, fee->upperBound, app.getDatabase(), nullptr);
+				fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound, app.getDatabase(), nullptr);
 			if (isDelete)
 				REQUIRE(!storedFee);
 			else {

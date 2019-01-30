@@ -585,7 +585,7 @@
     <ClCompile Include="..\..\src\ledger\AccountFrame.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\AccountHelper.cpp">
+    <ClCompile Include="..\..\src\ledger\AccountHelperLegacy.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\AccountKYCFrame.cpp">
@@ -1719,7 +1719,7 @@
     <ClInclude Include="..\..\src\ledger\AccountFrame.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\AccountHelper.h">
+    <ClInclude Include="..\..\src\ledger\AccountHelperLegacy.h">
       <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\AccountKYCFrame.h">

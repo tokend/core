@@ -8,7 +8,7 @@
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"

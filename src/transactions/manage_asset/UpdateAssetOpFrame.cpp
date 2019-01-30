@@ -5,7 +5,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "UpdateAssetOpFrame.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"

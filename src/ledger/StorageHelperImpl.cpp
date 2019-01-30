@@ -7,7 +7,7 @@
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
 #include "AccountRoleHelperImpl.h"
-#include "AccountHelper.h"
+#include "AccountHelperImpl.h"
 
 namespace stellar
 {
@@ -193,6 +193,15 @@ StorageHelperImpl::getExternalSystemAccountIDPoolEntryHelper()
             std::make_unique<ExternalSystemAccountIDPoolEntryHelperImpl>(*this);
     }
     return *mExternalSystemAccountIDPoolEntryHelper;
+}
+AccountHelper&
+StorageHelperImpl::getAccountHelper()
+{
+    if (!mAccountHelper)
+    {
+        mAccountHelper = std::make_unique<AccountHelperImpl>(*this);
+    }
+    return *mAccountHelper;
 }
 AccountRoleHelper&
 StorageHelperImpl::getAccountRoleHelper()

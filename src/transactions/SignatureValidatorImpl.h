@@ -16,8 +16,6 @@ protected:
 	Hash mContentHash;
 	xdr::xvector<DecoratedSignature, 20> mSignatures;
 
-	static bool isAccountTypeAllowed(AccountFrame& account, std::vector<AccountType> allowedAccountTypes);
-
 	static std::vector<Signer> getSigners(Application& app, Database& db, AccountFrame& account);
 
     Result checkSignature(Application &app, Database &db, AccountFrame &account, SourceDetails &sourceDetails);

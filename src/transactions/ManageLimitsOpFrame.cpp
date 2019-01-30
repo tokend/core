@@ -48,7 +48,7 @@ ManageLimitsOpFrame::doApply(Application& app, LedgerDelta& delta,
         auto limitsV2Frame = limitsV2Helper->loadLimits(db, mManageLimits.details.limitsCreateDetails().statsOpType,
                                                         mManageLimits.details.limitsCreateDetails().assetCode,
                                                         mManageLimits.details.limitsCreateDetails().accountID,
-                                                        mManageLimits.details.limitsCreateDetails().accountType,
+                                                        mManageLimits.details.limitsCreateDetails().accountRole.get(),
                                                         mManageLimits.details.limitsCreateDetails().isConvertNeeded,
                                                         &delta);
         if (!limitsV2Frame) {
@@ -90,7 +90,7 @@ ManageLimitsOpFrame::doCheckValid(Application& app)
 {
     if ((mManageLimits.details.action() == ManageLimitsAction::CREATE) &&
         !!mManageLimits.details.limitsCreateDetails().accountID &&
-        !!mManageLimits.details.limitsCreateDetails().accountType)
+        !!mManageLimits.details.limitsCreateDetails().accountRole)
     {
         innerResult().code(ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE);
         return false;

@@ -2,7 +2,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/AssetPairHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
@@ -80,7 +80,7 @@ namespace stellar {
                 throw std::runtime_error("Unexpected destination type on payment v2 when load account");
         }
 
-        auto account = AccountHelper::Instance()->loadAccount(accountID, storageHelper.getDatabase());
+        auto account = AccountHelperLegacy::Instance()->loadAccount(accountID, storageHelper.getDatabase());
         if (!account)
         {
             mResult.code(OperationResultCode::opNO_COUNTERPARTY);
@@ -169,10 +169,6 @@ namespace stellar {
         }
     }
 
-    bool PaymentOpV2Frame::isRecipientFeeNotRequired() {
-        return mSourceAccount->getAccountType() == AccountType::COMMISSION;
-    }
-
     BalanceFrame::pointer
     PaymentOpV2Frame::tryLoadDestinationBalance(AssetCode asset, Database &db, LedgerDelta &delta, LedgerManager& lm) {
         switch (mPayment.destination.type()) {
@@ -193,7 +189,7 @@ namespace stellar {
             }
             case PaymentDestinationType::ACCOUNT: {
                 if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_DEST_ACCOUNT_NOT_FOUND) &&
-                    !AccountHelper::Instance()->exists(mPayment.destination.accountID(), db)) {
+                    !AccountHelperLegacy::Instance()->exists(mPayment.destination.accountID(), db)) {
                     innerResult().code(PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
                     return nullptr;
                 }
@@ -303,7 +299,7 @@ namespace stellar {
 
         AccountManager accountManager(app, db, delta, app.getLedgerManager());
         // process transfer from source to dest
-        auto sourceAccount = AccountHelper::Instance()->mustLoadAccount(getSourceID(), db);
+        auto sourceAccount = AccountHelperLegacy::Instance()->mustLoadAccount(getSourceID(), db);
 
         if (!processTransfer(accountManager, sourceAccount, sourceBalance, destBalance, mPayment.amount, sourceSentUniversal, db)) {
             return false;
@@ -317,11 +313,11 @@ namespace stellar {
             return false;
         }
 
-        auto destAccount = AccountHelper::Instance()->mustLoadAccount(destBalance->getAccountID(), db);
+        auto destAccount = AccountHelperLegacy::Instance()->mustLoadAccount(destBalance->getAccountID(), db);
         auto destFee = getActualFee(destAccount, destBalance->getAsset(), mPayment.amount, PaymentFeeType::INCOMING,
                                     db, ledgerManager);
 
-        if (!isRecipientFeeNotRequired()) {
+        if (!(app.getAdminID() == getSourceID())) {
             auto destFeePayer = destAccount;
             auto destFeePayerBalance = destBalance;
             if (mPayment.feeData.sourcePaysForDest) {

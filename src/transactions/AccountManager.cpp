@@ -5,7 +5,7 @@
 #include <ledger/AssetFrame.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/BalanceFrame.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "transactions/AccountManager.h"
 #include "main/Application.h"
 #include "ledger/AssetPairFrame.h"
@@ -28,17 +28,6 @@ namespace stellar {
     AccountManager::AccountManager(Application &app, Database &db,
                                    LedgerDelta &delta, LedgerManager &lm)
             : mApp(app), mDb(db), mDelta(delta), mLm(lm) {
-    }
-
-    void AccountManager::createStats(AccountFrame::pointer account) {
-        auto statsFrame = make_shared<StatisticsFrame>();
-        auto &stats = statsFrame->getStatistics();
-        stats.accountID = account->getID();
-        stats.dailyOutcome = 0;
-        stats.weeklyOutcome = 0;
-        stats.monthlyOutcome = 0;
-        stats.annualOutcome = 0;
-        EntryHelperProvider::storeAddEntry(mDelta, mDb, statsFrame->mEntry);
     }
 
     AccountManager::Result AccountManager::processTransfer(
@@ -237,7 +226,7 @@ namespace stellar {
         if (accountLimits)
             limits = accountLimits->getLimits();
         else {
-            limits = getDefaultLimits(account->getAccountType());
+            limits = getDefaultLimits(AccountType::MASTER);
         }
         if (stats.dailyOutcome > limits.dailyOut)
             return false;
@@ -271,7 +260,7 @@ namespace stellar {
     bool AccountManager::isFeeMatches(const AccountFrame::pointer account, const Fee fee,
                                       const FeeType feeType, const int64_t subtype, const AssetCode assetCode,
                                       const uint64_t amount) const {
-        if (isSystemAccountType(account->getAccountType())) {
+        if (mApp.getAdminID() == account->getID()) {
             return fee.fixed == 0 && fee.percent == 0;
         }
 

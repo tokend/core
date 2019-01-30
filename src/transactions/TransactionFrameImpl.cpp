@@ -6,7 +6,7 @@
 #include "crypto/SHA.h"
 #include "database/Database.h"
 #include "herder/TxSetFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
@@ -83,7 +83,7 @@ TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
         return true;
     }
 
-    if (getSourceAccount().getAccountType() == AccountType::MASTER)
+    if (app.getAdminID() == getSourceID())
     {
         return true;
     }
@@ -264,7 +264,7 @@ TransactionFrameImpl::loadAccount(LedgerDelta* delta, Database& db,
                                   AccountID const& accountID)
 {
     AccountFrame::pointer res;
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
 
     if (mSigningAccount && mSigningAccount->getID() == accountID)
     {
@@ -317,7 +317,7 @@ TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
     auto signatureValidator = getSignatureValidator();
     // block reasons are handeled on operation level
     auto sourceDetails = SourceDetails(
-        getAllAccountTypes(), mSigningAccount->getLowThreshold(),
+        getAllAccountTypes(), 0,
         getAnySignerType() ^ static_cast<int32_t>(SignerType::READER),
         getAnyBlockReason());
     SignatureValidator::Result result =

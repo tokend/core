@@ -48,6 +48,7 @@ class StorageHelperImpl : public StorageHelper
     ExternalSystemAccountIDHelper& getExternalSystemAccountIDHelper() override;
     ExternalSystemAccountIDPoolEntryHelper&
     getExternalSystemAccountIDPoolEntryHelper() override;
+    AccountHelper& getAccountHelper() override;
     AccountRoleHelper& getAccountRoleHelper() override;
     AccountRuleHelper& getAccountRuleHelper() override;
 
@@ -64,6 +65,7 @@ class StorageHelperImpl : public StorageHelper
         mExternalSystemAccountIDHelper;
     std::unique_ptr<ExternalSystemAccountIDPoolEntryHelper>
         mExternalSystemAccountIDPoolEntryHelper;
+    std::unique_ptr<AccountHelper> mAccountHelper;
     std::unique_ptr<AccountRoleHelper> mAccountRoleHelper;
     std::unique_ptr<AccountRuleHelper> mAccountRuleHelper;
 };

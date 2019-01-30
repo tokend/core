@@ -1,6 +1,6 @@
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "AccountRuleHelperImpl.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountTypeLimitsFrame.h"
 
 #include "LedgerDelta.h"

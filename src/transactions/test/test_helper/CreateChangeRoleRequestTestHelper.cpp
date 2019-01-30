@@ -5,7 +5,7 @@
 #include "CreateChangeRoleRequestTestHelper.h"
 #include "ReviewChangeRoleRequestHelper.h"
 #include "test/test_marshaler.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "bucket/BucketApplicator.h"
 
 
@@ -41,7 +41,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
                                                          longstring kycData,
                                                          uint32 *allTasks,
                                                          CreateChangeRoleRequestResultCode expectedResultCode) {
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto requestHelper = ReviewableRequestHelper::Instance();
 
     Database &db = mTestManager->getDB();
@@ -73,8 +73,6 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
     auto opResult = txResult.result.results()[0].tr().createChangeRoleRequestResult();
 
     if (actualResultCode != CreateChangeRoleRequestResultCode::SUCCESS) {
-        REQUIRE(accountAfter->getAccountType() == accountBefore->getAccountType());
-        REQUIRE(accountAfter->getKYCLevel() == accountBefore->getKYCLevel());
 
         if (requestBeforeTx) {
             auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);

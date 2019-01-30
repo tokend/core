@@ -21,15 +21,6 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-
-SourceDetails
-ReviewContractRequestOpFrame::getSourceAccountDetails(
-        unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
-}
-
 bool
 ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
                                            LedgerManager& ledgerManager,

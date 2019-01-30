@@ -10,8 +10,6 @@ namespace stellar {
 
         PaymentOpV2 const &mPayment;
 
-        bool isRecipientFeeNotRequired();
-
         bool isDestinationFeeValid();
 
         BalanceFrame::pointer tryLoadDestinationBalance(AssetCode asset, Database &db, LedgerDelta &delta,

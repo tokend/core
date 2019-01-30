@@ -8,7 +8,7 @@
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/BalanceHelper.h>
 #include "CreateIssuanceRequestOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -55,7 +55,7 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	    return false;
 	}
 
-	auto account = AccountHelper::Instance()->mustLoadAccount(balance->getAccountID(), storageHelper.getDatabase());
+	auto account = AccountHelperLegacy::Instance()->mustLoadAccount(balance->getAccountID(), storageHelper.getDatabase());
 
 	AccountRuleResource resource(LedgerEntryType::ASSET);
 	resource.asset().assetCode = asset->getCode();
@@ -234,7 +234,8 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 	}
 
     Fee feeToPay;
-    if (!calculateFee(balance->getAccountID(), db, feeToPay)) {
+    if (!calculateFee(app, balance->getAccountID(), db, feeToPay))
+    {
         innerResult().code(CreateIssuanceRequestResultCode::FEE_EXCEEDS_AMOUNT);
         return nullptr;
     }
@@ -250,7 +251,9 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 	return request;
 }
 
-bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db, Fee &fee)
+bool
+CreateIssuanceRequestOpFrame::calculateFee(Application& app, AccountID receiver,
+										   Database &db, Fee &fee)
 {
     // calculate fee which will be charged from receiver
     fee.percent = 0;
@@ -259,11 +262,13 @@ bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db
     if (!mIsFeeRequired)
         return true;
 
-    auto receiverFrame = AccountHelper::Instance()->mustLoadAccount(receiver, db);
-    if (isSystemAccountType(receiverFrame->getAccountType()))
-        return true;
+    if (app.getAdminID() == receiver)
+    {
+		return true;
+	}
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
+	auto receiverFrame = AccountHelperLegacy::Instance()->mustLoadAccount(receiver, db);
+	auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame,
                                                           mCreateIssuanceRequest.request.amount, db);
     if (feeFrame) {

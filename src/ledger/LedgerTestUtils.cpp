@@ -74,17 +74,7 @@ void
 makeValid(AccountEntry& a)
 {
 	a.accountID = SecretKey::random().getPublicKey();
-    std::sort(a.signers.begin(), a.signers.end(), &AccountFrame::signerCompare);
-    a.signers.erase(
-        std::unique(a.signers.begin(), a.signers.end(), signerEqual),
-        a.signers.end());
-    for (auto& s : a.signers)
-    {
-        if (s.weight == 0)
-        {
-            s.weight = 100;
-        }
-    }
+    a.roleID = 1;
 }
 
 void

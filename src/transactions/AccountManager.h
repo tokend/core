@@ -31,7 +31,6 @@ protected:
     LedgerManager& mLm;
 
 public:
-    void createStats(AccountFrame::pointer account);
 
     enum Result
     {
