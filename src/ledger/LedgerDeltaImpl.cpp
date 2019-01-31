@@ -224,7 +224,7 @@ LedgerDeltaImpl::mergeEntries(LedgerDelta& other)
     // propagates mPrevious for deleted & modified entries
     for (auto& d : other.getDeletionFramesSet())
     {
-        deleteEntry(d, true);
+        deleteEntry(d, false);
         auto it = other.getPreviousFrames().find(d);
         if (it != other.getPreviousFrames().end())
         {
@@ -233,11 +233,11 @@ LedgerDeltaImpl::mergeEntries(LedgerDelta& other)
     }
     for (auto& n : other.getCreationFrames())
     {
-        addEntry(n.second);
+        addEntry(n.second, false);
     }
     for (auto& m : other.getModificationFrames())
     {
-        modEntry(m.second);
+        modEntry(m.second, false);
         auto it = other.getPreviousFrames().find(m.first);
         if (it != other.getPreviousFrames().end())
         {
