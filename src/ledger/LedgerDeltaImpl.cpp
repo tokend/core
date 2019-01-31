@@ -248,7 +248,6 @@ LedgerDeltaImpl::mergeEntries(LedgerDelta& other)
     for(auto& ch : other.getAllChanges()) {
         mAllChanges.push_back(ch);
     }
-//    mOuterDelta->getChanges().insert(mOuterDelta->getChanges().end(), mAllChanges.begin(), mAllChanges.end());
 }
 
 void
