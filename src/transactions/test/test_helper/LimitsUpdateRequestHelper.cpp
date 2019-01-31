@@ -65,18 +65,18 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
 
     REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestID() == limitsUpdateRequestAfterTx->getRequestID());
-    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().ext.details() !=
-    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().ext.details());
+    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().ext.creatorDetails() !=
+    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().ext.creatorDetails());
 
     return createManageLimitsRequestResult;
 }
 
 LimitsUpdateRequest
-LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring details)
+LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring creatorDetails)
 {
     LimitsUpdateRequest result;
     result.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-    result.ext.details() = details;
+    result.ext.creatorDetails() = creatorDetails;
     return result;
 }
 
@@ -89,7 +89,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
     baseOp.body.type(OperationType::CREATE_MANAGE_LIMITS_REQUEST);
     auto& op = baseOp.body.createManageLimitsRequestOp();
     op.manageLimitsRequest.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-    op.manageLimitsRequest.ext.details() = request.ext.details();
+    op.manageLimitsRequest.ext.creatorDetails() = request.ext.creatorDetails();
 
     if (allTasks)
     {

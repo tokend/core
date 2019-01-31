@@ -222,7 +222,7 @@ SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &own
         sale.endTime = request.endTime;
         sale.softCap = request.softCap;
         sale.hardCap = request.hardCap;
-        sale.details = request.details;
+        sale.details = request.creatorDetails;
         sale.maxAmountToBeSold = maxAmountToBeSold;
         sale.currentCapInBase = 0;
         sale.quoteAssets.clear();

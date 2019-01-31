@@ -334,7 +334,7 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
         return CreateSaleCreationRequestResultCode::INVALID_CAP;
     }
 
-    if (!isValidJson(saleCreationRequest.details))
+    if (!isValidJson(saleCreationRequest.creatorDetails))
     {
         return CreateSaleCreationRequestResultCode::INVALID_DETAILS;
     }
@@ -366,7 +366,7 @@ bool CreateSaleCreationRequestOpFrame::ensureUpdateRequestValid(ReviewableReques
 
 void CreateSaleCreationRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)
 {
-    requestEntry.body.saleCreationRequest().details = mCreateSaleCreationRequest.request.details;
+    requestEntry.body.saleCreationRequest().creatorDetails = mCreateSaleCreationRequest.request.creatorDetails;
     requestEntry.body.saleCreationRequest().requiredBaseAssetForHardCap = mCreateSaleCreationRequest.request.requiredBaseAssetForHardCap;
     requestEntry.body.saleCreationRequest().hardCap = mCreateSaleCreationRequest.request.hardCap;
     requestEntry.body.saleCreationRequest().softCap = mCreateSaleCreationRequest.request.softCap;

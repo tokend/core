@@ -62,7 +62,7 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     }
 
     auto& limitsUpdateRequest = requestFrame->getRequestEntry().body.limitsUpdateRequest();
-    limitsUpdateRequest.ext.details() = mCreateManageLimitsRequest.manageLimitsRequest.ext.details();
+    limitsUpdateRequest.ext.creatorDetails() = mCreateManageLimitsRequest.manageLimitsRequest.ext.creatorDetails();
 
     requestFrame->recalculateHashRejectReason();
     reviewableRequestHelper->storeChange(*delta, db, requestFrame->mEntry);
@@ -86,7 +86,7 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH) &&
         manageLimitsRequest.ext.v() == LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH)
     {
-        auto details = manageLimitsRequest.ext.details();
+        auto details = manageLimitsRequest.ext.creatorDetails();
         reference = getLimitsManageRequestDetailsReference(details);
     }
     else
@@ -106,7 +106,7 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH))
     {
         body.limitsUpdateRequest().ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-        body.limitsUpdateRequest().ext.details() = mCreateManageLimitsRequest.manageLimitsRequest.ext.details();
+        body.limitsUpdateRequest().ext.creatorDetails() = mCreateManageLimitsRequest.manageLimitsRequest.ext.creatorDetails();
     }
     else
         body.limitsUpdateRequest().deprecatedDocumentHash =
@@ -157,7 +157,7 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
     bool requestHasNewDetails = manageLimitsRequest.ext.v() ==
                                 LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH;
 
-    if (requestHasNewDetails && !isValidJson(manageLimitsRequest.ext.details()))
+    if (requestHasNewDetails && !isValidJson(manageLimitsRequest.ext.creatorDetails()))
     {
         innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
         return false;

@@ -158,7 +158,7 @@ TransactionFramePtr ManageAssetTestHelper::createManageAssetTx(
 ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     AssetCode code,
     AccountID preissuedAssetSigner,
-    std::string details,
+    std::string creatorDetails,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
     uint32_t* allTasks,
@@ -171,7 +171,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
     AssetCreationRequest& assetCreationRequest = request.createAssetCreationRequest().createAsset;
     assetCreationRequest.code = code;
-    assetCreationRequest.details = details;
+    assetCreationRequest.creatorDetails = creatorDetails;
     assetCreationRequest.maxIssuanceAmount = maxIssuanceAmount;
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;

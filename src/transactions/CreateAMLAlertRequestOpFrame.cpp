@@ -114,7 +114,7 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
 
 bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
 {
-    if (mCreateAMLAlertRequest.amlAlertRequest.reason.empty())
+    if (mCreateAMLAlertRequest.amlAlertRequest.creatorDetails.empty())
     {
         innerResult().code(CreateAMLAlertRequestResultCode::INVALID_REASON);
         return false;

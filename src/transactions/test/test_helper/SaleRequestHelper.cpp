@@ -103,7 +103,7 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
 
 SaleCreationRequest
 SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
-                                     const uint64_t softCap, const uint64_t hardCap, std::string details,
+                                     const uint64_t softCap, const uint64_t hardCap, std::string creatorDetails,
                                      std::vector<SaleCreationRequestQuoteAsset> quoteAssets, uint64_t requiredBaseAssetForHardCap,
                                      SaleType saleType, uint64_t saleTypeInt)
 {
@@ -117,7 +117,7 @@ SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset
     request.quoteAssets.append(&quoteAssets[0], quoteAssets.size());
     request.softCap = softCap;
     request.hardCap = hardCap;
-    request.details = details;
+    request.creatorDetails = creatorDetails;
 
     request.saleTypeExt.saleType(saleType);
     request.requiredBaseAssetForHardCap = requiredBaseAssetForHardCap;

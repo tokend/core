@@ -142,7 +142,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     InvoiceRequest invoiceRequest;
     invoiceRequest.asset = invoiceCreationRequest.asset;
     invoiceRequest.amount = invoiceCreationRequest.amount;
-    invoiceRequest.details = invoiceCreationRequest.details;
+    invoiceRequest.creatorDetails = invoiceCreationRequest.details;
     invoiceRequest.isApproved = false;
     invoiceRequest.contractID = invoiceCreationRequest.contractID;
     invoiceRequest.senderBalance = senderBalance->getBalanceID();

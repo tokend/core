@@ -22,7 +22,7 @@ void AssetReviewChecker::checkApproval(AssetCreationRequest const& request,
     auto assetEntry = assetFrame->getAsset();
     REQUIRE(assetEntry.availableForIssueance == request.initialPreissuedAmount);
     REQUIRE(assetEntry.code == request.code);
-    REQUIRE(assetEntry.details == request.details);
+    REQUIRE(assetEntry.details == request.creatorDetails);
     REQUIRE(assetEntry.issued == 0);
     REQUIRE(assetEntry.maxIssuanceAmount == request.maxIssuanceAmount);
     REQUIRE(assetEntry.owner == requestor);

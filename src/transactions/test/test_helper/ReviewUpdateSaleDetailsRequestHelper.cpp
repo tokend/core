@@ -13,7 +13,7 @@ namespace stellar {
             auto updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
             auto saleAfterTx = SaleHelper::Instance()->loadSale(updateSaleDetailsRequest.saleID, mTestManager->getDB());
             REQUIRE(!!saleAfterTx);
-            REQUIRE(saleAfterTx->getSaleEntry().details == updateSaleDetailsRequest.newDetails);
+            REQUIRE(saleAfterTx->getSaleEntry().details == updateSaleDetailsRequest.creatorDetails);
         }
 
 

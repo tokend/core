@@ -151,7 +151,7 @@ void ReviewableRequestFrame::ensureSaleCreationValid(
     saleFrame->ensureValid();
 }
 void ReviewableRequestFrame::ensureAMLAlertValid(AMLAlertRequest const &request) {
-    if(request.reason.empty()){
+    if(request.creatorDetails.empty()){
         throw runtime_error("reason is invalid");
     }
 
@@ -171,7 +171,7 @@ ReviewableRequestFrame::ensureChangeRoleValid(const ChangeRoleRequest &request)
 }
 
 void ReviewableRequestFrame::ensureUpdateSaleDetailsValid(UpdateSaleDetailsRequest const &request) {
-    if (!isValidJson(request.newDetails)) {
+    if (!isValidJson(request.creatorDetails)) {
         throw std::runtime_error("New sale details is invalid");
     }
 }
@@ -190,7 +190,7 @@ void ReviewableRequestFrame::ensureASwapBidCreationValid(
         throw runtime_error("amount can not be zero");
     }
 
-    if (!isValidJson(request.details))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("details must be valid JSON");
     }
