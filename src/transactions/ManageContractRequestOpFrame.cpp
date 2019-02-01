@@ -5,11 +5,13 @@
 #include "medida/meter.h"
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/ContractHelper.h>
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
+#include "review_request/ReviewRequestHelper.h"
 #include "ManageContractOpFrame.h"
 #include "ManageKeyValueOpFrame.h"
 
@@ -25,9 +27,9 @@ ManageContractRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta 
         return{};
     }
     return{
-        {mManageContractRequest.details.contractRequest().customer,
+        {mManageContractRequest.details.createContractRequest().contractRequest.customer,
                 CounterpartyDetails(getAllAccountTypes(), true, true)},
-        {mManageContractRequest.details.contractRequest().escrow,
+        {mManageContractRequest.details.createContractRequest().contractRequest.escrow,
                 CounterpartyDetails(getAllAccountTypes(), true, true)},
     };
 }
@@ -37,8 +39,7 @@ ManageContractRequestOpFrame::getSourceAccountDetails(
         std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
         int32_t ledgerVersion) const
 {
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
+    return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
 }
 
 ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, OperationResult& res,
@@ -48,14 +49,16 @@ ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, 
 }
 
 bool
-ManageContractRequestOpFrame::doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager)
+ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
+
     innerResult().code(ManageContractRequestResultCode::SUCCESS);
 
     if (mManageContractRequest.details.action() == ManageContractRequestAction::CREATE)
     {
-        return createManageContractRequest(app, delta, ledgerManager);
+        return createManageContractRequest(app, storageHelper, ledgerManager);
     }
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -87,7 +90,7 @@ ManageContractRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledg
     LedgerKey requestKey;
     requestKey.type(LedgerEntryType::REVIEWABLE_REQUEST);
     requestKey.reviewableRequest().requestID = mManageContractRequest.details.requestID();
-    reviewableRequestHelper->storeDelete(delta, db, requestKey);
+    reviewableRequestHelper->storeDelete(*delta, db, requestKey);
 
     innerResult().success().details.action(ManageContractRequestAction::REMOVE);
 
@@ -95,40 +98,68 @@ ManageContractRequestOpFrame::doApply(Application& app, LedgerDelta& delta, Ledg
 }
 
 bool
-ManageContractRequestOpFrame::createManageContractRequest(Application& app, LedgerDelta& delta,
+ManageContractRequestOpFrame::createManageContractRequest(Application& app, StorageHelper &storageHelper,
                                                           LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& contractRequest = mManageContractRequest.details.contractRequest();
+    Database& db = storageHelper.getDatabase();
+    auto delta = storageHelper.getLedgerDelta();
 
-    if (!checkMaxContractsForContractor(app, db, delta, ledgerManager))
+    auto& contractRequest = mManageContractRequest.details.createContractRequest().contractRequest;
+
+    if (!checkMaxContractsForContractor(app, storageHelper, ledgerManager))
         return false;
 
-    if (!checkMaxContractDetailLength(app, db, delta))
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    if (!checkMaxContractDetailLength(app, keyValueHelper))
         return false;
 
     ReviewableRequestEntry::_body_t body;
     body.type(ReviewableRequestType::CONTRACT);
     body.contractRequest() = contractRequest;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),
+    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
                                                              contractRequest.customer,
                                                              nullptr, body,
                                                              ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+
+
+    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+
+
+    uint32_t allTasks = 0;
+    if (!loadTasks(storageHelper, allTasks, mManageContractRequest.details.createContractRequest().allTasks))
+    {
+        innerResult().code(ManageContractRequestResultCode::CONTRACT_CREATE_TASKS_NOT_FOUND);
+        return false;
+    }
+
+    request->setTasks(allTasks);
+    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+
+    bool fulfilled = false;
+
+    if (allTasks == 0) {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+            throw std::runtime_error("Failed to review manage contract request");
+        }
+        fulfilled = result.success().fulfilled;
+    }
 
     innerResult().success().details.action(ManageContractRequestAction::CREATE);
     innerResult().success().details.response().requestID = request->getRequestID();
+    innerResult().success().details.response().fulfilled = fulfilled;
 
     return true;
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app,
-                 Database& db, LedgerDelta& delta, LedgerManager& ledgerManager)
+ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, StorageHelper &storageHelper,
+        LedgerManager& ledgerManager)
 {
-    auto maxContractsCount = obtainMaxContractsForContractor(app, db, delta);
+    auto& db = storageHelper.getDatabase();
+    auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
     if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
@@ -147,14 +178,13 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app,
 
     return true;
 }
-}
 
 uint64_t
-ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, StorageHelper &storageHelper)
 {
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
     auto maxContractsCountKey = ManageKeyValueOpFrame::makeMaxContractsCountKey();
-    auto maxContractsCountKeyValue = KeyValueHelperLegacy::Instance()->
-            loadKeyValue(maxContractsCountKey, db, &delta);
+    auto maxContractsCountKeyValue = keyValueHelper.loadKeyValue(maxContractsCountKey);
 
     if (!maxContractsCountKeyValue)
     {
@@ -173,11 +203,11 @@ ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, 
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, KeyValueHelper &keyValueHelper)
 {
-    auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, db, delta);
+    auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, keyValueHelper);
 
-    if (mManageContractRequest.details.contractRequest().details.size() > maxContractInitialDetailLength)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.details.size() > maxContractInitialDetailLength)
     {
         innerResult().code(ManageContractRequestResultCode::DETAILS_TOO_LONG);
         return false;
@@ -187,11 +217,10 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Dat
 }
 
 uint64_t
-ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& app, Database& db, LedgerDelta& delta)
+ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& app, KeyValueHelper &keyValueHelper)
 {
     auto maxContractInitialDetailLengthKey = ManageKeyValueOpFrame::makeMaxContractInitialDetailLengthKey();
-    auto maxContractInitialDetailLengthKeyValue = KeyValueHelperLegacy::Instance()->
-            loadKeyValue(maxContractInitialDetailLengthKey, db, &delta);
+    auto maxContractInitialDetailLengthKeyValue = keyValueHelper.loadKeyValue(maxContractInitialDetailLengthKey);
 
     if (!maxContractInitialDetailLengthKeyValue)
     {
@@ -215,41 +244,41 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     if (mManageContractRequest.details.action() != ManageContractRequestAction::CREATE)
         return true;
 
-    if (mManageContractRequest.details.contractRequest().details.empty())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.details.empty())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
-    if (mManageContractRequest.details.contractRequest().customer == getSourceID())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.customer == getSourceID())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
-    if (mManageContractRequest.details.contractRequest().escrow == getSourceID())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.escrow == getSourceID())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
-    if (mManageContractRequest.details.contractRequest().customer ==
-        mManageContractRequest.details.contractRequest().escrow)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.customer ==
+        mManageContractRequest.details.createContractRequest().contractRequest.escrow)
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
     if (app.getLedgerManager().getCloseTime() >=
-        mManageContractRequest.details.contractRequest().endTime)
+        mManageContractRequest.details.createContractRequest().contractRequest.endTime)
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
     }
 
 
-    if (mManageContractRequest.details.contractRequest().startTime >=
-        mManageContractRequest.details.contractRequest().endTime)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.startTime >=
+        mManageContractRequest.details.createContractRequest().contractRequest.endTime)
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
@@ -258,3 +287,12 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
+std::vector<longstring>
+ManageContractRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+{
+    return std::vector<longstring>{
+        ManageKeyValueOpFrame::makeContractCreateTasksKey()
+    };
+}
+
+}

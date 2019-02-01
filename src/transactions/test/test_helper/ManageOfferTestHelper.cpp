@@ -1,4 +1,3 @@
-#include <ledger/SaleAnteHelper.h>
 #include "ManageOfferTestHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/OfferHelper.h"
@@ -63,14 +62,7 @@ void ManageOfferTestHelper::ensureCreateSuccess(Account& source, ManageOfferOp o
             auto balanceBefore = stateBeforeTx[balanceKey]->mEntry.data.balance();
             auto balanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(offer->getLockedBalance(), db);
 
-            auto saleAnteAfter = SaleAnteHelper::Instance()->loadSaleAnte(offerEntry.orderBookID,
-                                                                          balanceAfter->getBalanceID(), db);
-            if (!!saleAnteAfter) {
-                REQUIRE(balanceAfter->getLocked() == balanceBefore.locked + offer->getLockedAmount() +
-                                                     saleAnteAfter->getAmount());
-            } else {
-                REQUIRE(balanceAfter->getLocked() == balanceBefore.locked + offer->getLockedAmount());
-            }
+            REQUIRE(balanceAfter->getLocked() == balanceBefore.locked + offer->getLockedAmount());
 
             break;
         }

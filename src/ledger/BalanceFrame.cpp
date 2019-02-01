@@ -50,7 +50,7 @@ BalanceFrame::operator=(BalanceFrame const& other)
 }
 
 BalanceFrame::pointer
-BalanceFrame::createNew(BalanceID id, AccountID owner, AssetCode asset)
+BalanceFrame::createNew(BalanceID id, AccountID owner, AssetCode asset, uint64 sequentialID)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::BALANCE);
@@ -61,6 +61,7 @@ BalanceFrame::createNew(BalanceID id, AccountID owner, AssetCode asset)
     entry.asset = asset;
     entry.amount = 0;
     entry.locked = 0;
+    entry.sequentialID = sequentialID;
 
     auto framePtr = std::make_shared<BalanceFrame>(le);
     framePtr->setPrecisionForAmounts(0);

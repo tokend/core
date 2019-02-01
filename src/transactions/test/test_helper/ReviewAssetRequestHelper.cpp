@@ -63,12 +63,6 @@ void AssetReviewChecker::checkApprove(ReviewableRequestFrame::pointer requestBef
     }
 }
 
-void ReviewAssetRequestHelper::checkApproval(
-    ReviewableRequestFrame::pointer requestBeforeTx)
-{
-    
-}
-
 ReviewRequestResult ReviewAssetRequestHelper::applyReviewRequestTx(
     Account& source, uint64_t requestID, Hash requestHash,
     ReviewableRequestType requestType,
@@ -83,7 +77,18 @@ ReviewRequestResult ReviewAssetRequestHelper::applyReviewRequestTx(
                                                      assetReviewChecker);
 }
 
-ReviewAssetRequestHelper::ReviewAssetRequestHelper(
+    ReviewRequestResult
+    ReviewAssetRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                            ReviewableRequestType requestType,
+                                                            ReviewRequestOpAction action, std::string rejectReason,
+                                                            ReviewRequestResultCode expectedResult,
+                                                            uint32_t *tasksToAdd, uint32_t *tasksToRemove) {
+        auto assetReviewChecker = AssetReviewChecker(mTestManager);
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID, requestHash, requestType, action, rejectReason,
+                                                                  expectedResult, assetReviewChecker, tasksToAdd, tasksToRemove);
+    }
+
+    ReviewAssetRequestHelper::ReviewAssetRequestHelper(
     TestManager::pointer testManager) : ReviewRequestHelper(testManager)
 {
 }

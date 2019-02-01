@@ -16,6 +16,7 @@
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
 #include "test_helper/ManageOfferTestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace stellar;
@@ -47,6 +48,20 @@ TEST_CASE("manage offer", "[tx][offer]")
     auto rootAccount = Account{ root, 0 };
 
     Salt rootSeq = 1;
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     auto assetTestHelper = ManageAssetTestHelper(testManager);
     AssetCode base = "BTC";

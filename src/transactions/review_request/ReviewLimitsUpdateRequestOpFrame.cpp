@@ -102,6 +102,7 @@ namespace stellar {
         createReference(delta, db, requestorID, reference);
 
         innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = true;
         return true;
     }
 
@@ -112,6 +113,15 @@ namespace stellar {
         request->checkRequestType(ReviewableRequestType::LIMITS_UPDATE);
 
         Database& db = ledgerManager.getDatabase();
+
+        handleTasks(db, delta, request);
+
+        if (!request->canBeFulfilled(ledgerManager)){
+            innerResult().code(ReviewRequestResultCode::SUCCESS);
+            innerResult().success().fulfilled = false;
+            return true;
+        }
+
         EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
         auto requestorID = request->getRequestor();

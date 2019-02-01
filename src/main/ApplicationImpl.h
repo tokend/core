@@ -217,8 +217,6 @@ namespace stellar {
         AccountID masterID;
         AccountID commissionID;
 
-        std::unordered_set<ExternalSystemIDGeneratorType> mAvailableExternalSystemIDGenerators;
-
         bool mIsCheckingPolicies{ true };
 
         void shutdownMainIOService();
@@ -226,14 +224,5 @@ namespace stellar {
         void runWorkerThread(unsigned i);
 
         std::vector<std::unique_ptr<Invariant>> enabledInvariants();
-    public:
-        bool areAllExternalSystemGeneratorsAvailable(
-            xdr::xvector<ExternalSystemIDGeneratorType> ex) const override;
-        void addAvailableExternalSystemGenerator(
-            ExternalSystemIDGeneratorType ex) override;
-        const std::unordered_set<ExternalSystemIDGeneratorType>&
-        getAvailableExternalSystemGenerator() override;
-        const std::string getBTCAddressRoot() const override;
-        const std::string getETHAddressRoot() const override;
     };
 }

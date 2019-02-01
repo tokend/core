@@ -15,6 +15,7 @@
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
@@ -51,6 +52,9 @@
 #include "CreateManageLimitsRequestOpFrame.h"
 #include "ManageContractRequestOpFrame.h"
 #include "ManageContractOpFrame.h"
+#include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
+#include "atomic_swap/CancelASwapBidOpFrame.h"
+#include "atomic_swap/CreateASwapRequestOpFrame.h"
 
 namespace stellar
 {
@@ -124,6 +128,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
     case OperationType::CANCEL_SALE_REQUEST:
         return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
+    case OperationType::CREATE_ASWAP_BID_REQUEST:
+        return shared_ptr<OperationFrame>(new CreateASwapBidCreationRequestOpFrame(op, res, tx));
+    case OperationType::CANCEL_ASWAP_BID:
+        return shared_ptr<OperationFrame>(new CancelASwapBidOpFrame(op, res, tx));
+    case OperationType::CREATE_ASWAP_REQUEST:
+        return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_ROLE:
         return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_ROLE_PERMISSION:
@@ -221,7 +231,6 @@ OperationFrame::doApply(Application& app, LedgerDelta& delta,
 	LedgerManager& ledgerManager)
 {
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     return doApply(app, storageHelper, ledgerManager);
 }
 
@@ -401,9 +410,40 @@ OperationFrame::checkRolePermissions(Application& app)
 
     const OperationType thisOpType = getOperation().body.type();
     StorageHelperImpl storageHelper(app.getDatabase(), nullptr);
+    static_cast<StorageHelper&>(storageHelper).begin();
     AccountRolePermissionHelperImpl permissionHelper(storageHelper);
     return static_cast<AccountRolePermissionHelper&>(permissionHelper)
         .hasPermission(mSourceAccount, thisOpType);
 }
+
+
+bool
+OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr::pointer<uint32> tasks)
+{
+    if (tasks) {
+        allTasks = *tasks;
+        return true;
+    }
+
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto keys = makeTasksKeyVector(storageHelper);
+    for(auto& key : keys){
+        auto keyValueFrame = keyValueHelper.loadKeyValue(key);
+        if (keyValueFrame)
+        {
+            allTasks = keyValueFrame->mustGetUint32Value();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::vector<longstring>
+OperationFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+{
+    return std::vector<longstring>{};
+};
+
 
 }

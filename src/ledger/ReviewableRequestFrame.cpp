@@ -63,7 +63,7 @@ ReviewableRequestFrame::pointer ReviewableRequestFrame::createNew(uint64_t reque
 	request.reviewer = reviewer;
 	request.requestID = requestID;
 	request.reference = reference;
-        request.createdAt = createdAt;
+    request.createdAt = createdAt;
 	return make_shared<ReviewableRequestFrame>(entry);
 }
 
@@ -140,23 +140,6 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
     {
         throw runtime_error("external details is invalid");
     }
-
-    switch (request.details.withdrawalType())
-    {
-    case WithdrawalType::AUTO_CONVERSION:
-        {
-            if (!AssetFrame::isAssetCodeValid(request.details.autoConversion().destAsset))
-            {
-                throw runtime_error("dest asset is invalid");
-            }
-            
-            if (request.details.autoConversion().expectedAmount == 0)
-            {
-                throw runtime_error("destination amount is invalid");
-            }
-        }
-    default: break;
-    }
 }
 
 void ReviewableRequestFrame::ensureSaleCreationValid(
@@ -206,6 +189,43 @@ void ReviewableRequestFrame::ensureInvoiceValid(InvoiceRequest const& request)
         throw runtime_error("amount can not be 0");
 }
 
+void ReviewableRequestFrame::ensureASwapBidCreationValid(
+        const ASwapBidCreationRequest &request)
+{
+    if (request.amount == 0)
+    {
+        throw runtime_error("amount can not be zero");
+    }
+
+    if (!isValidJson(request.details))
+    {
+        throw runtime_error("details must be valid JSON");
+    }
+
+    if (request.quoteAssets.empty())
+    {
+        throw runtime_error("quote assets vector cannot be empty");
+    }
+}
+
+void ReviewableRequestFrame::ensureASwapValid(const ASwapRequest &request)
+{
+    if (request.bidID == 0)
+    {
+        throw runtime_error("bid ID cannot be zero");
+    }
+
+    if (request.baseAmount == 0)
+    {
+        throw runtime_error("base amount cannot be zero");
+    }
+
+    if (!AssetFrame::isAssetCodeValid(request.quoteAsset))
+    {
+        throw runtime_error("invalid quote asset");
+    }
+}
+
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
 	return sha256(xdr::xdr_to_opaque(body));
@@ -239,9 +259,6 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return;
         case ReviewableRequestType::LIMITS_UPDATE:
             return;
-        case ReviewableRequestType::TWO_STEP_WITHDRAWAL:
-            ensureWithdrawalValid(oe.body.twoStepWithdrawalRequest());
-            return;
         case ReviewableRequestType::AML_ALERT:
             ensureAMLAlertValid(oe.body.amlAlertRequest());
             return;
@@ -254,12 +271,12 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
         case ReviewableRequestType::INVOICE:
             ensureInvoiceValid(oe.body.invoiceRequest());
             return;
-        case ReviewableRequestType::UPDATE_SALE_END_TIME:
-            return;
-        case ReviewableRequestType ::UPDATE_PROMOTION:
-            return;
         case ReviewableRequestType::CONTRACT:
             return;
+        case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
+            return ensureASwapBidCreationValid(oe.body.aSwapBidCreationRequest());
+        case ReviewableRequestType::ATOMIC_SWAP:
+            return ensureASwapValid(oe.body.aSwapRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }
@@ -278,9 +295,8 @@ ReviewableRequestFrame::ensureValid() const
 
 void ReviewableRequestFrame::setTasks(uint32_t allTasks)
 {
-    mRequest.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
-    mRequest.ext.tasksExt().allTasks = allTasks;
-    mRequest.ext.tasksExt().pendingTasks = allTasks;
+    mRequest.tasks.allTasks = allTasks;
+    mRequest.tasks.pendingTasks = allTasks;
 }
 
 void ReviewableRequestFrame::checkRequestType(ReviewableRequestType requestType) const
@@ -297,13 +313,7 @@ void ReviewableRequestFrame::checkRequestType(ReviewableRequestType requestType)
 
 bool ReviewableRequestFrame::canBeFulfilled(LedgerManager& lm) const
 {
-    if (!lm.shouldUse(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST) ||
-        mRequest.ext.v() != LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-    {
-        return true;
-    }
-
-    return mRequest.ext.tasksExt().pendingTasks == 0;
+    return mRequest.tasks.pendingTasks == 0;
 }
 
 }

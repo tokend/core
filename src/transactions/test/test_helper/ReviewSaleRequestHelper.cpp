@@ -35,10 +35,7 @@ void SaleReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
     auto baseAssetAfterTx = AssetHelperLegacy::Instance()->loadAsset(saleCreationRequest->baseAsset, mTestManager->getDB());
     REQUIRE(!!baseAssetAfterTx);
     auto saleCreationRequestTemp = *saleCreationRequest;
-    uint64_t hardCapInBaseAsset = saleCreationRequest->ext.v() >=
-                                  LedgerVersion::ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP
-                                  ? ReviewSaleCreationRequestOpFrame::getRequiredBaseAssetForHardCap(saleCreationRequestTemp)
-                                  : baseAssetBeforeTx->getMaxIssuanceAmount();
+    uint64_t hardCapInBaseAsset = ReviewSaleCreationRequestOpFrame::getRequiredBaseAssetForHardCap(saleCreationRequestTemp);
     const auto saleRequest = *saleCreationRequest;
     REQUIRE(baseAssetBeforeTx->getPendingIssuance() + hardCapInBaseAsset == baseAssetAfterTx->getPendingIssuance());
 
@@ -69,6 +66,35 @@ ReviewRequestResult ReviewSaleRequestHelper::applyReviewRequestTx(
         expectedResult,
         checker
     );
+
+
 }
+
+    ReviewRequestResult
+    ReviewSaleRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
+                                                           ReviewableRequestType requestType,
+                                                           ReviewRequestOpAction action, std::string rejectReason,
+                                                           ReviewRequestResultCode expectedResult, uint32_t *tasksToAdd,
+                                                           uint32_t *tasksToRemove) {
+        auto checker = SaleReviewChecker(mTestManager, requestID);
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                                  requestHash, requestType,
+                                                                  action, rejectReason,
+                                                                  expectedResult,
+                                                                  checker,
+                                                                  tasksToAdd,
+                                                                  tasksToRemove
+        );
+    }
+
+    ReviewRequestResult ReviewSaleRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID,
+                                                                               ReviewRequestOpAction action,
+                                                                               std::string rejectReason,
+                                                                               ReviewRequestResultCode expectedResult,
+                                                                               uint32_t *tasksToAdd,
+                                                                               uint32_t *tasksToRemove) {
+        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID, action, rejectReason,
+                                                                  expectedResult, tasksToAdd, tasksToRemove);
+    }
 }
 }

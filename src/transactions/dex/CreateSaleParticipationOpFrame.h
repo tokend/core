@@ -15,9 +15,6 @@ class CreateSaleParticipationOpFrame : public CreateOfferOpFrame
 
     bool isPriceValid(SaleFrame::pointer sale, BalanceFrame::pointer balance, Database& db) const;
 
-    bool tryCreateSaleAnte(Database& db, LedgerDelta& delta, LedgerManager& ledgerManager,
-                           BalanceFrame::pointer sourceBalanceFrame, uint64_t saleID);
-
     void setErrorCode(BalanceFrame::Result lockingResult);
 
 public:
@@ -26,13 +23,12 @@ public:
                          TransactionFrame& parentTx);
 
     bool doCheckValid(Application& app) override;
-    bool isSaleActive(Database& db,LedgerManager& ledgerManager, SaleFrame::pointer sale) const;
     bool doApply(Application& app, LedgerDelta& delta,
         LedgerManager& ledgerManager) override;
-
+    bool isSaleActive(Database& db,LedgerManager& ledgerManager, SaleFrame::pointer sale);
+    static SaleFrame::State getSaleState(const SaleFrame::pointer sale, Database& db, const uint64_t currentTime);
     static bool getSaleCurrentCap(SaleFrame::pointer const sale, Database& db, uint64_t& currentCapInDefaultQuote);
 
-    static SaleFrame::State getSaleState(SaleFrame::pointer const sale, Database& db, const uint64_t currentTime);
     static bool tryAddSaleCap(Database& db, uint64_t const& amount, AssetCode const& asset, SaleFrame::pointer sale);
 };
 }

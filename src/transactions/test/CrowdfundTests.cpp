@@ -21,7 +21,7 @@
 #include "transactions/dex/OfferManager.h"
 #include "test_helper/ParticipateInSaleTestHelper.h"
 #include "test_helper/ManageSaleTestHelper.h"
-#include "test_helper/ReviewPromotionUpdateRequestTestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -39,6 +39,25 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     TestManager::upgradeToCurrentLedgerVersion(app);
 
     auto root = Account{ getRoot(), Salt(0) };
+
+    uint32_t zeroTasks = 0;
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
+    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
+    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     const AssetCode defaultQuoteAsset = "USD";
     auto assetTestHelper = ManageAssetTestHelper(testManager);
@@ -60,7 +79,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     IssuanceRequestHelper issuanceHelper(testManager);
     CheckSaleStateHelper checkStateHelper(testManager);
     ManageSaleTestHelper manageSaleHelper(testManager);
-    ReviewPromotionUpdateRequestHelper reviewPromotionUpdateHelper(testManager);
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();
@@ -71,7 +89,9 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     const uint64_t maxIssuanceAmount = 2000 * ONE;
     const auto preIssuedAmount = maxIssuanceAmount;
     assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount,0, preIssuedAmount);
+                                                                      maxIssuanceAmount,0,
+                                                                      &zeroTasks,
+                                                                      preIssuedAmount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const auto hardCap = 10000 * ONE;
     const uint64_t softCap = hardCap / 2;
@@ -81,15 +101,21 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     SECTION("Price must be 1")
     {
         const auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE + 1) }, &saleType);
-        saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest,
-            CreateSaleCreationRequestResultCode::INVALID_PRICE);
+                                                                     endTime, softCap, hardCap, "{}",
+                                                                     {saleRequestHelper.createSaleQuoteAsset(quoteAsset,
+                                                                                                                     ONE + 1)},
+                                                                     0, saleType);
+        saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                                                 CreateSaleCreationRequestResultCode::INVALID_PRICE);
     }
     SECTION("Given valid crowdfund")
     {
         auto maxAmountToBeSold = preIssuedAmount / 2;
         const auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAsset, ONE) }, &saleType, &maxAmountToBeSold, SaleState::PROMOTION);
+                                                                     endTime, softCap, hardCap, "{}",
+                                                                     {saleRequestHelper.createSaleQuoteAsset(quoteAsset,
+                                                                                                                     ONE)},
+                                                                     maxAmountToBeSold, saleType);
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
         auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
         REQUIRE(sales.size() == 1);
@@ -118,9 +144,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
 
         SECTION("Happy path")
         {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
             // exchange rate for quote asset changed, so now amount to recieve is 0
             quoteDefaultQuotePrice = 542680000;
             assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
@@ -134,9 +157,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
         }
         SECTION("Participation amount is too small")
         {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
             // able to invest 10^-6 when price for quote and default quote is 1
             auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
             quoteDefaultQuotePrice = 1000 * ONE;
@@ -164,153 +184,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
             REQUIRE(quoteBalanceAfterTx->getAmount() == quoteBalanceBeforeTx->getAmount() - hardCapInQuoteAsset);
             // close the sale
             CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
-        }
-        SECTION("Not able to invest into sale in voting state")
-        {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::VOTING);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            // able to invest 10^-6 when price for quote and default quote is 1
-            auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
-            quoteDefaultQuotePrice = 1000 * ONE;
-            assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
-            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, 1,
-                ONE, 0, 0, saleID);
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer, ManageOfferResultCode::SALE_IS_NOT_STARTED_YET);
-
-            // reset back
-            saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer);
-        }
-        SECTION("Try to set state with non-master account")
-        {
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::VOTING);
-            saleTestHelper.applyManageSaleTx(syndicate, saleID, saleStateData, ManageSaleResultCode::NOT_ALLOWED);
-        }
-        SECTION("Not able to invest into sale in promotion state")
-        {
-            // able to invest 10^-6 when price for quote and default quote is 1
-            auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
-            quoteDefaultQuotePrice = 1000 * ONE;
-            assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
-            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, 1,
-                ONE, 0, 0, saleID);
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer, ManageOfferResultCode::SALE_IS_NOT_STARTED_YET);
-
-            // reset back
-            auto saleTestHelper = ManageSaleTestHelper(testManager);
-            auto saleStateData = saleTestHelper.setSaleState(SaleState::NONE);
-            saleTestHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer);
-        }
-        SECTION("Update sale in promotion state")
-        {
-            uint64_t requestID = 0;
-            const auto newPromotionData = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset,
-                                                                               currentTime,
-                                                                               endTime, softCap * 2, hardCap * 2, "{}",
-                                                                               {saleRequestHelper.createSaleQuoteAsset
-                                                                                       (quoteAsset, ONE)},
-                                                                               &saleType, &preIssuedAmount,
-                                                                               SaleState::NONE);
-            auto manageSaleData = manageSaleHelper.createPromotionUpdateRequest(requestID, newPromotionData);
-
-            SECTION("Invalid asset pair")
-            {
-                manageSaleData.promotionUpdateData().newPromotionData.baseAsset = quoteAsset;
-                manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                   ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_ASSET_PAIR);
-            }
-            SECTION("Sale ends before starts")
-            {
-                manageSaleData.promotionUpdateData().newPromotionData.endTime = currentTime - 1;
-                manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                   ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_START_END_INVALID);
-            }
-            SECTION("Invalid cap")
-            {
-                manageSaleData.promotionUpdateData().newPromotionData.hardCap = softCap - 1;
-                manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                   ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_CAP);
-            }
-            SECTION("Invalid details")
-            {
-                manageSaleData.promotionUpdateData().newPromotionData.details = "Invalid JSON";
-                manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                   ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_INVALID_DETAILS);
-            }
-
-            SECTION("Try to update foreign sale")
-            {
-                auto secondSyndicate = Account{ SecretKey::random(), 0 };
-                CreateAccountTestHelper(testManager).applyCreateAccountTx(root, secondSyndicate.key.getPublicKey(),
-                                                                          AccountType::SYNDICATE);
-
-                manageSaleHelper.applyManageSaleTx(secondSyndicate, saleID, manageSaleData,
-                                                   ManageSaleResultCode::SALE_NOT_FOUND);
-            }
-
-            SECTION("Try to update foreign sale with master")
-            {
-                manageSaleHelper.applyManageSaleTx(root, saleID, manageSaleData);
-            }
-
-            SECTION("Promotion update request creation success")
-            {
-                auto manageSaleResult = manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
-                requestID = manageSaleResult.success().response.promotionUpdateRequestID();
-
-                SECTION("Update promotion update request")
-                {
-                    SECTION("Request already exists")
-                    {
-                        manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                           ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_ALREADY_EXISTS);
-
-                    }
-                    SECTION("Request not found")
-                    {
-                        manageSaleData.promotionUpdateData().requestID = 42;
-                        manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData,
-                                                           ManageSaleResultCode::PROMOTION_UPDATE_REQUEST_NOT_FOUND);
-                    }
-                    SECTION("Successful request update")
-                    {
-                        manageSaleData.promotionUpdateData().requestID = requestID;
-                        manageSaleData.promotionUpdateData().newPromotionData.hardCap =
-                                manageSaleData.promotionUpdateData().newPromotionData.hardCap - ONE;
-                        manageSaleHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
-                    }
-
-                    SECTION("Review promotion update request success")
-                    {
-                        reviewPromotionUpdateHelper.applyReviewRequestTx(root, requestID,
-                                                                         ReviewRequestOpAction::APPROVE, "");
-                    }
-                }
-            }
-        }
-        SECTION("Update voting sale")
-        {
-            auto saleStateData = manageSaleHelper.setSaleState(SaleState::VOTING);
-            manageSaleHelper.applyManageSaleTx(root, saleID, saleStateData);
-
-            uint64_t requestID = 0;
-            const auto newPromotionData = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset,
-                                                                               currentTime,
-                                                                               endTime, softCap * 2, hardCap * 2, "{}",
-                                                                               {saleRequestHelper.createSaleQuoteAsset
-                                                                                       (quoteAsset, ONE)},
-                                                                               &saleType, &preIssuedAmount,
-                                                                               SaleState::NONE);
-
-            auto manageSaleData = manageSaleHelper.createPromotionUpdateRequest(requestID, newPromotionData);
-            manageSaleHelper.applyManageSaleTx(root, saleID, manageSaleData);
         }
     }
 }

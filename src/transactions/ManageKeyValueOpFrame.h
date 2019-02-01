@@ -51,11 +51,13 @@ namespace stellar {
         }
 
         static longstring makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet, uint32 kycLevelToSet);
+        static longstring makeLimitsUpdateTasksKey();
 
         static longstring makeExternalSystemExpirationPeriodKey(int32 externalSystemType);
 
-        static longstring makeIssuanceTasksKey(AssetCode assetCode);
+        static longstring makeTransactionFeeAssetKey();
 
+        static longstring makeIssuanceTasksKey(AssetCode assetCode);
         static longstring makeWithdrawalTasksKey(AssetCode assetCode);
 
         static longstring makeMaxContractDetailLengthKey();
@@ -68,9 +70,29 @@ namespace stellar {
 
         static longstring makeMaxInvoiceDetailLengthKey();
 
+        static longstring makeAtomicSwapTasksKey();
+        static longstring makePreIssuanceTasksKey(AssetCode assetCode);
+        static longstring makeAssetCreateTasksKey();
+
+        static longstring makeWithdrawLowerBoundKey(AssetCode assetCode);
+
+        static longstring makeAssetUpdateTasksKey();
+
+        static longstring makeSaleUpdateTasksKey(longstring ID);
+
+        static longstring makeSaleCreateTasksKey(AssetCode assetCode);
+
+        static longstring makeInvoiceCreateTasksKey();
+
+        static longstring makeContractCreateTasksKey();
+
+        static longstring makeAmlAlertCreateTasksKey();
+
+
         static const char * kycRulesPrefix;
         static const char * externalSystemPrefix;
         static const char * transactionFeeAssetKey;
+        static const char * transactionFeeAssetPrefix;
         static const char * issuanceTasksPrefix;
         static const char * withdrawalTasksPrefix;
         static const char * maxContractDetailLengthPrefix;
@@ -78,5 +100,18 @@ namespace stellar {
         static const char * maxContractsCountPrefix;
         static const char * maxInvoicesCountPrefix;
         static const char * maxInvoiceDetailLengthPrefix;
+        static const char * atomicSwapTasksPrefix;
+        static const char * withdrawLowerBoundPrefix;
+        static char const * preIssuanceTasksPrefix;
+        static char const * assetCreateTasks;
+        static char const * assetUpdateTasks;
+        static char const * saleUpdateDetailsTasksPrefix;
+        static char const * saleCreateTasksPrefix;
+        static char const * invoiceCreateTasks;
+        static char const * contractCreateTasks;
+        static char const * amlAlertCreateTasks;
+        static char const * limitsUpdateTasks;
+
+        static std::map<std::string, KeyValueEntryType> valueTypes;
     };
 }

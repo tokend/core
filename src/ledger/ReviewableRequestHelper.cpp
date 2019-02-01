@@ -15,37 +15,24 @@ namespace stellar {
                                             "reject_reason, created_at, version, lastmodified, "
                                             "all_tasks, pending_tasks, external_details FROM reviewable_request";
 
-    void ReviewableRequestHelper::addTasks(Database &db)
-    {
-        db.getSession() << "ALTER TABLE reviewable_request ADD all_tasks INT DEFAULT 0";
-        db.getSession() << "ALTER TABLE reviewable_request ADD pending_tasks INT DEFAULT 0";
-        db.getSession() << "ALTER TABLE reviewable_request ADD external_details TEXT";
-    }
-
-    void ReviewableRequestHelper::changeDefaultExternalDetails(Database &db)
-    {
-        db.getSession() << "ALTER TABLE reviewable_request ALTER COLUMN external_details SET DEFAULT ''";
-    }
-
-    void ReviewableRequestHelper::setEmptyStringToExternalDetailsInsteadNull(Database &db)
-    {
-        db.getSession() << "UPDATE reviewable_request SET external_details = '' where external_details is null";
-    }
 
     void ReviewableRequestHelper::dropAll(Database &db) {
         db.getSession() << "DROP TABLE IF EXISTS reviewable_request CASCADE;";
         db.getSession() << "CREATE TABLE reviewable_request"
                 "("
-                "id            BIGINT        NOT NULL CHECK (id >= 0),"
-                "hash          CHARACTER(64) NOT NULL,"
-                "body          TEXT          NOT NULL,"
-                "requestor     VARCHAR(56)   NOT NULL,"
-                "reviewer      VARCHAR(56)   NOT NULL,"
-                "reference     VARCHAR(64),"
-                "reject_reason TEXT          NOT NULL,"
-                "created_at    BIGINT        NOT NULL,"
-                "version       INT           NOT NULL,"
-                "lastmodified  INT           NOT NULL,"
+                "id               BIGINT        NOT NULL CHECK (id >= 0),"
+                "hash             CHARACTER(64) NOT NULL,"
+                "body             TEXT          NOT NULL,"
+                "requestor        VARCHAR(56)   NOT NULL,"
+                "reviewer         VARCHAR(56)   NOT NULL,"
+                "reference        VARCHAR(64),"
+                "reject_reason    TEXT          NOT NULL,"
+                "created_at       BIGINT        NOT NULL,"
+                "version          INT           NOT NULL,"
+                "lastmodified     INT           NOT NULL,"
+                "all_tasks        INT           DEFAULT 0,"
+                "pending_tasks    INT           DEFAULT 0,"
+                "external_details TEXT          DEFAULT '',"
                 "PRIMARY KEY (id)"
                 ");";
         db.getSession() << "CREATE UNIQUE INDEX requestor_reference ON reviewable_request (requestor, reference) WHERE reference IS NOT NULL;";
@@ -223,21 +210,15 @@ namespace stellar {
             oe.rejectReason = rejectReason;
             oe.ext.v(static_cast<LedgerVersion>(version));
 
-            if(oe.ext.v() < LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST && allTasks != 0)
-                throw std::runtime_error("version is incorrect but AllTasks in not empty");
+            oe.tasks.allTasks = allTasks;
+            oe.tasks.pendingTasks = pendingTasks;
 
-            if (oe.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-            {
-                oe.ext.tasksExt().allTasks = allTasks;
-                oe.ext.tasksExt().pendingTasks = pendingTasks;
-
-                // unmarshal external details
-                std::vector<uint8_t> decodedDetails;
-                bn::decode_b64(externalDetails, decodedDetails);
-                xdr::xdr_get detailsUnmarshaler(&decodedDetails.front(), &decodedDetails.back() + 1);
-                xdr::xdr_argpack_archive(detailsUnmarshaler, oe.ext.tasksExt().externalDetails);
-                detailsUnmarshaler.done();
-            }
+            // unmarshal external details
+            std::vector<uint8_t> decodedDetails;
+            bn::decode_b64(externalDetails, decodedDetails);
+            xdr::xdr_get detailsUnmarshaler(&decodedDetails.front(), &decodedDetails.back() + 1);
+            xdr::xdr_argpack_archive(detailsUnmarshaler, oe.tasks.externalDetails);
+            detailsUnmarshaler.done();
 
             ReviewableRequestFrame::ensureValid(oe);
 

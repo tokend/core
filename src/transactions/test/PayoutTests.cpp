@@ -20,6 +20,7 @@
 #include "test_helper/PayoutTestHelper.h"
 #include "test_helper/ReviewAssetRequestHelper.h"
 #include "test_helper/ReviewIssuanceRequestHelper.h"
+#include "test_helper/ManageKeyValueTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -59,10 +60,29 @@ TEST_CASE("payout", "[tx][payout]") {
     LedgerDelta& delta = deltaImpl;
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.begin();
+
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
 
     auto root = Account{getRoot(), Salt(0)};
+
+    uint32_t zeroTasks = 0;
+
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
 
     // create asset owner
     auto owner = Account{SecretKey::random(), Salt(0)};
@@ -79,10 +99,8 @@ TEST_CASE("payout", "[tx][payout]") {
     auto assetCreationRequest =
             manageAssetTestHelper.createAssetCreationRequest(assetCode,
                  preIssuedSigner.getPublicKey(), "{}", maxIssuanceAmount,
-                 transferableAssetPolicy, preIssuedAmount);
+                 transferableAssetPolicy, &zeroTasks, preIssuedAmount);
     auto manageAssetResult = manageAssetTestHelper.applyManageAssetTx(owner, 0, assetCreationRequest);
-    reviewAssetRequestHelper.applyReviewRequestTx(root, manageAssetResult.success().requestID,
-                                                  ReviewRequestOpAction::APPROVE, "");
 
     auto ownerBalance = balanceHelper.loadBalance(ownerID, assetCode);
     REQUIRE(ownerBalance);
@@ -101,7 +119,7 @@ TEST_CASE("payout", "[tx][payout]") {
     {
         // create holders and give them some amount of asset
         auto holdersCount = 5;
-        HolderAmount holdersAmounts[holdersCount];
+        std::vector<HolderAmount> holdersAmounts;
         for (auto i = 0; i < holdersCount; i++)
         {
             auto newAccount = Account{SecretKey::random(), Salt(0)};
@@ -118,7 +136,7 @@ TEST_CASE("payout", "[tx][payout]") {
             issuanceRequestHelper.applyCreateIssuanceRequest(owner, assetCode,
                                        holderAmount, newBalance->getBalanceID(),
                                        reference, &issuanceTasks);
-            holdersAmounts[i] = {newAccount, holderAmount};
+            holdersAmounts.push_back({newAccount, holderAmount});
         }
 
         auto assetFrame = assetHelper.loadAsset(assetCode);
@@ -129,12 +147,12 @@ TEST_CASE("payout", "[tx][payout]") {
         {
             uint64_t maxPayoutAmount = assetOwnerAmount / 10;
 
-            BalanceFrame::pointer holdersBalancesBefore[holdersCount];
+            std::vector<BalanceFrame::pointer> holdersBalancesBefore;
             for (auto i = 0; i < holdersCount; i++)
             {
-                holdersBalancesBefore[i] = balanceHelper.loadBalance(
+                holdersBalancesBefore.push_back(balanceHelper.loadBalance(
                         holdersAmounts[i].account.key.getPublicKey(),
-                        assetCode);
+                        assetCode));
             }
 
             auto receiversCount = 0;

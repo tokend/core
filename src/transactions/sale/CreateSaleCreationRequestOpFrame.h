@@ -30,16 +30,20 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
 
     ReviewableRequestFrame::pointer createNewUpdateRequest(Application& app, LedgerManager& lm, Database& db, LedgerDelta& delta, time_t closedAt) const;
 
+
     // isBaseAssetHasSufficientIssuance - returns true, if base asset amount required for hard cap and soft cap does not exceed available amount to be issued.
     // sets corresponding result code
     bool isBaseAssetHasSufficientIssuance(AssetFrame::pointer assetFrame);
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
+
+    bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
+    void updateRequest(ReviewableRequestEntry& entry);
 public:
 
     CreateSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper &storageHelper,
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
@@ -61,5 +65,8 @@ public:
     std::string getInnerResultCodeAsStr() override {
         return xdr::xdr_traits<CreateSaleCreationRequestResultCode>::enum_name(innerResult().code());
     }
+
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+
 };
 }

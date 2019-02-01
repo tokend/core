@@ -11,6 +11,7 @@
 #include "ledger/LedgerManagerImpl.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelperLegacy.h"
 
 #include "overlay/OverlayManager.h"
 #include "util/make_unique.h"
@@ -19,6 +20,7 @@
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "xdrpp/printer.h"
+#include "BalanceHelperLegacy.h"
 
 /*
 The ledger module:
@@ -178,6 +180,9 @@ LedgerManagerImpl::startNewLedger()
 	AccountManager accountManager(mApp, this->getDatabase(), delta, mApp.getLedgerManager());
 	for (auto systemAccount : systemAccounts)
 	{
+            auto& accountEntry = systemAccount->getAccount();
+            accountEntry.sequentialID =
+                delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 		EntryHelperProvider::storeAddEntry(delta, this->getDatabase(), systemAccount->mEntry);
 		accountManager.createStats(systemAccount);
 		
@@ -765,9 +770,6 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
         case LedgerUpgradeType::MAX_TX_SET_SIZE:
             ledgerDelta.getHeader().maxTxSetSize = lupgrade.newMaxTxSetSize();
             break;
-        case LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR:
-            ledgerDelta.getHeader().externalSystemIDGenerators = lupgrade.newExternalSystemIDGenerators();
-            break;
         case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
             ledgerDelta.getHeader().txExpirationPeriod = lupgrade.newTxExpirationPeriod();
             break;
@@ -832,11 +834,26 @@ LedgerManagerImpl::deleteOldEntries(Database& db, uint32_t ledgerSeq, uint64_t l
 void
 LedgerManagerImpl::checkDbState()
 {
+    Database& db = getDatabase();
+
 	// TODO move to invariant
 	auto accountHelper = AccountHelper::Instance();
     std::unordered_map<AccountID, AccountFrame::pointer> aData =
-		accountHelper->checkDB(getDatabase());
+		accountHelper->checkDB(db);
 
+    auto allAssetsWithIssued = AssetHelperLegacy::Instance()->loadIssuedForAssets(db);
+
+    for (const auto& item : allAssetsWithIssued)
+    {
+        auto totalAssetAmount = BalanceHelperLegacy::Instance()->loadTotalAssetAmount(
+                db, item.first);
+
+        if (totalAssetAmount != item.second)
+        {
+            throw std::runtime_error("Total asset amount on all balances not equal to "
+                                     "total issued amount of asset");
+        }
+    }
 }
 
 void

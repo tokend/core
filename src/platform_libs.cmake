@@ -19,7 +19,6 @@ target_link_libraries(core 3rdparty -lpthread)
 target_link_libraries(core medida)
 target_link_libraries(core xdrpp)
 target_link_libraries(core sodium)
-target_link_libraries(core coincore)
 target_link_libraries(core gmock)
 
 #For windows.

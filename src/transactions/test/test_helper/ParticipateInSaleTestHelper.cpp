@@ -1,4 +1,3 @@
-#include <ledger/SaleAnteHelper.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/AccountHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
@@ -69,20 +68,16 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
     auto investFee = FeeHelper::Instance()->loadForAccount(FeeType::INVEST_FEE, balanceBeforeTx.asset, 0,
                                                            sourceAccountFrame, op.amount, db);
     if (!!investFee) {
-        auto saleAnteAfterTx = SaleAnteHelper::Instance()->loadSaleAnte(saleAfterTx->getID(),
-                                                                        balanceBeforeTx.balanceID, db);
-        REQUIRE(!!saleAnteAfterTx);
-
         auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(balanceBeforeTx.balanceID, db);
         REQUIRE(balanceAfterTx->getLocked() - success.offer.offer().quoteAmount ==
-                balanceBeforeTx.locked + saleAnteAfterTx->getAmount());
+                balanceBeforeTx.locked);
     }
 
     return ManageOfferTestHelper::ensureCreateSuccess(source, op, success, stateBeforeTx);
 }
 
     uint64_t ParticipateInSaleTestHelper::addNewParticipant(Account& root, Account& participant, const uint64_t saleID, const AssetCode baseAsset,
-                               const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee, const uint64_t* saleAnteAmount)
+                               const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee)
     {
         IssuanceRequestHelper issuanceRequestHelper(mTestManager);
         auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(participant.key.getPublicKey(), quoteAsset, mTestManager->getDB(), nullptr);
@@ -90,15 +85,9 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
         // issue a tad more to ensure that it is enough to cover rounded up base amount
         const uint64 tad = quoteBalance->getMinimumAmount();
         uint32_t allTasks = 0;
-        if (saleAnteAmount) {
-            issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + *saleAnteAmount + fee + tad, root);
-            issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + *saleAnteAmount + fee + tad, quoteBalance->getBalanceID(),
+        issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + fee + tad, root);
+        issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + fee + tad, quoteBalance->getBalanceID(),
                                                                           SecretKey::random().getStrKeyPublic(), &allTasks);
-        } else {
-            issuanceRequestHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, quoteAssetAmount + fee + tad, root);
-            issuanceRequestHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteAssetAmount + fee + tad, quoteBalance->getBalanceID(),
-                                                                          SecretKey::random().getStrKeyPublic(), &allTasks);
-        }
 
         auto accountID = participant.key.getPublicKey();
         auto balanceCreationResult = ManageBalanceTestHelper(mTestManager).applyManageBalanceTx(participant, accountID, baseAsset);
@@ -110,11 +99,11 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
     }
 
     uint64_t ParticipateInSaleTestHelper::addNewParticipant(Account& root, const uint64_t saleID, const AssetCode baseAsset,
-                               const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee, const uint64_t* saleAnteAmount)
+                               const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee)
     {
         auto account = Account{ SecretKey::random(), 0 };
         CreateAccountTestHelper(mTestManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
-        return addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, fee, saleAnteAmount);
+        return addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, fee);
     }
 
 }

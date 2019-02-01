@@ -23,8 +23,7 @@ LimitsUpdateRequestHelper(TestManager::pointer testManager) : TxHelper(testManag
 }
 
 CreateManageLimitsRequestResult
-LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, LimitsUpdateRequest request,
-                                                          uint64_t* requestID,
+LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, LimitsUpdateRequest request, uint32_t *allTasks, uint64_t *requestID,
                                                           CreateManageLimitsRequestResultCode expectedResult)
 {
     Database& db = mTestManager->getDB();
@@ -38,7 +37,7 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
         limitsUpdateRequestBeforeTx = reviewableRequestHelper->loadRequest(*requestID, source.key.getPublicKey(), db);
     }
 
-    auto txFrame = createLimitsUpdateRequestTx(source, request, requestID);
+    auto txFrame = createLimitsUpdateRequestTx(source, request, allTasks, requestID);
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
@@ -83,6 +82,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring details)
 
 TransactionFramePtr
 LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUpdateRequest request,
+                                                       uint32_t* allTasks,
                                                        uint64_t* requestID)
 {
     Operation baseOp;
@@ -90,6 +90,11 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
     auto& op = baseOp.body.createManageLimitsRequestOp();
     op.manageLimitsRequest.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
     op.manageLimitsRequest.ext.details() = request.ext.details();
+
+    if (allTasks)
+    {
+        op.allTasks.activate() = *allTasks;
+    }
 
     if (requestID == nullptr)
     {

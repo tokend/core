@@ -103,9 +103,6 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         thisConfig.BASE_EXCHANGE_NAME = "Base exchange";
         thisConfig.TX_EXPIRATION_PERIOD = INT64_MAX / 2;
         thisConfig.MAX_INVOICES_FOR_RECEIVER_ACCOUNT = 100;
-        auto extendedPublicKey = "xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB";
-        thisConfig.BTC_ADDRESS_ROOT = extendedPublicKey;
-        thisConfig.ETH_ADDRESS_ROOT = extendedPublicKey;
 
         // disable NTP - travis-ci does not allow network access:
         // The container-based, OSX, and GCE (both Precise and Trusty) builds do not currently have IPv6 connectivity.

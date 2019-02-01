@@ -3,7 +3,6 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <hdkeys.h>
 #include "main/Config.h"
 #include "history/HistoryArchive.h"
 #include "StellarCoreVersion.h"
@@ -13,8 +12,6 @@
 #include "scp/LocalNode.h"
 #include <sstream>
 #include "ledger/AssetFrame.h"
-
-using namespace Coin;
 
 namespace stellar
 {
@@ -29,7 +26,8 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<int32_t>(LedgerVersion::WITHDRAWAL_TASKS);
+    LEDGER_PROTOCOL_VERSION = static_cast<int32_t >(
+            LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT);
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
     OVERLAY_PROTOCOL_VERSION = 5;
 
@@ -41,7 +39,7 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     MANUAL_CLOSE = false;
     CATCHUP_COMPLETE = false;
     CATCHUP_RECENT = 0;
-    MAINTENANCE_ON_STARTUP = true;
+    MAINTENANCE_ON_STARTUP = false;
     ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING = false;
     ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING = false;
     ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING = 0;
@@ -624,22 +622,6 @@ Config::load(std::string const& filename)
                 }
                 INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE =
                         item.second->as<bool>()->value();
-            }
-            else if (item.first == "BTC_ADDRESS_ROOT")
-            {
-                if (!item.second->as<std::string>() || !HDKeychain::validateExtendedPublicKey(item.second->as<std::string>()->value())) {
-                    throw std::invalid_argument("invalid BTC_ADDRESS_ROOT");
-                }
-
-                BTC_ADDRESS_ROOT = item.second->as<std::string>()->value();
-            }
-            else if (item.first == "ETH_ADDRESS_ROOT")
-            {
-                if (!item.second->as<std::string>() || !HDKeychain::validateExtendedPublicKey(item.second->as<std::string>()->value())) {
-                    throw std::invalid_argument("invalid ETH_ADDRESS_ROOT");
-                }
-
-                ETH_ADDRESS_ROOT = item.second->as<std::string>()->value();
             }
             else
             {

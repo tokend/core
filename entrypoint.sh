@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
-set -e
 
-CONFIG=/config.ini
+CONFIG=${CONFIG:-/config.ini}
 BIN=/usr/local/bin/core
-HISTORY=/history
+
+# will make init if core thinks history does not exist.
+# USE AT YOUR ON OWN RISK
+ensuredb() {
+    # vs history is hard-coded as a de facto standard
+    $BIN --conf $CONFIG --histexists vs
+    exit_code=$?
+    [[ $exit_code -eq 0 ]] && return
+    [[ $exit_code -eq 42 ]] && init && return
+    echo "histexists failed with $exit_code"
+    return $exit_code
+}
 
 start() {
     $BIN --conf $CONFIG --forcescp
@@ -11,12 +21,14 @@ start() {
 }
 
 init() {
-    rm -rf $HISTORY/*
     $BIN --conf $CONFIG --newdb
     $BIN --conf $CONFIG --newhist vs
 }
 
 case "$1" in
+    "ensuredb")
+        ensuredb
+        ;;
     "init")
         init
         ;;
@@ -24,5 +36,15 @@ case "$1" in
         start
         ;;
     *)
+
+    echo "ensuredb=$ENSUREDB"
+
+    if [ -z "$ENSUREDB" ]; then
+        echo "starting node"
         start
+    else 
+        echo "ensuring history and starting node"
+        ensuredb && start
+    fi
+
 esac

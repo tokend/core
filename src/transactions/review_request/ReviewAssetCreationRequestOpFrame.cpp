@@ -34,6 +34,15 @@ bool ReviewAssetCreationRequestOpFrame::handleApprove(Application & app, LedgerD
 		return false;
 	}
 
+
+	handleTasks(db, delta, request);
+
+	if (!request->canBeFulfilled(ledgerManager)){
+		innerResult().code(ReviewRequestResultCode::SUCCESS);
+		innerResult().success().fulfilled = false;
+		return true;
+	}
+
 	auto assetFrame = AssetFrame::create(assetCreationRequest, request->getRequestor());
 	EntryHelperProvider::storeAddEntry(delta, db, assetFrame->mEntry);
 
@@ -47,6 +56,7 @@ bool ReviewAssetCreationRequestOpFrame::handleApprove(Application & app, LedgerD
 
 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
+	innerResult().success().fulfilled = true;
 	return true;
 }
 

@@ -61,6 +61,8 @@ public:
 
     bool exists(Database& db, AssetCode code);
 
+    std::map<AssetCode, uint64_t> loadIssuedForAssets(Database &db);
+
 private:
     AssetHelperLegacy() { ; }
     ~AssetHelperLegacy() { ; }

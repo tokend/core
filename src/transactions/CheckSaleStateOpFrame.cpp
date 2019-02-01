@@ -20,7 +20,6 @@
 #include "dex/CreateSaleParticipationOpFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/SaleAnteHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "dex/DeleteSaleParticipationOpFrame.h"
@@ -117,48 +116,6 @@ bool CheckSaleStateOpFrame::handleCancel(SaleFrame::pointer sale, LedgerManager&
     return true;
 }
 
-void CheckSaleStateOpFrame::chargeSaleAntes(uint64_t saleID, AccountID const &commissionID,
-                                            LedgerDelta &delta, Database &db)
-{
-    auto saleAntes = SaleAnteHelper::Instance()->loadSaleAntesForSale(saleID, db);
-    for (auto &saleAnte : saleAntes) {
-        auto participantBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(saleAnte->getParticipantBalanceID(),
-                                                                                  db, &delta);
-        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID,
-                                                                                  participantBalanceFrame->getAsset(),
-                                                                                  db, delta);
-        if (!commissionBalance) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected commission balance to exist";
-            throw std::runtime_error("Unexpected state. Expected commission balance to exist");
-        }
-
-        const BalanceFrame::Result participantChargeResult = participantBalanceFrame->tryChargeFromLocked(saleAnte->getAmount());
-        if (participantChargeResult != BalanceFrame::Result::SUCCESS) {
-            string strParticipantBalanceID = PubKeyUtils::toStrKey(participantBalanceFrame->getBalanceID());
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to charge from locked amount for sale ante with reason "
-                    << participantChargeResult << " sale id: " << saleAnte->getSaleID()
-                    << " and participant balance id: " << strParticipantBalanceID;
-            throw std::runtime_error("Failed to charge from locked amount for sale ante");
-        }
-
-        const BalanceFrame::Result commissionBalanceFundResult = commissionBalance->tryFundAccount(saleAnte->getAmount());
-        if (commissionBalanceFundResult != BalanceFrame::Result::SUCCESS) {
-            string strCommissionBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Failed to fund commission balance with sale ante, reason " << commissionBalanceFundResult
-                    << ". Sale id: " << saleAnte->getSaleID() << " and commission balance id: "
-                    << strCommissionBalanceID;
-            throw runtime_error("Failed to fund commission balance with sale ante");
-        }
-
-        EntryHelperProvider::storeChangeEntry(delta, db, participantBalanceFrame->mEntry);
-        EntryHelperProvider::storeChangeEntry(delta, db, commissionBalance->mEntry);
-        EntryHelperProvider::storeDeleteEntry(delta, db, saleAnte->getKey());
-    }
-}
-
-
 void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, LedgerManager& lm, Database& db, LedgerDelta& delta, BalanceFrame::pointer balanceBefore){
     auto balanceAfter = BalanceHelperLegacy::Instance()->loadBalance(sale->getBaseBalanceID(), db);
     if(!lm.shouldUse(LedgerVersion::ALLOW_CLOSE_SALE_WITH_NON_ZERO_BALANCE)) {
@@ -238,10 +195,6 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
         ManageSaleOpFrame::cancelAllOffersForQuoteAsset(sale, quoteAsset, delta, db);
     }
 
-    if (lm.shouldUse(LedgerVersion::USE_SALE_ANTE)) {
-        chargeSaleAntes(sale->getID(), app.getCommissionID(), delta, db);
-    }
-
     SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
 
     cleanupIssuerBalance(sale, lm, db, delta, balanceBefore);
@@ -271,7 +224,9 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     CreateIssuanceRequestOpFrame createIssuanceRequestOpFrame(op, opRes, mParentTx);
     createIssuanceRequestOpFrame.doNotRequireFee();
     createIssuanceRequestOpFrame.setSourceAccountPtr(saleOwnerAccount);
-    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, delta, lm))
+
+    StorageHelperImpl storageHelper(db, &delta);
+    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply create issuance request on check sale: " << sale->getID();
         throw runtime_error("Unexpected state: failed to create issuance request on check sale");
@@ -621,7 +576,6 @@ std::string CheckSaleStateOpFrame::getInnerResultCodeAsStr()
 uint64 CheckSaleStateOpFrame::getMinimumAssetAmount(const AssetCode& balance, Database& db, LedgerDelta* delta)
 {
     StorageHelperImpl storageHelper(db, delta);
-    static_cast<StorageHelper&>(storageHelper).release();
     AssetFrame::pointer assetFrame = static_cast<StorageHelper&>(storageHelper)
             .getAssetHelper().mustLoadAsset(balance);
 

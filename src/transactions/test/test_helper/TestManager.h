@@ -24,8 +24,6 @@ namespace stellar {
 
             static Value ledgerVersion(Application& app, LedgerVersion version);
 
-            static Value externalSystemGenerators(Application& app);
-
         public:
             typedef std::shared_ptr<TestManager> pointer;
 

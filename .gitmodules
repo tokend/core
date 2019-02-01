@@ -10,6 +10,3 @@
 [submodule "src/xdr"]
 	path = src/xdr
 	url = https://github.com/tokend/xdr.git
-[submodule "lib/coincore"]
-	path = lib/coincore
-	url = git@gitlab.com:tokend/coincore.git

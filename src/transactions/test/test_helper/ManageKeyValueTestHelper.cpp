@@ -74,6 +74,26 @@ namespace stellar {
             }
         }
 
+        void
+        ManageKeyValueTestHelper::assetOpWithoutReview()
+        {
+            longstring assetKey =
+                ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+            setKey(assetKey)->setUi32Value(0);
+            doApply(mTestManager->getApp(),
+                                         ManageKVAction::PUT, true);
+            longstring preissuanceKey =
+                ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+            setKey(preissuanceKey)->setUi32Value(0);
+            doApply(mTestManager->getApp(),
+                                         ManageKVAction::PUT, true);
+            longstring assetUpdateKey =
+                ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+            setKey(assetUpdateKey)->setUi32Value(0);
+            doApply(mTestManager->getApp(),
+                                         ManageKVAction::PUT, true);
+        }
+
 
         Operation ManageKeyValueTestBuilder::buildOp()
         {
@@ -84,14 +104,14 @@ namespace stellar {
             op.body.manageKeyValueOp().action.action(kvAction);
 
             if(kvAction == ManageKVAction::PUT) {
-                op.body.manageKeyValueOp().action.value().value.type(this->type);
-                op.body.manageKeyValueOp().action.value().value = value;
+                op.body.manageKeyValueOp().action.value().type(this->type);
+                op.body.manageKeyValueOp().action.value() = value;
             }
             return op;
         }
 
         ManageKeyValueTestBuilder::ManageKeyValueTestBuilder(string256 key, TestManager::pointer &testManager,
-                                                             ManageKVAction action, KeyValueEntry::_value_t value,
+                                                             ManageKVAction action, KeyValueEntryValue value,
                                                              KeyValueEntryType type)
                 :key(key),
                  kvAction(action)

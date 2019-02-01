@@ -55,8 +55,10 @@ TransactionFrameImpl::storeFeeForOpType(
 bool
 TransactionFrameImpl::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
 {
-    auto txFeeAssetKV = KeyValueHelperLegacy::Instance()->loadKeyValue(
-        ManageKeyValueOpFrame::transactionFeeAssetKey, db);
+
+    auto key = ManageKeyValueOpFrame::makeTransactionFeeAssetKey();
+    auto txFeeAssetKV = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
+
     if (txFeeAssetKV == nullptr)
     {
         return false;
@@ -561,6 +563,9 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
             LedgerDelta& opDelta = opDeltaImpl;
             StorageHelperImpl storageHelperImpl(app.getDatabase(), &opDelta);
             StorageHelper& storageHelper = storageHelperImpl;
+            storageHelper.begin();
+
+
             bool txRes = op->apply(storageHelper, app);
 
             if (!txRes)

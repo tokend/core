@@ -3,14 +3,12 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
+#include <ledger/LedgerHeaderFrame.h>
 #include "transactions/CreateAccountOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "database/Database.h"
-
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
-
-#include "exsysidgen/ExternalSystemIDGenerators.h"
 #include "main/Application.h"
 
 namespace stellar {
@@ -105,21 +103,13 @@ namespace stellar {
                mCreateAccount.accountType == AccountType::VERIFIED;
     }
 
-    void CreateAccountOpFrame::storeExternalSystemsIDs(Application &app,
-                                                       LedgerDelta &delta, Database &db,
-                                                       const AccountFrame::pointer account) {
-        auto generator = ExternalSystemIDGenerators(app, delta, db);
-        auto newIDs = generator.generateNewIDs(account->getID());
-        for (const auto &newID : newIDs) {
-            EntryHelperProvider::storeAddEntry(delta, db, newID->mEntry);
-            innerResult().success().externalSystemIDs.push_back(newID->getExternalSystemAccountID());
-        }
-    }
-
     bool CreateAccountOpFrame::createAccount(Application &app, LedgerDelta &delta,
                                              LedgerManager &ledgerManager) {
         auto &db = app.getDatabase();
         auto destAccountFrame = make_shared<AccountFrame>(mCreateAccount.destination);
+        auto& accountEntry = destAccountFrame->getAccount();
+        accountEntry.sequentialID =
+            delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
         buildAccount(app, delta, destAccountFrame);
 
         //save recovery accountID
@@ -204,7 +194,6 @@ namespace stellar {
         destAccount.accountType = mCreateAccount.accountType;
         trySetReferrer(app, db, destAccountFrame);
         destAccount.policies = mCreateAccount.policies;
-        storeExternalSystemsIDs(app, delta, db, destAccountFrame);
         if (mCreateAccount.ext.v() == LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES &&
             mCreateAccount.ext.opExt().roleID)
         {

@@ -153,4 +153,20 @@ BalanceHelperLegacy::loadBalances(std::vector<AccountID> accountIDs,
     storageHelper->release();
     return storageHelper->getBalanceHelper().loadBalances(accountIDs, assetCode);
 }
+
+uint64_t BalanceHelperLegacy::loadTotalAssetAmount(Database &db, AssetCode assetCode)
+{
+    uint64_t assetTotalAmount = 0;
+
+    auto timer = db.getSelectTimer("total-asset-amount");
+    auto prep = db.getPreparedStatement("SELECT SUM(amount + locked) FROM balance "
+                                        "WHERE asset = :asset_code");
+    auto& st = prep.statement();
+    st.exchange(use(assetCode, "asset_code"));
+    st.exchange(into(assetTotalAmount));
+    st.define_and_bind();
+    st.execute(true);
+
+    return assetTotalAmount;
+}
 }

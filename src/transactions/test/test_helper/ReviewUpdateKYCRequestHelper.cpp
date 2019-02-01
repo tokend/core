@@ -57,8 +57,8 @@ namespace stellar {
             reviewRequestOp.requestHash = requestHash;
             reviewRequestOp.requestID = requestID;
             reviewRequestOp.requestDetails.requestType(requestType);
-            reviewRequestOp.requestDetails.updateKYC().tasksToAdd = 0;
-            reviewRequestOp.requestDetails.updateKYC().tasksToRemove = action == ReviewRequestOpAction::APPROVE
+            reviewRequestOp.reviewDetails.tasksToAdd = 0;
+            reviewRequestOp.reviewDetails.tasksToRemove = action == ReviewRequestOpAction::APPROVE
                                                                        ? CreateUpdateKYCRequestOpFrame::defaultTasks
                                                                        : 0;
             reviewRequestOp.requestDetails.updateKYC().externalDetails = "{}";

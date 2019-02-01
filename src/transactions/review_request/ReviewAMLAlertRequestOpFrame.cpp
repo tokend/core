@@ -31,6 +31,16 @@ bool ReviewAMLAlertRequestOpFrame::handleApprove(Application& app,
 {
     const auto amlAlert = getAmlAlert(request);
     auto& db = app.getDatabase();
+
+
+    handleTasks(db, delta, request);
+
+    if (!request->canBeFulfilled(ledgerManager)){
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
+
     createReference(delta, db, request->getRequestor(), request->getReference());
     auto balanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(amlAlert.balanceID, db, &delta);
     const BalanceFrame::Result chargeResult = balanceFrame->tryChargeFromLocked(amlAlert.amount);
@@ -52,6 +62,7 @@ bool ReviewAMLAlertRequestOpFrame::handleApprove(Application& app,
     AssetHelperLegacy::Instance()->storeChange(delta, db, assetFrame->mEntry);
     ReviewableRequestHelper::Instance()->storeDelete(delta, db, request->getKey());
     innerResult().code(ReviewRequestResultCode::SUCCESS);
+    innerResult().success().fulfilled = true;
     return true;
 }
 

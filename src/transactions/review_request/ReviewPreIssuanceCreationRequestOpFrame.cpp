@@ -28,6 +28,15 @@ bool ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, L
 
 	auto preIssuanceCreationRequest = request->getRequestEntry().body.preIssuanceRequest();
 	Database& db = ledgerManager.getDatabase();
+
+	handleTasks(db, delta, request);
+
+	if (!request->canBeFulfilled(ledgerManager)){
+		innerResult().code(ReviewRequestResultCode::SUCCESS);
+		innerResult().success().fulfilled = false;
+		return true;
+	}
+
 	createReference(delta, db, request->getRequestor(), request->getReference());
 
 	auto assetHelper = AssetHelperLegacy::Instance();
@@ -45,6 +54,7 @@ bool ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, L
 	EntryHelperProvider::storeChangeEntry(delta, db, asset->mEntry);
 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
+	innerResult().success().fulfilled = true;
 	return true;
 }
 

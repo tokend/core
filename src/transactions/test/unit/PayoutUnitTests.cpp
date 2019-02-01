@@ -82,7 +82,7 @@ TEST_CASE("payout - unit test", "[tx][payout]")
     request.policies = static_cast<uint32_t>(AssetPolicy::TRANSFERABLE);
     AssetFrame::pointer payAssetFrameFake = AssetFrame::create(request, sourceID);
     BalanceFrame::pointer balanceFrameFake = BalanceFrame::createNew(
-            balance.getPublicKey(), sourceID, op.asset);
+            balance.getPublicKey(), sourceID, op.asset, 1);
 
     ON_CALL(appMock, getDatabase()).WillByDefault(ReturnRef(dbMock));
     ON_CALL(appMock, getLedgerManager())

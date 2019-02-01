@@ -41,8 +41,6 @@ namespace stellar {
             xdr::xvector<UpgradeType, 6> upgrades;
             auto ledgerVersionValue = TestManager::ledgerVersion(app, ledgerVersion);
             upgrades.emplace_back(ledgerVersionValue.begin(), ledgerVersionValue.end());
-            auto externalSystemGenerators = TestManager::externalSystemGenerators(app);
-            upgrades.emplace_back(externalSystemGenerators.begin(), externalSystemGenerators.end());
 
             StellarValue sv(txSet->getContentsHash(), 1, upgrades, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
             LedgerCloseData ledgerData(1, txSet, sv);
@@ -92,14 +90,6 @@ namespace stellar {
         Value TestManager::ledgerVersion(Application& application, LedgerVersion version) {
             LedgerUpgrade upgrade(LedgerUpgradeType::VERSION);
             upgrade.newLedgerVersion() = static_cast<uint32>(version);
-            Value v(xdr::xdr_to_opaque(upgrade));
-            return v;
-        }
-
-        Value TestManager::externalSystemGenerators(Application& app) {
-            LedgerUpgrade upgrade(LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR);
-            upgrade.newExternalSystemIDGenerators().push_back(ExternalSystemIDGeneratorType::BITCOIN_BASIC);
-            upgrade.newExternalSystemIDGenerators().push_back(ExternalSystemIDGeneratorType::ETHEREUM_BASIC);
             Value v(xdr::xdr_to_opaque(upgrade));
             return v;
         }

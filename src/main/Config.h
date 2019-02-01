@@ -206,9 +206,6 @@ class Config : public std::enable_shared_from_this<Config>
 
     std::string NTP_SERVER; // ntp server used to check if time is valid on host
 
-    std::string BTC_ADDRESS_ROOT;
-    std::string ETH_ADDRESS_ROOT;
-
     Config();
 
     void load(std::string const& filename);

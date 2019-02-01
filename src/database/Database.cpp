@@ -59,7 +59,7 @@
 #include <ledger/ContractHelper.h>
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/SaleAnteHelper.h"
+#include "ledger/AtomicSwapBidHelper.h"
 
 extern "C" void register_factory_sqlite3();
 
@@ -83,24 +83,23 @@ enum databaseSchemaVersion : unsigned long {
 	INITIAL = 3,
 	DROP_BAN = 4,
     REFERENCE_VERSION = 5,
-    ADD_SALE_TYPE = 6,
-	USE_KYC_LEVEL = 7,
-    ADD_ACCOUNT_KYC = 8,
-    ADD_FEE_ASSET = 9,
-    EXTERNAL_POOL_FIX_DB_TYPES = 10,
-    EXTERNAL_POOL_FIX_MIGRATION = 11,
-    KEY_VALUE_FIX_MIGRATION = 12,
-    EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 13,
-    ADD_SALE_ANTE = 14,
-    ADD_SALE_STATE = 15,
-    ADD_LIMITS_V2 = 16,
-    ADD_REVIEWABLE_REQUEST_TASKS = 17,
-    ADD_CONTRACTS = 18,
-    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 19,
-    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 20,
-    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 21,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 22,
-    ADD_ASSET_CUSTOM_PRECISION = 23
+	USE_KYC_LEVEL = 6,
+    ADD_ACCOUNT_KYC = 7,
+    ADD_FEE_ASSET = 8,
+    EXTERNAL_POOL_FIX_DB_TYPES = 9,
+    EXTERNAL_POOL_FIX_MIGRATION = 10,
+    KEY_VALUE_FIX_MIGRATION = 11,
+    EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 12,
+    ADD_SALE_STATE = 13,
+    ADD_LIMITS_V2 = 14,
+    ADD_REVIEWABLE_REQUEST_TASKS = 15,
+    ADD_CONTRACTS = 16,
+    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 17,
+    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 18,
+    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 19,
+    ADD_ACCOUNT_ROLES_AND_POLICIES = 20,
+    ADD_ATOMIC_SWAP_BID = 21,
+    ADD_ASSET_CUSTOM_PRECISION = 22
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
@@ -159,7 +158,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
     clearPreparedStatementCache();
 
     StorageHelperImpl storageHelper(*this, nullptr);
-    static_cast<StorageHelper&>(storageHelper).release();
     switch (vers) {
         case databaseSchemaVersion::DROP_SCP:
             Herder::dropAll(*this);
@@ -169,9 +167,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::DROP_BAN:
             BanManager::dropAll(*this);
             break;
-        case ADD_SALE_TYPE:
-            SaleHelper::Instance()->addType(*this);
-            break;
         case REFERENCE_VERSION:
             ReferenceHelper::addVersion(*this);
             break;
@@ -180,9 +175,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
             AccountKYCHelper::Instance()->dropAll(*this);
-            break;
-        case databaseSchemaVersion::ADD_FEE_ASSET:
-            FeeHelper::Instance()->addFeeAsset(*this);
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_DB_TYPES:
             break;
@@ -195,32 +187,24 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_PARENT_DB_TYPE:
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
             break;
-        case databaseSchemaVersion::ADD_SALE_ANTE:
-            SaleAnteHelper::Instance()->dropAll(*this);
-            break;
-        case databaseSchemaVersion::ADD_SALE_STATE:
-            SaleHelper::Instance()->addState(*this);
-            break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
             LimitsV2Helper::Instance()->dropAll(*this);
             StatisticsV2Helper::Instance()->dropAll(*this);
             PendingStatisticsHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
-            ReviewableRequestHelper::Instance()->addTasks(*this);
             PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
+            break;
+        case databaseSchemaVersion::ADD_FEE_ASSET:
             break;
         case databaseSchemaVersion::ADD_CONTRACTS:
             ContractHelper::Instance()->dropAll(*this);
             break;
-        case databaseSchemaVersion::REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE:
-            ReviewableRequestHelper::Instance()->changeDefaultExternalDetails(*this);
-            break;
-        case databaseSchemaVersion::REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
-            ReviewableRequestHelper::Instance()->setEmptyStringToExternalDetailsInsteadNull(*this);
-            break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
             ContractHelper::Instance()->addCustomerDetails(*this);
+            break;
+        case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
+            AtomicSwapBidHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES:
             std::make_unique<AccountRoleHelper>(storageHelper)->dropAll();
@@ -229,6 +213,14 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
+            break;
+        case databaseSchemaVersion::ADD_SALE_STATE:
+            break;
+        case databaseSchemaVersion::
+        REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE:
+            break;
+        case databaseSchemaVersion::
+        REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");

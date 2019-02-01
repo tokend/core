@@ -13,6 +13,12 @@ if(DEFINED DEVELOPER_EDITION)
     add_definitions(-DDEVELOPER_EDITION=1)
 endif(DEFINED DEVELOPER_EDITION)
 
+# add revision of xdr submodule, use in core info
+execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/xdr && git rev-parse HEAD)" OUTPUT_VARIABLE XDR_REVISION)
+string(STRIP ${XDR_REVISION} XDR_REVISION)
+
+add_definitions(-DXDR_REVISION="${XDR_REVISION}")
+
 #For Windows
 if(${CMAKE_HOST_WIN32})
     add_definitions(

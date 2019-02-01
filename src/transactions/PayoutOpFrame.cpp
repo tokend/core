@@ -238,11 +238,12 @@ PayoutOpFrame::processTransfers(BalanceFrame::pointer sourceBalance,
         auto receiverBalance = accountIDBalanceMap[holdersAmount.first];
         if (!receiverBalance)
         {
-            auto balanceID = BalanceKeyUtils::forAccount(
-                    holdersAmount.first, storageHelper.getLedgerDelta()
-                        ->getHeaderFrame().generateID(LedgerEntryType::BALANCE));
-            receiverBalance = BalanceFrame::createNew(balanceID,
-                    holdersAmount.first, sourceBalance->getAsset());
+            auto sequentialID =
+                storageHelper.getLedgerDelta()->getHeaderFrame().generateID(
+                    LedgerEntryType::BALANCE);
+            auto balanceID = BalanceKeyUtils::forAccount(holdersAmount.first, sequentialID);
+            receiverBalance = BalanceFrame::createNew(balanceID, holdersAmount.first, sourceBalance->getAsset(),
+                sequentialID);
 
             isNewBalance = true;
         }

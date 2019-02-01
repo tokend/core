@@ -62,21 +62,6 @@ namespace stellar {
 #ifdef SIGTERM
         mStopSignals.add(SIGTERM);
 #endif
-
-        if (mConfig.BTC_ADDRESS_ROOT != "") {
-            ApplicationImpl::addAvailableExternalSystemGenerator(ExternalSystemIDGeneratorType::BITCOIN_BASIC);
-        }
-        else {
-            CLOG(WARNING, Logging::OPERATION_LOGGER) << "BTC ID Generator is not available as BTC_ADDRESS_ROOT is empty";
-        }
-
-        if (mConfig.ETH_ADDRESS_ROOT != "") {
-            ApplicationImpl::addAvailableExternalSystemGenerator(ExternalSystemIDGeneratorType::ETHEREUM_BASIC);
-        }
-        else {
-            CLOG(WARNING, Logging::OPERATION_LOGGER) << "BTC ID Generator is not available as ETH_ADDRESS_ROOT is empty";
-        }
-
         std::srand(static_cast<uint32>(clock.now().time_since_epoch().count()));
 
         mNetworkID = sha256(mConfig.NETWORK_PASSPHRASE);
@@ -653,42 +638,6 @@ namespace stellar {
         }
         return result;
     }
-
-
-    const std::string ApplicationImpl::getBTCAddressRoot() const
-    {
-        return mConfig.BTC_ADDRESS_ROOT;
-    }
-
-    const std::string ApplicationImpl::getETHAddressRoot() const
-    {
-        return mConfig.ETH_ADDRESS_ROOT;
-    }
-
-    bool ApplicationImpl::areAllExternalSystemGeneratorsAvailable(
-        xdr::xvector<ExternalSystemIDGeneratorType> ex) const
-    {
-            for (auto generator : ex)
-            {
-                if (mAvailableExternalSystemIDGenerators.find(generator) == mAvailableExternalSystemIDGenerators.end())
-                    return false;
-            }
-
-            return true;
-    }
-
-    void ApplicationImpl::addAvailableExternalSystemGenerator(
-        const ExternalSystemIDGeneratorType ex)
-    {
-        mAvailableExternalSystemIDGenerators.insert(ex);
-    }
-
-    const std::unordered_set<ExternalSystemIDGeneratorType>& ApplicationImpl::
-    getAvailableExternalSystemGenerator()
-    {
-        return mAvailableExternalSystemIDGenerators;
-    }
-
 
     Invariants &ApplicationImpl::getInvariants() {
         return *mInvariants;

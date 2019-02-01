@@ -313,12 +313,6 @@ HerderImpl::validateUpgradeStep(uint64 slotIndex, UpgradeType const& upgrade,
               (newMax <= mApp.getConfig().DESIRED_MAX_TX_PER_LEDGER * 13 / 10);
         break;
     }
-    case LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR:
-    {
-        auto newGenerators = lupgrade.newExternalSystemIDGenerators();
-        res = mApp.areAllExternalSystemGeneratorsAvailable(newGenerators);
-        break;
-    }
     case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
     {
         auto newPeriod = lupgrade.newTxExpirationPeriod();
@@ -716,14 +710,6 @@ HerderImpl::combineCandidates(uint64 slotIndex,
                     {
                         clUpgrade.newMaxTxSetSize() =
                             lupgrade.newMaxTxSetSize();
-                    }
-                    break;
-                case LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR:
-                    if (!(clUpgrade.newExternalSystemIDGenerators() ==
-                        lupgrade.newExternalSystemIDGenerators()))
-                    {
-                        clUpgrade.newExternalSystemIDGenerators() =
-                            lupgrade.newExternalSystemIDGenerators();
                     }
                     break;
                 case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
@@ -1371,16 +1357,6 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
         upgrades.emplace_back(LedgerUpgradeType::MAX_TX_SET_SIZE);
         upgrades.back().newMaxTxSetSize() =
             mApp.getConfig().DESIRED_MAX_TX_PER_LEDGER;
-    }
-
-    xdr::xvector<ExternalSystemIDGeneratorType> generators;
-    auto avaialbeGenerators = mApp.getAvailableExternalSystemGenerator();
-    copy(avaialbeGenerators.begin(), avaialbeGenerators.end(), back_inserter(generators));
-    sort(generators.begin(), generators.end());
-    if (lcl.header.externalSystemIDGenerators != generators)
-    {
-        upgrades.emplace_back(LedgerUpgradeType::EXTERNAL_SYSTEM_ID_GENERATOR);
-        upgrades.back().newExternalSystemIDGenerators() = generators;
     }
 
     for (auto const& upgrade : upgrades)

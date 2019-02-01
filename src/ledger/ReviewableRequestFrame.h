@@ -35,6 +35,8 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureUpdateKYCValid(UpdateKYCRequest const &request);
 	static void ensureUpdateSaleDetailsValid(UpdateSaleDetailsRequest const &request);
 	static void ensureInvoiceValid(InvoiceRequest const& request);
+	static void ensureASwapBidCreationValid(ASwapBidCreationRequest const& request);
+	static void ensureASwapValid(ASwapRequest const& request);
 
 
   public:
@@ -111,32 +113,17 @@ class ReviewableRequestFrame : public EntryFrame
 
     uint32_t getAllTasks() const
 	{
-		uint32_t allTasks = 0;
-		if (mRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-		{
-			allTasks = mRequest.ext.tasksExt().allTasks;
-		}
-		return allTasks;
+		return mRequest.tasks.allTasks;
 	}
 
 	uint32_t getPendingTasks() const
 	{
-		uint32_t pendingTasks = 0;
-		if (mRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-		{
-			pendingTasks = mRequest.ext.tasksExt().pendingTasks;
-		}
-		return pendingTasks;
+		return mRequest.tasks.pendingTasks;
 	}
 
 	xdr::xvector<longstring> getExternalDetails() const
 	{
-		xdr::xvector<longstring> externalDetails;
-		if (mRequest.ext.v() == LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST)
-		{
-			externalDetails = mRequest.ext.tasksExt().externalDetails;
-		}
-		return externalDetails;
+		return mRequest.tasks.externalDetails;
 	}
 
 	void setRejectReason(stellar::longstring rejectReason) {

@@ -175,22 +175,17 @@ struct LedgerEntryIdCmp
                     return false;
                 return apend.statisticsID < bpend.statisticsID;
             }
-            case LedgerEntryType::SALE_ANTE: {
-                auto const& asa = a.saleAnte();
-                auto const& bsa = b.saleAnte();
-                if (asa.saleID < bsa.saleID) {
-                    return true;
-                }
-                if (bsa.saleID < asa.saleID) {
-                    return false;
-                }
-                return asa.participantBalanceID < bsa.participantBalanceID;
-            }
             case LedgerEntryType::CONTRACT:
             {
                 auto const& acon = a.contract();
                 auto const& bcon = b.contract();
                 return acon.contractID < bcon.contractID;
+            }
+            case LedgerEntryType::ATOMIC_SWAP_BID:
+            {
+                auto const& abid = a.atomicSwapBid();
+                auto const& bbid = b.atomicSwapBid();
+                return abid.bidID < bbid.bidID;
             }
             case LedgerEntryType::ACCOUNT_ROLE:
             {

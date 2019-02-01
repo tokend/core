@@ -6,7 +6,7 @@
 
 namespace stellar
 {
-class LedgerHeader;
+struct LedgerHeader;
 class LedgerHeaderFrame;
 class Application;
 

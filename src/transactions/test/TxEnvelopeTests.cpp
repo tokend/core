@@ -48,6 +48,14 @@ TEST_CASE("txenvelope", "[tx][envelope]")
 
     SECTION("Transaction fee")
     {
+        ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+        longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+        manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+        manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
         // create asset for tx fee
         AssetCode txFeeAssetCode = "ETH";
         uint64_t preIssuedAmount = 10000 * ONE;
@@ -79,8 +87,8 @@ TEST_CASE("txenvelope", "[tx][envelope]")
             txFeePayer.key.getPublicKey(), txFeeAssetCode, db);
 
         // create new key value for tx fee asset
-        manageKeyValueTestHelper.setKey(
-            ManageKeyValueOpFrame::transactionFeeAssetKey);
+        auto key = ManageKeyValueOpFrame::makeTransactionFeeAssetKey();
+        manageKeyValueTestHelper.setKey(key);
         manageKeyValueTestHelper.setValue(txFeeAssetCode);
         manageKeyValueTestHelper.setResult(ManageKeyValueResultCode::SUCCESS);
         manageKeyValueTestHelper.doApply(app, ManageKVAction::PUT, true,
@@ -132,7 +140,8 @@ TEST_CASE("txenvelope", "[tx][envelope]")
 
         SECTION("Source doesn't have balance in tx fee asset")
         {
-            manageKeyValueTestHelper.setKey(ManageKeyValueOpFrame::transactionFeeAssetKey);
+            auto key = ManageKeyValueOpFrame::makeTransactionFeeAssetKey();
+            manageKeyValueTestHelper.setKey(key);
             manageKeyValueTestHelper.setValue("VLT");
             manageKeyValueTestHelper.setResult(ManageKeyValueResultCode::SUCCESS);
             manageKeyValueTestHelper.doApply(app, ManageKVAction::PUT, true,

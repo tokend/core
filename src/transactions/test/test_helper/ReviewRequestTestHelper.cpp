@@ -228,13 +228,13 @@ TransactionFramePtr ReviewRequestHelper::createReviewRequestTxWithTasks(txtest::
     reviewRequestOp.requestHash = requestHash;
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
-    reviewRequestOp.ext.v(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST);
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
     if (tasksToAdd != nullptr){
-        reviewRequestOp.ext.reviewDetails().tasksToAdd = *tasksToAdd;
+        reviewRequestOp.reviewDetails.tasksToAdd = *tasksToAdd;
     }
 
     if (tasksToRemove != nullptr){
-        reviewRequestOp.ext.reviewDetails().tasksToRemove = *tasksToRemove;
+        reviewRequestOp.reviewDetails.tasksToRemove = *tasksToRemove;
     }
     return txFromOperation(source, op, nullptr);
 }

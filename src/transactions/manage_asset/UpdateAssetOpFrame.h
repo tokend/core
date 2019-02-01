@@ -26,12 +26,17 @@ public:
 	UpdateAssetOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper &storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
+
+    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+
 protected:
     std::string getAssetCode() const override;
-	bool policiesIncompatible(AssetFrame::pointer assetFrame);
+	void updateRequest(ReviewableRequestEntry &requestEntry);
+	bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
+
 
 };
 }

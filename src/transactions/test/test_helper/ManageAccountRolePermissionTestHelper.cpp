@@ -81,6 +81,7 @@ ManageAccountRolePermissionTestHelper::applySetIdentityPermissionTx(
         txResult.result.results()[0].tr().manageAccountRolePermissionResult();
 
     StorageHelperImpl storageHelperImpl(mTestManager->getDB(), nullptr);
+    static_cast<StorageHelper&>(storageHelperImpl).begin();
     AccountRolePermissionHelperImpl rolePermissionHelper(storageHelperImpl);
     LedgerKey affectedPermissionKey;
     affectedPermissionKey.type(LedgerEntryType::ACCOUNT_ROLE_PERMISSION);

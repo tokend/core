@@ -35,8 +35,6 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    innerResult().code(ReviewRequestResultCode::SUCCESS);
-
     if (request->getRequestType() != ReviewableRequestType::CONTRACT)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CONTRACT, but got "
@@ -45,6 +43,15 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
     }
 
     Database& db = ledgerManager.getDatabase();
+
+
+    handleTasks(db, delta, request);
+
+    if (!request->canBeFulfilled(ledgerManager)){
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
 
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
@@ -72,12 +79,8 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
 
     EntryHelperProvider::storeAddEntry(delta, db, contractFrame->mEntry);
 
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_CONTRACT_ID_REVIEW_REQUEST_RESULT))
-    {
-        innerResult().success().ext.v(LedgerVersion::ADD_CONTRACT_ID_REVIEW_REQUEST_RESULT);
-        innerResult().success().ext.contractID() = contractEntry.contractID;
-    }
-
+    innerResult().code(ReviewRequestResultCode::SUCCESS);
+    innerResult().success().fulfilled = false;
     return true;
 }
 
@@ -90,7 +93,7 @@ ReviewContractRequestOpFrame::checkCustomerDetailsLength(Application& app, Datab
         innerResult().code(ReviewRequestResultCode::CONTRACT_DETAILS_TOO_LONG);
         return false;
     }
-    
+
     return true;
 }
 

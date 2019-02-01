@@ -29,9 +29,11 @@ namespace stellar{
             void doApply(Application &app, ManageKVAction action, bool require, KeyValueEntryType type =
                                                                                 KeyValueEntryType::UINT32);
 
+            void assetOpWithoutReview();
+
         private:
 
-            KeyValueEntry::_value_t value;
+            KeyValueEntryValue value;
             longstring key;
             ManageKeyValueResultCode expectedResult = ManageKeyValueResultCode ::SUCCESS;
         };
@@ -42,7 +44,7 @@ namespace stellar{
 
 
             ManageKeyValueTestBuilder(string256 key, TestManager::pointer &testManager,
-                                                    ManageKVAction action, KeyValueEntry::_value_t value,
+                                                    ManageKVAction action, KeyValueEntryValue value,
                                                     KeyValueEntryType type = KeyValueEntryType::UINT32);
 
             ManageKeyValueTestBuilder copy() override
@@ -53,7 +55,7 @@ namespace stellar{
             Operation buildOp() override;
 
             longstring key;
-            KeyValueEntry::_value_t value;
+            KeyValueEntryValue value;
             KeyValueEntryType type;
             ManageKVAction kvAction;
             std::shared_ptr<ManageKeyValueOpFrame> kvManager;
