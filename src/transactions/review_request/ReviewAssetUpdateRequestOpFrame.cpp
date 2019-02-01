@@ -53,7 +53,7 @@ bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDel
     bool wasBase = assetFrame->isPolicySet(AssetPolicy::BASE_ASSET);
 
 	AssetEntry& assetEntry = assetFrame->getAsset();
-	assetEntry.details = assetUpdateRequest.details;
+	assetEntry.details = assetUpdateRequest.creatorDetails;
 	assetEntry.policies = assetUpdateRequest.policies;
     
 	EntryHelperProvider::storeChangeEntry(delta, db, assetFrame->mEntry);

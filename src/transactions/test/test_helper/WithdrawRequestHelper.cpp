@@ -102,13 +102,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
 }
 
 WithdrawalRequest WithdrawRequestHelper::createWithdrawRequest(
-    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails)
+    const BalanceID balance, const uint64_t amount, const Fee fee, std::string creatorDetails)
 {
     WithdrawalRequest result;
     result.balance = balance;
     result.amount = amount;
     result.fee = fee;
-    result.externalDetails = externalDetails;
+    result.creatorDetails = creatorDetails;
     result.ext.v(LedgerVersion::EMPTY_VERSION);
     return result;
 }

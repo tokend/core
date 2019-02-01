@@ -242,8 +242,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         SECTION("too long external details")
         {
             uint64 maxLength = testManager->getApp().getWithdrawalDetailsMaxLength();
-            std::string longExternalDetails(maxLength + 1, 'x');
-            withdrawRequest.externalDetails = longExternalDetails;
+            std::string longCreatorDetails(maxLength + 1, 'x');
+            withdrawRequest.creatorDetails = longCreatorDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         }
@@ -251,8 +251,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         SECTION("invalid external details json")
         {
             //missed colon
-            std::string invalidExternalDetails = "{ \"key\" \"value\" }";
-            withdrawRequest.externalDetails = invalidExternalDetails;
+            std::string invalidCreatorDetails = "{ \"key\" \"value\" }";
+            withdrawRequest.creatorDetails = invalidCreatorDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         }

@@ -138,7 +138,7 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 		return false;
 	}
 
-    if (!isValidJson(mAssetUpdateRequest.details)) {
+    if (!isValidJson(mAssetUpdateRequest.creatorDetails)) {
         innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
         return false;
     }
@@ -175,7 +175,7 @@ bool UpdateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointe
 
 void UpdateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
     requestEntry.body.assetUpdateRequest().code = mManageAsset.request.createAssetUpdateRequest().updateAsset.code;
-    requestEntry.body.assetUpdateRequest().details = mManageAsset.request.createAssetUpdateRequest().updateAsset.details;
+    requestEntry.body.assetUpdateRequest().creatorDetails = mManageAsset.request.createAssetUpdateRequest().updateAsset.creatorDetails;
     requestEntry.body.assetUpdateRequest().policies = mManageAsset.request.createAssetUpdateRequest().updateAsset.policies;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.assetUpdateRequest().sequenceNumber++;

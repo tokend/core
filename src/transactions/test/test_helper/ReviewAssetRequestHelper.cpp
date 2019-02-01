@@ -39,7 +39,7 @@ void AssetReviewChecker::checkApproval(AssetUpdateRequest const& request,
     REQUIRE(!!assetFrame);
     auto assetEntry = assetFrame->getAsset();
     REQUIRE(assetEntry.code == request.code);
-    REQUIRE(assetEntry.details == request.details);
+    REQUIRE(assetEntry.details == request.creatorDetails);
     REQUIRE(assetEntry.owner == requestor);
     REQUIRE(assetEntry.policies == request.policies);
 }

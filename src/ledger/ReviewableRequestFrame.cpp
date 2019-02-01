@@ -87,7 +87,7 @@ void ReviewableRequestFrame::ensureAssetUpdateValid(AssetUpdateRequest const& re
             throw runtime_error("Asset code is invalid");
 	}
 
-    if (!isValidJson(request.details))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("invalid details");
     }
@@ -131,7 +131,7 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
         throw runtime_error("amount is invalid");
     }
 
-    if (!isValidJson(request.externalDetails))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("external details is invalid");
     }

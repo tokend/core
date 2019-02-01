@@ -237,7 +237,7 @@ bool CreateWithdrawalRequestOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    if (!isExternalDetailsValid(app, mCreateWithdrawalRequest.request.externalDetails)) {
+    if (!isExternalDetailsValid(app, mCreateWithdrawalRequest.request.creatorDetails)) {
         innerResult().code(CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         return false;
     }
