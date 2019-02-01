@@ -51,6 +51,7 @@ namespace stellar {
         }
 
         static longstring makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet, uint32 kycLevelToSet);
+        static longstring makeLimitsUpdateTasksKey();
 
         static longstring makeExternalSystemExpirationPeriodKey(int32 externalSystemType);
 
@@ -109,6 +110,7 @@ namespace stellar {
         static char const * invoiceCreateTasks;
         static char const * contractCreateTasks;
         static char const * amlAlertCreateTasks;
+        static char const * limitsUpdateTasks;
 
         static std::map<std::string, KeyValueEntryType> valueTypes;
     };

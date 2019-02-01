@@ -6,6 +6,7 @@
 #include "review_request/ReviewRequestHelper.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "CreateManageLimitsRequestOpFrame.h"
+#include "ManageKeyValueOpFrame.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -183,6 +184,13 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
 bool CreateManageLimitsRequestOpFrame::doCheckValid(Application& app)
 {
     return true;
+}
+
+std::vector<longstring>
+CreateManageLimitsRequestOpFrame::makeTasksKeyVector(
+    StorageHelper& storageHelper)
+{
+    return {ManageKeyValueOpFrame::limitsUpdateTasks};
 }
 
 bool CreateManageLimitsRequestOpFrame::ensureLimitsUpdateValid()
