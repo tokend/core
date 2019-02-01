@@ -134,7 +134,7 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
     uint64_t universalAmount = 0;
     switch (withdrawRequest->getRequestType())
     {
-    case ReviewableRequestType::WITHDRAW:
+    case ReviewableRequestType::CREATE_WITHDRAW:
         universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
         break;
     default:

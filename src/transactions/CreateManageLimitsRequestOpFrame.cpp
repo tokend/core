@@ -15,7 +15,7 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
                                         std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::LIMITS_UPDATE);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
 
     result.emplace_back(resource, "create", mSourceAccount);
 
@@ -31,14 +31,14 @@ CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestReference(Hash const& documentHash) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, documentHash));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, documentHash));
     return binToHex(hash);
 }
 
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestDetailsReference(longstring const& details) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, details));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, details));
     return binToHex(hash);
 }
 
@@ -48,7 +48,7 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.ext.requestID(), getSourceID(),
-                                                             ReviewableRequestType::LIMITS_UPDATE, db, delta);
+                                                             ReviewableRequestType::UPDATE_LIMITS, db, delta);
     if (!requestFrame)
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
@@ -102,7 +102,7 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     }
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::LIMITS_UPDATE);
+    body.type(ReviewableRequestType::UPDATE_LIMITS);
     if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH))
     {
         body.limitsUpdateRequest().ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);

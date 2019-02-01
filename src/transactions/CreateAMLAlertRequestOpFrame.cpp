@@ -20,7 +20,7 @@ CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHe
                               std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::AML_ALERT);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
 
     result.emplace_back(resource, "create", mSourceAccount);
 
@@ -78,7 +78,7 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
 
 
     auto& requestEntry = request->getRequestEntry();
-    requestEntry.body.type(ReviewableRequestType::AML_ALERT);
+    requestEntry.body.type(ReviewableRequestType::CREATE_AML_ALERT);
     requestEntry.body.amlAlertRequest() = amlAlertRequest;
     request->recalculateHashRejectReason();
     balanceHelper.storeChange(balanceFrame->mEntry);

@@ -145,7 +145,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
                                                      ledgerManager.getCloseTime());
     ReviewableRequestEntry &requestEntry = request->getRequestEntry();
 
-    requestEntry.body.type(ReviewableRequestType::WITHDRAW);
+    requestEntry.body.type(ReviewableRequestType::CREATE_WITHDRAW);
     requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
     requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
 

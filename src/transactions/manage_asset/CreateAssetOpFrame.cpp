@@ -41,13 +41,13 @@ CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_CREATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::CREATE_ASSET);
 	if (!request) {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_CREATE);
+	requestEntry.body.type(ReviewableRequestType::CREATE_ASSET);
 	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
     requestEntry.body.assetCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();

@@ -33,13 +33,13 @@ UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_UPDATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::UPDATE_ASSET);
     if (!request) {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_UPDATE);
+	requestEntry.body.type(ReviewableRequestType::UPDATE_ASSET);
 	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
 	requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
 	request->recalculateHashRejectReason();

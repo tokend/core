@@ -58,7 +58,7 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper &storageHel
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageInvoiceRequest.details.requestID(), db);
-	if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::INVOICE)
+	if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
 	{
 	    innerResult().code(ManageInvoiceRequestResultCode::NOT_FOUND);
 	    return false;
@@ -150,7 +150,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     invoiceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::INVOICE);
+    body.type(ReviewableRequestType::CREATE_INVOICE);
     body.invoiceRequest() = invoiceRequest;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), invoiceCreationRequest.sender,
@@ -221,7 +221,7 @@ ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app
     auto maxInvoicesCount = obtainMaxInvoicesCount(app, keyValueHelper);
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::INVOICE, db);
+    auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::CREATE_INVOICE, db);
     if (allRequests.size() >= maxInvoicesCount)
     {
         innerResult().code(ManageInvoiceRequestResultCode::TOO_MANY_INVOICES);

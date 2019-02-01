@@ -21,8 +21,8 @@ using xdr::operator==;
 
 bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::ASSET_UPDATE) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected ASSET_UPDATE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+	if (request->getRequestType() != ReviewableRequestType::UPDATE_ASSET) {
+		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected UPDATE_ASSET, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
 		throw std::invalid_argument("Unexpected request type for review asset update request");
 	}
 

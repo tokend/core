@@ -48,12 +48,12 @@ void AssetReviewChecker::checkApprove(ReviewableRequestFrame::pointer requestBef
 {
     switch (requestBeforeTx->getRequestEntry().body.type())
     {
-    case ReviewableRequestType::ASSET_CREATE:
+    case ReviewableRequestType::CREATE_ASSET:
         checkApproval(requestBeforeTx->getRequestEntry().body.
             assetCreationRequest(),
             requestBeforeTx->getRequestor());
         break;
-    case ReviewableRequestType::ASSET_UPDATE:
+    case ReviewableRequestType::UPDATE_ASSET:
         checkApproval(requestBeforeTx->getRequestEntry().body.
             assetUpdateRequest(),
             requestBeforeTx->getRequestor());

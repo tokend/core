@@ -276,7 +276,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             reviewWithdraw.action = ReviewRequestOpAction::APPROVE;
             reviewWithdraw.reason = "";
             reviewWithdraw.requestHash = requestFrame->getHash();
-            reviewWithdraw.requestDetails.requestType(ReviewableRequestType::WITHDRAW);
+            reviewWithdraw.requestDetails.requestType(ReviewableRequestType::CREATE_WITHDRAW);
             reviewWithdraw.requestDetails.withdrawal().externalDetails = "{\"key\"}";
 
             TxHelper txHelper(testManager);
