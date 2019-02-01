@@ -99,7 +99,8 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
         throw std::runtime_error("Unexpected state expected reviewer to exist");
     }
 
-    auto reviewRequestOpFrame = ReviewRequestOpFrame::makeHelper(op, opRes, parentTx);
+    auto reviewRequestOpFrame = std::unique_ptr<ReviewRequestOpFrame>(
+            ReviewRequestOpFrame::makeHelper(op, opRes, parentTx));
     reviewRequestOpFrame->setSourceAccountPtr(reviewerFrame);
     bool isApplied = reviewRequestOpFrame->doCheckValid(mApp) && reviewRequestOpFrame->doApply(mApp, mDelta, mLedgerManager);
     if (reviewRequestOpFrame->getResultCode() != OperationResultCode::opINNER)
