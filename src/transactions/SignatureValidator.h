@@ -17,7 +17,10 @@ public:
 	typedef std::shared_ptr<SignatureValidator> pointer;
 
 	// checks if signature is valid.
-	virtual Result check(Application& app, Database &db, AccountFrame& account, SourceDetails& sourceDetails) = 0;
+	virtual Result check(Application& app, StorageHelper& storageHelper,
+						 AccountID const& accountID,
+						 std::vector<SignerRequirement> requirements) = 0;
+
 	virtual Result check(std::vector<PublicKey> keys, int signaturesRequired, LedgerVersion ledgerVersion) = 0;
 	virtual bool checkAllSignaturesUsed() = 0;
 	virtual void resetSignatureTracker() = 0;

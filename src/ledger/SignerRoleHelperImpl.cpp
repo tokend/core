@@ -1,22 +1,20 @@
-#include "SignerHelperImpl.h"
+#include "SignerRoleHelperImpl.h"
 #include "StorageHelper.h"
 #include "LedgerDelta.h"
-
-using namespace soci;
 
 namespace stellar
 {
 
-SignerHelperImpl::SignerHelperImpl(StorageHelper &storageHelper)
+using namespace soci;
+
+SignerRoleHelperImpl::SignerRoleHelperImpl(StorageHelper &storageHelper)
         : mStorageHelper(storageHelper)
 {
-    mSignerColumnSelector = "SELECT account_id, public_key, weight, role_id, "
-                            "identity, details, version, lastmodified "
-                            "FROM signers ";
+    mSignerRoleColumnSelector = "SELECT     ";
 }
 
 void
-SignerHelperImpl::dropAll()
+SignerRoleHelperImpl::dropAll()
 {
     Database& db = getDatabase();
 
@@ -37,13 +35,12 @@ SignerHelperImpl::dropAll()
 }
 
 void
-SignerHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
+SignerRoleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
 {
-    auto signerFrame = std::make_shared<SignerFrame>(entry);
+    auto signerFrame = std::make_shared<SignerRoleFrame>(entry);
     auto signerEntry = signerFrame->getEntry();
 
-    std::string accountIDStr = PubKeyUtils::toStrKey(signerEntry.accountID);
-    std::string pubKeyStr = PubKeyUtils::toStrKey(signerEntry.pubKey);
+
     auto version = static_cast<int32_t>(signerEntry.ext.v());
 
     std::string sql;
@@ -65,11 +62,10 @@ SignerHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
-    st.exchange(use(accountIDStr, "acc"));
-    st.exchange(use(pubKeyStr, "pub"));
-    st.exchange(use(signerEntry.weight, "w"));
+
+/*    st.exchange(use(signerEntry.weight, "w"));
     st.exchange(use(signerEntry.roleID, "r"));
-    st.exchange(use(signerEntry.identity, "ide"));
+    st.exchange(use(signerEntry.identity, "ide"));*/
     st.exchange(use(signerEntry.details, "det"));
     st.exchange(use(version, "v"));
     st.exchange(use(signerFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -96,40 +92,39 @@ SignerHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
 }
 
 void
-SignerHelperImpl::storeAdd(LedgerEntry const &entry)
+SignerRoleHelperImpl::storeAdd(LedgerEntry const &entry)
 {
     storeUpdate(entry, true);
 }
 
 void
-SignerHelperImpl::storeChange(LedgerEntry const &entry)
+SignerRoleHelperImpl::storeChange(LedgerEntry const &entry)
 {
     storeUpdate(entry, false);
 }
 
-std::vector<SignerFrame::pointer>
-SignerHelperImpl::loadSigners(AccountID const& accountID)
+SignerRoleFrame::pointer
+SignerRoleHelperImpl::loadSignerRole(uint64_t const roleID)
 {
-    std::string const accountIDStr = PubKeyUtils::toStrKey(accountID);
 
-    std::string sql = mSignerColumnSelector;
+    std::string sql = mSignerRoleColumnSelector;
     sql += " WHERE account_id = :id";
 
     auto prep = getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(accountIDStr, "id"));
+    st.exchange(use(roleID, "id"));
 
-    std::vector<SignerFrame::pointer> result;
+    std::vector<SignerRoleFrame::pointer> result;
     load(prep, [&result](LedgerEntry const& entry)
     {
-        result.emplace_back(std::make_shared<SignerFrame>(entry));
+        result.emplace_back(std::make_shared<SignerRoleFrame>(entry));
     });
 
-    return result;
+    return result[0];
 }
 
 void
-SignerHelperImpl::storeDelete(LedgerKey const &key)
+SignerRoleHelperImpl::storeDelete(LedgerKey const &key)
 {
     auto pubKey = key.signer().pubKey;
     std::string signerStrKey = PubKeyUtils::toStrKey(pubKey);
@@ -152,7 +147,7 @@ SignerHelperImpl::storeDelete(LedgerKey const &key)
 }
 
 bool
-SignerHelperImpl::exists(LedgerKey const& key)
+SignerRoleHelperImpl::exists(LedgerKey const& key)
 {
     if (cachedEntryExists(key) && getCachedEntry(key) != nullptr)
     {
@@ -163,7 +158,7 @@ SignerHelperImpl::exists(LedgerKey const& key)
 }
 
 bool
-SignerHelperImpl::exists(PublicKey const &rawPubKey)
+SignerRoleHelperImpl::exists(PublicKey const &rawPubKey)
 {
     int exists = 0;
     {
@@ -183,7 +178,7 @@ SignerHelperImpl::exists(PublicKey const &rawPubKey)
 }
 
 LedgerKey
-SignerHelperImpl::getLedgerKey(LedgerEntry const& from)
+SignerRoleHelperImpl::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey(from.data.type());
     ledgerKey.signer().pubKey = from.data.signer().pubKey;
@@ -192,19 +187,19 @@ SignerHelperImpl::getLedgerKey(LedgerEntry const& from)
 }
 
 EntryFrame::pointer
-SignerHelperImpl::storeLoad(LedgerKey const& key)
+SignerRoleHelperImpl::storeLoad(LedgerKey const& key)
 {
-    return loadSigner(key.signer().pubKey);
+    return loadSignerRole(0);
 }
 
 EntryFrame::pointer
-SignerHelperImpl::fromXDR(LedgerEntry const& from)
+SignerRoleHelperImpl::fromXDR(LedgerEntry const& from)
 {
-    return std::make_shared<SignerFrame>(from);
+    return std::make_shared<SignerRoleFrame>(from);
 }
 
 uint64_t
-SignerHelperImpl::countObjects()
+SignerRoleHelperImpl::countObjects()
 {
     soci::session& sess = getDatabase().getSession();
     uint64_t count = 0;
@@ -212,9 +207,10 @@ SignerHelperImpl::countObjects()
 
     return count;
 }
+/*
 
-SignerFrame::pointer
-SignerHelperImpl::loadSigner(PublicKey const &publicKey)
+SignerRoleFrame::pointer
+SignerRoleHelperImpl::loadSigner(PublicKey const &publicKey)
 {
     LedgerKey key(LedgerEntryType::SIGNER);
     key.signer().pubKey = publicKey;
@@ -257,9 +253,10 @@ SignerHelperImpl::loadSigner(PublicKey const &publicKey)
 
     return result;
 }
+*/
 
 void
-SignerHelperImpl::load(StatementContext& prep,
+SignerRoleHelperImpl::load(StatementContext& prep,
                        std::function<void(LedgerEntry const&)> processor)
 {
     try
@@ -302,7 +299,7 @@ SignerHelperImpl::load(StatementContext& prep,
 }
 
 Database&
-SignerHelperImpl::getDatabase()
+SignerRoleHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
 }

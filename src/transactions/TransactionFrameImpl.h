@@ -140,7 +140,8 @@ class TransactionFrameImpl : public TransactionFrame
     void addSignature(SecretKey const& secretKey);
 
 	// Checks signature, if not valid - returns false and sets valid error code
-    bool doCheckSignature(Application& app, Database& db, AccountFrame& account);
+    bool doCheckSignature(Application& app, StorageHelper& storageHelper,
+                          AccountID const& accountID);
 
     bool checkValid(Application& app);
 

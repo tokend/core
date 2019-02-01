@@ -70,7 +70,8 @@ class TransactionFrame
     virtual void addSignature(SecretKey const& secretKey) = 0;
 
 	// Checks signature, if not valid - returns false and sets valid error code
-    virtual bool doCheckSignature(Application& app, Database& db, AccountFrame& account) = 0;
+    virtual bool doCheckSignature(Application& app, StorageHelper& storageHelper,
+                                  AccountID const& accountID) = 0;
 
     virtual bool checkValid(Application& app) = 0;
 

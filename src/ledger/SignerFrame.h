@@ -17,12 +17,14 @@ public:
     SignerFrame();
     SignerFrame(LedgerEntry const& from);
 
+    LedgerKey const&
+    getKey() const override;
+
     EntryFrame::pointer
     copy() const override
     {
         return EntryFrame::pointer(new SignerFrame(*this));
     }
-
 
     SignerEntry const&
     getEntry() const
@@ -35,6 +37,12 @@ public:
     {
         clearCached();
         return mSignerEntry;
+    }
+
+    uint64_t const
+    getRoleID() const
+    {
+        return mSignerEntry.roleID;
     }
 };
 

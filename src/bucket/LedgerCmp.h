@@ -202,6 +202,19 @@ struct LedgerEntryIdCmp
                 auto const& barp = b.accountRule();
                 return aarp.id < barp.id;
             }
+            case LedgerEntryType::SIGNER_ROLE:
+            {
+                auto const& arole = a.signerRole();
+                auto const& brole = b.signerRole();
+
+                return arole.id < brole.id;
+            }
+            case LedgerEntryType::SIGNER_RULE:
+            {
+                auto const& aarp = a.signerRule();
+                auto const& barp = b.signerRule();
+                return aarp.id < barp.id;
+            }
             default:
             {
                 throw std::runtime_error("Unexpected state. LedgerCmp cannot compare structures. Unknown ledger entry type");

@@ -44,12 +44,18 @@ struct OperationCondition
     }
 };
 
+struct SignerRequirement
+{
+    SignerRuleResource resource;
+    string256 action;
+};
+
 class OperationFrame
 {
 
   private:
 	bool checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties);
-	bool checkRolePermissions(Application& app,  AccountRuleVerifier& accountRuleVerifier);
+	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
   
   protected:
 
@@ -59,7 +65,7 @@ class OperationFrame
     OperationResult& mResult;
 
 	// checks signature, if not valid - returns false and sets operation error code;
-    bool doCheckSignature(Application& app, Database& db, SourceDetails& sourceDetails);
+    bool doCheckSignature(Application& app, StorageHelper& storageHelper, SourceDetails& sourceDetails);
 
     virtual bool doCheckValid(Application& app) = 0;
     virtual bool doApply(Application& app, LedgerDelta& delta,
@@ -81,6 +87,10 @@ class OperationFrame
     virtual bool
     tryGetOperationConditions(StorageHelper &storageHelper,
                               std::vector<OperationCondition> &result) const;
+
+    virtual bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const;
 
 	// returns true if operation is allowed in the system
 	virtual bool isSupported() const;

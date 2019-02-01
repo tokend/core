@@ -8,6 +8,9 @@
 #include "AccountRuleHelperImpl.h"
 #include "AccountRoleHelperImpl.h"
 #include "AccountHelperImpl.h"
+#include "SignerHelperImpl.h"
+#include "SignerRuleHelperImpl.h"
+#include "SignerRoleHelperImpl.h"
 
 namespace stellar
 {
@@ -220,6 +223,33 @@ StorageHelperImpl::getAccountRuleHelper()
         mAccountRuleHelper = std::make_unique<AccountRuleHelperImpl>(*this);
     }
     return *mAccountRuleHelper;
+}
+SignerHelper&
+StorageHelperImpl::getSignerHelper()
+{
+    if (!mSignerHelper)
+    {
+        mSignerHelper = std::make_unique<SignerHelperImpl>(*this);
+    }
+    return *mSignerHelper;
+}
+SignerRuleHelper&
+StorageHelperImpl::getSignerRuleHelper()
+{
+    if (!mSignerRuleHelper)
+    {
+        mSignerRuleHelper = std::make_unique<SignerRuleHelperImpl>(*this);
+    }
+    return *mSignerRuleHelper;
+}
+SignerRoleHelper&
+StorageHelperImpl::getSignerRoleHelper()
+{
+    if (!mSignerRoleHelper)
+    {
+        mSignerRoleHelper = std::make_unique<SignerRoleHelperImpl>(*this);
+    }
+    return *mSignerRoleHelper;
 }
 
 } // namespace stellar

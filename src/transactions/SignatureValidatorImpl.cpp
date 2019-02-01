@@ -4,7 +4,10 @@
 
 #include "util/asio.h"
 #include <set>
-#include "ledger/AccountHelperLegacy.h"
+#include <transactions/rule_verifing/SignerRuleVerifier.h>
+#include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/SignerHelper.h"
 #include "transactions/SignatureValidatorImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "main/Application.h"
@@ -41,38 +44,21 @@ void SignatureValidatorImpl::resetSignatureTracker()
     mUsedSignatures = vector<bool>(mSignatures.size());
 }
 
-vector<Signer> SignatureValidatorImpl::getSigners(Application& app, Database& db,
-                                              AccountFrame& account)
+vector<SignerFrame::pointer>
+SignatureValidatorImpl::getSigners(StorageHelper& storageHelper,
+                                   AccountID const& accountID)
 {
-    // TODO use signer helper
-    /*// system accounts use master's signers
-    if (account.getAccountType() != AccountType::MASTER &&
-        isSystemAccountType(account.getAccountType()))
+    auto& signerHelper = storageHelper.getSignerHelper();
+
+    auto result = signerHelper.loadSigners(accountID);
+    if (result.empty())
     {
-        auto accountHelper = AccountHelperLegacy::Instance();
-        auto master = accountHelper->loadAccount(app.getAdminID(), db);
-        assert(master);
-        return getSigners(app, db, *master);
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected signers to exist for account: "
+                                               << PubKeyUtils::toStrKey(accountID);
+        std::runtime_error("Expected signers to exist for account");
     }
 
-    vector<Signer> signers;
-    if (account.getAccount().thresholds[0])
-        signers.push_back(
-                          Signer(account.getID(),
-                                 account.getAccount().thresholds[0],
-                                 getAnySignerType(), 0, "", Signer::_ext_t{}));
-
-    // create signer for recovery
-    if (account.getAccountType() != AccountType::MASTER)
-    {
-        uint8_t recoveryWeight = 255;
-        signers.push_back(Signer(account.getRecoveryID(), recoveryWeight,
-                                 getAnySignerType(), 0, "", Signer::_ext_t{}));
-    }
-
-    auto accountSigners = account.getAccount().signers;
-    signers.insert(signers.end(), accountSigners.begin(), accountSigners.end());
-    return signers;*/
+    return result;
 }
 
 SignatureValidatorImpl::Result SignatureValidatorImpl::check(
@@ -107,24 +93,46 @@ SignatureValidatorImpl::Result SignatureValidatorImpl::check(
     return NOT_ENOUGH_WEIGHT;
 }
 
-
-SignatureValidatorImpl::Result SignatureValidatorImpl::checkSignature(
-    Application& app, Database& db, AccountFrame& account,
-    SourceDetails& sourceDetails)
+bool
+SignatureValidatorImpl::checkSignerRules(StorageHelper& storageHelper,
+                                         SignerRuleVerifier& verifier,
+                                         std::vector<SignerRequirement> requirements,
+                                         SignerFrame::pointer signer)
 {
-    auto signers = getSigners(app, db, account);
+    for (auto requirement : requirements)
+    {
+        if (!verifier.isAllowed(requirement, signer, storageHelper))
+        {
+            return false;
+        }
+    }
 
-    set<uint32> usedIdentities;
+    return true;
+}
 
-    // calculate the weight of the signatures
-    int totalWeight = 0;
+SignatureValidatorImpl::Result
+SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
+        AccountID const& accountID, SignerRuleVerifier& verifier,
+        std::vector<SignerRequirement> requirements)
+{
+    auto signers = getSigners(storageHelper, accountID);
+
+    // is used to find unused signatures
+    struct SignatureWeight
+    {
+        size_t signatureIndex;
+        uint32_t weight;
+    };
+
+    std::map<uint32_t, SignatureWeight> identityWeights;
 
     for (size_t i = 0; i < mSignatures.size(); i++)
     {
         auto const& sig = mSignatures[i];
 
-        for (auto const& signer : signers)
+        for (auto const& signerFrame : signers)
         {
+            auto const& signer = signerFrame->getEntry();
             bool isSignatureValid = PubKeyUtils::hasHint(signer.pubKey,
                                                          sig.hint) &&
                                     PubKeyUtils::verifySig(signer.pubKey,
@@ -133,26 +141,40 @@ SignatureValidatorImpl::Result SignatureValidatorImpl::checkSignature(
             if (!isSignatureValid)
                 continue;
 
-            if (usedIdentities.find(signer.identity) != usedIdentities.end())
-                continue;
+            if (!checkSignerRules(storageHelper, verifier, requirements, signerFrame))
+            {
+                break;
+            }
 
-            if (!(signer.signerType & sourceDetails.mNeededSignedClass))
-                return INVALID_SIGNER_TYPE;
+            auto existingIdentity = identityWeights.find(signer.identity);
+            if (existingIdentity != identityWeights.end())
+            {
+                // we don't need signature if there is another one which signer has bigger weight
+                if (existingIdentity->second.weight < signer.weight)
+                {
+                    existingIdentity->second = {i, signer.weight};
+                }
+                break;
+            }
 
-            mUsedSignatures[i] = true;
-            usedIdentities.insert(signer.identity);
-            totalWeight += signer.weight;
-            if (totalWeight >= sourceDetails.mNeeededTheshold)
-                return SUCCESS;
-
+            identityWeights.emplace(signer.identity, SignatureWeight{i, signer.weight});
             break;
         }
     }
 
-    if (!checkAllSignaturesUsed())
-        return EXTRA;
+    uint64_t totalWeight = 0;
+    for (auto& identityWeight : identityWeights)
+    {
+        totalWeight += identityWeight.second.weight;
+        mUsedSignatures[identityWeight.second.signatureIndex] = true;
+    }
 
-    return NOT_ENOUGH_WEIGHT;
+    if (totalWeight < 1000)
+    {
+        return NOT_ENOUGH_WEIGHT;
+    }
+
+    return SUCCESS;
 }
 
 bool SignatureValidatorImpl::shouldSkipCheck(Application & app)
@@ -170,14 +192,15 @@ bool SignatureValidatorImpl::shouldSkipCheck(Application & app)
     return true;
 }
 
-SignatureValidatorImpl::Result SignatureValidatorImpl::check(
-    Application& app, Database& db, AccountFrame& account,
-    SourceDetails& sourceDetails)
+SignatureValidatorImpl::Result
+SignatureValidatorImpl::check(Application& app, StorageHelper& storageHelper,
+                              AccountID const& accountID,
+                              std::vector<SignerRequirement> requirements)
 {
     if (shouldSkipCheck(app)) {
         return SUCCESS;
     }
-
+/*
     if ((account.getBlockReasons() | sourceDetails.mAllowedBlockedReasons) !=
         sourceDetails.mAllowedBlockedReasons)
         return ACCOUNT_BLOCKED;
@@ -188,8 +211,9 @@ SignatureValidatorImpl::Result SignatureValidatorImpl::check(
         return check(sourceDetails.mSpecificSigners,
                      sourceDetails.mNeeededTheshold,
                      LedgerVersion(ledgerVersion));
-    }
+    }*/
+    SignerRuleVerifierImpl signerRuleVerifier;
 
-    return checkSignature(app, db, account, sourceDetails);
+    return checkSignature(storageHelper, accountID, signerRuleVerifier, requirements);
 }
 }

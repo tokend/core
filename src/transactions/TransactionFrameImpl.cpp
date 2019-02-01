@@ -18,7 +18,7 @@
 
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
-#include "AccountRuleVerifierImpl.h"
+#include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
 
 namespace stellar
 {
@@ -311,17 +311,12 @@ TransactionFrameImpl::resetResults()
 }
 
 bool
-TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
-                                       AccountFrame& account)
+TransactionFrameImpl::doCheckSignature(Application& app,
+                                       StorageHelper& storageHelper,
+                                       AccountID const& accountID)
 {
     auto signatureValidator = getSignatureValidator();
-    // block reasons are handeled on operation level
-    auto sourceDetails = SourceDetails(
-        getAllAccountTypes(), 0,
-        getAnySignerType() ^ static_cast<int32_t>(SignerType::READER),
-        getAnyBlockReason());
-    SignatureValidator::Result result =
-        signatureValidator->check(app, db, account, sourceDetails);
+    auto result = signatureValidator->check(app, storageHelper, accountID, {});
     switch (result)
     {
     case SignatureValidator::Result::SUCCESS:
@@ -410,7 +405,7 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
     }
 
     // error code already set
-    return doCheckSignature(app, db, *mSigningAccount);
+    return doCheckSignature(app, storageHelper, getSourceID());
 }
 
 bool

@@ -2,7 +2,7 @@
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "transactions/AccountRuleVerifier.h"
+#include "transactions/rule_verifing/AccountRuleVerifier.h"
 #include "main/CommandHandler.h"
 #include "main/PersistentState.h"
 #include "medida/meter.h"
@@ -19,6 +19,9 @@
 #include "transactions/test/mocks/MockExternalSystemAccountIDHelper.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
+#include "transactions/test/mocks/MockSignerHelper.h"
+#include "transactions/test/mocks/MockSignerRuleHelper.h"
+#include "transactions/test/mocks/MockSignerRoleHelper.h"
 #include "transactions/test/mocks/MockBalanceHelper.h"
 #include "transactions/test/mocks/MockAssetHelper.h"
 #include "transactions/test/mocks/MockLedgerDelta.h"
@@ -47,6 +50,9 @@ TEST_CASE("bind external system account_id - unit test",
     MockLedgerDelta ledgerDeltaMock;
     MockDatabase dbMock;
     MockStorageHelper storageHelperMock;
+    MockSignerHelper signerHelperMock;
+    MockSignerRuleHelper signerRuleHelperMock;
+    MockSignerRoleHelper signerRoleHelperMock;
     MockKeyValueHelper keyValueHelperMock;
     MockAccountRuleVerifier accountRuleVerifierMock;
     MockExternalSystemAccountIDHelper externalSystemAccountIDHelperMock;
@@ -83,12 +89,18 @@ TEST_CASE("bind external system account_id - unit test",
     ON_CALL(transactionFrameMock, getSignatureValidator())
         .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
-            check(Ref(appMock), Ref(dbMock), Ref(*accountFrameFake), _))
+            check(Ref(appMock), Ref(storageHelperMock), Ref(Const(*operation.sourceAccount)), _))
         .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
 
     ON_CALL(storageHelperMock, getKeyValueHelper())
         .WillByDefault(ReturnRef(keyValueHelperMock));
+    ON_CALL(storageHelperMock, getSignerHelper())
+            .WillByDefault(ReturnRef(signerHelperMock));
+    ON_CALL(storageHelperMock, getSignerRuleHelper())
+            .WillByDefault(ReturnRef(signerRuleHelperMock));
+    ON_CALL(storageHelperMock, getSignerRoleHelper())
+            .WillByDefault(ReturnRef(signerRoleHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDPoolEntryHelper())

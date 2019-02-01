@@ -24,7 +24,7 @@ AccountHelperImpl::dropAll()
     db.getSession() << "CREATE TABLE accounts"
                        "("
                        "account_id          VARCHAR(56) PRIMARY KEY,"
-                       "sequential_id       BIGINT      UNIQUE NOT NULL"
+                       "sequential_id       BIGINT      UNIQUE NOT NULL,"
                        "role_id             BIGINT      NOT NULL,"
                        "version             INT         NOT NULL    DEFAULT 0,"
                        "lastmodified        INT         NOT NULL,"

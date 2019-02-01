@@ -16,6 +16,9 @@
 #include "transactions/test/mocks/MockDatabase.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
 #include "transactions/test/mocks/MockBalanceHelper.h"
+#include "transactions/test/mocks/MockSignerHelper.h"
+#include "transactions/test/mocks/MockSignerRuleHelper.h"
+#include "transactions/test/mocks/MockSignerRoleHelper.h"
 #include "transactions/test/mocks/MockAssetHelper.h"
 #include "transactions/test/mocks/MockLedgerDelta.h"
 #include "transactions/test/mocks/MockLedgerManager.h"
@@ -41,6 +44,9 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
     MockLedgerDelta ledgerDeltaMock;
     MockDatabase dbMock;
     MockStorageHelper storageHelperMock;
+    MockSignerHelper signerHelperMock;
+    MockSignerRuleHelper signerRuleHelperMock;
+    MockSignerRoleHelper signerRoleHelperMock;
     MockKeyValueHelper keyValueHelperMock;
     MockBalanceHelper balanceHelperMock;
     MockAssetHelper assetHelperMock;
@@ -95,6 +101,12 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
             .WillByDefault(Return(&ledgerDeltaMock));
     ON_CALL(transactionFrameMock, getSignatureValidator())
             .WillByDefault(Return(signatureValidatorMock));
+    ON_CALL(storageHelperMock, getSignerHelper())
+            .WillByDefault(ReturnRef(signerHelperMock));
+    ON_CALL(storageHelperMock, getSignerRuleHelper())
+            .WillByDefault(ReturnRef(signerRuleHelperMock));
+    ON_CALL(storageHelperMock, getSignerRoleHelper())
+            .WillByDefault(ReturnRef(signerRoleHelperMock));
     ON_CALL(storageHelperMock, getKeyValueHelper())
             .WillByDefault(ReturnRef(keyValueHelperMock));
     ON_CALL(storageHelperMock, getBalanceHelper())

@@ -1,16 +1,15 @@
 #pragma once
 
-#include "SignerHelper.h"
-#include "util/NonCopyable.h"
+#include "SignerRuleHelper.h"
 
 namespace stellar
 {
 class StorageHelper;
 
-class SignerHelperImpl : public SignerHelper, NonCopyable
+class SignerRuleHelperImpl : public SignerRuleHelper
 {
 public:
-    SignerHelperImpl(StorageHelper& storageHelper);
+    SignerRuleHelperImpl(StorageHelper& storageHelper);
 
 private:
     void
@@ -43,14 +42,14 @@ private:
     uint64_t
     countObjects() override;
 
-    std::vector<SignerFrame::pointer>
-    loadSigners(AccountID const& accountID);
+    std::vector<SignerRuleFrame::pointer>
+    loadSignerRules(std::vector<uint64_t> const ruleIDs);
 
-    SignerFrame::pointer
-    loadSigner(PublicKey const& publicKey);
+    SignerRuleFrame::pointer
+    loadSignerRule(uint64_t const ruleID);
 
     bool
-    exists(PublicKey const &rawPubKey);
+    exists(uint64_t const ruleID);
 
     void
     storeUpdate(LedgerEntry const& entry, bool insert);
@@ -59,7 +58,7 @@ private:
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
 
     StorageHelper& mStorageHelper;
-    const char* mSignerColumnSelector;
-
+    const char* mSignerRuleColumnSelector;
 };
 }
+

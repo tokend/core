@@ -9,6 +9,7 @@
 #include <string>
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
 #include <ledger/LedgerDeltaImpl.h>
+#include <ledger/SignerFrame.h>
 #include "util/Logging.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeFrame.h"
@@ -55,7 +56,7 @@
 #include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
 #include "atomic_swap/CancelASwapBidOpFrame.h"
 #include "atomic_swap/CreateASwapRequestOpFrame.h"
-#include "AccountRuleVerifierImpl.h"
+#include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
 
 namespace stellar
 {
@@ -208,15 +209,31 @@ OperationFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     return false;
 }
 
+bool
+OperationFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                 std::vector<SignerRequirement> &result) const
+{
+    // method must be overridden
+    return false;
+}
+
 int64_t OperationFrame::getPaidFee() const {
 	// default fee for all operations is 0, finantial operations must override this function
     return 0;
 }
 
 bool
-OperationFrame::doCheckSignature(Application& app, Database& db, SourceDetails& sourceDetails)
+OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper,
+                                 SourceDetails& sourceDetails)
 {
-    auto result = mParentTx.getSignatureValidator()->check(app, db, *mSourceAccount, sourceDetails);
+    std::vector<SignerRequirement> signerRequirements;
+    if (!tryGetSignerRequirements(storageHelper, signerRequirements))
+    {
+
+    }
+
+    auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
+            getSourceID(), signerRequirements);
 	switch (result)
 	{
 	case SignatureValidator::Result::SUCCESS:
@@ -345,13 +362,14 @@ OperationFrame::checkValid(Application& app,
 		return false;
 	}
 
-    if (!checkRolePermissions(app, accountRuleVerifier))
+	StorageHelperImpl storageHelper(db, delta);
+    if (!checkRolePermissions(storageHelper, accountRuleVerifier))
     {
         return false;
     }
 
     auto sourceDetails = getSourceAccountDetails(counterpartiesDetails, ledgerVersion, db);
-    if (!doCheckSignature(app, db, sourceDetails))
+    if (!doCheckSignature(app, storageHelper, sourceDetails))
     {
         return false;
     }
@@ -410,12 +428,11 @@ OperationFrame::checkCounterparties(Application& app, std::unordered_map<Account
 }
 
 bool
-OperationFrame::checkRolePermissions(Application& app, AccountRuleVerifier& accountRuleVerifier)
+OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
+                                     AccountRuleVerifier& accountRuleVerifier)
 {
-    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
-
-    std::vector<OperationCondition> operationConditions;
-    if (!tryGetOperationConditions(storageHelperImpl, operationConditions))
+        std::vector<OperationCondition> operationConditions;
+    if (!tryGetOperationConditions(storageHelper, operationConditions))
     {
         return false;
     }
@@ -428,7 +445,7 @@ OperationFrame::checkRolePermissions(Application& app, AccountRuleVerifier& acco
             return false;
         }
 
-        if (!accountRuleVerifier.isAllowed(condition, storageHelperImpl))
+        if (!accountRuleVerifier.isAllowed(condition, storageHelper))
         {
             mResult.code(OperationResultCode::opNO_ROLE_PERMISSION);
             return false;

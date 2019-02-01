@@ -15,6 +15,9 @@ class EntryHelper;
 class AccountHelper;
 class AccountRoleHelper;
 class AccountRuleHelper;
+class SignerHelper;
+class SignerRuleHelper;
+class SignerRoleHelper;
 
 class StorageHelper
 {
@@ -47,5 +50,8 @@ class StorageHelper
     virtual AccountHelper& getAccountHelper() = 0;
     virtual AccountRoleHelper& getAccountRoleHelper() = 0;
     virtual AccountRuleHelper& getAccountRuleHelper() = 0;
+    virtual SignerHelper& getSignerHelper() = 0;
+    virtual SignerRuleHelper& getSignerRuleHelper() = 0;
+    virtual SignerRoleHelper& getSignerRoleHelper() = 0;
 };
 } // namespace stellar

@@ -32,6 +32,11 @@ set(NOT_COMMON_SOURCE_FILES
         bucket/BucketManager.h
         ledger/LedgerManager.h
         ledger/AccountHelper.h
+        ledger/AccountRuleHelper.h
+        ledger/AccountRoleHelper.h
+        ledger/SignerHelper.h
+        ledger/SignerRuleHelper.h
+        ledger/SignerRoleHelper.h
         history/HistoryManager.h
         overlay/BanManager.h
         overlay/StellarXDR.h
@@ -39,8 +44,10 @@ set(NOT_COMMON_SOURCE_FILES
         process/ProcessManager.h
         transactions/SourceDetails.h
         transactions/CounterpartyDetails.h
+        transactions/SignatureValidator.h
         transactions/test/test_helper/Account.h
-        transactions/AccountRuleVerifier.h)
+        transactions/rule_verifing/AccountRuleVerifier.h
+        transactions/rule_verifing/SignerRuleVerifier.h)
 
 #find source files
 file(GLOB STELLAR_CORE_SOURCE_FILES **/*.cpp **/**/*.cpp **/**/**/*.cpp)
