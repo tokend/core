@@ -56,7 +56,7 @@ namespace stellar{
             KeyValueEntry::_value_t value;
             KeyValueEntryType type;
             ManageKVAction kvAction;
-            ManageKeyValueOpFrame* kvManager;
+            std::shared_ptr<ManageKeyValueOpFrame> kvManager;
             Operation op;
             TransactionFramePtr tx;
             OperationResult res;
