@@ -6,7 +6,7 @@ namespace stellar
 {
 class StorageHelper;
 
-class SignerRuleHelperImpl : public SignerRuleHelper
+class SignerRuleHelperImpl : public SignerRuleHelper, NonCopyable
 {
 public:
     SignerRuleHelperImpl(StorageHelper& storageHelper);

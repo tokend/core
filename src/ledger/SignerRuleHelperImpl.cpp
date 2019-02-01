@@ -1,3 +1,5 @@
+#include <lib/xdrpp/xdrpp/marshal.h>
+#include <lib/util/basen.h>
 #include "SignerRuleHelperImpl.h"
 #include "StorageHelper.h"
 #include "LedgerDelta.h"
@@ -10,7 +12,10 @@ using namespace soci;
 SignerRuleHelperImpl::SignerRuleHelperImpl(StorageHelper &storageHelper)
         : mStorageHelper(storageHelper)
 {
-    mSignerRuleColumnSelector = "SELECT    ";
+    mSignerRuleColumnSelector = "SELECT id, resource, action, owner_id, "
+                                "       is_forbid, is_default, details, "
+                                "       version, lastmodified "
+                                " FROM  signer_rules";
 }
 
 void
@@ -18,57 +23,68 @@ SignerRuleHelperImpl::dropAll()
 {
     Database& db = getDatabase();
 
-    db.getSession() << "DROP TABLE IF EXISTS signers";
-    db.getSession() << "CREATE TABLE signers"
+    db.getSession() << "DROP TABLE IF EXISTS signer_rules";
+    db.getSession() << "CREATE TABLE signer_rules"
                        "("
-                       "account_id      VARCHAR(56)    NOT NULL,"
-                       "public_key      VARCHAR(56)    NOT NULL,"
-                       "weight          INT            NOT NULL,"
-                       "role_id         BIGINT         NOT NULL,"
-                       "identity        INT            NOT NULL,"
-                       "details         VARCHAR(256)   NOT NULL DEFAULT '{}',"
+                       "id              VARCHAR(56)    NOT NULL,"
+                       "resource        TEXT           NOT NULL, "
+                       "action          VARCHAR(256)   NOT NULL,"
+                       "owner_id        VARCHAR(56)    NOT NULL,"
+                       "is_forbid       BOOLEAN        NOT NULL,"
+                       "is_default      BOOLEAN        NOT NULL,"
+                       "details         TEXT           NOT NULL DEFAULT '{}',"
                        "version         INT            NOT NULL DEFAULT 0,"
                        "lastmodified    INT            NOT NULL DEFAULT 0,"
-                       "PRIMARY KEY (public_key)"
+                       "PRIMARY KEY (id)"
                        ");";
-    db.getSession() << "CREATE INDEX account_signers ON signers (account_id)";
 }
 
 void
 SignerRuleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
 {
-    auto signerFrame = std::make_shared<SignerRuleFrame>(entry);
-    auto signerEntry = signerFrame->getEntry();
+    auto signerRuleFrame = std::make_shared<SignerRuleFrame>(entry);
+    auto signerRuleEntry = signerRuleFrame->getEntry();
 
+    signerRuleFrame->touch(mStorageHelper.mustGetLedgerDelta());
 
-    auto version = static_cast<int32_t>(signerEntry.ext.v());
+    LedgerKey const& key = signerRuleFrame->getKey();
+    flushCachedEntry(key);
+
+    auto resourceBody = xdr::xdr_to_opaque(signerRuleFrame->getResource());
+    std::string strResource = bn::encode_b64(resourceBody);
+    std::string ownerID = PubKeyUtils::toStrKey(signerRuleEntry.ownerID);
+    int isForbid = signerRuleFrame->isForbid() ? 1 : 0;
+    int isDefault = signerRuleFrame->isDefault() ? 1 : 0;
+    auto version = static_cast<int32_t>(signerRuleEntry.ext.v());
 
     std::string sql;
     if (insert)
     {
-        sql = "INSERT INTO signers (account_id, public_key, weight, role_id,"
-              "                     identity, details, version, lastmodified) "
-              "VALUES (:acc, :pub, :w, :r, :ide, :det, :v, :lm)";
+        sql = "INSERT INTO signer_rules "
+              "(id, resource, action, owner_id, is_forbid, is_default, "
+              " details, version, lastmodified) "
+              "VALUES (:id, :res, :act, :own, :is_f, :is_d, :det, :v, :lm)";
     }
     else
     {
-        sql = "UPDATE signers SET account_id = :acc, public_key = :pub, "
-              " weight = :w, role_id = :r, identity = :ide, details = :det, "
-              " version = :v, lastmodified = :lm "
-              "WHERE public_key = :pub";
+        sql = "UPDATE signer_rules SET resource = :res, action = :act, "
+              " owner_id = :own, is_forbid = :is_f, is_default = :is_d, "
+              " details = :det, version = :v, lastmodified = :lm "
+              "WHERE id = :id";
     }
 
     Database& db = getDatabase();
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
-
-
-/*    st.exchange(use(signerEntry.weight, "w"));
-st.exchange(use(signerEntry.roleID, "r"));
-st.exchange(use(signerEntry.identity, "ide"));*/
-    st.exchange(use(signerEntry.details, "det"));
+    st.exchange(use(signerRuleEntry.id, "id"));
+    st.exchange(use(strResource, "res"));
+    st.exchange(use(signerRuleEntry.action, "act"));
+    st.exchange(use(ownerID, "own"));
+    st.exchange(use(isForbid, "is_f"));
+    st.exchange(use(isDefault, "is_d"));
+    st.exchange(use(signerRuleEntry.details, "det"));
     st.exchange(use(version, "v"));
-    st.exchange(use(signerFrame->mEntry.lastModifiedLedgerSeq, "lm"));
+    st.exchange(use(signerRuleFrame->mEntry.lastModifiedLedgerSeq, "lm"));
 
     st.define_and_bind();
 
@@ -83,11 +99,11 @@ st.exchange(use(signerEntry.identity, "ide"));*/
 
     if (insert)
     {
-        mStorageHelper.mustGetLedgerDelta().addEntry(*signerFrame);
+        mStorageHelper.mustGetLedgerDelta().addEntry(*signerRuleFrame);
     }
     else
     {
-        mStorageHelper.mustGetLedgerDelta().modEntry(*signerFrame);
+        mStorageHelper.mustGetLedgerDelta().modEntry(*signerRuleFrame);
     }
 }
 
@@ -106,13 +122,12 @@ SignerRuleHelperImpl::storeChange(LedgerEntry const &entry)
 std::vector<SignerRuleFrame::pointer>
 SignerRuleHelperImpl::loadSignerRules(std::vector<uint64_t> const ruleIDs)
 {
-
     std::string sql = mSignerRuleColumnSelector;
-    sql += " WHERE account_id = :id";
+    sql += " WHERE id IN (" + obtainSqlIDsString(ruleIDs) + ")";
 
     auto prep = getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(ruleIDs[0], "id"));
+    auto timer = getDatabase().getSelectTimer("signer_rules");
 
     std::vector<SignerRuleFrame::pointer> result;
     load(prep, [&result](LedgerEntry const& entry)
@@ -126,23 +141,29 @@ SignerRuleHelperImpl::loadSignerRules(std::vector<uint64_t> const ruleIDs)
 void
 SignerRuleHelperImpl::storeDelete(LedgerKey const &key)
 {
-    auto pubKey = key.signer().pubKey;
-    std::string signerStrKey = PubKeyUtils::toStrKey(pubKey);
+    uint64_t id = key.signerRule().id;
 
     Database& db = getDatabase();
-    auto prep = db.getPreparedStatement("DELETE FROM signers "
-                                        "WHERE public_key = :pub");
+    auto prep = db.getPreparedStatement("DELETE FROM signer_rules "
+                                        " WHERE id = :id");
     auto& st = prep.statement();
-    st.exchange(use(signerStrKey));
+    st.exchange(use(id));
     st.define_and_bind();
     {
-        auto timer = db.getDeleteTimer("signer");
+        auto timer = db.getDeleteTimer("signer_rule");
         st.execute(true);
     }
 
     if (st.get_affected_rows() != 1)
     {
         throw std::runtime_error("Could not update data in SQL");
+    }
+
+    flushCachedEntry(key);
+
+    if (mStorageHelper.getLedgerDelta() != nullptr)
+    {
+        mStorageHelper.mustGetLedgerDelta().deleteEntry(key);
     }
 }
 
@@ -165,7 +186,7 @@ SignerRuleHelperImpl::exists(uint64_t const ruleID)
         Database& db = getDatabase();
         auto timer = db.getSelectTimer("signer-exists");
         auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL "
-                                            "FROM signers WHERE public_key = :v1)");
+                                            "FROM signer_rules WHERE id = :v1)");
         auto& st = prep.statement();
         st.exchange(use(ruleID));
         st.exchange(into(exists));
@@ -180,7 +201,7 @@ LedgerKey
 SignerRuleHelperImpl::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey(from.data.type());
-    ledgerKey.signer().pubKey = from.data.signer().pubKey;
+    ledgerKey.signerRule().id = from.data.signerRule().id;
 
     return ledgerKey;
 }
@@ -188,7 +209,7 @@ SignerRuleHelperImpl::getLedgerKey(LedgerEntry const& from)
 EntryFrame::pointer
 SignerRuleHelperImpl::storeLoad(LedgerKey const& key)
 {
-    return loadSignerRule(0);
+    return loadSignerRule(key.signerRule().id);
 }
 
 EntryFrame::pointer
@@ -202,7 +223,7 @@ SignerRuleHelperImpl::countObjects()
 {
     soci::session& sess = getDatabase().getSession();
     uint64_t count = 0;
-    sess << "SELECT COUNT(*) FROM signers;", into(count);
+    sess << "SELECT COUNT(*) FROM signer_rules;", into(count);
 
     return count;
 }
@@ -215,17 +236,17 @@ SignerRuleHelperImpl::loadSignerRule(uint64_t  const ruleID)
 
     if (cachedEntryExists(key))
     {
-    auto p = getCachedEntry(key);
-    return p ? std::make_shared<SignerRuleFrame>(*p) : nullptr;
+        auto p = getCachedEntry(key);
+        return p ? std::make_shared<SignerRuleFrame>(*p) : nullptr;
     }
 
     Database& db = getDatabase();
     std::string sql = mSignerRuleColumnSelector;
-    sql += " WHERE public_key = :pub_k";
+    sql += " WHERE id = :id";
 
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(ruleID, "pub_k"));
+    st.exchange(use(ruleID, "id"));
 
     SignerRuleFrame::pointer result;
     load(prep, [&result](LedgerEntry const& entry)
@@ -257,20 +278,23 @@ SignerRuleHelperImpl::load(StatementContext& prep,
     try
     {
         LedgerEntry le;
-        le.data.type(LedgerEntryType::SIGNER);
-        auto& signerEntry = le.data.signer();
+        le.data.type(LedgerEntryType::SIGNER_RULE);
+        auto& signerRule = le.data.signerRule();
 
         std::string accountIDStr;
-        std::string publicKeyStr;
+        std::string resource;
+        int32_t isForbid;
+        int32_t isDefault;
         int32_t version;
 
         auto& st = prep.statement();
+        st.exchange(into(signerRule.id));
+        st.exchange(into(resource));
+        st.exchange(into(signerRule.action));
         st.exchange(into(accountIDStr));
-        st.exchange(into(publicKeyStr));
-        st.exchange(into(signerEntry.weight));
-        st.exchange(into(signerEntry.roleID));
-        st.exchange(into(signerEntry.identity));
-        st.exchange(into(signerEntry.details));
+        st.exchange(into(isForbid));
+        st.exchange(into(isDefault));
+        st.exchange(into(signerRule.details));
         st.exchange(into(version));
         st.exchange(into(le.lastModifiedLedgerSeq));
         st.define_and_bind();
@@ -278,9 +302,16 @@ SignerRuleHelperImpl::load(StatementContext& prep,
 
         while (st.got_data())
         {
-            signerEntry.accountID = PubKeyUtils::fromStrKey(accountIDStr);
-            signerEntry.pubKey = PubKeyUtils::fromStrKey(publicKeyStr);
-            signerEntry.ext.v(static_cast<LedgerVersion>(version));
+            std::vector<uint8_t> decoded;
+            bn::decode_b64(resource, decoded);
+            xdr::xdr_get unmarshaler(&decoded.front(), &decoded.back() + 1);
+            xdr::xdr_argpack_archive(unmarshaler, signerRule.resource);
+            unmarshaler.done();
+
+            signerRule.ownerID = PubKeyUtils::fromStrKey(accountIDStr);
+            signerRule.isForbid = isForbid > 0;
+            signerRule.isDefault = isDefault > 0;
+            signerRule.ext.v(static_cast<LedgerVersion>(version));
 
             processor(le);
             st.fetch();
@@ -289,7 +320,7 @@ SignerRuleHelperImpl::load(StatementContext& prep,
     catch (std::exception& e)
     {
         CLOG(ERROR, Logging::ENTRY_LOGGER) << e.what();
-        std::throw_with_nested(std::runtime_error("Failed to load signer"));
+        std::throw_with_nested(std::runtime_error("Failed to load signer rule"));
     }
 }
 

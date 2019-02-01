@@ -21,13 +21,13 @@ AccountRuleHelperImpl::dropAll()
     mDb.getSession() << "DROP TABLE IF EXISTS account_rules;";
     mDb.getSession() << "CREATE TABLE account_rules"
            "("
-           "id              BIGINT  NOT NULL CHECK (id > 0),"
-           "resource        TEXT    NOT NULL,"
-           "action          TEXT    NOT NULL,"
-           "is_forbid       BOOLEAN NOT NULL,"
-           "details         TEXT    NOT NULL,"
-           "lastmodified    INT     NOT NULL,"
-           "version         INT     NOT NULL,"
+           "id              BIGINT          NOT NULL CHECK (id > 0),"
+           "resource        TEXT            NOT NULL,"
+           "action          VARCHAR(256)    NOT NULL,"
+           "is_forbid       BOOLEAN         NOT NULL,"
+           "details         TEXT            NOT NULL,"
+           "lastmodified    INT             NOT NULL,"
+           "version         INT             NOT NULL,"
            "PRIMARY KEY(id) "
            ");";
 }
@@ -67,6 +67,11 @@ AccountRuleHelperImpl::storeDelete(LedgerKey const& key)
     st.exchange(use(key.accountRule().id));
     st.define_and_bind();
     st.execute(true);
+
+    if (st.get_affected_rows() != 1)
+    {
+        throw std::runtime_error("Could not update data in SQL");
+    }
 
     flushCachedEntry(key);
 
@@ -307,8 +312,7 @@ uint64_t
 AccountRuleHelperImpl::countObjects()
 {
     auto timer = mDb.getSelectTimer("account_role_permission_count");
-    auto prep = mDb.getPreparedStatement(
-        "SELECT COUNT(*) FROM account_rules");
+    auto prep = mDb.getPreparedStatement("SELECT COUNT(*) FROM account_rules");
     auto& st = prep.statement();
 
     uint64_t count;

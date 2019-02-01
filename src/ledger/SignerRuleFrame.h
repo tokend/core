@@ -52,6 +52,12 @@ public:
         return mSignerRuleEntry.isForbid;
     }
 
+    bool const
+    isDefault() const
+    {
+        return mSignerRuleEntry.isDefault;
+    }
+
     std::string const
     getAction() const
     {

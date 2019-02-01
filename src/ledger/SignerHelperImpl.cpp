@@ -28,7 +28,7 @@ SignerHelperImpl::dropAll()
                        "weight          INT            NOT NULL,"
                        "role_id         BIGINT         NOT NULL,"
                        "identity        INT            NOT NULL,"
-                       "details         VARCHAR(256)   NOT NULL DEFAULT '{}',"
+                       "details         TEXT           NOT NULL DEFAULT '{}',"
                        "version         INT            NOT NULL DEFAULT 0,"
                        "lastmodified    INT            NOT NULL DEFAULT 0,"
                        "PRIMARY KEY (public_key)"
@@ -41,6 +41,11 @@ SignerHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
 {
     auto signerFrame = std::make_shared<SignerFrame>(entry);
     auto signerEntry = signerFrame->getEntry();
+
+    signerFrame->touch(mStorageHelper.mustGetLedgerDelta());
+
+    LedgerKey const& key = signerFrame->getKey();
+    flushCachedEntry(key);
 
     std::string accountIDStr = PubKeyUtils::toStrKey(signerEntry.accountID);
     std::string pubKeyStr = PubKeyUtils::toStrKey(signerEntry.pubKey);
@@ -149,6 +154,8 @@ SignerHelperImpl::storeDelete(LedgerKey const &key)
     {
         throw std::runtime_error("Could not update data in SQL");
     }
+
+    flushCachedEntry(key);
 }
 
 bool

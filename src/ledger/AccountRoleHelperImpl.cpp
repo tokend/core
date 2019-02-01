@@ -45,6 +45,8 @@ AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
         accountRoleFrame->touch(*mStorageHelper.getLedgerDelta());
     }
 
+    LedgerKey const& key = accountRoleFrame->getKey();
+    flushCachedEntry(key);
     accountRoleFrame->ensureValid();
 
     string sql;

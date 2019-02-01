@@ -1,12 +1,13 @@
 #pragma once
 
 #include "SignerRoleHelper.h"
+#include "SignerRoleRulesHelper.h"
 
 namespace stellar
 {
 class StorageHelper;
 
-class SignerRoleHelperImpl : public SignerRoleHelper
+class SignerRoleHelperImpl : public SignerRoleHelper, NonCopyable
 {
 public:
     SignerRoleHelperImpl(StorageHelper& storageHelper);
@@ -46,7 +47,7 @@ private:
     loadSignerRole(uint64_t const roleID) override;
 
     bool
-    exists(PublicKey const &rawPubKey);
+    exists(uint64_t const roleID);
 
     void
     storeUpdate(LedgerEntry const& entry, bool insert);
@@ -55,6 +56,7 @@ private:
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
 
     StorageHelper& mStorageHelper;
+    SignerRoleRulesHelper mSignerRoleRulesHelper;
     const char* mSignerRoleColumnSelector;
 };
 }
