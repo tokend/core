@@ -105,9 +105,6 @@ class TransactionFrame
     virtual void storeTransactionTiming(LedgerManager& ledgerManager,
                                         uint64 maxTime) const = 0;
 
-    // transaction fee
-    virtual bool processTxFee(Application& app, LedgerDelta* delta) = 0;
-
     virtual bool tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode) = 0;
 
     virtual void storeFeeForOpType(OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,

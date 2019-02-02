@@ -59,7 +59,7 @@ ReviewChangeRoleRequestTestHelper::createReviewRequestTx(Account& source, uint64
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.reviewDetails.tasksToAdd = 0;
     reviewRequestOp.reviewDetails.tasksToRemove = action == ReviewRequestOpAction::APPROVE
-            ? CreateChangeRoleRequestOpFrame::defaultTasks
+            ? 30
             : 0;
     reviewRequestOp.reviewDetails.externalDetails = "{}";
 

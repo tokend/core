@@ -159,8 +159,6 @@ class AccountFrame : public EntryFrame
         return mAccountEntry.policies;
     }
 
-    uint32 getKYCLevel() const;
-    void setKYCLevel(uint32 kycLevel);
     uint64_t getAccountRole() const;
     void setAccountRole(uint64_t accountRoleID);
 

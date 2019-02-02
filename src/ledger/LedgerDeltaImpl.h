@@ -41,9 +41,9 @@ class LedgerDeltaImpl : public LedgerDelta
     bool mUpdateLastModified;
 
     void checkState();
-    void addEntry(EntryFrame::pointer entry);
+    void addEntry(EntryFrame::pointer entry, bool mustAddToAllChanges = true);
     void deleteEntry(EntryFrame::pointer entry);
-    void modEntry(EntryFrame::pointer entry);
+    void modEntry(EntryFrame::pointer entry, bool mustAddToAllChanges = true);
     void recordEntry(EntryFrame::pointer entry);
 
     // merge "other" into current ledgerDelta
@@ -82,6 +82,7 @@ class LedgerDeltaImpl : public LedgerDelta
     void addEntry(EntryFrame const& entry) override;
     void deleteEntry(EntryFrame const& entry) override;
     void deleteEntry(LedgerKey const& key) override;
+    void deleteEntry(LedgerKey const& key, bool mustAddToAllChanges = true);
     void modEntry(EntryFrame const& entry) override;
     void recordEntry(EntryFrame const& entry) override;
 

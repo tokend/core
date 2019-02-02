@@ -172,9 +172,6 @@ class TransactionFrameImpl : public TransactionFrame
     void storeTransactionTiming(LedgerManager& ledgerManager,
                                       uint64 maxTime) const;
 
-    // transaction fee
-    bool processTxFee(Application& app, LedgerDelta* delta) override;
-
     bool tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode) override;
 
     void storeFeeForOpType(OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,

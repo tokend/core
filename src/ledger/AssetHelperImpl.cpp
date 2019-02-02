@@ -33,10 +33,10 @@ AssetHelperImpl::dropAll()
            "owner                   VARCHAR(56)   NOT NULL,"
            "preissued_asset_signer  VARCHAR(56)   NOT NULL,"
            "details                 TEXT          NOT NULL,"
-           "max_issuance_amount     NUMERIC(20,0) NOT NULL CHECK (max_issuance_amount >= 0),"
-           "available_for_issueance NUMERIC(20,0) NOT NULL CHECK (available_for_issueance >= 0),"
-           "issued                  NUMERIC(20,0) NOT NULL CHECK (issued >= 0),"
-           "pending_issuance        NUMERIC(20,0) NOT NULL CHECK (issued >= 0),"
+           "max_issuance_amount     NUMERIC(23,0) NOT NULL CHECK (max_issuance_amount >= 0),"
+           "available_for_issueance NUMERIC(23,0) NOT NULL CHECK (available_for_issueance >= 0),"
+           "issued                  NUMERIC(23,0) NOT NULL CHECK (issued >= 0),"
+           "pending_issuance        NUMERIC(23,0) NOT NULL CHECK (issued >= 0),"
            "policies                INT           NOT NULL, "
            "type                    BIGINT        NOT NULL, "
            "lastmodified            INT           NOT NULL, "
@@ -362,10 +362,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     while (st.got_data())
     {
         oe.ext.v(static_cast<LedgerVersion>(version));
-        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-        {
-            oe.ext.trailingDigitsCount() = trailingDigits;
-        }
+        oe.trailingDigitsCount = trailingDigits;
 
         AssetFrame::ensureValid(oe);
 

@@ -28,6 +28,8 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
     char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
+    char const* ManageKeyValueOpFrame::limitsUpdateTasks =
+        "limits_update_tasks";
     char const* ManageKeyValueOpFrame::transactionFeeAssetPrefix =
         "tx_fee_asset";
     char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix =
@@ -48,6 +50,7 @@ namespace stellar {
         {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
         {withdrawLowerBoundPrefix, KeyValueEntryType::UINT64},
         {transactionFeeAssetPrefix, KeyValueEntryType::STRING},
+        {limitsUpdateTasks, KeyValueEntryType::UINT32},
     };
 
     ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
@@ -86,10 +89,7 @@ namespace stellar {
             return true;
         }
 
-        if (ledgerManager.shouldUse(LedgerVersion::KEY_VALUE_UPDATE))
-        {
-            keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
-        }
+        keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
         keyValueHelper->storeChange(delta, db, keyValueFrame->mEntry);
 
         return true;
@@ -122,6 +122,12 @@ namespace stellar {
     ManageKeyValueOpFrame::makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet)
     {
         return string(changeRoleTasks) + ":" + to_string(currentRoleID) + ":" + to_string(roleIDToSet);
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeLimitsUpdateTasksKey()
+    {
+        return limitsUpdateTasks;
     }
 
     longstring

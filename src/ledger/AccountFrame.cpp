@@ -5,9 +5,6 @@
 #include "AccountFrame.h"
 #include "LedgerDelta.h"
 #include "database/Database.h"
-#include "ledger/AccountTypeLimitsFrame.h"
-#include "lib/util/format.h"
-#include "util/basen.h"
 #include "util/types.h"
 
 using namespace soci;
@@ -118,28 +115,6 @@ AccountFrame::getLowThreshold() const
         .thresholds[static_cast<int32_t>(ThresholdIndexes::LOW)];
 }
 
-uint32
-AccountFrame::getKYCLevel() const
-{
-    if (mAccountEntry.ext.v() == LedgerVersion::USE_KYC_LEVEL)
-    {
-        return mAccountEntry.ext.kycLevel();
-    }
-
-    return 0;
-}
-void
-AccountFrame::setKYCLevel(uint32 kycLevel)
-{
-    if (mAccountEntry.ext.v() == LedgerVersion::USE_KYC_LEVEL)
-    {
-        mAccountEntry.ext.kycLevel() = kycLevel;
-    }
-    else if (kycLevel != 0)
-    {
-        throw std::runtime_error("Could not read KYC Level");
-    }
-}
 uint64_t
 AccountFrame::getAccountRole() const
 {
