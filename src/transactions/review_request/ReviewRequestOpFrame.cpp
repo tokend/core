@@ -38,15 +38,6 @@ using xdr::operator==;
 bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database & db, LedgerDelta & delta)
 {
     auto requestorAccount = AccountHelper::Instance()->loadAccount(request->getRequestor(), db, &delta);
-    // just go through old flow
-    if (!lm.shouldUse(LedgerVersion::ALLOW_REJECT_REQUEST_OF_BLOCKED_REQUESTOR)) {
-        if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
-            innerResult().code(ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
-            return false;
-        }
-
-        return true;
-    }
 
     // we do not care about user state if it's not approval
     if (mReviewRequest.action != ReviewRequestOpAction::APPROVE) {

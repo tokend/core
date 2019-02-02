@@ -202,11 +202,6 @@ std::vector<FeeType> getAllFeeTypes()
 	return result;
 }
 
-bool isFeeValid(FeeData const& fee)
-{
-	return fee.fixedFee >= 0 && fee.paymentFee >= 0;
-}
-
 bool isFeeTypeValid(FeeType feeType)
 {
 	auto allFeeTypes = xdr::xdr_traits<FeeType>::enum_values();

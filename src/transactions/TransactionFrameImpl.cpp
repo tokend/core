@@ -80,117 +80,6 @@ TransactionFrameImpl::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
     return true;
 }
 
-bool
-TransactionFrameImpl::processTxFee(Application& app, LedgerDelta* delta)
-{
-    auto& ledgerManager = app.getLedgerManager();
-
-    if (!ledgerManager.shouldUse(LedgerVersion::ADD_TRANSACTION_FEE))
-    {
-        return true;
-    }
-
-    if (getSourceAccount().getAccountType() == AccountType::MASTER)
-    {
-        return true;
-    }
-
-    uint64_t maxTotalFee = UINT64_MAX;
-
-    if (mEnvelope.tx.ext.v() == LedgerVersion::ADD_TRANSACTION_FEE)
-    {
-        maxTotalFee = mEnvelope.tx.ext.maxTotalFee();
-    }
-
-    auto& db = app.getDatabase();
-    AssetCode txFeeAssetCode;
-
-    if (!tryGetTxFeeAsset(db, txFeeAssetCode))
-    {
-        return true;
-    }
-
-    getResult().ext.v(LedgerVersion::ADD_TRANSACTION_FEE);
-    getResult().ext.transactionFee().assetCode = txFeeAssetCode;
-
-    std::map<OperationType, uint64_t> feesForOpTypes;
-    uint64_t totalFeeAmount = 0;
-    for (auto& op : mOperations)
-    {
-        auto opType = op->getOperation().body.type();
-
-        if (feesForOpTypes.find(opType) == feesForOpTypes.end())
-        {
-            storeFeeForOpType(opType, feesForOpTypes, getSourceAccountPtr(),
-                              txFeeAssetCode, db);
-        }
-
-        uint64_t opFeeAmount = feesForOpTypes[opType];
-
-        if (!safeSum(opFeeAmount, totalFeeAmount, totalFeeAmount))
-        {
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Overflow on tx fee calculation. Failed to add operation "
-                   "fee, operation type: "
-                << xdr::xdr_traits<OperationType>::enum_name(opType)
-                << "; amount: " << opFeeAmount;
-            throw runtime_error(
-                "Overflow on tx fee calculation. Failed to add operation fee");
-        }
-
-        OperationFee opFee;
-        opFee.operationType = opType;
-        opFee.amount = opFeeAmount;
-        getResult().ext.transactionFee().operationFees.push_back(opFee);
-    }
-
-    if (totalFeeAmount > maxTotalFee)
-    {
-        app.getMetrics()
-            .NewMeter({"transaction", "invalid", "insufficient-fee"},
-                      "transaction")
-            .Mark();
-        getResult().result.code(TransactionResultCode::txINSUFFICIENT_FEE);
-        return false;
-    }
-
-    auto sourceBalance = BalanceHelperLegacy::Instance()->loadBalance(getSourceID(),
-            txFeeAssetCode, db, delta);
-    if (!sourceBalance)
-    {
-        getResult().result.code(TransactionResultCode::txSOURCE_UNDERFUNDED);
-        return false;
-    }
-
-    auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
-        app.getCommissionID(), txFeeAssetCode, db, *delta);
-
-    const BalanceFrame::Result sourceChargeResult = sourceBalance->tryCharge(totalFeeAmount);
-    if (sourceChargeResult != BalanceFrame::Result::SUCCESS)
-    {
-        getResult().result.code(sourceChargeResult == BalanceFrame::Result::UNDERFUNDED ?
-                                TransactionResultCode::txSOURCE_UNDERFUNDED :
-                                TransactionResultCode::txFEE_INCORRECT_PRECISION);
-        return false;
-    }
-
-    EntryHelperProvider::storeChangeEntry(*delta, db, sourceBalance->mEntry);
-
-    const BalanceFrame::Result commissionResult = commissionBalance->tryFundAccount(totalFeeAmount);
-    if (commissionResult != BalanceFrame::Result::SUCCESS)
-    {
-        getResult().result.code(commissionResult == BalanceFrame::Result::LINE_FULL ?
-                                TransactionResultCode::txCOMMISSION_LINE_FULL :
-                                TransactionResultCode::txFEE_INCORRECT_PRECISION);
-        return false;
-    }
-
-    EntryHelperProvider::storeChangeEntry(*delta, db,
-                                          commissionBalance->mEntry);
-
-    return true;
-}
-
 Hash const&
 TransactionFrameImpl::getFullHash() const
 {
@@ -550,12 +439,6 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
         auto& opTimer =
             app.getMetrics().NewTimer({"transaction", "op", "apply"});
 
-        if (!processTxFee(app, &thisTxDelta))
-        {
-            meta.operations().clear();
-            return false;
-        }
-
         for (auto& op : mOperations)
         {
             auto time = opTimer.TimeScope();
@@ -573,17 +456,8 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
                 errorEncountered = true;
             }
             stateBeforeOp.push_back(opDelta.getState());
-            auto detailedChangesVersion =
-                static_cast<uint32_t>(LedgerVersion::DETAILED_LEDGER_CHANGES);
-            if (app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion >=
-                detailedChangesVersion)
-            {
-                meta.operations().emplace_back(opDelta.getAllChanges());
-            }
-            else
-            {
-                meta.operations().emplace_back(opDelta.getChanges());
-            }
+            meta.operations().emplace_back(opDelta.getAllChanges());
+
             storageHelper.commit();
         }
 

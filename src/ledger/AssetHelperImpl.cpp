@@ -361,10 +361,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     while (st.got_data())
     {
         oe.ext.v(static_cast<LedgerVersion>(version));
-        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-        {
-            oe.ext.trailingDigitsCount() = trailingDigits;
-        }
+        oe.trailingDigitsCount = trailingDigits;
 
         AssetFrame::ensureValid(oe);
 

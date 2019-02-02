@@ -301,12 +301,6 @@ bool CreateWithdrawalRequestOpFrame::processStatistics(AccountManager& accountMa
                                                        BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
                                                        uint64_t& universalAmount, const uint64_t requestID)
 {
-    if (!ledgerManager.shouldUse(LedgerVersion::CREATE_ONLY_STATISTICS_V2))
-    {
-        if (!tryAddStats(accountManager, balanceFrame, amountToAdd, universalAmount))
-            return false;
-    }
-
     StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
     return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount, requestID);
 }

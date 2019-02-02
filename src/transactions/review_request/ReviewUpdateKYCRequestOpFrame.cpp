@@ -67,7 +67,7 @@ namespace stellar {
         }
 
         auto &accountEntry = accountToUpdateKYCFrame->getAccount();
-        accountEntry.ext.v(LedgerVersion::USE_KYC_LEVEL);
+
         accountToUpdateKYCFrame->setKYCLevel(updateKYCRequest.kycLevel);
         accountToUpdateKYCFrame->setAccountType(updateKYCRequest.accountTypeToSet);
         EntryHelperProvider::storeChangeEntry(delta, db, accountToUpdateKYCFrame->mEntry);

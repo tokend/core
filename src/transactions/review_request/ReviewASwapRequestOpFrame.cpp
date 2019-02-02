@@ -192,14 +192,6 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         removeBid(db, delta, bidOwnerBalanceFrame, bidFrame);
     }
 
-    if (!ledgerManager.shouldUse(LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT))
-    {
-        innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().fulfilled = true;
-        innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
-        return true;
-    }
-
     auto quoteAssetPrice = bidFrame->getQuoteAssetPrice(aSwapRequest.quoteAsset);
     if (quoteAssetPrice == 0)
     {

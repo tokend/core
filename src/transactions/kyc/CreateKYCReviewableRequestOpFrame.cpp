@@ -29,13 +29,13 @@ namespace stellar {
 
     std::unordered_map<AccountID, CounterpartyDetails>
     CreateUpdateKYCRequestOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta, int32_t ledgerVersion) const {
-        std::vector<AccountType> allowedAccountTypes = {AccountType::GENERAL, AccountType::NOT_VERIFIED,
+        std::vector<AccountType> allowedAccountTypes = {AccountType::GENERAL,
+                                                        AccountType::NOT_VERIFIED,
                                                         AccountType::ACCREDITED_INVESTOR,
                                                         AccountType::INSTITUTIONAL_INVESTOR,
-                                                        AccountType::VERIFIED};
-        if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_SYNDICATE_TO_UPDATE_KYC)) {
-            allowedAccountTypes.push_back(AccountType::SYNDICATE);
-        }
+                                                        AccountType::VERIFIED,
+                                                        AccountType::SYNDICATE};
+
         return {{mCreateUpdateKYCRequest.updateKYCRequestData.accountToUpdateKYC,
                         CounterpartyDetails(allowedAccountTypes, true, true)}
         };
@@ -50,21 +50,15 @@ namespace stellar {
                                  static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
         }
         if (getSourceID() == mCreateUpdateKYCRequest.updateKYCRequestData.accountToUpdateKYC) {
-            int32_t allowedSignerTypes = static_cast<int32_t>(SignerType::KYC_ACC_MANAGER);
-            if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_ACCOUNT_MANAGER_TO_CHANGE_KYC))
-            {
-                allowedSignerTypes |= static_cast<int32_t>(SignerType::ACCOUNT_MANAGER);
-            }
+            int32_t allowedSignerTypes =
+                    static_cast<int32_t>(SignerType::KYC_ACC_MANAGER) | static_cast<int32_t>(SignerType::ACCOUNT_MANAGER);
 
-            std::vector<AccountType> allowedAccountTypes = {AccountType::GENERAL, AccountType::NOT_VERIFIED,
+            std::vector<AccountType> allowedAccountTypes = {AccountType::GENERAL,
+                                                            AccountType::NOT_VERIFIED,
                                                             AccountType::ACCREDITED_INVESTOR,
                                                             AccountType::INSTITUTIONAL_INVESTOR,
-                                                            AccountType::VERIFIED};
-
-            if (ledgerVersion >= static_cast<int32_t>(LedgerVersion::ALLOW_SYNDICATE_TO_UPDATE_KYC))
-            {
-                allowedAccountTypes.push_back(AccountType::SYNDICATE);
-            }
+                                                            AccountType::VERIFIED,
+                                                            AccountType::SYNDICATE};
 
             return SourceDetails(allowedAccountTypes, mSourceAccount->getHighThreshold(), allowedSignerTypes);
         }
@@ -180,13 +174,7 @@ namespace stellar {
         innerResult().success().requestID = requestFrame->getRequestID();
         innerResult().success().fulfilled = false;
 
-        bool canAutoApprove = requestFrame->canBeFulfilled(ledgerManager);
-
-        if (!ledgerManager.shouldUse(LedgerVersion::FIX_CREATE_KYC_REQUEST_AUTO_APPROVE))
-            canAutoApprove = canAutoApprove &&
-                             mSourceAccount->getAccountType() == AccountType::MASTER;
-
-        if (canAutoApprove)
+        if (requestFrame->canBeFulfilled(ledgerManager))
             tryAutoApprove(db, delta, app, requestFrame);
 
         return true;
@@ -242,12 +230,6 @@ namespace stellar {
                                                      UpdateKYCRequestData kycRequestData,
                                                      AccountFrame::pointer account, uint32 &defaultMask)
     {
-        if(!ledgerManager.shouldUse(LedgerVersion::KYC_RULES))
-        {
-            defaultMask = CreateUpdateKYCRequestOpFrame::defaultTasks;
-            return true;
-        }
-
         auto  key = ManageKeyValueOpFrame::makeKYCRuleKey(account->getAccount().accountType,account->getKYCLevel(),
                                                           kycRequestData.accountTypeToSet,kycRequestData.kycLevelToSet);
 

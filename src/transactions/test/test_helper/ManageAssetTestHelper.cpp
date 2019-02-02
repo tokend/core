@@ -72,8 +72,7 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
         countObjects(mTestManager->getDB().getSession());
     if (expectedResult != ManageAssetResultCode::SUCCESS)
     {
-        REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx)
-        ;
+        REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
         return ManageAssetResult{};
     }
 
@@ -174,11 +173,8 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;
     assetCreationRequest.initialPreissuedAmount = initialPreissuanceAmount;
-    if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
-    {
-        assetCreationRequest.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
-        assetCreationRequest.ext.trailingDigitsCount() = trailingDigitsCount;
-    }
+    assetCreationRequest.trailingDigitsCount = trailingDigitsCount;
+
     if (allTasks){
         request.createAssetCreationRequest().allTasks.activate() = *allTasks;
     }
@@ -245,13 +241,8 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                                       getPublicKey(),
                                                       "{}", maxIssuanceAmount,
                                                       policies, allTasks, 0);
-    if (trailingDigitsCount != AssetFrame::kMaximumTrailingDigits)
-    {
-        creationRequest.createAssetCreationRequest().createAsset.ext.v(
-                LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
-        creationRequest.createAssetCreationRequest().createAsset.ext.trailingDigitsCount() =
-                trailingDigitsCount;
-    }
+    creationRequest.createAssetCreationRequest().createAsset.trailingDigitsCount =
+            trailingDigitsCount;
     auto creationResult = applyManageAssetTx(assetOwner, 0, creationRequest);
 
     auto accountHelper = AccountHelper::Instance();
@@ -312,7 +303,6 @@ void ManageAssetTestHelper::changeAssetTrailingDigits(AssetCode assetCode,
     storageHelper->release();
 
     auto asset = storageHelper->getAssetHelper().mustLoadAsset(assetCode);
-    asset->mEntry.data.asset().ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
     asset->setTrailingDigitsCount(trailingDigitsCount);
     storageHelper->getAssetHelper().storeChange(asset->mEntry);
 }

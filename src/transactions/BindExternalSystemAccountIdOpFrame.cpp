@@ -138,12 +138,6 @@ BindExternalSystemAccountIdOpFrame::getExpiresAt(StorageHelper& storageHelper,
                                                  LedgerManager& ledgerManager,
                                                  int32 externalSystemType)
 {
-    if (!ledgerManager.shouldUse(
-            LedgerVersion::KEY_VALUE_POOL_ENTRY_EXPIRES_AT))
-    {
-        return dayInSeconds;
-    }
-
     auto key = ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(
         externalSystemType);
 

@@ -87,11 +87,10 @@ createNewUpdateRequest(Application& app, LedgerManager& lm, Database& db, Ledger
     }
 
     auto const& sale = mCreateSaleCreationRequest.request;
-    xdr::pointer<string64> referencePtr = nullptr;
-    if (!lm.shouldUse(LedgerVersion::ALLOW_TO_CREATE_SEVERAL_SALES)) {
-        auto reference = getReference(sale);
-        referencePtr = xdr::pointer<string64>(new string64(reference));
-    }
+
+    auto reference = getReference(sale);
+    xdr::pointer<string64> referencePtr =  xdr::pointer<string64>(new string64(reference));
+
     auto request = ReviewableRequestFrame::createNew(mCreateSaleCreationRequest.requestID, getSourceID(), app.getMasterID(),
         referencePtr, closedAt);
     auto& requestEntry = request->getRequestEntry();

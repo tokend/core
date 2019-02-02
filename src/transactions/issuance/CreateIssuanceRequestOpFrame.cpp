@@ -173,12 +173,6 @@ std::unordered_map<AccountID, CounterpartyDetails> CreateIssuanceRequestOpFrame:
 SourceDetails CreateIssuanceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
                                                                     int32_t ledgerVersion) const
 {
-	if (ledgerVersion < static_cast<int32_t>(LedgerVersion::ADD_TASKS_TO_REVIEWABLE_REQUEST))
-	{
-		return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-							 static_cast<int32_t>(SignerType::ISSUANCE_MANAGER));
-	}
-
 	if (!mCreateIssuanceRequest.allTasks)
 	{
 		return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
