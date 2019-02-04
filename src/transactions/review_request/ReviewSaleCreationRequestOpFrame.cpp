@@ -27,7 +27,7 @@ ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(
     auto requestType = request->getType();
     switch (requestType)
     {
-    case ReviewableRequestType::SALE:
+    case ReviewableRequestType::CREATE_SALE:
     {
         return request->getRequestEntry().body.saleCreationRequest();
     }
@@ -118,7 +118,7 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::SALE)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_SALE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected request type. Expected SALE, but got "
@@ -154,7 +154,7 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
     }
 
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(ReviewableRequestType::SALE);
+    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_SALE);
     innerResult().success().typeExt.saleExtended().saleID = newSaleID;
     return true;
 }

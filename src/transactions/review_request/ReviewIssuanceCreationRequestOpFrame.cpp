@@ -20,7 +20,7 @@ handleApprove(Application &app, LedgerDelta &delta,
 														   LedgerManager &ledgerManager,
 														   ReviewableRequestFrame::pointer request)
 {
-	request->checkRequestType(ReviewableRequestType::ISSUANCE_CREATE);
+	request->checkRequestType(ReviewableRequestType::CREATE_ISSUANCE);
 
 	auto& issuanceRequest = request->getRequestEntry().body.issuanceRequest();
 	Database& db = ledgerManager.getDatabase();
@@ -201,7 +201,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		LedgerDeltaImpl localDeltaImpl(delta);
 		LedgerDelta& localDelta = localDeltaImpl;
 
-		request->checkRequestType(ReviewableRequestType::ISSUANCE_CREATE);
+		request->checkRequestType(ReviewableRequestType::CREATE_ISSUANCE);
 		auto& requestEntry = request->getRequestEntry();
         auto& issuanceRequest = request->getRequestEntry().body.issuanceRequest();
 		auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(issuanceRequest.asset, db, &localDelta);

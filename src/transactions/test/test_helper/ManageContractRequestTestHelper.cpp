@@ -17,7 +17,7 @@ ManageContractRequestTestHelper::ManageContractRequestTestHelper(TestManager::po
 ManageContractRequestOp
 ManageContractRequestTestHelper::createContractRequest(AccountID customer, AccountID escrow,
                                                        uint64_t startTime, uint64_t endTime,
-                                                       longstring details)
+                                                       longstring creatorDetails)
 {
     ManageContractRequestOp result;
     result.details.action(ManageContractRequestAction::CREATE);
@@ -25,7 +25,7 @@ ManageContractRequestTestHelper::createContractRequest(AccountID customer, Accou
     result.details.createContractRequest().contractRequest.escrow = escrow;
     result.details.createContractRequest().contractRequest.startTime = startTime;
     result.details.createContractRequest().contractRequest.endTime = endTime;
-    result.details.createContractRequest().contractRequest.details = details;
+    result.details.createContractRequest().contractRequest.creatorDetails = creatorDetails;
     result.details.createContractRequest().contractRequest.ext.v(LedgerVersion::EMPTY_VERSION);
     result.ext.v(LedgerVersion::EMPTY_VERSION);
 

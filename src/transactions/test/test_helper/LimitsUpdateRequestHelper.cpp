@@ -65,17 +65,17 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
 
     REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestID() == limitsUpdateRequestAfterTx->getRequestID());
-    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().details !=
-    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().details);
+    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails !=
+    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails);
 
     return createManageLimitsRequestResult;
 }
 
 LimitsUpdateRequest
-LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring details)
+LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring creatorDetails)
 {
     LimitsUpdateRequest result;
-    result.details = details;
+    result.creatorDetails = creatorDetails;
     return result;
 }
 
@@ -87,7 +87,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_MANAGE_LIMITS_REQUEST);
     auto& op = baseOp.body.createManageLimitsRequestOp();
-    op.manageLimitsRequest.details = request.details;
+    op.manageLimitsRequest.creatorDetails = request.creatorDetails;
 
     if (allTasks)
     {
