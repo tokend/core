@@ -53,7 +53,5 @@ public:
     {
         return xdr::xdr_traits<CreateChangeRoleRequestResultCode>::enum_name(innerResult().code());
     }
-
-    static const uint32 defaultTasks;
 };
 }

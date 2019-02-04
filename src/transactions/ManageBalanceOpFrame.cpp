@@ -46,12 +46,6 @@ ManageBalanceOpFrame::doApply(Application& app,
     Database& db = ledgerManager.getDatabase();
     if (mManageBalance.action == ManageBalanceAction::CREATE_UNIQUE)
     {
-        if (!ledgerManager.shouldUse(LedgerVersion::UNIQUE_BALANCE_CREATION))
-        {
-            innerResult().code(ManageBalanceResultCode::VERSION_IS_NOT_SUPPORTED_YET);
-            return false;
-        }
-
         const auto balance = BalanceHelperLegacy::Instance()->loadBalance(mManageBalance.destination, mManageBalance.asset, db, nullptr);
         if (!!balance)
         {

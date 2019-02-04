@@ -152,7 +152,7 @@ namespace stellar {
             op = buildOp();
             res = OperationResult(OperationResultCode::opINNER);
             res.tr().type(OperationType::MANAGE_KEY_VALUE);
-            kvManager = new ManageKeyValueOpFrame(op,res,*tx);
+            kvManager = std::make_shared<ManageKeyValueOpFrame>(op, res, *tx);
         }
 
     }

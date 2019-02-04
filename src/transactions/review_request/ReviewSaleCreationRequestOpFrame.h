@@ -29,9 +29,6 @@ namespace stellar {
         void createAssetPair(SaleFrame::pointer sale, Application &app, LedgerManager &ledgerManager,
                              LedgerDelta &delta) const;
 
-        AssetFrame::pointer loadAsset(LedgerManager &ledgerManager, AssetCode code, AccountID const &requestor,
-                                      Database &db, LedgerDelta *delta);
-
         std::map<AssetCode, BalanceID>
         loadBalances(AccountManager &accountManager, ReviewableRequestFrame::pointer request,
                      SaleCreationRequest const &sale);

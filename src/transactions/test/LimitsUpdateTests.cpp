@@ -129,7 +129,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
             }
             SECTION("Update limits update request") {
                 std::string newDocumentData = "{\n \"a\": \"New document data\" \n}";
-                limitsUpdateRequest.ext.details() = newDocumentData;
+                limitsUpdateRequest.details = newDocumentData;
                 uint64_t limitsUpdateRequestID = limitsUpdateResult.success().manageLimitsRequestID;
                 limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
                                                                                               limitsUpdateRequest,
@@ -142,7 +142,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
 
         SECTION("Invalid details")
         {
-            limitsUpdateRequest.ext.details() = "Some document data, huge data, very huge data to check convert to string64"
+            limitsUpdateRequest.details = "Some document data, huge data, very huge data to check convert to string64"
                                                 " when get reference to write to database information about request";
             limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
                                                                                           limitsUpdateRequest, nullptr,

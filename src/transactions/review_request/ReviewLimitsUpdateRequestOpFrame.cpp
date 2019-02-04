@@ -75,19 +75,9 @@ namespace stellar {
 
         if (!manageLimitsOpFrame.doCheckValid(app) || !manageLimitsOpFrame.doApply(app, delta, ledgerManager))
         {
-            if (ledgerManager.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS))
-            {
-                OperationResult& manageLimitsResult = manageLimitsOpFrame.getResult();
-                auto manageLimitsResultCode = ManageLimitsOpFrame::getInnerCode(manageLimitsResult);
-                return handleManageLimitsResult(manageLimitsResultCode);
-            }
-
-            auto resultCodeString = manageLimitsOpFrame.getInnerResultCodeAsStr();
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply manage limits"
-                                                      " on review limits update request: "
-                                                   << request->getRequestID() << " with code: " << resultCodeString;
-            throw runtime_error("Unexpected state: failed to set limits on review limits update request with code: " +
-                                 resultCodeString);
+            OperationResult& manageLimitsResult = manageLimitsOpFrame.getResult();
+            auto manageLimitsResultCode = ManageLimitsOpFrame::getInnerCode(manageLimitsResult);
+            return handleManageLimitsResult(manageLimitsResultCode);
         }
 
         auto reference = request->getReference();
@@ -127,12 +117,6 @@ namespace stellar {
                                                         LedgerManager &ledgerManager,
                                                         ReviewableRequestFrame::pointer request)
     {
-        if (!ledgerManager.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS))
-        {
-            innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
-            return false;
-        }
-
         request->checkRequestType(ReviewableRequestType::LIMITS_UPDATE);
         request->setRejectReason(mReviewRequest.reason);
 

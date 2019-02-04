@@ -142,22 +142,6 @@ namespace stellar {
     AccountManager::processStatistics(AccountFrame::pointer from, BalanceFrame::pointer fromBalance,
                                       uint64_t amount, uint64_t& universalAmount)
     {
-        if (!mLm.shouldUse(LedgerVersion::CREATE_ONLY_STATISTICS_V2))
-        {
-            auto stats = StatisticsHelper::Instance()->mustLoadStatistics(fromBalance->getAccountID(), mDb, &mDelta);
-
-            auto now = mLm.getCloseTime();
-            if (!stats->add(universalAmount, now)) {
-                return ProcessTransferResult(Result::STATS_OVERFLOW, 0);
-            }
-
-            if (!validateStats(from, fromBalance, stats)) {
-                return ProcessTransferResult(Result::LIMITS_EXCEEDED, 0);
-            }
-
-            EntryHelperProvider::storeChangeEntry(mDelta, mDb, stats->mEntry);
-        }
-
         universalAmount = 0;
         auto statsV2Result = tryAddStatsV2(from, fromBalance, amount, universalAmount);
 
@@ -389,8 +373,7 @@ namespace stellar {
     void AccountManager::unlockPendingIssuanceForSale(SaleFrame::pointer const sale, LedgerDelta &delta, Database &db,
                                                       LedgerManager &lm) {
         auto baseAsset = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db, &delta);
-        const auto baseAmount = lm.shouldUse(LedgerVersion::ALLOW_TO_SPECIFY_REQUIRED_BASE_ASSET_AMOUNT_FOR_HARD_CAP)
-                                ? sale->getSaleEntry().maxAmountToBeSold : baseAsset->getPendingIssuance();
+        const auto baseAmount = sale->getSaleEntry().maxAmountToBeSold;
         baseAsset->mustUnlockIssuedAmount(baseAmount);
         AssetHelperLegacy::Instance()->storeChange(delta, db, baseAsset->mEntry);
     }

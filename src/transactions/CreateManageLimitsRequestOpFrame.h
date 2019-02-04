@@ -45,6 +45,8 @@ public:
     {
         return xdr::xdr_traits<CreateManageLimitsRequestResultCode>::enum_name(innerResult().code());
     }
+
+    std::vector<longstring> makeTasksKeyVector(StorageHelper& storageHelper) override;
 };
 
 }

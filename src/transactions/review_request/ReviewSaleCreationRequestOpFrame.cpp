@@ -61,8 +61,8 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
         throw runtime_error("Quote asset does not exist");
     }
 
-    auto baseAsset = loadAsset(ledgerManager, saleCreationRequest.baseAsset,
-                               request->getRequestor(), db, &delta);
+    auto baseAsset = AssetHelperLegacy::Instance()->loadAsset(
+            saleCreationRequest.baseAsset, request->getRequestor(), db, &delta);
     if (!baseAsset)
     {
         return ReviewRequestResultCode::BASE_ASSET_DOES_NOT_EXISTS;
@@ -90,26 +90,6 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
     createAssetPair(saleFrame, app, ledgerManager, delta);
     return ReviewRequestResultCode::SUCCESS;
-}
-
-AssetFrame::pointer
-ReviewSaleCreationRequestOpFrame::loadAsset(LedgerManager& ledgerManager,
-                                            AssetCode code,
-                                            AccountID const& requestor,
-                                            Database& db, LedgerDelta* delta)
-{
-    AssetFrame::pointer retAsset;
-
-    if (!ledgerManager.shouldUse(
-            LedgerVersion::ALLOW_TO_UPDATE_VOTING_SALES_AS_PROMOTION))
-    {
-        retAsset =
-            AssetHelperLegacy::Instance()->loadAsset(code, requestor, db, delta);
-        return retAsset;
-    }
-
-    retAsset = AssetHelperLegacy::Instance()->loadAsset(code, requestor, db, delta);
-    return retAsset;
 }
 
 bool
@@ -179,12 +159,7 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
                 ledgerManager.getDatabase());
         if (!!assetPair)
         {
-            if (ledgerManager.shouldUse(
-                    LedgerVersion::FIX_ASSET_PAIRS_CREATION_IN_SALE_CREATION))
-            {
-                continue;
-            }
-            return;
+            continue;
         }
 
         // create new asset pair

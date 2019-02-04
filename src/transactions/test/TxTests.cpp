@@ -2,6 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include <ledger/BalanceHelperLegacy.h>
 #include "main/Application.h"
 #include "invariant/Invariants.h"
 #include "overlay/LoopbackPeer.h"
@@ -10,10 +11,9 @@
 #include "test/test_marshaler.h"
 #include "TxTests.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
-#include "transactions/DirectDebitOpFrame.h"
+#include "transactions/payment/PaymentOpV2Frame.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/ManageInvoiceRequestOpFrame.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -64,15 +64,15 @@ FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
 	return fee;
 }
 
-PaymentFeeData getNoPaymentFee() {
+PaymentFeeDataV2 getNoPaymentFee() {
     return getGeneralPaymentFee(0, 0);
 }
 
-PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
-    PaymentFeeData paymentFeeData;
-    FeeData generalFeeData;
-    generalFeeData.fixedFee = fixedFee;
-    generalFeeData.paymentFee = paymentFee;
+PaymentFeeDataV2 getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
+    PaymentFeeDataV2 paymentFeeData;
+    Fee generalFeeData;
+    generalFeeData.fixed = fixedFee;
+    generalFeeData.percent = paymentFee;
     paymentFeeData.sourceFee = generalFeeData;
     paymentFeeData.destinationFee = generalFeeData;
     paymentFeeData.sourcePaysForDest = true;
@@ -539,13 +539,6 @@ applyManageBalanceTx(Application& app, SecretKey& from, SecretKey& account,
     return opResult;
 }
 
-TransactionFramePtr
-createManageAssetTx(Hash const& networkID, SecretKey& source, Salt seq, AssetCode code,
-    int32 policies, ManageAssetAction action)
-{
-	throw std::runtime_error("use manageAssetHelper");
-}
-
 void applyManageAssetTx(Application & app, SecretKey & source, Salt seq, AssetCode asset, int32 policies, ManageAssetAction action, ManageAssetResultCode result)
 {
 	throw std::runtime_error("use manageAssetHelper");
@@ -555,54 +548,48 @@ void applyManageAssetTx(Application & app, SecretKey & source, Salt seq, AssetCo
 // For base balance
 TransactionFramePtr
 createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds,
-                    InvoiceReference* invoiceReference)
+                Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
 {
     return createPaymentTx(networkID, from, from.getPublicKey(), to.getPublicKey(), seq, amount,paymentFee,
-        isSourceFee, subject, reference, timeBounds, invoiceReference);
+        isSourceFee, subject, reference, timeBounds);
 }
 
 TransactionFramePtr
 createPaymentTx(Hash const& networkID, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID,
-                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds,
-                    InvoiceReference* invoiceReference)
+                Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
 {
     Operation op;
-    op.body.type(OperationType::PAYMENT);
-    op.body.paymentOp().amount = amount;
-	op.body.paymentOp().feeData = paymentFee;
-    op.body.paymentOp().subject = subject;
-    op.body.paymentOp().sourceBalanceID = fromBalanceID;
-    op.body.paymentOp().destinationBalanceID = toBalanceID;
-    op.body.paymentOp().reference = reference;
-    if (invoiceReference)
-        op.body.paymentOp().invoiceReference.activate() = *invoiceReference;
+    op.body.type(OperationType::PAYMENT_V2);
+    op.body.paymentOpV2().amount = amount;
+	op.body.paymentOpV2().feeData = paymentFee;
+    op.body.paymentOpV2().subject = subject;
+    op.body.paymentOpV2().sourceBalanceID = fromBalanceID;
+    op.body.paymentOpV2().reference = reference;
 
     return transactionFromOperation(networkID, from, seq, op, nullptr, timeBounds);
 }
 
 
 // For base balance
-PaymentResult
+PaymentV2Result
 applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
-               Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee,
-               std::string subject, std::string reference, PaymentResultCode result,
-               InvoiceReference* invoiceReference)
+               Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee,
+               std::string subject, std::string reference, PaymentV2ResultCode result)
 {
     return applyPaymentTx(app, from, from.getPublicKey(), to.getPublicKey(),
-               seq, amount, paymentFee, isSourceFee, subject, reference, result, invoiceReference);
+               seq, amount, paymentFee, isSourceFee, subject, reference, result);
 }
 
-PaymentResult
+PaymentV2Result
 applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID,
-        BalanceID toBalanceID, Salt seq, int64_t amount, PaymentFeeData paymentFee,
+        BalanceID toBalanceID, Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee,
         bool isSourceFee, std::string subject, std::string reference, 
-        PaymentResultCode result, InvoiceReference* invoiceReference)
+        PaymentV2ResultCode result)
 {
     TransactionFramePtr txFrame;
 
     txFrame = createPaymentTx(app.getNetworkID(), from, fromBalanceID, toBalanceID,
-        seq, amount, paymentFee, isSourceFee, subject, reference, nullptr, invoiceReference);
+        seq, amount, paymentFee, isSourceFee, subject, reference, nullptr);
 
     LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                           app.getDatabase());
@@ -612,47 +599,11 @@ applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID,
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
     REQUIRE(opResult.code() == OperationResultCode::opINNER);
-    auto innerCode = PaymentOpFrame::getInnerCode(txResult.result.results()[0]);
+    auto innerCode = PaymentOpV2Frame::getInnerCode(txResult.result.results()[0]);
     REQUIRE(innerCode == result);
     REQUIRE(txResult.feeCharged == app.getLedgerManager().getTxFee());
 
-    return txResult.result.results()[0].tr().paymentResult();
-}
-
-TransactionFramePtr
-createDirectDebitTx(Hash const& networkID, SecretKey& source, Salt seq, AccountID from,
-	PaymentOp paymentOp)
-{
-	Operation op;
-	op.body.type(OperationType::DIRECT_DEBIT);
-	op.body.directDebitOp().paymentOp = paymentOp;
-	op.body.directDebitOp().from = from;
-
-	return transactionFromOperation(networkID, source, seq, op);
-}
-
-DirectDebitResult
-applyDirectDebitTx(Application& app, SecretKey& source, Salt seq,
-	AccountID from, PaymentOp paymentOp, DirectDebitResultCode result)
-{
-	TransactionFramePtr txFrame;
-
-	txFrame = createDirectDebitTx(app.getNetworkID(), source, seq, from, paymentOp);
-
-	LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-		app.getDatabase());
-	applyCheck(txFrame, delta, app);
-
-	checkTransaction(*txFrame);
-	auto txResult = txFrame->getResult();
-	auto innerCode =
-		DirectDebitOpFrame::getInnerCode(txResult.result.results()[0]);
-	REQUIRE(innerCode == result);
-	REQUIRE(txResult.feeCharged == app.getLedgerManager().getTxFee());
-
-	auto opResult = txResult.result.results()[0].tr().directDebitResult();
-
-	return opResult;
+    return txResult.result.results()[0].tr().paymentV2Result();
 }
 
 TransactionFramePtr createManageAccount(Hash const& networkID, SecretKey& source, SecretKey& account, Salt seq, uint32 blockReasonsToAdd, uint32 blockReasonsToRemove, AccountType accountType)

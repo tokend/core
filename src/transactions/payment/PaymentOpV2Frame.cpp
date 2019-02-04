@@ -188,8 +188,7 @@ namespace stellar {
                 return dest;
             }
             case PaymentDestinationType::ACCOUNT: {
-                if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_DEST_ACCOUNT_NOT_FOUND) &&
-                    !AccountHelperLegacy::Instance()->exists(mPayment.destination.accountID(), db)) {
+                if (!AccountHelperLegacy::Instance()->exists(mPayment.destination.accountID(), db)) {
                     innerResult().code(PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
                     return nullptr;
                 }
@@ -256,11 +255,6 @@ namespace stellar {
     bool
     PaymentOpV2Frame::isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID)
     {
-        if (!lm.shouldUse(LedgerVersion::FIX_PAYMENT_V2_SEND_TO_SELF))
-        {
-            return false;
-        }
-
         return sourceBalanceID == destBalanceID;
     }
 

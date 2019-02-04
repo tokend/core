@@ -111,10 +111,6 @@ void DeleteSaleParticipationOpFrame::doNotCheckSaleState()
 }
 BalanceID DeleteSaleParticipationOpFrame::getQuoteBalanceID(OfferFrame::pointer offer, LedgerManager& lm)
 {
-    if (!lm.shouldUse(LedgerVersion::ALLOW_TO_CANCEL_SALE_PARTICIP_WITHOUT_SPECIFING_BALANCE)) {
-        return mManageOffer.quoteBalance;
-    }
-
     return offer->getOffer().quoteBalance;
 }
 }
