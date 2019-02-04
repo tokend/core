@@ -92,6 +92,8 @@ public:
 
     bool exists(Database& db, BalanceID balanceID);
 
+    uint64_t loadTotalAssetAmount(Database& db, AssetCode assetCode);
+
 private:
     BalanceHelperLegacy() { ; }
     ~BalanceHelperLegacy() { ; }

@@ -29,7 +29,8 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<int32_t>(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS);
+    LEDGER_PROTOCOL_VERSION = static_cast<int32_t >(
+            LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT);
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
     OVERLAY_PROTOCOL_VERSION = 5;
 
