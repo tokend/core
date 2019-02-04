@@ -4,16 +4,24 @@
 
 ### Added
 
+* RuleVerifier
+* AccountRuleVerifier
+
 ### Changed
 
-* Squashed ledger version;
+* ManageAccountRule and ManageAccountRole op frames
+* AccountRole and AccountRule helpers and frames
+* Account frame
 
-### Deprecated 
+### Deprecated
+
+* Account type
+* Payout
 
 ### Removed
 
-* Payment and Direct Debit Operations
+* getSourceAccountDetails and getCounterpartyDetails for all op frames
 
-### Fixed 
+### Fixed
 
 ### Security 
