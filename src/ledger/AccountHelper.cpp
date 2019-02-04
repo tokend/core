@@ -41,7 +41,7 @@ namespace stellar
 		int32_t newAccountVersion = static_cast<int32_t>(accountFrame->getAccount().ext.v());
 		int32_t newAccountPolicies = accountFrame->getPolicies();
 		//set kyc level
-		uint32 kycLevel = accountFrame->getKYCLevel();
+		uint32 kycLevel = 0;
 		std::string sql;
 
         if (insert)
@@ -453,7 +453,6 @@ namespace stellar
 		account.accountType = AccountType(accountType);
 		account.ext.v((LedgerVersion)accountVersion);
 		account.policies = accountPolicies;
-		res->setKYCLevel(kycLevel);
 		if (referrer != "")
 			account.referrer.activate() = PubKeyUtils::fromStrKey(referrer);
 		bn::decode_b64(thresholds.begin(), thresholds.end(),

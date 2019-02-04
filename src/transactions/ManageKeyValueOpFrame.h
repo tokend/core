@@ -52,6 +52,8 @@ namespace stellar {
         static longstring
         makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet);
 
+        static longstring makeLimitsUpdateTasksKey();
+
         static longstring makeExternalSystemExpirationPeriodKey(int32 externalSystemType);
 
         static longstring makeTransactionFeeAssetKey();
@@ -109,6 +111,7 @@ namespace stellar {
         static char const * invoiceCreateTasks;
         static char const * contractCreateTasks;
         static char const * amlAlertCreateTasks;
+        static char const * limitsUpdateTasks;
 
         static std::map<std::string, KeyValueEntryType> valueTypes;
     };

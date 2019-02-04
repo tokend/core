@@ -100,14 +100,6 @@ ReviewSaleCreationRequestOpFrame::loadAsset(LedgerManager& ledgerManager,
 {
     AssetFrame::pointer retAsset;
 
-    if (!ledgerManager.shouldUse(
-            LedgerVersion::ALLOW_TO_UPDATE_VOTING_SALES_AS_PROMOTION))
-    {
-        retAsset =
-            AssetHelperLegacy::Instance()->loadAsset(code, requestor, db, delta);
-        return retAsset;
-    }
-
     auto requestorFrame =
         AccountHelper::Instance()->mustLoadAccount(requestor, db);
 
@@ -174,13 +166,6 @@ ReviewSaleCreationRequestOpFrame::getSourceAccountDetails(
 {
     auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
 
-    auto newSignersVersion =
-        static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSignersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ASSET_MANAGER);
-    }
-
     return SourceDetails({AccountType::MASTER},
                          mSourceAccount->getHighThreshold(), allowedSigners);
 }
@@ -206,12 +191,7 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
                 ledgerManager.getDatabase());
         if (!!assetPair)
         {
-            if (ledgerManager.shouldUse(
-                    LedgerVersion::FIX_ASSET_PAIRS_CREATION_IN_SALE_CREATION))
-            {
-                continue;
-            }
-            return;
+            continue;
         }
 
         // create new asset pair

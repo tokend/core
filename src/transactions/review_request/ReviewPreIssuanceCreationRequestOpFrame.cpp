@@ -69,12 +69,6 @@ SourceDetails ReviewPreIssuanceCreationRequestOpFrame::getSourceAccountDetails(s
 {
     auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
 
-    auto newSingersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSingersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ISSUANCE_MANAGER);
-    }
-
 	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
 }
 

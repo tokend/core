@@ -74,7 +74,6 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
 
     if (actualResultCode != CreateChangeRoleRequestResultCode::SUCCESS) {
         REQUIRE(accountAfter->getAccountType() == accountBefore->getAccountType());
-        REQUIRE(accountAfter->getKYCLevel() == accountBefore->getKYCLevel());
 
         if (requestBeforeTx) {
             auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);

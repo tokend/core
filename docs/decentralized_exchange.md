@@ -1,6 +1,6 @@
 # Decentralized exchange
 ## Concept
-**Swarmfund** gives an opportunity to exchange assets within the 
+**TokenD** gives an opportunity to exchange assets within the 
 system by creating an offer. Basically, offer tells between which assets 
 exchange will be performed (base and quote), amount and desirable price
 for exchange. Source account must hold balances in base and quote 

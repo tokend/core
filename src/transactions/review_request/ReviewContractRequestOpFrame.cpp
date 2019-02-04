@@ -68,14 +68,10 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
     contractEntry.initialDetails = contractRequest.creatorDetails;
     contractEntry.state = static_cast<uint32_t>(ContractState::NO_CONFIRMATIONS);
 
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT))
-    {
-        if (!checkCustomerDetailsLength(app, db, delta))
-            return false;
+    if (!checkCustomerDetailsLength(app, db, delta))
+        return false;
 
-        contractEntry.ext.v(LedgerVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT);
-        contractEntry.ext.customerDetails() = mReviewRequest.requestDetails.contract().details;
-    }
+    contractEntry.customerDetails = mReviewRequest.requestDetails.contract().details;
 
     EntryHelperProvider::storeAddEntry(delta, db, contractFrame->mEntry);
 

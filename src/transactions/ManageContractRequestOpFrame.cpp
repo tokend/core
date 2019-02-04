@@ -60,8 +60,9 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageContractRequest.details.requestID(), db);
 
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT))
+    if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CONTRACT)
     {
+<<<<<<< HEAD
         if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
         {
             innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
@@ -75,7 +76,12 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
             innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
             return false;
         }
+=======
+        innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
+        return false;
+>>>>>>> feature/roles_rules
     }
+
 
     if (!(reviewableRequest->getRequestor() == getSourceID()))
     {
@@ -158,13 +164,17 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
     auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
+<<<<<<< HEAD
     if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
     {
         auto allRequests = ReviewableRequestHelper::Instance()->
                 loadRequests(getSourceID(), ReviewableRequestType::MANAGE_CONTRACT, db);
+=======
+    auto allRequests = ReviewableRequestHelper::Instance()->
+            loadRequests(getSourceID(), ReviewableRequestType::CONTRACT, db);
+>>>>>>> feature/roles_rules
 
-        contractsCount += allRequests.size();
-    }
+    contractsCount += allRequests.size();
 
     if (contractsCount >= maxContractsCount)
     {

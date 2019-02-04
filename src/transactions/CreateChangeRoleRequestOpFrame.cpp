@@ -13,8 +13,6 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-uint32 const CreateChangeRoleRequestOpFrame::defaultTasks = 30;
-
 CreateChangeRoleRequestOpFrame::CreateChangeRoleRequestOpFrame(
         Operation const &op, OperationResult &res, TransactionFrame &parentTx)
         : OperationFrame(op, res, parentTx)
@@ -151,13 +149,7 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, Le
     innerResult().success().requestID = requestFrame->getRequestID();
     innerResult().success().fulfilled = false;
 
-    bool canAutoApprove = requestFrame->canBeFulfilled(ledgerManager);
-
-    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CREATE_KYC_REQUEST_AUTO_APPROVE))
-        canAutoApprove = canAutoApprove &&
-                         mSourceAccount->getAccountType() == AccountType::MASTER;
-
-    if (canAutoApprove)
+    if (requestFrame->canBeFulfilled(ledgerManager))
         tryAutoApprove(db, delta, app, requestFrame);
 
     return true;
@@ -220,12 +212,6 @@ bool
 CreateChangeRoleRequestOpFrame::getChangeRoleTasks(Database &db, LedgerManager &ledgerManager,
                                                    AccountFrame::pointer account, uint32 &defaultMask)
 {
-    if(!ledgerManager.shouldUse(LedgerVersion::KYC_RULES))
-    {
-        defaultMask = CreateChangeRoleRequestOpFrame::defaultTasks;
-        return true;
-    }
-
     auto key = ManageKeyValueOpFrame::makeChangeRoleKey(
             account->getAccountRole(), mCreateChangeRoleRequestOp.accountRoleToSet);
 

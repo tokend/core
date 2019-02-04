@@ -30,8 +30,8 @@ FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
     AssetCode asset, AccountID* accountID = nullptr, AccountType* accountType = nullptr,
     int64_t subtype = FeeFrame::SUBTYPE_ANY, int64_t lowerBound = 0, int64_t upperBound = INT64_MAX);
 
-PaymentFeeData getNoPaymentFee();
-PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee);
+PaymentFeeDataV2 getNoPaymentFee();
+PaymentFeeDataV2 getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee);
     
 bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app);
 
@@ -114,36 +114,25 @@ applyManageAssetTx(Application& app, SecretKey& source, Salt seq,
 				   ManageAssetAction action  = ManageAssetAction::CREATE_ASSET_CREATION_REQUEST,
 				   ManageAssetResultCode result = ManageAssetResultCode::SUCCESS);
 
-TransactionFramePtr createDirectDebitTx(Hash const& networkID, SecretKey& source,
-                                          Salt seq, AccountID from, PaymentOp paymentOp);
-
-DirectDebitResult
-applyDirectDebitTx(Application& app, SecretKey& source, Salt seq,
-        AccountID from, PaymentOp paymentOp,
-        DirectDebitResultCode result = DirectDebitResultCode::SUCCESS);
-
-
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from,
     BalanceID fromBalanceID, BalanceID toBalanceID, Salt seq, int64_t amount,
-    PaymentFeeData paymentFee, bool isSourceFee = false, std::string subject = "",
-    std::string reference="", TimeBounds* timeBounds = nullptr,
-    InvoiceReference* invoiceReference = nullptr);
+    PaymentFeeDataV2 paymentFee, bool isSourceFee = false, std::string subject = "",
+    std::string reference="", TimeBounds* timeBounds = nullptr);
 
 
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-    Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee = false,
-    std::string subject = "", std::string reference="", TimeBounds* timeBounds = nullptr,
-    InvoiceReference* invoiceReference = nullptr);
+    Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee = false,
+    std::string subject = "", std::string reference="", TimeBounds* timeBounds = nullptr);
 
-PaymentResult applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID, Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee,
+PaymentV2Result applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID,
+    Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee,
     std::string subject = "", std::string reference="",
-    PaymentResultCode result = PaymentResultCode::SUCCESS, InvoiceReference* invoiceReference = nullptr);
+    PaymentV2ResultCode result = PaymentV2ResultCode::SUCCESS);
 
-PaymentResult applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
-                    Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee,
+PaymentV2Result applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
+                    Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee,
                     std::string subject = "", std::string reference="",
-                    PaymentResultCode result = PaymentResultCode::SUCCESS,
-                    InvoiceReference* invoiceReference = nullptr);
+                    PaymentV2ResultCode result = PaymentV2ResultCode::SUCCESS);
 
 TransactionFramePtr
 createReviewPaymentRequestTx(Hash const& networkID, SecretKey& exchange,

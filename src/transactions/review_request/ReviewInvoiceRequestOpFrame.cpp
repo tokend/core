@@ -242,15 +242,18 @@ ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
                                LedgerDelta& delta, LedgerManager& ledgerManager,
                                ReviewableRequestFrame::pointer request)
 {
+<<<<<<< HEAD
     if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
     {
         request->checkRequestType(ReviewableRequestType::CREATE_INVOICE);
+=======
+    request->checkRequestType(ReviewableRequestType::INVOICE);
+>>>>>>> feature/roles_rules
 
-        if (request->getRequestEntry().body.invoiceRequest().isApproved)
-        {
-            innerResult().code(ReviewRequestResultCode::INVOICE_ALREADY_APPROVED);
-            return false;
-        }
+    if (request->getRequestEntry().body.invoiceRequest().isApproved)
+    {
+        innerResult().code(ReviewRequestResultCode::INVOICE_ALREADY_APPROVED);
+        return false;
     }
 
     return ReviewRequestOpFrame::handlePermanentReject(app, delta,

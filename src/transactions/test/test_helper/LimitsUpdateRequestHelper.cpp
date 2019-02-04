@@ -65,8 +65,13 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
 
     REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestID() == limitsUpdateRequestAfterTx->getRequestID());
+<<<<<<< HEAD
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().ext.creatorDetails() !=
     limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().ext.creatorDetails());
+=======
+    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().details !=
+    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().details);
+>>>>>>> feature/roles_rules
 
     return createManageLimitsRequestResult;
 }
@@ -75,8 +80,12 @@ LimitsUpdateRequest
 LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring creatorDetails)
 {
     LimitsUpdateRequest result;
+<<<<<<< HEAD
     result.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
     result.ext.creatorDetails() = creatorDetails;
+=======
+    result.details = details;
+>>>>>>> feature/roles_rules
     return result;
 }
 
@@ -88,8 +97,12 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_MANAGE_LIMITS_REQUEST);
     auto& op = baseOp.body.createManageLimitsRequestOp();
+<<<<<<< HEAD
     op.manageLimitsRequest.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
     op.manageLimitsRequest.ext.creatorDetails() = request.ext.creatorDetails();
+=======
+    op.manageLimitsRequest.details = request.details;
+>>>>>>> feature/roles_rules
 
     if (allTasks)
     {
@@ -102,8 +115,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
         return txFromOperation(source, baseOp, nullptr);
     }
 
-    op.ext.v(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS);
-    op.ext.requestID() = *requestID;
+    op.requestID = *requestID;
 
     return txFromOperation(source, baseOp, nullptr);
 }

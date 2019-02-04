@@ -20,7 +20,6 @@
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
-#include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/payment/PaymentOpV2Frame.h"
 #include "transactions/SetOptionsOpFrame.h"
 #include "transactions/SetFeesOpFrame.h"
@@ -32,7 +31,6 @@
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/ManageAssetPairOpFrame.h"
-#include "transactions/DirectDebitOpFrame.h"
 #include "transactions/ManageInvoiceRequestOpFrame.h"
 #include "transactions/review_request/ReviewRequestOpFrame.h"
 #include "transactions/PayoutOpFrame.h"
@@ -72,8 +70,6 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
     {
     case OperationType::CREATE_ACCOUNT:
         return shared_ptr<OperationFrame>(new CreateAccountOpFrame(op, res, tx));
-    case OperationType::PAYMENT:
-        return shared_ptr<OperationFrame>(new PaymentOpFrame(op, res, tx));
     case OperationType::SET_OPTIONS:
         return shared_ptr<OperationFrame>(new SetOptionsOpFrame(op, res, tx));
     case OperationType::CREATE_ISSUANCE_REQUEST:
@@ -94,8 +90,6 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
 		return shared_ptr<OperationFrame>(new ManageLimitsOpFrame(op, res, tx));
 	case OperationType::MANAGE_ASSET_PAIR:
 		return shared_ptr<OperationFrame>(new ManageAssetPairOpFrame(op, res, tx));
-    case OperationType::DIRECT_DEBIT:
-        return shared_ptr<OperationFrame>(new DirectDebitOpFrame(op, res, tx));
 	case OperationType::MANAGE_OFFER:
 		return shared_ptr<OperationFrame>(ManageOfferOpFrame::make(op, res, tx));
     case OperationType::MANAGE_INVOICE_REQUEST:

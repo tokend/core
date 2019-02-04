@@ -20,66 +20,6 @@ using namespace txtest;
 void testManageAssetHappyPath(TestManager::pointer testManager,
                               Account& account, Account& root);
 
-TEST_CASE("Asset issuer migration", "[tx][asset_issuer_migration]")
-{
-    auto cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    cfg.LEDGER_PROTOCOL_VERSION = uint32(LedgerVersion::ASSET_PREISSUER_MIGRATION);
-    VirtualClock clock;
-    const auto appPtr = Application::create(clock, cfg);
-    auto& app = *appPtr;
-    app.start();
-    auto testManager = TestManager::make(app);
-
-    auto root = Account{ getRoot(), Salt(0) };
-
-    auto account = Account{ SecretKey::random(), 0 };
-
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
-    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
-    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring assetCreateKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
-    manageKeyValueHelper.setKey(assetCreateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-
-
-    CreateAccountTestHelper createAccountTestHelper(testManager);
-    createAccountTestHelper.applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::SYNDICATE);
-
-
-    auto preissuedSigner = SecretKey::random();
-    auto manageAssetHelper = ManageAssetTestHelper(testManager);
-    const AssetCode assetCode = "EURT";
-    const uint64_t maxIssuance = 102030;
-    const auto initialPreIssuedAmount = maxIssuance;
-    const auto creationRequest = manageAssetHelper.
-        createAssetCreationRequest(assetCode,
-            preissuedSigner.getPublicKey(),
-            "{}", maxIssuance, 0, nullptr, initialPreIssuedAmount);
-    auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
-        creationRequest);
-
-    auto newPreIssuanceSigner = SecretKey::random();
-    auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
-    auto changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(
-            preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());
-    auto txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
-    SECTION("Owner is not able to change signer")
-    {
-        changePreIssanceSigner = manageAssetHelper.createChangeSignerRequest(
-                account, assetCode, newPreIssuanceSigner.getPublicKey());
-        txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssanceSigner);
-        testManager->applyCheck(txFrame);
-        auto txResult = txFrame->getResult();
-        const auto opResult = txResult.result.results()[0];
-        REQUIRE(opResult.code() == OperationResultCode::opINNER);
-        REQUIRE(opResult.tr().manageAssetResult().code() == ManageAssetResultCode::INVALID_SIGNATURE);
-    }
-}
-
 TEST_CASE("manage asset", "[tx][manage_asset]")
 {
     auto cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
