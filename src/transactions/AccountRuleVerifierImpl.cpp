@@ -102,7 +102,7 @@ AccountRuleVerifierImpl::isResourceMatches(
 
             switch (expectedDetails.requestType())
             {
-                case ReviewableRequestType::CREATE_SALE:
+                case ReviewableRequestType::SALE:
                     return isTypeMatches(expectedDetails.sale().type,
                                          actualDetails.sale().type);
                 default:

@@ -139,7 +139,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
             REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
                     saleID);
             REQUIRE(
-                    requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails ==
+                    requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails ==
                     data.updateSaleDetailsData().newDetails);
 
             if (!!requestBeforeTx)
@@ -152,8 +152,8 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 
                 REQUIRE(
                         requestBeforeTxEntry.body.updateSaleDetailsRequest()
-                                .creatorDetails !=
-                        requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails);
+                                .newDetails !=
+                        requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails);
             }
         }
 

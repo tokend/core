@@ -21,8 +21,8 @@ using xdr::operator==;
 
 bool ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CREATE_PRE_ISSUANCE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+	if (request->getRequestType() != ReviewableRequestType::PRE_ISSUANCE_CREATE) {
+		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected PRE_ISSUANCE_CREATE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
 		throw std::invalid_argument("Unexpected request type for review preIssuance creation request");
 	}
 

@@ -152,8 +152,8 @@ ReviewRequestResult ReviewRequestHelper::applyReviewRequestTx(
 
     if (requestMustBeDeletedAfterApproval)
     {
-        if (requestBeforeTx->getRequestType() != ReviewableRequestType::CREATE_ISSUANCE
-        && requestBeforeTx->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
+        if (requestBeforeTx->getRequestType() != ReviewableRequestType::ISSUANCE_CREATE
+        && requestBeforeTx->getRequestType() != ReviewableRequestType::WITHDRAW)
         {
             REQUIRE(!requestAfterTx);
         }

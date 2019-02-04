@@ -100,7 +100,7 @@ namespace stellar {
                                                          LedgerManager &ledgerManager,
                                                          ReviewableRequestFrame::pointer request)
     {
-        request->checkRequestType(ReviewableRequestType::UPDATE_LIMITS);
+        request->checkRequestType(ReviewableRequestType::LIMITS_UPDATE);
 
         Database& db = ledgerManager.getDatabase();
 
@@ -124,17 +124,7 @@ namespace stellar {
                                                         LedgerManager &ledgerManager,
                                                         ReviewableRequestFrame::pointer request)
     {
-<<<<<<< HEAD
-        if (!ledgerManager.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS))
-        {
-            innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
-            return false;
-        }
-
-        request->checkRequestType(ReviewableRequestType::UPDATE_LIMITS);
-=======
         request->checkRequestType(ReviewableRequestType::LIMITS_UPDATE);
->>>>>>> feature/roles_rules
         request->setRejectReason(mReviewRequest.reason);
 
         auto& requestEntry = request->getRequestEntry();

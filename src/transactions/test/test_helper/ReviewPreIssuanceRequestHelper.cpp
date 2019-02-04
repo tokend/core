@@ -20,7 +20,7 @@ ReviewPreIssuanceChecker::ReviewPreIssuanceChecker(
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
+    if (!request || request->getType() != ReviewableRequestType::PRE_ISSUANCE_CREATE) {
         return;
     }
     preIssuanceRequest = std::make_shared<PreIssuanceRequest>(request->getRequestEntry().body.preIssuanceRequest());

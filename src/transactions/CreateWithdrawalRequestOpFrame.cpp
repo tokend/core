@@ -145,7 +145,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
                                                      ledgerManager.getCloseTime());
     ReviewableRequestEntry &requestEntry = request->getRequestEntry();
 
-    requestEntry.body.type(ReviewableRequestType::CREATE_WITHDRAW);
+    requestEntry.body.type(ReviewableRequestType::WITHDRAW);
     requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
     requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
 
@@ -237,7 +237,7 @@ bool CreateWithdrawalRequestOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    if (!isExternalDetailsValid(app, mCreateWithdrawalRequest.request.creatorDetails)) {
+    if (!isExternalDetailsValid(app, mCreateWithdrawalRequest.request.externalDetails)) {
         innerResult().code(CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         return false;
     }

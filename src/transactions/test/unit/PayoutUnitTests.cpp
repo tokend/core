@@ -75,7 +75,7 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
     request.initialPreissuedAmount = ONE;
     request.maxIssuanceAmount = ONE;
     request.policies = 0;
-    request.creatorDetails =  "";
+    request.details =  "";
     AssetFrame::pointer assetFrameFake = AssetFrame::create(request, sourceID);
 
     request.code = "USD";

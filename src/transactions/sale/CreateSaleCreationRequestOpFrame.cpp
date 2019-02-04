@@ -31,7 +31,7 @@ CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
                                             std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::SALE);
     resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
 
     result.emplace_back(resource, "create", mSourceAccount);
@@ -50,7 +50,7 @@ CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest 
         return assetFrame;
     }
 
-    auto assetCreationRequests = ReviewableRequestHelper::Instance()->loadRequests(source, ReviewableRequestType::CREATE_ASSET, db);
+    auto assetCreationRequests = ReviewableRequestHelper::Instance()->loadRequests(source, ReviewableRequestType::ASSET_CREATE, db);
     for (auto assetCreationRequestFrame : assetCreationRequests)
     {
         auto& assetCreationRequest = assetCreationRequestFrame->getRequestEntry().body.assetCreationRequest();
@@ -65,7 +65,7 @@ CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest 
 
 std::string CreateSaleCreationRequestOpFrame::getReference(SaleCreationRequest const& request) const
 {
-    const auto hash = sha256(xdr_to_opaque(ReviewableRequestType::CREATE_SALE, request.baseAsset));
+    const auto hash = sha256(xdr_to_opaque(ReviewableRequestType::SALE, request.baseAsset));
     return binToHex(hash);
 }
 
@@ -90,7 +90,7 @@ createNewUpdateRequest(Application& app, LedgerManager& lm, Database& db, Ledger
             getSourceID(), app.getAdminID(), referencePtr, closedAt);
 
     auto& requestEntry = request->getRequestEntry();
-    requestEntry.body.type(ReviewableRequestType::CREATE_SALE);
+    requestEntry.body.type(ReviewableRequestType::SALE);
     requestEntry.body.saleCreationRequest() = sale;
     requestEntry.body.saleCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();
@@ -333,7 +333,7 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
         return CreateSaleCreationRequestResultCode::INVALID_CAP;
     }
 
-    if (!isValidJson(saleCreationRequest.creatorDetails))
+    if (!isValidJson(saleCreationRequest.details))
     {
         return CreateSaleCreationRequestResultCode::INVALID_DETAILS;
     }
@@ -365,7 +365,7 @@ bool CreateSaleCreationRequestOpFrame::ensureUpdateRequestValid(ReviewableReques
 
 void CreateSaleCreationRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)
 {
-    requestEntry.body.saleCreationRequest().creatorDetails = mCreateSaleCreationRequest.request.creatorDetails;
+    requestEntry.body.saleCreationRequest().details = mCreateSaleCreationRequest.request.details;
     requestEntry.body.saleCreationRequest().requiredBaseAssetForHardCap = mCreateSaleCreationRequest.request.requiredBaseAssetForHardCap;
     requestEntry.body.saleCreationRequest().hardCap = mCreateSaleCreationRequest.request.hardCap;
     requestEntry.body.saleCreationRequest().softCap = mCreateSaleCreationRequest.request.softCap;

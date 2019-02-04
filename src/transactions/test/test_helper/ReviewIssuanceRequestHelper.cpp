@@ -26,7 +26,7 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::CREATE_ISSUANCE) {
+    if (!request || request->getType() != ReviewableRequestType::ISSUANCE_CREATE) {
         return;
     }
     issuanceRequest = std::make_shared<IssuanceRequest>(request->getRequestEntry().body.issuanceRequest());

@@ -62,24 +62,8 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
 
     if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CONTRACT)
     {
-<<<<<<< HEAD
-        if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
-        {
-            innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
-            return false;
-        }
-    }
-    else
-    {
-        if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
-        {
-            innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
-            return false;
-        }
-=======
         innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
         return false;
->>>>>>> feature/roles_rules
     }
 
 
@@ -116,7 +100,7 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
         return false;
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::MANAGE_CONTRACT);
+    body.type(ReviewableRequestType::CONTRACT);
     body.contractRequest() = contractRequest;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
@@ -164,15 +148,8 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
     auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
-<<<<<<< HEAD
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
-    {
-        auto allRequests = ReviewableRequestHelper::Instance()->
-                loadRequests(getSourceID(), ReviewableRequestType::MANAGE_CONTRACT, db);
-=======
     auto allRequests = ReviewableRequestHelper::Instance()->
             loadRequests(getSourceID(), ReviewableRequestType::CONTRACT, db);
->>>>>>> feature/roles_rules
 
     contractsCount += allRequests.size();
 
@@ -213,7 +190,7 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Key
 {
     auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, keyValueHelper);
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.size() > maxContractInitialDetailLength)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.details.size() > maxContractInitialDetailLength)
     {
         innerResult().code(ManageContractRequestResultCode::DETAILS_TOO_LONG);
         return false;
@@ -250,7 +227,7 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     if (mManageContractRequest.details.action() != ManageContractRequestAction::CREATE)
         return true;
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.empty())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.details.empty())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;
