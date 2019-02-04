@@ -12,6 +12,7 @@
 #include "medida/meter.h"
 #include "main/Application.h"
 #include "medida/metrics_registry.h"
+#include <cstring>
 
 namespace stellar {
 
@@ -43,6 +44,14 @@ namespace stellar {
 
         auto feeHelper = FeeHelper::Instance();
         auto feeFrame = feeHelper->loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db, &delta);
+
+        // if the operation-provided hash isn't equal to the hash calculated here - it is invalid
+        // (assuming that the hash calculated here is valid)
+        auto actHashVal = mSetFees.fee.get()->hash;
+        if (actHashVal != hash) {
+            innerResult().code(SetFeesResultCode::MALFORMED);
+            return false;
+        }
 
         // delete
         if (mSetFees.isDelete) {
