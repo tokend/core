@@ -72,7 +72,7 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
 }
 
 LimitsUpdateRequest
-LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring details)
+LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring creatorDetails)
 {
     LimitsUpdateRequest result;
     result.creatorDetails = creatorDetails;

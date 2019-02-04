@@ -16,7 +16,7 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
                                         std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::LIMITS_UPDATE);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
 
     result.emplace_back(resource, "create", mSourceAccount);
 
@@ -32,14 +32,14 @@ CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestReference(Hash const& documentHash) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, documentHash));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, documentHash));
     return binToHex(hash);
 }
 
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestDetailsReference(longstring const& details) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, details));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, details));
     return binToHex(hash);
 }
 

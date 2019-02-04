@@ -100,7 +100,7 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
         return false;
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::CONTRACT);
+    body.type(ReviewableRequestType::MANAGE_CONTRACT);
     body.contractRequest() = contractRequest;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
@@ -190,7 +190,7 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Key
 {
     auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, keyValueHelper);
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.details.size() > maxContractInitialDetailLength)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.size() > maxContractInitialDetailLength)
     {
         innerResult().code(ManageContractRequestResultCode::DETAILS_TOO_LONG);
         return false;
@@ -227,7 +227,7 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     if (mManageContractRequest.details.action() != ManageContractRequestAction::CREATE)
         return true;
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.details.empty())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.empty())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;

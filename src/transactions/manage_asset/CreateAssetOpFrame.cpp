@@ -41,13 +41,13 @@ CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_CREATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::CREATE_ASSET);
 	if (!request) {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_CREATE);
+	requestEntry.body.type(ReviewableRequestType::CREATE_ASSET);
 	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
     requestEntry.body.assetCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();
@@ -141,7 +141,7 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
         return false;
     }
 
-    if (!isValidJson(mAssetCreationRequest.details))
+    if (!isValidJson(mAssetCreationRequest.creatorDetails))
     {
         innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
         return false;
@@ -197,7 +197,7 @@ bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointe
 
 void CreateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
     requestEntry.body.assetCreationRequest().code = mManageAsset.request.createAssetCreationRequest().createAsset.code;
-    requestEntry.body.assetCreationRequest().details = mManageAsset.request.createAssetCreationRequest().createAsset.details;
+    requestEntry.body.assetCreationRequest().creatorDetails= mManageAsset.request.createAssetCreationRequest().createAsset.creatorDetails;
     requestEntry.body.assetCreationRequest().policies = mManageAsset.request.createAssetCreationRequest().createAsset.policies;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.assetCreationRequest().sequenceNumber++;

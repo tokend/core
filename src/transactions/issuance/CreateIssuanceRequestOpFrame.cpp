@@ -241,7 +241,7 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 
 	auto reference = xdr::pointer<stellar::string64>(new stellar::string64(mCreateIssuanceRequest.reference));
 	ReviewableRequestEntry::_body_t body;
-	body.type(ReviewableRequestType::ISSUANCE_CREATE);
+	body.type(ReviewableRequestType::CREATE_ISSUANCE);
 	body.issuanceRequest() = mCreateIssuanceRequest.request;
     body.issuanceRequest().fee = feeToPay;
 	auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), asset->getOwner(), reference,

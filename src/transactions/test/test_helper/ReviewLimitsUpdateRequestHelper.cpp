@@ -18,7 +18,7 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, db);
-    if (!request || request->getType() != ReviewableRequestType::LIMITS_UPDATE)
+    if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
     {
         return;
     }
