@@ -135,7 +135,7 @@ bool SetOptionsOpFrame::tryUpdateSigners(Application& app, LedgerManager& ledger
 std::string
 SetOptionsOpFrame::getLimitsUpdateRequestReference(Hash const& documentHash) const
 {
-    const auto hash = sha256(xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, documentHash));
+    const auto hash = sha256(xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, documentHash));
     return binToHex(hash);
 }
 
@@ -155,7 +155,7 @@ SetOptionsOpFrame::tryCreateUpdateLimitsRequest(Application& app, LedgerDelta& d
     }
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::LIMITS_UPDATE);
+    body.type(ReviewableRequestType::UPDATE_LIMITS);
     body.limitsUpdateRequest().deprecatedDocumentHash = mSetOptions.limitsUpdateRequestData->documentHash;
 
     auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),

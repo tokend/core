@@ -87,7 +87,7 @@ void ReviewableRequestFrame::ensureAssetUpdateValid(AssetUpdateRequest const& re
             throw runtime_error("Asset code is invalid");
 	}
 
-    if (!isValidJson(request.details))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("invalid details");
     }
@@ -131,7 +131,7 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
         throw runtime_error("amount is invalid");
     }
 
-    if (!isValidJson(request.externalDetails))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("external details is invalid");
     }
@@ -151,7 +151,7 @@ void ReviewableRequestFrame::ensureSaleCreationValid(
     saleFrame->ensureValid();
 }
 void ReviewableRequestFrame::ensureAMLAlertValid(AMLAlertRequest const &request) {
-    if(request.reason.empty()){
+    if(request.creatorDetails.empty()){
         throw runtime_error("reason is invalid");
     }
 
@@ -171,7 +171,7 @@ ReviewableRequestFrame::ensureChangeRoleValid(const ChangeRoleRequest &request)
 }
 
 void ReviewableRequestFrame::ensureUpdateSaleDetailsValid(UpdateSaleDetailsRequest const &request) {
-    if (!isValidJson(request.newDetails)) {
+    if (!isValidJson(request.creatorDetails)) {
         throw std::runtime_error("New sale details is invalid");
     }
 }
@@ -190,7 +190,7 @@ void ReviewableRequestFrame::ensureASwapBidCreationValid(
         throw runtime_error("amount can not be zero");
     }
 
-    if (!isValidJson(request.details))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("details must be valid JSON");
     }
@@ -232,27 +232,27 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
         if (oe.hash != hash)
             throw runtime_error("Calculated hash does not match one in request");
         switch (oe.body.type()) {
-        case ReviewableRequestType::ASSET_CREATE:
+        case ReviewableRequestType::CREATE_ASSET:
             ensureAssetCreateValid(oe.body.assetCreationRequest());
             return;
-        case ReviewableRequestType::ASSET_UPDATE:
+        case ReviewableRequestType::UPDATE_ASSET:
             ensureAssetUpdateValid(oe.body.assetUpdateRequest());
             return;
-        case ReviewableRequestType::ISSUANCE_CREATE:
+        case ReviewableRequestType::CREATE_ISSUANCE:
             ensureIssuanceValid(oe.body.issuanceRequest());
             return;
-        case ReviewableRequestType::PRE_ISSUANCE_CREATE:
+        case ReviewableRequestType::CREATE_PRE_ISSUANCE:
             ensurePreIssuanceValid(oe.body.preIssuanceRequest());
             return;
-        case ReviewableRequestType::WITHDRAW:
+        case ReviewableRequestType::CREATE_WITHDRAW:
             ensureWithdrawalValid(oe.body.withdrawalRequest());
             return;
-        case ReviewableRequestType::SALE:
+        case ReviewableRequestType::CREATE_SALE:
             ensureSaleCreationValid(oe.body.saleCreationRequest());
             return;
-        case ReviewableRequestType::LIMITS_UPDATE:
+        case ReviewableRequestType::UPDATE_LIMITS:
             return;
-        case ReviewableRequestType::AML_ALERT:
+        case ReviewableRequestType::CREATE_AML_ALERT:
             ensureAMLAlertValid(oe.body.amlAlertRequest());
             return;
 		case ReviewableRequestType::CHANGE_ROLE:
@@ -261,14 +261,14 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
         case ReviewableRequestType::UPDATE_SALE_DETAILS:
             ensureUpdateSaleDetailsValid(oe.body.updateSaleDetailsRequest());
             return;
-        case ReviewableRequestType::INVOICE:
+        case ReviewableRequestType::CREATE_INVOICE:
             ensureInvoiceValid(oe.body.invoiceRequest());
             return;
-        case ReviewableRequestType::CONTRACT:
+        case ReviewableRequestType::MANAGE_CONTRACT:
             return;
         case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
             return ensureASwapBidCreationValid(oe.body.aSwapBidCreationRequest());
-        case ReviewableRequestType::ATOMIC_SWAP:
+        case ReviewableRequestType::CREATE_ATOMIC_SWAP:
             return ensureASwapValid(oe.body.aSwapRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");

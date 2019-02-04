@@ -40,7 +40,7 @@ namespace stellar {
             return false;
         }
 
-        saleFrame->getSaleEntry().details = updateSaleDetailsRequest.newDetails;
+        saleFrame->getSaleEntry().details = updateSaleDetailsRequest.creatorDetails;
 
         EntryHelperProvider::storeChangeEntry(delta, db, saleFrame->mEntry);
         EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());

@@ -26,7 +26,7 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::WITHDRAW)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) <<
             "Unexpected request type. Expected WITHDRAW, but got " << xdr::
@@ -115,7 +115,7 @@ bool ReviewWithdrawalRequestOpFrame::handlePermanentReject(Application& app,
     LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::WITHDRAW)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) <<
             "Unexpected request type. Expected WITHDRAW, but got " << xdr::
