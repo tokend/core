@@ -74,7 +74,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
     SECTION("Invalid set fee tx hash") {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0);
         fee.hash.fill(0);
-        setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::MALFORMED);
+        setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_FEE_HASH);
     }
 
     // create account for further tests
