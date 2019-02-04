@@ -64,7 +64,7 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 
 	auto reference = xdr::pointer<stellar::string64>(new stellar::string64(mCreatePreIssuanceRequest.request.reference));
 	ReviewableRequestEntry::_body_t requestBody;
-	requestBody.type(ReviewableRequestType::CREATE_PRE_ISSUANCE);
+	requestBody.type(ReviewableRequestType::PRE_ISSUANCE_CREATE);
 	requestBody.preIssuanceRequest() = mCreatePreIssuanceRequest.request;
 	auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
                                                              app.getAdminID(), reference,

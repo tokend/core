@@ -14,7 +14,7 @@ AccountRoleHelperImpl::dropAll()
 {
     Database& db = mStorageHelper.getDatabase();
 
-    db.getSession() << "DROP TABLE IF EXISTS account_roles CASCADE;";
+    db.getSession() << "DROP TABLE IF EXISTS account_roles;";
     db.getSession() << "CREATE TABLE account_roles "
            "("
            "id                 BIGINT      NOT NULL CHECK (id >= 0), "

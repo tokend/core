@@ -229,7 +229,7 @@ bool CreateASwapBidCreationRequestOpFrame::doCheckValid(Application &app)
         return false;
     }
 
-    if (!isValidJson(aSwapCreationRequest.creatorDetails))
+    if (!isValidJson(aSwapCreationRequest.details))
     {
         innerResult().code(CreateASwapBidCreationRequestResultCode::INVALID_DETAILS);
         return false;

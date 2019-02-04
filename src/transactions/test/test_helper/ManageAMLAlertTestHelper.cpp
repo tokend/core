@@ -14,7 +14,7 @@ namespace txtest
     }
 
 TransactionFramePtr ManageAMLAlertTestHelper::createAmlAlertTx(Account& source, const BalanceID balance, const uint64 amount,
-    std::string creatorDetails, std::string reference, uint32_t* allTasks)
+    std::string reason, std::string reference, uint32_t* allTasks)
 {
     Operation op;
     op.body.type(OperationType::CREATE_AML_ALERT);
@@ -25,7 +25,7 @@ TransactionFramePtr ManageAMLAlertTestHelper::createAmlAlertTx(Account& source, 
     auto& request = op.body.createAMLAlertRequestOp().amlAlertRequest;
     request.amount = amount;
     request.balanceID = balance;
-    request.creatorDetails = creatorDetails;
+    request.reason = reason;
     return txFromOperation(source, op);
 }
 

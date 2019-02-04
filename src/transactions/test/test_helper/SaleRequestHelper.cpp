@@ -27,7 +27,7 @@ ReviewRequestResult SaleRequestHelper::createApprovedSale(Account& root, Account
         auto result = ReviewRequestResult{};
         result.code(ReviewRequestResultCode::SUCCESS);
         result.success().fulfilled = true;
-        result.success().typeExt.requestType(ReviewableRequestType::CREATE_SALE);
+        result.success().typeExt.requestType(ReviewableRequestType::SALE);
         result.success().typeExt.saleExtended().saleID = requestCreationResult.success().saleID;
         return result;
     }
@@ -103,7 +103,7 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
 
 SaleCreationRequest
 SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
-                                     const uint64_t softCap, const uint64_t hardCap, std::string creatorDetails,
+                                     const uint64_t softCap, const uint64_t hardCap, std::string details,
                                      std::vector<SaleCreationRequestQuoteAsset> quoteAssets, uint64_t requiredBaseAssetForHardCap,
                                      SaleType saleType, uint64_t saleTypeInt)
 {
@@ -117,7 +117,7 @@ SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset
     request.quoteAssets.append(&quoteAssets[0], quoteAssets.size());
     request.softCap = softCap;
     request.hardCap = hardCap;
-    request.creatorDetails = creatorDetails;
+    request.details = details;
 
     request.saleTypeExt.saleType(saleType);
     request.requiredBaseAssetForHardCap = requiredBaseAssetForHardCap;

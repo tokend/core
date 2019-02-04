@@ -82,7 +82,7 @@ AMLAlertRequest ReviewAMLAlertRequestOpFrame::getAmlAlert(
     ReviewableRequestFrame::pointer request)
 {
     auto requestEntry = request->getRequestEntry();
-    if (requestEntry.body.type() != ReviewableRequestType::CREATE_AML_ALERT)
+    if (requestEntry.body.type() != ReviewableRequestType::AML_ALERT)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Review aml alert: expected aml alert but got " << xdr::xdr_to_string(requestEntry.body.type());
         throw runtime_error("Expected request to be AML alert");

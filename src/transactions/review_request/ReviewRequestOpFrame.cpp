@@ -90,33 +90,33 @@ ReviewRequestOpFrame::ReviewRequestOpFrame(Operation const& op,
 ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, OperationResult & res, TransactionFrame & parentTx)
 {
 	switch (op.body.reviewRequestOp().requestDetails.requestType()) {
-	case ReviewableRequestType::CREATE_ASSET:
+	case ReviewableRequestType::ASSET_CREATE:
 		return new ReviewAssetCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_ASSET:
+	case ReviewableRequestType::ASSET_UPDATE:
 		return new ReviewAssetUpdateRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ISSUANCE:
+	case ReviewableRequestType::ISSUANCE_CREATE:
 		return new ReviewIssuanceCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_PRE_ISSUANCE:
+	case ReviewableRequestType::PRE_ISSUANCE_CREATE:
 		return new ReviewPreIssuanceCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_WITHDRAW:
+	case ReviewableRequestType::WITHDRAW:
 		return new ReviewWithdrawalRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_SALE:
+	case ReviewableRequestType::SALE:
 		return new ReviewSaleCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_LIMITS:
+	case ReviewableRequestType::LIMITS_UPDATE:
 		return new ReviewLimitsUpdateRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_AML_ALERT:
+	case ReviewableRequestType::AML_ALERT:
 		return new ReviewAMLAlertRequestOpFrame(op,res,parentTx);
     case ReviewableRequestType::CHANGE_ROLE:
         return new ReviewChangeRoleRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::UPDATE_SALE_DETAILS:
 		return new ReviewUpdateSaleDetailsRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_INVOICE:
+	case ReviewableRequestType::INVOICE:
 		return new ReviewInvoiceRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::MANAGE_CONTRACT:
+	case ReviewableRequestType::CONTRACT:
 		return new ReviewContractRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
 		return new ReviewASwapBidCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ATOMIC_SWAP:
+	case ReviewableRequestType::ATOMIC_SWAP:
 		return new ReviewASwapRequestOpFrame(op, res, parentTx);
 	default:
 		throw std::runtime_error("Unexpected request type for review request op");

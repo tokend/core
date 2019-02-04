@@ -157,7 +157,7 @@ TransactionFramePtr ManageAssetTestHelper::createManageAssetTx(
 ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     AssetCode code,
     AccountID preissuedAssetSigner,
-    std::string creatorDetails,
+    std::string details,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
     uint32_t* allTasks,
@@ -170,7 +170,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
     AssetCreationRequest& assetCreationRequest = request.createAssetCreationRequest().createAsset;
     assetCreationRequest.code = code;
-    assetCreationRequest.creatorDetails = creatorDetails;
+    assetCreationRequest.details = details;
     assetCreationRequest.maxIssuanceAmount = maxIssuanceAmount;
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;
@@ -185,7 +185,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
 
 ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     AssetCode code,
-    std::string creatorDetails,
+    std::string details,
     uint32_t policies,
     uint32_t *allTasks
 )
@@ -194,7 +194,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     request.action(ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST);
     AssetUpdateRequest& assetUpdateRequest = request.createAssetUpdateRequest().updateAsset;
     assetUpdateRequest.code = code;
-    assetUpdateRequest.creatorDetails = creatorDetails;
+    assetUpdateRequest.details = details;
     assetUpdateRequest.policies = policies;
     if (allTasks){
         request.createAssetUpdateRequest().allTasks.activate() = *allTasks;
@@ -334,7 +334,7 @@ void ManageAssetTestHelper::validateManageAssetEffect(
                                                  mTestManager->getDB());
         REQUIRE(assetFrame);
         auto assetEntry = assetFrame->getAsset();
-        REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.creatorDetails);
+        REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.details);
         REQUIRE(assetEntry.policies == request.createAssetUpdateRequest().updateAsset.policies);
         break;
     }

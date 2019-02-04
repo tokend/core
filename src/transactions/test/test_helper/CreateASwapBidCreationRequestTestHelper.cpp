@@ -19,13 +19,13 @@ CreateASwapBidCreationRequestHelper::CreateASwapBidCreationRequestHelper(
 
 ASwapBidCreationRequest
 CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
-        BalanceID baseBalance, uint64_t amount, std::string creatorDetails,
+        BalanceID baseBalance, uint64_t amount, std::string details,
         std::vector<ASwapBidQuoteAsset> quoteAssets)
 {
     ASwapBidCreationRequest request;
     request.baseBalance = baseBalance;
     request.amount = amount;
-    request.creatorDetails = creatorDetails;
+    request.details = details;
     request.quoteAssets.clear();
     request.quoteAssets.append(&quoteAssets[0], quoteAssets.size());
 

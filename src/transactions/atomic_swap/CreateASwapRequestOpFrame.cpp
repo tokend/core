@@ -124,7 +124,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
                                                           ledgerManager.getCloseTime());
 
     auto& requestEntry = requestFrame->getRequestEntry();
-    requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP);
+    requestEntry.body.type(ReviewableRequestType::ATOMIC_SWAP);
     requestEntry.body.aSwapRequest() = mCreateASwapRequest.request;
 
     uint32_t allTasks = 0;

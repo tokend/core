@@ -20,7 +20,7 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::CREATE_WITHDRAW) {
+    if (!request || request->getType() != ReviewableRequestType::WITHDRAW) {
         return;
     }
     withdrawalRequest = std::make_shared<WithdrawalRequest>(request->getRequestEntry().body.withdrawalRequest());

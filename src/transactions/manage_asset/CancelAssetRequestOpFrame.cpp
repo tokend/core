@@ -50,7 +50,7 @@ CancelAssetRequestOpFrame::doApply(Application& app,
 	}
 
 	auto requestType = request->getRequestEntry().body.type();
-	if (requestType != ReviewableRequestType::CREATE_ASSET && requestType != ReviewableRequestType::UPDATE_ASSET) {
+	if (requestType != ReviewableRequestType::ASSET_CREATE && requestType != ReviewableRequestType::ASSET_UPDATE) {
 		innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
 		return false;
 	}

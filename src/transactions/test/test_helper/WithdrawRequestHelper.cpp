@@ -102,13 +102,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
 }
 
 WithdrawalRequest WithdrawRequestHelper::createWithdrawRequest(
-    const BalanceID balance, const uint64_t amount, const Fee fee, std::string creatorDetails)
+    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails)
 {
     WithdrawalRequest result;
     result.balance = balance;
     result.amount = amount;
     result.fee = fee;
-    result.creatorDetails = creatorDetails;
+    result.externalDetails = externalDetails;
     result.ext.v(LedgerVersion::EMPTY_VERSION);
     return result;
 }
@@ -134,7 +134,7 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
     uint64_t universalAmount = 0;
     switch (withdrawRequest->getRequestType())
     {
-    case ReviewableRequestType::CREATE_WITHDRAW:
+    case ReviewableRequestType::WITHDRAW:
         universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
         break;
     default:

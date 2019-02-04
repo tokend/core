@@ -22,7 +22,7 @@ void AssetReviewChecker::checkApproval(AssetCreationRequest const& request,
     auto assetEntry = assetFrame->getAsset();
     REQUIRE(assetEntry.availableForIssueance == request.initialPreissuedAmount);
     REQUIRE(assetEntry.code == request.code);
-    REQUIRE(assetEntry.details == request.creatorDetails);
+    REQUIRE(assetEntry.details == request.details);
     REQUIRE(assetEntry.issued == 0);
     REQUIRE(assetEntry.maxIssuanceAmount == request.maxIssuanceAmount);
     REQUIRE(assetEntry.owner == requestor);
@@ -39,7 +39,7 @@ void AssetReviewChecker::checkApproval(AssetUpdateRequest const& request,
     REQUIRE(!!assetFrame);
     auto assetEntry = assetFrame->getAsset();
     REQUIRE(assetEntry.code == request.code);
-    REQUIRE(assetEntry.details == request.creatorDetails);
+    REQUIRE(assetEntry.details == request.details);
     REQUIRE(assetEntry.owner == requestor);
     REQUIRE(assetEntry.policies == request.policies);
 }
@@ -48,12 +48,12 @@ void AssetReviewChecker::checkApprove(ReviewableRequestFrame::pointer requestBef
 {
     switch (requestBeforeTx->getRequestEntry().body.type())
     {
-    case ReviewableRequestType::CREATE_ASSET:
+    case ReviewableRequestType::ASSET_CREATE:
         checkApproval(requestBeforeTx->getRequestEntry().body.
             assetCreationRequest(),
             requestBeforeTx->getRequestor());
         break;
-    case ReviewableRequestType::UPDATE_ASSET:
+    case ReviewableRequestType::ASSET_UPDATE:
         checkApproval(requestBeforeTx->getRequestEntry().body.
             assetUpdateRequest(),
             requestBeforeTx->getRequestor());

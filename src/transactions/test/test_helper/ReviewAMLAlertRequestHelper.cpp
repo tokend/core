@@ -40,7 +40,7 @@ void AmlReviewChecker::checkPermanentReject(AMLAlertRequest const& request,
 
 void AmlReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
 {
-    if (request->getType() != ReviewableRequestType::CREATE_AML_ALERT)
+    if (request->getType() != ReviewableRequestType::AML_ALERT)
     {
         throw std::runtime_error("Expected aml alert request type");
     }
@@ -50,7 +50,7 @@ void AmlReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
 
 void AmlReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer request)
 {
-    if (request->getType() != ReviewableRequestType::CREATE_AML_ALERT)
+    if (request->getType() != ReviewableRequestType::AML_ALERT)
     {
         throw std::runtime_error("Expected aml alert request type");
     }

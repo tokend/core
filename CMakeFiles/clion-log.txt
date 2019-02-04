@@ -1,0 +1,6 @@
+/snap/clion/61/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/libpq.so -DOPENSSL_ROOT_DIR=/usr/lib/openssl-1.0 -DOPENSSL_LIBRARIES=/usr/lib/openssl-1.0 -DOPENSSL_INCLUDE_DIR=/usr/include/openssl-1.0 -G "CodeBlocks - Unix Makefiles" /home/hp/c++/core
+/usr/include/postgresql/
+INFOPostgreSQL_LIBRARIES: /usr/lib/libpq.so
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/hp/c++/core
