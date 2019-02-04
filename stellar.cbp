@@ -311,7 +311,7 @@
 					<Add option="-DASIO_SEPARATE_COMPILATION=1"/>
 					<Add option="-DSQLITE_OMIT_LOAD_EXTENSION=1"/>
 					<Add option="-DUSE_POSTGRES=1"/>
-					<Add option="-DXDR_REVISION=&quot;c42cd1dade8580bf409d69db84ffb4fb1d77b8a2&quot;"/>
+					<Add option="-DXDR_REVISION=&quot;a2bef06453f25c0dbe29052dffd0b71bfacf5cdb&quot;"/>
 					<Add directory="/home/hp/c++/core/src"/>
 					<Add directory="/home/hp/c++/core/src/.."/>
 					<Add directory="/home/hp/c++/core/src/../lib"/>
@@ -361,7 +361,7 @@
 					<Add option="-DASIO_SEPARATE_COMPILATION=1"/>
 					<Add option="-DSQLITE_OMIT_LOAD_EXTENSION=1"/>
 					<Add option="-DUSE_POSTGRES=1"/>
-					<Add option="-DXDR_REVISION=&quot;c42cd1dade8580bf409d69db84ffb4fb1d77b8a2&quot;"/>
+					<Add option="-DXDR_REVISION=&quot;a2bef06453f25c0dbe29052dffd0b71bfacf5cdb&quot;"/>
 					<Add directory="/home/hp/c++/core/src"/>
 					<Add directory="/home/hp/c++/core/src/.."/>
 					<Add directory="/home/hp/c++/core/src/../lib"/>
