@@ -48,13 +48,9 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     auto& db = storageHelper.getDatabase();
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-<<<<<<< HEAD
-    auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.ext.requestID(), getSourceID(),
-                                                             ReviewableRequestType::UPDATE_LIMITS, db, delta);
-=======
+
     auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.requestID, getSourceID(),
-                                                             ReviewableRequestType::LIMITS_UPDATE, db, delta);
->>>>>>> feature/roles_rules
+                                                             ReviewableRequestType::UPDATE_LIMITS, db, delta);
     if (!requestFrame)
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
@@ -68,11 +64,8 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     }
 
     auto& limitsUpdateRequest = requestFrame->getRequestEntry().body.limitsUpdateRequest();
-<<<<<<< HEAD
-    limitsUpdateRequest.ext.creatorDetails() = mCreateManageLimitsRequest.manageLimitsRequest.ext.creatorDetails();
-=======
-    limitsUpdateRequest.details = mCreateManageLimitsRequest.manageLimitsRequest.details;
->>>>>>> feature/roles_rules
+
+    limitsUpdateRequest.creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
 
     requestFrame->recalculateHashRejectReason();
     reviewableRequestHelper->storeChange(*delta, db, requestFrame->mEntry);
@@ -92,19 +85,8 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     auto delta = storageHelper.getLedgerDelta();
 
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
-<<<<<<< HEAD
-    if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH) &&
-        manageLimitsRequest.ext.v() == LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH)
-    {
-        auto details = manageLimitsRequest.ext.creatorDetails();
-        reference = getLimitsManageRequestDetailsReference(details);
-    }
-    else
-        reference = getLimitsManageRequestReference(mCreateManageLimitsRequest.manageLimitsRequest.deprecatedDocumentHash);
-=======
->>>>>>> feature/roles_rules
 
-    auto details = manageLimitsRequest.details;
+    auto details = manageLimitsRequest.creatorDetails;
     longstring reference = getLimitsManageRequestDetailsReference(details);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
 
@@ -116,21 +98,10 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     }
 
     ReviewableRequestEntry::_body_t body;
-<<<<<<< HEAD
-    body.type(ReviewableRequestType::UPDATE_LIMITS);
-    if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH))
-    {
-        body.limitsUpdateRequest().ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-        body.limitsUpdateRequest().ext.creatorDetails() = mCreateManageLimitsRequest.manageLimitsRequest.ext.creatorDetails();
-    }
-    else
-        body.limitsUpdateRequest().deprecatedDocumentHash =
-                mCreateManageLimitsRequest.manageLimitsRequest.deprecatedDocumentHash;
-=======
-    body.type(ReviewableRequestType::LIMITS_UPDATE);
 
-    body.limitsUpdateRequest().details = mCreateManageLimitsRequest.manageLimitsRequest.details;
->>>>>>> feature/roles_rules
+    body.type(ReviewableRequestType::UPDATE_LIMITS);
+
+    body.limitsUpdateRequest().creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
                                                              app.getAdminID(), referencePtr,
@@ -170,11 +141,8 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
 
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
 
-<<<<<<< HEAD
-    if (requestHasNewDetails && !isValidJson(manageLimitsRequest.ext.creatorDetails()))
-=======
-    if (!isValidJson(manageLimitsRequest.details))
->>>>>>> feature/roles_rules
+
+    if (!isValidJson(manageLimitsRequest.creatorDetails))
     {
         innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
         return false;
