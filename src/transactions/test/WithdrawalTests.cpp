@@ -243,7 +243,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             uint64 maxLength = testManager->getApp().getWithdrawalDetailsMaxLength();
             std::string longExternalDetails(maxLength + 1, 'x');
-            withdrawRequest.externalDetails = longExternalDetails;
+            withdrawRequest.creatorDetails = longExternalDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         }
@@ -252,7 +252,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             //missed colon
             std::string invalidExternalDetails = "{ \"key\" \"value\" }";
-            withdrawRequest.externalDetails = invalidExternalDetails;
+            withdrawRequest.creatorDetails = invalidExternalDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
         }
@@ -276,7 +276,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             reviewWithdraw.action = ReviewRequestOpAction::APPROVE;
             reviewWithdraw.reason = "";
             reviewWithdraw.requestHash = requestFrame->getHash();
-            reviewWithdraw.requestDetails.requestType(ReviewableRequestType::WITHDRAW);
+            reviewWithdraw.requestDetails.requestType(ReviewableRequestType::CREATE_WITHDRAW);
             reviewWithdraw.requestDetails.withdrawal().externalDetails = "{\"key\"}";
 
             TxHelper txHelper(testManager);

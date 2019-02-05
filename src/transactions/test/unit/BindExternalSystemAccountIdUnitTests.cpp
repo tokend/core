@@ -12,7 +12,7 @@
 #include "process/ProcessManager.h"
 #include "simulation/LoadGenerator.h"
 #include "test/test_marshaler.h"
-#include "transactions/BindExternalSystemAccountIdOpFrame.h"
+#include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
 #include "transactions/test/mocks/MockApplication.h"
 #include "transactions/test/mocks/MockDatabase.h"
 #include "transactions/test/mocks/MockAccountRuleVerifier.h"

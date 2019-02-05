@@ -25,7 +25,7 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::INVOICE)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected INVOICE, but got "
                                << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
@@ -233,7 +233,7 @@ ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
                                LedgerDelta& delta, LedgerManager& ledgerManager,
                                ReviewableRequestFrame::pointer request)
 {
-    request->checkRequestType(ReviewableRequestType::INVOICE);
+    request->checkRequestType(ReviewableRequestType::CREATE_INVOICE);
 
     if (request->getRequestEntry().body.invoiceRequest().isApproved)
     {

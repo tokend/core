@@ -2,18 +2,12 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "util/asio.h"
 #include "OperationFrame.h"
 #include "main/Application.h"
-#include "xdrpp/marshal.h"
-#include <string>
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
-#include <ledger/LedgerDeltaImpl.h>
-#include <ledger/SignerFrame.h>
-#include "util/Logging.h"
+#include <transactions/manage_role_rule/ManageSignerRoleOpFrame.h>
+#include <transactions/manage_role_rule/ManageSignerRuleOpFrame.h>
 #include "ledger/LedgerDelta.h"
-#include "ledger/FeeFrame.h"
-#include "ledger/AccountTypeLimitsFrame.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/StorageHelper.h"
@@ -35,18 +29,15 @@
 #include "transactions/review_request/ReviewRequestOpFrame.h"
 #include "transactions/PayoutOpFrame.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
-#include "transactions/manage_external_system_account_id_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
+#include "transactions/external_system_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
 #include "CreateChangeRoleRequestOpFrame.h"
 #include "transactions/dex/ManageSaleOpFrame.h"
 #include "transactions/manage_role_rule/ManageAccountRuleOpFrame.h"
 #include "transactions/manage_role_rule/ManageAccountRoleOpFrame.h"
-#include "database/Database.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 #include "dex/ManageOfferOpFrame.h"
 #include "CheckSaleStateOpFrame.h"
-#include "BindExternalSystemAccountIdOpFrame.h"
+#include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
 #include "ManageKeyValueOpFrame.h"
 #include "CreateManageLimitsRequestOpFrame.h"
 #include "ManageContractRequestOpFrame.h"
@@ -132,6 +123,11 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_RULE:
         return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
+    case OperationType::MANAGE_SIGNER:
+    case OperationType::MANAGE_SIGNER_ROLE:
+        return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
+    case OperationType::MANAGE_SIGNER_RULE:
+        return make_shared<ManageSignerRuleOpFrame>(op, res, tx);
     default:
         ostringstream err;
         err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
@@ -164,31 +160,6 @@ std::string OperationFrame::getInnerResultCodeAsStr() {
 	return "not_implemented";
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-OperationFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta, int32_t ledgerVersion) const {
-    return getCounterpartyDetails(db, delta);
-}
-
-std::unordered_map<AccountID, CounterpartyDetails>
-OperationFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const
-{
-    return {};
-}
-
-SourceDetails OperationFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion, Database& db) const
-{
-    return getSourceAccountDetails(counterpartiesDetails, ledgerVersion);
-}
-
-SourceDetails
-OperationFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), 0, getAnySignerType());
-}
-
 bool OperationFrame::isSupported() const
 {
 	// by default all operations are supported
@@ -217,8 +188,7 @@ int64_t OperationFrame::getPaidFee() const {
 }
 
 bool
-OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper,
-                                 SourceDetails& sourceDetails)
+OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
 {
     std::vector<SignerRequirement> signerRequirements;
     if (!tryGetSignerRequirements(storageHelper, signerRequirements))
@@ -349,21 +319,13 @@ OperationFrame::checkValid(Application& app,
         }
     }
 
-    const uint32 ledgerVersion = app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion;
-    auto counterpartiesDetails = getCounterpartyDetails(db, delta, ledgerVersion);
-	if (!checkCounterparties(app, counterpartiesDetails))
-	{
-		return false;
-	}
-
 	StorageHelperImpl storageHelper(db, delta);
     if (!checkRolePermissions(storageHelper, accountRuleVerifier))
     {
         return false;
     }
 
-    auto sourceDetails = getSourceAccountDetails(counterpartiesDetails, ledgerVersion, db);
-    if (!doCheckSignature(app, storageHelper, sourceDetails))
+    if (!doCheckSignature(app, storageHelper))
     {
         return false;
     }
@@ -383,40 +345,6 @@ OperationFrame::checkValid(Application& app,
 		app.getMetrics().NewMeter({ "operation", "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
         return isValid;
 	}
-
-    return true;
-}
-
-bool
-OperationFrame::checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties)
-{
-
-	auto& db = app.getDatabase();
-
-    for (auto& counterpartyPair : counterparties)
-    {
-		auto accountHelper = AccountHelperLegacy::Instance();
-		counterpartyPair.second.mAccount  = accountHelper->loadAccount(counterpartyPair.first, db);
-		bool isExists = !!counterpartyPair.second.mAccount;
-
-        if (!isExists)
-        {
-			if (!counterpartyPair.second.mIsMustExists)
-				continue;
-
-            app.getMetrics().NewMeter({ "operation", "invalid", "counterparty-not-found" }, "operation").Mark();
-            mResult.code(OperationResultCode::opNO_COUNTERPARTY);
-            return false;
-        }
-
-        if (!counterpartyPair.second.mIsBlockedAllowed && counterpartyPair.second.mAccount->isBlocked())
-        {
-            app.getMetrics().NewMeter({ "operation", "invalid", "blocked-counterparty" }, "operation").Mark();
-            mResult.code(OperationResultCode::opCOUNTERPARTY_BLOCKED);
-            return false;
-        }
-
-    }
 
     return true;
 }

@@ -93,7 +93,7 @@ namespace stellar {
                                                          LedgerManager &ledgerManager,
                                                          ReviewableRequestFrame::pointer request)
     {
-        request->checkRequestType(ReviewableRequestType::LIMITS_UPDATE);
+        request->checkRequestType(ReviewableRequestType::UPDATE_LIMITS);
 
         Database& db = ledgerManager.getDatabase();
 
@@ -117,7 +117,7 @@ namespace stellar {
                                                         LedgerManager &ledgerManager,
                                                         ReviewableRequestFrame::pointer request)
     {
-        request->checkRequestType(ReviewableRequestType::LIMITS_UPDATE);
+        request->checkRequestType(ReviewableRequestType::UPDATE_LIMITS);
         request->setRejectReason(mReviewRequest.reason);
 
         auto& requestEntry = request->getRequestEntry();

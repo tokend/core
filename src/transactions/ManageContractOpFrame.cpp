@@ -17,22 +17,6 @@ namespace stellar
 {
 using xdr::operator==;
 
-std::unordered_map<AccountID, CounterpartyDetails>
-ManageContractOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-    // no counterparties
-    return{};
-}
-
-SourceDetails
-ManageContractOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), 0,
-                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
-}
-
 ManageContractOpFrame::ManageContractOpFrame(Operation const& op, OperationResult& res,
         TransactionFrame& parentTx)
         : OperationFrame(op, res, parentTx)

@@ -21,22 +21,6 @@ PayoutOpFrame::isSupported() const
     return false;
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-PayoutOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const
-{
-    // source account is only counterparty
-    return {};
-}
-
-SourceDetails
-PayoutOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails>
-        counterpartiesDetails, int32_t ledgerVersion) const
-{
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, 0,
-                         static_cast<int32_t>(SignerType::BALANCE_MANAGER));
-}
-
 Fee
 PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
                             uint64_t precisionStep, Database& db)

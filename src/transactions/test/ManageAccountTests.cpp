@@ -4,7 +4,6 @@
 #include <transactions/rule_verifing/AccountRuleVerifierImpl.h>
 #include "main/Application.h"
 #include "util/Timer.h"
-#include "main/Config.h"
 #include "overlay/LoopbackPeer.h"
 #include "util/make_unique.h"
 #include "main/test.h"
@@ -38,23 +37,6 @@ TEST_CASE("Manage account", "[dep_tx][manage_account]")
 
 	SECTION("Common")
 	{
-		SECTION("Check source account requirements")
-		{
-			auto tx = createManageAccount(app.getNetworkID(), rootKP, account, rootSeq++, 0, 0);
-			tx->checkValid(app);
-			auto op = tx->getOperations()[0];
-			AccountRuleVerifierImpl accountRuleVerifier;
-			op->checkValid(app, accountRuleVerifier, &delta);
-			// Master is only source
-			auto sourceDetails = op->getSourceAccountDetails({}, 0);
-			auto allowedSources = sourceDetails.mAllowedSourceAccountTypes;
-			REQUIRE(allowedSources.size() == 1);
-			REQUIRE(allowedSources[0] == AccountType::MASTER);
-			//Only account creator can sign
-			auto requiredSigner = sourceDetails.mNeededSignedClass;
-			REQUIRE(requiredSigner == (static_cast<int32_t >(SignerType::NOT_VERIFIED_ACC_MANAGER) |
-									   static_cast<int32_t >(SignerType::GENERAL_ACC_MANAGER)));
-		}
 		SECTION("Account does not exists")
 		{
 			auto randomAccount = SecretKey::random();
@@ -68,10 +50,6 @@ TEST_CASE("Manage account", "[dep_tx][manage_account]")
 			auto op = tx->getOperations()[0];
 			AccountRuleVerifierImpl accountRuleVerifier;
 			op->checkValid(app, accountRuleVerifier, &delta);
-			// Master is only source
-			auto sourceDetails = op->getSourceAccountDetails({}, 0);
-			auto allowedSources = sourceDetails.mAllowedSourceAccountTypes;
-			REQUIRE(sourceDetails.mNeededSignedClass == 0);
 		}
 		SECTION("Success on empty manage account")
 		{

@@ -84,7 +84,7 @@ ReviewASwapBidCreationRequestOpFrame::buildNewBid(AccountID ownerID, AssetCode b
     bidEntry.lockedAmount = 0;
     bidEntry.isCancelled = false;
     bidEntry.createdAt = ledgerCloseTime;
-    bidEntry.details = request.details;
+    bidEntry.details = request.creatorDetails;
     bidEntry.quoteAssets = request.quoteAssets;
 
     LedgerEntry le;

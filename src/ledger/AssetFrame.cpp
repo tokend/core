@@ -55,7 +55,7 @@ AssetFrame::pointer AssetFrame::create(AssetCreationRequest const& request,
     AssetEntry& asset = le.data.asset();
     asset.availableForIssueance = request.initialPreissuedAmount;
     asset.code = request.code;
-    asset.details = request.details;
+    asset.details = request.creatorDetails;
     asset.issued = 0;
     asset.maxIssuanceAmount = request.maxIssuanceAmount;
     asset.owner = owner;

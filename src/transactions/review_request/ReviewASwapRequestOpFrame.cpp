@@ -99,7 +99,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
                                               LedgerManager &ledgerManager,
                                               ReviewableRequestFrame::pointer request)
 {
-    request->checkRequestType(ReviewableRequestType::ATOMIC_SWAP);
+    request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP);
 
     auto& requestTasksExt = request->getRequestEntry().tasks;
 
@@ -204,7 +204,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(ReviewableRequestType::ATOMIC_SWAP);
+    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP);
 
     auto& aSwapExtended = innerResult().success().typeExt.aSwapExtended();
 

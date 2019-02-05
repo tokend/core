@@ -231,7 +231,7 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
             ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     AccountRuleResource saleResource(LedgerEntryType::REVIEWABLE_REQUEST);
-    saleResource.reviewableRequest().details.requestType(ReviewableRequestType::SALE);
+    saleResource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
     saleResource.reviewableRequest().details.sale().type = saleTypeInt;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
@@ -853,7 +853,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                              &toAdd, &toRemove);
             REQUIRE(reviewSaleRequestResult.success().fulfilled);
             REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
-                    ReviewableRequestType::SALE);
+                    ReviewableRequestType::CREATE_SALE);
             REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
         }
         SECTION("Max issuance or preissued amount is less then hard cap")
@@ -1232,7 +1232,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                                           &toAdd, &toRemove);
                 REQUIRE(reviewSaleRequestResult.success().fulfilled);
                 REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
-                        ReviewableRequestType::SALE);
+                        ReviewableRequestType::CREATE_SALE);
                 REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
             }
 

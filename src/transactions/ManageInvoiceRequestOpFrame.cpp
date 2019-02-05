@@ -16,26 +16,6 @@ namespace stellar
 using xdr::operator==;
 
 
-std::unordered_map<AccountID, CounterpartyDetails>
-ManageInvoiceRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-    if (mManageInvoiceRequest.details.action() == ManageInvoiceRequestAction::REMOVE) {
-        // no counterparties
-        return{};
-    }
-    return{
-            {mManageInvoiceRequest.details.invoiceRequest().sender,
-                    CounterpartyDetails(getAllAccountTypes(), true, true)},
-    };
-}
-
-SourceDetails
-ManageInvoiceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const
-{
-	return SourceDetails({}, 0, 0);
-}
-
 ManageInvoiceRequestOpFrame::ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res,
                                      TransactionFrame& parentTx)
     : OperationFrame(op, res, parentTx)
@@ -58,7 +38,7 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper &storageHel
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageInvoiceRequest.details.requestID(), db);
-	if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::INVOICE)
+	if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
 	{
 	    innerResult().code(ManageInvoiceRequestResultCode::NOT_FOUND);
 	    return false;
@@ -142,7 +122,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     InvoiceRequest invoiceRequest;
     invoiceRequest.asset = invoiceCreationRequest.asset;
     invoiceRequest.amount = invoiceCreationRequest.amount;
-    invoiceRequest.details = invoiceCreationRequest.details;
+    invoiceRequest.creatorDetails = invoiceCreationRequest.details;
     invoiceRequest.isApproved = false;
     invoiceRequest.contractID = invoiceCreationRequest.contractID;
     invoiceRequest.senderBalance = senderBalance->getBalanceID();
@@ -150,7 +130,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     invoiceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::INVOICE);
+    body.type(ReviewableRequestType::CREATE_INVOICE);
     body.invoiceRequest() = invoiceRequest;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), invoiceCreationRequest.sender,
@@ -221,7 +201,7 @@ ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app
     auto maxInvoicesCount = obtainMaxInvoicesCount(app, keyValueHelper);
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::INVOICE, db);
+    auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::CREATE_INVOICE, db);
     if (allRequests.size() >= maxInvoicesCount)
     {
         innerResult().code(ManageInvoiceRequestResultCode::TOO_MANY_INVOICES);

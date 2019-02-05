@@ -96,7 +96,7 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
 
             switch (expectedDetails.requestType())
             {
-                case ReviewableRequestType::SALE:
+                case ReviewableRequestType::CREATE_SALE:
                     return isTypeMatches(expectedDetails.sale().type,
                                          actualDetails.sale().type);
                 default:

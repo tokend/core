@@ -26,7 +26,7 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::CONTRACT)
+    if (request->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CONTRACT, but got "
                          << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
@@ -56,7 +56,7 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
     contractEntry.escrow = contractRequest.escrow;
     contractEntry.startTime = contractRequest.startTime;
     contractEntry.endTime = contractRequest.endTime;
-    contractEntry.initialDetails = contractRequest.details;
+    contractEntry.initialDetails = contractRequest.creatorDetails;
     contractEntry.state = static_cast<uint32_t>(ContractState::NO_CONFIRMATIONS);
 
     if (!checkCustomerDetailsLength(app, db, delta))

@@ -7,6 +7,11 @@ namespace stellar
 {
 class ManageInvoiceRequestOpFrame : public OperationFrame
 {
+    bool
+    isSupported() const override
+    {
+        return false;
+    }
 
     ManageInvoiceRequestResult&
     innerResult()
@@ -15,10 +20,6 @@ class ManageInvoiceRequestOpFrame : public OperationFrame
     }
 
     ManageInvoiceRequestOp const& mManageInvoiceRequest;
-
-	std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
 
     bool createManageInvoiceRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 

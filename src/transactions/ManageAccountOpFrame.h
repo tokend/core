@@ -17,15 +17,6 @@ class ManageAccountOpFrame : public OperationFrame
         return mResult.tr().manageAccountResult();
     }
     ManageAccountOp const& mManageAccount;
-
-	std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
-
-	std::vector<AccountType> getAllowedCounterpartyAccountType() const
-	{
-		return{ AccountType::GENERAL, AccountType::NOT_VERIFIED};
-	}
 	
   public:
     ManageAccountOpFrame(Operation const& op, OperationResult& res,

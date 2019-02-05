@@ -15,29 +15,6 @@ namespace stellar
 {
 using xdr::operator==;
 
-std::unordered_map<AccountID, CounterpartyDetails>
-ManageContractRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-    if (mManageContractRequest.details.action() == ManageContractRequestAction::REMOVE) {
-        // no counterparties
-        return{};
-    }
-    return{
-        {mManageContractRequest.details.createContractRequest().contractRequest.customer,
-                CounterpartyDetails(getAllAccountTypes(), true, true)},
-        {mManageContractRequest.details.createContractRequest().contractRequest.escrow,
-                CounterpartyDetails(getAllAccountTypes(), true, true)},
-    };
-}
-
-SourceDetails
-ManageContractRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails({}, 0, 0);
-}
-
 ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, OperationResult& res,
         TransactionFrame& parentTx) : OperationFrame(op, res, parentTx),
         mManageContractRequest(mOperation.body.manageContractRequestOp())
@@ -60,7 +37,7 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageContractRequest.details.requestID(), db);
 
-    if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CONTRACT)
+    if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
     {
         innerResult().code(ManageContractRequestResultCode::NOT_FOUND);
         return false;
@@ -100,7 +77,7 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
         return false;
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::CONTRACT);
+    body.type(ReviewableRequestType::MANAGE_CONTRACT);
     body.contractRequest() = contractRequest;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
@@ -149,7 +126,7 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
     auto allRequests = ReviewableRequestHelper::Instance()->
-            loadRequests(getSourceID(), ReviewableRequestType::CONTRACT, db);
+            loadRequests(getSourceID(), ReviewableRequestType::MANAGE_CONTRACT, db);
 
     contractsCount += allRequests.size();
 
@@ -190,7 +167,7 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Key
 {
     auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, keyValueHelper);
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.details.size() > maxContractInitialDetailLength)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.size() > maxContractInitialDetailLength)
     {
         innerResult().code(ManageContractRequestResultCode::DETAILS_TOO_LONG);
         return false;
@@ -227,7 +204,7 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     if (mManageContractRequest.details.action() != ManageContractRequestAction::CREATE)
         return true;
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.details.empty())
+    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.empty())
     {
         innerResult().code(ManageContractRequestResultCode::MALFORMED);
         return false;

@@ -33,13 +33,13 @@ UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_UPDATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::UPDATE_ASSET);
     if (!request) {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_UPDATE);
+	requestEntry.body.type(ReviewableRequestType::UPDATE_ASSET);
 	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
 	requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
 	request->recalculateHashRejectReason();
@@ -138,7 +138,7 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 		return false;
 	}
 
-    if (!isValidJson(mAssetUpdateRequest.details)) {
+    if (!isValidJson(mAssetUpdateRequest.creatorDetails)) {
         innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
         return false;
     }
@@ -175,7 +175,7 @@ bool UpdateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointe
 
 void UpdateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
     requestEntry.body.assetUpdateRequest().code = mManageAsset.request.createAssetUpdateRequest().updateAsset.code;
-    requestEntry.body.assetUpdateRequest().details = mManageAsset.request.createAssetUpdateRequest().updateAsset.details;
+    requestEntry.body.assetUpdateRequest().creatorDetails = mManageAsset.request.createAssetUpdateRequest().updateAsset.creatorDetails;
     requestEntry.body.assetUpdateRequest().policies = mManageAsset.request.createAssetUpdateRequest().updateAsset.policies;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.assetUpdateRequest().sequenceNumber++;

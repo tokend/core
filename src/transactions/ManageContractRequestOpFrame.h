@@ -7,6 +7,11 @@ namespace stellar
 {
 class ManageContractRequestOpFrame : public OperationFrame
 {
+    bool
+    isSupported() const override
+    {
+        return false;
+    }
 
     ManageContractRequestResult&
     innerResult()
@@ -15,11 +20,6 @@ class ManageContractRequestOpFrame : public OperationFrame
     }
 
     ManageContractRequestOp const& mManageContractRequest;
-
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db,
-                                                                              LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
 
     bool createManageContractRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
 
