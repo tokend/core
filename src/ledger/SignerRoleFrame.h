@@ -44,5 +44,11 @@ public:
     {
         return mSignerRoleEntry.ruleIDs;
     }
+
+    AccountID const&
+    getOwnerID() const
+    {
+        return mSignerRoleEntry.ownerID;
+    }
 };
 }

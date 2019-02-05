@@ -44,14 +44,16 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
 	if (!asset)
 	{
-		mResult.code(OperationResultCode::opNO_ASSET);
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::ASSET;
 		return false;
 	}
 
 	auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateIssuanceRequest.request.receiver);
 	if (!balance)
 	{
-	    mResult.code(OperationResultCode::opNO_BALANCE);
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::BALANCE;
 	    return false;
 	}
 

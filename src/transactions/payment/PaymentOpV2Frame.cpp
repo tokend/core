@@ -30,7 +30,8 @@ namespace stellar {
         auto senderBalanceFrame = balanceHelper.loadBalance(mPayment.sourceBalanceID);
         if (!senderBalanceFrame)
         {
-            mResult.code(OperationResultCode::opNO_BALANCE);
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::BALANCE;
             return false;
         }
 
@@ -69,7 +70,8 @@ namespace stellar {
                 auto destinationBalanceFrame = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
                 if (!destinationBalanceFrame)
                 {
-                    mResult.code(OperationResultCode::opNO_BALANCE);
+                    mResult.code(OperationResultCode::opNO_ENTRY);
+                    mResult.entryType() = LedgerEntryType::BALANCE;
                     return nullptr;
                 }
 
@@ -83,7 +85,8 @@ namespace stellar {
         auto account = AccountHelperLegacy::Instance()->loadAccount(accountID, storageHelper.getDatabase());
         if (!account)
         {
-            mResult.code(OperationResultCode::opNO_COUNTERPARTY);
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ACCOUNT;
             return nullptr;
         }
 

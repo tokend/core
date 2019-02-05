@@ -20,7 +20,9 @@ namespace stellar {
         MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
         MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
         MOCK_METHOD1(loadSigners,
-                std::vector<SignerFrame::pointer>(AccountID const& accountID));
+                     std::vector<SignerFrame::pointer>(AccountID const& accountID));
+        MOCK_METHOD1(isRoleIDUsed, bool(uint64_t const roleID));
+
     };
 
 }  // namespace stellar

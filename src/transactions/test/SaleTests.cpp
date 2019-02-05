@@ -1079,7 +1079,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.baseBalance = nonExistingBalance;
                 participateHelper.applyManageOffer(participant, manageOffer,
                                                    ManageOfferResultCode::BALANCE_NOT_FOUND,
-                                                   OperationResultCode::opNO_BALANCE);
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("quote balance doesn't exist")
             {
@@ -1087,7 +1087,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.quoteBalance = nonExistingBalance;
                 participateHelper.applyManageOffer(participant, manageOffer,
                                                    ManageOfferResultCode::BALANCE_NOT_FOUND,
-                                                   OperationResultCode::opNO_BALANCE);
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("base and quote balances mixed up")
             {
@@ -1101,7 +1101,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.orderBookID = nonExistingSaleID;
                 participateHelper.applyManageOffer(participant, manageOffer,
                                                    ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS,
-                                                   OperationResultCode::opNO_SALE);
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("base and quote balances are in the same asset")
             {

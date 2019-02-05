@@ -300,7 +300,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             withdrawRequest.balance = nonExistingBalance;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND,
-                                                             OperationResultCode::opNO_BALANCE);
+                                                             OperationResultCode::opNO_ENTRY);
         }
 
         SECTION("try to withdraw from not my balance")

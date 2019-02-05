@@ -21,6 +21,9 @@ namespace stellar {
         MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
         MOCK_METHOD1(loadSignerRules,
                 std::vector<SignerRuleFrame::pointer>(std::vector<uint64_t> const ruleIDs));
+        MOCK_METHOD1(exists, bool(uint64_t const ruleID));
+        MOCK_METHOD1(loadSignerRule, SignerRuleFrame::pointer(uint64_t const ruleID));
+
     };
 
 }  // namespace stellar

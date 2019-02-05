@@ -33,7 +33,8 @@ ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageH
     auto asset = storageHelper.getAssetHelper().loadAsset(mUpdateMaxIssuance.assetCode);
     if (!asset)
     {
-        mResult.code(OperationResultCode::opNO_ASSET);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
         return false;
     }
 

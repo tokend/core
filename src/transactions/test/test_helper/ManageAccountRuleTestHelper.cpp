@@ -1,7 +1,7 @@
 #include "ManageAccountRuleTestHelper.h"
 #include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/StorageHelperImpl.h"
-#include "transactions/ManageAccountRuleOpFrame.h"
+#include "transactions/manage_role_rule/ManageAccountRuleOpFrame.h"
 #include <lib/catch.hpp>
 
 namespace stellar

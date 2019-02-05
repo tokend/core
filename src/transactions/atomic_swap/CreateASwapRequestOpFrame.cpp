@@ -31,7 +31,8 @@ CreateASwapRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelpe
             mCreateASwapRequest.request.bidID, storageHelper.getDatabase());
     if (!bid) 
     {
-        mResult.code(OperationResultCode::opNO_BID);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ATOMIC_SWAP_BID;
         return false;
     }
     

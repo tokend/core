@@ -1,7 +1,8 @@
 #include "ManageAccountRoleOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
-#include "ledger/AccountRoleHelperImpl.h"
-#include "ledger/AccountRuleHelperImpl.h"
+#include "ledger/AccountRoleHelper.h"
+#include "ledger/AccountRuleHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 
@@ -103,7 +104,8 @@ ManageAccountRoleOpFrame::deleteAccountRole(Application& app,
 {
     auto& data = mManageAccountRole.data.removeData();
 
-    if (AccountHelperLegacy::Instance()->isRoleIDUsed(data.accountRoleID, storageHelper.getDatabase()))
+    auto& accountHelper = storageHelper.getAccountHelper();
+    if (accountHelper.isRoleIDUsed(data.accountRoleID))
     {
         innerResult().code(ManageAccountRoleResultCode::ROLE_IS_USED);
         return false;

@@ -266,7 +266,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
                 CreateASwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND,
-                OperationResultCode::opNO_BALANCE);
+                OperationResultCode::opNO_ENTRY);
     }
 
     SECTION("Base and quote assets are equal")
@@ -376,7 +376,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                         0, firstQuoteAsset, amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                 firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND,
-                                OperationResultCode::opNO_BID);
+                                OperationResultCode::opNO_ENTRY);
                     }
 
                     SECTION("Try to create aswap request for own bid")

@@ -224,7 +224,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  balanceDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
                                                  PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND,
-                                                 OperationResultCode::opNO_BALANCE);
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Source balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
@@ -232,7 +232,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
                                                  PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND,
-                                                 OperationResultCode::opNO_BALANCE);
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Not allowed by asset policy")
         {

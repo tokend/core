@@ -48,6 +48,11 @@ struct SignerRequirement
 {
     SignerRuleResource resource;
     string256 action;
+
+    SignerRequirement(SignerRuleResource res, string256 act)
+            : resource(res), action(act)
+    {
+    }
 };
 
 class OperationFrame

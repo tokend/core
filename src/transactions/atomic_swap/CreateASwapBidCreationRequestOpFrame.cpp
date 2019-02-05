@@ -34,7 +34,8 @@ CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
     auto balance = balanceHelper.loadBalance(mCreateASwapBidCreationRequest.request.baseBalance);
     if (!balance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 

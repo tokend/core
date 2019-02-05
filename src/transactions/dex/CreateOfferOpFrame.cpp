@@ -38,14 +38,16 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     auto baseBalance = balanceHelper.loadBalance(mManageOffer.baseBalance);
     if (!baseBalance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 
     auto quoteBalance = balanceHelper.loadBalance(mManageOffer.quoteBalance);
     if (!quoteBalance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 

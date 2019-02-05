@@ -1,9 +1,8 @@
 #include "ManageAccountRuleOpFrame.h"
-#include "database/Database.h"
-#include "ledger/AccountRuleHelperImpl.h"
+#include "ledger/AccountRuleHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "main/Application.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/AccountRoleHelper.h"
 
 namespace stellar

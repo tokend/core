@@ -52,6 +52,9 @@ private:
     bool
     exists(PublicKey const &rawPubKey);
 
+    bool
+    isRoleIDUsed(uint64_t roleID);
+
     void
     storeUpdate(LedgerEntry const& entry, bool insert);
 

@@ -55,6 +55,9 @@ private:
     bool
     exists(AccountID const &rawAccountID);
 
+    bool
+    isRoleIDUsed(uint64_t roleID);
+
     StorageHelper& mStorageHelper;
     const char* mAccountColumnSelector;
 };

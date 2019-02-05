@@ -349,7 +349,7 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
         issuanceRequestHelper.applyCreateIssuanceRequest(assetOwner, invalidAssetCode, amount, receiverBalance->getBalanceID(),
                                                          reference, &issuanceTasks,
                                                          CreateIssuanceRequestResultCode::ASSET_NOT_FOUND,
-                                                         "{}", OperationResultCode::opNO_ASSET);
+                                                         "{}", OperationResultCode::opNO_ENTRY);
     }
 
     SECTION("try to issue zero amount")
@@ -382,7 +382,7 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
         issuanceRequestHelper.applyCreateIssuanceRequest(assetOwner, nonExistentAsset, amount, receiverBalance->getBalanceID(),
                                                          reference, &issuanceTasks,
                                                          CreateIssuanceRequestResultCode::ASSET_NOT_FOUND,
-                                                         "{}", OperationResultCode::opNO_ASSET);
+                                                         "{}", OperationResultCode::opNO_ENTRY);
     }
 
     SECTION("try to issue not my asset")
@@ -410,7 +410,7 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
         BalanceID nonExistingReceiver = SecretKey::random().getPublicKey();
         issuanceRequestHelper.applyCreateIssuanceRequest(assetOwner, assetCode, amount, nonExistingReceiver, reference,
                                                          &issuanceTasks, CreateIssuanceRequestResultCode::NO_COUNTERPARTY,
-                                                         "{}", OperationResultCode::opNO_BALANCE);
+                                                         "{}", OperationResultCode::opNO_ENTRY);
     }
 
     SECTION("invalid external details")

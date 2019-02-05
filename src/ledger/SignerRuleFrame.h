@@ -63,5 +63,11 @@ public:
     {
         return mSignerRuleEntry.action;
     }
+
+    AccountID const&
+    getOwnerID() const
+    {
+        return mSignerRuleEntry.ownerID;
+    }
 };
 }

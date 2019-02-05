@@ -69,7 +69,8 @@ CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
     if (!sale)
     {
-        mResult.code(OperationResultCode::opNO_SALE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::SALE;
         return false;
     }
 

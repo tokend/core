@@ -28,7 +28,8 @@ CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storage
     auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID, storageHelper.getDatabase());
     if (!sale) 
     {
-        mResult.code(OperationResultCode::opNO_SALE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::SALE;
         return false;
     }
     

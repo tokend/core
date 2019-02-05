@@ -27,7 +27,8 @@ CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storage
     auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
     if (!balance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 

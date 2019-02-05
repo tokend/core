@@ -53,8 +53,6 @@ namespace stellar
 
 		AccountFrame::pointer mustLoadAccount(AccountID const& accountID, Database& db);
 
-		bool isRoleIDUsed(uint64_t roleID, Database& db);
-
 	private:
 		AccountHelperLegacy() { ; }
 		~AccountHelperLegacy() { ; }

@@ -189,6 +189,26 @@ SignerHelperImpl::exists(PublicKey const &rawPubKey)
     return exists != 0;
 }
 
+bool
+SignerHelperImpl::isRoleIDUsed(uint64_t roleID)
+{
+    int exists = 0;
+    {
+        Database& db = getDatabase();
+
+        auto timer = db.getSelectTimer("signer-role-used");
+        auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM signers "
+                                            "WHERE role_id = :v1)");
+        auto& st = prep.statement();
+        st.exchange(use(roleID));
+        st.exchange(into(exists));
+        st.define_and_bind();
+        st.execute(true);
+    }
+
+    return exists != 0;
+}
+
 LedgerKey
 SignerHelperImpl::getLedgerKey(LedgerEntry const& from)
 {
