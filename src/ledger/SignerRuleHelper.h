@@ -17,5 +17,8 @@ public:
 
     virtual std::vector<SignerRuleFrame::pointer>
     loadSignerRules(std::vector<uint64_t> const ruleIDs) = 0;
+
+    virtual std::vector<uint64_t>
+    loadDefaultRuleIDs() = 0;
 };
 }

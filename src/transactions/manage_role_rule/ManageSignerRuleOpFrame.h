@@ -54,7 +54,7 @@ private:
     updateRule(Application &app, StorageHelper &storageHelper);
 
     bool
-    deleteAccountRule(Application &app, StorageHelper &storageHelper);
+    deleteRule(Application &app, StorageHelper &storageHelper);
 
     bool
     isRuleUsed(StorageHelper &storageHelper, uint64_t ruleID);

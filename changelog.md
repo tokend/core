@@ -20,6 +20,7 @@
 
 ### Removed
 
+* source account details, counterparty details
 * getSourceAccountDetails and getCounterpartyDetails for all op frames
 
 ### Fixed

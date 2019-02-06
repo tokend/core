@@ -84,6 +84,8 @@ ManageSignerRoleOpFrame::createRole(Application& app,
         return false;
     }
 
+    auto defaultRuleIDs = storageHelper.getSignerRuleHelper().loadDefaultRuleIDs();
+
     auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
     LedgerEntry le;
@@ -91,6 +93,7 @@ ManageSignerRoleOpFrame::createRole(Application& app,
     auto& roleEntry = le.data.signerRole();
     roleEntry.id = headerFrame.generateID(LedgerEntryType::SIGNER_ROLE);
     roleEntry.ruleIDs = creationData.ruleIDs;
+    roleEntry.ruleIDs.insert(roleEntry.ruleIDs.end(), defaultRuleIDs.begin(), defaultRuleIDs.end());
     roleEntry.details = creationData.details;
     roleEntry.ownerID = getSourceID();
 
@@ -104,7 +107,7 @@ ManageSignerRoleOpFrame::createRole(Application& app,
 
 bool
 ManageSignerRoleOpFrame::updateRole(Application& app,
-                                            StorageHelper& storageHelper)
+                                    StorageHelper& storageHelper)
 {
     auto& helper = storageHelper.getSignerRoleHelper();
     auto updateData = mManageSignerRole.data.updateData();
@@ -116,8 +119,11 @@ ManageSignerRoleOpFrame::updateRole(Application& app,
         return false;
     }
 
+    auto defaultRuleIDs = storageHelper.getSignerRuleHelper().loadDefaultRuleIDs();
+
     auto& roleEntry = role->getEntry();
     roleEntry.ruleIDs = updateData.ruleIDs;
+    roleEntry.ruleIDs.insert(roleEntry.ruleIDs.end(), defaultRuleIDs.begin(), defaultRuleIDs.end());
     roleEntry.details = updateData.details;
 
     helper.storeChange(role->mEntry);

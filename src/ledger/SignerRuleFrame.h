@@ -14,9 +14,10 @@ class SignerRuleFrame : public EntryFrame
 public:
     typedef std::shared_ptr<SignerRuleFrame> pointer;
 
+    static const uint32_t threshold = 1000;
+
     SignerRuleFrame();
     SignerRuleFrame(LedgerEntry const& from);
-
 
     LedgerKey const&
     getKey() const override;

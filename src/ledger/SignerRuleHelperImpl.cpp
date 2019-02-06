@@ -324,6 +324,32 @@ SignerRuleHelperImpl::load(StatementContext& prep,
     }
 }
 
+std::vector<uint64_t>
+SignerRuleHelperImpl::loadDefaultRuleIDs()
+{
+    std::string sql = "SELECT id from signer_rules WHERE is_default ";
+
+    auto prep = getDatabase().getPreparedStatement(sql);
+    auto& st = prep.statement();
+    auto timer = getDatabase().getSelectTimer("signer_rules");
+
+    std::vector<uint64_t> result;
+    uint64_t id;
+
+    st.exchange(into(id));
+    st.define_and_bind();
+    st.execute(true);
+
+    while (st.got_data())
+    {
+        result.emplace_back(id);
+
+        st.fetch();
+    }
+
+    return result;
+}
+
 Database&
 SignerRuleHelperImpl::getDatabase()
 {

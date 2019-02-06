@@ -6,6 +6,7 @@
 #include <set>
 #include <transactions/rule_verifing/SignerRuleVerifier.h>
 #include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
+#include <ledger/SignerRuleFrame.h>
 #include "ledger/StorageHelper.h"
 #include "ledger/SignerHelper.h"
 #include "transactions/SignatureValidatorImpl.h"
@@ -166,7 +167,7 @@ SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
         mUsedSignatures[identityWeight.second.signatureIndex] = true;
     }
 
-    if (totalWeight < 1000)
+    if (totalWeight < SignerRuleFrame::threshold)
     {
         return NOT_ENOUGH_WEIGHT;
     }

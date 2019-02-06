@@ -32,7 +32,7 @@ ManageSignerRuleOpFrame::doApply(Application& app,
         case ManageSignerRuleAction::UPDATE:
             return updateRule(app, storageHelper);
         case ManageSignerRuleAction::REMOVE:
-            return deleteAccountRule(app, storageHelper);
+            return deleteRule(app, storageHelper);
         default:
             throw std::runtime_error("Unknown action in manage signer rule");
     }
@@ -175,8 +175,8 @@ ManageSignerRuleOpFrame::createRule(Application &app,
 }
 
 bool
-ManageSignerRuleOpFrame::deleteAccountRule(Application &app,
-                                            StorageHelper &storageHelper)
+ManageSignerRuleOpFrame::deleteRule(Application &app,
+                                    StorageHelper &storageHelper)
 {
     LedgerKey key(LedgerEntryType::SIGNER_RULE);
     auto ruleID = mManageSignerRule.data.removeData().ruleID;

@@ -51,6 +51,9 @@ private:
     bool
     exists(uint64_t const ruleID);
 
+    std::vector<uint64_t>
+    loadDefaultRuleIDs() override;
+
     void
     storeUpdate(LedgerEntry const& entry, bool insert);
 

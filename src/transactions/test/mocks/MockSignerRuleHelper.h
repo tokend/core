@@ -19,10 +19,13 @@ namespace stellar {
         MOCK_METHOD0(getDatabase, Database&());
         MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
         MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
-        MOCK_METHOD1(loadSignerRules,
-                std::vector<SignerRuleFrame::pointer>(std::vector<uint64_t> const ruleIDs));
         MOCK_METHOD1(exists, bool(uint64_t const ruleID));
-        MOCK_METHOD1(loadSignerRule, SignerRuleFrame::pointer(uint64_t const ruleID));
+        MOCK_METHOD1(loadSignerRule,
+                     SignerRuleFrame::pointer(uint64_t const ruleID));
+        MOCK_METHOD1(loadSignerRules,
+                     std::vector<SignerRuleFrame::pointer>(std::vector<uint64_t> const ruleIDs));
+        MOCK_METHOD0(loadDefaultRuleIDs, std::vector<uint64_t>());
+
 
     };
 

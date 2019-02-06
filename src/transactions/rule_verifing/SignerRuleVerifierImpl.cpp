@@ -94,6 +94,8 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                 return false;
             }
 
+
+
             switch (expectedDetails.requestType())
             {
                 case ReviewableRequestType::CREATE_SALE:

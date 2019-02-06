@@ -5,7 +5,6 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "transactions/OperationFrame.h"
-#include "transactions/SourceDetails.h"
 
 namespace stellar
 {

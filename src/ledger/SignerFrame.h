@@ -44,6 +44,12 @@ public:
     {
         return mSignerEntry.roleID;
     }
+
+    AccountID const&
+    getAccountID() const
+    {
+        return mSignerEntry.accountID;
+    }
 };
 
 }

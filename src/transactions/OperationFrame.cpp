@@ -46,12 +46,12 @@
 #include "atomic_swap/CancelASwapBidOpFrame.h"
 #include "atomic_swap/CreateASwapRequestOpFrame.h"
 #include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
+#include "ManageSignerOpFrame.h"
 
 namespace stellar
 {
 
 using namespace std;
-
 
 shared_ptr<OperationFrame>
 OperationFrame::makeHelper(Operation const& op, OperationResult& res,
@@ -124,6 +124,7 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
     case OperationType::MANAGE_ACCOUNT_RULE:
         return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
     case OperationType::MANAGE_SIGNER:
+        return make_shared<ManageSignerOpFrame>(op, res, tx);
     case OperationType::MANAGE_SIGNER_ROLE:
         return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
     case OperationType::MANAGE_SIGNER_RULE:

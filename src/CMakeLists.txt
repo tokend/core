@@ -42,8 +42,6 @@ set(NOT_COMMON_SOURCE_FILES
         overlay/StellarXDR.h
         overlay/OverlayManager.h
         process/ProcessManager.h
-        transactions/SourceDetails.h
-        transactions/CounterpartyDetails.h
         transactions/SignatureValidator.h
         transactions/test/test_helper/Account.h
         transactions/rule_verifing/AccountRuleVerifier.h

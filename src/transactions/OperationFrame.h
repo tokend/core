@@ -6,8 +6,6 @@
 
 #include <memory>
 #include "transactions/AccountManager.h"
-#include "transactions/CounterpartyDetails.h"
-#include "transactions/SourceDetails.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/AccountFrame.h"
 #include "ledger/AssetFrame.h"
