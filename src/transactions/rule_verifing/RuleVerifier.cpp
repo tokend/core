@@ -46,7 +46,7 @@ RuleVerifier::isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset)
 }
 
 bool
-RuleVerifier::isTasksMatch(uint32_t const expectedTasks, uint32_t const actualTasks) const
+RuleVerifier::isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTasks) const
 {
     return (expectedTasks | actualTasks) == expectedTasks;
 }

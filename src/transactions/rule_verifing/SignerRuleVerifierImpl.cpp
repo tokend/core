@@ -84,6 +84,18 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                    actualResource.atomicSwapBid().assetCode);
         case LedgerEntryType::REVIEWABLE_REQUEST:
         {
+            if (!isTasksMatch(requiredResource.reviewableRequest().tasksToAdd,
+                             actualResource.reviewableRequest().tasksToAdd))
+            {
+                return false;
+            }
+
+            if (!isTasksMatch(requiredResource.reviewableRequest().tasksToRemove,
+                              actualResource.reviewableRequest().tasksToRemove))
+            {
+                return false;
+            }
+
             auto expectedDetails = requiredResource.reviewableRequest().details;
             auto actualDetails = actualResource.reviewableRequest().details;
             if (actualDetails.requestType() == ReviewableRequestType::ANY) {
@@ -93,8 +105,6 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
             if (actualDetails.requestType() != expectedDetails.requestType()) {
                 return false;
             }
-
-
 
             switch (expectedDetails.requestType())
             {
