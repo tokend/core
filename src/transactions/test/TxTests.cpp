@@ -298,36 +298,6 @@ loadBalance(BalanceID bid, Application& app, bool mustExist)
 	return res;
 }
 
-
-void
-requireNoAccount(SecretKey const& k, Application& app)
-{
-    AccountFrame::pointer res = loadAccount(k, app, false);
-    REQUIRE(!res);
-}
-
-int64_t
-getAccountBalance(SecretKey const& k, Application& app)
-{
-    AccountFrame::pointer account;
-    account = loadAccount(k, app);
-    std::vector<BalanceFrame::pointer> retBalances;
-    balanceHelper->loadBalances(account->getID(), retBalances, app.getDatabase());
-    auto balanceFrame = retBalances[0];
-    return balanceFrame->getBalance().amount;
-}
-
-int64_t
-getAccountBalance(PublicKey const& k, Application& app)
-{
-    AccountFrame::pointer account;
-    account = loadAccount(k, app);
-    std::vector<BalanceFrame::pointer> retBalances;
-    balanceHelper->loadBalances(account->getID(), retBalances, app.getDatabase());
-    auto balanceFrame = retBalances[0];
-    return balanceFrame->getBalance().amount;
-}
-
 int64_t
 getBalance(BalanceID const& k, Application& app)
 {
@@ -343,15 +313,6 @@ checkTransaction(TransactionFrame& txFrame)
     REQUIRE(txFrame.getResult().feeCharged == 0); // default fee
     REQUIRE((txFrame.getResultCode() == TransactionResultCode::txSUCCESS ||
              txFrame.getResultCode() == TransactionResultCode::txFAILED));
-}
-
-void
-checkTransactionForOpResult(TransactionFramePtr txFrame, Application& app, OperationResultCode opCode)
-{
-    LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-                          app.getDatabase());
-    applyCheck(txFrame, delta, app);
-    REQUIRE(getFirstResult(*txFrame).code() == opCode);
 }
 
 [[deprecated("Use txHelper")]]
@@ -390,15 +351,7 @@ createCreateAccountTx(Hash const& networkID, SecretKey& from, SecretKey& to,
     Operation op;
     op.body.type(OperationType::CREATE_ACCOUNT);
     op.body.createAccountOp().destination = to.getPublicKey();
-	op.body.createAccountOp().accountType = accountType;
 
-	if (policies != -1)
-	{
-		op.body.createAccountOp().policies = policies;
-	}
-
-    if (referrer)
-        op.body.createAccountOp().referrer.activate() = *referrer;
     return transactionFromOperation(networkID, from, seq, op, nullptr, timeBounds);
 }
 
@@ -450,7 +403,6 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     else
     {
         REQUIRE(toAccountAfter);
-		REQUIRE(!toAccountAfter->isBlocked());
         
         auto statisticsFrame = statisticsHelper->loadStatistics(to.getPublicKey(), app.getDatabase());
         REQUIRE(statisticsFrame);
@@ -472,78 +424,10 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     }
 }
 
-TransactionFramePtr
-createManageBalanceTx(Hash const& networkID, SecretKey& from, SecretKey& account,
-                      Salt seq, AssetCode asset, ManageBalanceAction action)
-{
-    Operation op;
-    op.body.type(OperationType::MANAGE_BALANCE);
-    op.body.manageBalanceOp().destination = account.getPublicKey();
-    op.body.manageBalanceOp().action = action;
-    op.body.manageBalanceOp().asset = asset;
-
-    return transactionFromOperation(networkID, from, seq, op);
-}
-
-ManageBalanceResult
-applyManageBalanceTx(Application& app, SecretKey& from, SecretKey& account,
-                     Salt seq, AssetCode asset, ManageBalanceAction action,
-                     ManageBalanceResultCode result)
-{
-    TransactionFramePtr txFrame;
-
-    std::vector<BalanceFrame::pointer> balances;
-    balanceHelper->loadBalances(account.getPublicKey(), balances, app.getDatabase());
-    
-    
-    txFrame = createManageBalanceTx(app.getNetworkID(), from, account, seq, asset, action);
-
-    LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-                          app.getDatabase());
-    applyCheck(txFrame, delta, app);
-
-    checkTransaction(*txFrame);
-    auto txResult = txFrame->getResult();
-    auto innerCode =
-        ManageBalanceOpFrame::getInnerCode(txResult.result.results()[0]);
-    REQUIRE(innerCode == result);
-    REQUIRE(txResult.feeCharged == app.getLedgerManager().getTxFee());
-
-    std::vector<BalanceFrame::pointer> balancesAfter;
-    balanceHelper->loadBalances(account.getPublicKey(), balancesAfter, app.getDatabase());
-
-    auto opResult = txResult.result.results()[0].tr().manageBalanceResult();
-
-    if (innerCode != ManageBalanceResultCode::SUCCESS)
-    {
-        REQUIRE(balances.size() == balancesAfter.size());
-    }
-    else
-    {
-        if (action == ManageBalanceAction::CREATE)
-        {
-            auto assetFrame = assetHelper->loadAsset(asset, app.getDatabase());
-            REQUIRE(balances.size() == balancesAfter.size() - 1);
-            auto balance = balanceHelper->loadBalance(opResult.success().balanceID, app.getDatabase());
-            REQUIRE(balance);
-            REQUIRE(balance->getBalance().accountID == account.getPublicKey());
-            REQUIRE(balance->getBalance().amount == 0);
-            REQUIRE(balance->getAsset() == asset);
-        }
-        else
-        {
-            REQUIRE(balances.size() == balancesAfter.size() + 1);
-            REQUIRE(!balanceHelper->loadBalance(opResult.success().balanceID, app.getDatabase()));
-        }
-    }
-    return opResult;
-}
-
 void applyManageAssetTx(Application & app, SecretKey & source, Salt seq, AssetCode asset, int32 policies, ManageAssetAction action, ManageAssetResultCode result)
 {
 	throw std::runtime_error("use manageAssetHelper");
 }
-
 
 // For base balance
 TransactionFramePtr
@@ -567,80 +451,6 @@ createPaymentTx(Hash const& networkID, SecretKey& from, BalanceID fromBalanceID,
     op.body.paymentOpV2().reference = reference;
 
     return transactionFromOperation(networkID, from, seq, op, nullptr, timeBounds);
-}
-
-
-// For base balance
-PaymentV2Result
-applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
-               Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee,
-               std::string subject, std::string reference, PaymentV2ResultCode result)
-{
-    return applyPaymentTx(app, from, from.getPublicKey(), to.getPublicKey(),
-               seq, amount, paymentFee, isSourceFee, subject, reference, result);
-}
-
-PaymentV2Result
-applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID,
-        BalanceID toBalanceID, Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee,
-        bool isSourceFee, std::string subject, std::string reference, 
-        PaymentV2ResultCode result)
-{
-    TransactionFramePtr txFrame;
-
-    txFrame = createPaymentTx(app.getNetworkID(), from, fromBalanceID, toBalanceID,
-        seq, amount, paymentFee, isSourceFee, subject, reference, nullptr);
-
-    LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-                          app.getDatabase());
-    applyCheck(txFrame, delta, app);
-
-    checkTransaction(*txFrame);
-    auto txResult = txFrame->getResult();
-    auto opResult = txResult.result.results()[0];
-    REQUIRE(opResult.code() == OperationResultCode::opINNER);
-    auto innerCode = PaymentOpV2Frame::getInnerCode(txResult.result.results()[0]);
-    REQUIRE(innerCode == result);
-    REQUIRE(txResult.feeCharged == app.getLedgerManager().getTxFee());
-
-    return txResult.result.results()[0].tr().paymentV2Result();
-}
-
-TransactionFramePtr createManageAccount(Hash const& networkID, SecretKey& source, SecretKey& account, Salt seq, uint32 blockReasonsToAdd, uint32 blockReasonsToRemove, AccountType accountType)
-{
-	Operation op;
-	op.body.type(OperationType::MANAGE_ACCOUNT);
-	auto& opBody = op.body.manageAccountOp();
-	opBody.account = account.getPublicKey();
-	opBody.blockReasonsToAdd = blockReasonsToAdd;
-    opBody.blockReasonsToRemove = blockReasonsToRemove;
-    opBody.accountType = accountType;
-	return transactionFromOperation(networkID, source, seq, op);
-}
-
-void
-applyManageAccountTx(Application& app, SecretKey& source, SecretKey& account, Salt seq, uint32 blockReasonsToAdd, uint32 blockReasonsToRemove, AccountType accountType,  ManageAccountResultCode targetResult)
-{
-	TransactionFramePtr txFrame = createManageAccount(app.getNetworkID(), source, account,
-        seq, blockReasonsToAdd, blockReasonsToRemove, accountType);
-
-	LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-		app.getDatabase());
-    
-    auto accountFrameBefore = loadAccount(account, app, false);
-
-	applyCheck(txFrame, delta, app);
-
-	auto result = txFrame->getResult().result.results()[0].tr().manageAccountResult();
-	REQUIRE(result.code() == targetResult);
-	if (result.code() == ManageAccountResultCode::SUCCESS && accountFrameBefore)
-	{
-		auto accountFrameAfter = loadAccount(account, app);
-        uint32 expectedReasons = (accountFrameBefore->getBlockReasons() | blockReasonsToAdd) & ~blockReasonsToRemove; 
-        REQUIRE(accountFrameAfter->getBlockReasons() == expectedReasons);
-        REQUIRE(accountFrameAfter->isBlocked() == (expectedReasons != 0));
-        REQUIRE(result.success().blockReasons == expectedReasons);
-	}
 }
 
 TransactionFramePtr createSetFees(Hash const& networkID, SecretKey& source, Salt seq, FeeEntry* fee, bool isDelete)
@@ -687,12 +497,6 @@ void applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry* fee, 
 	}
 }
 
-[[deprecated]]
-void uploadPreemissions(Application& app, SecretKey& source, SecretKey& issuance,
-	Salt sourceSeq, int64 amount, AssetCode asset)
-{
-}
-
 void fundAccount(Application& app, SecretKey& source, SecretKey& issuance,
     Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset)
 {
@@ -715,47 +519,6 @@ getFirstResult(TransactionFrame const& tx)
 {
     return getFirstOperationFrame(tx).getResult();
 }
-
-OperationResultCode
-getFirstResultCode(TransactionFrame const& tx)
-{
-    return getFirstOperationFrame(tx).getResultCode();
-}
-
-Operation&
-getFirstOperation(TransactionFrame& tx)
-{
-    return tx.getEnvelope().tx.operations[0];
-}
-
-void
-reSignTransaction(TransactionFrame& tx, SecretKey& source)
-{
-    tx.getEnvelope().signatures.clear();
-    tx.addSignature(source);
-}
-
-void
-checkAmounts(int64_t a, int64_t b, int64_t maxd)
-{
-    int64_t d = b - maxd;
-    REQUIRE(a >= d);
-    REQUIRE(a <= b);
-}
-
-void
-checkTx(int index, TxSetResultMeta& r, TransactionResultCode expected)
-{
-    REQUIRE(r[index].first.result.result.code() == expected);
-};
-
-void
-checkTx(int index, TxSetResultMeta& r, TransactionResultCode expected,
-        OperationResultCode code)
-{
-    checkTx(index, r, expected);
-    REQUIRE(r[index].first.result.result.results()[0].code() == code);
-};
 
 }
 }

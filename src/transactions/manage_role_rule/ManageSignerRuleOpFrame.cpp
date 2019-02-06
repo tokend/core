@@ -86,12 +86,14 @@ ManageSignerRuleOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         case ManageSignerRuleAction::CREATE:
             isDefault = mManageSignerRule.data.createData().isDefault;
             break;
-        case ManageSignerRuleAction::UPDATE: {
+        case ManageSignerRuleAction::UPDATE:
+        {
             auto updateData = mManageSignerRule.data.updateData();
             isDefault = updateData.isDefault;
             auto ruleFrame = storageHelper.getSignerRuleHelper().loadSignerRule(
                     updateData.ruleID);
-            if (!ruleFrame) {
+            if (!ruleFrame)
+            {
                 mResult.code(OperationResultCode::opNO_ENTRY);
                 mResult.entryType() = LedgerEntryType::SIGNER_RULE;
                 return false;

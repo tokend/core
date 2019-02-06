@@ -3,7 +3,6 @@
 #include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/test/test_helper/ManageAccountTestHelper.h>
 #include "main/test.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
@@ -36,7 +35,6 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
     auto reviewWithdrawHelper = ReviewWithdrawRequestHelper(testManager);
     auto withdrawRequestHelper = WithdrawRequestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
-    auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     auto manageKVHelper = ManageKeyValueTestHelper(testManager);
 
     manageKVHelper.assetOpWithoutReview();

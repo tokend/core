@@ -1,41 +1,58 @@
 #pragma once
 
-// Copyright 2015 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include "transactions/OperationFrame.h"
 
-namespace stellar {
-    class CreateAccountOpFrame : public OperationFrame {
-    public:
+namespace stellar
+{
+class CreateAccountOpFrame : public OperationFrame
+{
+public:
+    CreateAccountOpFrame(Operation const &op, OperationResult &res,
+                         TransactionFrame &parentTx);
 
-        CreateAccountOpFrame(Operation const &op, OperationResult &res,
-                             TransactionFrame &parentTx);
+    bool
+    doCheckValid(Application &app) override;
 
-        bool doCheckValid(Application &app) override;
-        bool doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) override;
+    bool
+    doApply(Application &app, StorageHelper& storageHelper,
+            LedgerManager &ledgerManager) override;
 
-        static CreateAccountResultCode getInnerCode(OperationResult const &res) {
-            return res.tr().createAccountResult().code();
-        }
+    static CreateAccountResultCode
+    getInnerCode(OperationResult const &res)
+    {
+        return res.tr().createAccountResult().code();
+    }
 
-    private:
-        CreateAccountResult &innerResult() {
-            return mResult.tr().createAccountResult();
-        }
+private:
+    CreateAccountResult &innerResult()
+    {
+        return mResult.tr().createAccountResult();
+    }
 
-        bool createAccount(Application &app, LedgerDelta &delta,
-                           LedgerManager &ledgerManager);
+    void
+    trySetReferrer(Application& app, StorageHelper& storageHelper,
+                   AccountFrame::pointer accountFrame) const;
 
-        void createBalance(LedgerDelta& delta, Database &db);
+    bool
+    createAccount(Application &app, StorageHelper& storageHelper);
 
-        bool checkRoleExisting(StorageHelper& storageHelper);
+    void
+    createBalances(StorageHelper& storageHelper);
 
-        bool
-        tryGetOperationConditions(StorageHelper& storageHelper,
-                                  std::vector<OperationCondition>& result) const override;
+    bool
+    createSigners(Application &app, StorageHelper& storageHelper);
 
-        CreateAccountOp const &mCreateAccount;
-    };
+    bool
+    checkRoleExisting(StorageHelper& storageHelper);
+
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
+    CreateAccountOp const &mCreateAccount;
+};
 }

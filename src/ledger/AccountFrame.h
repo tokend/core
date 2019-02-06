@@ -1,27 +1,9 @@
 #pragma once
 
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include "ledger/EntryFrame.h"
-#include "map"
-#include "xdr/Stellar-ledger-entries-account.h"
-#include <functional>
-#include <unordered_map>
-
-namespace soci
-{
-class session;
-namespace details
-{
-class prepare_temp_type;
-}
-} // namespace soci
 
 namespace stellar
 {
-class LedgerManager;
 
 class AccountFrame : public EntryFrame
 {
@@ -29,7 +11,7 @@ class AccountFrame : public EntryFrame
 
     AccountFrame(AccountFrame const& from);
 
-  public:
+public:
     typedef std::shared_ptr<AccountFrame> pointer;
 
     AccountFrame();
@@ -45,8 +27,6 @@ class AccountFrame : public EntryFrame
         return EntryFrame::pointer(new AccountFrame(*this));
     }
 
-    bool isBlocked() const;
-    void setBlockReasons(uint32 reasonsToAdd, uint32 reasonsToRemove);
     AccountID const& getID() const;
 
     AccountEntry const&
@@ -62,32 +42,25 @@ class AccountFrame : public EntryFrame
         return mAccountEntry;
     }
 
-    uint32
-    getBlockReasons() const
-    {
-        return mAccountEntry.blockReasons;
-    }
-
     LedgerKey const&
     getKey() const override;
 
-    AccountID
-    getRecoveryID() const
+    AccountID*
+    getReferrer() const
     {
-        CLOG(ERROR, "FIXME!!!!!!!!!!!!") << "RECOVERY will be implemented on signer level (getter)";
-        return PubKeyUtils::random();
+        mAccountEntry.referrer.get();
     }
 
     void
-    setRecoveryID(const AccountID& recovery)
+    setReferrer(AccountID const& referrer)
     {
-        CLOG(ERROR, "FIXME!!!!!!!!!!!!") << "RECOVERY will be implemented on signer level";
+        mAccountEntry.referrer.activate() = referrer;
     }
 
-    uint64_t getAccountRole() const;
-    void setAccountRole(uint64_t accountRoleID);
+    uint64_t
+    getAccountRole() const;
 
-    // compare signers, ignores weight
-    static bool signerCompare(Signer const& s1, Signer const& s2);
+    void
+    setAccountRole(uint64_t roleID);
 };
 } // namespace stellar

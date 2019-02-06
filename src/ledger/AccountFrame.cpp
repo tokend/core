@@ -53,25 +53,6 @@ AccountFrame::makeAuthOnlyAccount(AccountID const& id)
     return ret;
 }
 
-bool
-AccountFrame::signerCompare(Signer const& s1, Signer const& s2)
-{
-    return s1.pubKey < s2.pubKey;
-}
-
-bool
-AccountFrame::isBlocked() const
-{
-    return mAccountEntry.blockReasons > 0;
-}
-
-void
-AccountFrame::setBlockReasons(uint32 reasonsToAdd, uint32 reasonsToRemove)
-{
-    mAccountEntry.blockReasons |= reasonsToAdd;
-    mAccountEntry.blockReasons &= ~reasonsToRemove;
-}
-
 AccountID const&
 AccountFrame::getID() const
 {

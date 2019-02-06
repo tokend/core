@@ -69,16 +69,7 @@ AccountFrame::pointer loadAccount(PublicKey const& k, Application& app,
 BalanceFrame::pointer loadBalance(BalanceID bid, Application& app,
                                   bool mustExist = true);
 
-
-// short hand to check that an account does not exist
-void requireNoAccount(SecretKey const& k, Application& app);
-
-int64_t getAccountBalance(SecretKey const& k, Application& app);
-int64_t getAccountBalance(PublicKey const& k, Application& app);
 int64_t getBalance(BalanceID const& k, Application& app);
-
-void
-checkTransactionForOpResult(TransactionFramePtr txFrame, Application& app, OperationResultCode opCode);
 
 TransactionFramePtr createCreateAccountTx(Hash const& networkID,
                                           SecretKey& from, SecretKey& to,
@@ -90,22 +81,6 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
                      Salt seq, AccountType accountType,
                      SecretKey* signer = nullptr, AccountID* referrer = nullptr,
                      CreateAccountResultCode result = CreateAccountResultCode::SUCCESS, int32 policies = -1);
-
-
-
-TransactionFramePtr createManageBalanceTx(Hash const& networkID,
-                                          SecretKey& from, SecretKey& account,
-                                          Salt seq, AssetCode asset, ManageBalanceAction action);
-
-ManageBalanceResult
-applyManageBalanceTx(Application& app, SecretKey& from, SecretKey& account, Salt seq,
-        AssetCode asset = "AETH",
-        ManageBalanceAction action  = ManageBalanceAction::CREATE, ManageBalanceResultCode result = ManageBalanceResultCode::SUCCESS);
-
-
-TransactionFramePtr createManageAssetTx(Hash const& networkID, SecretKey& source,
-										Salt seq, AssetCode code,
-										int32 policies, ManageAssetAction action);
 
 void
 applyManageAssetTx(Application& app, SecretKey& source, Salt seq,
@@ -123,39 +98,12 @@ TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from, Secr
     Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee = false,
     std::string subject = "", std::string reference="", TimeBounds* timeBounds = nullptr);
 
-PaymentV2Result applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID,
-    Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee,
-    std::string subject = "", std::string reference="",
-    PaymentV2ResultCode result = PaymentV2ResultCode::SUCCESS);
-
-PaymentV2Result applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
-                    Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee,
-                    std::string subject = "", std::string reference="",
-                    PaymentV2ResultCode result = PaymentV2ResultCode::SUCCESS);
-
-TransactionFramePtr
-createReviewPaymentRequestTx(Hash const& networkID, SecretKey& exchange,
-                Salt seq, int64 paymentID,  bool accept = true);
-
-
-TransactionFramePtr createManageAccount(Hash const& networkID,
-	SecretKey& source, SecretKey& account,
-	Salt seq, uint32 blockReasonsToAdd, uint32 blockReasonsToRemove, AccountType accountType = AccountType::GENERAL);
-
-void
-applyManageAccountTx(Application& app, SecretKey& source, SecretKey& account,
-	Salt seq, uint32 blockReasonsToAdd = 0, uint32 blockReasonsToRemove = 0,
-    AccountType accountType = AccountType::GENERAL,
-    ManageAccountResultCode result = ManageAccountResultCode::SUCCESS);
-
 TransactionFramePtr createSetFees(Hash const& networkID,
 	SecretKey& source, Salt seq, FeeEntry* fee, bool isDelete);
 
 void applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry* fees, bool isDelete, SecretKey* signer = nullptr,
 				  SetFeesResultCode result = SetFeesResultCode::SUCCESS);
 
-void uploadPreemissions(Application& app, SecretKey& source, SecretKey& issuance,
-	Salt sourceSeq, int64 amount, AssetCode asset);
 void fundAccount(Application& app, SecretKey& source, SecretKey& issuance,
     Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset = "XAAU");
 
@@ -165,24 +113,6 @@ TransactionFramePtr createFundAccount(Hash const& networkID, SecretKey& source, 
 
 OperationFrame const& getFirstOperationFrame(TransactionFrame const& tx);
 OperationResult const& getFirstResult(TransactionFrame const& tx);
-OperationResultCode getFirstResultCode(TransactionFrame const& tx);
-
-// modifying the type of the operation will lead to undefined behavior
-Operation& getFirstOperation(TransactionFrame& tx);
-
-void reSignTransaction(TransactionFrame& tx, SecretKey& source);
-
-// checks that b-maxd <= a <= b
-// bias towards seller means
-//    * amount left in an offer should be higher than the exact calculation
-//    * amount received by a seller should be higher than the exact calculation
-void checkAmounts(int64_t a, int64_t b, int64_t maxd = 1);
-
-// methods to check results based off meta data
-void checkTx(int index, TxSetResultMeta& r, TransactionResultCode expected);
-
-void checkTx(int index, TxSetResultMeta& r, TransactionResultCode expected,
-             OperationResultCode code);
 
 } // end txtest namespace
 }

@@ -7,7 +7,6 @@
 #include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/test/test_helper/ManageAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "main/test.h"
@@ -42,7 +41,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     auto reviewWithdrawHelper = ReviewWithdrawRequestHelper(testManager);
     auto withdrawRequestHelper = WithdrawRequestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
-    auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     ManageLimitsTestHelper manageLimitsTestHelper(testManager);
 
     //Default tasks

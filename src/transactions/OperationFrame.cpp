@@ -17,7 +17,6 @@
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/payment/PaymentOpV2Frame.h"
 #include "transactions/SetFeesOpFrame.h"
-#include "transactions/ManageAccountOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
@@ -65,8 +64,6 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
 		return shared_ptr<OperationFrame>(new CreateIssuanceRequestOpFrame(op, res, tx));
     case OperationType::SET_FEES:
         return shared_ptr<OperationFrame>(new SetFeesOpFrame(op, res, tx));
-	case OperationType::MANAGE_ACCOUNT:
-		return shared_ptr<OperationFrame>(new ManageAccountOpFrame(op, res, tx));
     case OperationType::CREATE_WITHDRAWAL_REQUEST:
 		return shared_ptr<OperationFrame>(new CreateWithdrawalRequestOpFrame(op, res, tx));
     case OperationType::MANAGE_BALANCE:

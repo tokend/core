@@ -68,33 +68,6 @@ TEST_CASE("create account", "[tx][create_account]") {
                                                 .setTxResultCode(TransactionResultCode::txFAILED));
         }
     }
-    SECTION("Can't create system account") {
-        auto systemCreateAccountBuilder = createAccountTestBuilder
-                .setOperationResultCode(OperationResultCode::opNOT_ALLOWED)
-                .setResultCode(CreateAccountResultCode::TYPE_NOT_ALLOWED)
-                .setTxResultCode(TransactionResultCode::txFAILED);
-        for (auto systemAccountType : getSystemAccountTypes()) {
-            auto randomAccount = SecretKey::random();
-            systemCreateAccountBuilder =
-                    systemCreateAccountBuilder.setType(systemAccountType).setToPublicKey(randomAccount.getPublicKey());
-            createAccountHelper.applyTx(systemCreateAccountBuilder);
-        }
-    }
-
-    SECTION("Can't create account with non-zero policies and NON_VERYFIED type") {
-        auto account = SecretKey::random();
-        AccountID validReferrer = root.key.getPublicKey();
-        createAccountHelper.applyTx(
-                createAccountTestBuilder
-                        .setToPublicKey(account.getPublicKey())
-                        .setType(AccountType::NOT_VERIFIED)
-                        .setReferrer(&validReferrer)
-                        .setPolicies(1)
-                        .setRoleID(emptyAccountRoleID)
-                        .setResultCode(CreateAccountResultCode::NOT_VERIFIED_CANNOT_HAVE_POLICIES)
-                        .setTxResultCode(TransactionResultCode::txFAILED)
-        );
-    }
 
     SECTION("Root account can create account")
     {

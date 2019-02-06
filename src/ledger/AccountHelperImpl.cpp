@@ -10,8 +10,8 @@ namespace stellar
 AccountHelperImpl::AccountHelperImpl(StorageHelper& storageHelper)
         : mStorageHelper(storageHelper)
 {
-    mAccountColumnSelector = "SELECT account_id, sequential_id, role_id,"
-                             "       version, lastmodified "
+    mAccountColumnSelector = "SELECT account_id, referrer, sequential_id, "
+                             "       role_id, version, lastmodified "
                              " FROM  accounts";
 }
 
@@ -23,7 +23,8 @@ AccountHelperImpl::dropAll()
     db.getSession() << "DROP TABLE IF EXISTS accounts;";
     db.getSession() << "CREATE TABLE accounts"
                        "("
-                       "account_id          VARCHAR(56) PRIMARY KEY,"
+                       "account_id          VARCHAR(56) NOT NULL PRIMARY KEY,"
+                       "referrer            VARCHAR(56) DEFAULT NULL,"
                        "sequential_id       BIGINT      UNIQUE NOT NULL,"
                        "role_id             BIGINT      NOT NULL,"
                        "version             INT         NOT NULL    DEFAULT 0,"
@@ -45,6 +46,16 @@ AccountHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     std::string actIDStrKey = PubKeyUtils::toStrKey(accountFrame->getID());
     int32_t newAccountVersion = static_cast<int32_t>(accountFrame->getAccount().ext.v());
 
+    std::string referrerStr;
+    indicator referrerInd = i_null;
+    AccountID* referrer = accountFrame->getReferrer();
+    if (referrer != nullptr)
+    {
+        referrerStr = PubKeyUtils::toStrKey(*referrer);
+        referrerInd = i_ok;
+    }
+
+
     std::string sql;
     if (insert)
     {
@@ -64,7 +75,8 @@ AccountHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 
     {
         soci::statement& st = prep.statement();
-        st.exchange(use(actIDStrKey, "id"));;
+        st.exchange(use(actIDStrKey, "id"));
+        st.exchange(use(referrerStr, referrerInd, "ref"));
         st.exchange(use(accountEntry.sequentialID, "seq_id"));
         st.exchange(use(accountEntry.roleID, "ar"));
         st.exchange(use(newAccountVersion, "v"));
@@ -168,6 +180,21 @@ AccountHelperImpl::countObjects()
 }
 
 AccountFrame::pointer
+AccountHelperImpl::mustLoadAccount(AccountID const& accountID)
+{
+    auto accountFrame = loadAccount(accountID);
+
+    if (!accountFrame)
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Expected account to exist: "
+                                           << PubKeyUtils::toStrKey(accountID);
+        throw std::runtime_error("Expected account to exist");
+    }
+
+    return accountFrame;
+}
+
+AccountFrame::pointer
 AccountHelperImpl::loadAccount(AccountID const& accountID)
 {
     LedgerKey key;
@@ -224,10 +251,13 @@ AccountHelperImpl::load(StatementContext &prep,
         auto& accountEntry = le.data.account();
 
         std::string accountID;
+        std::string referrer;
+        indicator referrerInd = i_null;
         int32_t version;
 
         auto& st = prep.statement();
         st.exchange(into(accountID));
+        st.exchange(into(referrer, referrerInd));
         st.exchange(into(accountEntry.sequentialID));
         st.exchange(into(accountEntry.roleID));
         st.exchange(into(version));
@@ -239,6 +269,11 @@ AccountHelperImpl::load(StatementContext &prep,
         {
             accountEntry.accountID = PubKeyUtils::fromStrKey(accountID);
             accountEntry.ext.v(static_cast<LedgerVersion>(version));
+
+            if (referrerInd == i_ok)
+            {
+                accountEntry.referrer.activate() = PubKeyUtils::fromStrKey(referrer);
+            }
 
             processor(le);
             st.fetch();

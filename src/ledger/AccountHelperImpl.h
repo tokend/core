@@ -46,6 +46,9 @@ private:
     AccountFrame::pointer
     loadAccount(AccountID const& accountID) override;
 
+    AccountFrame::pointer
+    mustLoadAccount(AccountID const& accountID) override;
+
     void
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
 

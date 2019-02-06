@@ -52,11 +52,11 @@ bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::poi
     if (mReviewRequest.action != ReviewRequestOpAction::APPROVE) {
         return true;
     }
-
-    if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
+	//TODO
+    /*if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
         innerResult().code(ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
         return false;
-    }
+    }*/
 
     return true;
     

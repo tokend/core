@@ -29,7 +29,6 @@ AccountHelperLegacy::storeUpdate(LedgerDelta& delta, Database& db, bool insert, 
     flushCachedEntry(key, db);
 
     std::string actIDStrKey = PubKeyUtils::toStrKey(accountFrame->getID());
-    std::string recIdStrKey = PubKeyUtils::toStrKey(accountFrame->getRecoveryID());
 
     int32_t newAccountVersion = static_cast<int32_t>(accountFrame->getAccount().ext.v());
 
@@ -57,9 +56,7 @@ AccountHelperLegacy::storeUpdate(LedgerDelta& delta, Database& db, bool insert, 
     {
         soci::statement& st = prep.statement();
         st.exchange(use(actIDStrKey, "id"));
-        st.exchange(use(recIdStrKey, "rid"));
         st.exchange(use(accountFrame->mEntry.lastModifiedLedgerSeq, "lm"));
-        st.exchange(use(accountEntry.blockReasons, "br"));
         st.exchange(use(newAccountVersion, "v"));
         st.exchange(use(accountEntry.sequentialID, "seqid"));
         st.exchange(use(accountEntry.roleID, "ar"));
@@ -215,7 +212,6 @@ AccountHelperLegacy::loadAccount(AccountID const& accountID, Database& db, Ledge
     st.exchange(into(res->mEntry.lastModifiedLedgerSeq));
     st.exchange(into(accountType));
     st.exchange(into(account.roleID));
-    st.exchange(into(account.blockReasons));
     st.exchange(into(referrer));
     st.exchange(into(accountPolicies));
     st.exchange(into(kycLevel));

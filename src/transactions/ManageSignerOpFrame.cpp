@@ -33,11 +33,24 @@ ManageSignerOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
             roleID = mManageSigner.data.createData().roleID;
             break;
         case ManageSignerAction::UPDATE:
+        {
             roleID = mManageSigner.data.updateData().roleID;
+            // checking for rules which allows to change signer with such role
+            auto signer = storageHelper.getSignerHelper().loadSigner(
+                    mManageSigner.data.updateData().publicKey);
+            if (!signer)
+            {
+                mResult.code(OperationResultCode::opNO_ENTRY);
+                mResult.entryType() = LedgerEntryType::SIGNER;
+                return false;
+            }
+            SignerRuleResource resource(LedgerEntryType::SIGNER);
+            resource.signer().roleID = signer->getRoleID();
+            result.emplace_back(resource, "manage");
             break;
+        }
         case ManageSignerAction::REMOVE:
         {
-
             auto signer = storageHelper.getSignerHelper().loadSigner(
                     mManageSigner.data.removeData().publicKey);
             if (!signer) {

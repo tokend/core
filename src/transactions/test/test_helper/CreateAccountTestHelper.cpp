@@ -15,15 +15,8 @@ namespace stellar {
             Operation op;
             op.body.type(OperationType::CREATE_ACCOUNT);
             CreateAccountOp &createAccountOp = op.body.createAccountOp();
-            createAccountOp.accountType = accountType;
             createAccountOp.destination = to;
-            createAccountOp.recoveryKey = recovery;
             createAccountOp.roleID = roleID;
-
-            if (policies != -1)
-                createAccountOp.policies = policies;
-            if (referrer)
-                createAccountOp.referrer.activate() = *referrer;
 
             return op;
         }
@@ -159,7 +152,6 @@ namespace stellar {
 
             }
             REQUIRE(toAccountAfter);
-            REQUIRE(!toAccountAfter->isBlocked());
 
             if (!toAccount)
             {
