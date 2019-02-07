@@ -9,6 +9,7 @@ RUN true \
 VOLUME /data
 
 COPY --from=corebuild /build/src/core /usr/local/bin/core
+COPY --from=corebuild /healthcheck /healthcheck
 COPY entrypoint.sh /usr/local/bin/core-entrypoint.sh
 COPY pg-entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN true \
@@ -16,6 +17,8 @@ RUN true \
  && chmod +x /usr/local/bin/core-entrypoint.sh \
  && chmod +x /usr/local/bin/entrypoint.sh \ 
  && chmod +x /usr/local/bin/pg-entrypoint.sh
+
+HEALTHCHECK --interval=5m --timeout=3s --start-period=30s --retries=3 CMD ["/healthcheck"]
 
 ENTRYPOINT ["entrypoint.sh"]
 

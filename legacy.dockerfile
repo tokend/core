@@ -9,8 +9,10 @@ RUN true \
 VOLUME /data
 
 COPY --from=corebuild /build/src/core /usr/local/bin/core
+COPY --from=corebuild /healthcheck /healthcheck
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT [ "entrypoint.sh" ]
+HEALTHCHECK --interval=5m --timeout=3s --start-period=30s --retries=3 CMD ["/healthcheck"]
 
+ENTRYPOINT [ "entrypoint.sh" ]
 
