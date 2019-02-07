@@ -62,7 +62,7 @@ CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
     auto& assetHelper = storageHelper.getAssetHelper();
     auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
 
-    AccountRuleResource resource(LedgerEntryType::ASSET);
+    SignerRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetType = asset->getType();
     resource.asset().assetCode = asset->getCode();
 

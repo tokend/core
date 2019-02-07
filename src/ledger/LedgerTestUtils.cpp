@@ -3,12 +3,8 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "LedgerTestUtils.h"
-#include "ledger/AccountFrame.h"
 #include "crypto/SecretKey.h"
-#include "crypto/SHA.h"
 #include "util/types.h"
-#include <string>
-#include <cctype>
 #include <xdrpp/autocheck.h>
 
 namespace stellar
@@ -62,12 +58,6 @@ stripControlCharacters(T& s)
             it++;
         }
     }
-}
-
-static bool
-signerEqual(Signer const& s1, Signer const& s2)
-{
-    return s1.pubKey == s2.pubKey;
 }
 
 void
@@ -131,13 +121,6 @@ makeValid(AssetPairEntry& o)
 	}
 }
 
-
-void
-makeValid(TrustEntry& o)
-{
-	
-}
-
 void makeValid(Limits& o) {
 	if (o.dailyOut < 0)
 	{
@@ -148,13 +131,6 @@ void makeValid(Limits& o) {
 	clampLow<int64_t>(o.dailyOut, o.weeklyOut);
 	clampLow<int64_t>(o.weeklyOut, o.monthlyOut);
 	clampLow<int64_t>(o.monthlyOut, o.annualOut);
-}
-
-void
-makeValid(AccountTypeLimitsEntry& o)
-{
-	o.accountType = AccountType(rand());
-	makeValid(o.limits);
 }
 
 
@@ -205,14 +181,8 @@ LedgerEntry makeValid(LedgerEntry& le)
 	case LedgerEntryType::REFERENCE_ENTRY:
 		makeValid(led.reference());
 		break;
-	case LedgerEntryType::ACCOUNT_TYPE_LIMITS:
-		makeValid(led.accountTypeLimits());
-		break;
 	case LedgerEntryType::STATISTICS:
 		makeValid(led.stats());
-		break;
-	case LedgerEntryType::TRUST:
-		makeValid(led.trust());
 		break;
 	case LedgerEntryType::ACCOUNT_LIMITS:
 		makeValid(led.accountLimits());

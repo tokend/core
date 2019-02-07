@@ -345,7 +345,7 @@ TransactionFramePtr transactionFromOperation(Hash const& networkID, SecretKey& f
 
 TransactionFramePtr
 createCreateAccountTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-                      Salt seq, AccountType accountType, AccountID* referrer,
+                      Salt seq, AccountID* referrer,
 					  TimeBounds* timeBounds, int32 policies)
 {
     Operation op;
@@ -358,7 +358,7 @@ createCreateAccountTx(Hash const& networkID, SecretKey& from, SecretKey& to,
 
 void
 applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
-                     Salt seq, AccountType accountType, SecretKey* signer,
+                     Salt seq, SecretKey* signer,
                      AccountID* referrer, CreateAccountResultCode result, int32 policies)
 {
     TransactionFramePtr txFrame;
@@ -369,7 +369,7 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     fromAccount = loadAccount(from, app);
 
     txFrame = createCreateAccountTx(app.getNetworkID(), from, to, seq,
-        accountType, referrer, nullptr, policies);
+            referrer, nullptr, policies);
 	if (signer)
 	{
 		txFrame->getEnvelope().signatures.clear();

@@ -62,7 +62,7 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
 
     // create account which will withdraw
     auto withdrawerKP = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), 1);
     auto withdrawer = Account{ withdrawerKP, Salt(0) };
     auto withdrawerBalance = BalanceHelperLegacy::Instance()->
             loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);

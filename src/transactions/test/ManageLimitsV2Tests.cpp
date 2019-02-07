@@ -43,7 +43,7 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
     auto a1 = Account { getAccount("A"), Salt(0) };
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
-    auto txFrame = createAccountTestHelper.createCreateAccountTx(root, a1.key.getPublicKey(), AccountType::GENERAL);
+    auto txFrame = createAccountTestHelper.createCreateAccountTx(root, a1.key.getPublicKey(), 1);
     testManager->applyCheck(txFrame);
 
     ManageLimitsOp manageLimitsOp;

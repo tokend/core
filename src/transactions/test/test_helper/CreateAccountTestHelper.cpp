@@ -27,14 +27,13 @@ namespace stellar {
             return newTestHelper;
         }
 
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(AccountType accountType) {
+        CreateAccountTestBuilder CreateAccountTestBuilder::setType(uint32_t accountType) {
             auto newTestHelper = copy();
-            newTestHelper.accountType = accountType;
             return newTestHelper;
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setType(int32_t accountType) {
-            return setType(static_cast<AccountType>(accountType));
+            return setType(accountType);
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setReferrer(AccountID *referrer) {
@@ -77,17 +76,17 @@ namespace stellar {
         }
 
         CreateAccountResultCode
-        CreateAccountTestHelper::applyCreateAccountTx(Account &from, PublicKey to, AccountType accountType,
+        CreateAccountTestHelper::applyCreateAccountTx(Account &from, PublicKey to, uint64_t roleID,
                                                       Account *signer, AccountID *referrer, int32 policies,
                                                       CreateAccountResultCode expectedResult) {
             auto builder = CreateAccountTestBuilder()
                     .setSource(from)
                     .setToPublicKey(to)
-                    .setType(accountType)
                     .setSigner(signer)
                     .setReferrer(referrer)
                     .setPolicies(policies)
                     .setResultCode(expectedResult)
+                    .setRoleID(roleID)
                     .setRecovery(SecretKey::random().getPublicKey());
             return applyTx(builder);
         }
@@ -110,13 +109,12 @@ namespace stellar {
         }
 
         TransactionFramePtr
-        CreateAccountTestHelper::createCreateAccountTx(Account &source, PublicKey to, AccountType accountType,
+        CreateAccountTestHelper::createCreateAccountTx(Account &source, PublicKey to,
                                                        uint32_t policies)
         {
             auto builder = CreateAccountTestBuilder()
                     .setSource(source)
                     .setToPublicKey(to)
-                    .setType(accountType)
                     .setPolicies(policies);
 
             return builder.buildTx(mTestManager);

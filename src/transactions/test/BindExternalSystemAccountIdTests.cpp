@@ -67,7 +67,6 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     auto account = Account { SecretKey::random(), Salt(0) };
     createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                             .setSource(root)
-                                            .setType(AccountType::GENERAL)
                                             .setToPublicKey(account.key.getPublicKey())
                                             .setRoleID(1));
 
@@ -102,7 +101,6 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         auto binder = Account { SecretKey::random(), Salt(0) };
         createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                 .setSource(root)
-                                                .setType(AccountType::GENERAL)
                                                 .setToPublicKey(binder.key.getPublicKey())
                                                 .setRoleID(1));
 
@@ -120,7 +118,6 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         auto binder = Account {SecretKey::random(), Salt(0)};
         createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                 .setSource(root)
-                                                .setType(AccountType::GENERAL)
                                                 .setToPublicKey(binder.key.getPublicKey())
                                                 .setRoleID(1));
 

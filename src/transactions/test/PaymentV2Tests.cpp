@@ -122,13 +122,11 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                             .setSource(root)
-                                            .setType(AccountType::GENERAL)
                                             .setToPublicKey(payer.key.getPublicKey())
                                             .setRoleID(senderAccountRoleID));
 
     createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                             .setSource(root)
-                                            .setType(AccountType::GENERAL)
                                             .setToPublicKey(recipient.key.getPublicKey())
                                             .setRoleID(recipientAccountRoleID));
 

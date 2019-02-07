@@ -7,7 +7,6 @@
 #include "overlay/StellarXDR.h"
 #include "crypto/SecretKey.h"
 #include "ledger/AccountFrame.h"
-#include "ledger/AccountTypeLimitsFrame.h"
 #include "util/optional.h"
 #include "ledger/FeeFrame.h"
 #include "herder/LedgerCloseData.h"
@@ -73,12 +72,12 @@ int64_t getBalance(BalanceID const& k, Application& app);
 
 TransactionFramePtr createCreateAccountTx(Hash const& networkID,
                                           SecretKey& from, SecretKey& to,
-                                          Salt seq, AccountType accountType,
+                                          Salt seq,
                                           AccountID* referrer = nullptr, TimeBounds* timeBounds = nullptr, int32 policies = -1);
 
 void
 applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
-                     Salt seq, AccountType accountType,
+                     Salt seq,
                      SecretKey* signer = nullptr, AccountID* referrer = nullptr,
                      CreateAccountResultCode result = CreateAccountResultCode::SUCCESS, int32 policies = -1);
 

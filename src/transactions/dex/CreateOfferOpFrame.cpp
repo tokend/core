@@ -84,7 +84,7 @@ CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
     auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
 
-    AccountRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    SignerRuleResource resource(LedgerEntryType::OFFER_ENTRY);
     resource.offer().baseAssetCode = baseAsset->getCode();
     resource.offer().quoteAssetCode = quoteAsset->getCode();
     resource.offer().baseAssetType = baseAsset->getType();

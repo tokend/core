@@ -81,21 +81,14 @@ public:
                        BalanceFrame::pointer balance,
                        StatisticsFrame::pointer statsFrame);
 
-    Limits getDefaultLimits(AccountType accountType);
+    Limits getDefaultLimits();
 
     bool isFeeMatches(AccountFrame::pointer account, Fee fee, FeeType feeType, int64_t subtype, AssetCode assetCode, uint64_t amount) const;
-
-    Result addStats(AccountFrame::pointer account, BalanceFrame::pointer balance, uint64_t amountToAdd,
-                    uint64_t &universalAmount);
 
     Result tryAddStatsV2(const AccountFrame::pointer account, const BalanceFrame::pointer balance,
                          const uint64_t amountToAdd, uint64_t& universalAmount);
 
-    void revertStats(AccountID account, uint64_t universalAmount, time_t timePerformed);
-
     void transferFee(AssetCode asset, uint64_t totalFee);
-
-    void transferFee(AssetCode asset, Fee fee);
 
     BalanceID loadOrCreateBalanceForAsset(AccountID const& account, AssetCode const& asset) const;
     static BalanceID loadOrCreateBalanceForAsset(AccountID const& account, AssetCode const& asset, Database& db, LedgerDelta& delta);

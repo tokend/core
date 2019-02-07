@@ -102,7 +102,7 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
                                const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee)
     {
         auto account = Account{ SecretKey::random(), 0 };
-        CreateAccountTestHelper(mTestManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
+        CreateAccountTestHelper(mTestManager).applyCreateAccountTx(root, account.key.getPublicKey(), 1);
         return addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, fee);
     }
 

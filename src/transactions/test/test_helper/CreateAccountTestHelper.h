@@ -20,7 +20,7 @@ namespace stellar {
 
             CreateAccountTestBuilder setRecovery(const PublicKey& recovery);
 
-            CreateAccountTestBuilder setType(AccountType accountType);
+            CreateAccountTestBuilder setType(uint32_t accountType);
 
             CreateAccountTestBuilder setType(int32_t accountType);
 
@@ -37,7 +37,6 @@ namespace stellar {
 
             PublicKey to;
             PublicKey recovery;
-            AccountType accountType = AccountType::GENERAL;
             AccountID *referrer = nullptr;
             int32 policies = -1;
             uint64_t roleID = 1;
@@ -84,12 +83,12 @@ namespace stellar {
 
             explicit CreateAccountTestHelper(TestManager::pointer testManager);
 
-            TransactionFramePtr createCreateAccountTx(Account& source, PublicKey to, AccountType accountType, uint32_t policies = 0);
+            TransactionFramePtr createCreateAccountTx(Account& source, PublicKey to, uint32_t policies = 0);
 
             CreateAccountResultCode applyTx(CreateAccountTestBuilder builder);
 
             [[deprecated]]
-            CreateAccountResultCode applyCreateAccountTx(Account &from, PublicKey to, AccountType accountType,
+            CreateAccountResultCode applyCreateAccountTx(Account &from, PublicKey to, uint64_t roleID = 1,
                                                          Account *signer = nullptr, AccountID *referrer = nullptr,
                                                          int32 policies = -1,
                                                          CreateAccountResultCode expectedResult = CreateAccountResultCode::SUCCESS);
@@ -98,7 +97,6 @@ namespace stellar {
             Account from;
             PublicKey to;
             PublicKey recovery;
-            AccountType accountType = AccountType::GENERAL;
             Account *signer = nullptr;
             AccountID *referrer = nullptr;
             int32 policies = -1;

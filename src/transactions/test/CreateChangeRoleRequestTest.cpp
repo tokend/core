@@ -56,7 +56,6 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(master)
             .setToPublicKey(account.key.getPublicKey())
-            .setType(AccountType::NOT_VERIFIED)
             .setRecovery(SecretKey::random().getPublicKey())
             .setRoleID(1);
 

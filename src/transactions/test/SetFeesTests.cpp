@@ -79,7 +79,7 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
 
     // create account for further tests
     auto account = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(master, account.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(master, account.getPublicKey(), 1);
     auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(account.getPublicKey(), db);
 
     auto accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,

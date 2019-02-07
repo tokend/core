@@ -103,7 +103,7 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
 
-    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
+    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, 1);
     const AssetCode baseAsset = "XAAU";
     const uint64_t maxIssuanceAmount = 2000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
@@ -457,7 +457,6 @@ TEST_CASE("Sale", "[tx][sale]")
         auto createAccountTestBuilder = CreateAccountTestBuilder()
                 .setSource(root)
                 .setToPublicKey(newSyndicatePubKey)
-                .setType(AccountType::SYNDICATE)
                 .setRecovery(SecretKey::random().getPublicKey());
 
         auto createAccountHelper = CreateAccountTestHelper(testManager);
@@ -633,7 +632,7 @@ TEST_CASE("Sale", "[tx][sale]")
         SECTION("Try to cancel sale offer as regular one")
         {
             auto account = Account{ SecretKey::random(), 0 };
-            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
+            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), 1);
             uint64_t quoteAssetAmount = hardCap / 2;
             uint64_t feeToPay(0);
             participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
@@ -893,11 +892,11 @@ TEST_CASE("Sale", "[tx][sale]")
         uint32_t tasks = 1, zeroTasks = 0;
         auto ownerSyndicate = Account{ SecretKey::random(), 0 };
         auto ownerSyndicatePubKey = ownerSyndicate.key.getPublicKey();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, ownerSyndicatePubKey, AccountType::SYNDICATE);
+        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, ownerSyndicatePubKey, 1);
 
         auto thiefSyndicate = Account{ SecretKey::random(), 0 };
         auto thiefSyndicatePubKey = thiefSyndicate.key.getPublicKey();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, thiefSyndicatePubKey, AccountType::SYNDICATE);
+        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, thiefSyndicatePubKey, 1);
 
         const AssetCode asset = "GSC";
         const uint64_t assetMaxIssuanceAmount = 2000 * ONE;
@@ -975,7 +974,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         // create sale owner
         Account owner = Account{ SecretKey::random(), Salt(0) };
-        createAccountTestHelper.applyCreateAccountTx(root, owner.key.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, owner.key.getPublicKey(), 1);
 
         // create base asset
         const AssetCode baseAsset = "ETH";
@@ -989,7 +988,7 @@ TEST_CASE("Sale", "[tx][sale]")
         // create participant
         Account participant = Account{ SecretKey::random(), Salt(0) };
         AccountID participantID = participant.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, participantID, AccountType::GENERAL);
+        createAccountTestHelper.applyCreateAccountTx(root, participantID, 1);
 
         // create base balance for participant:
         auto manageBalanceRes = ManageBalanceTestHelper(testManager).applyManageBalanceTx(participant, participantID, baseAsset);

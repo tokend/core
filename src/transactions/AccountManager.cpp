@@ -4,7 +4,6 @@
 
 #include <ledger/AssetFrame.h>
 #include <ledger/BalanceHelperLegacy.h>
-#include <ledger/BalanceFrame.h>
 #include <ledger/AccountHelperLegacy.h>
 #include "transactions/AccountManager.h"
 #include "main/Application.h"
@@ -12,15 +11,11 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/AccountLimitsFrame.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "ledger/AccountTypeLimitsFrame.h"
-#include "ledger/AccountTypeLimitsHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/EntryHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/StatisticsHelper.h"
 #include "ledger/FeeHelper.h"
-#include "StatisticsV2Processor.h"
 
 namespace stellar {
     using namespace std;
@@ -210,7 +205,7 @@ namespace stellar {
         if (accountLimits)
             limits = accountLimits->getLimits();
         else {
-            limits = getDefaultLimits(AccountType::MASTER);
+            limits = getDefaultLimits();
         }
         if (stats.dailyOutcome > limits.dailyOut)
             return false;
@@ -223,21 +218,15 @@ namespace stellar {
         return true;
     }
 
-    Limits AccountManager::getDefaultLimits(AccountType accountType) {
-        auto accountTypeLimitsHelper = AccountTypeLimitsHelper::Instance();
-        auto defaultLimitsFrame = accountTypeLimitsHelper->loadLimits(
-                accountType,
-                mDb);
+    Limits AccountManager::getDefaultLimits() {
+
         Limits limits;
 
-        if (defaultLimitsFrame)
-            limits = defaultLimitsFrame->getLimits();
-        else {
             limits.dailyOut = INT64_MAX;
             limits.weeklyOut = INT64_MAX;
             limits.monthlyOut = INT64_MAX;
             limits.annualOut = INT64_MAX;
-        }
+
         return limits;
     }
 
@@ -270,46 +259,6 @@ namespace stellar {
         return fee.percent == expectedPercentFee;
     }
 
-    AccountManager::Result AccountManager::addStats(AccountFrame::pointer account,
-                                                    BalanceFrame::pointer balance,
-                                                    uint64_t amountToAdd, uint64_t &universalAmount) {
-        universalAmount = 0;
-        auto statsAssetFrame = AssetHelperLegacy::Instance()->loadStatsAsset(mDb);
-        if (!statsAssetFrame)
-            return SUCCESS;
-
-        AssetCode baseAsset = balance->getAsset();
-        auto statsAssetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(baseAsset,
-                                                                                     statsAssetFrame->getCode(), mDb);
-        if (!statsAssetPair)
-            return SUCCESS;
-
-        if (!AssetPairHelper::Instance()->convertAmount(statsAssetPair, statsAssetFrame->getCode(), amountToAdd,
-                                                        ROUND_UP, mDb, universalAmount))
-            return STATS_OVERFLOW;
-
-        auto statsFrame = StatisticsHelper::Instance()->mustLoadStatistics(account->getID(), mDb);
-        time_t currentTime = mLm.getCloseTime();
-        if (!statsFrame->add(universalAmount, currentTime))
-            return STATS_OVERFLOW;
-
-        if (!validateStats(account, balance, statsFrame))
-            return LIMITS_EXCEEDED;
-
-        EntryHelperProvider::storeChangeEntry(mDelta, mDb, statsFrame->mEntry);
-        return SUCCESS;
-    }
-
-    void AccountManager::revertStats(AccountID account, uint64_t universalAmount, time_t timePerformed) {
-        auto statsFrame = StatisticsHelper::Instance()->mustLoadStatistics(account, mDb);
-        time_t now = mLm.getCloseTime();
-        auto accIdStr = PubKeyUtils::toStrKey(account);
-
-        statsFrame->revert(universalAmount, now, timePerformed);
-
-        EntryHelperProvider::storeChangeEntry(mDelta, mDb, statsFrame->mEntry);
-    }
-
     void AccountManager::transferFee(AssetCode asset, uint64_t totalFee) {
         if (totalFee == 0)
             return;
@@ -327,14 +276,6 @@ namespace stellar {
         }
 
         EntryHelperProvider::storeChangeEntry(mDelta, mDb, commissionBalance->mEntry);
-    }
-
-    void AccountManager::transferFee(AssetCode asset, Fee fee) {
-        uint64_t totalFee = 0;
-        if (!safeSum(fee.fixed, fee.percent, totalFee))
-            throw std::runtime_error("totalFee overflows uin64");
-
-        transferFee(asset, totalFee);
     }
 
     BalanceID AccountManager::loadOrCreateBalanceForAsset(AccountID const &account,

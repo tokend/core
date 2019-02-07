@@ -76,7 +76,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
     // create account which will withdraw
     auto withdrawerKP = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), 1);
     auto withdrawer = Account{ withdrawerKP, Salt(0) };
     auto withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
     REQUIRE(!!withdrawerBalance);
@@ -305,7 +305,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             //create another account
             auto newAccountKP = SecretKey::random();
-            createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), AccountType::GENERAL);
+            createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), 1);
             Account newAccount = Account{newAccountKP, Salt(0)};
 
             withdrawRequestHelper.applyCreateWithdrawRequest(newAccount, withdrawRequest, nullptr,

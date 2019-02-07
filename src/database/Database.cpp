@@ -3,28 +3,19 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "database/Database.h"
-#include "overlay/StellarXDR.h"
 #include "main/Application.h"
 #include "main/Config.h"
 #include "util/Logging.h"
-#include "util/make_unique.h"
-#include "util/types.h"
 #include "util/GlobalChecks.h"
-#include "util/Timer.h"
-#include "crypto/Hex.h"
-
 #include "ledger/AccountFrame.h"
 #include "ledger/AccountLimitsFrame.h"
-#include "ledger/AccountTypeLimitsFrame.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/EntryHelperLegacy.h"
-#include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/StatisticsFrame.h"
 #include "ledger/AssetPairFrame.h"
-#include "ledger/TrustFrame.h"
 #include "ledger/OfferFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ExternalSystemAccountID.h"
@@ -41,13 +32,6 @@
 #include "herder/Herder.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "medida/metrics_registry.h"
-#include "medida/timer.h"
-#include "medida/counter.h"
-
-#include <stdexcept>
-#include <vector>
-#include <sstream>
-#include <thread>
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AccountRuleHelperImpl.h>
 #include <ledger/AssetHelperImpl.h>

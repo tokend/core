@@ -90,7 +90,6 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                 .setSource(root)
                                                 .setToPublicKey(account.getPublicKey())
-                                                .setType(AccountType::NOT_VERIFIED)
                                                 .setRecovery(SecretKey::random().getPublicKey())
                                                 .setRoleID(1));
         auto balance = BalanceHelperLegacy::Instance()->loadBalance(account.getPublicKey(), asset, testManager->getDB(), nullptr);

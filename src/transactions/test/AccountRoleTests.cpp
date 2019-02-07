@@ -82,7 +82,6 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
             createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                     .setSource(master)
                                                     .setToPublicKey(randomAccount.getPublicKey())
-                                                    .setType(AccountType::NOT_VERIFIED)
                                                     .setRecovery(SecretKey::random().getPublicKey())
                                                     .setRoleID(accountRoleID));
 

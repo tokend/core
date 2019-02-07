@@ -40,31 +40,15 @@ uint256 makePublicKey(uint256 const& b);
 // returns true if the passed string32 is valid
 bool isString32Valid(std::string const& str);
 
-// returns all signer types
-int32_t getAnySignerType();
-
-int32 getAnyAssetPolicy();
-
 bool isValidManageAssetPairAction(ManageAssetPairAction action);
 bool isValidManageAssetAction(ManageAssetAction action);
 
 int32 getAnyAssetPairPolicy();
 
-uint32_t getAnyBlockReason();
-
-// returns vector of all account types
-std::vector<AccountType> getAllAccountTypes();
-
-std::vector<AccountType> getSystemAccountTypes();
-
-bool isSystemAccountType(AccountType accountType);
-
 std::vector<FeeType> getAllFeeTypes();
 // returns true, if passed opType is valid operation type
 
 bool isFeeTypeValid(FeeType feeType);
-
-int32_t getManagerType(AccountType accountType);
 
 // Returns true, if flag value is valid. (Does not contains any values which do not belongs to FlagType)
 template <typename FlagType>

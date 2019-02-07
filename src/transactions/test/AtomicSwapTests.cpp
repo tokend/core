@@ -103,7 +103,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(sellerPubKey)
-            .setType(AccountType::SYNDICATE)
             .setRecovery(SecretKey::random().getPublicKey())
             .setRoleID(1);
     createAccountHelper.applyTx(createAccountTestBuilder);
@@ -111,7 +110,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(firstBuyerPubKey)
-            .setType(AccountType::NOT_VERIFIED)
             .setRecovery(SecretKey::random().getPublicKey())
             .setRoleID(1);
     createAccountHelper.applyTx(createAccountTestBuilder);
@@ -119,7 +117,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(secondBuyerPubKey)
-            .setType(AccountType::NOT_VERIFIED)
             .setRecovery(SecretKey::random().getPublicKey())
             .setRoleID(1);
     createAccountHelper.applyTx(createAccountTestBuilder);

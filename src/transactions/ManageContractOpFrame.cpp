@@ -2,15 +2,8 @@
 #include <ledger/KeyValueHelperLegacy.h>
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "transactions/ManageContractOpFrame.h"
-#include "ledger/TrustFrame.h"
-#include "ledger/TrustHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "crypto/SHA.h"
-#include "database/Database.h"
-#include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 #include "ManageKeyValueOpFrame.h"
 
 namespace stellar

@@ -77,7 +77,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     SECTION("Syndicate happy path")
     {
         auto syndicate = Account{SecretKey::random(), Salt(0)};
-        createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), 1);
         testManageAssetHappyPath(testManager, syndicate, root);
     }
     SECTION("Cancel asset request")
@@ -244,7 +244,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             // create asset by syndicate
             auto syndicate = Account{SecretKey::random(), Salt(0)};
-            createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), AccountType::SYNDICATE);
+            createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), 1);
             const AssetCode assetCode = "BTC";
             manageAssetHelper.createAsset(syndicate, syndicate.key, assetCode, root, 0, &zeroTasks);
             // try to update with root
@@ -399,7 +399,6 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             SECTION("Can change asset pre issuance signer")
             {
                 auto newPreIssuanceSigner = SecretKey::random();
-                auto signer = Signer(preissuedSigner.getPublicKey(), 1, int32_t(SignerType::TX_SENDER), 0, "", Signer::_ext_t{});
                 auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
                 auto changePreIssuanceSigner = manageAssetHelper.createChangeSignerRequest(
                         preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());

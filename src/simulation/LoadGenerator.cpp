@@ -645,7 +645,7 @@ LoadGenerator::TxInfo::toTransactionFrames(
         {
 
             auto resultingEnvelope = txtest::createCreateAccountTx(app.getNetworkID(), mFrom->mKey, mTo->mKey, 1,
-                AccountType::GENERAL, nullptr, &timeBounds)->getEnvelope();
+                nullptr, &timeBounds)->getEnvelope();
 
 			Salt seq = 1;
 			auto issuenceKey = mFrom->mKey;

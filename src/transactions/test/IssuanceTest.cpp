@@ -33,7 +33,7 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
 	// create new account with balance 
 	auto receiverKP = SecretKey::random();
     CreateAccountTestHelper createAccountTestHelper(testManager);
-    createAccountTestHelper.applyCreateAccountTx(root, receiverKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, receiverKP.getPublicKey());
 
 	auto balanceHelper = BalanceHelperLegacy::Instance();
 	auto receiverBalance = balanceHelper->loadBalance(receiverKP.getPublicKey(), assetToBeIssued, testManager->getDB(), nullptr);
@@ -215,7 +215,7 @@ void createPreIssuanceRequestHardPath(TestManager::pointer testManager, Account 
         //create one more account
         SecretKey syndicate = SecretKey::random();
         Account syndicateAccount = Account{syndicate, Salt(0)};
-        createAccountTestHelper.applyCreateAccountTx(root, syndicate.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, syndicate.getPublicKey());
 
         //root is asset owner, syndicate tries to preissue some amount of asset
         issuanceRequestHelper.applyCreatePreIssuanceRequest(syndicateAccount, preissuedSigner, assetCode, amount, reference,
@@ -269,7 +269,7 @@ void createPreIssuanceRequestHardPath(TestManager::pointer testManager, Account 
         {
             //issue some amount first
             SecretKey receiver = SecretKey::random();
-            createAccountTestHelper.applyCreateAccountTx(root, receiver.getPublicKey(), AccountType::GENERAL);
+            createAccountTestHelper.applyCreateAccountTx(root, receiver.getPublicKey());
             auto balanceHelper = BalanceHelperLegacy::Instance();
             auto receiverBalance = balanceHelper->loadBalance(receiver.getPublicKey(), assetCode, testManager->getDB(), nullptr);
             REQUIRE(receiverBalance);
@@ -321,7 +321,7 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
 
     //create receiver account
     SecretKey receiverKP = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(root, receiverKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, receiverKP.getPublicKey());
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto receiverBalance = balanceHelper->loadBalance(receiverKP.getPublicKey(), assetCode, testManager->getDB(),
                                                       nullptr);
@@ -390,7 +390,7 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
         //create syndicate account
         SecretKey syndicateKP = SecretKey::random();
         Account syndicate = Account{syndicateKP, Salt(0)};
-        createAccountTestHelper.applyCreateAccountTx(root, syndicateKP.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, syndicateKP.getPublicKey());
 
         //try to issue some amount from syndicate account
         issuanceRequestHelper.applyCreateIssuanceRequest(syndicate, assetCode, amount, receiverBalance->getBalanceID(),
@@ -520,7 +520,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
         auto issuerSecret = SecretKey::random();
         auto issuer = Account{ issuerSecret, Salt(0) };
         CreateAccountTestHelper createAccountTestHelper(testManager);
-        createAccountTestHelper.applyCreateAccountTx(root, issuerSecret.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, issuerSecret.getPublicKey(), 1);
         issuanceRequestHelper.createAssetWithPreIssuedAmount(issuer, assetToBeIssued, preIssuedAmount, root);
 
         auto& db = testManager->getDB();

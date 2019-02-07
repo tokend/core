@@ -136,7 +136,7 @@ TEST_CASE("Flooding", "[flood][overlay]")
             SecretKey dest = SecretKey::random();
 
             auto tx1 = createCreateAccountTx(networkID, sources[i], dest,
-                                             expectedSeq, AccountType::GENERAL);
+                                             expectedSeq);
 
             // round robin
             auto inApp = nodes[i % nodes.size()];
@@ -214,7 +214,7 @@ TEST_CASE("Flooding", "[flood][overlay]")
             SecretKey dest = SecretKey::random();
 
             auto tx1 = createCreateAccountTx(networkID, sources[i], dest,
-                                             expectedSeq, AccountType::GENERAL);
+                                             expectedSeq);
 
             // round robin
             auto inApp = nodes[i % nodes.size()];
