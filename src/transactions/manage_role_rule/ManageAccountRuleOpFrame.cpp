@@ -74,6 +74,15 @@ ManageAccountRuleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper
 }
 
 bool
+ManageAccountRuleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                    std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT_RULE), "manage");
+
+    return true;
+}
+
+bool
 ManageAccountRuleOpFrame::updateRule(Application &app,
                                      StorageHelper &storageHelper)
 {

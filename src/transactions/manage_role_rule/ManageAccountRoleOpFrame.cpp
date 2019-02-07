@@ -28,6 +28,15 @@ ManageAccountRoleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper
 }
 
 bool
+ManageAccountRoleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                    std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT_ROLE), "manage");
+
+    return true;
+}
+
+bool
 ManageAccountRoleOpFrame::checkRulesExisting(StorageHelper &storageHelper, std::vector<uint64_t> ruleIDs)
 {
     auto& ruleHelper = storageHelper.getAccountRuleHelper();

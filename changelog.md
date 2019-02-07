@@ -24,6 +24,8 @@
 * source account details, counterparty details
 * getSourceAccountDetails and getCounterpartyDetails for all op frames
 * manage account op frame
+* trust frame
+* account type limits frame
 
 ### Fixed
 

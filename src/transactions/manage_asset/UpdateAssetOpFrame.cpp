@@ -35,7 +35,21 @@ bool
 UpdateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                    std::vector<SignerRequirement>& result) const
 {
-    return false;
+    auto asset = storageHelper.getAssetHelper().loadAsset(mAssetUpdateRequest.code);
+    if (!asset)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update");
+
+    return true;
 }
 
 ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)

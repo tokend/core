@@ -6,7 +6,7 @@ namespace stellar
 {
 class ManageAccountRoleOpFrame : public OperationFrame
 {
-  public:
+public:
     ManageAccountRoleOpFrame(Operation const& op, OperationResult& res,
                              TransactionFrame& parentTx);
 
@@ -28,7 +28,7 @@ class ManageAccountRoleOpFrame : public OperationFrame
             innerResult().code());
     }
 
-  private:
+private:
     ManageAccountRoleResult&
     innerResult()
     {
@@ -40,6 +40,10 @@ class ManageAccountRoleOpFrame : public OperationFrame
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
     bool createAccountRole(Application& app, StorageHelper& storageHelper);
     bool updateAccountRole(Application& app, StorageHelper& storageHelper);

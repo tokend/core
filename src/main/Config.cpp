@@ -689,19 +689,6 @@ AssetCode Config::getAssetCode(std::shared_ptr<cpptoml::toml_base> rawValue, con
 void
 Config::validateConfig()
 {
-	auto systemAccounts = getSystemAccounts();
-	for (int i = 0; i < systemAccounts.size(); i++)
-	{
-		for (int j = 0; j < systemAccounts.size(); j++)
-		{
-			if (i == j)
-				continue;
-
-			if (systemAccounts[i] == systemAccounts[j])
-				throw std::invalid_argument("Systems accounts can't have same accountID");
-		}
-	}
-
 	if (BASE_EXCHANGE_NAME.empty())
 	{
 		throw std::invalid_argument("BASE_EXCHANGE_NAME must not be empty");

@@ -12,7 +12,7 @@ namespace stellar
 
 class ManageAccountRuleOpFrame : public OperationFrame
 {
-  public:
+public:
     ManageAccountRuleOpFrame(Operation const& op,
                                        OperationResult& res,
                                        TransactionFrame& parentTx);
@@ -20,10 +20,6 @@ class ManageAccountRuleOpFrame : public OperationFrame
     bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
-
-    bool
-    tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
 
     static ManageAccountRuleResultCode
     getInnerCode(OperationResult const& res)
@@ -37,7 +33,7 @@ class ManageAccountRuleOpFrame : public OperationFrame
         return xdr::xdr_traits<ManageAccountRuleResultCode>::enum_name(innerResult().code());
     }
 
-  private:
+private:
     ManageAccountRuleOp const& mManageAccountRule;
 
     ManageAccountRuleResult&
@@ -45,6 +41,14 @@ class ManageAccountRuleOpFrame : public OperationFrame
     {
         return mResult.tr().manageAccountRuleResult();
     }
+
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
     bool createRule(Application& app, StorageHelper& storageHelper);
     bool updateRule(Application &app, StorageHelper &storageHelper);

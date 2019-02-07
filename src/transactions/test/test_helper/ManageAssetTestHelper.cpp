@@ -347,15 +347,14 @@ void ManageAssetTestHelper::validateManageAssetEffect(
     auto balanceHelper = BalanceHelperLegacy::Instance();
     if (assetFrame->isPolicySet(AssetPolicy::BASE_ASSET))
     {
-        auto systemAccounts = mTestManager->getApp().getSystemAccounts();
-        for (auto systemAccount : systemAccounts)
-        {
+        auto systemAccount = mTestManager->getApp().getAdminID();
+
             auto balanceFrame = balanceHelper->loadBalance(systemAccount,
                                                            assetCode,
                                                            mTestManager->
                                                            getDB(), nullptr);
             REQUIRE(balanceFrame);
-        }
+
     }
 }
 }

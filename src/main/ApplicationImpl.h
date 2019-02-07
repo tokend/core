@@ -132,8 +132,6 @@ namespace stellar {
 
         virtual AccountID getAdminID() const override;
 
-        virtual std::vector<PublicKey> getSystemAccounts() const override;
-
         virtual std::string getBaseExchangeName() const override;
 
         virtual uint64 getTxExpirationPeriod() const override;

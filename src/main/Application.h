@@ -254,8 +254,6 @@ class Application
     virtual void newDB() = 0;
 
 	virtual AccountID getAdminID() const = 0;
-	[[deprecated]] // remove, use getAdminID
-	virtual std::vector<PublicKey> getSystemAccounts() const = 0;
 
     virtual std::string getBaseExchangeName() const = 0;
     virtual uint64 getTxExpirationPeriod() const = 0;

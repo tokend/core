@@ -123,13 +123,11 @@ PayoutOpFrame::obtainHoldersPayoutAmountsMap(Application& app, uint64_t& totalAm
 {
     std::map<AccountID, uint64_t> result;
     totalAmount = 0;
-    auto systemAccounts = app.getSystemAccounts();
+    auto systemAccount = app.getAdminID();
 
     for (auto const& holder : holders)
     {
-        auto systemAccountIter = std::find(systemAccounts.begin(),
-                systemAccounts.end(), holder->getAccountID());
-        if (systemAccountIter != systemAccounts.end())
+        if (holder->getAccountID() == systemAccount)
             continue;
 
         uint64_t calculatedAmount;

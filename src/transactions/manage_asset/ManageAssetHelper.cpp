@@ -9,14 +9,8 @@ namespace stellar
 void ManageAssetHelper::createSystemBalances(AssetCode assetCode, Application &app,
                                             LedgerDelta &delta)
 {
-    auto systemAccounts = app.getSystemAccounts();
-
     auto& db = app.getDatabase();
-    for (auto& systemAccount : systemAccounts)
-    {
-
-        AccountManager::loadOrCreateBalanceForAsset(systemAccount, assetCode, db, delta);
-    }
+    AccountManager::loadOrCreateBalanceForAsset(app.getAdminID(), assetCode, db, delta);
 }
 
 void ManageAssetHelper::createBalanceForAccount(AccountID account,
