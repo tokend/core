@@ -5,6 +5,7 @@
 #include "ledger/SignerRoleHelper.h"
 #include "ledger/SignerRuleHelper.h"
 #include "ledger/SignerHelper.h"
+#include "main/Application.h"
 
 namespace stellar
 {
@@ -73,6 +74,17 @@ ManageSignerRoleOpFrame::checkRulesExisting(StorageHelper &storageHelper,
     return true;
 }
 
+AccountID
+ManageSignerRoleOpFrame::getOwnerID(Application& app, CreateSignerRoleData data)
+{
+    if ((app.getAdminID() == getSourceID()) && data.isReadOnly)
+    {
+        return app.getLedgerManager().getNotExistingAccountID();
+    }
+
+    return getSourceID();
+}
+
 bool
 ManageSignerRoleOpFrame::createRole(Application& app,
                                     StorageHelper& storageHelper)
@@ -95,7 +107,7 @@ ManageSignerRoleOpFrame::createRole(Application& app,
     roleEntry.ruleIDs = creationData.ruleIDs;
     roleEntry.ruleIDs.insert(roleEntry.ruleIDs.end(), defaultRuleIDs.begin(), defaultRuleIDs.end());
     roleEntry.details = creationData.details;
-    roleEntry.ownerID = getSourceID();
+    roleEntry.ownerID = getOwnerID(app, creationData);
 
     storageHelper.getSignerRoleHelper().storeAdd(le);
 

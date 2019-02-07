@@ -73,6 +73,7 @@ class LedgerManagerImpl : public LedgerManager
                                   uint64_t const ownerRoleID);
 
     State mState;
+    AccountID mNotExistingAccount;
 
   public:
     LedgerManagerImpl(Application& app);
@@ -116,5 +117,6 @@ class LedgerManagerImpl : public LedgerManager
 
     bool shouldUse(const LedgerVersion version);
     LedgerVersion getLedgerVersion();
+    AccountID getNotExistingAccountID() override;
 };
 }

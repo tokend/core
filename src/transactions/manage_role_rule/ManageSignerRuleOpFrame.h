@@ -47,6 +47,9 @@ private:
         return mResult.tr().manageSignerRuleResult();
     }
 
+    AccountID
+    getOwnerID(Application& app, CreateSignerRuleData data);
+
     bool
     createRule(Application& app, StorageHelper& storageHelper);
 

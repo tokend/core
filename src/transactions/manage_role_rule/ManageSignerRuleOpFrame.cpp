@@ -1,5 +1,4 @@
 #include "ManageSignerRuleOpFrame.h"
-#include "database/Database.h"
 #include "ledger/SignerRuleHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
@@ -153,20 +152,34 @@ ManageSignerRuleOpFrame::updateRule(Application &app,
     return true;
 }
 
+AccountID
+ManageSignerRuleOpFrame::getOwnerID(Application& app, CreateSignerRuleData data)
+{
+    if ((app.getAdminID() == getSourceID()) && data.isReadOnly)
+    {
+        return app.getLedgerManager().getNotExistingAccountID();
+    }
+
+    return getSourceID();
+}
+
 bool
 ManageSignerRuleOpFrame::createRule(Application &app,
                                      StorageHelper &storageHelper)
 {
+    auto data = mManageSignerRule.data.createData();
+
     auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
     LedgerEntry le;
     le.data.type(LedgerEntryType::SIGNER_RULE);
     auto& rule = le.data.signerRule();
     rule.id = headerFrame.generateID(LedgerEntryType::SIGNER_RULE);
-    rule.resource = mManageSignerRule.data.createData().resource;
-    rule.action = mManageSignerRule.data.createData().action;
-    rule.isForbid = mManageSignerRule.data.createData().isForbid;
-    rule.details = mManageSignerRule.data.createData().details;
+    rule.resource = data.resource;
+    rule.action = data.action;
+    rule.isForbid = data.isForbid;
+    rule.details = data.details;
+    rule.ownerID = getOwnerID(app, data);
 
     storageHelper.getSignerRuleHelper().storeAdd(le);
 

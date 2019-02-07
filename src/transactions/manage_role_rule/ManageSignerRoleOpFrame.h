@@ -48,6 +48,9 @@ private:
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
+    AccountID
+    getOwnerID(Application& app,  CreateSignerRoleData data);
+
     bool
     createRole(Application& app, StorageHelper& storageHelper);
 

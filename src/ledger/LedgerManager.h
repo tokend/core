@@ -179,6 +179,8 @@ class LedgerManager
 
     virtual LedgerVersion getLedgerVersion() = 0;
 
+    virtual AccountID getNotExistingAccountID() = 0;
+
     virtual ~LedgerManager()
     {
     }

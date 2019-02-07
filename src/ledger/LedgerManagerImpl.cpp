@@ -109,6 +109,14 @@ LedgerManagerImpl::LedgerManagerImpl(Application& app)
     , mState(LM_BOOTING_STATE)
 
 {
+    std::string raw = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    mNotExistingAccount = PubKeyUtils::fromStrKey(raw);
+}
+
+AccountID
+LedgerManagerImpl::getNotExistingAccountID()
+{
+    return mNotExistingAccount;
 }
 
 void
@@ -162,7 +170,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     firstSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     firstSignerRule.isDefault = true;
     firstSignerRule.isForbid = true;
-    firstSignerRule.ownerID = mApp.getAdminID();
+    firstSignerRule.ownerID = mNotExistingAccount;
     firstSignerRule.details = "{}";
 
     auto& helper = storageHelper.getSignerRuleHelper();
@@ -178,7 +186,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     secondSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     secondSignerRule.isDefault = true;
     secondSignerRule.isForbid = true;
-    secondSignerRule.ownerID = mApp.getAdminID();
+    secondSignerRule.ownerID = mNotExistingAccount;
     secondSignerRule.details = "{}";
 
     helper.storeAdd(secondSignerRuleEntry);
@@ -193,7 +201,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     thirdSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     thirdSignerRule.isDefault = true;
     thirdSignerRule.isForbid = true;
-    thirdSignerRule.ownerID = mApp.getAdminID();
+    thirdSignerRule.ownerID = mNotExistingAccount;
     thirdSignerRule.details = "{}";
 
     helper.storeAdd(thirdSignerRuleEntry);
@@ -212,7 +220,7 @@ LedgerManagerImpl::createAdminSigner(StorageHelper &storageHelper)
     signerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     signerRule.isDefault = false;
     signerRule.isForbid = false;
-    signerRule.ownerID = mApp.getAdminID();
+    signerRule.ownerID = mNotExistingAccount;
     signerRule.details = "{}";
 
     storageHelper.getSignerRuleHelper().storeAdd(signerRuleEntry);
@@ -221,7 +229,7 @@ LedgerManagerImpl::createAdminSigner(StorageHelper &storageHelper)
     signerRoleEntry.data.type(LedgerEntryType::SIGNER_ROLE);
     auto& signerRole = signerRoleEntry.data.signerRole();
     signerRole.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_ROLE);
-    signerRole.ownerID = mApp.getAdminID();
+    signerRole.ownerID = mNotExistingAccount;
     signerRole.details = "{}";
     signerRole.ruleIDs = {signerRule.id};
 
