@@ -19,6 +19,10 @@ protected:
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
 
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
 public:
     ManageExternalSystemAccountIdPoolEntryOpFrame(Operation const& op, OperationResult& res,
                                         TransactionFrame& parentTx);

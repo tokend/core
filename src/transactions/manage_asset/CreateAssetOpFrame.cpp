@@ -10,7 +10,6 @@
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 
@@ -21,9 +20,9 @@ using namespace std;
 using xdr::operator==;
 
 CreateAssetOpFrame::CreateAssetOpFrame(Operation const& op,
-                                           OperationResult& res,
-                                           TransactionFrame& parentTx)
-    : ManageAssetOpFrame(op, res, parentTx), mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
+        OperationResult& res, TransactionFrame& parentTx)
+        : ManageAssetOpFrame(op, res, parentTx)
+        , mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
 {
 }
 
@@ -32,9 +31,21 @@ CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                           std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::ASSET);
-    resource.asset().assetType = mManageAsset.request.createAssetCreationRequest().createAsset.type;
-    resource.asset().assetCode = mManageAsset.request.createAssetCreationRequest().createAsset.code;
+    resource.asset().assetType = mAssetCreationRequest.type;
+    resource.asset().assetCode = mAssetCreationRequest.code;
     result.emplace_back(resource, "create", mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const
+{
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetType = mAssetCreationRequest.type;
+    resource.asset().assetCode = mAssetCreationRequest.code;
+    result.emplace_back(resource, "create");
 
     return true;
 }

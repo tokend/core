@@ -51,6 +51,26 @@ CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
     return true;
 }
 
+bool
+CreateASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+        std::vector<SignerRequirement> &result) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balance = balanceHelper.mustLoadBalance(
+            mCreateASwapBidCreationRequest.request.baseBalance);
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(balance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    resource.atomicSwapBid().assetType = asset->getType();
+    resource.atomicSwapBid().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "create");
+
+    return true;
+}
+
 CreateASwapBidCreationRequestResultCode
 CreateASwapBidCreationRequestOpFrame::isBaseAssetValid(Database &db,
                                                        AssetCode baseAssetCode)

@@ -19,6 +19,10 @@ class BindExternalSystemAccountIdOpFrame : public OperationFrame
     tryGetOperationConditions(StorageHelper& sh,
                               std::vector<OperationCondition>& result) const override;
 
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
 public:
     BindExternalSystemAccountIdOpFrame(Operation const& op, OperationResult& res,
                                        TransactionFrame& parentTx);

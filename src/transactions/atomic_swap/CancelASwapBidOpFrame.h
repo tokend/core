@@ -7,7 +7,7 @@ namespace stellar
 
 class CancelASwapBidOpFrame : public OperationFrame
 {
-protected:
+private:
     CancelASwapBidOp const& mCancelASwapBid;
 
     CancelASwapBidResult& innerResult()
@@ -18,6 +18,10 @@ protected:
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
     CancelASwapBidOpFrame(Operation const &op, OperationResult &opRes,

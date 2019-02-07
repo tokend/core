@@ -25,7 +25,8 @@ bool
 CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                             std::vector<OperationCondition> &result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID, storageHelper.getDatabase());
+    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
+            storageHelper.getDatabase());
     if (!sale) 
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -40,6 +41,26 @@ CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storage
     result.emplace_back(resource, "participate", mSourceAccount);
 
     return CreateOfferOpFrame::tryGetOperationConditions(storageHelper, result);
+}
+
+bool
+CreateSaleParticipationOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result) const
+{
+    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
+            storageHelper.getDatabase());
+    if (!sale)
+    {
+        throw std::runtime_error("Expected sale to exists");
+    }
+
+    SignerRuleResource resource(LedgerEntryType::SALE);
+    resource.sale().saleID = sale->getID();
+    resource.sale().saleType = sale->getType();
+
+    result.emplace_back(resource, "participate");
+
+    return CreateOfferOpFrame::tryGetSignerRequirements(storageHelper, result);
 }
 
 SaleFrame::pointer CreateSaleParticipationOpFrame::loadSaleForOffer(

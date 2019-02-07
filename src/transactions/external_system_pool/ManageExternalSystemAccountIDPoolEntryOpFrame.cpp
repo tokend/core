@@ -19,6 +19,15 @@ ManageExternalSystemAccountIdPoolEntryOpFrame::tryGetOperationConditions(
     return true;
 }
 
+bool
+ManageExternalSystemAccountIdPoolEntryOpFrame::tryGetSignerRequirements(
+        StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "manage");
+
+    return true;
+}
+
     ManageExternalSystemAccountIdPoolEntryOpFrame::ManageExternalSystemAccountIdPoolEntryOpFrame(Operation const &op,
                                                                                                  OperationResult &res,
                                                                              TransactionFrame &parentTx)

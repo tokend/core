@@ -10,6 +10,7 @@
 #include "CreateIssuanceRequestOpFrame.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
+#include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
@@ -57,7 +58,7 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	    return false;
 	}
 
-	auto account = AccountHelperLegacy::Instance()->mustLoadAccount(balance->getAccountID(), storageHelper.getDatabase());
+	auto account = storageHelper.getAccountHelper().mustLoadAccount(balance->getAccountID());
 
 	AccountRuleResource resource(LedgerEntryType::ASSET);
 	resource.asset().assetCode = asset->getCode();
@@ -66,6 +67,22 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	result.emplace_back(resource, "receive_from_issuance", account);
 
 	// only asset owner can do issuance, it will be handled in doApply
+	return true;
+}
+
+bool
+CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+									   std::vector<SignerRequirement>& result) const
+{
+	auto asset = storageHelper.getAssetHelper().mustLoadAsset(
+			mCreateIssuanceRequest.request.asset);
+
+	SignerRuleResource resource(LedgerEntryType::ASSET);
+	resource.asset().assetCode = asset->getCode();
+	resource.asset().assetType = asset->getType();
+
+	result.emplace_back(resource, "issue");
+
 	return true;
 }
 

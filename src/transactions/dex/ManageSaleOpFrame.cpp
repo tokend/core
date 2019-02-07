@@ -22,6 +22,28 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    auto sale = SaleHelper::Instance()->loadSale(mManageSaleOp.saleID,
+                                                 storageHelper.getDatabase());
+    if (!sale)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::SALE;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::SALE);
+    resource.sale().saleID = sale->getID();
+    resource.sale().saleType = sale->getType();
+
+    result.emplace_back(resource, "manage");
+
+    return true;
+}
+
     bool ManageSaleOpFrame::amendUpdateSaleDetailsRequest(Application &app, LedgerManager &lm, StorageHelper &storageHelper) {
 
         auto& db = storageHelper.getDatabase();

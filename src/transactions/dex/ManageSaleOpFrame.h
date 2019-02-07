@@ -23,6 +23,10 @@ namespace stellar {
         tryGetOperationConditions(StorageHelper& storageHelper,
                                   std::vector<OperationCondition>& result) const override;
 
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
+
     public:
         ManageSaleOpFrame(Operation const &op, OperationResult &opRes, TransactionFrame &parentTx);
 

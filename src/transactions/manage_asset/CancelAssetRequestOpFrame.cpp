@@ -3,17 +3,11 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "CancelAssetRequestOpFrame.h"
-
+#include "ledger/StorageHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/EntryHelperLegacy.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
-
-#include "database/Database.h"
-
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 
 namespace stellar
 {
@@ -33,6 +27,28 @@ CancelAssetRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelpe
 						  std::vector<OperationCondition>& result) const
 {
 	// only request creator can cancel it
+	return true;
+}
+
+bool
+CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+							std::vector<stellar::SignerRequirement> &result) const
+{
+	// FIXME
+	/*auto request = ReviewableRequestHelper::Instance()->Instance()->loadRequest(
+			mManageAsset.requestID, storageHelper.getDatabase());
+	if (!request || (request->getType()))
+	{
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+		return false;
+	}
+
+	SignerRuleResource resource(LedgerEntryType::ASSET);
+	resource.asset().assetType = request..type;
+	resource.asset().assetCode = mAssetCreationRequest.code;
+	result.emplace_back(resource, "create");*/
+
 	return true;
 }
 

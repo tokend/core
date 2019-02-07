@@ -48,6 +48,21 @@ ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageH
     return true;
 }
 
+bool
+ChangeAssetMaxIssuanceOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(mUpdateMaxIssuance.assetCode);
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update_max_issuance");
+
+    return true;
+}
+
 bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta,
                                           LedgerManager& ledgerManager)
 {

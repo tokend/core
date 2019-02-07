@@ -34,6 +34,14 @@ ChangeAssetPreIssuerOpFrame::tryGetOperationConditions(StorageHelper& storageHel
     return true;
 }
 
+bool
+ChangeAssetPreIssuerOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    // only asset pre issuer can change asset pre issuer
+    return true;
+}
+
 bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, LedgerDelta& delta,
                                           LedgerManager& ledgerManager)
 {

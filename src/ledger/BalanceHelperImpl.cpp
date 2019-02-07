@@ -224,6 +224,20 @@ BalanceHelperImpl::countObjects()
 }
 
 BalanceFrame::pointer
+BalanceHelperImpl::mustLoadBalance(BalanceID balanceID)
+{
+    auto result = loadBalance(balanceID);
+    if (result)
+    {
+        return result;
+    }
+
+    CLOG(ERROR, Logging::ENTRY_LOGGER) << "Expected balance to exist: "
+                                       << BalanceKeyUtils::toStrKey(balanceID);
+    throw std::runtime_error("Expected balance to exist");
+}
+
+BalanceFrame::pointer
 BalanceHelperImpl::loadBalance(BalanceID balanceID)
 {
     LedgerKey key;

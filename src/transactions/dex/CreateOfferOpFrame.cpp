@@ -71,6 +71,36 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     return true;
 }
 
+bool
+CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    auto baseBalance = balanceHelper.mustLoadBalance(mManageOffer.baseBalance);
+    auto quoteBalance = balanceHelper.mustLoadBalance(mManageOffer.quoteBalance);
+
+    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
+    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+
+    AccountRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    resource.offer().baseAssetCode = baseAsset->getCode();
+    resource.offer().quoteAssetCode = quoteAsset->getCode();
+    resource.offer().baseAssetType = baseAsset->getType();
+    resource.offer().quoteAssetType = quoteAsset->getType();
+
+    std::string action = "create_to_sell";
+    if (mManageOffer.isBuy)
+    {
+        action = "create_to_buy";
+    }
+
+    result.emplace_back(resource, action);
+
+    return true;
+};
+
 BalanceFrame::pointer CreateOfferOpFrame::loadBalanceValidForTrading(
     BalanceID const& balanceID, Database& db,
     LedgerDelta& delta)

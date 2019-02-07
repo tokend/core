@@ -31,6 +31,13 @@ UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+UpdateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                   std::vector<SignerRequirement>& result) const
+{
+    return false;
+}
+
 ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)
 {
     ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::UPDATE_ASSET);

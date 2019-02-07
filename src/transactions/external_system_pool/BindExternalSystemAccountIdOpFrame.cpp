@@ -26,6 +26,15 @@ BindExternalSystemAccountIdOpFrame::tryGetOperationConditions(StorageHelper& sh,
     return true;
 }
 
+bool
+BindExternalSystemAccountIdOpFrame::tryGetSignerRequirements(
+        StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "bind");
+
+    return true;
+}
+
 BindExternalSystemAccountIdOpFrame::BindExternalSystemAccountIdOpFrame(
     Operation const& op, OperationResult& res, TransactionFrame& parentTx)
     : OperationFrame(op, res, parentTx)

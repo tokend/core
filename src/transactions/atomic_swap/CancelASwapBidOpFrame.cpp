@@ -24,6 +24,19 @@ CancelASwapBidOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     return true;
 }
 
+bool
+CancelASwapBidOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                    std::vector<SignerRequirement> &result) const
+{
+    SignerRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    // maybe add type and asset or bid id
+    //resource.atomicSwapBid().
+
+    result.emplace_back(resource, "cancel");
+
+    return true;
+}
+
 bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
                                     LedgerManager &ledgerManager)
 {
