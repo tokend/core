@@ -1,6 +1,7 @@
 #include "AccountHelperImpl.h"
 #include "StorageHelper.h"
 #include "LedgerDelta.h"
+#include "database/Database.h"
 
 using namespace soci;
 

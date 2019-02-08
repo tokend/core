@@ -3,6 +3,7 @@
 #include "SignerRuleHelperImpl.h"
 #include "StorageHelper.h"
 #include "LedgerDelta.h"
+#include "database/Database.h"
 
 namespace stellar
 {

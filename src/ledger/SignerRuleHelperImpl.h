@@ -5,6 +5,7 @@
 namespace stellar
 {
 class StorageHelper;
+class StatementContext;
 
 class SignerRuleHelperImpl : public SignerRuleHelper, NonCopyable
 {

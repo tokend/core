@@ -156,8 +156,11 @@ StorageHelperImpl::getEntryHelpers()
     SignerHelper& signerHelper = getSignerHelper();
     SignerRuleHelper& signerRuleHelper = getSignerRuleHelper();
     SignerRoleHelper& signerRoleHelper = getSignerRoleHelper();
+    AccountRuleHelper& accountRuleHelper = getAccountRuleHelper();
+    AccountRoleHelper& accountRoleHelper = getAccountRoleHelper();
 
-    return {&signerHelper, &signerRuleHelper, &signerRoleHelper};
+    return {&signerHelper, &signerRuleHelper, &signerRoleHelper,
+            &accountRuleHelper, &accountRoleHelper};
 }
 
 KeyValueHelper&

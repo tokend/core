@@ -1,9 +1,9 @@
 #include "AccountRoleHelperImpl.h"
 #include "LedgerDelta.h"
 #include "StorageHelper.h"
+#include "database/Database.h"
 
 using namespace soci;
-using namespace std;
 
 namespace stellar
 {
@@ -37,7 +37,7 @@ AccountRoleHelperImpl::AccountRoleHelperImpl(StorageHelper& storageHelper)
 void
 AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 {
-    auto accountRoleFrame = make_shared<AccountRoleFrame>(entry);
+    auto accountRoleFrame = std::make_shared<AccountRoleFrame>(entry);
     auto& accountRoleEntry = accountRoleFrame->getAccountRole();
 
     if (mStorageHelper.getLedgerDelta())
@@ -49,7 +49,7 @@ AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     flushCachedEntry(key);
     accountRoleFrame->ensureValid();
 
-    string sql;
+    std::string sql;
     if (insert)
     {
         sql = "INSERT INTO account_roles (id, details, lastmodified, version) "
@@ -80,7 +80,7 @@ AccountRoleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     st.execute(true);
 
     if (st.get_affected_rows() != 1)
-        throw runtime_error("could not update SQL");
+        throw std::runtime_error("could not update SQL");
 
     sort(accountRoleEntry.ruleIDs.begin(), accountRoleEntry.ruleIDs.end());
     mAccountRoleRulesHelper.storeUpdate(accountRoleID, accountRoleEntry.ruleIDs, insert);
@@ -172,7 +172,7 @@ stellar::AccountRoleHelperImpl::getLedgerKey(LedgerEntry const& from)
 AccountRoleFrame::pointer
 AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
 {
-    string sql = mAccountRoleSelector;
+    std::string sql = mAccountRoleSelector;
     sql += " WHERE id = :id";
     auto prep = mStorageHelper.getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();
@@ -183,7 +183,7 @@ AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
     auto timer = getDatabase().getSelectTimer("select_account_role");
     load(prep, [&result](LedgerEntry const& entry)
     {
-        result = make_shared<AccountRoleFrame>(entry);
+        result = std::make_shared<AccountRoleFrame>(entry);
     });
 
     LedgerKey key(LedgerEntryType::ACCOUNT_ROLE);
@@ -207,7 +207,7 @@ AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
 
 void
 AccountRoleHelperImpl::load(StatementContext &prep,
-                            function<void(LedgerEntry const &)> processor)
+                            std::function<void(LedgerEntry const &)> processor)
 {
     try
     {
@@ -239,7 +239,7 @@ AccountRoleHelperImpl::load(StatementContext &prep,
     }
     catch (...)
     {
-        throw_with_nested(runtime_error("Failed to load account role"));
+        std::throw_with_nested(std::runtime_error("Failed to load account role"));
     }
 }
 
@@ -260,7 +260,7 @@ AccountRoleHelperImpl::getDatabase()
 EntryFrame::pointer
 AccountRoleHelperImpl::fromXDR(LedgerEntry const& from)
 {
-    return make_shared<AccountRoleFrame>(from);
+    return std::make_shared<AccountRoleFrame>(from);
 }
 
 uint64_t

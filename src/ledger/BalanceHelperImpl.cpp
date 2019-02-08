@@ -1,8 +1,8 @@
 #include "BalanceHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AssetHelper.h"
-#include <memory>
+#include "database/Database.h"
+#include "AssetHelper.h"
 
 using namespace soci;
 using namespace std;

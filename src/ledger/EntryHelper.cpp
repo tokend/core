@@ -1,5 +1,6 @@
 #include <xdrpp/marshal.h>
 #include "ledger/EntryHelper.h"
+#include "database/Database.h"
 
 namespace stellar
 {

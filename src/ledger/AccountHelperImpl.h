@@ -6,6 +6,7 @@
 namespace stellar
 {
 class StorageHelper;
+class StatementContext;
 
 class AccountHelperImpl : public AccountHelper, NonCopyable
 {

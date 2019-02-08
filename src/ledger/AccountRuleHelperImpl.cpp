@@ -2,6 +2,7 @@
 #include "LedgerDelta.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "util/basen.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;

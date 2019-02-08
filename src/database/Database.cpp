@@ -7,19 +7,7 @@
 #include "main/Config.h"
 #include "util/Logging.h"
 #include "util/GlobalChecks.h"
-#include "ledger/AccountFrame.h"
-#include "ledger/AccountLimitsFrame.h"
-#include "ledger/AssetFrame.h"
-#include "ledger/BalanceFrame.h"
 #include "ledger/EntryHelperLegacy.h"
-#include "ledger/FeeHelper.h"
-#include "ledger/ReferenceFrame.h"
-#include "ledger/StatisticsFrame.h"
-#include "ledger/AssetPairFrame.h"
-#include "ledger/OfferFrame.h"
-#include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ExternalSystemAccountID.h"
-#include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "ledger/StorageHelperImpl.h"
 #include "overlay/OverlayManager.h"
@@ -30,10 +18,8 @@
 #include "transactions/TransactionFrame.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "medida/metrics_registry.h"
 #include <ledger/AccountKYCHelper.h>
-#include <ledger/AccountRuleHelperImpl.h>
 #include <ledger/AssetHelperImpl.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/LimitsV2Helper.h>
@@ -64,26 +50,18 @@ bool DatabaseImpl::gDriversRegistered = false;
 
 enum databaseSchemaVersion : unsigned long {
 	DROP_SCP = 2,
-	INITIAL = 3,
-	DROP_BAN = 4,
-    REFERENCE_VERSION = 5,
-	USE_KYC_LEVEL = 6,
-    ADD_ACCOUNT_KYC = 7,
-    ADD_FEE_ASSET = 8,
-    EXTERNAL_POOL_FIX_DB_TYPES = 9,
-    EXTERNAL_POOL_FIX_MIGRATION = 10,
-    KEY_VALUE_FIX_MIGRATION = 11,
-    EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 12,
-    ADD_SALE_STATE = 13,
-    ADD_LIMITS_V2 = 14,
-    ADD_REVIEWABLE_REQUEST_TASKS = 15,
-    ADD_CONTRACTS = 16,
-    REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE = 17,
-    REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS = 18,
-    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 19,
-    ADD_ACCOUNT_ROLES_AND_POLICIES = 20,
-    ADD_ATOMIC_SWAP_BID = 21,
-    ADD_ASSET_CUSTOM_PRECISION = 22
+	DROP_BAN = 3,
+    REFERENCE_VERSION = 4,
+    ADD_ACCOUNT_KYC = 5,
+    EXTERNAL_POOL_FIX_MIGRATION = 6,
+    KEY_VALUE_FIX_MIGRATION = 7,
+    EXTERNAL_POOL_FIX_PARENT_DB_TYPE = 8,
+    ADD_LIMITS_V2 = 9,
+    ADD_REVIEWABLE_REQUEST_TASKS = 10,
+    ADD_CONTRACTS = 11,
+    ADD_CUSTOMER_DETAILS_TO_CONTRACT = 12,
+    ADD_ATOMIC_SWAP_BID = 13,
+    ADD_ASSET_CUSTOM_PRECISION = 14
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
@@ -146,20 +124,14 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::DROP_SCP:
             Herder::dropAll(*this);
             break;
-        case databaseSchemaVersion::INITIAL:
-            break;
         case databaseSchemaVersion::DROP_BAN:
             BanManager::dropAll(*this);
             break;
         case REFERENCE_VERSION:
             ReferenceHelper::addVersion(*this);
             break;
-        case databaseSchemaVersion::USE_KYC_LEVEL:
-            break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
             AccountKYCHelper::Instance()->dropAll(*this);
-            break;
-        case databaseSchemaVersion::EXTERNAL_POOL_FIX_DB_TYPES:
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_MIGRATION:
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->dropAll(*this);
@@ -178,8 +150,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
             PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
             break;
-        case databaseSchemaVersion::ADD_FEE_ASSET:
-            break;
         case databaseSchemaVersion::ADD_CONTRACTS:
             ContractHelper::Instance()->dropAll(*this);
             break;
@@ -189,20 +159,8 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
             AtomicSwapBidHelper::Instance()->dropAll(*this);
             break;
-        case databaseSchemaVersion::ADD_ACCOUNT_ROLES_AND_POLICIES:
-            std::unique_ptr<AccountRoleHelper>(new AccountRoleHelperImpl(storageHelper))->dropAll();
-            std::unique_ptr<AccountRuleHelper>(new AccountRuleHelperImpl(storageHelper))->dropAll();
-            break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
-            break;
-        case databaseSchemaVersion::ADD_SALE_STATE:
-            break;
-        case databaseSchemaVersion::
-        REVIEWABLE_REQUEST_FIX_DEFAULT_VALUE:
-            break;
-        case databaseSchemaVersion::
-        REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");

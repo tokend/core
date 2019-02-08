@@ -1,7 +1,7 @@
 #include "ledger/KeyValueHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include <memory>
+#include "database/Database.h"
 #include <xdrpp/marshal.h>
 #include "util/basen.h"
 

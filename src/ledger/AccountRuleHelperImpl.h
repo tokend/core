@@ -8,6 +8,7 @@
 namespace stellar
 {
 class LedgerManager;
+class StatementContext;
 
 class AccountRuleHelperImpl : public AccountRuleHelper, NonCopyable
 {

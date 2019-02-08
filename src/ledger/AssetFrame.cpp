@@ -3,16 +3,9 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "AssetFrame.h"
-#include "database/Database.h"
-#include "LedgerDelta.h"
-#include "ledger/LedgerManager.h"
 #include "util/types.h"
-#include <util/basen.h>
-#include "util/format.h"
 #include "xdrpp/printer.h"
-#include <locale>
 
-using namespace soci;
 using namespace std;
 
 namespace stellar
