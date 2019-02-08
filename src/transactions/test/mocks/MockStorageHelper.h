@@ -56,6 +56,8 @@ namespace stellar {
                      SignerRuleHelper&());
         MOCK_METHOD0(getSignerRoleHelper,
                      SignerRoleHelper&());
+        MOCK_METHOD0(getEntryHelpers, std::vector<EntryHelper*>());
+
     };
 
 }  // namespace stellar

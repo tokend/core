@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 namespace stellar
 {
@@ -39,6 +40,8 @@ class StorageHelper
     virtual void begin() = 0;
 
     virtual std::unique_ptr<StorageHelper> startNestedTransaction() = 0;
+
+    virtual std::vector<EntryHelper*> getEntryHelpers() = 0;
 
     virtual KeyValueHelper& getKeyValueHelper() = 0;
     virtual BalanceHelper& getBalanceHelper() = 0;

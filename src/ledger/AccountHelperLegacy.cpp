@@ -5,6 +5,8 @@
 #include "ledger/AccountHelperLegacy.h"
 #include "LedgerDelta.h"
 #include "util/types.h"
+#include "StorageHelperImpl.h"
+#include "AccountHelper.h"
 
 using namespace soci;
 using namespace std;
@@ -82,16 +84,8 @@ AccountHelperLegacy::storeUpdate(LedgerDelta& delta, Database& db, bool insert, 
 void
 AccountHelperLegacy::dropAll(Database& db)
 {
-    db.getSession() << "DROP TABLE IF EXISTS accounts;";
-
-    db.getSession() << "CREATE TABLE accounts"
-        "("
-        "account_id          VARCHAR(56)  PRIMARY KEY,"
-        "sequential_id      BIGINT       UNIQUE NOT NULL"
-        "role_id BIGINT NOT NULL,"
-        "version            INT          NOT NULL           DEFAULT 0,"
-        "lastmodified       INT          NOT NULL,"
-        ");";
+    std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(db, nullptr);
+    return storageHelper->getAccountHelper().dropAll();
 }
 
 void
@@ -177,60 +171,8 @@ AccountHelperLegacy::countObjects(soci::session& sess)
 AccountFrame::pointer
 AccountHelperLegacy::loadAccount(AccountID const& accountID, Database& db, LedgerDelta* delta)
 {
-    LedgerKey key;
-    key.type(LedgerEntryType::ACCOUNT);
-    key.account().accountID = accountID;
-    if (cachedEntryExists(key, db))
-    {
-        auto p = getCachedEntry(key, db);
-        return p ? std::make_shared<AccountFrame>(*p) : nullptr;
-    }
-
-    std::string actIDStrKey = PubKeyUtils::toStrKey(accountID);
-
-    std::string publicKey, creditAuthKey, referrer;
-    std::string thresholds;
-
-    AccountFrame::pointer res = make_shared<AccountFrame>(accountID);
-    AccountEntry& account = res->getAccount();
-
-    int32 accountType;
-    uint32 accountPolicies;
-    uint32 kycLevel;
-    int32_t accountVersion;
-    auto prep =
-        db.getPreparedStatement("SELECT recoveryid, thresholds, lastmodified, account_type, account_role, "
-            "block_reasons, referrer, policies, kyc_level, version, sequential_id "
-            "FROM   accounts "
-            "WHERE  accountid=:v1");
-    auto& st = prep.statement();
-    st.exchange(into(thresholds));
-    st.exchange(into(res->mEntry.lastModifiedLedgerSeq));
-    st.exchange(into(accountType));
-    st.exchange(into(account.roleID));
-    st.exchange(into(referrer));
-    st.exchange(into(accountPolicies));
-    st.exchange(into(kycLevel));
-    st.exchange(into(accountVersion));
-            st.exchange(into(account.sequentialID));
-    st.exchange(use(actIDStrKey));
-    st.define_and_bind();
-    {
-        auto timer = db.getSelectTimer("account");
-        st.execute(true);
-    }
-
-    if (!st.got_data())
-    {
-        putCachedEntry(key, nullptr, db);
-        return nullptr;
-    }
-
-    account.ext.v((LedgerVersion)accountVersion);
-
-    std::shared_ptr<LedgerEntry const> pEntry = std::make_shared<LedgerEntry const>(res->mEntry);
-    putCachedEntry(key, pEntry, db);
-    return res;
+    std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(db, delta);
+    return storageHelper->getAccountHelper().loadAccount(accountID);
 }
 
 AccountFrame::pointer

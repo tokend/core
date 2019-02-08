@@ -109,7 +109,7 @@ LedgerManagerImpl::LedgerManagerImpl(Application& app)
     , mState(LM_BOOTING_STATE)
 
 {
-    std::string raw = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    std::string raw = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
     mNotExistingAccount = PubKeyUtils::fromStrKey(raw);
 }
 

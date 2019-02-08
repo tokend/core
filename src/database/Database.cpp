@@ -350,6 +350,14 @@ DatabaseImpl::initialize()
 
     // only time this section should be modified is when
     // consolidating changes found in applySchemaUpgrade here
+    StorageHelperImpl storageHelperImpl(*this, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto helpers = storageHelper.getEntryHelpers();
+    for (auto& helper : helpers)
+    {
+        helper->dropAll();
+    }
+
 	EntryHelperProvider::dropAll(*this);
     OverlayManager::dropAll(*this);
     PersistentState::dropAll(*this);

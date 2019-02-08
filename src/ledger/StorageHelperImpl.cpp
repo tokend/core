@@ -150,6 +150,16 @@ StorageHelperImpl::startNestedTransaction()
     return std::make_unique<StorageHelperImpl>(mDatabase, mNestedDelta.get());
 }
 
+std::vector<EntryHelper*>
+StorageHelperImpl::getEntryHelpers()
+{
+    SignerHelper& signerHelper = getSignerHelper();
+    SignerRuleHelper& signerRuleHelper = getSignerRuleHelper();
+    SignerRoleHelper& signerRoleHelper = getSignerRoleHelper();
+
+    return {&signerHelper, &signerRuleHelper, &signerRoleHelper};
+}
+
 KeyValueHelper&
 StorageHelperImpl::getKeyValueHelper()
 {

@@ -42,6 +42,8 @@ class StorageHelperImpl : public StorageHelper
 
     virtual std::unique_ptr<StorageHelper> startNestedTransaction();
 
+    std::vector<EntryHelper*> getEntryHelpers() override;
+
     KeyValueHelper& getKeyValueHelper() override;
     BalanceHelper& getBalanceHelper() override;
     AssetHelper& getAssetHelper() override;

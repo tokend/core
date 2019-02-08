@@ -26,7 +26,7 @@ SignerRuleHelperImpl::dropAll()
     db.getSession() << "DROP TABLE IF EXISTS signer_rules";
     db.getSession() << "CREATE TABLE signer_rules"
                        "("
-                       "id              VARCHAR(56)    NOT NULL,"
+                       "id              BIGINT         NOT NULL,"
                        "resource        TEXT           NOT NULL, "
                        "action          VARCHAR(256)   NOT NULL,"
                        "owner_id        VARCHAR(56)    NOT NULL,"

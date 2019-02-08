@@ -28,7 +28,7 @@ AccountHelperImpl::dropAll()
                        "sequential_id       BIGINT      UNIQUE NOT NULL,"
                        "role_id             BIGINT      NOT NULL,"
                        "version             INT         NOT NULL    DEFAULT 0,"
-                       "lastmodified        INT         NOT NULL,"
+                       "lastmodified        INT         NOT NULL"
                        ");";
 }
 
@@ -59,14 +59,14 @@ AccountHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     std::string sql;
     if (insert)
     {
-        sql = "INSERT INTO accounts (account_id, sequential_id, role_id, "
-              "                      version, lastmodified) "
-              "VALUES (:id, :seq_id, :r_id, :v, :lm)";
+        sql = "INSERT INTO accounts (account_id, referrer, sequential_id, "
+              "                      role_id, version, lastmodified) "
+              "VALUES (:id, :ref, :seq_id, :r_id, :v, :lm)";
     }
     else
     {
-        sql = "UPDATE accounts SET sequential_id = :seq_id"
-              "       version=:v  lastmodified=:lm"
+        sql = "UPDATE accounts SET referrer = :ref, sequential_id = :seq_id, "
+              "       role_id = :r_id, version=:v,  lastmodified=:lm "
               " WHERE account_id=:id";
     }
 
@@ -78,7 +78,7 @@ AccountHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
         st.exchange(use(actIDStrKey, "id"));
         st.exchange(use(referrerStr, referrerInd, "ref"));
         st.exchange(use(accountEntry.sequentialID, "seq_id"));
-        st.exchange(use(accountEntry.roleID, "ar"));
+        st.exchange(use(accountEntry.roleID, "r_id"));
         st.exchange(use(newAccountVersion, "v"));
         st.exchange(use(accountFrame->mEntry.lastModifiedLedgerSeq, "lm"));
 
