@@ -40,6 +40,19 @@ CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     return true;
 }
 
+bool
+CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
+{
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+    resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
+
+    result.emplace_back(resource, "create");
+
+    return true;
+}
+
 AssetFrame::pointer
 CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest const& request,
                                                             Database& db, AccountID const& source)

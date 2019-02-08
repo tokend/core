@@ -83,6 +83,25 @@ CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+CheckSaleStateOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
+    if (!sale)
+    {
+        throw std::runtime_error("Expected sale to exists");
+    }
+
+    SignerRuleResource resource(LedgerEntryType::SALE);
+    resource.sale().saleID = sale->getID();
+    resource.sale().saleType = sale->getType();
+
+    result.emplace_back(resource, "check");
+
+    return true;
+}
+
 void CheckSaleStateOpFrame::issueBaseTokens(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,
     LedgerDelta& delta, Database& db, LedgerManager& lm) const
 {

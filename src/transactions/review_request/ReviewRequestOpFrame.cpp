@@ -43,6 +43,20 @@ ReviewRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 	return true;
 }
 
+bool
+ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+									std::vector<SignerRequirement>& result) const
+{
+	SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+	resource.reviewableRequest().details.requestType(mReviewRequest.requestDetails.requestType());
+	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+
+	result.emplace_back(resource, "review");
+
+	return true;
+}
+
 bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database & db, LedgerDelta & delta)
 {
     auto requestorAccount = AccountHelperLegacy::Instance()->

@@ -14,6 +14,14 @@ CancelSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     return true;
 }
 
+bool
+CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
+{
+    // TODO
+    //SignerRuleResource resource(LedgerEntryType::)
+}
+
 CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(
         Operation const& op, OperationResult& res,
         TransactionFrame& parentTx)
