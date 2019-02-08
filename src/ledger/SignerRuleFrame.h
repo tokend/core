@@ -18,6 +18,8 @@ public:
 
     SignerRuleFrame();
     SignerRuleFrame(LedgerEntry const& from);
+    SignerRuleFrame(uint64_t const ruleID, AccountID ownerID,
+                    CreateSignerRuleData const data);
 
     LedgerKey const&
     getKey() const override;
@@ -69,6 +71,12 @@ public:
     getOwnerID() const
     {
         return mSignerRuleEntry.ownerID;
+    }
+
+    uint64_t const
+    getID() const
+    {
+        return mSignerRuleEntry.id;
     }
 };
 }

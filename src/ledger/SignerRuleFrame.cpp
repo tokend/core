@@ -18,6 +18,20 @@ SignerRuleFrame::SignerRuleFrame(SignerRuleFrame const& from)
 {
 }
 
+SignerRuleFrame::SignerRuleFrame(uint64_t const ruleID, AccountID ownerID,
+        const CreateSignerRuleData data)
+        : SignerRuleFrame()
+
+{
+    mSignerRuleEntry.id = ruleID;
+    mSignerRuleEntry.isForbid = data.isForbid;
+    mSignerRuleEntry.isDefault = data.isDefault;
+    mSignerRuleEntry.resource = data.resource;
+    mSignerRuleEntry.action = data.action;
+    mSignerRuleEntry.details = data.details;
+    mSignerRuleEntry.ownerID = ownerID;
+}
+
 LedgerKey const&
 SignerRuleFrame::getKey() const
 {

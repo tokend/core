@@ -1,5 +1,6 @@
 #pragma once
 
+#include <lib/gtest/googlemock/include/gmock/gmock-generated-function-mockers.h>
 #include "ledger/SignerRuleHelper.h"
 
 namespace stellar

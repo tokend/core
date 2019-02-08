@@ -171,20 +171,14 @@ ManageSignerRuleOpFrame::createRule(Application &app,
 
     auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
-    LedgerEntry le;
-    le.data.type(LedgerEntryType::SIGNER_RULE);
-    auto& rule = le.data.signerRule();
-    rule.id = headerFrame.generateID(LedgerEntryType::SIGNER_RULE);
-    rule.resource = data.resource;
-    rule.action = data.action;
-    rule.isForbid = data.isForbid;
-    rule.details = data.details;
-    rule.ownerID = getOwnerID(app, data);
+    auto signerRuleFrame = std::make_shared<SignerRuleFrame>(
+            headerFrame.generateID(LedgerEntryType::SIGNER_RULE),
+            getOwnerID(app, data), data);
 
-    storageHelper.getSignerRuleHelper().storeAdd(le);
+    storageHelper.getSignerRuleHelper().storeAdd(signerRuleFrame->mEntry);
 
     innerResult().code(ManageSignerRuleResultCode::SUCCESS);
-    innerResult().success().ruleID = rule.id;
+    innerResult().success().ruleID = signerRuleFrame->getID();
 
     return true;
 }
