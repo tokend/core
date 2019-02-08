@@ -1,11 +1,11 @@
 #pragma once
 
-#include "ledger/AccountHelper.h"
+#include <ledger/AccountRoleHelper.h>
 
 namespace stellar
 {
 
-class MockAccountHelper : public AccountHelper
+class MockAccountRoleHelper : public AccountRoleHelper
 {
 public:
     MOCK_METHOD0(dropAll, void());
@@ -20,9 +20,10 @@ public:
     MOCK_METHOD0(getDatabase, Database&());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
-
-    MOCK_METHOD1(loadAccount, AccountFrame::pointer(AccountID const& accountID));
+    MOCK_METHOD1(loadAccountRole,
+            AccountRoleFrame::pointer(uint64_t const roleID));
+    MOCK_METHOD1(loadRoleIDsByRule,
+            std::vector<uint64_t>(uint64_t const ruleID));
 };
 
 }  // namespace stellar
-

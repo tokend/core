@@ -54,7 +54,7 @@ CreateWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     assetResource.asset().assetType = asset->getAsset().type;
     assetResource.asset().assetCode = asset->getCode();
 
-    result.emplace_back(assetResource, "withdraw", mSourceAccount);
+    result.emplace_back(assetResource, "withdraw");
 
     return true;
 }
@@ -128,7 +128,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
                                                             AssetFrame::pointer assetFrame)
 {
     auto& db = app.getDatabase();
-    auto delta = storageHelper.mustGetLedgerDelta();
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
     if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
     {

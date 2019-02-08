@@ -7,6 +7,7 @@
 #include "ledger/LedgerDelta.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
+#include "ManageKeyValueOpFrame.h"
 
 namespace stellar
 {

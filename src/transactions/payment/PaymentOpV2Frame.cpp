@@ -66,7 +66,7 @@ PaymentOpV2Frame::tryGetSignerRequirements(StorageHelper &storageHelper,
     auto& assetHelper = storageHelper.getAssetHelper();
     auto assetFrame = assetHelper.mustLoadAsset(balanceFrame->getAsset());
 
-    AccountRuleResource resource(LedgerEntryType::ASSET);
+    SignerRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetType = assetFrame->getType();
     resource.asset().assetCode = assetFrame->getCode();
 

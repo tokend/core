@@ -39,7 +39,7 @@ CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHel
         resource.reviewableRequest().allTasks = *mCreateAMLAlertRequest.allTasks;
     }
 
-    result.emplace_back(resource, "create", mSourceAccount);
+    result.emplace_back(resource, "create");
 
     return true;
 }

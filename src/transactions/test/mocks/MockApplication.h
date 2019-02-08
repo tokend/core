@@ -32,7 +32,7 @@ class MockApplication : public Application
   public:
     MOCK_METHOD0(timeNow, uint64_t());
     MOCK_METHOD0(getConfig, Config const&());
-    MOCK_CONST_METHOD0(getState, State());
+    MOCK_CONST_METHOD0(getState, Application::State());
     MOCK_CONST_METHOD0(getStateHuman, std::string());
     MOCK_CONST_METHOD0(isStopping, bool());
     MOCK_METHOD0(getClock, VirtualClock&());

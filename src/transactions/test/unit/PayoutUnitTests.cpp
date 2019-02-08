@@ -14,6 +14,9 @@
 #include "test/test_marshaler.h"
 #include "transactions/test/mocks/MockApplication.h"
 #include "transactions/test/mocks/MockDatabase.h"
+#include "transactions/test/mocks/MockAccountRoleHelper.h"
+#include "transactions/test/mocks/MockAccountRuleHelper.h"
+#include "transactions/test/mocks/MockAccountHelper.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
 #include "transactions/test/mocks/MockBalanceHelper.h"
 #include "transactions/test/mocks/MockSignerHelper.h"
@@ -29,7 +32,6 @@
 #include "transactions/test/mocks/MockTransactionFrame.h"
 #include "transactions/deprecated/PayoutOpFrame.h"
 #include "util/StatusManager.h"
-#include "util/Timer.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
 
@@ -120,18 +122,6 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
 
     PayoutOpFrame opFrame(operation, operationResult, transactionFrameMock);
 
-  /*  SECTION("Check validity")
-    {
-        EXPECT_CALL(transactionFrameMock,
-                    loadAccount(&ledgerDeltaMock, Ref(dbMock),
-                                sourceID))
-                .WillOnce(Return(accountFrameFake));
-        EXPECT_CALL(appMock,
-                    getMetrics())
-                .WillOnce(ReturnRef(metricsRegistryFake));
-        REQUIRE_FALSE(opFrame.checkValid(appMock, &ledgerDeltaMock));
-    }*/
-
     SECTION("Apply success do check valid")
     {
         REQUIRE(opFrame.doCheckValid(appMock));
@@ -161,35 +151,4 @@ TEST_CASE("payout - unit test", "[dep_tx][payout]")
         REQUIRE(opFrame.getResult().tr().payoutResult().code() ==
                 PayoutResultCode::BALANCE_NOT_FOUND);
     }
-
-    /*SECTION("Apply, asset not transferable")
-    {
-        payAssetFrameFake->setPolicies(0);
-        EXPECT_CALL(assetHelperMock, loadAsset(op.asset, sourceID))
-                .WillOnce(Return(assetFrameFake));
-        EXPECT_CALL(balanceHelperMock, loadBalance(balance.getPublicKey(), sourceID))
-                .WillOnce(Return(balanceFrameFake));
-        ON_CALL(assetHelperMock, mustLoadAsset(request.code))
-                .WillByDefault(Return(payAssetFrameFake));
-        REQUIRE_FALSE(
-                opFrame.doApply(appMock, storageHelperMock, ledgerManagerMock));
-        REQUIRE(opFrame.getResult().code() ==
-                OperationResultCode::opINNER);
-        REQUIRE(opFrame.getResult().tr().payoutResult().code() ==
-                PayoutResultCode::ASSET_NOT_TRANSFERABLE);
-    }*/
-
-    /*SECTION("Apply, no asset holders")
-    {
-        EXPECT_CALL(assetHelperMock, loadAsset(op.asset, sourceID))
-                .WillOnce(Return(assetFrameFake));
-        EXPECT_CALL(balanceHelperMock, loadBalance(balance.getPublicKey(), sourceID))
-                .WillOnce(Return(balanceFrameFake));
-        REQUIRE_FALSE(
-                opFrame.doApply(appMock, storageHelperMock, ledgerManagerMock));
-        REQUIRE(opFrame.getResult().code() ==
-                OperationResultCode::opINNER);
-        REQUIRE(opFrame.getResult().tr().payoutResult().code() ==
-                PayoutResultCode::HOLDERS_NOT_FOUND);
-    }*/
 }
