@@ -1,6 +1,7 @@
 // Sends "/info" request to the localhosted core,
 // if info['state'] == 'Synced!' returns 0, otherwise returns 1.
-// Gets HTTP_PORT from /config.ini file, otherwise sets it to 8080.
+// Gets config path from CONFIG env variable
+// Loads HTTP_PORT from CONFIG file, otherwise sets it to 8080.
 
 package main
 
@@ -10,13 +11,14 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"gopkg.in/ini.v1"
 )
 
 const(
-	configPath = "/config.ini"
+	defaultConfigPath = "/config.ini"
 	healthyState = "Synced!"
 	defaultCorePort = 8080
 
@@ -24,6 +26,11 @@ const(
 )
 
 func main() {
+	configPath := os.Getenv("CONFIG")
+	if configPath == "" {
+		configPath = defaultConfigPath
+	}
+
 	corePort := getCorePort(configPath)
 	state, err := coreState(fmt.Sprintf(stateEndpoint, corePort))
 	if err != nil {
