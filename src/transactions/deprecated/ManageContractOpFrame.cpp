@@ -1,10 +1,10 @@
 #include <ledger/ContractHelper.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include "transactions/review_request/ReviewRequestHelper.h"
-#include "transactions/ManageContractOpFrame.h"
+#include "ManageContractOpFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "ManageKeyValueOpFrame.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 
 namespace stellar
 {

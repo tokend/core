@@ -1,5 +1,5 @@
 #include "util/asio.h"
-#include "transactions/PayoutOpFrame.h"
+#include "PayoutOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include <ledger/LedgerHeaderFrame.h>
 #include "ledger/StorageHelper.h"

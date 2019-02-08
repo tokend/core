@@ -24,6 +24,15 @@ ManageLimitsOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+ManageLimitsOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::LIMITS_V2), "manage");
+
+    return true;
+}
+
 std::string
 ManageLimitsOpFrame::getInnerResultCodeAsStr()
 {

@@ -32,47 +32,6 @@ TransactionFrameImpl::TransactionFrameImpl(Hash const& networkID,
 {
 }
 
-void
-TransactionFrameImpl::storeFeeForOpType(
-    OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,
-    AccountFrame::pointer source, AssetCode txFeeAssetCode, Database& db)
-{
-    auto opFeeFrame = FeeHelper::Instance()->loadForAccount(
-        FeeType::OPERATION_FEE, txFeeAssetCode, static_cast<int64_t>(opType),
-        source, 0, db);
-    feesForOpTypes[opType] =
-        opFeeFrame != nullptr ? static_cast<uint64_t>(opFeeFrame->getFixedFee())
-                              : 0;
-}
-
-bool
-TransactionFrameImpl::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
-{
-
-    auto key = ManageKeyValueOpFrame::makeTransactionFeeAssetKey();
-    auto txFeeAssetKV = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
-
-    if (txFeeAssetKV == nullptr)
-    {
-        return false;
-    }
-
-    if (txFeeAssetKV->getKeyValue().value.type() != KeyValueEntryType::STRING)
-    {
-        throw std::runtime_error(
-            "Unexpected database state, expected issuance tasks to be STRING");
-    }
-
-    if (!AssetFrame::isAssetCodeValid(
-            txFeeAssetKV->getKeyValue().value.stringValue()))
-    {
-        throw std::invalid_argument("Tx fee asset code is invalid");
-    }
-
-    txFeeAssetCode = txFeeAssetKV->getKeyValue().value.stringValue();
-    return true;
-}
-
 Hash const&
 TransactionFrameImpl::getFullHash() const
 {

@@ -173,11 +173,6 @@ class TransactionFrameImpl : public TransactionFrame
     void storeTransactionTiming(LedgerManager& ledgerManager,
                                       uint64 maxTime) const;
 
-    bool tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode) override;
-
-    void storeFeeForOpType(OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,
-                                   AccountFrame::pointer source, AssetCode txFeeAssetCode, Database& db) override;
-
 	void clearCached();
 };
 }

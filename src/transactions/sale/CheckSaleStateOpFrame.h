@@ -6,7 +6,7 @@
 
 #include "transactions/OperationFrame.h"
 #include "ledger/SaleFrame.h"
-#include "FeesManager.h"
+#include "transactions/FeesManager.h"
 
 namespace stellar
 {

@@ -9,7 +9,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
-#include <transactions/dex/ManageSaleOpFrame.h>
+#include <transactions/sale/ManageSaleOpFrame.h>
 
 class pointer;
 namespace stellar

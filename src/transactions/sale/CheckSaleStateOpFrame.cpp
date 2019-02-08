@@ -2,27 +2,24 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <transactions/dex/ManageSaleOpFrame.h>
+#include <transactions/sale/ManageSaleOpFrame.h>
 #include "CheckSaleStateOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "database/Database.h"
 #include "ledger/SaleHelper.h"
-#include "main/Application.h"
-#include "dex/ManageOfferOpFrame.h"
+#include "transactions/dex/ManageOfferOpFrame.h"
 #include "ledger/OfferHelper.h"
-#include "dex/OfferManager.h"
-#include "FeesManager.h"
+#include "transactions/dex/OfferManager.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "xdrpp/printer.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "issuance/CreateIssuanceRequestOpFrame.h"
-#include "dex/CreateOfferOpFrame.h"
-#include "dex/CreateSaleParticipationOpFrame.h"
+#include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
+#include "transactions/dex/CreateSaleParticipationOpFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
-#include "dex/DeleteSaleParticipationOpFrame.h"
+#include "transactions/dex/DeleteSaleParticipationOpFrame.h"
 
 namespace stellar
 {

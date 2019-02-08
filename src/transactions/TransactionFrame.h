@@ -106,12 +106,6 @@ class TransactionFrame
     virtual void storeTransactionTiming(LedgerManager& ledgerManager,
                                         uint64 maxTime) const = 0;
 
-    virtual bool tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode) = 0;
-
-    virtual void storeFeeForOpType(OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,
-                                   AccountFrame::pointer source, AssetCode txFeeAssetCode, Database& db) = 0;
-
-
     // access to history tables
     static TransactionResultSet getTransactionHistoryResults(Database& db,
                                                              uint32 ledgerSeq);

@@ -13,7 +13,7 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "transactions/CheckSaleStateOpFrame.h"
+#include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/printer.h"
 
 namespace stellar

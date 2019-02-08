@@ -1,6 +1,6 @@
 #include <ledger/SaleHelper.h>
 #include "ReviewUpdateSaleDetailsRequestOpFrame.h"
-#include "transactions/dex/ManageSaleOpFrame.h"
+#include "transactions/sale/ManageSaleOpFrame.h"
 
 namespace stellar {
     ReviewUpdateSaleDetailsRequestOpFrame::ReviewUpdateSaleDetailsRequestOpFrame(const stellar::Operation &op,

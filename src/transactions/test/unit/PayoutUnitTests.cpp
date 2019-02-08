@@ -27,7 +27,7 @@
 #include "transactions/test/mocks/MockExternalSystemAccountIDHelper.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/test/mocks/MockTransactionFrame.h"
-#include "transactions/PayoutOpFrame.h"
+#include "transactions/deprecated/PayoutOpFrame.h"
 #include "util/StatusManager.h"
 #include "util/Timer.h"
 #include "util/TmpDir.h"

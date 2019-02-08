@@ -18,7 +18,10 @@ class CreateManageLimitsRequestOpFrame : public OperationFrame
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
 
-    std::string getLimitsManageRequestReference(Hash const& documentHash) const;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
     std::string getLimitsManageRequestDetailsReference(longstring const& details) const;
 
     bool ensureLimitsUpdateValid();

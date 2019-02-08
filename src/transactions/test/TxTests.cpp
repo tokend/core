@@ -15,7 +15,7 @@
 #include "transactions/ManageBalanceOpFrame.h"
 #include "transactions/payment/PaymentOpV2Frame.h"
 #include "transactions/ManageLimitsOpFrame.h"
-#include "transactions/ManageInvoiceRequestOpFrame.h"
+#include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/FeeHelper.h"

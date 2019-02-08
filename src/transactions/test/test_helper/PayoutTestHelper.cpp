@@ -1,7 +1,7 @@
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include "PayoutTestHelper.h"
-#include "transactions/PayoutOpFrame.h"
+#include "transactions/deprecated/PayoutOpFrame.h"
 #include "test/test_marshaler.h"
 
 namespace stellar

@@ -33,6 +33,15 @@ SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::FEE), "manage");
+
+    return true;
+}
+
     bool SetFeesOpFrame::trySetFee(medida::MetricsRegistry &metrics, Database &db, LedgerDelta &delta) {
         assert(mSetFees.fee);
         if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(metrics, db, delta))

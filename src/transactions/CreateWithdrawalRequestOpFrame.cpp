@@ -2,7 +2,6 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/StatisticsHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -23,7 +22,6 @@ bool
 CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                                           std::vector<OperationCondition>& result) const
 {
-
     auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
     if (!balance)
     {
@@ -35,6 +33,24 @@ CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storage
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
 
     AccountRuleResource assetResource(LedgerEntryType::ASSET);
+    assetResource.asset().assetType = asset->getAsset().type;
+    assetResource.asset().assetCode = asset->getCode();
+
+    result.emplace_back(assetResource, "withdraw", mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
+            mCreateWithdrawalRequest.request.balance);
+
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
+
+    SignerRuleResource assetResource(LedgerEntryType::ASSET);
     assetResource.asset().assetType = asset->getAsset().type;
     assetResource.asset().assetCode = asset->getCode();
 
@@ -112,7 +128,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
                                                             AssetFrame::pointer assetFrame)
 {
     auto& db = app.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
+    auto delta = storageHelper.mustGetLedgerDelta();
 
     if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
     {
@@ -127,7 +143,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
         return nullptr;
     }
 
-    AccountManager accountManager(app, db, *delta, ledgerManager);
+    AccountManager accountManager(app, db, delta, ledgerManager);
     if (!isFeeMatches(accountManager, balanceFrame))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
@@ -142,7 +158,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
 
 
     uint64_t universalAmount = 0;
-    auto request = ReviewableRequestFrame::createNew(*delta, getSourceID(), assetFrame->getOwner(), nullptr,
+    auto request = ReviewableRequestFrame::createNew(delta, getSourceID(), assetFrame->getOwner(), nullptr,
                                                      ledgerManager.getCloseTime());
     ReviewableRequestEntry &requestEntry = request->getRequestEntry();
 
@@ -151,15 +167,15 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
 
     request->recalculateHashRejectReason();
-    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
     storageHelper.getBalanceHelper().storeChange(balanceFrame->mEntry);
 
-    if (!processStatistics(accountManager, db, *delta, ledgerManager, balanceFrame,
+    if (!processStatistics(accountManager, db, delta, ledgerManager, balanceFrame,
                            mCreateWithdrawalRequest.request.amount, universalAmount, request->getRequestID()))
     {
         return nullptr;
     }
-    storeChangeRequest(*delta, request, db, universalAmount);
+    storeChangeRequest(delta, request, db, universalAmount);
 
     return request;
 
@@ -179,7 +195,6 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &st
                                              LedgerManager &ledgerManager)
 {
     auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
     auto balanceFrame = tryLoadBalance(storageHelper);
     if (!balanceFrame)
     {
@@ -209,7 +224,7 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &st
     }
 
     request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+    EntryHelperProvider::storeChangeEntry(storageHelper.mustGetLedgerDelta(), db, request->mEntry);
 
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
     innerResult().success().requestID = request->getRequestID();

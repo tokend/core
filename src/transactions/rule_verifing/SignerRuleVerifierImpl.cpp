@@ -85,7 +85,7 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::REVIEWABLE_REQUEST:
         {
             if (!isTasksMatch(requiredResource.reviewableRequest().tasksToAdd,
-                             actualResource.reviewableRequest().tasksToAdd))
+                              actualResource.reviewableRequest().tasksToAdd))
             {
                 return false;
             }

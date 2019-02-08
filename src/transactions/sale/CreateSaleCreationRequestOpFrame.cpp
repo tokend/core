@@ -47,6 +47,13 @@ CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
     resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateSaleCreationRequest.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateSaleCreationRequest.allTasks;
+    }
 
     result.emplace_back(resource, "create");
 

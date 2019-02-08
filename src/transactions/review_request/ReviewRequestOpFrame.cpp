@@ -51,6 +51,7 @@ ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 	resource.reviewableRequest().details.requestType(mReviewRequest.requestDetails.requestType());
 	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
 	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+	resource.reviewableRequest().allTasks = 0;
 
 	result.emplace_back(resource, "review");
 

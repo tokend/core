@@ -1,5 +1,5 @@
 #include <ledger/ReviewableRequestFrame.h>
-#include "transactions/ManageContractRequestOpFrame.h"
+#include "ManageContractRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
 #include <ledger/ReviewableRequestHelper.h>
@@ -8,8 +8,8 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/KeyValueHelper.h"
-#include "review_request/ReviewRequestHelper.h"
-#include "ManageKeyValueOpFrame.h"
+#include "transactions/review_request/ReviewRequestHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 
 namespace stellar
 {

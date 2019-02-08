@@ -1,5 +1,5 @@
 #include "ManageSaleOpFrame.h"
-#include "OfferManager.h"
+#include "transactions/dex/OfferManager.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include <ledger/OfferHelper.h>
 #include <ledger/KeyValueHelper.h>

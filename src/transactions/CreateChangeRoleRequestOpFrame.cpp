@@ -1,8 +1,8 @@
-#include <transactions/ManageKeyValueOpFrame.h>
+#include "CreateChangeRoleRequestOpFrame.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include "ledger/AccountHelperLegacy.h"
-#include "main/Application.h"
-#include "bucket/BucketApplicator.h"
+#include <lib/xdrpp/xdrpp/marshal.h>
+#include <crypto/SHA.h>
 #include "xdrpp/printer.h"
 #include "ledger/LedgerDelta.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
@@ -35,6 +35,25 @@ CreateChangeRoleRequestOpFrame::tryGetOperationConditions(StorageHelper& storage
     }
 
     result.emplace_back(resource, "create", mSourceAccount);
+    return true;
+}
+
+bool
+CreateChangeRoleRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CHANGE_ROLE);
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateChangeRoleRequestOp.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateChangeRoleRequestOp.allTasks;
+    }
+
+    result.emplace_back(resource, "create");
+
     return true;
 }
 
