@@ -55,7 +55,10 @@ func coreState(coreUrl string) (string, error) {
 }
 
 func getCorePort(configPath string) (int) {
-	cfg, err := ini.Load(configPath)
+	cfg, err := ini.LoadSources( ini.LoadOptions{
+			SkipUnrecognizableLines: true,
+		}, configPath)
+
     if err != nil {
 		return defaultCorePort
 	}
