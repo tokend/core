@@ -1,0 +1,14 @@
+//
+// Created by artem on 12.02.19.
+//
+
+#ifndef STELLAR_MANAGESIGNERROLETESTHELPER_H
+#define STELLAR_MANAGESIGNERROLETESTHELPER_H
+
+
+class ManageSignerRoleTestHelper {
+
+};
+
+
+#endif //STELLAR_MANAGESIGNERROLETESTHELPER_H

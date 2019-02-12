@@ -12,8 +12,8 @@ namespace stellar {
 
         bool isDestinationFeeValid();
 
-        BalanceFrame::pointer tryLoadDestinationBalance(AssetCode asset, Database &db, LedgerDelta &delta,
-                                                        LedgerManager& lm);
+        BalanceFrame::pointer
+        tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
 
         bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db);
 

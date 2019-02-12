@@ -63,6 +63,7 @@ namespace stellar
 		static EntryFrame::pointer storeLoadEntry(LedgerKey const& key, Database& db);
 		static uint64_t countObjectsEntry(soci::session& sess, LedgerEntryType const& type);
 
+		[[deprecated]]
 		static void storeAddOrChangeEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry);
 
 		static void checkAgainstDatabase(LedgerEntry const& entry, Database& db);

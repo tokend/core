@@ -21,6 +21,15 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
     , mTransaction(nullptr)
     , mIsReleased(true)
 {
+    mHelpers =
+    {
+        {LedgerEntryType::ACCOUNT, &getAccountHelper()},
+        {LedgerEntryType::ACCOUNT_ROLE, &getAccountRoleHelper()},
+        {LedgerEntryType::ACCOUNT_RULE, &getAccountRuleHelper()},
+        {LedgerEntryType::SIGNER, &getSignerHelper()},
+        {LedgerEntryType::SIGNER_ROLE, &getSignerRoleHelper()},
+        {LedgerEntryType::SIGNER_RULE, &getSignerRuleHelper()},
+    };
 }
 
 StorageHelperImpl::~StorageHelperImpl()
@@ -150,17 +159,22 @@ StorageHelperImpl::startNestedTransaction()
     return std::make_unique<StorageHelperImpl>(mDatabase, mNestedDelta.get());
 }
 
+EntryHelper*
+StorageHelperImpl::getHelper(LedgerEntryType type)
+{
+    return mHelpers[type];
+}
+
 std::vector<EntryHelper*>
 StorageHelperImpl::getEntryHelpers()
 {
-    SignerHelper& signerHelper = getSignerHelper();
-    SignerRuleHelper& signerRuleHelper = getSignerRuleHelper();
-    SignerRoleHelper& signerRoleHelper = getSignerRoleHelper();
-    AccountRuleHelper& accountRuleHelper = getAccountRuleHelper();
-    AccountRoleHelper& accountRoleHelper = getAccountRoleHelper();
+    std::vector<EntryHelper*> result;
+    for (auto& helper : mHelpers)
+    {
+        result.emplace_back(helper.second);
+    }
 
-    return {&signerHelper, &signerRuleHelper, &signerRoleHelper,
-            &accountRuleHelper, &accountRoleHelper};
+    return result;
 }
 
 KeyValueHelper&

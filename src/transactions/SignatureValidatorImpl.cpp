@@ -56,7 +56,7 @@ SignatureValidatorImpl::getSigners(StorageHelper& storageHelper,
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected signers to exist for account: "
                                                << PubKeyUtils::toStrKey(accountID);
-        std::runtime_error("Expected signers to exist for account");
+        throw std::runtime_error("Expected signers to exist for account");
     }
 
     return result;

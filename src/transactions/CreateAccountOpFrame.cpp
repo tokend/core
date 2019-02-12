@@ -107,6 +107,7 @@ CreateAccountOpFrame::createSigners(Application &app,
             mCreateAccount.destination);
 
     Operation op;
+    op.sourceAccount.activate() = accountFrame->getID();
     op.body.type(OperationType::MANAGE_SIGNER);
     ManageSignerOp& manageSignerOp = op.body.manageSignerOp();
     manageSignerOp.data.action(ManageSignerAction::CREATE);
@@ -132,6 +133,7 @@ CreateAccountOpFrame::createSigners(Application &app,
         }
     }
 
+    return true;
 }
 
 bool

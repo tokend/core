@@ -3,7 +3,6 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/test/TxTests.h>
-#include <cstdint>
 #include <crypto/SHA.h>
 #include "ManageAssetTestHelper.h"
 #include "ledger/AccountHelperLegacy.h"

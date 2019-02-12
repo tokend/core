@@ -3,6 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <herder/LedgerCloseData.h>
+#include <ledger/StorageHelperImpl.h>
 #include "TestManager.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "invariant/Invariants.h"
@@ -13,7 +14,7 @@ namespace stellar {
 
     namespace txtest {
         TestManager::TestManager(Application &app, Database &db, LedgerManager &lm) :
-                mApp(app), mDB(db), mLm(lm)
+                mApp(app), mDB(db), mLm(lm), mSh(*(new StorageHelperImpl(db, nullptr)))
         {
             mApp.stopCheckingPolicies();
         }

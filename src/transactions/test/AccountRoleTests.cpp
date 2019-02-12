@@ -82,7 +82,7 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
             createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                     .setSource(master)
                                                     .setToPublicKey(randomAccount.getPublicKey())
-                                                    .setRecovery(SecretKey::random().getPublicKey())
+                                                    .addBasicSigner()
                                                     .setRoleID(accountRoleID));
 
             manageAccountRoleHelper.applyTx(master, removeRoleOp,

@@ -194,11 +194,13 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
     }
 
     BalanceFrame::pointer
-    PaymentOpV2Frame::tryLoadDestinationBalance(AssetCode asset, Database &db, LedgerDelta &delta, LedgerManager& lm) {
-        switch (mPayment.destination.type()) {
-            case PaymentDestinationType::BALANCE: {
-                auto dest = BalanceHelperLegacy::Instance()->loadBalance(mPayment.destination.balanceID(), db,
-                                                                   &delta);
+    PaymentOpV2Frame::tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper)
+    {
+        switch (mPayment.destination.type())
+        {
+            case PaymentDestinationType::BALANCE:
+            {
+                auto dest = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
                 if (!dest) {
                     innerResult().code(PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND);
                     return nullptr;
@@ -212,14 +214,14 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
                 return dest;
             }
             case PaymentDestinationType::ACCOUNT: {
-                if (!AccountHelperLegacy::Instance()->exists(mPayment.destination.accountID(), db)) {
+                if (!storageHelper.getAccountHelper().exists(mPayment.destination.accountID())) {
                     innerResult().code(PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
                     return nullptr;
                 }
 
-                auto dest = AccountManager::loadOrCreateBalanceFrameForAsset(mPayment.destination.accountID(),
-                                                                             asset, db,
-                                                                             delta);
+                auto dest = AccountManager::loadOrCreateBalanceFrameForAsset(
+                        mPayment.destination.accountID(), asset, storageHelper.getDatabase(),
+                        storageHelper.mustGetLedgerDelta());
                 if (!dest) {
                     CLOG(ERROR, Logging::OPERATION_LOGGER)
                             << "Unexpected state: expected destination balance to exist, account id: "
@@ -287,7 +289,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
                             LedgerManager& ledgerManager)
     {
         Database& db = storageHelper.getDatabase();
-        LedgerDelta& delta = *storageHelper.getLedgerDelta();
+        LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
         auto sourceBalance = BalanceHelperLegacy::Instance()->loadBalance(
             getSourceID(), mPayment.sourceBalanceID, db, &delta);
         if (!sourceBalance)
@@ -296,7 +298,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             return false;
         }
 
-        auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), db, delta, ledgerManager);
+        auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), storageHelper);
         if (!destBalance) {
             return false;
         }
@@ -316,17 +318,15 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         uint64_t sourceSentUniversal = 0;
 
         AccountManager accountManager(app, db, delta, app.getLedgerManager());
-        // process transfer from source to dest
-        auto sourceAccount = AccountHelperLegacy::Instance()->mustLoadAccount(getSourceID(), db);
 
-        if (!processTransfer(accountManager, sourceAccount, sourceBalance, destBalance, mPayment.amount, sourceSentUniversal, db)) {
+        if (!processTransfer(accountManager, mSourceAccount, sourceBalance, destBalance, mPayment.amount, sourceSentUniversal, db)) {
             return false;
         }
 
-        auto sourceFee = getActualFee(sourceAccount, sourceBalance->getAsset(), mPayment.amount,
+        auto sourceFee = getActualFee(mSourceAccount, sourceBalance->getAsset(), mPayment.amount,
                                       PaymentFeeType::OUTGOING, db, ledgerManager);
 
-        if (!processTransferFee(accountManager, sourceAccount, sourceBalance, mPayment.feeData.sourceFee, sourceFee,
+        if (!processTransferFee(accountManager, mSourceAccount, sourceBalance, mPayment.feeData.sourceFee, sourceFee,
                                 app.getAdminID(), db, delta, false, sourceSentUniversal)) {
             return false;
         }
@@ -339,7 +339,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             auto destFeePayer = destAccount;
             auto destFeePayerBalance = destBalance;
             if (mPayment.feeData.sourcePaysForDest) {
-                destFeePayer = sourceAccount;
+                destFeePayer = mSourceAccount;
                 destFeePayerBalance = sourceBalance;
             }
 

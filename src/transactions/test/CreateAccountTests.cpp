@@ -43,7 +43,7 @@ TEST_CASE("create account", "[tx][create_account]") {
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(randomAccount.getPublicKey())
-            .setRecovery(SecretKey::random().getPublicKey())
+            .addBasicSigner()
             .setRoleID(emptyAccountRoleID);
 
     int32 BitcoinExternalSystemType = 1;
@@ -105,6 +105,7 @@ TEST_CASE("create account", "[tx][create_account]") {
             auto accountCreator = SecretKey::random();
             auto notAllowedBuilder = createAccountTestBuilder
                     .setToPublicKey(accountCreator.getPublicKey())
+                    .addBasicSigner()
                     .setRoleID(emptyRoleID);
             createAccountHelper.applyTx(notAllowedBuilder);
             auto notRoot = Account{accountCreator, Salt(1)};

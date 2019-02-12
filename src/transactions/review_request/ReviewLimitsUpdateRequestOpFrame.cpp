@@ -8,6 +8,8 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/AccountHelperLegacy.h"
 #include <ledger/ReviewableRequestHelper.h>
+#include "ledger/AccountHelper.h"
+#include <ledger/StorageHelperImpl.h>
 #include "transactions/ManageLimitsOpFrame.h"
 #include "main/Application.h"
 
@@ -108,7 +110,13 @@ namespace stellar {
         EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
         auto requestorID = request->getRequestor();
-        AccountHelperLegacy::Instance()->ensureExists(requestorID, db);
+
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        StorageHelper& storageHelper = storageHelperImpl;
+        if (!storageHelper.getAccountHelper().exists(requestorID))
+        {
+            throw std::runtime_error("Expected account to exists");
+        }
 
         return tryCallManageLimits(app, ledgerManager, delta, request);
     }

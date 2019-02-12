@@ -12,12 +12,10 @@
 #include "ledger/StatisticsHelper.h"
 #include "ledger/AccountLimitsFrame.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
-#include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
@@ -26,10 +24,8 @@
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/OfferFrame.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/ExternalSystemAccountID.h"
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"
 #include "ledger/KeyValueHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntry.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
@@ -120,26 +116,25 @@ namespace stellar
     void
     EntryHelperProvider::checkAgainstDatabase(LedgerEntry const& entry, Database& db)
     {
-        auto key = LedgerEntryKey(entry);
-        EntryFrame::pointer fromDb;
-        auto helper = getHelper(entry.data.type());
-        if (!helper)
-        {
-            StorageHelperImpl storageHelper(db, nullptr);
-            static_cast<StorageHelper&>(storageHelper).begin();
-            auto helper = createHelper(entry.data.type(), storageHelper);
-            if (!helper)
-            {
-                throw std::runtime_error("There's no legacy helper for this entry, "
-                                         "and no helper can be created.");
-            }
-            helper->flushCachedEntry(key);
-            fromDb = helper->storeLoad(key);
-        }
+		StorageHelperImpl storageHelperImpl(db, nullptr);
+		StorageHelper& storageHelper = storageHelperImpl;
+
+		LedgerKey key;
+		EntryFrame::pointer fromDb;
+
+		auto helper = storageHelper.getHelper(entry.data.type());
+		if (helper != nullptr)
+		{
+			key = helper->getLedgerKey(entry);
+			helper->flushCachedEntry(key);
+			fromDb = helper->storeLoad(key);
+		}
         else
         {
-            helper->flushCachedEntry(key, db);
-            fromDb = helper->storeLoad(key, db);
+			key = LedgerEntryKey(entry);
+			auto legacyHelper = getHelper(entry.data.type()); // helper existing handled above
+			legacyHelper->flushCachedEntry(key, db);
+            fromDb = legacyHelper->storeLoad(key, db);
         }
         if (!fromDb || !(fromDb->mEntry == entry))
         {

@@ -19,6 +19,7 @@ class AccountRuleHelper;
 class SignerHelper;
 class SignerRuleHelper;
 class SignerRoleHelper;
+enum class LedgerEntryType;
 
 class StorageHelper
 {
@@ -41,6 +42,7 @@ class StorageHelper
 
     virtual std::unique_ptr<StorageHelper> startNestedTransaction() = 0;
 
+    virtual EntryHelper* getHelper(LedgerEntryType type) = 0;
     virtual std::vector<EntryHelper*> getEntryHelpers() = 0;
 
     virtual KeyValueHelper& getKeyValueHelper() = 0;

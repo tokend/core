@@ -90,7 +90,7 @@ TEST_CASE("bind external system account_id - unit test",
     ON_CALL(transactionFrameMock, getSignatureValidator())
         .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
-            check(Ref(appMock), Ref(storageHelperMock), Const(*operation.sourceAccount), _))
+            check(Ref(appMock), _, Const(*operation.sourceAccount), _))
         .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
 
@@ -106,7 +106,7 @@ TEST_CASE("bind external system account_id - unit test",
         .WillByDefault(ReturnRef(externalSystemAccountIDHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDPoolEntryHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDPoolEntryHelperMock));
-    ON_CALL(accountRuleVerifierMock, isAllowed(_, Ref(storageHelperMock)))
+    ON_CALL(accountRuleVerifierMock, isAllowed(_, _))
             .WillByDefault(Return(true));
 
     BindExternalSystemAccountIdOpFrame opFrame(operation, operationResult,

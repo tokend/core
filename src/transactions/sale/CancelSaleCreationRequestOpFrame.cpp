@@ -1,6 +1,6 @@
-
-#include <ledger/ReviewableRequestHelper.h>
 #include "CancelSaleCreationRequestOpFrame.h"
+#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -18,8 +18,27 @@ bool
 CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                             std::vector<SignerRequirement>& result) const
 {
-    // TODO
-    //SignerRuleResource resource(LedgerEntryType::)
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mCancelSaleCreationRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+
+    resource.reviewableRequest().details.sale().type =
+            request->getRequestEntry().body.saleCreationRequest().saleType;
+    resource.reviewableRequest().allTasks = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().tasksToRemove = 0;
+
+    result.emplace_back(resource, "cancel");
+
+    return true;
 }
 
 CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(

@@ -12,6 +12,7 @@ class AccountRuleHelper;
 class AccountRoleHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
+enum class LedgerEntryType;
 
 class MockStorageHelper : public StorageHelper
 {
@@ -41,6 +42,7 @@ public:
     MOCK_METHOD0(getSignerRuleHelper, SignerRuleHelper&());
     MOCK_METHOD0(getSignerRoleHelper, SignerRoleHelper&());
     MOCK_METHOD0(getEntryHelpers, std::vector<EntryHelper*>());
+    MOCK_METHOD1(getHelper, EntryHelper*(LedgerEntryType type));
 
 };
 

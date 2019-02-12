@@ -191,7 +191,7 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
     std::vector<SignerRequirement> signerRequirements;
     if (!tryGetSignerRequirements(storageHelper, signerRequirements))
     {
-
+        return false;
     }
 
     auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
@@ -317,6 +317,15 @@ OperationFrame::checkValid(Application& app,
         }
     }
 
+    mResult.code(OperationResultCode::opINNER);
+    mResult.tr().type(mOperation.body.type());
+
+    bool isValid = doCheckValid(app);
+    if (!isValid)
+    {
+        return isValid;
+    }
+
 	StorageHelperImpl storageHelper(db, delta);
     if (!checkRolePermissions(storageHelper, accountRuleVerifier))
     {
@@ -334,15 +343,6 @@ OperationFrame::checkValid(Application& app,
         // previous operations may change it (can even create the account)
         mSourceAccount.reset();
     }
-
-    mResult.code(OperationResultCode::opINNER);
-    mResult.tr().type(mOperation.body.type());
-
-    bool isValid = doCheckValid(app);
-	if (!isValid) {
-		app.getMetrics().NewMeter({ "operation", "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
-        return isValid;
-	}
 
     return true;
 }

@@ -18,11 +18,9 @@ namespace stellar {
 
             CreateAccountTestBuilder setToPublicKey(PublicKey to);
 
-            CreateAccountTestBuilder setRecovery(const PublicKey& recovery);
+            CreateAccountTestBuilder addSignerData(UpdateSignerData data);
 
-            CreateAccountTestBuilder setType(uint32_t accountType);
-
-            CreateAccountTestBuilder setType(int32_t accountType);
+            CreateAccountTestBuilder addBasicSigner(uint64_t roleID = 1);
 
             CreateAccountTestBuilder setReferrer(AccountID *referrer);
 
@@ -36,7 +34,7 @@ namespace stellar {
                     TransactionResultCode expectedResult);
 
             PublicKey to;
-            PublicKey recovery;
+            xdr::xvector<UpdateSignerData> signersData = {};
             AccountID *referrer = nullptr;
             int32 policies = -1;
             uint64_t roleID = 1;
@@ -96,7 +94,6 @@ namespace stellar {
         private:
             Account from;
             PublicKey to;
-            PublicKey recovery;
             Account *signer = nullptr;
             AccountID *referrer = nullptr;
             int32 policies = -1;

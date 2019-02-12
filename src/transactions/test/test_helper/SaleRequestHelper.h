@@ -30,7 +30,8 @@ public:
     CancelSaleCreationRequestResult applyCancelSaleRequest(
             Account& source, uint64_t requestID,
             CancelSaleCreationRequestResultCode expectedResult =
-            CancelSaleCreationRequestResultCode::SUCCESS);
+            CancelSaleCreationRequestResultCode::SUCCESS,
+            OperationResultCode opExpectedResult = OperationResultCode::opINNER);
 
     static SaleCreationRequest
     createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,

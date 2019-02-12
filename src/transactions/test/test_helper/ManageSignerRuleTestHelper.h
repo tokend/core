@@ -1,0 +1,14 @@
+//
+// Created by artem on 12.02.19.
+//
+
+#ifndef STELLAR_MANAGESIGNERRULETESTHELPER_H
+#define STELLAR_MANAGESIGNERRULETESTHELPER_H
+
+
+class ManageSignerRuleTestHelper {
+
+};
+
+
+#endif //STELLAR_MANAGESIGNERRULETESTHELPER_H

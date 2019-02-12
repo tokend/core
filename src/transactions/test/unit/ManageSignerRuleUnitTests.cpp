@@ -47,11 +47,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
     MockDatabase dbMock;
     MockStorageHelper storageHelperMock;
     MockLedgerHeaderFrame ledgerHeaderFrameMock;
-    //MockSignerHelper signerHelperMock;
     MockSignerRuleHelper signerRuleHelperMock;
-    //MockSignerRoleHelper signerRoleHelperMock;
-    //MockKeyValueHelper keyValueHelperMock;
-    //MockAccountRuleVerifier accountRuleVerifierMock;
     std::shared_ptr<MockSignatureValidator> signatureValidatorMock =
             std::make_shared<MockSignatureValidator>();
 

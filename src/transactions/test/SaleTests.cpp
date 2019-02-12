@@ -246,13 +246,13 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
 
     // basic account builder
     auto createAccountBuilder = CreateAccountTestBuilder()
-            .setSource(root)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setSource(root);
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
     createAccountTestHelper.applyTx(createAccountBuilder
                                             .setToPublicKey(syndicatePubKey)
+                                            .addBasicSigner()
                                             .setRoleID(1));
 
     const uint64_t maxIssuanceAmount = 2000 * ONE;
@@ -406,13 +406,13 @@ TEST_CASE("Sale", "[tx][sale]")
 
     // basic account builder
     auto createAccountBuilder = CreateAccountTestBuilder()
-            .setSource(root)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setSource(root);
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
     createAccountTestHelper.applyTx(createAccountBuilder
                                             .setToPublicKey(syndicatePubKey)
+                                            .addBasicSigner()
                                             .setRoleID(1));
     // TODO: for now we need to keep maxIssuance = preIssuance to allow sale creation
     const uint64_t maxIssuanceAmount = 6000 * ONE;
@@ -447,7 +447,8 @@ TEST_CASE("Sale", "[tx][sale]")
             SECTION("Already canceled")
             {
                 saleRequestHelper.applyCancelSaleRequest(syndicate, requestID,
-                      CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
+                      CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND,
+                      OperationResultCode::opNO_ENTRY);
             }
         }
 
@@ -457,7 +458,7 @@ TEST_CASE("Sale", "[tx][sale]")
         auto createAccountTestBuilder = CreateAccountTestBuilder()
                 .setSource(root)
                 .setToPublicKey(newSyndicatePubKey)
-                .setRecovery(SecretKey::random().getPublicKey());
+                .addBasicSigner();
 
         auto createAccountHelper = CreateAccountTestHelper(testManager);
         createAccountHelper.applyTx(createAccountTestBuilder);
@@ -721,7 +722,8 @@ TEST_CASE("Sale", "[tx][sale]")
 
                 SECTION("Sale not found") {
                     manageSaleTestHelper.applyManageSaleTx(syndicate, 42, manageSaleData,
-                                                           ManageSaleResultCode::SALE_NOT_FOUND);
+                                                           ManageSaleResultCode::SALE_NOT_FOUND,
+                                                           OperationResultCode::opNO_ENTRY);
                 }
 
                 SECTION("Request to update not found") {
@@ -1179,7 +1181,8 @@ TEST_CASE("Sale", "[tx][sale]")
                 {
                     //switch to non-existing offerID
                     manageOffer.offerID++;
-                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::NOT_FOUND);
+                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::NOT_FOUND,
+                                                       OperationResultCode::opNO_ENTRY);
                 }
                 SECTION("try to delete from non-existing orderBook")
                 {

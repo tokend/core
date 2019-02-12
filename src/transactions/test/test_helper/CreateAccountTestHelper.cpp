@@ -2,6 +2,7 @@
 #include <transactions/CreateAccountOpFrame.h>
 #include <ledger/StatisticsHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
+#include <ledger/SignerRuleFrame.h>
 #include "CreateAccountTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -17,6 +18,11 @@ namespace stellar {
             CreateAccountOp &createAccountOp = op.body.createAccountOp();
             createAccountOp.destination = to;
             createAccountOp.roleID = roleID;
+            if (referrer != nullptr)
+            {
+                createAccountOp.referrer.activate() = *referrer;
+            }
+            createAccountOp.signersData = signersData;
 
             return op;
         }
@@ -25,15 +31,6 @@ namespace stellar {
             auto newTestHelper = copy();
             newTestHelper.to = to;
             return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(uint32_t accountType) {
-            auto newTestHelper = copy();
-            return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(int32_t accountType) {
-            return setType(accountType);
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setReferrer(AccountID *referrer) {
@@ -69,9 +66,25 @@ namespace stellar {
             return newTestHelper;
         }
 
-        CreateAccountTestBuilder CreateAccountTestBuilder::setRecovery(const PublicKey& recovery) {
+        CreateAccountTestBuilder CreateAccountTestBuilder::addSignerData(
+                UpdateSignerData data)
+        {
             auto newTestHelper = copy();
-            newTestHelper.recovery = recovery;
+            newTestHelper.signersData.emplace_back(data);
+            return newTestHelper;
+        }
+
+        CreateAccountTestBuilder CreateAccountTestBuilder::addBasicSigner(
+                uint64_t roleID)
+        {
+            auto newTestHelper = copy();
+            UpdateSignerData data;
+            data.publicKey = to;
+            data.roleID = roleID;
+            data.weight = SignerRuleFrame::threshold;
+            data.identity = 1;
+            data.details = "{}";
+            newTestHelper.signersData.emplace_back(data);
             return newTestHelper;
         }
 
@@ -86,8 +99,8 @@ namespace stellar {
                     .setReferrer(referrer)
                     .setPolicies(policies)
                     .setResultCode(expectedResult)
-                    .setRoleID(roleID)
-                    .setRecovery(SecretKey::random().getPublicKey());
+                    .addBasicSigner()
+                    .setRoleID(roleID);
             return applyTx(builder);
         }
 

@@ -68,6 +68,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                             .setSource(root)
                                             .setToPublicKey(account.key.getPublicKey())
+                                            .addBasicSigner()
                                             .setRoleID(1));
 
     testManager->advanceToTime(BindExternalSystemAccountIdOpFrame::dayInSeconds);
@@ -102,6 +103,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                 .setSource(root)
                                                 .setToPublicKey(binder.key.getPublicKey())
+                                                .addBasicSigner()
                                                 .setRoleID(1));
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
@@ -119,6 +121,7 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
         createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                 .setSource(root)
                                                 .setToPublicKey(binder.key.getPublicKey())
+                                                .addBasicSigner()
                                                 .setRoleID(1));
 
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,

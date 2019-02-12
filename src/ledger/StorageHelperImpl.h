@@ -43,6 +43,7 @@ class StorageHelperImpl : public StorageHelper
     virtual std::unique_ptr<StorageHelper> startNestedTransaction();
 
     std::vector<EntryHelper*> getEntryHelpers() override;
+    EntryHelper* getHelper(LedgerEntryType type) override;
 
     KeyValueHelper& getKeyValueHelper() override;
     BalanceHelper& getBalanceHelper() override;
@@ -76,5 +77,7 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<SignerHelper> mSignerHelper;
     std::unique_ptr<SignerRuleHelper> mSignerRuleHelper;
     std::unique_ptr<SignerRoleHelper> mSignerRoleHelper;
+
+    std::map<LedgerEntryType, EntryHelper*> mHelpers;
 };
 } // namespace stellar
