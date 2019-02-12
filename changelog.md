@@ -16,4 +16,6 @@
 
 ### Fixed 
 
+* Populate base and quote assets on offer removal
+
 ### Security 
