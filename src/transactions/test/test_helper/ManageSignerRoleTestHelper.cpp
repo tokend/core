@@ -1,3 +1,4 @@
+#include <transactions/manage_role_rule/ManageSignerRoleOpFrame.h>
 #include "ManageSignerRoleTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -77,7 +78,7 @@ ManageSignerRoleTestHelper::applyTx(Account &source,
     auto txFee = mTestManager->getLedgerManager().getTxFee();
     REQUIRE(txResult.feeCharged == txFee);
 
-    return opResult.tr().manageAccountRoleResult();
+    return opResult.tr().manageSignerRoleResult();
 }
 
 }
