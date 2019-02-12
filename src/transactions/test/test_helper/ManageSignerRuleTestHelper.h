@@ -1,14 +1,36 @@
-//
-// Created by artem on 12.02.19.
-//
+#pragma once
 
-#ifndef STELLAR_MANAGESIGNERRULETESTHELPER_H
-#define STELLAR_MANAGESIGNERRULETESTHELPER_H
+#include "TxHelper.h"
 
+namespace stellar
+{
+namespace txtest
+{
 
-class ManageSignerRuleTestHelper {
+class ManageSignerRuleTestHelper : TxHelper
+{
+public:
+    ManageSignerRuleTestHelper(TestManager::pointer testManager);
 
+    TransactionFramePtr
+    createTx(Account &source, ManageSignerRuleOp op);
+
+    ManageSignerRuleResult applyTx(Account &source, ManageSignerRuleOp &entry,
+            ManageSignerRuleResultCode expectedResult =
+            ManageSignerRuleResultCode::SUCCESS,
+            TransactionResultCode expectedTxResult =
+            TransactionResultCode::txSUCCESS);
+
+    ManageSignerRuleOp buildCreateRuleOp(SignerRuleResource resource,
+                                         std::string action, bool isForbid,
+                                         bool isDefault, bool isReadOnly);
+
+    ManageSignerRuleOp buildUpdateRoleOp(uint64_t id, SignerRuleResource resource,
+                                         std::string action, bool isForbid,
+                                         bool isDefault);
+
+    ManageSignerRuleOp buildRemoveRoleOp(uint64_t ruleID);
 };
 
-
-#endif //STELLAR_MANAGESIGNERRULETESTHELPER_H
+} // namespace txtest
+} // namespace stellar
