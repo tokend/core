@@ -38,7 +38,7 @@ void
 SignerRoleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
 {
     auto signerRoleFrame = std::make_shared<SignerRoleFrame>(entry);
-    auto signerRoleEntry = signerRoleFrame->getEntry();
+    auto& signerRoleEntry = signerRoleFrame->getEntry();
 
     signerRoleFrame->touch(mStorageHelper.mustGetLedgerDelta());
 
@@ -152,14 +152,13 @@ SignerRoleHelperImpl::loadSignerRole(uint64_t const roleID)
 void
 SignerRoleHelperImpl::storeDelete(LedgerKey const &key)
 {
-    auto pubKey = key.signer().pubKey;
-    std::string signerStrKey = PubKeyUtils::toStrKey(pubKey);
+    auto id = key.signerRole().id;
 
     Database& db = getDatabase();
     auto prep = db.getPreparedStatement("DELETE FROM signer_roles "
                                         "WHERE id = :id");
     auto& st = prep.statement();
-    st.exchange(use(signerStrKey));
+    st.exchange(use(id));
     st.define_and_bind();
     {
         auto timer = db.getDeleteTimer("signer-role");

@@ -11,7 +11,7 @@ class ManageSignerTestHelper : TxHelper
 public:
     ManageSignerTestHelper(TestManager::pointer testManager);
 
-    ManageSignerOp buildCreateOp(PublicKey& key, uint32_t weight,
+    ManageSignerOp buildCreateOp(PublicKey key, uint32_t weight,
                                  uint32_t identity, uint64_t roleID);
 
     ManageSignerOp buildUpdateOp(PublicKey& key, uint32_t wight,

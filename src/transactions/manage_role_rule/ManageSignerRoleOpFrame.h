@@ -52,6 +52,11 @@ private:
     getOwnerID(Application& app,  CreateSignerRoleData data);
 
     bool
+    tryObtainRuleIDs(StorageHelper& storageHelper,
+                     std::vector<uint64_t> incomingIDs,
+                     std::vector<uint64_t>& result);
+
+    bool
     createRole(Application& app, StorageHelper& storageHelper);
 
     bool

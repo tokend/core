@@ -13,7 +13,7 @@ public:
 
     ManageSignerRoleOp buildCreateRoleOp(const std::string &name,
                                          std::vector<uint64_t> ruleIDs,
-                                         bool isDefault);
+                                         bool isReadOnly);
 
     ManageSignerRoleOp buildUpdateRoleOp(uint64_t accountRoleID,
                                           const std::string &name,

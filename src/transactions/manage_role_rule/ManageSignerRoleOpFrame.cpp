@@ -86,6 +86,47 @@ ManageSignerRoleOpFrame::getOwnerID(Application& app, CreateSignerRoleData data)
 }
 
 bool
+ManageSignerRoleOpFrame::tryObtainRuleIDs(StorageHelper &storageHelper,
+                                          std::vector<uint64_t> incomingIDs,
+                                          std::vector<uint64_t> &result)
+{
+    std::unordered_set<uint64_t> ruleIDs;
+    for (auto id : incomingIDs)
+    {
+        if (ruleIDs.find(id) != ruleIDs.end())
+        {
+            innerResult().code(ManageSignerRoleResultCode::RULE_ID_DUPLICATION);
+            innerResult().ruleID() = id;
+            return false;
+        }
+
+        ruleIDs.insert(id);
+    }
+
+    auto defaultRuleIDs = storageHelper.getSignerRuleHelper().loadDefaultRuleIDs();
+
+    for (auto id : defaultRuleIDs)
+    {
+        if (ruleIDs.find(id) != ruleIDs.end())
+        {
+            innerResult().code(ManageSignerRoleResultCode::DEFAULT_RULE_ID_DUPLICATION);
+            innerResult().ruleID() = id;
+            return false;
+        }
+
+        ruleIDs.insert(id);
+    }
+
+    result.clear();
+    for (auto id : ruleIDs)
+    {
+        result.emplace_back(id);
+    }
+
+    return true;
+}
+
+bool
 ManageSignerRoleOpFrame::createRole(Application& app,
                                     StorageHelper& storageHelper)
 {
@@ -96,16 +137,18 @@ ManageSignerRoleOpFrame::createRole(Application& app,
         return false;
     }
 
-    auto defaultRuleIDs = storageHelper.getSignerRuleHelper().loadDefaultRuleIDs();
-
     auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
     LedgerEntry le;
     le.data.type(LedgerEntryType::SIGNER_ROLE);
     auto& roleEntry = le.data.signerRole();
     roleEntry.id = headerFrame.generateID(LedgerEntryType::SIGNER_ROLE);
-    roleEntry.ruleIDs = creationData.ruleIDs;
-    roleEntry.ruleIDs.insert(roleEntry.ruleIDs.end(), defaultRuleIDs.begin(), defaultRuleIDs.end());
+
+    if (!tryObtainRuleIDs(storageHelper, creationData.ruleIDs, roleEntry.ruleIDs))
+    {
+        return false;
+    }
+
     roleEntry.details = creationData.details;
     roleEntry.ownerID = getOwnerID(app, creationData);
 
@@ -131,11 +174,13 @@ ManageSignerRoleOpFrame::updateRole(Application& app,
         return false;
     }
 
-    auto defaultRuleIDs = storageHelper.getSignerRuleHelper().loadDefaultRuleIDs();
-
     auto& roleEntry = role->getEntry();
-    roleEntry.ruleIDs = updateData.ruleIDs;
-    roleEntry.ruleIDs.insert(roleEntry.ruleIDs.end(), defaultRuleIDs.begin(), defaultRuleIDs.end());
+
+    if (!tryObtainRuleIDs(storageHelper, updateData.ruleIDs, roleEntry.ruleIDs))
+    {
+        return false;
+    }
+
     roleEntry.details = updateData.details;
 
     helper.storeChange(role->mEntry);

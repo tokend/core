@@ -163,14 +163,17 @@ bool
 ManageAccountRoleOpFrame::doCheckValid(Application& app)
 {
     std::string details;
+    std::vector<uint64_t> incomingIDs;
 
     switch (mManageAccountRole.data.action())
     {
         case ManageAccountRoleAction::CREATE:
             details = mManageAccountRole.data.createData().details;
+            incomingIDs = mManageAccountRole.data.createData().accountRuleIDs;
             break;
         case ManageAccountRoleAction::UPDATE:
             details = mManageAccountRole.data.updateData().details;
+            incomingIDs = mManageAccountRole.data.updateData().accountRuleIDs;
             break;
         case ManageAccountRoleAction::REMOVE:
             return true;
@@ -182,6 +185,19 @@ ManageAccountRoleOpFrame::doCheckValid(Application& app)
     {
         innerResult().code(ManageAccountRoleResultCode::INVALID_DETAILS);
         return false;
+    }
+
+    std::unordered_set<uint64_t> ruleIDs;
+    for (auto id : incomingIDs)
+    {
+        if (ruleIDs.find(id) != ruleIDs.end())
+        {
+            innerResult().code(ManageAccountRoleResultCode::RULE_ID_DUPLICATION);
+            innerResult().ruleID() = id;
+            return false;
+        }
+
+        ruleIDs.insert(id);
     }
 
     return true;

@@ -16,7 +16,7 @@ ManageSignerTestHelper::ManageSignerTestHelper(TestManager::pointer testManager)
 }
 
 ManageSignerOp
-ManageSignerTestHelper::buildCreateOp(PublicKey &key, uint32_t weight,
+ManageSignerTestHelper::buildCreateOp(PublicKey key, uint32_t weight,
                                       uint32_t identity, uint64_t roleID)
 {
     ManageSignerOp op;

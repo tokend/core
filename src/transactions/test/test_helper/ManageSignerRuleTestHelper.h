@@ -15,7 +15,7 @@ public:
     TransactionFramePtr
     createTx(Account &source, ManageSignerRuleOp op);
 
-    ManageSignerRuleResult applyTx(Account &source, ManageSignerRuleOp &entry,
+    ManageSignerRuleResult applyTx(Account &source, ManageSignerRuleOp &op,
             ManageSignerRuleResultCode expectedResult =
             ManageSignerRuleResultCode::SUCCESS,
             TransactionResultCode expectedTxResult =
