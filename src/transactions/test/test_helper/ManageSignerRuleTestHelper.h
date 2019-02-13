@@ -27,11 +27,12 @@ public:
                                          std::string action, bool isForbid,
                                          bool isDefault, bool isReadOnly);
 
-    ManageSignerRuleOp buildUpdateRoleOp(uint64_t id, SignerRuleResource resource,
+    ManageSignerRuleOp buildUpdateRuleOp(uint64_t id,
+                                         SignerRuleResource resource,
                                          std::string action, bool isForbid,
                                          bool isDefault);
 
-    ManageSignerRuleOp buildRemoveRoleOp(uint64_t ruleID);
+    ManageSignerRuleOp buildRemoveRuleOp(uint64_t ruleID);
 };
 
 } // namespace txtest

@@ -32,7 +32,7 @@ ManageSignerTestHelper::buildCreateOp(PublicKey key, uint32_t weight,
 }
 
 ManageSignerOp
-ManageSignerTestHelper::buildUpdateOp(PublicKey &key, uint32_t weight,
+ManageSignerTestHelper::buildUpdateOp(PublicKey key, uint32_t weight,
                                       uint32_t identity, uint64_t roleID)
 {
     ManageSignerOp op;
@@ -48,7 +48,7 @@ ManageSignerTestHelper::buildUpdateOp(PublicKey &key, uint32_t weight,
 }
 
 ManageSignerOp
-ManageSignerTestHelper::buildRemoveOp(PublicKey &key)
+ManageSignerTestHelper::buildRemoveOp(PublicKey key)
 {
     ManageSignerOp op;
     op.data.action(ManageSignerAction::REMOVE);
@@ -59,23 +59,29 @@ ManageSignerTestHelper::buildRemoveOp(PublicKey &key)
 }
 
 TransactionFramePtr
-ManageSignerTestHelper::buildTx(Account &source, const ManageSignerOp &op)
+ManageSignerTestHelper::buildTx(Account &source, const ManageSignerOp &op,
+                                Account* signer)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::MANAGE_SIGNER);
     baseOp.body.manageSignerOp() = op;
-    return txFromOperation(source, baseOp, nullptr);
+    return txFromOperation(source, baseOp, signer);
 }
 
 ManageSignerResult
 ManageSignerTestHelper::applyTx(Account &source, const ManageSignerOp &op,
                                 ManageSignerResultCode expectedResultCode,
-                                OperationResultCode expectedOpCode)
+                                OperationResultCode expectedOpCode,
+                                TransactionResultCode expectedTxResult,
+                                Account* signer)
 {
-    auto txFrame = buildTx(source, op);
+    auto txFrame = buildTx(source, op, signer);
 
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
+
+    REQUIRE(txResult.result.code() == expectedTxResult);
+
     auto opResult = txResult.result.results()[0];
 
     REQUIRE(opResult.code() == expectedOpCode);

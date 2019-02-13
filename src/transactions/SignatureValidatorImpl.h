@@ -36,8 +36,8 @@ public:
 	SignatureValidatorImpl(Hash contentHash, xdr::xvector<DecoratedSignature, 20> signatures);
 
 	Result
-	check(Application& app, StorageHelper& storageHelper, AccountID const& accountID,
-		  std::vector<SignerRequirement> requirements) override;
+	check(Application& app, StorageHelper& storageHelper, SignerRuleVerifier& signerRuleVerifier,
+		  AccountID const& accountID, std::vector<SignerRequirement> requirements) override;
 
 	Result check(std::vector<PublicKey> keys, int signaturesRequired, LedgerVersion ledgerVersion) override;
 	bool checkAllSignaturesUsed() override;

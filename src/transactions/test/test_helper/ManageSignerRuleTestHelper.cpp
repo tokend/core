@@ -31,7 +31,7 @@ ManageSignerRuleTestHelper::buildCreateRuleOp(SignerRuleResource resource,
 }
 
 ManageSignerRuleOp
-ManageSignerRuleTestHelper::buildUpdateRoleOp(uint64_t id,
+ManageSignerRuleTestHelper::buildUpdateRuleOp(uint64_t id,
                                               SignerRuleResource resource,
                                               std::string action, bool isForbid,
                                               bool isDefault)
@@ -50,7 +50,7 @@ ManageSignerRuleTestHelper::buildUpdateRoleOp(uint64_t id,
 }
 
 ManageSignerRuleOp
-ManageSignerRuleTestHelper::buildRemoveRoleOp(uint64_t ruleID)
+ManageSignerRuleTestHelper::buildRemoveRuleOp(uint64_t ruleID)
 {
     ManageSignerRuleOp result;
     result.data.action(ManageSignerRuleAction::REMOVE);

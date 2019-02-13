@@ -52,24 +52,35 @@ ManageSignerRoleTestHelper::buildRemoveRoleOp(uint64_t roleID)
 
 TransactionFramePtr
 ManageSignerRoleTestHelper::createSignerRoleTx(Account &source,
-                                               const ManageSignerRoleOp &op)
+                               const ManageSignerRoleOp &op, Account* signer)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::MANAGE_SIGNER_ROLE);
     baseOp.body.manageSignerRoleOp() = op;
-    return txFromOperation(source, baseOp, nullptr);
+    return txFromOperation(source, baseOp, signer);
 }
 
 ManageSignerRoleResult
-ManageSignerRoleTestHelper::applyTx(Account &source,
-        const ManageSignerRoleOp &op,
-        ManageSignerRoleResultCode expectedResultCode)
+ManageSignerRoleTestHelper::applyTx(Account &source, const ManageSignerRoleOp &op,
+        ManageSignerRoleResultCode expectedResultCode,
+        OperationResultCode operationResultCode,
+        TransactionResultCode txResultCode, Account* signer)
 {
-    TransactionFramePtr txFrame = createSignerRoleTx(source, op);
+    TransactionFramePtr txFrame = createSignerRoleTx(source, op, signer);
     mTestManager->applyCheck(txFrame);
 
     auto txResult = txFrame->getResult();
+
+    REQUIRE(txResult.result.code() == txResultCode);
+
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == operationResultCode);
+
+    if (operationResultCode != OperationResultCode::opINNER)
+    {
+        return ManageSignerRoleResult{};
+    }
 
     auto actualResultCode = ManageSignerRoleOpFrame::getInnerCode(opResult);
 

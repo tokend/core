@@ -187,12 +187,10 @@ bool
 ManageSignerRuleOpFrame::deleteRule(Application &app,
                                     StorageHelper &storageHelper)
 {
-    LedgerKey key(LedgerEntryType::SIGNER_RULE);
     auto ruleID = mManageSignerRule.data.removeData().ruleID;
-    key.accountRule().id = ruleID;
 
-    auto frame = storageHelper.getSignerRuleHelper().storeLoad(key);
-    if (!frame)
+    auto frame = storageHelper.getSignerRuleHelper().loadSignerRule(ruleID);
+    if (!frame || !(frame->getOwnerID() == getSourceID()))
     {
         innerResult().code(ManageSignerRuleResultCode::NOT_FOUND);
         return false;
@@ -205,7 +203,7 @@ ManageSignerRuleOpFrame::deleteRule(Application &app,
 
     storageHelper.getSignerRuleHelper().storeDelete(frame->getKey());
     innerResult().code(ManageSignerRuleResultCode::SUCCESS);
-    innerResult().success().ruleID = key.signerRule().id;
+    innerResult().success().ruleID = ruleID;
     return true;
 }
 

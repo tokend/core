@@ -61,7 +61,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
 
             SECTION("update")
             {
-                auto op = manageSignerRuleTestHelper.buildUpdateRoleOp(2,
+                auto op = manageSignerRuleTestHelper.buildUpdateRuleOp(2,
                         SignerRuleResource(LedgerEntryType::FEE), "manage", false, false);
                 manageSignerRuleTestHelper.applyTx(master, op,
                                                    ManageSignerRuleResultCode::SUCCESS,
@@ -71,7 +71,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
 
             SECTION("remove")
             {
-                auto op = manageSignerRuleTestHelper.buildRemoveRoleOp(2);
+                auto op = manageSignerRuleTestHelper.buildRemoveRuleOp(2);
                 manageSignerRuleTestHelper.applyTx(master, op,
                                                    ManageSignerRuleResultCode::SUCCESS,
                                                    OperationResultCode::opBAD_AUTH,
@@ -81,42 +81,87 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
 
         SECTION("operational try manage readonly rule")
         {
+            auto op = manageSignerRuleTestHelper.buildRemoveRuleOp(ownerSignerRoleID);
+            manageSignerRuleTestHelper.applyTx(master, op,
+                                               ManageSignerRuleResultCode::NOT_FOUND,
+                                               OperationResultCode::opINNER,
+                                               TransactionResultCode::txFAILED, &signer);
 
+            op = manageSignerRuleTestHelper.buildUpdateRuleOp(ownerSignerRoleID,
+                    SignerRuleResource(LedgerEntryType::FEE), "manage", false, false);
+            manageSignerRuleTestHelper.applyTx(master, op,
+                                               ManageSignerRuleResultCode::NOT_FOUND,
+                                               OperationResultCode::opINNER,
+                                               TransactionResultCode::txFAILED, &signer);
         }
 
-        /*auto removeRoleOp = manageSignerRoleTestHelper.buildRemoveRoleOp(roleID);
-        SECTION("Delete signer role")
+        SECTION("operational tries to manage owner signer role")
         {
-            manageSignerRoleTestHelper.applyTx(master, removeRoleOp);
+            std::string validDetails = R"({"from": "manage signer test"})";
 
-            SECTION("Delete non-existing signer role")
+            SECTION("update")
             {
-                manageSignerRoleTestHelper.applyTx(master, removeRoleOp,
-                                                   ManageSignerRoleResultCode::NOT_FOUND);
+                auto op = manageSignerRoleTestHelper.buildUpdateRoleOp(
+                        ownerSignerRoleID, validDetails, {1});
+                manageSignerRoleTestHelper.applyTx(master, op,
+                                                   ManageSignerRoleResultCode::SUCCESS,
+                                                   OperationResultCode::opBAD_AUTH,
+                                                   TransactionResultCode::txFAILED, &signer);
+            }
+
+            SECTION("remove")
+            {
+                auto op = manageSignerRoleTestHelper.buildRemoveRoleOp(1);
+                manageSignerRoleTestHelper.applyTx(master, op,
+                                                   ManageSignerRoleResultCode::SUCCESS,
+                                                   OperationResultCode::opBAD_AUTH,
+                                                   TransactionResultCode::txFAILED, &signer);
             }
         }
 
-        SECTION("Cannot delete role that is used")
+        SECTION("operational tries to manage owner signer")
         {
-            auto randomKey = SecretKey::random();
-            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
-                    randomKey.getPublicKey(), 10, 12, roleID);
-            manageSignerTestHelper.applyTx(master, createSignerOp);
+            SECTION("create")
+            {
+                auto op = manageSignerTestHelper.buildCreateOp(
+                        master.key.getPublicKey(), 1, 0, ownerSignerRoleID);
+                manageSignerTestHelper.applyTx(master, op,
+                                               ManageSignerResultCode::SUCCESS,
+                                               OperationResultCode::opBAD_AUTH,
+                                               TransactionResultCode::txFAILED, &signer);
+            }
 
-            manageSignerRoleTestHelper.applyTx(master, removeRoleOp,
-                                               ManageSignerRoleResultCode::ROLE_IS_USED);
+            SECTION("update")
+            {
+                auto op = manageSignerTestHelper.buildUpdateOp(
+                        master.key.getPublicKey(), 1, 0, roleID);
+                manageSignerTestHelper.applyTx(master, op,
+                                               ManageSignerResultCode::SUCCESS,
+                                               OperationResultCode::opBAD_AUTH,
+                                               TransactionResultCode::txFAILED, &signer);
+            }
+
+            SECTION("remove")
+            {
+                auto op = manageSignerTestHelper.buildRemoveOp(master.key.getPublicKey());
+                manageSignerTestHelper.applyTx(master, op,
+                                               ManageSignerResultCode::SUCCESS,
+                                               OperationResultCode::opBAD_AUTH,
+                                               TransactionResultCode::txFAILED, &signer);
+            }
         }
-    }
 
+        SECTION("operational can create another operational")
+        {
+            auto anotherSignerKey = SecretKey::random();
+            auto anotherSigner = Account{anotherSignerKey, Salt(4)};
 
-    SECTION("Default Rule id duplication")
-    {
-        std::vector<uint64> ruleIDs{ruleID, 2};
-
-        auto createSignerRoleOp = manageSignerRoleTestHelper.buildCreateRoleOp(
-                R"({"data": "new_details"})", ruleIDs, false);
-
-        manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
-                                           ManageSignerRoleResultCode::DEFAULT_RULE_ID_DUPLICATION);*/
+            auto op = manageSignerTestHelper.buildCreateOp(
+                    anotherSigner.key.getPublicKey(), 1, 0, roleID);
+            manageSignerTestHelper.applyTx(master, op,
+                                           ManageSignerResultCode::SUCCESS,
+                                           OperationResultCode::opINNER,
+                                           TransactionResultCode::txSUCCESS, &signer);
+        }
     }
 }

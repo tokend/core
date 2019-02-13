@@ -22,12 +22,17 @@ public:
     ManageSignerRoleOp buildRemoveRoleOp(uint64_t accountRoleID);
 
     TransactionFramePtr createSignerRoleTx(Account& source,
-                                            const ManageSignerRoleOp& op);
+                                           const ManageSignerRoleOp& op,
+                                           Account* signer = nullptr);
 
     ManageSignerRoleResult
     applyTx(Account &source, const ManageSignerRoleOp &op,
             ManageSignerRoleResultCode expectedResultCode =
-            ManageSignerRoleResultCode::SUCCESS);
+            ManageSignerRoleResultCode::SUCCESS,
+            OperationResultCode operationResultCode =
+            OperationResultCode::opINNER,
+            TransactionResultCode expectedTxResult =
+            TransactionResultCode::txSUCCESS, Account* signer = nullptr);
 };
 } // namespace txtest
 } // namespace stellar

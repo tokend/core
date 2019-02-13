@@ -8,6 +8,7 @@
 
 namespace stellar
 {
+class SignerRuleVerifier;
 
 class SignatureValidator
 {
@@ -17,6 +18,7 @@ public:
 
 	// checks if signature is valid.
 	virtual Result check(Application& app, StorageHelper& storageHelper,
+						 SignerRuleVerifier& signerRuleVerifier,
 						 AccountID const& accountID,
 						 std::vector<SignerRequirement> requirements) = 0;
 

@@ -7,6 +7,7 @@
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
 #include <transactions/manage_role_rule/ManageSignerRoleOpFrame.h>
 #include <transactions/manage_role_rule/ManageSignerRuleOpFrame.h>
+#include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
 #include "ledger/LedgerDelta.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -194,8 +195,9 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
         return false;
     }
 
+    SignerRuleVerifierImpl signerRuleVerifier;
     auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
-            getSourceID(), signerRequirements);
+            signerRuleVerifier, getSourceID(), signerRequirements);
 	switch (result)
 	{
 	case SignatureValidator::Result::SUCCESS:

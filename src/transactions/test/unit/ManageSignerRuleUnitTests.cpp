@@ -31,6 +31,7 @@
 #include "transactions/test/mocks/MockAccountRoleHelper.h"
 #include "transactions/test/mocks/MockAccountRuleHelper.h"
 #include "transactions/test/mocks/MockAccountHelper.h"
+#include "transactions/test/mocks/MockSignerRuleVerifier.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
@@ -48,6 +49,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
     MockStorageHelper storageHelperMock;
     MockLedgerHeaderFrame ledgerHeaderFrameMock;
     MockSignerRuleHelper signerRuleHelperMock;
+    MockSignerRuleVerifier signerRuleVerifierMock;
     std::shared_ptr<MockSignatureValidator> signatureValidatorMock =
             std::make_shared<MockSignatureValidator>();
 
@@ -73,7 +75,8 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
     ON_CALL(transactionFrameMock, getSignatureValidator())
             .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
-            check(Ref(appMock), Ref(storageHelperMock), Const(*op.sourceAccount), _))
+            check(Ref(appMock), Ref(storageHelperMock), Ref(signerRuleVerifierMock),
+                  Const(*op.sourceAccount), _))
             .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
     ON_CALL(storageHelperMock, getSignerRoleHelper());
@@ -123,7 +126,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
         EXPECT_CALL(storageHelperMock, getSignerRuleHelper())
                 .WillOnce(ReturnRef(signerRuleHelperMock));
         EXPECT_CALL(signerRuleHelperMock, storeAdd(signerRuleFrame->mEntry))
-                .Times(1);
+                .WillOnce(Return());
 
         REQUIRE(opFrame.doCheckValid(appMock));
         REQUIRE(opFrame.doApply(appMock, storageHelperMock, ledgerManagerMock));

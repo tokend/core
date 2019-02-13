@@ -123,6 +123,7 @@ SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
     };
 
     std::map<uint32_t, SignatureWeight> identityWeights;
+    uint64_t totalWeight = 0;
 
     for (size_t i = 0; i < mSignatures.size(); i++)
     {
@@ -150,29 +151,29 @@ SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
                 // we don't need signature if there is another one which signer has bigger weight
                 if (existingIdentity->second.weight < signer.weight)
                 {
+                    totalWeight += signer.weight - existingIdentity->second.weight;
                     existingIdentity->second = {i, signer.weight};
                 }
                 break;
             }
 
+            totalWeight += signer.weight;
             identityWeights.emplace(signer.identity, SignatureWeight{i, signer.weight});
+
+            if (totalWeight >= SignerRuleFrame::threshold)
+            {
+                for (auto& identityWeight : identityWeights)
+                {
+                    mUsedSignatures[identityWeight.second.signatureIndex] = true;
+                }
+
+                return SUCCESS;
+            }
             break;
         }
     }
 
-    uint64_t totalWeight = 0;
-    for (auto& identityWeight : identityWeights)
-    {
-        totalWeight += identityWeight.second.weight;
-        mUsedSignatures[identityWeight.second.signatureIndex] = true;
-    }
-
-    if (totalWeight < SignerRuleFrame::threshold)
-    {
-        return NOT_ENOUGH_WEIGHT;
-    }
-
-    return SUCCESS;
+    return NOT_ENOUGH_WEIGHT;
 }
 
 bool SignatureValidatorImpl::shouldSkipCheck(Application & app)
@@ -192,25 +193,13 @@ bool SignatureValidatorImpl::shouldSkipCheck(Application & app)
 
 SignatureValidatorImpl::Result
 SignatureValidatorImpl::check(Application& app, StorageHelper& storageHelper,
-                              AccountID const& accountID,
+                              SignerRuleVerifier& signerRuleVerifier, AccountID const& accountID,
                               std::vector<SignerRequirement> requirements)
 {
-    if (shouldSkipCheck(app)) {
+    if (shouldSkipCheck(app))
+    {
         return SUCCESS;
     }
-/*
-    if ((account.getBlockReasons() | sourceDetails.mAllowedBlockedReasons) !=
-        sourceDetails.mAllowedBlockedReasons)
-        return ACCOUNT_BLOCKED;
-
-    const uint32 ledgerVersion = app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion;
-    if (!sourceDetails.mSpecificSigners.empty())
-    {
-        return check(sourceDetails.mSpecificSigners,
-                     sourceDetails.mNeeededTheshold,
-                     LedgerVersion(ledgerVersion));
-    }*/
-    SignerRuleVerifierImpl signerRuleVerifier;
 
     return checkSignature(storageHelper, accountID, signerRuleVerifier, requirements);
 }

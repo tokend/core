@@ -14,19 +14,22 @@ public:
     ManageSignerOp buildCreateOp(PublicKey key, uint32_t weight,
                                  uint32_t identity, uint64_t roleID);
 
-    ManageSignerOp buildUpdateOp(PublicKey& key, uint32_t wight,
+    ManageSignerOp buildUpdateOp(PublicKey key, uint32_t wight,
                                  uint32_t identity, uint64_t roleID);
 
-    ManageSignerOp buildRemoveOp(PublicKey& key);
+    ManageSignerOp buildRemoveOp(PublicKey key);
 
-    TransactionFramePtr buildTx(Account &source,
-                                const ManageSignerOp &op);
+    TransactionFramePtr
+    buildTx(Account &source, const ManageSignerOp &op, Account* signer = nullptr);
 
     ManageSignerResult applyTx(Account &source, const ManageSignerOp &op,
                                ManageSignerResultCode expectedResultCode =
                                        ManageSignerResultCode::SUCCESS,
                                OperationResultCode expectedOpCode =
-                                       OperationResultCode::opINNER);
+                                       OperationResultCode::opINNER,
+                               TransactionResultCode expectedTxResult =
+                                       TransactionResultCode::txSUCCESS,
+                               Account* signer = nullptr);
 
     void applyCreateOperationalSigner(Account& source, PublicKey signerKey);
 };

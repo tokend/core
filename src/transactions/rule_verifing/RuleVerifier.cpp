@@ -59,7 +59,7 @@ RuleVerifier::isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTa
 bool
 RuleVerifier::isBoolMatches(bool const expected, bool const actual) const
 {
-    return actual || !expected;
+    return actual == expected;
 }
 
 } // namespace stellar

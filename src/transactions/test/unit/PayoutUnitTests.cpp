@@ -34,6 +34,7 @@
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
+#include "transactions/test/mocks/MockSignerRuleVerifier.h"
 
 using namespace stellar;
 using namespace testing;
