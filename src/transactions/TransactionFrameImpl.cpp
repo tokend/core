@@ -178,7 +178,6 @@ TransactionFrameImpl::doCheckSignature(Application& app,
         getResult().result.code(TransactionResultCode::txBAD_AUTH);
         return false;
     case SignatureValidator::Result::EXTRA:
-    case SignatureValidator::Result::INVALID_SIGNER_TYPE:
         app.getMetrics()
             .NewMeter({"transaction", "invalid", "bad-auth-extra"},
                       "transaction")

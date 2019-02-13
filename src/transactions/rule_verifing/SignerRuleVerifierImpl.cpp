@@ -135,6 +135,15 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.sale().saleType) &&
                    isIDMatches(requiredResource.sale().saleType,
                                actualResource.sale().saleType);
+        case LedgerEntryType::SIGNER:
+            return isIDMatches(requiredResource.signer().roleID,
+                               actualResource.signer().roleID);
+        case LedgerEntryType::SIGNER_ROLE:
+            return isIDMatches(requiredResource.signerRole().roleID,
+                               actualResource.signerRole().roleID);
+        case LedgerEntryType::SIGNER_RULE:
+            return isBoolMatches(requiredResource.signerRule().isDefault,
+                                 actualResource.signerRule().isDefault);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:

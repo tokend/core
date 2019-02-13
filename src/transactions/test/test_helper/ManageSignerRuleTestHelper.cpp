@@ -61,21 +61,23 @@ ManageSignerRuleTestHelper::buildRemoveRoleOp(uint64_t ruleID)
 }
 
 TransactionFramePtr
-ManageSignerRuleTestHelper::createTx(Account &source, ManageSignerRuleOp op)
+ManageSignerRuleTestHelper::createTx(Account &source, ManageSignerRuleOp op,
+                                     Account* signer)
 {
     Operation opBase;
     opBase.body.type(OperationType::MANAGE_SIGNER_RULE);
     opBase.body.manageSignerRuleOp() = op;
 
-    return txFromOperation(source, opBase, nullptr);
+    return txFromOperation(source, opBase, signer);
 }
 
 ManageSignerRuleResult ManageSignerRuleTestHelper::applyTx(Account &source,
         ManageSignerRuleOp &op,
         ManageSignerRuleResultCode expectedResult,
-        TransactionResultCode expectedTxResult)
+        OperationResultCode operationResultCode,
+        TransactionResultCode expectedTxResult, Account* signer)
 {
-    auto txFrame = createTx(source, op);
+    auto txFrame = createTx(source, op, signer);
 
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
@@ -84,7 +86,12 @@ ManageSignerRuleResult ManageSignerRuleTestHelper::applyTx(Account &source,
 
     auto opResult = txResult.result.results()[0];
 
-    REQUIRE(opResult.code() == OperationResultCode::opINNER);
+    REQUIRE(opResult.code() == operationResultCode);
+
+    if (operationResultCode != OperationResultCode::opINNER)
+    {
+        return ManageSignerRuleResult{};
+    }
 
     auto actualResultCode = ManageSignerRuleOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);

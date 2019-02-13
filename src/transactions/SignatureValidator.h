@@ -12,7 +12,7 @@ namespace stellar
 class SignatureValidator
 {
 public:
-	enum Result { NOT_ENOUGH_WEIGHT, INVALID_ACCOUNT_TYPE, ACCOUNT_BLOCKED, SUCCESS, INVALID_SIGNER_TYPE, EXTRA };
+	enum Result { NOT_ENOUGH_WEIGHT, INVALID_ACCOUNT_TYPE, ACCOUNT_BLOCKED, SUCCESS, EXTRA };
 	typedef std::shared_ptr<SignatureValidator> pointer;
 
 	// checks if signature is valid.

@@ -208,10 +208,6 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
 		app.getMetrics().NewMeter({ "transaction", "invalid", "bad-auth" }, "transaction").Mark();
 		mResult.code(OperationResultCode::opBAD_AUTH);
 		return false;
-	case SignatureValidator::Result::INVALID_SIGNER_TYPE:
-		app.getMetrics().NewMeter({ "transaction", "invalid", "invalid-signer-type" }, "transaction").Mark();
-		mResult.code(OperationResultCode::opNOT_ALLOWED);
-		return false;
 	case SignatureValidator::Result::ACCOUNT_BLOCKED:
 		app.getMetrics().NewMeter({ "operation", "invalid", "account-is-blocked" }, "operation").Mark();
 		mResult.code(OperationResultCode::opACCOUNT_BLOCKED);

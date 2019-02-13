@@ -133,6 +133,9 @@ AccountRuleVerifierImpl::isResourceMatches(
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
         case LedgerEntryType::ACCOUNT_ROLE:
+        case LedgerEntryType::SIGNER:
+        case LedgerEntryType::SIGNER_ROLE:
+        case LedgerEntryType::SIGNER_RULE:
         case LedgerEntryType::BALANCE:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:

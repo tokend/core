@@ -24,7 +24,6 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
 
     // set up world
     auto master = Account{getRoot(), Salt(1)};
-    auto account = Account{SecretKey::random(), Salt{2}};
 
     ManageSignerTestHelper manageSignerTestHelper(testManager);
     ManageSignerRoleTestHelper manageSignerRoleTestHelper(testManager);
@@ -87,5 +86,27 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
                 createAccountRoleOp, ManageSignerRoleResultCode::NO_SUCH_RULE);
 
         REQUIRE(result.ruleID() == nonExistingRuleID);
+    }
+
+    SECTION("Rule id duplication")
+    {
+        std::vector<uint64> ruleIDs{ruleID, ruleID};
+
+        auto createSignerRoleOp = manageSignerRoleTestHelper.buildCreateRoleOp(
+                R"({"data": "new_details"})", ruleIDs, false);
+
+        manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
+                                           ManageSignerRoleResultCode::RULE_ID_DUPLICATION);
+    }
+
+    SECTION("Default Rule id duplication")
+    {
+        std::vector<uint64> ruleIDs{ruleID, 2};
+
+        auto createSignerRoleOp = manageSignerRoleTestHelper.buildCreateRoleOp(
+                R"({"data": "new_details"})", ruleIDs, false);
+
+        manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
+                                           ManageSignerRoleResultCode::DEFAULT_RULE_ID_DUPLICATION);
     }
 }

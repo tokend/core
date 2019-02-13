@@ -35,6 +35,9 @@ protected:
 
     bool
     isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTasks) const;
+
+    bool
+    isBoolMatches(bool const expected, bool const actual) const;
 };
 
 } // namespace stellar
