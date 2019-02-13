@@ -2,23 +2,15 @@
 
 ## Unreleased
 
-### Added
+## 3.0.0-x.2
 
 ### Changed
 
 * Squashed ledger version;
 
-### Deprecated 
-
 ### Removed
 
 * Payment and Direct Debit Operations
-
-### Fixed 
-
-### Security 
-
-## 3.0.0-x.1
 
 ### Fixed 
 
