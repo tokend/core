@@ -20,6 +20,10 @@ namespace stellar {
         tryGetOperationConditions(StorageHelper& storageHelper,
                                   std::vector<OperationCondition>& result) const override;
 
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
+
         bool mustEmptyFixed(FeeEntry const &fee, medida::MetricsRegistry &metrics);
 
         bool mustEmptyPercent(FeeEntry const &fee, medida::MetricsRegistry &metrics);

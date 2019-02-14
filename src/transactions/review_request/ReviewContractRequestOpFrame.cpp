@@ -4,7 +4,7 @@
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
 #include <transactions/payment/PaymentOpV2Frame.h>
-#include <transactions/ManageContractOpFrame.h>
+#include <transactions/deprecated/ManageContractOpFrame.h>
 #include "util/asio.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "database/Database.h"
@@ -20,15 +20,6 @@ namespace stellar
 
 using namespace std;
 using xdr::operator==;
-
-
-SourceDetails
-ReviewContractRequestOpFrame::getSourceAccountDetails(
-        unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
-}
 
 bool
 ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,

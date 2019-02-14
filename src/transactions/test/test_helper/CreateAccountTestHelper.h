@@ -18,17 +18,13 @@ namespace stellar {
 
             CreateAccountTestBuilder setToPublicKey(PublicKey to);
 
-            CreateAccountTestBuilder setRecovery(const PublicKey& recovery);
+            CreateAccountTestBuilder addSignerData(UpdateSignerData data);
 
-            CreateAccountTestBuilder setType(AccountType accountType);
-
-            CreateAccountTestBuilder setType(int32_t accountType);
+            CreateAccountTestBuilder addBasicSigner(uint64_t roleID = 1);
 
             CreateAccountTestBuilder setReferrer(AccountID *referrer);
 
             CreateAccountTestBuilder setPolicies(int32 policies);
-
-            CreateAccountTestBuilder setPolicies(AccountPolicies policies);
 
             CreateAccountTestBuilder setRoleID(uint64_t roleID);
 
@@ -38,8 +34,7 @@ namespace stellar {
                     TransactionResultCode expectedResult);
 
             PublicKey to;
-            PublicKey recovery;
-            AccountType accountType = AccountType::GENERAL;
+            xdr::xvector<UpdateSignerData> signersData = {};
             AccountID *referrer = nullptr;
             int32 policies = -1;
             uint64_t roleID = 1;
@@ -86,12 +81,12 @@ namespace stellar {
 
             explicit CreateAccountTestHelper(TestManager::pointer testManager);
 
-            TransactionFramePtr createCreateAccountTx(Account& source, PublicKey to, AccountType accountType, uint32_t policies = 0);
+            TransactionFramePtr createCreateAccountTx(Account& source, PublicKey to, uint32_t policies = 0);
 
             CreateAccountResultCode applyTx(CreateAccountTestBuilder builder);
 
             [[deprecated]]
-            CreateAccountResultCode applyCreateAccountTx(Account &from, PublicKey to, AccountType accountType,
+            CreateAccountResultCode applyCreateAccountTx(Account &from, PublicKey to, uint64_t roleID = 1,
                                                          Account *signer = nullptr, AccountID *referrer = nullptr,
                                                          int32 policies = -1,
                                                          CreateAccountResultCode expectedResult = CreateAccountResultCode::SUCCESS);
@@ -99,8 +94,6 @@ namespace stellar {
         private:
             Account from;
             PublicKey to;
-            PublicKey recovery;
-            AccountType accountType = AccountType::GENERAL;
             Account *signer = nullptr;
             AccountID *referrer = nullptr;
             int32 policies = -1;

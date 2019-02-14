@@ -9,7 +9,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
-#include <transactions/dex/ManageSaleOpFrame.h>
+#include <transactions/sale/ManageSaleOpFrame.h>
 
 class pointer;
 namespace stellar
@@ -80,7 +80,8 @@ ManageSaleTestHelper::createManageSaleTx(Account& source, uint64_t saleID,
 ManageSaleResult
 ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         ManageSaleOp::_data_t data,
-                                        ManageSaleResultCode expectedResultCode)
+                                        ManageSaleResultCode expectedResultCode,
+                                        OperationResultCode opExpectedCode)
 {
     auto& db = mTestManager->getDB();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -108,16 +109,22 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     mTestManager->applyCheck(txFrame, stateBeforeOp);
 
     auto txResult = txFrame->getResult();
-    auto actualResultCode =
-        ManageSaleOpFrame::getInnerCode(txResult.result.results()[0]);
+    auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == opExpectedCode);
+    if (opExpectedCode != OperationResultCode::opINNER)
+    {
+        return ManageSaleResult{};
+    }
+
+    auto actualResultCode = ManageSaleOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResultCode);
 
     auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
     REQUIRE(txResult.feeCharged == txFee);
 
-    ManageSaleResult manageSaleResult =
-        txResult.result.results()[0].tr().manageSaleResult();
+    ManageSaleResult manageSaleResult = opResult.tr().manageSaleResult();
 
     if (actualResultCode != ManageSaleResultCode::SUCCESS)
         return manageSaleResult;

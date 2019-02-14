@@ -1,14 +1,12 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
-#include "main/Application.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "review_request/ReviewRequestHelper.h"
-#include "bucket/BucketApplicator.h"
 
 
 namespace stellar
@@ -23,6 +21,25 @@ CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHe
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
 
     result.emplace_back(resource, "create", mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                        std::vector<SignerRequirement> &result) const
+{
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateAMLAlertRequest.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateAMLAlertRequest.allTasks;
+    }
+
+    result.emplace_back(resource, "create");
 
     return true;
 }

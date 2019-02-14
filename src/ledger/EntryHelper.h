@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-#include "ledger/EntryHelperLegacy.h"
+#include "EntryFrame.h"
 
 namespace stellar
 {

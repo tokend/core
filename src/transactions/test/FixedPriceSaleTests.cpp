@@ -72,7 +72,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();
 
-    createAccountTestHelper.applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
+    createAccountTestHelper.applyCreateAccountTx(root, syndicatePubKey);
     const AssetCode baseAsset = "BTC";
     const uint64_t maxIssuanceAmount = 1000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
@@ -87,7 +87,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
 
     auto account = Account{ SecretKey::random(), 0 };
     auto accountID = account.key.getPublicKey();
-    createAccountTestHelper.applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
+    createAccountTestHelper.applyCreateAccountTx(root, account.key.getPublicKey());
     auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(accountID, defaultQuoteAsset, db, nullptr);
     issuanceHelper.applyCreateIssuanceRequest(root, defaultQuoteAsset, 100 * ONE, quoteBalance->getBalanceID(),
                                                      SecretKey::random().getStrKeyPublic(), &allTasks);
@@ -246,7 +246,7 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();
 
-    createAccountTestHelper.applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
+    createAccountTestHelper.applyCreateAccountTx(root, syndicatePubKey);
     const AssetCode baseAsset = "BTC";
     const uint64_t maxIssuanceAmount = 20000 * ONE;
     const auto preIssuedAmount = maxIssuanceAmount/2;

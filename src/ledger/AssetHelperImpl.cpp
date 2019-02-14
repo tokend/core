@@ -2,6 +2,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include <xdrpp/marshal.h>
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;
@@ -378,8 +379,8 @@ AssetHelperImpl::doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_
     return amount % precision == 0;
 }
 
-void
-AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
+std::vector<AssetFrame::pointer>
+AssetHelperImpl::loadBaseAssets()
 {
     std::string sql = mAssetColumnSelector;
     sql += " WHERE policies & :bp = :bp "
@@ -389,10 +390,13 @@ AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
     prep.statement().exchange(use(baseAssetPolicy, "bp"));
 
     auto timer = getDatabase().getSelectTimer("asset");
+    std::vector<AssetFrame::pointer> retAssets;
     loadAssets(prep, [&retAssets](LedgerEntry const& asset)
     {
         retAssets.push_back(make_shared<AssetFrame>(asset));
     });
+
+    return retAssets;
 }
 
 Database&

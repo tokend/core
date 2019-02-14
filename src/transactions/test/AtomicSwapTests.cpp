@@ -103,24 +103,21 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(sellerPubKey)
-            .setType(AccountType::SYNDICATE)
-            .setRecovery(SecretKey::random().getPublicKey())
+            .addBasicSigner()
             .setRoleID(1);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(firstBuyerPubKey)
-            .setType(AccountType::NOT_VERIFIED)
-            .setRecovery(SecretKey::random().getPublicKey())
+            .addBasicSigner()
             .setRoleID(1);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(secondBuyerPubKey)
-            .setType(AccountType::NOT_VERIFIED)
-            .setRecovery(SecretKey::random().getPublicKey())
+            .addBasicSigner()
             .setRoleID(1);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
@@ -266,7 +263,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
                 CreateASwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND,
-                OperationResultCode::opNO_BALANCE);
+                OperationResultCode::opNO_ENTRY);
     }
 
     SECTION("Base and quote assets are equal")
@@ -375,8 +372,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(
                                         0, firstQuoteAsset, amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
-                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND,
-                                OperationResultCode::opNO_BID);
+                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND);
                     }
 
                     SECTION("Try to create aswap request for own bid")

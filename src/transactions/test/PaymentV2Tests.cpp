@@ -122,14 +122,14 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                             .setSource(root)
-                                            .setType(AccountType::GENERAL)
                                             .setToPublicKey(payer.key.getPublicKey())
+                                            .addBasicSigner()
                                             .setRoleID(senderAccountRoleID));
 
     createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                             .setSource(root)
-                                            .setType(AccountType::GENERAL)
                                             .setToPublicKey(recipient.key.getPublicKey())
+                                            .addBasicSigner()
                                             .setRoleID(recipientAccountRoleID));
 
     //create limits
@@ -215,7 +215,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  accountDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
                                                  PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
-                                                 OperationResultCode::opNO_COUNTERPARTY);
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Destination balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
@@ -224,7 +224,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  balanceDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
                                                  PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND,
-                                                 OperationResultCode::opNO_BALANCE);
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Source balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
@@ -232,7 +232,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
                                                  PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND,
-                                                 OperationResultCode::opNO_BALANCE);
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Not allowed by asset policy")
         {

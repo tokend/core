@@ -1,6 +1,7 @@
 #pragma once
 
-#include "EntryHelper.h"
+#include <unordered_map>
+#include "EntryHelperLegacy.h"
 #include "AtomicSwapBidFrame.h"
 
 namespace soci

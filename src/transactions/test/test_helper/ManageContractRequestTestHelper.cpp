@@ -1,5 +1,5 @@
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/ManageContractRequestOpFrame.h>
+#include <transactions/deprecated/ManageContractRequestOpFrame.h>
 #include <lib/catch.hpp>
 #include "ManageContractRequestTestHelper.h"
 

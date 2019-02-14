@@ -2,28 +2,22 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "util/asio.h"
 #include "OperationFrame.h"
 #include "main/Application.h"
-#include "xdrpp/marshal.h"
-#include <string>
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
-#include <ledger/LedgerDeltaImpl.h>
-#include "util/Logging.h"
+#include <transactions/manage_role_rule/ManageSignerRoleOpFrame.h>
+#include <transactions/manage_role_rule/ManageSignerRuleOpFrame.h>
+#include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
 #include "ledger/LedgerDelta.h"
-#include "ledger/FeeFrame.h"
-#include "ledger/AccountTypeLimitsFrame.h"
 #include "ledger/ReferenceFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/payment/PaymentOpV2Frame.h"
-#include "transactions/SetOptionsOpFrame.h"
 #include "transactions/SetFeesOpFrame.h"
-#include "transactions/ManageAccountOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
@@ -31,36 +25,33 @@
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/ManageAssetPairOpFrame.h"
-#include "transactions/ManageInvoiceRequestOpFrame.h"
+#include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "transactions/review_request/ReviewRequestOpFrame.h"
-#include "transactions/PayoutOpFrame.h"
+#include "transactions/deprecated/PayoutOpFrame.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
-#include "transactions/manage_external_system_account_id_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
+#include "transactions/external_system_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
 #include "CreateChangeRoleRequestOpFrame.h"
-#include "transactions/dex/ManageSaleOpFrame.h"
-#include "transactions/ManageAccountRuleOpFrame.h"
-#include "transactions/ManageAccountRoleOpFrame.h"
-#include "database/Database.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
+#include "transactions/sale/ManageSaleOpFrame.h"
+#include "transactions/manage_role_rule/ManageAccountRuleOpFrame.h"
+#include "transactions/manage_role_rule/ManageAccountRoleOpFrame.h"
 #include "dex/ManageOfferOpFrame.h"
-#include "CheckSaleStateOpFrame.h"
-#include "BindExternalSystemAccountIdOpFrame.h"
+#include "transactions/sale/CheckSaleStateOpFrame.h"
+#include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
 #include "ManageKeyValueOpFrame.h"
 #include "CreateManageLimitsRequestOpFrame.h"
-#include "ManageContractRequestOpFrame.h"
-#include "ManageContractOpFrame.h"
+#include "transactions/deprecated/ManageContractRequestOpFrame.h"
+#include "transactions/deprecated/ManageContractOpFrame.h"
 #include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
 #include "atomic_swap/CancelASwapBidOpFrame.h"
 #include "atomic_swap/CreateASwapRequestOpFrame.h"
-#include "AccountRuleVerifierImpl.h"
+#include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
+#include "ManageSignerOpFrame.h"
 
 namespace stellar
 {
 
 using namespace std;
-
 
 shared_ptr<OperationFrame>
 OperationFrame::makeHelper(Operation const& op, OperationResult& res,
@@ -70,14 +61,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
     {
     case OperationType::CREATE_ACCOUNT:
         return shared_ptr<OperationFrame>(new CreateAccountOpFrame(op, res, tx));
-    case OperationType::SET_OPTIONS:
-        return shared_ptr<OperationFrame>(new SetOptionsOpFrame(op, res, tx));
     case OperationType::CREATE_ISSUANCE_REQUEST:
 		return shared_ptr<OperationFrame>(new CreateIssuanceRequestOpFrame(op, res, tx));
     case OperationType::SET_FEES:
         return shared_ptr<OperationFrame>(new SetFeesOpFrame(op, res, tx));
-	case OperationType::MANAGE_ACCOUNT:
-		return shared_ptr<OperationFrame>(new ManageAccountOpFrame(op, res, tx));
     case OperationType::CREATE_WITHDRAWAL_REQUEST:
 		return shared_ptr<OperationFrame>(new CreateWithdrawalRequestOpFrame(op, res, tx));
     case OperationType::MANAGE_BALANCE:
@@ -134,6 +121,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
     case OperationType::MANAGE_ACCOUNT_RULE:
         return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
+    case OperationType::MANAGE_SIGNER:
+        return make_shared<ManageSignerOpFrame>(op, res, tx);
+    case OperationType::MANAGE_SIGNER_ROLE:
+        return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
+    case OperationType::MANAGE_SIGNER_RULE:
+        return make_shared<ManageSignerRuleOpFrame>(op, res, tx);
     default:
         ostringstream err;
         err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
@@ -166,33 +159,6 @@ std::string OperationFrame::getInnerResultCodeAsStr() {
 	return "not_implemented";
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-OperationFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta, int32_t ledgerVersion) const {
-    return getCounterpartyDetails(db, delta);
-}
-
-std::unordered_map<AccountID, CounterpartyDetails>
-OperationFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const
-{
-    return {};
-}
-
-SourceDetails OperationFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion, Database& db) const
-{
-    return getSourceAccountDetails(counterpartiesDetails, ledgerVersion);
-}
-
-SourceDetails
-OperationFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(),
-                         mSourceAccount->getHighThreshold(),
-                         getAnySignerType());
-}
-
 bool OperationFrame::isSupported() const
 {
 	// by default all operations are supported
@@ -207,15 +173,31 @@ OperationFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     return false;
 }
 
+bool
+OperationFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                 std::vector<SignerRequirement> &result) const
+{
+    // method must be overridden
+    return false;
+}
+
 int64_t OperationFrame::getPaidFee() const {
 	// default fee for all operations is 0, finantial operations must override this function
     return 0;
 }
 
 bool
-OperationFrame::doCheckSignature(Application& app, Database& db, SourceDetails& sourceDetails)
+OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
 {
-    auto result = mParentTx.getSignatureValidator()->check(app, db, *mSourceAccount, sourceDetails);
+    std::vector<SignerRequirement> signerRequirements;
+    if (!tryGetSignerRequirements(storageHelper, signerRequirements))
+    {
+        return false;
+    }
+
+    SignerRuleVerifierImpl signerRuleVerifier;
+    auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
+            signerRuleVerifier, getSourceID(), signerRequirements);
 	switch (result)
 	{
 	case SignatureValidator::Result::SUCCESS:
@@ -227,10 +209,6 @@ OperationFrame::doCheckSignature(Application& app, Database& db, SourceDetails& 
 	case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
 		app.getMetrics().NewMeter({ "transaction", "invalid", "bad-auth" }, "transaction").Mark();
 		mResult.code(OperationResultCode::opBAD_AUTH);
-		return false;
-	case SignatureValidator::Result::INVALID_SIGNER_TYPE:
-		app.getMetrics().NewMeter({ "transaction", "invalid", "invalid-signer-type" }, "transaction").Mark();
-		mResult.code(OperationResultCode::opNOT_ALLOWED);
 		return false;
 	case SignatureValidator::Result::ACCOUNT_BLOCKED:
 		app.getMetrics().NewMeter({ "operation", "invalid", "account-is-blocked" }, "operation").Mark();
@@ -337,20 +315,22 @@ OperationFrame::checkValid(Application& app,
         }
     }
 
-    const uint32 ledgerVersion = app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion;
-    auto counterpartiesDetails = getCounterpartyDetails(db, delta, ledgerVersion);
-	if (!checkCounterparties(app, counterpartiesDetails))
-	{
-		return false;
-	}
+    mResult.code(OperationResultCode::opINNER);
+    mResult.tr().type(mOperation.body.type());
 
-    if (!checkRolePermissions(app, accountRuleVerifier))
+    bool isValid = doCheckValid(app);
+    if (!isValid)
+    {
+        return isValid;
+    }
+
+	StorageHelperImpl storageHelper(db, delta);
+    if (!checkRolePermissions(storageHelper, accountRuleVerifier))
     {
         return false;
     }
 
-    auto sourceDetails = getSourceAccountDetails(counterpartiesDetails, ledgerVersion, db);
-    if (!doCheckSignature(app, db, sourceDetails))
+    if (!doCheckSignature(app, storageHelper))
     {
         return false;
     }
@@ -362,67 +342,15 @@ OperationFrame::checkValid(Application& app,
         mSourceAccount.reset();
     }
 
-    mResult.code(OperationResultCode::opINNER);
-    mResult.tr().type(mOperation.body.type());
-
-    bool isValid = doCheckValid(app);
-	if (!isValid) {
-		app.getMetrics().NewMeter({ "operation", "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
-        return isValid;
-	}
-
     return true;
 }
 
 bool
-OperationFrame::checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties)
+OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
+                                     AccountRuleVerifier& accountRuleVerifier)
 {
-
-	auto& db = app.getDatabase();
-
-    for (auto& counterpartyPair : counterparties)
-    {
-		auto accountHelper = AccountHelper::Instance();
-		counterpartyPair.second.mAccount  = accountHelper->loadAccount(counterpartyPair.first, db);
-		bool isExists = !!counterpartyPair.second.mAccount;
-
-        if (!isExists)
-        {
-			if (!counterpartyPair.second.mIsMustExists)
-				continue;
-
-            app.getMetrics().NewMeter({ "operation", "invalid", "counterparty-not-found" }, "operation").Mark();
-            mResult.code(OperationResultCode::opNO_COUNTERPARTY);
-            return false;
-        }
-
-        if (!counterpartyPair.second.mIsBlockedAllowed && counterpartyPair.second.mAccount->isBlocked())
-        {
-            app.getMetrics().NewMeter({ "operation", "invalid", "blocked-counterparty" }, "operation").Mark();
-            mResult.code(OperationResultCode::opCOUNTERPARTY_BLOCKED);
-            return false;
-        }
-
-		auto& allowedTypes = counterpartyPair.second.mAllowedAccountTypes;
-        if(std::find(allowedTypes.begin(), allowedTypes.end(), counterpartyPair.second.mAccount->getAccountType()) == allowedTypes.end())
-        {
-            app.getMetrics().NewMeter({ "operation", "invalid", "wrong-counterparty-type" }, "operation").Mark();
-            mResult.code(OperationResultCode::opCOUNTERPARTY_WRONG_TYPE);
-            return false;
-        }
-
-    }
-
-    return true;
-}
-
-bool
-OperationFrame::checkRolePermissions(Application& app, AccountRuleVerifier& accountRuleVerifier)
-{
-    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
-
-    std::vector<OperationCondition> operationConditions;
-    if (!tryGetOperationConditions(storageHelperImpl, operationConditions))
+        std::vector<OperationCondition> operationConditions;
+    if (!tryGetOperationConditions(storageHelper, operationConditions))
     {
         return false;
     }
@@ -435,7 +363,7 @@ OperationFrame::checkRolePermissions(Application& app, AccountRuleVerifier& acco
             return false;
         }
 
-        if (!accountRuleVerifier.isAllowed(condition, storageHelperImpl))
+        if (!accountRuleVerifier.isAllowed(condition, storageHelper))
         {
             mResult.code(OperationResultCode::opNO_ROLE_PERMISSION);
             return false;

@@ -11,6 +11,13 @@ namespace stellar
 
 class CancelAssetRequestOpFrame : public ManageAssetOpFrame
 {
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
     
@@ -21,9 +28,6 @@ public:
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
-    bool
-    tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
 protected:
     std::string getAssetCode() const override;
 };

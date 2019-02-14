@@ -87,7 +87,7 @@ TEST_CASE("payout", "[dep_tx][payout]") {
     // create asset owner
     auto owner = Account{SecretKey::random(), Salt(0)};
     auto ownerID = owner.key.getPublicKey();
-    createAccountTestHelper.applyCreateAccountTx(root, ownerID, AccountType::SYNDICATE);
+    createAccountTestHelper.applyCreateAccountTx(root, ownerID, 1);
 
     // create asset for payout
     AssetCode assetCode = "EUR";
@@ -125,8 +125,7 @@ TEST_CASE("payout", "[dep_tx][payout]") {
             auto newAccount = Account{SecretKey::random(), Salt(0)};
             auto newAccountID = newAccount.key.getPublicKey();
             auto holderAmount = uint64_t(ONE * std::pow(10, i-2));
-            createAccountTestHelper.applyCreateAccountTx(root, newAccountID,
-                                                         AccountType::GENERAL);
+            createAccountTestHelper.applyCreateAccountTx(root, newAccountID, 1);
             manageBalanceTestHelper.createBalance(newAccount,
                                                   newAccountID, assetCode);
             auto newBalance = balanceHelper.loadBalance(newAccountID,
@@ -325,8 +324,7 @@ TEST_CASE("payout", "[dep_tx][payout]") {
             // create third-party owner and his asset
             auto thirdPartyIssuer = Account {SecretKey::random(), Salt(0)};
             auto thirdPartyIssuerID = thirdPartyIssuer.key.getPublicKey();
-            createAccountTestHelper.applyCreateAccountTx(root,
-                                 thirdPartyIssuerID, AccountType::SYNDICATE);
+            createAccountTestHelper.applyCreateAccountTx(root, thirdPartyIssuerID, 1);
             AssetCode thirdPartyAssetCode = "USD";
             preIssuedAmount = 1000 * ONE;
             auto payAssetAmount = preIssuedAmount / 2;
@@ -448,8 +446,7 @@ TEST_CASE("payout", "[dep_tx][payout]") {
     {
         Account account = {SecretKey::random(), Salt(0)};
         auto accountID = account.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, accountID,
-                                                     AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
         manageBalanceTestHelper.createBalance(account, accountID, assetCode);
         auto accountBalance = balanceHelper.loadBalance(accountID, assetCode);
         payoutTestHelper.applyPayoutTx(owner, assetCode,
@@ -465,8 +462,7 @@ TEST_CASE("payout", "[dep_tx][payout]") {
 
         auto newAccount = Account{SecretKey::random(), Salt(0)};
         auto newAccountID = newAccount.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, newAccountID,
-                                                     AccountType::GENERAL);
+        createAccountTestHelper.applyCreateAccountTx(root, newAccountID, 1);
         manageBalanceTestHelper.createBalance(newAccount,
                                               newAccountID, assetCode);
         auto newBalance = balanceHelper.loadBalance(newAccountID, assetCode);

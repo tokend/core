@@ -10,7 +10,7 @@
 #include "ledger/LedgerManager.h"
 #include "ledger/EntryHelperLegacy.h"
 #include "ledger/AccountFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include <xdrpp/autocheck.h>
 #include "LedgerTestUtils.h"
 #include "test/test_marshaler.h"
@@ -94,10 +94,10 @@ TEST_CASE("DB cache interaction with transactions", "[ledger][dbcache]")
     }
 
     // The write should have removed it from the cache.
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
     REQUIRE(!accountHelper->cachedEntryExists(key, db));
 
-    AccountType accountType0, accountType1;
+    uint64_t accountType0, accountType1;
 
     {
         soci::transaction sqltx(session);
@@ -107,9 +107,9 @@ TEST_CASE("DB cache interaction with transactions", "[ledger][dbcache]")
         auto acc = accountHelper->loadAccount(key.account().accountID, db);
         REQUIRE(accountHelper->cachedEntryExists(key, db));
 
-        accountType0 = acc->getAccount().accountType;
-        acc->getAccount().accountType = AccountType::GENERAL;
-        accountType1 = acc->getAccount().accountType;
+        accountType0 = acc->getAccount().roleID;
+        acc->getAccount().roleID = 1;
+        accountType1 = acc->getAccount().roleID;
 
         EntryHelperProvider::storeChangeEntry(delta, db, acc->mEntry);
         // Write should flush cache, put balance1 in DB _pending commit_.
@@ -120,7 +120,7 @@ TEST_CASE("DB cache interaction with transactions", "[ledger][dbcache]")
         REQUIRE(accountHelper->cachedEntryExists(key, db));
 
         // Read-back value should be balance1
-        REQUIRE(acc->getAccount().accountType == accountType1);
+        REQUIRE(acc->getAccount().roleID == accountType1);
 
         LOG(INFO) << "accountType0: " << static_cast<int32_t >(accountType0);
         LOG(INFO) << "accountType1: " << static_cast<int32_t >(accountType1);
@@ -134,7 +134,7 @@ TEST_CASE("DB cache interaction with transactions", "[ledger][dbcache]")
     auto acc = accountHelper->loadAccount(key.account().accountID, db);
     // Read should populate cache
     CHECK(accountHelper->cachedEntryExists(key, db));
-    LOG(INFO) << "cached accountType: " << static_cast<int32_t >(acc->getAccount().accountType);
+    LOG(INFO) << "cached accountType: " << static_cast<int32_t >(acc->getAccount().roleID);
 
-    CHECK(accountType0 == acc->getAccount().accountType);
+    CHECK(accountType0 == acc->getAccount().roleID);
 }

@@ -41,6 +41,15 @@ ManageAssetPairOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
 	return true;
 }
 
+bool
+ManageAssetPairOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+								 	std::vector<SignerRequirement>& result) const
+{
+	result.emplace_back(SignerRuleResource(LedgerEntryType::ASSET_PAIR), "manage");
+
+	return true;
+}
+
 bool ManageAssetPairOpFrame::createNewAssetPair(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair)
 {
 	Database& db = ledgerManager.getDatabase();

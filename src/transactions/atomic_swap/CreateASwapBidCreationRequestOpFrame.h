@@ -8,7 +8,7 @@ namespace stellar
 
 class CreateASwapBidCreationRequestOpFrame : public OperationFrame
 {
-protected:
+private:
     CreateASwapBidCreationRequestOp const& mCreateASwapBidCreationRequest;
 
     CreateASwapBidCreationRequestResult& innerResult()
@@ -19,6 +19,10 @@ protected:
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
     CreateASwapBidCreationRequestOpFrame(Operation const &op, OperationResult &opRes,

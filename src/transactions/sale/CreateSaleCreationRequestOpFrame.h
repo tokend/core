@@ -22,6 +22,10 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
 
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
     // tryLoadAssetOrRequest - tries to load base asset or request. If fails returns nullptr. If request exists - creates asset frame wrapper for it
     static AssetFrame::pointer tryLoadBaseAssetOrRequest(SaleCreationRequest const& request, Database& db, AccountID const& source);
 

@@ -5,7 +5,7 @@
 #include "transactions/ManageBalanceOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/StorageHelper.h"
@@ -21,13 +21,31 @@ bool
 ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const
 {
-    if (!(getSourceID() == mManageBalance.destination))
+    AccountRuleResource resource(LedgerEntryType::BALANCE);
+
+    if (getSourceID() == mManageBalance.destination)
     {
-        result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create_for_other", mSourceAccount);
+        result.emplace_back(resource, "create", mSourceAccount);
         return true;
     }
 
-    result.emplace_back(AccountRuleResource(LedgerEntryType::BALANCE), "create", mSourceAccount);
+    result.emplace_back(resource, "create_for_other", mSourceAccount);
+    return true;
+}
+
+bool
+ManageBalanceOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                std::vector<SignerRequirement> &result) const
+{
+    SignerRuleResource resource(LedgerEntryType::BALANCE);
+
+    if (getSourceID() == mManageBalance.destination)
+    {
+        result.emplace_back(resource, "create");
+        return true;
+    }
+
+    result.emplace_back(resource, "create_for_other");
     return true;
 }
 
@@ -54,7 +72,7 @@ ManageBalanceOpFrame::doApply(Application& app,
         }
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     const AccountFrame::pointer destAccountFrame = accountHelper->
         loadAccount(delta, mManageBalance.destination, db);
     if (!destAccountFrame)

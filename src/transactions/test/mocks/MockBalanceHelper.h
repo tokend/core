@@ -21,6 +21,7 @@ public:
     MOCK_METHOD0(getDatabase, Database&());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
+    MOCK_METHOD1(mustLoadBalance, BalanceFrame::pointer(BalanceID balanceID));
     MOCK_METHOD1(loadBalance,
             BalanceFrame::pointer(BalanceID balanceID));
     MOCK_METHOD2(loadBalance,

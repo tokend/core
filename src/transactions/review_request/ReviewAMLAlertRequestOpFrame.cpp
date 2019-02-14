@@ -72,12 +72,6 @@ bool ReviewAMLAlertRequestOpFrame::handleReject(Application &app, LedgerDelta &d
         return false;
     }
 
-    SourceDetails ReviewAMLAlertRequestOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::AML_ALERT_REVIEWER));
-    }
-
 AMLAlertRequest ReviewAMLAlertRequestOpFrame::getAmlAlert(
     ReviewableRequestFrame::pointer request)
 {

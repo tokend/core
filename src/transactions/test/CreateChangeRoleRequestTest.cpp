@@ -5,7 +5,7 @@
 #include "transactions/test/test_helper/CreateChangeRoleRequestTestHelper.h"
 #include "test/test_marshaler.h"
 #include "main/test.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountKYCHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "bucket/BucketApplicator.h"
@@ -56,8 +56,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(master)
             .setToPublicKey(account.key.getPublicKey())
-            .setType(AccountType::NOT_VERIFIED)
-            .setRecovery(SecretKey::random().getPublicKey())
+            .addBasicSigner()
             .setRoleID(1);
 
     accountTestHelper.applyTx(createAccountTestBuilder);

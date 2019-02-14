@@ -42,14 +42,21 @@ class StorageHelperImpl : public StorageHelper
 
     virtual std::unique_ptr<StorageHelper> startNestedTransaction();
 
+    std::vector<EntryHelper*> getEntryHelpers() override;
+    EntryHelper* getHelper(LedgerEntryType type) override;
+
     KeyValueHelper& getKeyValueHelper() override;
     BalanceHelper& getBalanceHelper() override;
     AssetHelper& getAssetHelper() override;
     ExternalSystemAccountIDHelper& getExternalSystemAccountIDHelper() override;
     ExternalSystemAccountIDPoolEntryHelper&
     getExternalSystemAccountIDPoolEntryHelper() override;
+    AccountHelper& getAccountHelper() override;
     AccountRoleHelper& getAccountRoleHelper() override;
     AccountRuleHelper& getAccountRuleHelper() override;
+    SignerHelper& getSignerHelper() override;
+    SignerRuleHelper& getSignerRuleHelper() override;
+    SignerRoleHelper& getSignerRoleHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -64,7 +71,13 @@ class StorageHelperImpl : public StorageHelper
         mExternalSystemAccountIDHelper;
     std::unique_ptr<ExternalSystemAccountIDPoolEntryHelper>
         mExternalSystemAccountIDPoolEntryHelper;
+    std::unique_ptr<AccountHelper> mAccountHelper;
     std::unique_ptr<AccountRoleHelper> mAccountRoleHelper;
     std::unique_ptr<AccountRuleHelper> mAccountRuleHelper;
+    std::unique_ptr<SignerHelper> mSignerHelper;
+    std::unique_ptr<SignerRuleHelper> mSignerRuleHelper;
+    std::unique_ptr<SignerRoleHelper> mSignerRoleHelper;
+
+    std::map<LedgerEntryType, EntryHelper*> mHelpers;
 };
 } // namespace stellar

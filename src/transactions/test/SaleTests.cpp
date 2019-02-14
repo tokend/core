@@ -103,7 +103,7 @@ TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
 
-    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
+    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, 1);
     const AssetCode baseAsset = "XAAU";
     const uint64_t maxIssuanceAmount = 2000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
@@ -246,13 +246,13 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
 
     // basic account builder
     auto createAccountBuilder = CreateAccountTestBuilder()
-            .setSource(root)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setSource(root);
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
     createAccountTestHelper.applyTx(createAccountBuilder
                                             .setToPublicKey(syndicatePubKey)
+                                            .addBasicSigner()
                                             .setRoleID(1));
 
     const uint64_t maxIssuanceAmount = 2000 * ONE;
@@ -406,13 +406,13 @@ TEST_CASE("Sale", "[tx][sale]")
 
     // basic account builder
     auto createAccountBuilder = CreateAccountTestBuilder()
-            .setSource(root)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setSource(root);
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
     createAccountTestHelper.applyTx(createAccountBuilder
                                             .setToPublicKey(syndicatePubKey)
+                                            .addBasicSigner()
                                             .setRoleID(1));
     // TODO: for now we need to keep maxIssuance = preIssuance to allow sale creation
     const uint64_t maxIssuanceAmount = 6000 * ONE;
@@ -447,7 +447,8 @@ TEST_CASE("Sale", "[tx][sale]")
             SECTION("Already canceled")
             {
                 saleRequestHelper.applyCancelSaleRequest(syndicate, requestID,
-                      CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
+                      CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND,
+                      OperationResultCode::opNO_ENTRY);
             }
         }
 
@@ -457,8 +458,7 @@ TEST_CASE("Sale", "[tx][sale]")
         auto createAccountTestBuilder = CreateAccountTestBuilder()
                 .setSource(root)
                 .setToPublicKey(newSyndicatePubKey)
-                .setType(AccountType::SYNDICATE)
-                .setRecovery(SecretKey::random().getPublicKey());
+                .addBasicSigner();
 
         auto createAccountHelper = CreateAccountTestHelper(testManager);
         createAccountHelper.applyTx(createAccountTestBuilder);
@@ -633,7 +633,7 @@ TEST_CASE("Sale", "[tx][sale]")
         SECTION("Try to cancel sale offer as regular one")
         {
             auto account = Account{ SecretKey::random(), 0 };
-            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
+            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), 1);
             uint64_t quoteAssetAmount = hardCap / 2;
             uint64_t feeToPay(0);
             participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
@@ -722,7 +722,8 @@ TEST_CASE("Sale", "[tx][sale]")
 
                 SECTION("Sale not found") {
                     manageSaleTestHelper.applyManageSaleTx(syndicate, 42, manageSaleData,
-                                                           ManageSaleResultCode::SALE_NOT_FOUND);
+                                                           ManageSaleResultCode::SALE_NOT_FOUND,
+                                                           OperationResultCode::opNO_ENTRY);
                 }
 
                 SECTION("Request to update not found") {
@@ -893,11 +894,11 @@ TEST_CASE("Sale", "[tx][sale]")
         uint32_t tasks = 1, zeroTasks = 0;
         auto ownerSyndicate = Account{ SecretKey::random(), 0 };
         auto ownerSyndicatePubKey = ownerSyndicate.key.getPublicKey();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, ownerSyndicatePubKey, AccountType::SYNDICATE);
+        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, ownerSyndicatePubKey, 1);
 
         auto thiefSyndicate = Account{ SecretKey::random(), 0 };
         auto thiefSyndicatePubKey = thiefSyndicate.key.getPublicKey();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, thiefSyndicatePubKey, AccountType::SYNDICATE);
+        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, thiefSyndicatePubKey, 1);
 
         const AssetCode asset = "GSC";
         const uint64_t assetMaxIssuanceAmount = 2000 * ONE;
@@ -975,7 +976,7 @@ TEST_CASE("Sale", "[tx][sale]")
 
         // create sale owner
         Account owner = Account{ SecretKey::random(), Salt(0) };
-        createAccountTestHelper.applyCreateAccountTx(root, owner.key.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, owner.key.getPublicKey(), 1);
 
         // create base asset
         const AssetCode baseAsset = "ETH";
@@ -989,7 +990,7 @@ TEST_CASE("Sale", "[tx][sale]")
         // create participant
         Account participant = Account{ SecretKey::random(), Salt(0) };
         AccountID participantID = participant.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, participantID, AccountType::GENERAL);
+        createAccountTestHelper.applyCreateAccountTx(root, participantID, 1);
 
         // create base balance for participant:
         auto manageBalanceRes = ManageBalanceTestHelper(testManager).applyManageBalanceTx(participant, participantID, baseAsset);
@@ -1079,7 +1080,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.baseBalance = nonExistingBalance;
                 participateHelper.applyManageOffer(participant, manageOffer,
                                                    ManageOfferResultCode::BALANCE_NOT_FOUND,
-                                                   OperationResultCode::opNO_BALANCE);
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("quote balance doesn't exist")
             {
@@ -1087,7 +1088,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.quoteBalance = nonExistingBalance;
                 participateHelper.applyManageOffer(participant, manageOffer,
                                                    ManageOfferResultCode::BALANCE_NOT_FOUND,
-                                                   OperationResultCode::opNO_BALANCE);
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("base and quote balances mixed up")
             {
@@ -1101,7 +1102,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.orderBookID = nonExistingSaleID;
                 participateHelper.applyManageOffer(participant, manageOffer,
                                                    ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS,
-                                                   OperationResultCode::opNO_SALE);
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("base and quote balances are in the same asset")
             {
@@ -1180,7 +1181,8 @@ TEST_CASE("Sale", "[tx][sale]")
                 {
                     //switch to non-existing offerID
                     manageOffer.offerID++;
-                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::NOT_FOUND);
+                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::NOT_FOUND,
+                                                       OperationResultCode::opNO_ENTRY);
                 }
                 SECTION("try to delete from non-existing orderBook")
                 {

@@ -39,5 +39,6 @@ class MockLedgerManager : public LedgerManager
     MOCK_METHOD0(checkDbState, void());
     MOCK_METHOD1(shouldUse, bool(LedgerVersion const));
 	MOCK_METHOD0(getLedgerVersion, LedgerVersion());
+	MOCK_METHOD0(getNotExistingAccountID, AccountID());
 };
 }

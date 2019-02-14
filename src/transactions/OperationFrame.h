@@ -6,8 +6,6 @@
 
 #include <memory>
 #include "transactions/AccountManager.h"
-#include "transactions/CounterpartyDetails.h"
-#include "transactions/SourceDetails.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/AccountFrame.h"
 #include "ledger/AssetFrame.h"
@@ -44,12 +42,21 @@ struct OperationCondition
     }
 };
 
+struct SignerRequirement
+{
+    SignerRuleResource resource;
+    string256 action;
+
+    SignerRequirement(SignerRuleResource res, string256 act)
+            : resource(res), action(act)
+    {
+    }
+};
+
 class OperationFrame
 {
-
-  private:
-	bool checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties);
-	bool checkRolePermissions(Application& app,  AccountRuleVerifier& accountRuleVerifier);
+private:
+	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
   
   protected:
 
@@ -59,7 +66,7 @@ class OperationFrame
     OperationResult& mResult;
 
 	// checks signature, if not valid - returns false and sets operation error code;
-    bool doCheckSignature(Application& app, Database& db, SourceDetails& sourceDetails);
+    bool doCheckSignature(Application& app, StorageHelper& storageHelper);
 
     virtual bool doCheckValid(Application& app) = 0;
     virtual bool doApply(Application& app, LedgerDelta& delta,
@@ -70,17 +77,13 @@ class OperationFrame
   public:
     virtual ~OperationFrame() = default;
 
-    virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const;
-    virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta,
-                                                                                      int32_t ledgerVersion) const;
-    virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                      int32_t ledgerVersion) const;
-    virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion, Database& db) const;
-
     virtual bool
     tryGetOperationConditions(StorageHelper &storageHelper,
                               std::vector<OperationCondition> &result) const;
+
+    virtual bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const;
 
 	// returns true if operation is allowed in the system
 	virtual bool isSupported() const;

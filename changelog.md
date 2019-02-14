@@ -13,6 +13,7 @@
 * AccountRole and AccountRule helpers and frames
 * Account frame
 * Rename KYC request to change role
+* Create account op frame
 
 ### Deprecated
 
@@ -21,7 +22,11 @@
 
 ### Removed
 
+* source account details, counterparty details
 * getSourceAccountDetails and getCounterpartyDetails for all op frames
+* manage account op frame
+* trust frame
+* account type limits frame
 
 ### Fixed
 

@@ -24,6 +24,15 @@ ManageLimitsOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+ManageLimitsOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::LIMITS_V2), "manage");
+
+    return true;
+}
+
 std::string
 ManageLimitsOpFrame::getInnerResultCodeAsStr()
 {
@@ -48,7 +57,7 @@ ManageLimitsOpFrame::doApply(Application& app, LedgerDelta& delta,
         auto limitsV2Frame = limitsV2Helper->loadLimits(db, mManageLimits.details.limitsCreateDetails().statsOpType,
                                                         mManageLimits.details.limitsCreateDetails().assetCode,
                                                         mManageLimits.details.limitsCreateDetails().accountID,
-                                                        mManageLimits.details.limitsCreateDetails().accountType,
+                                                        mManageLimits.details.limitsCreateDetails().accountRole.get(),
                                                         mManageLimits.details.limitsCreateDetails().isConvertNeeded,
                                                         &delta);
         if (!limitsV2Frame) {
@@ -90,7 +99,7 @@ ManageLimitsOpFrame::doCheckValid(Application& app)
 {
     if ((mManageLimits.details.action() == ManageLimitsAction::CREATE) &&
         !!mManageLimits.details.limitsCreateDetails().accountID &&
-        !!mManageLimits.details.limitsCreateDetails().accountType)
+        !!mManageLimits.details.limitsCreateDetails().accountRole)
     {
         innerResult().code(ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE);
         return false;

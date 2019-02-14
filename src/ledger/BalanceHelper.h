@@ -15,10 +15,13 @@ class StatementContext;
 
 class BalanceHelper : public EntryHelper
 {
-  public:
+public:
     using EntryHelper::exists;
 
     virtual bool exists(BalanceID balanceID) = 0;
+
+    virtual BalanceFrame::pointer
+    mustLoadBalance(BalanceID balanceID) = 0;
 
     virtual BalanceFrame::pointer loadBalance(BalanceID balanceID) = 0;
 

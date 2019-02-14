@@ -73,7 +73,7 @@ SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t reques
 
 CancelSaleCreationRequestResult
 SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
-        CancelSaleCreationRequestResultCode expectedResult)
+        CancelSaleCreationRequestResultCode expectedResult, OperationResultCode opExpectedResult)
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
@@ -84,6 +84,13 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == opExpectedResult);
+    if (opExpectedResult != OperationResultCode::opINNER)
+    {
+        return CancelSaleCreationRequestResult{};
+    }
+
     auto actualResultCode =
             CancelSaleCreationRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);

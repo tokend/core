@@ -187,7 +187,7 @@
     <ClCompile Include="..\..\src\invariant\InvariantDoesNotHold.cpp" />
     <ClCompile Include="..\..\src\invariant\Invariants.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountFrame.cpp" />
-    <ClCompile Include="..\..\src\ledger\AccountHelper.cpp" />
+    <ClCompile Include="..\..\src\ledger\AccountHelperLegacy.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountKYCFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountKYCHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountLimitsFrame.cpp" />
@@ -547,7 +547,7 @@
     <ClInclude Include="..\..\src\invariant\InvariantDoesNotHold.h" />
     <ClInclude Include="..\..\src\invariant\Invariants.h" />
     <ClInclude Include="..\..\src\ledger\AccountFrame.h" />
-    <ClInclude Include="..\..\src\ledger\AccountHelper.h" />
+    <ClInclude Include="..\..\src\ledger\AccountHelperLegacy.h" />
     <ClInclude Include="..\..\src\ledger\AccountKYCFrame.h" />
     <ClInclude Include="..\..\src\ledger\AccountKYCHelper.h" />
     <ClInclude Include="..\..\src\ledger\AccountLimitsFrame.h" />

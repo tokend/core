@@ -43,15 +43,15 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
     auto a1 = Account { getAccount("A"), Salt(0) };
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
-    auto txFrame = createAccountTestHelper.createCreateAccountTx(root, a1.key.getPublicKey(), AccountType::GENERAL);
+    auto txFrame = createAccountTestHelper.createCreateAccountTx(root, a1.key.getPublicKey(), 1);
     testManager->applyCheck(txFrame);
 
     ManageLimitsOp manageLimitsOp;
     manageLimitsOp.details.action(ManageLimitsAction::CREATE);
     AccountID accountID = a1.key.getPublicKey();
-    AccountType accountType = AccountType::GENERAL;
+    uint64_t accountType = 1;
     manageLimitsOp.details.limitsCreateDetails().accountID.activate() = accountID;
-    manageLimitsOp.details.limitsCreateDetails().accountType.activate() = accountType;
+    manageLimitsOp.details.limitsCreateDetails().accountRole.activate() = accountType;
     manageLimitsOp.details.limitsCreateDetails().assetCode = "USD";
     manageLimitsOp.details.limitsCreateDetails().statsOpType = StatsOpType::PAYMENT_OUT;
     manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = false;
@@ -69,12 +69,12 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
         manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp,
                                                    ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE);
         manageLimitsOp.details.limitsCreateDetails().annualOut = 0;
-        manageLimitsOp.details.limitsCreateDetails().accountType = nullptr;
+        manageLimitsOp.details.limitsCreateDetails().accountRole = nullptr;
         manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp, ManageLimitsResultCode::INVALID_LIMITS);
     }
     SECTION("success accountID limits setting")
     {
-        manageLimitsOp.details.limitsCreateDetails().accountType = nullptr;
+        manageLimitsOp.details.limitsCreateDetails().accountRole = nullptr;
         manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
         auto limitsAfter = limitsV2Helper->loadLimits(app.getDatabase(),
                 manageLimitsOp.details.limitsCreateDetails().statsOpType,
@@ -128,7 +128,7 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
         auto limitsBefore = limitsV2Helper->loadLimits(app.getDatabase(),
                 manageLimitsOp.details.limitsCreateDetails().statsOpType,
                 manageLimitsOp.details.limitsCreateDetails().assetCode,
-                nullptr, manageLimitsOp.details.limitsCreateDetails().accountType,
+                nullptr, manageLimitsOp.details.limitsCreateDetails().accountRole.get(),
                 manageLimitsOp.details.limitsCreateDetails().isConvertNeeded, nullptr);
 
         REQUIRE(!limitsBefore);
@@ -137,7 +137,7 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
         auto limitsAfterFrame = limitsV2Helper->loadLimits(app.getDatabase(),
                 manageLimitsOp.details.limitsCreateDetails().statsOpType,
                 manageLimitsOp.details.limitsCreateDetails().assetCode,
-                nullptr, manageLimitsOp.details.limitsCreateDetails().accountType,
+                nullptr, manageLimitsOp.details.limitsCreateDetails().accountRole.get(),
                 manageLimitsOp.details.limitsCreateDetails().isConvertNeeded, nullptr);
 
         REQUIRE(!!limitsAfterFrame);

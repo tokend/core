@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "ledger/AccountLimitsHelper.h"
@@ -46,8 +46,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
     // create requestor
     auto requestor = Account{ SecretKey::random(), Salt(0) };
     AccountID requestorID = requestor.key.getPublicKey();
-    createAccountTestHelper.applyCreateAccountTx(root, requestorID,
-                                                 AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, requestorID, 1);
 
     // set default limits for review request
     reviewLimitsUpdateHelper.initializeLimits(requestorID);
@@ -93,8 +92,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
             SECTION("Approve for account with limits") {
                 auto accountWithLimits = Account{SecretKey::random(), Salt(0)};
                 AccountID accountWithoutLimitsID = accountWithLimits.key.getPublicKey();
-                createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID,
-                                                             AccountType::GENERAL);
+                createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID, 1);
                 ManageLimitsOp manageLimitsOp;
                 manageLimitsOp.details.action(ManageLimitsAction::CREATE);
                 manageLimitsOp.details.limitsCreateDetails().accountID.activate() = accountWithoutLimitsID;

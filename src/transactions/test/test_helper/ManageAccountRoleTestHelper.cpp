@@ -1,6 +1,6 @@
 #include "ManageAccountRoleTestHelper.h"
 #include "test/test_marshaler.h"
-#include "transactions/ManageAccountRoleOpFrame.h"
+#include "transactions/manage_role_rule/ManageAccountRoleOpFrame.h"
 #include "ManageAccountRuleTestHelper.h"
 
 namespace stellar

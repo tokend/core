@@ -131,6 +131,14 @@ CreatePreIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper& storag
 	return true;
 }
 
+bool
+CreatePreIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+							 				std::vector<SignerRequirement>& result) const
+{
+	// only asset owner signer which is specified in asset can do pre issuance
+	return true;
+}
+
 bool CreatePreIssuanceRequestOpFrame::isSignatureValid(AssetFrame::pointer asset, LedgerVersion version)
 {
 	auto& request = mCreatePreIssuanceRequest.request;

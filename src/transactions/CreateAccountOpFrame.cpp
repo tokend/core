@@ -1,154 +1,219 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
+#include "transactions/CreateAccountOpFrame.h"
 #include <transactions/manage_asset/ManageAssetHelper.h>
 #include <ledger/LedgerHeaderFrame.h>
-#include <ledger/StorageHelperImpl.h>
-#include "transactions/CreateAccountOpFrame.h"
-#include "ledger/AccountHelper.h"
-#include "ledger/AssetHelperLegacy.h"
+#include <ledger/StorageHelper.h>
+#include <ledger/SignerRuleFrame.h>
 #include "ledger/AccountRoleHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ManageSignerOpFrame.h"
 
-namespace stellar {
-    using namespace std;
-    using xdr::operator==;
+namespace stellar
+{
+using namespace std;
+using xdr::operator==;
 
-    CreateAccountOpFrame::CreateAccountOpFrame(Operation const &op,
-                                               OperationResult &res,
-                                               TransactionFrame &parentTx)
-            : OperationFrame(op, res, parentTx), mCreateAccount(mOperation.body.createAccountOp()) {
-    }
+CreateAccountOpFrame::CreateAccountOpFrame(Operation const &op,
+        OperationResult &res, TransactionFrame &parentTx)
+        : OperationFrame(op, res, parentTx)
+        , mCreateAccount(mOperation.body.createAccountOp())
+{
+}
 
-    bool
-    CreateAccountOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+bool
+CreateAccountOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                     std::vector<OperationCondition> &result) const
+{
+    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT), "create", mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateAccountOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                   std::vector<SignerRequirement> &result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT), "create");
+
+    return true;
+}
+
+void
+CreateAccountOpFrame::trySetReferrer(Application& app, StorageHelper& storageHelper,
+                                     AccountFrame::pointer accountFrame) const
+{
+    if (!mCreateAccount.referrer)
     {
-        result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT), "create", mSourceAccount);
-
-        return true;
+        return;
     }
 
-    void CreateAccountOpFrame::trySetReferrer(Application &app, Database &db,
-                                              AccountFrame::pointer
-                                              destAccountFrame) const {
-        if (!mCreateAccount.referrer) {
-            return;
-        }
-
-        const auto referrerAccountID = *mCreateAccount.referrer;
-        if (referrerAccountID == app.getAdminID())
-            return;
-
-        if (!AccountHelper::Instance()->exists(referrerAccountID, db))
-            return;
-
-        destAccountFrame->setReferrer(referrerAccountID);
-    }
-
-    bool CreateAccountOpFrame::createAccount(Application &app, LedgerDelta &delta,
-                                             LedgerManager &ledgerManager) {
-        auto &db = app.getDatabase();
-        StorageHelperImpl storageHelper(db, &delta);
-
-        if (!checkRoleExisting(storageHelper))
-        {
-            return false;
-        }
-
-        auto destAccountFrame = make_shared<AccountFrame>(mCreateAccount.destination);
-        auto& accountEntry = destAccountFrame->getAccount();
-        accountEntry.sequentialID =
-            delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
-        buildAccount(app, delta, destAccountFrame);
-
-        //save recovery accountID
-        destAccountFrame->setRecoveryID(mCreateAccount.recoveryKey);
-
-        EntryHelperProvider::storeAddEntry(delta, db, destAccountFrame->mEntry);
-        AccountManager accountManager(app, db, delta, ledgerManager);
-        accountManager.createStats(destAccountFrame);
-        // create balance for all available base assets
-        createBalance(delta, db);
-        return true;
-    }
-
-    void CreateAccountOpFrame::createBalance(LedgerDelta &delta, Database &db) {
-        std::vector<AssetFrame::pointer> baseAssets;
-        AssetHelperLegacy::Instance()->loadBaseAssets(baseAssets, db);
-        for (const auto &baseAsset : baseAssets) {
-            ManageAssetHelper::createBalanceForAccount(mCreateAccount.destination, baseAsset->getCode(), db, delta);
-        }
-    }
-
-    bool
-    CreateAccountOpFrame::checkRoleExisting(StorageHelper& storageHelper)
+    const auto referrer = *mCreateAccount.referrer;
+    if (referrer == app.getAdminID())
     {
-        LedgerKey roleKey(LedgerEntryType::ACCOUNT_ROLE);
-        roleKey.accountRole().id = mCreateAccount.roleID;
+        return;
+    }
 
-        auto& roleHelper = storageHelper.getAccountRoleHelper();
-        if (!roleHelper.exists(roleKey))
+    if (!storageHelper.getAccountHelper().exists(referrer))
+    {
+        return;
+    }
+
+    accountFrame->setReferrer(referrer);
+}
+
+bool
+CreateAccountOpFrame::createAccount(Application &app, StorageHelper& storageHelper)
+{
+    auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
+
+    if (!checkRoleExisting(storageHelper))
+    {
+        return false;
+    }
+
+    auto accountFrame = make_shared<AccountFrame>(mCreateAccount.destination);
+    auto& accountEntry = accountFrame->getAccount();
+    accountEntry.sequentialID = headerFrame.generateID(LedgerEntryType::ACCOUNT);
+    accountEntry.roleID = mCreateAccount.roleID;
+    trySetReferrer(app, storageHelper, accountFrame);
+
+    storageHelper.getAccountHelper().storeAdd(accountFrame->mEntry);
+
+    innerResult().success().sequentialID = accountEntry.sequentialID;
+
+    return true;
+}
+
+void
+CreateAccountOpFrame::createBalances(StorageHelper& storageHelper)
+{
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    std::vector<AssetFrame::pointer> baseAssets = assetHelper.loadBaseAssets();
+    for (const auto &baseAsset : baseAssets)
+    {
+        ManageAssetHelper::createBalanceForAccount(mCreateAccount.destination,
+                                                   baseAsset->getCode(),
+                                                   storageHelper.getDatabase(),
+                                                   storageHelper.mustGetLedgerDelta());
+    }
+}
+
+bool
+CreateAccountOpFrame::createSigners(Application &app,
+                                    StorageHelper& storageHelper)
+{
+    auto accountFrame = storageHelper.getAccountHelper().mustLoadAccount(
+            mCreateAccount.destination);
+
+    Operation op;
+    op.sourceAccount.activate() = accountFrame->getID();
+    op.body.type(OperationType::MANAGE_SIGNER);
+    ManageSignerOp& manageSignerOp = op.body.manageSignerOp();
+    manageSignerOp.data.action(ManageSignerAction::CREATE);
+
+    OperationResult opRes;
+    opRes.code(OperationResultCode::opINNER);
+    opRes.tr().type(OperationType::MANAGE_SIGNER);
+
+    for (auto const& createData : mCreateAccount.signersData)
+    {
+        manageSignerOp.data.createData() = createData;
+
+        ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
+
+        manageSignerOpFrame.setSourceAccountPtr(accountFrame);
+
+        if (!manageSignerOpFrame.doCheckValid(app) ||
+            !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))
         {
-            innerResult().code(CreateAccountResultCode::NO_SUCH_ROLE);
+            innerResult().code(CreateAccountResultCode::INVALID_SIGNER_DATA);
+            innerResult().createSignerErrorCode() = ManageSignerOpFrame::getInnerCode(opRes);
             return false;
         }
-
-        return true;
     }
 
-    bool
-    CreateAccountOpFrame::doApply(Application &app,
-                                  LedgerDelta &delta, LedgerManager &ledgerManager) {
-        Database &db = ledgerManager.getDatabase();
-        innerResult().code(CreateAccountResultCode::SUCCESS);
+    return true;
+}
 
-        if (!ledgerManager.shouldUse(mCreateAccount.ext.v())) {
-            innerResult().code(CreateAccountResultCode::INVALID_ACCOUNT_VERSION);
-            return false;
-        }
+bool
+CreateAccountOpFrame::checkRoleExisting(StorageHelper& storageHelper)
+{
+    LedgerKey roleKey(LedgerEntryType::ACCOUNT_ROLE);
+    roleKey.accountRole().id = mCreateAccount.roleID;
 
-        if (AccountHelper::Instance()->exists(mCreateAccount.destination, db))
+    auto& roleHelper = storageHelper.getAccountRoleHelper();
+    if (!roleHelper.exists(roleKey))
+    {
+        innerResult().code(CreateAccountResultCode::NO_SUCH_ROLE);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+CreateAccountOpFrame::doApply(Application &app, StorageHelper& storageHelper,
+                              LedgerManager &ledgerManager)
+{
+    innerResult().code(CreateAccountResultCode::SUCCESS);
+
+    auto& accountHelper = storageHelper.getAccountHelper();
+
+    if (accountHelper.exists(mCreateAccount.destination))
+    {
+        innerResult().code(CreateAccountResultCode::ALREADY_EXISTS);
+        return false;
+    }
+
+    if (!createAccount(app, storageHelper))
+    {
+        return false;
+    }
+
+    createBalances(storageHelper);
+
+    return createSigners(app, storageHelper);
+}
+
+bool
+CreateAccountOpFrame::doCheckValid(Application &app)
+{
+    if (mCreateAccount.destination == getSourceID())
+    {
+        innerResult().code(CreateAccountResultCode::INVALID_DESTINATION);
+        return false;
+    }
+
+    if (mCreateAccount.signersData.empty())
+    {
+        innerResult().code(CreateAccountResultCode::NO_SIGNER_DATA);
+        return false;
+    }
+
+    map<uint32_t, uint64_t> identityWeight;
+
+    for (auto const& createData : mCreateAccount.signersData)
+    {
+        if (identityWeight[createData.identity] < createData.weight)
         {
-            innerResult().code(CreateAccountResultCode::ALREADY_EXISTS);
-            return false;
+            identityWeight[createData.identity] = createData.weight;
         }
-
-        return createAccount(app, delta, ledgerManager);
     }
 
-    bool CreateAccountOpFrame::doCheckValid(Application &app) {
-        if (mCreateAccount.destination == getSourceID()) {
-            innerResult().code(CreateAccountResultCode::MALFORMED);
-            return false;
-        }
+    uint64_t totalWeight = 0;
 
-        if (mCreateAccount.recoveryKey == mCreateAccount.destination) {
-            innerResult().code(CreateAccountResultCode::MALFORMED);
-            return false;
-        }
-
-        if (mCreateAccount.accountType == AccountType::NOT_VERIFIED &&
-            mCreateAccount.policies != 0) {
-            innerResult().code(CreateAccountResultCode::NOT_VERIFIED_CANNOT_HAVE_POLICIES);
-            return false;
-        }
-
-        if (isSystemAccountType(mCreateAccount.accountType)) {
-            innerResult().code(CreateAccountResultCode::TYPE_NOT_ALLOWED);
-            return false;
-        }
-
-        return true;
+    for (auto const& pair : identityWeight)
+    {
+        totalWeight += pair.second;
     }
 
-    void
-    CreateAccountOpFrame::buildAccount(Application &app, LedgerDelta &delta, AccountFrame::pointer destAccountFrame) {
-        auto &db = app.getDatabase();
-        auto &destAccount = destAccountFrame->getAccount();
-        destAccount.accountType = mCreateAccount.accountType;
-        trySetReferrer(app, db, destAccountFrame);
-        destAccount.policies = mCreateAccount.policies;
-        destAccount.roleID = mCreateAccount.roleID;
+    if (totalWeight < SignerRuleFrame::threshold)
+    {
+        innerResult().code(CreateAccountResultCode::INVALID_WEIGHT);
+        return false;
     }
+
+    return true;
+}
 }

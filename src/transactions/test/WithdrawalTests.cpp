@@ -4,10 +4,9 @@
 
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAssetPairTestHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/test/test_helper/ManageAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "main/test.h"
@@ -42,7 +41,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     auto reviewWithdrawHelper = ReviewWithdrawRequestHelper(testManager);
     auto withdrawRequestHelper = WithdrawRequestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
-    auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     ManageLimitsTestHelper manageLimitsTestHelper(testManager);
 
     //Default tasks
@@ -78,7 +76,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
     // create account which will withdraw
     auto withdrawerKP = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), 1);
     auto withdrawer = Account{ withdrawerKP, Salt(0) };
     auto withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
     REQUIRE(!!withdrawerBalance);
@@ -300,14 +298,14 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             withdrawRequest.balance = nonExistingBalance;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND,
-                                                             OperationResultCode::opNO_BALANCE);
+                                                             OperationResultCode::opNO_ENTRY);
         }
 
         SECTION("try to withdraw from not my balance")
         {
             //create another account
             auto newAccountKP = SecretKey::random();
-            createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), AccountType::GENERAL);
+            createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), 1);
             Account newAccount = Account{newAccountKP, Salt(0)};
 
             withdrawRequestHelper.applyCreateWithdrawRequest(newAccount, withdrawRequest, nullptr,

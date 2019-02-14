@@ -23,17 +23,31 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     return true;
 }
 
+bool
+CreateManageLimitsRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
+{
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateManageLimitsRequest.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateManageLimitsRequest.allTasks;
+    }
+
+    result.emplace_back(resource, "create");
+
+    return true;
+}
+
 CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(
         Operation const& op, OperationResult& res,
         TransactionFrame& parentTx)
         : OperationFrame(op, res, parentTx)
-        , mCreateManageLimitsRequest(mOperation.body.createManageLimitsRequestOp()){}
-
-std::string
-CreateManageLimitsRequestOpFrame::getLimitsManageRequestReference(Hash const& documentHash) const
+        , mCreateManageLimitsRequest(mOperation.body.createManageLimitsRequestOp())
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, documentHash));
-    return binToHex(hash);
 }
 
 std::string
@@ -133,20 +147,6 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
 bool
 CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    if(!ledgerManager.shouldUse(mCreateManageLimitsRequest.ext.v()))
-    {
-        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_MANAGE_LIMITS_REQUEST_VERSION);
-        return false;
-    }
-
-    auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
-
-    if (!isValidJson(manageLimitsRequest.creatorDetails))
-    {
-        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
-        return false;
-    }
-
     // required for the new flow, when source have to specify request id for creation or update of the request
     bool isUpdating = mCreateManageLimitsRequest.requestID != 0;
     if (isUpdating)
@@ -159,6 +159,12 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
 
 bool CreateManageLimitsRequestOpFrame::doCheckValid(Application& app)
 {
+    if (!isValidJson(mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails))
+    {
+        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
+        return false;
+    }
+
     return true;
 }
 
@@ -166,7 +172,7 @@ std::vector<longstring>
 CreateManageLimitsRequestOpFrame::makeTasksKeyVector(
     StorageHelper& storageHelper)
 {
-    return {ManageKeyValueOpFrame::limitsUpdateTasks};
+    return {ManageKeyValueOpFrame::makeLimitsUpdateTasksKey()};
 }
 
 bool CreateManageLimitsRequestOpFrame::ensureLimitsUpdateValid()

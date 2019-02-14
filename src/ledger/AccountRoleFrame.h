@@ -65,7 +65,7 @@ class AccountRoleFrame : public EntryFrame
 
     void ensureValid() const;
 
-    static pointer createNew(uint64_t id,
-                             CreateAccountRoleData data);
+    static pointer
+    createNew(uint64_t id, CreateAccountRoleData data);
 };
 } // namespace stellar

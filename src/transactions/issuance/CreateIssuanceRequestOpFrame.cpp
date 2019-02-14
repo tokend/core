@@ -8,8 +8,9 @@
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/BalanceHelper.h>
 #include "CreateIssuanceRequestOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
+#include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
@@ -44,18 +45,20 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
 	if (!asset)
 	{
-		mResult.code(OperationResultCode::opNO_ASSET);
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::ASSET;
 		return false;
 	}
 
 	auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateIssuanceRequest.request.receiver);
 	if (!balance)
 	{
-	    mResult.code(OperationResultCode::opNO_BALANCE);
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::BALANCE;
 	    return false;
 	}
 
-	auto account = AccountHelper::Instance()->mustLoadAccount(balance->getAccountID(), storageHelper.getDatabase());
+	auto account = storageHelper.getAccountHelper().mustLoadAccount(balance->getAccountID());
 
 	AccountRuleResource resource(LedgerEntryType::ASSET);
 	resource.asset().assetCode = asset->getCode();
@@ -64,6 +67,22 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	result.emplace_back(resource, "receive_from_issuance", account);
 
 	// only asset owner can do issuance, it will be handled in doApply
+	return true;
+}
+
+bool
+CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+									   std::vector<SignerRequirement>& result) const
+{
+	auto asset = storageHelper.getAssetHelper().mustLoadAsset(
+			mCreateIssuanceRequest.request.asset);
+
+	SignerRuleResource resource(LedgerEntryType::ASSET);
+	resource.asset().assetCode = asset->getCode();
+	resource.asset().assetType = asset->getType();
+
+	result.emplace_back(resource, "issue");
+
 	return true;
 }
 
@@ -234,7 +253,8 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 	}
 
     Fee feeToPay;
-    if (!calculateFee(balance->getAccountID(), db, feeToPay)) {
+    if (!calculateFee(app, balance->getAccountID(), db, feeToPay))
+    {
         innerResult().code(CreateIssuanceRequestResultCode::FEE_EXCEEDS_AMOUNT);
         return nullptr;
     }
@@ -250,7 +270,9 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 	return request;
 }
 
-bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db, Fee &fee)
+bool
+CreateIssuanceRequestOpFrame::calculateFee(Application& app, AccountID receiver,
+										   Database &db, Fee &fee)
 {
     // calculate fee which will be charged from receiver
     fee.percent = 0;
@@ -259,11 +281,13 @@ bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db
     if (!mIsFeeRequired)
         return true;
 
-    auto receiverFrame = AccountHelper::Instance()->mustLoadAccount(receiver, db);
-    if (isSystemAccountType(receiverFrame->getAccountType()))
-        return true;
+    if (app.getAdminID() == receiver)
+    {
+		return true;
+	}
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
+	auto receiverFrame = AccountHelperLegacy::Instance()->mustLoadAccount(receiver, db);
+	auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame,
                                                           mCreateIssuanceRequest.request.amount, db);
     if (feeFrame) {

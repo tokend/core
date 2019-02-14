@@ -31,7 +31,8 @@ CreateASwapRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelpe
             mCreateASwapRequest.request.bidID, storageHelper.getDatabase());
     if (!bid) 
     {
-        mResult.code(OperationResultCode::opNO_BID);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ATOMIC_SWAP_BID;
         return false;
     }
     
@@ -47,7 +48,31 @@ CreateASwapRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelpe
     return true;
 }
 
-bool CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTasks)
+bool
+CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                    std::vector<SignerRequirement> &result) const
+{
+    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
+            mCreateASwapRequest.request.bidID, storageHelper.getDatabase());
+    if (!bid)
+    {
+        throw std::runtime_error("Expected bid to exists");
+    }
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetType = asset->getType();
+    resource.asset().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "receive_from_atomic_swap");
+
+    return true;
+}
+
+bool
+CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTasks)
 {
     auto aSwapKV = KeyValueHelperLegacy::Instance()->loadKeyValue(
             ManageKeyValueOpFrame::atomicSwapTasksPrefix, db);

@@ -1,3 +1,4 @@
+#include <ledger/StorageHelperImpl.h>
 #include "ReviewChangeRoleRequestOpFrame.h"
 #include "ReviewRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
@@ -36,12 +37,12 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     auto& changeRoleRequest = requestEntry.body.changeRoleRequest();
     auto destinationAccount = changeRoleRequest.destinationAccount;
-    auto destinationAccountFrame = AccountHelper::Instance()->loadAccount(destinationAccount, db);
-    if (!destinationAccountFrame)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Requestor account not found.";
-        throw std::runtime_error("Unexpected state. Updated account not found.");
-    }
+
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto& accountHelper = storageHelper.getAccountHelper();
+
+    auto destinationAccountFrame = accountHelper.mustLoadAccount(destinationAccount);
 
     // set KYC Data
     auto kycHelper = AccountKYCHelper::Instance();
@@ -58,7 +59,7 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     }
 
     destinationAccountFrame->setAccountRole(changeRoleRequest.accountRoleToSet);
-    EntryHelperProvider::storeChangeEntry(delta, db, destinationAccountFrame->mEntry);
+    accountHelper.storeChange(destinationAccountFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;

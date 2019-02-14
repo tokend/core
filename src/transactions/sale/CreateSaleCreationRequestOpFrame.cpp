@@ -8,7 +8,7 @@
 #include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestFrame.h"
@@ -37,6 +37,26 @@ CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     result.emplace_back(resource, "create", mSourceAccount);
 
     // only asset owner can create sale, but restrict him to create sale - feature
+    return true;
+}
+
+bool
+CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
+{
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+    resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateSaleCreationRequest.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateSaleCreationRequest.allTasks;
+    }
+
+    result.emplace_back(resource, "create");
+
     return true;
 }
 

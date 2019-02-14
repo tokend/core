@@ -33,6 +33,10 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
 
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
 public:
 
     CreateIssuanceRequestOpFrame(Operation const& op, OperationResult& res,
@@ -53,7 +57,8 @@ public:
 		return xdr::xdr_traits<CreateIssuanceRequestResultCode>::enum_name(innerResult().code());
 	}
 
-    bool calculateFee(AccountID receiver, Database &db, Fee &fee);
+    bool
+    calculateFee(Application& app, AccountID receiver, Database &db, Fee &fee);
 
     static CreateIssuanceRequestOp build(AssetCode const& asset, uint64_t amount, BalanceID const& receiver,
                                          LedgerManager& lm, uint32_t allTasks);

@@ -1,14 +1,18 @@
 #pragma once
 
 #include "ledger/StorageHelper.h"
-#include "ledger/KeyValueHelper.h"
-#include "ledger/ExternalSystemAccountIDHelper.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
-#include "ledger/AccountRoleHelperImpl.h"
-#include "ledger/AccountRuleHelperImpl.h"
 
 namespace stellar
 {
+class KeyValueHelper;
+class AccountHelper;
+class AssetHelper;
+class BalanceHelper;
+class AccountRuleHelper;
+class AccountRoleHelper;
+class ExternalSystemAccountIDHelper;
+class ExternalSystemAccountIDPoolEntryHelper;
+enum class LedgerEntryType;
 
 class MockStorageHelper : public StorageHelper
 {
@@ -21,8 +25,8 @@ public:
     MOCK_CONST_METHOD0(mustGetLedgerDelta, const LedgerDelta&());
     MOCK_METHOD0(commit, void());
     MOCK_METHOD0(rollback, void());
-    MOCK_METHOD0(begin, void());
     MOCK_METHOD0(release, void());
+    MOCK_METHOD0(begin, void());
     MOCK_METHOD0(startNestedTransaction, std::unique_ptr<StorageHelper>());
     MOCK_METHOD0(getKeyValueHelper, KeyValueHelper&());
     MOCK_METHOD0(getBalanceHelper, BalanceHelper&());
@@ -31,9 +35,15 @@ public:
                  ExternalSystemAccountIDHelper&());
     MOCK_METHOD0(getExternalSystemAccountIDPoolEntryHelper,
                  ExternalSystemAccountIDPoolEntryHelper&());
+    MOCK_METHOD0(getAccountHelper, AccountHelper&());
     MOCK_METHOD0(getAccountRoleHelper, AccountRoleHelper&());
     MOCK_METHOD0(getAccountRuleHelper, AccountRuleHelper&());
-    MOCK_METHOD0(getAccountHelper, AccountHelper*());
+    MOCK_METHOD0(getSignerHelper, SignerHelper&());
+    MOCK_METHOD0(getSignerRuleHelper, SignerRuleHelper&());
+    MOCK_METHOD0(getSignerRoleHelper, SignerRoleHelper&());
+    MOCK_METHOD0(getEntryHelpers, std::vector<EntryHelper*>());
+    MOCK_METHOD1(getHelper, EntryHelper*(LedgerEntryType type));
+
 };
 
 }  // namespace stellar

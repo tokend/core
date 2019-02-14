@@ -10,12 +10,9 @@
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/LedgerManagerImpl.h"
 #include "ledger/AssetPairFrame.h"
-#include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 
 #include "overlay/OverlayManager.h"
-#include "util/make_unique.h"
-#include "util/format.h"
 
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
@@ -24,6 +21,11 @@
 #include "StorageHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
 #include "AccountRoleHelperImpl.h"
+#include "SignerRuleFrame.h"
+#include "SignerRuleHelper.h"
+#include "SignerRoleHelper.h"
+#include "SignerHelper.h"
+#include "AccountHelper.h"
 
 /*
 The ledger module:
@@ -107,6 +109,14 @@ LedgerManagerImpl::LedgerManagerImpl(Application& app)
     , mState(LM_BOOTING_STATE)
 
 {
+    std::string raw = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+    mNotExistingAccount = PubKeyUtils::fromStrKey(raw);
+}
+
+AccountID
+LedgerManagerImpl::getNotExistingAccountID()
+{
+    return mNotExistingAccount;
 }
 
 void
@@ -142,6 +152,102 @@ LedgerManagerImpl::getStateHuman() const
     static const char* stateStrings[LM_NUM_STATE] = {
         "LM_BOOTING_STATE", "LM_SYNCED_STATE", "LM_CATCHING_UP_STATE"};
     return std::string(stateStrings[getState()]);
+}
+
+void
+LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
+                                            uint64_t const ownerRoleID)
+{
+    auto& ledgerHeader = storageHelper.mustGetLedgerDelta().getHeaderFrame();
+
+    LedgerEntry firstSignerRuleEntry;
+    firstSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
+    auto& firstSignerRule = firstSignerRuleEntry.data.signerRule();
+    SignerRuleResource ruleResource(LedgerEntryType::SIGNER_RULE);
+    ruleResource.signerRule().isDefault = true;
+    firstSignerRule.resource = ruleResource;
+    firstSignerRule.action = "*";
+    firstSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
+    firstSignerRule.isDefault = true;
+    firstSignerRule.isForbid = true;
+    firstSignerRule.ownerID = mNotExistingAccount;
+    firstSignerRule.details = "{}";
+
+    auto& helper = storageHelper.getSignerRuleHelper();
+    helper.storeAdd(firstSignerRuleEntry);
+
+    LedgerEntry secondSignerRuleEntry;
+    secondSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
+    auto& secondSignerRule = secondSignerRuleEntry.data.signerRule();
+    SignerRuleResource roleResource(LedgerEntryType::SIGNER_ROLE);
+    roleResource.signerRole().roleID = ownerRoleID;
+    secondSignerRule.resource = roleResource;
+    secondSignerRule.action = "*";
+    secondSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
+    secondSignerRule.isDefault = true;
+    secondSignerRule.isForbid = true;
+    secondSignerRule.ownerID = mNotExistingAccount;
+    secondSignerRule.details = "{}";
+
+    helper.storeAdd(secondSignerRuleEntry);
+
+    LedgerEntry thirdSignerRuleEntry;
+    thirdSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
+    auto& thirdSignerRule = thirdSignerRuleEntry.data.signerRule();
+    SignerRuleResource signerResource(LedgerEntryType::SIGNER);
+    signerResource.signer().roleID = ownerRoleID;
+    thirdSignerRule.resource = signerResource;
+    thirdSignerRule.action = "*";
+    thirdSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
+    thirdSignerRule.isDefault = true;
+    thirdSignerRule.isForbid = true;
+    thirdSignerRule.ownerID = mNotExistingAccount;
+    thirdSignerRule.details = "{}";
+
+    helper.storeAdd(thirdSignerRuleEntry);
+}
+
+uint64_t
+LedgerManagerImpl::createAdminSigner(StorageHelper &storageHelper)
+{
+    auto& ledgerHeader = storageHelper.mustGetLedgerDelta().getHeaderFrame();
+
+    LedgerEntry signerRuleEntry;
+    signerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
+    auto& signerRule = signerRuleEntry.data.signerRule();
+    signerRule.resource = SignerRuleResource(LedgerEntryType::ANY);
+    signerRule.action = "*";
+    signerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
+    signerRule.isDefault = false;
+    signerRule.isForbid = false;
+    signerRule.ownerID = mNotExistingAccount;
+    signerRule.details = "{}";
+
+    storageHelper.getSignerRuleHelper().storeAdd(signerRuleEntry);
+
+    LedgerEntry signerRoleEntry;
+    signerRoleEntry.data.type(LedgerEntryType::SIGNER_ROLE);
+    auto& signerRole = signerRoleEntry.data.signerRole();
+    signerRole.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_ROLE);
+    signerRole.ownerID = mNotExistingAccount;
+    signerRole.details = "{}";
+    signerRole.ruleIDs = {signerRule.id};
+
+    storageHelper.getSignerRoleHelper().storeAdd(signerRoleEntry);
+
+    LedgerEntry signerEntry;
+    signerEntry.data.type(LedgerEntryType::SIGNER);
+    auto& signer = signerEntry.data.signer();
+    signer.accountID = mApp.getAdminID();
+    signer.pubKey = mApp.getAdminID();
+    signer.details = "{}";
+    signer.weight = SignerRuleFrame::threshold;
+    signer.identity = 0;
+    signer.roleID = signerRole.id;
+
+    storageHelper.getSignerHelper().storeAdd(signerEntry);
+
+    return signerRole.id;
 }
 
 uint64_t
@@ -202,11 +308,12 @@ LedgerManagerImpl::startNewLedger()
     auto& accountEntry = adminAccount->getAccount();
     accountEntry.accountID = mApp.getAdminID();
     accountEntry.roleID = createAdminRole(storageHelperImpl);
-    accountEntry.accountType = AccountType::MASTER;
     accountEntry.sequentialID = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 
     // use new account helper, when it will be possible
-    AccountHelper::Instance()->storeAdd(delta, getDatabase(), adminAccount->mEntry);
+    storageHelper.getAccountHelper().storeAdd(adminAccount->mEntry);
+    auto ownerRoleID = createAdminSigner(storageHelper);
+    createDefaultSignerRules(storageHelper, ownerRoleID);
     storageHelper.commit();
 
     mCurrentLedger = make_shared<LedgerHeaderFrameImpl>(genesisHeader);
@@ -852,11 +959,6 @@ void
 LedgerManagerImpl::checkDbState()
 {
     Database& db = getDatabase();
-
-	// TODO move to invariant
-	auto accountHelper = AccountHelper::Instance();
-    std::unordered_map<AccountID, AccountFrame::pointer> aData =
-		accountHelper->checkDB(db);
 
     auto allAssetsWithIssued = AssetHelperLegacy::Instance()->loadIssuedForAssets(db);
 

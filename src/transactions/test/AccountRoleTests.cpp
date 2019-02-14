@@ -1,13 +1,13 @@
 #include "TxTests.h"
 #include "crypto/SHA.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "main/test.h"
 #include "overlay/LoopbackPeer.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
-#include "transactions/BindExternalSystemAccountIdOpFrame.h"
-#include "transactions/ManageAccountRuleOpFrame.h"
+#include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
+#include "transactions/manage_role_rule/ManageAccountRuleOpFrame.h"
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
 #include "util/make_unique.h"
@@ -82,8 +82,7 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
             createAccountTestHelper.applyTx(CreateAccountTestBuilder()
                                                     .setSource(master)
                                                     .setToPublicKey(randomAccount.getPublicKey())
-                                                    .setType(AccountType::NOT_VERIFIED)
-                                                    .setRecovery(SecretKey::random().getPublicKey())
+                                                    .addBasicSigner()
                                                     .setRoleID(accountRoleID));
 
             manageAccountRoleHelper.applyTx(master, removeRoleOp,

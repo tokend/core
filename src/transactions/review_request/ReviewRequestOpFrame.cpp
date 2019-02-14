@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "util/asio.h"
 #include "ReviewRequestOpFrame.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
@@ -43,19 +43,35 @@ ReviewRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 	return true;
 }
 
+bool
+ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+									std::vector<SignerRequirement>& result) const
+{
+	SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+	resource.reviewableRequest().details.requestType(mReviewRequest.requestDetails.requestType());
+	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+	resource.reviewableRequest().allTasks = 0;
+
+	result.emplace_back(resource, "review");
+
+	return true;
+}
+
 bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database & db, LedgerDelta & delta)
 {
-    auto requestorAccount = AccountHelper::Instance()->loadAccount(request->getRequestor(), db, &delta);
+    auto requestorAccount = AccountHelperLegacy::Instance()->
+            loadAccount(request->getRequestor(), db, &delta);
 
     // we do not care about user state if it's not approval
     if (mReviewRequest.action != ReviewRequestOpAction::APPROVE) {
         return true;
     }
-
-    if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
+	//TODO
+    /*if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
         innerResult().code(ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
         return false;
-    }
+    }*/
 
     return true;
     

@@ -6,14 +6,8 @@
 
 #include "ledger/EntryFrame.h"
 
-namespace soci
-{
-class session;
-}
-
 namespace stellar
 {
-class StatementContext;
 
 class ExternalSystemAccountIDFrame : public EntryFrame
 {

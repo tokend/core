@@ -34,7 +34,8 @@ CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
     auto balance = balanceHelper.loadBalance(mCreateASwapBidCreationRequest.request.baseBalance);
     if (!balance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 
@@ -46,6 +47,26 @@ CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
     resource.atomicSwapBid().assetCode = asset->getCode();
 
     result.emplace_back(resource, "create", mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+        std::vector<SignerRequirement> &result) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balance = balanceHelper.mustLoadBalance(
+            mCreateASwapBidCreationRequest.request.baseBalance);
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(balance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    resource.atomicSwapBid().assetType = asset->getType();
+    resource.atomicSwapBid().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "create");
 
     return true;
 }

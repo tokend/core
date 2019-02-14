@@ -9,7 +9,7 @@
 #include <crypto/SHA.h>
 #include <transactions/SignatureValidatorImpl.h>
 #include "ChangeAssetPreIssuerOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 
 namespace stellar
@@ -31,6 +31,14 @@ ChangeAssetPreIssuerOpFrame::tryGetOperationConditions(StorageHelper& storageHel
                           std::vector<OperationCondition>& result) const
 {
     // will be handled on signer level
+    return true;
+}
+
+bool
+ChangeAssetPreIssuerOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    // only asset pre issuer can change asset pre issuer
     return true;
 }
 

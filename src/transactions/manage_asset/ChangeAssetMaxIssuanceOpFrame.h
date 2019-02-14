@@ -13,6 +13,14 @@ class ChangeAssetMaxIssuanceOpFrame : public ManageAssetOpFrame
 {
     UpdateMaxIssuance mUpdateMaxIssuance;
 
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
 public:
     ChangeAssetMaxIssuanceOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
@@ -22,9 +30,6 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-    bool
-    tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
 protected:
     std::string getAssetCode() const override;
 };

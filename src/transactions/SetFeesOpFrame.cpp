@@ -33,6 +33,15 @@ SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     return true;
 }
 
+bool
+SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::FEE), "manage");
+
+    return true;
+}
+
     bool SetFeesOpFrame::trySetFee(medida::MetricsRegistry &metrics, Database &db, LedgerDelta &delta) {
         assert(mSetFees.fee);
         if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(metrics, db, delta))
@@ -42,7 +51,7 @@ SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
             return false;
 
         Hash hash = FeeFrame::calcHash(mSetFees.fee->feeType, mSetFees.fee->asset, mSetFees.fee->accountID.get(),
-                                       mSetFees.fee->accountType.get(), mSetFees.fee->subtype);
+                                       mSetFees.fee->accountRole.get(), mSetFees.fee->subtype);
 
         auto actualHashValue = mSetFees.fee.get()->hash;
         if (actualHashValue != hash) {
@@ -299,7 +308,7 @@ SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
             return false;
         }
 
-        if (mSetFees.fee->accountID && mSetFees.fee->accountType) {
+        if (mSetFees.fee->accountID && mSetFees.fee->accountRole) {
             innerResult().code(SetFeesResultCode::MALFORMED);
             app.getMetrics().NewMeter({"op-set-fees", "invalid", "malformed-both-set"}, "operation").Mark();
             return false;

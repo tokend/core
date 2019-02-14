@@ -6,8 +6,10 @@
 #include "ReviewLimitsUpdateRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include <ledger/ReviewableRequestHelper.h>
+#include "ledger/AccountHelper.h"
+#include <ledger/StorageHelperImpl.h>
 #include "transactions/ManageLimitsOpFrame.h"
 #include "main/Application.h"
 
@@ -20,13 +22,6 @@ namespace stellar {
                                                                        TransactionFrame &parentTx) :
                                       ReviewRequestOpFrame(op, res, parentTx)
     {
-    }
-
-    SourceDetails ReviewLimitsUpdateRequestOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-    {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t >(SignerType::LIMITS_MANAGER));
     }
 
     bool
@@ -62,7 +57,7 @@ namespace stellar {
         ManageLimitsOp& manageLimitsOp = op.body.manageLimitsOp();
         manageLimitsOp.details.action(ManageLimitsAction::CREATE);
         manageLimitsOp.details.limitsCreateDetails().accountID = mReviewRequest.requestDetails.limitsUpdate().newLimitsV2.accountID;
-        manageLimitsOp.details.limitsCreateDetails().accountType = mReviewRequest.requestDetails.limitsUpdate().newLimitsV2.accountType;
+        manageLimitsOp.details.limitsCreateDetails().accountRole = mReviewRequest.requestDetails.limitsUpdate().newLimitsV2.accountRole;
         manageLimitsOp.details.limitsCreateDetails().statsOpType = mReviewRequest.requestDetails.limitsUpdate().newLimitsV2.statsOpType;
         manageLimitsOp.details.limitsCreateDetails().assetCode = mReviewRequest.requestDetails.limitsUpdate().newLimitsV2.assetCode;
         manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = mReviewRequest.requestDetails.limitsUpdate().newLimitsV2.isConvertNeeded;
@@ -76,7 +71,7 @@ namespace stellar {
         opRes.tr().type(OperationType::MANAGE_LIMITS);
         ManageLimitsOpFrame manageLimitsOpFrame(op, opRes, mParentTx);
 
-        auto accountHelper = AccountHelper::Instance();
+        auto accountHelper = AccountHelperLegacy::Instance();
         auto master = accountHelper->mustLoadAccount(app.getAdminID(), db);
         manageLimitsOpFrame.setSourceAccountPtr(master);
 
@@ -115,7 +110,13 @@ namespace stellar {
         EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
         auto requestorID = request->getRequestor();
-        AccountHelper::Instance()->ensureExists(requestorID, db);
+
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        StorageHelper& storageHelper = storageHelperImpl;
+        if (!storageHelper.getAccountHelper().exists(requestorID))
+        {
+            throw std::runtime_error("Expected account to exists");
+        }
 
         return tryCallManageLimits(app, ledgerManager, delta, request);
     }

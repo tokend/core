@@ -31,8 +31,6 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
                       LedgerManager& ledgerManager, BalanceFrame::pointer balanceFrame,
                       const uint64_t amountToAdd, uint64_t& universalAmount, const uint64_t requestID);
 
-    bool tryAddStats(AccountManager& accountManager, BalanceFrame::pointer balance, uint64_t amountToAdd,
-                         uint64_t& universalAmount);
     bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor, const BalanceFrame::pointer balance,
                        const uint64_t amountToAdd, uint64_t& universalAmount, uint64_t requestID);
 
@@ -50,6 +48,10 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
 

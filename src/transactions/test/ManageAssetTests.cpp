@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
-#include <transactions/test/test_helper/ManageAccountTestHelper.h>
+#include <transactions/test/test_helper/ManageSignerTestHelper.h>
 #include "main/test.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -78,7 +78,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     SECTION("Syndicate happy path")
     {
         auto syndicate = Account{SecretKey::random(), Salt(0)};
-        createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), 1);
         testManageAssetHappyPath(testManager, syndicate, root);
     }
     SECTION("Cancel asset request")
@@ -152,7 +152,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             manageAssetHelper.applyManageAssetTx(root, 0, request,
                 ManageAssetResultCode::INITIAL_PREISSUED_EXCEEDS_MAX_ISSUANCE);
         }
-        SECTION("Trying to update non existsing request")
+        SECTION("Trying to update non existing request")
         {
             const auto request = manageAssetHelper.
                 createAssetCreationRequest("USDS",
@@ -219,33 +219,34 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     SECTION("Asset update request")
     {
         auto manageAssetHelper = ManageAssetTestHelper(testManager);
+        const AssetCode assetCode = "USD";
+        manageAssetHelper.createAsset(root, root.key, assetCode, root, 0, &zeroTasks);
+
         SECTION("Invalid asset code")
         {
             const auto request = manageAssetHelper.
                 createAssetUpdateRequest("USD S", "{}", 0);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
-                                                 ManageAssetResultCode::
-                                                 INVALID_CODE);
+                                                 ManageAssetResultCode::INVALID_CODE);
         }
         SECTION("Invalid asset policies")
         {
             const auto request = manageAssetHelper.
                 createAssetUpdateRequest("USDS", "{}", UINT32_MAX);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
-                                                 ManageAssetResultCode::
-                                                 INVALID_POLICIES);
+                                                 ManageAssetResultCode::INVALID_POLICIES);
         }
-        SECTION("Trying to update non existsing request")
+        SECTION("Trying to update non existing request")
         {
             const auto request = manageAssetHelper.
-                createAssetUpdateRequest("USDS", "{}", 0);
+                createAssetUpdateRequest(assetCode, "{}", 0);
             manageAssetHelper.applyManageAssetTx(root, 12, request, ManageAssetResultCode::REQUEST_NOT_FOUND);
         }
         SECTION("Trying to update not my asset")
         {
             // create asset by syndicate
             auto syndicate = Account{SecretKey::random(), Salt(0)};
-            createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), AccountType::SYNDICATE);
+            createAccountTestHelper.applyCreateAccountTx(root, syndicate.key.getPublicKey(), 1);
             const AssetCode assetCode = "BTC";
             manageAssetHelper.createAsset(syndicate, syndicate.key, assetCode, root, 0, &zeroTasks);
             // try to update with root
@@ -257,9 +258,6 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         }
         SECTION("Trying to update asset's details to invalid")
         {
-            const AssetCode assetCode = "USD";
-            manageAssetHelper.createAsset(root, root.key, assetCode, root, 0, &zeroTasks);
-
             const std::string invalidDetails = "{\"key\"}";
             const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, invalidDetails, 0);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
@@ -344,6 +342,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
 {
     auto preissuedSigner = SecretKey::random();
     auto manageAssetHelper = ManageAssetTestHelper(testManager);
+    ManageSignerTestHelper manageSignerTestHelper(testManager);
     const AssetCode assetCode = "EURT";
     const uint64_t maxIssuance = 102030;
     const auto initialPreIssuedAmount = maxIssuance;
@@ -359,6 +358,8 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                                        "{}", maxIssuance, 0, &tasks, initialPreIssuedAmount);
         auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
                                                                    creationRequest);
+
+        manageSignerTestHelper.applyCreateOperationalSigner(account, preissuedSigner.getPublicKey());
 
 		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
 
@@ -400,8 +401,6 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             SECTION("Can change asset pre issuance signer")
             {
                 auto newPreIssuanceSigner = SecretKey::random();
-                auto signer = Signer(preissuedSigner.getPublicKey(), 1, int32_t(SignerType::TX_SENDER), 0, "", Signer::_ext_t{});
-                applySetOptions(testManager->getApp(), account.key, 0, nullptr, &signer);
                 auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
                 auto changePreIssuanceSigner = manageAssetHelper.createChangeSignerRequest(
                         preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());

@@ -44,11 +44,9 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
     auto account2 = Account{SecretKey::random(), 0};
     CreateAccountTestHelper createAccountTestHelper(testManager);
     createAccountTestHelper.
-        applyCreateAccountTx(root, account.key.getPublicKey(),
-                             AccountType::GENERAL);
+        applyCreateAccountTx(root, account.key.getPublicKey(), 1);
     createAccountTestHelper.
-        applyCreateAccountTx(root, account2.key.getPublicKey(),
-                             AccountType::GENERAL);
+        applyCreateAccountTx(root, account2.key.getPublicKey(), 1);
 
     AssetCode asset = "EUR";
     AssetCode asset2 = "USD";
@@ -101,8 +99,7 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
     {
         account = Account{ SecretKey::random() , 0 };
         createAccountTestHelper.
-            applyCreateAccountTx(root, account.key.getPublicKey(),
-                AccountType::GENERAL);
+            applyCreateAccountTx(root, account.key.getPublicKey(), 1);
         auto accountID = account.key.getPublicKey();
         manageBalanceTestHelper.applyManageBalanceTx(root, accountID, asset,
             ManageBalanceAction::CREATE_UNIQUE);

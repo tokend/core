@@ -123,8 +123,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     // basic create account builder
     auto createAccountBuilder = CreateAccountTestBuilder()
             .setSource(rootAccount)
-            .setRoleID(1)
-            .setRecovery(SecretKey::random().getPublicKey());
+            .setRoleID(1);
 
     auto fundAccount = [&issuanceHelper, &rootAccount](AssetCode code, uint64_t amount, BalanceID receiver)
     {
@@ -176,7 +175,8 @@ TEST_CASE("manage offer", "[tx][offer]")
     {
         auto buyer = Account{ SecretKey::random() , 0};
         createAccountTestHelper.applyTx(createAccountBuilder
-                                    .setToPublicKey(buyer.key.getPublicKey()));
+                                    .setToPublicKey(buyer.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
                                                            base, db, &delta);
         REQUIRE(baseBuyerBalance);
@@ -186,8 +186,11 @@ TEST_CASE("manage offer", "[tx][offer]")
         auto quoteAssetAmount = 1000 * ONE;
         fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
         auto seller = Account{ SecretKey::random() , 0};
-        createAccountTestHelper.applyTx(createAccountBuilder
-                                    .setToPublicKey(seller.key.getPublicKey()));
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                    .setSource(rootAccount)
+                                    .setRoleID(1)
+                                    .setToPublicKey(seller.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseSellerBalance = balanceHelper->
             loadBalance(seller.key.getPublicKey(), base, db, &delta);
         REQUIRE(baseBuyerBalance);
@@ -604,7 +607,8 @@ TEST_CASE("manage offer", "[tx][offer]")
 
         auto buyer = Account{ SecretKey::random(), 0 };
         createAccountTestHelper.applyTx(createAccountBuilder
-                                    .setToPublicKey(buyer.key.getPublicKey()));
+                                    .setToPublicKey(buyer.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
                                                            base, db, &delta);
         REQUIRE(baseBuyerBalance);
@@ -616,7 +620,8 @@ TEST_CASE("manage offer", "[tx][offer]")
 
         auto seller = Account{ SecretKey::random() , 0};
         createAccountTestHelper.applyTx(createAccountBuilder
-                                    .setToPublicKey(seller.key.getPublicKey()));
+                                    .setToPublicKey(seller.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseSellerBalance = balanceHelper->
             loadBalance(seller.key.getPublicKey(), base, db, &delta);
         REQUIRE(baseSellerBalance);

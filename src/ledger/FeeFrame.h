@@ -80,7 +80,7 @@ namespace stellar
 
 		static bool isInRange(int64_t a, int64_t b, int64_t point);
 
-        static Hash calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, AccountType* accountType, int64_t subtype);
+        static Hash calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, uint64_t* accountType, int64_t subtype);
 
     };
 }

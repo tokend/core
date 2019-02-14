@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ledger/EntryHelper.h"
-#include "ledger/AccountFrame.h"
+#include "ledger/AccountRuleFrame.h"
 
 namespace soci
 {

@@ -8,7 +8,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include <ledger/StorageHelper.h>
 #include "ChangeAssetMaxIssuanceOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 
@@ -33,7 +33,8 @@ ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageH
     auto asset = storageHelper.getAssetHelper().loadAsset(mUpdateMaxIssuance.assetCode);
     if (!asset)
     {
-        mResult.code(OperationResultCode::opNO_ASSET);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
         return false;
     }
 
@@ -44,6 +45,21 @@ ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageH
     result.emplace_back(resource, "update_max_issuance", mSourceAccount);
 
     // only asset owner can do it, but it is useful to restrict him
+    return true;
+}
+
+bool
+ChangeAssetMaxIssuanceOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(mUpdateMaxIssuance.assetCode);
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update_max_issuance");
+
     return true;
 }
 

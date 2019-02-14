@@ -2,32 +2,37 @@
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "transactions/AccountRuleVerifier.h"
 #include "main/CommandHandler.h"
 #include "main/PersistentState.h"
-#include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "overlay/BanManager.h"
 #include "overlay/OverlayManager.h"
 #include "process/ProcessManager.h"
 #include "simulation/LoadGenerator.h"
 #include "test/test_marshaler.h"
-#include "transactions/BindExternalSystemAccountIdOpFrame.h"
+#include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
 #include "transactions/test/mocks/MockApplication.h"
 #include "transactions/test/mocks/MockDatabase.h"
 #include "transactions/test/mocks/MockAccountRuleVerifier.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDHelper.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
-#include "transactions/test/mocks/MockBalanceHelper.h"
-#include "transactions/test/mocks/MockAssetHelper.h"
+#include "transactions/test/mocks/MockSignerHelper.h"
+#include "transactions/test/mocks/MockSignerRuleHelper.h"
+#include "transactions/test/mocks/MockSignerRoleHelper.h"
 #include "transactions/test/mocks/MockLedgerDelta.h"
 #include "transactions/test/mocks/MockLedgerManager.h"
 #include "transactions/test/mocks/MockSignatureValidator.h"
 #include "transactions/test/mocks/MockStorageHelper.h"
 #include "transactions/test/mocks/MockTransactionFrame.h"
+#include "transactions/test/mocks/MockAccountRuleHelper.h"
+#include "transactions/test/mocks/MockAssetHelper.h"
+#include "transactions/test/mocks/MockBalanceHelper.h"
+#include "transactions/test/mocks/MockAccountRoleHelper.h"
+#include "transactions/test/mocks/MockAccountRuleHelper.h"
+#include "transactions/test/mocks/MockAccountHelper.h"
+#include "transactions/test/mocks/MockSignerRuleVerifier.h"
 #include "util/StatusManager.h"
-#include "util/Timer.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
 
@@ -47,11 +52,15 @@ TEST_CASE("bind external system account_id - unit test",
     MockLedgerDelta ledgerDeltaMock;
     MockDatabase dbMock;
     MockStorageHelper storageHelperMock;
+    MockSignerHelper signerHelperMock;
+    MockSignerRuleHelper signerRuleHelperMock;
+    MockSignerRoleHelper signerRoleHelperMock;
     MockKeyValueHelper keyValueHelperMock;
     MockAccountRuleVerifier accountRuleVerifierMock;
     MockExternalSystemAccountIDHelper externalSystemAccountIDHelperMock;
     MockExternalSystemAccountIDPoolEntryHelper
         externalSystemAccountIDPoolEntryHelperMock;
+    MockSignerRuleVerifier signerRuleVerifierMock;
     std::shared_ptr<MockSignatureValidator> signatureValidatorMock =
         std::make_shared<MockSignatureValidator>();
 
@@ -83,12 +92,18 @@ TEST_CASE("bind external system account_id - unit test",
     ON_CALL(transactionFrameMock, getSignatureValidator())
         .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
-            check(Ref(appMock), Ref(dbMock), Ref(*accountFrameFake), _))
+            check(Ref(appMock), _, _, Const(*operation.sourceAccount), _))
         .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
 
     ON_CALL(storageHelperMock, getKeyValueHelper())
         .WillByDefault(ReturnRef(keyValueHelperMock));
+    ON_CALL(storageHelperMock, getSignerHelper())
+            .WillByDefault(ReturnRef(signerHelperMock));
+    ON_CALL(storageHelperMock, getSignerRuleHelper())
+            .WillByDefault(ReturnRef(signerRuleHelperMock));
+    ON_CALL(storageHelperMock, getSignerRoleHelper())
+            .WillByDefault(ReturnRef(signerRoleHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDPoolEntryHelper())

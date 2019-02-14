@@ -1,4 +1,4 @@
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ReviewRequestHelper.h"
@@ -86,7 +86,7 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::REVIEW_REQUEST);
     Database& db = mLedgerManager.getDatabase();
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
     auto reviewerFrame = accountHelper->loadAccount(reviewer, db);
     if (!reviewerFrame) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: expected review to exist for request: "

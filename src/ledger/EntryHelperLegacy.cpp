@@ -3,53 +3,38 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "ledger/EntryHelper.h"
-#include "ledger/EntryHelperLegacy.h"
 #include "LedgerManager.h"
-#include "ledger/AccountFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/StatisticsFrame.h"
 #include "ledger/StatisticsHelper.h"
-#include "ledger/AccountTypeLimitsFrame.h"
-#include "ledger/AccountTypeLimitsHelper.h"
 #include "ledger/AccountLimitsFrame.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
-#include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelperImpl.h"
-#include "ledger/TrustFrame.h"
-#include "ledger/TrustHelper.h"
 #include "ledger/OfferFrame.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/ExternalSystemAccountID.h"
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"
-#include "ledger/KeyValueEntryFrame.h"
 #include "ledger/KeyValueHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntry.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
-#include "crypto/Hex.h"
-#include "database/Database.h"
 #include "SaleHelper.h"
 #include "AccountKYCHelper.h"
 #include "LimitsV2Helper.h"
 #include "StatisticsV2Helper.h"
 #include "PendingStatisticsHelper.h"
 #include "ContractHelper.h"
-#include "BalanceHelperLegacy.h"
 #include "AccountRuleHelperImpl.h"
 
 namespace stellar
@@ -131,26 +116,25 @@ namespace stellar
     void
     EntryHelperProvider::checkAgainstDatabase(LedgerEntry const& entry, Database& db)
     {
-        auto key = LedgerEntryKey(entry);
-        EntryFrame::pointer fromDb;
-        auto helper = getHelper(entry.data.type());
-        if (!helper)
-        {
-            StorageHelperImpl storageHelper(db, nullptr);
-            static_cast<StorageHelper&>(storageHelper).begin();
-            auto helper = createHelper(entry.data.type(), storageHelper);
-            if (!helper)
-            {
-                throw std::runtime_error("There's no legacy helper for this entry, "
-                                         "and no helper can be created.");
-            }
-            helper->flushCachedEntry(key);
-            fromDb = helper->storeLoad(key);
-        }
+		StorageHelperImpl storageHelperImpl(db, nullptr);
+		StorageHelper& storageHelper = storageHelperImpl;
+
+		LedgerKey key;
+		EntryFrame::pointer fromDb;
+
+		auto helper = storageHelper.getHelper(entry.data.type());
+		if (helper != nullptr)
+		{
+			key = helper->getLedgerKey(entry);
+			helper->flushCachedEntry(key);
+			fromDb = helper->storeLoad(key);
+		}
         else
         {
-            helper->flushCachedEntry(key, db);
-            fromDb = helper->storeLoad(key, db);
+			key = LedgerEntryKey(entry);
+			auto legacyHelper = getHelper(entry.data.type()); // helper existing handled above
+			legacyHelper->flushCachedEntry(key, db);
+            fromDb = legacyHelper->storeLoad(key, db);
         }
         if (!fromDb || !(fromDb->mEntry == entry))
         {
@@ -245,9 +229,8 @@ namespace stellar
 	}
 
 	EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
-		{ LedgerEntryType::ACCOUNT, AccountHelper::Instance() },
+		{ LedgerEntryType::ACCOUNT, AccountHelperLegacy::Instance() },
 		{ LedgerEntryType::ACCOUNT_LIMITS, AccountLimitsHelper::Instance() },
-		{ LedgerEntryType::ACCOUNT_TYPE_LIMITS, AccountTypeLimitsHelper::Instance() },
 		{ LedgerEntryType::ASSET, AssetHelperLegacy::Instance() },
 		{ LedgerEntryType::ASSET_PAIR, AssetPairHelper::Instance() },
 		{ LedgerEntryType::BALANCE, BalanceHelperLegacy::Instance() },
@@ -257,7 +240,6 @@ namespace stellar
 		{ LedgerEntryType::REFERENCE_ENTRY, ReferenceHelper::Instance() },
 		{ LedgerEntryType::REVIEWABLE_REQUEST, ReviewableRequestHelper::Instance() },
 		{ LedgerEntryType::STATISTICS, StatisticsHelper::Instance() },
-		{ LedgerEntryType::TRUST, TrustHelper::Instance() },
 		{ LedgerEntryType::KEY_VALUE, KeyValueHelperLegacy::Instance()},
         { LedgerEntryType::ACCOUNT_KYC, AccountKYCHelper::Instance()},
 		{ LedgerEntryType::SALE, SaleHelper::Instance() },

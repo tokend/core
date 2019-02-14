@@ -7,7 +7,10 @@
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
 #include "AccountRoleHelperImpl.h"
-#include "AccountHelper.h"
+#include "AccountHelperImpl.h"
+#include "SignerHelperImpl.h"
+#include "SignerRuleHelperImpl.h"
+#include "SignerRoleHelperImpl.h"
 
 namespace stellar
 {
@@ -18,6 +21,15 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
     , mTransaction(nullptr)
     , mIsReleased(true)
 {
+    mHelpers =
+    {
+        {LedgerEntryType::ACCOUNT, &getAccountHelper()},
+        {LedgerEntryType::ACCOUNT_ROLE, &getAccountRoleHelper()},
+        {LedgerEntryType::ACCOUNT_RULE, &getAccountRuleHelper()},
+        {LedgerEntryType::SIGNER, &getSignerHelper()},
+        {LedgerEntryType::SIGNER_ROLE, &getSignerRoleHelper()},
+        {LedgerEntryType::SIGNER_RULE, &getSignerRuleHelper()},
+    };
 }
 
 StorageHelperImpl::~StorageHelperImpl()
@@ -147,6 +159,24 @@ StorageHelperImpl::startNestedTransaction()
     return std::make_unique<StorageHelperImpl>(mDatabase, mNestedDelta.get());
 }
 
+EntryHelper*
+StorageHelperImpl::getHelper(LedgerEntryType type)
+{
+    return mHelpers[type];
+}
+
+std::vector<EntryHelper*>
+StorageHelperImpl::getEntryHelpers()
+{
+    std::vector<EntryHelper*> result;
+    for (auto& helper : mHelpers)
+    {
+        result.emplace_back(helper.second);
+    }
+
+    return result;
+}
+
 KeyValueHelper&
 StorageHelperImpl::getKeyValueHelper()
 {
@@ -194,6 +224,15 @@ StorageHelperImpl::getExternalSystemAccountIDPoolEntryHelper()
     }
     return *mExternalSystemAccountIDPoolEntryHelper;
 }
+AccountHelper&
+StorageHelperImpl::getAccountHelper()
+{
+    if (!mAccountHelper)
+    {
+        mAccountHelper = std::make_unique<AccountHelperImpl>(*this);
+    }
+    return *mAccountHelper;
+}
 AccountRoleHelper&
 StorageHelperImpl::getAccountRoleHelper()
 {
@@ -211,6 +250,33 @@ StorageHelperImpl::getAccountRuleHelper()
         mAccountRuleHelper = std::make_unique<AccountRuleHelperImpl>(*this);
     }
     return *mAccountRuleHelper;
+}
+SignerHelper&
+StorageHelperImpl::getSignerHelper()
+{
+    if (!mSignerHelper)
+    {
+        mSignerHelper = std::make_unique<SignerHelperImpl>(*this);
+    }
+    return *mSignerHelper;
+}
+SignerRuleHelper&
+StorageHelperImpl::getSignerRuleHelper()
+{
+    if (!mSignerRuleHelper)
+    {
+        mSignerRuleHelper = std::make_unique<SignerRuleHelperImpl>(*this);
+    }
+    return *mSignerRuleHelper;
+}
+SignerRoleHelper&
+StorageHelperImpl::getSignerRoleHelper()
+{
+    if (!mSignerRoleHelper)
+    {
+        mSignerRoleHelper = std::make_unique<SignerRoleHelperImpl>(*this);
+    }
+    return *mSignerRoleHelper;
 }
 
 } // namespace stellar

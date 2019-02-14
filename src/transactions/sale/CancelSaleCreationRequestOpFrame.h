@@ -18,6 +18,10 @@ class CancelSaleCreationRequestOpFrame : public OperationFrame
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
 
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
 public:
 
     CancelSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,

@@ -5,7 +5,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "UpdateAssetOpFrame.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
@@ -28,6 +28,27 @@ UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                           std::vector<OperationCondition>& result) const
 {
     // only asset owner can update asset
+    return true;
+}
+
+bool
+UpdateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                   std::vector<SignerRequirement>& result) const
+{
+    auto asset = storageHelper.getAssetHelper().loadAsset(mAssetUpdateRequest.code);
+    if (!asset)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update");
+
     return true;
 }
 

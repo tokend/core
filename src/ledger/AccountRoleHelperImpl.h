@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ledger/AccountRoleFrame.h"
-#include "ledger/LedgerManager.h"
 #include "AccountRoleHelper.h"
 #include "AccountRoleRulesHelper.h"
 
@@ -16,7 +14,7 @@ class StorageHelper;
 class Application;
 class StatementContext;
 
-class AccountRoleHelperImpl : public AccountRoleHelper
+class AccountRoleHelperImpl : public AccountRoleHelper, NonCopyable
 {
 public:
     AccountRoleHelperImpl(StorageHelper& storageHelper);

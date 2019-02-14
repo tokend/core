@@ -1,6 +1,6 @@
 #include <ledger/SaleHelper.h>
 #include "ReviewUpdateSaleDetailsRequestOpFrame.h"
-#include "transactions/dex/ManageSaleOpFrame.h"
+#include "transactions/sale/ManageSaleOpFrame.h"
 
 namespace stellar {
     ReviewUpdateSaleDetailsRequestOpFrame::ReviewUpdateSaleDetailsRequestOpFrame(const stellar::Operation &op,
@@ -8,12 +8,6 @@ namespace stellar {
                                                                                  stellar::TransactionFrame &parentTx) :
             ReviewRequestOpFrame(op, res, parentTx) {
 
-    }
-
-    SourceDetails ReviewUpdateSaleDetailsRequestOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::ASSET_MANAGER));
     }
 
     bool ReviewUpdateSaleDetailsRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,

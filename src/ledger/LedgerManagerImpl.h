@@ -62,10 +62,18 @@ class LedgerManagerImpl : public LedgerManager
     void closeLedgerHelper(LedgerDelta const& delta);
     void advanceLedgerPointers();
 
-    // returns roleID
+    // returns account roleID
     uint64_t createAdminRole(StorageHelper& storageHelper);
 
+    // returns signer role id
+    uint64_t
+    createAdminSigner(StorageHelper& storageHelper);
+
+    void createDefaultSignerRules(StorageHelper& storageHelper,
+                                  uint64_t const ownerRoleID);
+
     State mState;
+    AccountID mNotExistingAccount;
 
   public:
     LedgerManagerImpl(Application& app);
@@ -109,5 +117,6 @@ class LedgerManagerImpl : public LedgerManager
 
     bool shouldUse(const LedgerVersion version);
     LedgerVersion getLedgerVersion();
+    AccountID getNotExistingAccountID() override;
 };
 }

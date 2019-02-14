@@ -1,7 +1,8 @@
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/CreateAccountOpFrame.h>
 #include <ledger/StatisticsHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
+#include <ledger/SignerRuleFrame.h>
 #include "CreateAccountTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -15,15 +16,13 @@ namespace stellar {
             Operation op;
             op.body.type(OperationType::CREATE_ACCOUNT);
             CreateAccountOp &createAccountOp = op.body.createAccountOp();
-            createAccountOp.accountType = accountType;
             createAccountOp.destination = to;
-            createAccountOp.recoveryKey = recovery;
             createAccountOp.roleID = roleID;
-
-            if (policies != -1)
-                createAccountOp.policies = policies;
-            if (referrer)
+            if (referrer != nullptr)
+            {
                 createAccountOp.referrer.activate() = *referrer;
+            }
+            createAccountOp.signersData = signersData;
 
             return op;
         }
@@ -32,16 +31,6 @@ namespace stellar {
             auto newTestHelper = copy();
             newTestHelper.to = to;
             return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(AccountType accountType) {
-            auto newTestHelper = copy();
-            newTestHelper.accountType = accountType;
-            return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(int32_t accountType) {
-            return setType(static_cast<AccountType>(accountType));
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setReferrer(AccountID *referrer) {
@@ -54,10 +43,6 @@ namespace stellar {
             auto newTestHelper = copy();
             newTestHelper.policies = policies;
             return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setPolicies(AccountPolicies policies) {
-            return setPolicies(static_cast<int32_t>(policies));
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setRoleID(uint64_t roleID)
@@ -81,25 +66,41 @@ namespace stellar {
             return newTestHelper;
         }
 
-        CreateAccountTestBuilder CreateAccountTestBuilder::setRecovery(const PublicKey& recovery) {
+        CreateAccountTestBuilder CreateAccountTestBuilder::addSignerData(
+                UpdateSignerData data)
+        {
             auto newTestHelper = copy();
-            newTestHelper.recovery = recovery;
+            newTestHelper.signersData.emplace_back(data);
+            return newTestHelper;
+        }
+
+        CreateAccountTestBuilder CreateAccountTestBuilder::addBasicSigner(
+                uint64_t roleID)
+        {
+            auto newTestHelper = copy();
+            UpdateSignerData data;
+            data.publicKey = to;
+            data.roleID = roleID;
+            data.weight = SignerRuleFrame::threshold;
+            data.identity = 1;
+            data.details = "{}";
+            newTestHelper.signersData.emplace_back(data);
             return newTestHelper;
         }
 
         CreateAccountResultCode
-        CreateAccountTestHelper::applyCreateAccountTx(Account &from, PublicKey to, AccountType accountType,
+        CreateAccountTestHelper::applyCreateAccountTx(Account &from, PublicKey to, uint64_t roleID,
                                                       Account *signer, AccountID *referrer, int32 policies,
                                                       CreateAccountResultCode expectedResult) {
             auto builder = CreateAccountTestBuilder()
                     .setSource(from)
                     .setToPublicKey(to)
-                    .setType(accountType)
                     .setSigner(signer)
                     .setReferrer(referrer)
                     .setPolicies(policies)
                     .setResultCode(expectedResult)
-                    .setRecovery(SecretKey::random().getPublicKey());
+                    .addBasicSigner()
+                    .setRoleID(roleID);
             return applyTx(builder);
         }
 
@@ -121,13 +122,12 @@ namespace stellar {
         }
 
         TransactionFramePtr
-        CreateAccountTestHelper::createCreateAccountTx(Account &source, PublicKey to, AccountType accountType,
+        CreateAccountTestHelper::createCreateAccountTx(Account &source, PublicKey to,
                                                        uint32_t policies)
         {
             auto builder = CreateAccountTestBuilder()
                     .setSource(source)
                     .setToPublicKey(to)
-                    .setType(accountType)
                     .setPolicies(policies);
 
             return builder.buildTx(mTestManager);
@@ -144,7 +144,7 @@ namespace stellar {
             REQUIRE(txResult.feeCharged == mTestManager->getApp().getLedgerManager().getTxFee());
             Database& db = mTestManager->getDB();
 
-            auto accountHelper = AccountHelper::Instance();
+            auto accountHelper = AccountHelperLegacy::Instance();
             AccountFrame::pointer fromAccount = accountHelper->loadAccount(builder.source.key.getPublicKey(), db);
             AccountFrame::pointer toAccount = accountHelper->loadAccount(builder.to, db);
 
@@ -163,21 +163,6 @@ namespace stellar {
 
             }
             REQUIRE(toAccountAfter);
-            REQUIRE(!toAccountAfter->isBlocked());
-            REQUIRE(toAccountAfter->getAccountType() == builder.accountType);
-            REQUIRE(toAccountAfter->getAccount().recoveryID == builder.recovery);
-            if (builder.policies != -1){
-                REQUIRE(toAccountAfter->getPolicies() == builder.policies);
-            }
-
-            auto statisticsHelper = StatisticsHelper::Instance();
-            auto statisticsFrame = statisticsHelper->loadStatistics(builder.to, db);
-            REQUIRE(statisticsFrame);
-            auto statistics = statisticsFrame->getStatistics();
-            REQUIRE(statistics.dailyOutcome == 0);
-            REQUIRE(statistics.weeklyOutcome == 0);
-            REQUIRE(statistics.monthlyOutcome == 0);
-            REQUIRE(statistics.annualOutcome == 0);
 
             if (!toAccount)
             {

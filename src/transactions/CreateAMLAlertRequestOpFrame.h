@@ -1,15 +1,6 @@
-//
-// Created by Roman on 02.03.18.
-//
-
 #pragma once
 
-// Copyright 2015 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include "transactions/OperationFrame.h"
-#include "ledger/ReviewableRequestFrame.h"
 
 namespace stellar {
     class CreateAMLAlertRequestOpFrame : public OperationFrame {
@@ -22,6 +13,10 @@ namespace stellar {
         bool
         tryGetOperationConditions(StorageHelper& storageHelper,
                                   std::vector<OperationCondition>& result) const override;
+
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
 
     public:
 

@@ -3,6 +3,8 @@
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include "CancelASwapBidOpFrame.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
 
 using namespace std;
 
@@ -21,6 +23,36 @@ CancelASwapBidOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                  std::vector<OperationCondition> &result) const
 {
     // only bid owner can do this
+    return true;
+}
+
+bool
+CancelASwapBidOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                    std::vector<SignerRequirement> &result) const
+{
+    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
+            mCancelASwapBid.bidID, storageHelper.getDatabase());
+    if (!bid)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ATOMIC_SWAP_BID;
+        return false;
+    }
+
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(bid->getBaseAsset());
+    if (!asset)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    resource.atomicSwapBid().assetCode = asset->getCode();
+    resource.atomicSwapBid().assetType = asset->getType();
+
+    result.emplace_back(resource, "cancel");
+
     return true;
 }
 

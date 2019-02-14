@@ -190,10 +190,6 @@ namespace stellar {
         return mConfig.masterID;
     }
 
-    std::vector<PublicKey> ApplicationImpl::getSystemAccounts() const {
-        return mConfig.getSystemAccounts();
-    }
-
     std::string ApplicationImpl::getBaseExchangeName() const {
         assert(mConfig.BASE_EXCHANGE_NAME.size() > 0);
         return mConfig.BASE_EXCHANGE_NAME;

@@ -10,12 +10,10 @@ namespace stellar {
 
         PaymentOpV2 const &mPayment;
 
-        bool isRecipientFeeNotRequired();
-
         bool isDestinationFeeValid();
 
-        BalanceFrame::pointer tryLoadDestinationBalance(AssetCode asset, Database &db, LedgerDelta &delta,
-                                                        LedgerManager& lm);
+        BalanceFrame::pointer
+        tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
 
         bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db);
 
@@ -37,6 +35,10 @@ namespace stellar {
         bool
         tryGetOperationConditions(StorageHelper& storageHelper,
                                   std::vector<OperationCondition>& result) const override;
+
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
 
         AccountFrame::pointer
         tryLoadDestinationAccount(StorageHelper& storageHelper) const;

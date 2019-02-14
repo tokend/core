@@ -200,7 +200,7 @@ CommandHandler::testTx(std::string const& params, std::string& retStr)
         TransactionFramePtr txFrame;
         if (create != retMap.end() && create->second == "true")
         {
-            txFrame = createCreateAccountTx(networkID, fromKey, toKey, fromSeq, AccountType::GENERAL);
+            txFrame = createCreateAccountTx(networkID, fromKey, toKey, fromSeq);
         }
         else
         {

@@ -6,7 +6,7 @@
 #include "CreateOfferOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
@@ -38,14 +38,16 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     auto baseBalance = balanceHelper.loadBalance(mManageOffer.baseBalance);
     if (!baseBalance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 
     auto quoteBalance = balanceHelper.loadBalance(mManageOffer.quoteBalance);
     if (!quoteBalance)
     {
-        mResult.code(OperationResultCode::opNO_BALANCE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
 
@@ -68,6 +70,36 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
 
     return true;
 }
+
+bool
+CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    auto baseBalance = balanceHelper.mustLoadBalance(mManageOffer.baseBalance);
+    auto quoteBalance = balanceHelper.mustLoadBalance(mManageOffer.quoteBalance);
+
+    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
+    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    resource.offer().baseAssetCode = baseAsset->getCode();
+    resource.offer().quoteAssetCode = quoteAsset->getCode();
+    resource.offer().baseAssetType = baseAsset->getType();
+    resource.offer().quoteAssetType = quoteAsset->getType();
+
+    std::string action = "create_to_sell";
+    if (mManageOffer.isBuy)
+    {
+        action = "create_to_buy";
+    }
+
+    result.emplace_back(resource, action);
+
+    return true;
+};
 
 BalanceFrame::pointer CreateOfferOpFrame::loadBalanceValidForTrading(
     BalanceID const& balanceID, Database& db,
