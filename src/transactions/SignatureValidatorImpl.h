@@ -13,6 +13,16 @@ class SignerRuleVerifier;
 
 class SignatureValidatorImpl : public SignatureValidator
 {
+	// is used to find unused signatures
+	struct SignatureWeight
+	{
+		size_t signatureIndex;
+		uint32_t weight;
+	};
+
+	SignatureValidatorImpl::Result
+	handleSuccess(std::map<uint32_t, SignatureWeight> identityWeights);
+
 protected:
 	std::vector<bool> mUsedSignatures;
 	Hash mContentHash;

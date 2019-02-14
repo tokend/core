@@ -115,13 +115,6 @@ SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
 {
     auto signers = getSigners(storageHelper, accountID);
 
-    // is used to find unused signatures
-    struct SignatureWeight
-    {
-        size_t signatureIndex;
-        uint32_t weight;
-    };
-
     std::map<uint32_t, SignatureWeight> identityWeights;
     uint64_t totalWeight = 0;
 
@@ -153,6 +146,11 @@ SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
                 {
                     totalWeight += signer.weight - existingIdentity->second.weight;
                     existingIdentity->second = {i, signer.weight};
+
+                    if (totalWeight >= SignerRuleFrame::threshold)
+                    {
+                        return handleSuccess(identityWeights);
+                    }
                 }
                 break;
             }
@@ -162,18 +160,24 @@ SignatureValidatorImpl::checkSignature(StorageHelper& storageHelper,
 
             if (totalWeight >= SignerRuleFrame::threshold)
             {
-                for (auto& identityWeight : identityWeights)
-                {
-                    mUsedSignatures[identityWeight.second.signatureIndex] = true;
-                }
-
-                return SUCCESS;
+                return handleSuccess(identityWeights);
             }
             break;
         }
     }
 
     return NOT_ENOUGH_WEIGHT;
+}
+
+SignatureValidatorImpl::Result
+SignatureValidatorImpl::handleSuccess(std::map<uint32_t, SignatureWeight> identityWeights)
+{
+    for (auto& identityWeight : identityWeights)
+    {
+        mUsedSignatures[identityWeight.second.signatureIndex] = true;
+    }
+
+    return SUCCESS;
 }
 
 bool SignatureValidatorImpl::shouldSkipCheck(Application & app)

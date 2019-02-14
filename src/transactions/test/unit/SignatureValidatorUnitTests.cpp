@@ -124,6 +124,41 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
         }
+
+        SECTION("Try to use signers with fewer weight")
+        {
+            for (uint32_t i = 0; i < 3; i++)
+            {
+                auto secretKey = SecretKey::random();
+                DecoratedSignature signature;
+                signature.signature = secretKey.sign(content);
+                signature.hint = PubKeyUtils::getHint(secretKey.getPublicKey());
+                signatures.insert(signatures.begin(), signature);
+                auto signer = std::make_shared<SignerFrame>();
+                signer->getEntry().pubKey = secretKey.getPublicKey();
+                signer->getEntry().weight = i;
+                signer->getEntry().identity = i;
+                signers.emplace_back(signer);
+            }
+
+            signatureValidator = SignatureValidatorImpl(content, signatures);
+
+            EXPECT_CALL(appMock, getConfig())
+                    .WillOnce(ReturnRef(Const(config)));
+            EXPECT_CALL(storageHelperMock, getSignerHelper())
+                    .WillOnce(ReturnRef(signerHelperMock));
+            EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
+                    .WillOnce(Return(signers));
+            EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
+                    .Times(6).WillRepeatedly(Return(true));
+
+            auto result = signatureValidator.check(appMock, storageHelperMock,
+                    signerRuleVerifierMock, source,
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+
+            REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
+            REQUIRE(!signatureValidator.checkAllSignaturesUsed());
+        }
     }
 
     SECTION("Two operations")
