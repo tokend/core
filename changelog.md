@@ -12,6 +12,7 @@
 * ManageAccountRule and ManageAccountRole op frames
 * AccountRole and AccountRule helpers and frames
 * Account frame
+* Rename KYC request to change role
 
 ### Deprecated
 
