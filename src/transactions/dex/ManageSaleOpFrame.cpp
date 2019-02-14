@@ -41,7 +41,7 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
             return false;
         }
 
-        requestEntry.body.updateSaleDetailsRequest().newDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
+        requestEntry.body.updateSaleDetailsRequest().creatorDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
         requestEntry.body.updateSaleDetailsRequest().sequenceNumber++;
         requestFrame->setTasks(requestEntry.tasks.allTasks);
 
@@ -85,7 +85,7 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
         auto &requestEntry = request->getRequestEntry();
         requestEntry.body.type(ReviewableRequestType::UPDATE_SALE_DETAILS);
         requestEntry.body.updateSaleDetailsRequest().saleID = mManageSaleOp.saleID;
-        requestEntry.body.updateSaleDetailsRequest().newDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
+        requestEntry.body.updateSaleDetailsRequest().creatorDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
         requestEntry.body.updateSaleDetailsRequest().sequenceNumber = 0;
 
         request->recalculateHashRejectReason();

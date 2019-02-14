@@ -16,7 +16,7 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
                                         std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::LIMITS_UPDATE);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
 
     result.emplace_back(resource, "create", mSourceAccount);
 
@@ -32,14 +32,14 @@ CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestReference(Hash const& documentHash) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, documentHash));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, documentHash));
     return binToHex(hash);
 }
 
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestDetailsReference(longstring const& details) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, details));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, details));
     return binToHex(hash);
 }
 
@@ -48,8 +48,9 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     auto& db = storageHelper.getDatabase();
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+
     auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.requestID, getSourceID(),
-                                                             ReviewableRequestType::LIMITS_UPDATE, db, delta);
+                                                             ReviewableRequestType::UPDATE_LIMITS, db, delta);
     if (!requestFrame)
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
@@ -63,7 +64,8 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     }
 
     auto& limitsUpdateRequest = requestFrame->getRequestEntry().body.limitsUpdateRequest();
-    limitsUpdateRequest.details = mCreateManageLimitsRequest.manageLimitsRequest.details;
+
+    limitsUpdateRequest.creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
 
     requestFrame->recalculateHashRejectReason();
     reviewableRequestHelper->storeChange(*delta, db, requestFrame->mEntry);
@@ -84,7 +86,7 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
 
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
 
-    auto details = manageLimitsRequest.details;
+    auto details = manageLimitsRequest.creatorDetails;
     longstring reference = getLimitsManageRequestDetailsReference(details);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
 
@@ -96,9 +98,10 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     }
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::LIMITS_UPDATE);
 
-    body.limitsUpdateRequest().details = mCreateManageLimitsRequest.manageLimitsRequest.details;
+    body.type(ReviewableRequestType::UPDATE_LIMITS);
+
+    body.limitsUpdateRequest().creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
 
     auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
                                                              app.getAdminID(), referencePtr,
@@ -138,7 +141,7 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
 
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
 
-    if (!isValidJson(manageLimitsRequest.details))
+    if (!isValidJson(manageLimitsRequest.creatorDetails))
     {
         innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
         return false;
