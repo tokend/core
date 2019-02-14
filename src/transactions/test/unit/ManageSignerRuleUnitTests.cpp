@@ -75,8 +75,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
     ON_CALL(transactionFrameMock, getSignatureValidator())
             .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
-            check(Ref(appMock), Ref(storageHelperMock), Ref(signerRuleVerifierMock),
-                  Const(*op.sourceAccount), _))
+            check(Ref(appMock), Ref(storageHelperMock), _, Const(*op.sourceAccount), _))
             .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
     ON_CALL(storageHelperMock, getSignerRoleHelper());

@@ -59,7 +59,9 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
             SECTION("Delete non-existing signer role")
             {
                 manageSignerRoleTestHelper.applyTx(master, removeRoleOp,
-                                                ManageSignerRoleResultCode::NOT_FOUND);
+                                                   ManageSignerRoleResultCode::NOT_FOUND,
+                                                   OperationResultCode::opINNER,
+                                                   TransactionResultCode::txFAILED);
             }
         }
 
@@ -71,7 +73,9 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
             manageSignerTestHelper.applyTx(master, createSignerOp);
 
             manageSignerRoleTestHelper.applyTx(master, removeRoleOp,
-                                            ManageSignerRoleResultCode::ROLE_IS_USED);
+                                               ManageSignerRoleResultCode::ROLE_IS_USED,
+                                               OperationResultCode::opINNER,
+                                               TransactionResultCode::txFAILED);
         }
     }
 
@@ -83,7 +87,8 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
                 R"({"data": "new_details"})", {nonExistingRuleID}, true);
 
         auto result = manageSignerRoleTestHelper.applyTx(master,
-                createAccountRoleOp, ManageSignerRoleResultCode::NO_SUCH_RULE);
+                createAccountRoleOp, ManageSignerRoleResultCode::NO_SUCH_RULE,
+                OperationResultCode::opINNER, TransactionResultCode::txFAILED);
 
         REQUIRE(result.ruleID() == nonExistingRuleID);
     }
@@ -95,8 +100,11 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
         auto createSignerRoleOp = manageSignerRoleTestHelper.buildCreateRoleOp(
                 R"({"data": "new_details"})", ruleIDs, false);
 
-        manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
-                                           ManageSignerRoleResultCode::RULE_ID_DUPLICATION);
+        auto result = manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
+                ManageSignerRoleResultCode::RULE_ID_DUPLICATION,
+                OperationResultCode::opINNER, TransactionResultCode::txFAILED);
+
+        REQUIRE(result.ruleID() == ruleID);
     }
 
     SECTION("Default Rule id duplication")
@@ -106,7 +114,10 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
         auto createSignerRoleOp = manageSignerRoleTestHelper.buildCreateRoleOp(
                 R"({"data": "new_details"})", ruleIDs, false);
 
-        manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
-                                           ManageSignerRoleResultCode::DEFAULT_RULE_ID_DUPLICATION);
+        auto result = manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp,
+                ManageSignerRoleResultCode::DEFAULT_RULE_ID_DUPLICATION,
+                OperationResultCode::opINNER, TransactionResultCode::txFAILED);
+
+        REQUIRE(result.ruleID() == 2);
     }
 }

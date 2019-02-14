@@ -92,7 +92,7 @@ TEST_CASE("bind external system account_id - unit test",
     ON_CALL(transactionFrameMock, getSignatureValidator())
         .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
-            check(Ref(appMock), _, Ref(signerRuleVerifierMock), Const(*operation.sourceAccount), _))
+            check(Ref(appMock), _, _, Const(*operation.sourceAccount), _))
         .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
 
