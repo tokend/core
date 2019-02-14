@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* Fixed problem with adding to reference table
+
 ## 3.0.0-x.2
 
 ### Changed
