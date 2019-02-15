@@ -41,7 +41,6 @@ namespace stellar
 		void storeDelete(LedgerDelta& delta, Database& db, LedgerKey const& key) override;
 		bool exists(Database& db, LedgerKey const& key) override;
 		bool exists(AccountID const& accountID, Database& db);
-		void ensureExists(AccountID const &accountID, Database &db);
 		LedgerKey getLedgerKey(LedgerEntry const& from) override;
 		EntryFrame::pointer storeLoad(LedgerKey const& key, Database& db) override;
 		EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
@@ -56,8 +55,6 @@ namespace stellar
 	private:
 		AccountHelperLegacy() { ; }
 		~AccountHelperLegacy() { ; }
-
-		void storeUpdate(LedgerDelta& delta, Database& db, bool insert, LedgerEntry const& entry);
 	};
 
 

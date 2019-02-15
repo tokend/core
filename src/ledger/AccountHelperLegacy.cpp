@@ -16,72 +16,6 @@ namespace stellar
 using xdr::operator<;
 
 void
-AccountHelperLegacy::storeUpdate(LedgerDelta& delta, Database& db, bool insert, LedgerEntry const& entry)
-{
-    auto accountFrame = make_shared<AccountFrame>(entry);
-    auto accountEntry = accountFrame->getAccount();
-
-    accountFrame->touch(delta);
-
-    LedgerKey const& key = accountFrame->getKey();
-    flushCachedEntry(key, db);
-
-    std::string actIDStrKey = PubKeyUtils::toStrKey(accountFrame->getID());
-
-    int32_t newAccountVersion = static_cast<int32_t>(accountFrame->getAccount().ext.v());
-
-    std::string sql;
-
-    if (insert)
-    {
-        sql = std::string(
-            "INSERT INTO accounts (accountid, recoveryid, thresholds, lastmodified, account_type, account_role,"
-            "block_reasons, referrer, policies, kyc_level, version, sequential_id) "
-            "VALUES (:id, :rid, :th, :lm, :type, :ar, :br, :ref, :p, :kyc, :v, :seqid)");
-    }
-    else
-    {
-        sql = std::string(
-            "UPDATE accounts "
-            "SET    recoveryid=:rid, thresholds=:th, lastmodified=:lm, account_type=:type, account_role=:ar, "
-            "       block_reasons=:br, referrer=:ref, policies=:p, kyc_level=:kyc, version=:v, sequential_id = :seqid "
-            "WHERE  accountid=:id");
-    }
-
-    auto prep = db.getPreparedStatement(sql);
-
-
-    {
-        soci::statement& st = prep.statement();
-        st.exchange(use(actIDStrKey, "id"));
-        st.exchange(use(accountFrame->mEntry.lastModifiedLedgerSeq, "lm"));
-        st.exchange(use(newAccountVersion, "v"));
-        st.exchange(use(accountEntry.sequentialID, "seqid"));
-        st.exchange(use(accountEntry.roleID, "ar"));
-
-        st.define_and_bind();
-        {
-            auto timer = insert ? db.getInsertTimer("account")
-                : db.getUpdateTimer("account");
-            st.execute(true);
-        }
-
-        if (st.get_affected_rows() != 1)
-        {
-            throw std::runtime_error("Could not update data in SQL");
-        }
-        if (insert)
-        {
-            delta.addEntry(*accountFrame);
-        }
-        else
-        {
-            delta.modEntry(*accountFrame);
-        }
-    }
-}
-
-void
 AccountHelperLegacy::dropAll(Database& db)
 {
     std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(db, nullptr);
@@ -91,53 +25,30 @@ AccountHelperLegacy::dropAll(Database& db)
 void
 AccountHelperLegacy::storeAdd(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
 {
-    storeUpdate(delta, db, true, entry);
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, &delta));
+    storageHelper->getAccountHelper().storeAdd(entry);
 }
 
 void
 AccountHelperLegacy::storeChange(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
 {
-    storeUpdate(delta, db, false, entry);
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, &delta));
+    storageHelper->getAccountHelper().storeChange(entry);
 }
 
 void
 AccountHelperLegacy::storeDelete(LedgerDelta& delta, Database& db,
         LedgerKey const& key)
 {
-    flushCachedEntry(key, db);
-
-    std::string actIDStrKey = PubKeyUtils::toStrKey(key.account().accountID);
-    {
-        auto timer = db.getDeleteTimer("account");
-        auto prep = db.getPreparedStatement("DELETE FROM accounts "
-            "WHERE       accountid=:v1");
-        auto& st = prep.statement();
-        st.exchange(soci::use(actIDStrKey));
-        st.define_and_bind();
-        st.execute(true);
-    }
-    {
-        auto timer = db.getDeleteTimer("signer");
-        auto prep =
-            db.getPreparedStatement("DELETE FROM signers "
-                "WHERE       accountid=:v1");
-        auto& st = prep.statement();
-        st.exchange(soci::use(actIDStrKey));
-        st.define_and_bind();
-        st.execute(true);
-    }
-    delta.deleteEntry(key);
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, &delta));
+    storageHelper->getAccountHelper().storeDelete(key);
 }
 
 bool
 AccountHelperLegacy::exists(Database& db, LedgerKey const& key)
 {
-    if (cachedEntryExists(key, db) && getCachedEntry(key, db) != nullptr)
-    {
-        return true;
-    }
-
-    return exists(key.account().accountID, db);
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
+    storageHelper->getAccountHelper().exists(key);
 }
 
 LedgerKey
@@ -194,36 +105,16 @@ AccountHelperLegacy::mustLoadAccount(AccountID const& accountID, Database& db)
 
     if (!accountFrame)
     {
-        throw new::runtime_error("Expect account to exist");
+        throw std::runtime_error("Expect account to exist");
     }
 
     return accountFrame;
 }
 
-bool AccountHelperLegacy::exists(AccountID const &rawAccountID, Database &db) {
-    int exists = 0;
-    {
-        auto timer = db.getSelectTimer("account-exists");
-        auto prep =
-                db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM accounts "
-                                                "WHERE accountid=:v1)");
-        auto& st = prep.statement();
-                    auto accountID = PubKeyUtils::toStrKey(rawAccountID);
-        st.exchange(use(accountID));
-        st.exchange(into(exists));
-        st.define_and_bind();
-        st.execute(true);
-    }
-    return exists != 0;
+bool AccountHelperLegacy::exists(AccountID const &rawAccountID, Database &db)
+{
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
+    storageHelper->getAccountHelper().exists(rawAccountID);
 }
 
-void AccountHelperLegacy::ensureExists(AccountID const &accountID, Database &db) {
-    if (!exists(accountID, db))
-    {
-        auto accountIdStr = PubKeyUtils::toStrKey(accountID);
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: account not found in database, accountID: "
-                                               << accountIdStr;
-        throw runtime_error("Unexpected state: failed to found account in database, accountID: " + accountIdStr);
-    }
-}
 }

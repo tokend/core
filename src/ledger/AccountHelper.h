@@ -9,6 +9,8 @@ namespace stellar
 class AccountHelper : public EntryHelper
 {
 public:
+    using EntryHelper::exists;
+
     virtual bool
     exists(AccountID const& accountID) = 0;
 
