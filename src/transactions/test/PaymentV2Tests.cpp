@@ -290,8 +290,12 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                 paymentV2Delta.commission.push_back(BalanceDelta{paymentAsset, totalFee});
 
                 paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,
-                                                     paymentAmount, paymentFeeData, "", "",
+                                                     paymentAmount, paymentFeeData, "", "ref",
                                                      &paymentV2Delta);
+
+                paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,
+                                                     paymentAmount, paymentFeeData, "", "ref",
+                                                     &paymentV2Delta, PaymentV2ResultCode::REFERENCE_DUPLICATION);
             }
             SECTION("Incorrect amount precision") {
                 if (testSet.paymentAsset == "USDN") {
