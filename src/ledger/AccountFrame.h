@@ -48,7 +48,7 @@ public:
     AccountID*
     getReferrer() const
     {
-        mAccountEntry.referrer.get();
+        return mAccountEntry.referrer.get();
     }
 
     void

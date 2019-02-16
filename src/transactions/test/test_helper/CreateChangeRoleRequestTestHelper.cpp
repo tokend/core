@@ -83,8 +83,8 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
                     requestBeforeTxEntry.body.changeRoleRequest().destinationAccount);
             REQUIRE(requestAfterTxEntry.body.changeRoleRequest().accountRoleToSet ==
                     requestBeforeTxEntry.body.changeRoleRequest().accountRoleToSet);
-            REQUIRE(requestAfterTxEntry.body.changeRoleRequest().kycData ==
-                    requestBeforeTxEntry.body.changeRoleRequest().kycData);
+            REQUIRE(requestAfterTxEntry.body.changeRoleRequest().creatorDetails ==
+                requestBeforeTxEntry.body.changeRoleRequest().creatorDetails);
             REQUIRE(requestAfterTxEntry.tasks.allTasks ==
                     requestBeforeTxEntry.tasks.allTasks);
             REQUIRE(requestAfterTxEntry.tasks.pendingTasks ==
@@ -114,7 +114,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
     REQUIRE(requestAfterTx->getRequestID() == requestID);
     REQUIRE(requestAfterTxEntry.body.changeRoleRequest().destinationAccount == accountToUpdateKYC);
     REQUIRE(requestAfterTxEntry.body.changeRoleRequest().accountRoleToSet == roleIDToSet);
-    REQUIRE(requestAfterTxEntry.body.changeRoleRequest().kycData == kycData);
+    REQUIRE(requestAfterTxEntry.body.changeRoleRequest().creatorDetails == kycData);
 
     if (!!allTasks) {
         REQUIRE(requestAfterTxEntry.tasks.allTasks == *allTasks);

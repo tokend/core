@@ -165,7 +165,7 @@ void ReviewableRequestFrame::ensureAMLAlertValid(AMLAlertRequest const &request)
 void
 ReviewableRequestFrame::ensureChangeRoleValid(const ChangeRoleRequest &request)
 {
-	if (!isValidJson(request.kycData)) {
+	if (!isValidJson(request.creatorDetails)) {
 		throw std::runtime_error("KYC data is invalid");
 	}
 }

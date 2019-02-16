@@ -18,7 +18,7 @@ void ReviewChangeRoleRequestChecker::checkApprove(ReviewableRequestFrame::pointe
 
     auto accountKYCAfterTx = AccountKYCHelper::Instance()->loadAccountKYC(updateKYCRequest.destinationAccount,mTestManager->getDB());
     REQUIRE(!!accountKYCAfterTx);
-    REQUIRE(accountKYCAfterTx->getKYCData() == updateKYCRequest.kycData);
+    REQUIRE(accountKYCAfterTx->getKYCData() == updateKYCRequest.creatorDetails);
 }
 
 ReviewChangeRoleRequestChecker::ReviewChangeRoleRequestChecker(TestManager::pointer testManager)

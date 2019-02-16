@@ -49,12 +49,12 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     auto updatedKYC = kycHelper->loadAccountKYC(destinationAccount, db, &delta);
     if (!updatedKYC)
     {
-        auto updatedKYCAccountFrame = AccountKYCFrame::createNew(destinationAccount, changeRoleRequest.kycData);
+        auto updatedKYCAccountFrame = AccountKYCFrame::createNew(destinationAccount, changeRoleRequest.creatorDetails);
         kycHelper->storeAdd(delta, db, updatedKYCAccountFrame->mEntry);
     }
     else
     {
-        updatedKYC->setKYCData(changeRoleRequest.kycData);
+        updatedKYC->setKYCData(changeRoleRequest.creatorDetails);
         kycHelper->storeChange(delta, db, updatedKYC->mEntry);
     }
 

@@ -21,7 +21,7 @@ SignerHelperImpl::dropAll()
 {
     Database& db = getDatabase();
 
-    db.getSession() << "DROP TABLE IF EXISTS signers";
+    db.getSession() << "DROP TABLE IF EXISTS signers;";
     db.getSession() << "CREATE TABLE signers"
                        "("
                        "account_id      VARCHAR(56)    NOT NULL,"
@@ -34,7 +34,7 @@ SignerHelperImpl::dropAll()
                        "lastmodified    INT            NOT NULL DEFAULT 0,"
                        "PRIMARY KEY (public_key)"
                        ");";
-    db.getSession() << "CREATE INDEX account_signers ON signers (account_id)";
+    db.getSession() << "CREATE INDEX account_signers ON signers (account_id);";
 }
 
 void

@@ -218,7 +218,7 @@ CreateChangeRoleRequestOpFrame::createRequest(ReviewableRequestEntry &requestEnt
 
     changeRoleRequest.destinationAccount = mCreateChangeRoleRequestOp.destinationAccount;
     changeRoleRequest.accountRoleToSet = mCreateChangeRoleRequestOp.accountRoleToSet;
-    changeRoleRequest.kycData = mCreateChangeRoleRequestOp.kycData;
+    changeRoleRequest.creatorDetails = mCreateChangeRoleRequestOp.kycData;
     changeRoleRequest.sequenceNumber = 0;
 
     requestEntry.tasks.allTasks = mCreateChangeRoleRequestOp.allTasks.get()
@@ -254,7 +254,7 @@ CreateChangeRoleRequestOpFrame::getChangeRoleTasks(Database &db, LedgerManager &
 void
 CreateChangeRoleRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)
 {
-    requestEntry.body.changeRoleRequest().kycData = mCreateChangeRoleRequestOp.kycData;
+    requestEntry.body.changeRoleRequest().creatorDetails = mCreateChangeRoleRequestOp.kycData;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.changeRoleRequest().sequenceNumber++;
 }

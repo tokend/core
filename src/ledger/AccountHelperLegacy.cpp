@@ -48,7 +48,7 @@ bool
 AccountHelperLegacy::exists(Database& db, LedgerKey const& key)
 {
     auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    storageHelper->getAccountHelper().exists(key);
+    return storageHelper->getAccountHelper().exists(key);
 }
 
 LedgerKey
@@ -114,7 +114,7 @@ AccountHelperLegacy::mustLoadAccount(AccountID const& accountID, Database& db)
 bool AccountHelperLegacy::exists(AccountID const &rawAccountID, Database &db)
 {
     auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    storageHelper->getAccountHelper().exists(rawAccountID);
+    return storageHelper->getAccountHelper().exists(rawAccountID);
 }
 
 }

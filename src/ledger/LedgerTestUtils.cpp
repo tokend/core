@@ -49,7 +49,7 @@ stripControlCharacters(T& s)
     for (auto it = s.begin(); it != s.end();)
     {
         char c = static_cast<char>(*it);
-        if (c < 0 || std::iscntrl(c))
+        if (c < 0 || std::iscntrl(c, loc))
         {
             it = s.erase(it);
         }
