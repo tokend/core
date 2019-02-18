@@ -28,49 +28,49 @@ CancelAssetRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelpe
 						  std::vector<OperationCondition>& result) const
 {
 	// only request creator can cancel it
-	return true;
+    return true;
 }
 
 bool
 CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 							std::vector<stellar::SignerRequirement> &result) const
 {
-	auto request = ReviewableRequestHelper::Instance()->loadRequest(
-			mManageAsset.requestID, storageHelper.getDatabase());
-	if (!request || ((request->getType() != ReviewableRequestType::CREATE_ASSET) &&
-					 (request->getType() != ReviewableRequestType::UPDATE_ASSET)))
-	{
-		mResult.code(OperationResultCode::opNO_ENTRY);
-		mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
-		return false;
-	}
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mManageAsset.requestID, storageHelper.getDatabase());
+    if (!request || ((request->getType() != ReviewableRequestType::CREATE_ASSET) &&
+                     (request->getType() != ReviewableRequestType::UPDATE_ASSET)))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
 
-	SignerRuleResource resource(LedgerEntryType::ASSET);
+    SignerRuleResource resource(LedgerEntryType::ASSET);
 
-	switch (request->getType())
-	{
-		case ReviewableRequestType::CREATE_ASSET:
-		{
-			auto createData = request->getRequestEntry().body.assetCreationRequest();
-			resource.asset().assetType = createData.type;
-			resource.asset().assetCode = createData.code;
-			break;
-		}
-		case ReviewableRequestType::UPDATE_ASSET:
-		{
-			auto updateData = request->getRequestEntry().body.assetUpdateRequest();
-			resource.asset().assetCode = updateData.code;
-			auto asset = storageHelper.getAssetHelper().mustLoadAsset(updateData.code);
-			resource.asset().assetType = asset->getType();
-			break;
-		}
-		default:
-			throw std::runtime_error("Unexpected request type");
-	}
+    switch (request->getType())
+    {
+        case ReviewableRequestType::CREATE_ASSET:
+        {
+            auto createData = request->getRequestEntry().body.assetCreationRequest();
+            resource.asset().assetType = createData.type;
+            resource.asset().assetCode = createData.code;
+            break;
+	    }
+	    case ReviewableRequestType::UPDATE_ASSET:
+        {
+            auto updateData = request->getRequestEntry().body.assetUpdateRequest();
+            resource.asset().assetCode = updateData.code;
+            auto asset = storageHelper.getAssetHelper().mustLoadAsset(updateData.code);
+            resource.asset().assetType = asset->getType();
+            break;
+        }
+        default:
+            throw std::runtime_error("Unexpected request type");
+    }
 
-	result.emplace_back(resource, "cancel");
+    result.emplace_back(resource, "cancel");
 
-	return true;
+    return true;
 }
 
 bool

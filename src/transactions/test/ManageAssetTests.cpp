@@ -98,7 +98,8 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
                                                  manageAssetHelper.
                                                  createCancelRequest(),
                                                  ManageAssetResultCode::
-                                                 REQUEST_NOT_FOUND);
+                                                 REQUEST_NOT_FOUND,
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Request has invalid type")
         {
@@ -116,7 +117,8 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             manageAssetHelper.
                 applyManageAssetTx(root, requestResult.success().requestID,
                                    cancelRequest,
-                                   ManageAssetResultCode::REQUEST_NOT_FOUND);
+                                   ManageAssetResultCode::REQUEST_NOT_FOUND,
+                                   OperationResultCode::opNO_ENTRY);
         }
     }
     SECTION("Asset creation request")
