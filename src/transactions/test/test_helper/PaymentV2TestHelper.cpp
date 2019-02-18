@@ -110,6 +110,11 @@ namespace stellar {
 
             auto actualPaymentResult = opResult.tr().paymentV2Result();
 
+            if (expectedResultCode != PaymentV2ResultCode::SUCCESS)
+            {
+                return actualPaymentResult;
+            }
+
             if (!paymentDelta)
                 return actualPaymentResult;
 
