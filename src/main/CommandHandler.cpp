@@ -434,6 +434,9 @@ CommandHandler::info(std::string const& params, std::string& retStr)
 #ifdef XDR_REVISION
     info["xdr_revision"] = XDR_REVISION;
 #endif
+#ifdef CORE_REVISION
+    info["core_revision"] = CORE_REVISION;
+#endif
     info["protocol_version"] = mApp.getConfig().LEDGER_PROTOCOL_VERSION;
     info["ledger_version"] = lm.getLastClosedLedgerHeader().header.ledgerVersion;
     info["tx_expiration_period"] = Json::UInt64(lm.getTxExpirationPeriod()

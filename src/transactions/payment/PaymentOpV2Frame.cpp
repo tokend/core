@@ -363,7 +363,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
                 innerResult().code(PaymentV2ResultCode::REFERENCE_DUPLICATION);
                 return false;
             }
-        createReferenceEntry(mPayment.reference, storageHelper);
+        createReferenceEntry(mPayment.reference, sourceAccountID, storageHelper);
         }
 
         innerResult().code(PaymentV2ResultCode::SUCCESS);

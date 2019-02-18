@@ -126,7 +126,7 @@ private:
     bool loadAccount(LedgerDelta* delta, Database& db);
 
     void
-    createReferenceEntry(std::string reference, StorageHelper& storageHelper);
+    createReferenceEntry(std::string reference, AccountID sender, StorageHelper& storageHelper);
 
     OperationResult&
     getResult() const

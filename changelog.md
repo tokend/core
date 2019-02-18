@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-x.3
+
+### Fixed
+
+* Fixed problem with adding to reference table
+
 ## Unreleased
 
 ### Added

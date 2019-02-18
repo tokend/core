@@ -260,13 +260,14 @@ OperationFrame::loadAccount(LedgerDelta* delta, Database& db)
 
 [[deprecated]]
 void
-OperationFrame::createReferenceEntry(string reference, StorageHelper& storageHelper)
+OperationFrame::createReferenceEntry(string reference, AccountID sender, StorageHelper& storageHelper)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::REFERENCE_ENTRY);
     ReferenceEntry& entry = le.data.reference();
 
     entry.reference = reference;
+    entry.sender = sender;
     auto referenceFrame = std::make_shared<ReferenceFrame>(le);
     EntryHelperProvider::storeAddEntry(*storageHelper.getLedgerDelta(),
                                        storageHelper.getDatabase(),
