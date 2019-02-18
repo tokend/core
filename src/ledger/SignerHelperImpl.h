@@ -48,10 +48,10 @@ private:
     loadSigners(AccountID const& accountID);
 
     SignerFrame::pointer
-    loadSigner(PublicKey const& publicKey);
+    loadSigner(PublicKey const& publicKey,  AccountID const& accountID);
 
     bool
-    exists(PublicKey const &rawPubKey);
+    exists(PublicKey const &rawPubKey, AccountID const& accountID);
 
     bool
     isRoleIDUsed(uint64_t roleID);

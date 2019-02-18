@@ -23,6 +23,7 @@ SignerFrame::getKey() const
     {
         mKey = LedgerKey(LedgerEntryType::SIGNER);
         mKey.signer().pubKey = mSignerEntry.pubKey;
+        mKey.signer().accountID = mSignerEntry.accountID;
         mKeyCalculated = true;
     }
 

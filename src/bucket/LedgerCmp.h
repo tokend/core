@@ -47,7 +47,15 @@ struct LedgerEntryIdCmp
             case LedgerEntryType::ACCOUNT:
                 return a.account().accountID < b.account().accountID;
             case LedgerEntryType::SIGNER:
-                return a.signer().pubKey < b.signer().pubKey;
+            {
+                auto const &as = a.signer();
+                auto const &bs = b.signer();
+                if (as.pubKey < bs.pubKey)
+                    return true;
+                if (bs.pubKey < as.pubKey)
+                    return false;
+                return as.accountID < bs.accountID;
+            }
             case LedgerEntryType::FEE: {
                 auto const &af = a.feeState();
                 auto const &bf = b.feeState();

@@ -1,8 +1,8 @@
-#include <ledger/SignerRuleFrame.h>
+#include "ledger/SignerRuleFrame.h"
+#include "transactions/test/test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRoleTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRuleTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerTestHelper.h"
-#include "TxTests.h"
 #include "crypto/SHA.h"
 #include "main/test.h"
 #include "test/test_marshaler.h"
@@ -28,6 +28,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
     ManageSignerTestHelper manageSignerTestHelper(testManager);
     ManageSignerRoleTestHelper manageSignerRoleTestHelper(testManager);
     ManageSignerRuleTestHelper manageSignerRuleTestHelper(testManager);
+    CreateAccountTestHelper createAccountTestHelper(testManager);
 
     SECTION("Create operational signer")
     {
@@ -162,6 +163,27 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
                                            ManageSignerResultCode::SUCCESS,
                                            OperationResultCode::opINNER,
                                            TransactionResultCode::txSUCCESS, &signer);
+        }
+
+        SECTION("Use public key of existing signer for other account")
+        {
+            auto accountKey = SecretKey::random();
+            auto account = Account{accountKey, Salt(5)};
+
+            UpdateSignerData signerData;
+            auto data = createSignerOp.data.createData();
+            signerData.publicKey = data.publicKey;
+            signerData.weight = data.weight;
+            signerData.identity = data.identity;
+            signerData.roleID = data.roleID;
+            signerData.details = data.details;
+
+            createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                    .setSource(master)
+                                                    .setToPublicKey(accountKey.getPublicKey())
+                                                    .setRoleID(1)
+                                                    .addBasicSigner()
+                                                    .addSignerData(signerData));
         }
     }
 }

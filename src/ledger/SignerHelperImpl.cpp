@@ -32,7 +32,7 @@ SignerHelperImpl::dropAll()
                        "details         TEXT           NOT NULL DEFAULT '{}',"
                        "version         INT            NOT NULL DEFAULT 0,"
                        "lastmodified    INT            NOT NULL DEFAULT 0,"
-                       "PRIMARY KEY (public_key)"
+                       "PRIMARY KEY (public_key, account_id)"
                        ");";
     db.getSession() << "CREATE INDEX account_signers ON signers (account_id);";
 }
@@ -138,13 +138,17 @@ void
 SignerHelperImpl::storeDelete(LedgerKey const &key)
 {
     auto pubKey = key.signer().pubKey;
+    auto accountID = key.signer().accountID;
     std::string signerStrKey = PubKeyUtils::toStrKey(pubKey);
+    std::string accountIDStr = PubKeyUtils::toStrKey(accountID);
 
     Database& db = getDatabase();
     auto prep = db.getPreparedStatement("DELETE FROM signers "
-                                        "WHERE public_key = :pub");
+                                        "WHERE public_key = :pub "
+                                        "  AND account_id = :a");
     auto& st = prep.statement();
-    st.exchange(use(signerStrKey));
+    st.exchange(use(accountIDStr, "a"));
+    st.exchange(use(signerStrKey, "pub"));
     st.define_and_bind();
     {
         auto timer = db.getDeleteTimer("signer");
@@ -167,21 +171,25 @@ SignerHelperImpl::exists(LedgerKey const& key)
         return true;
     }
 
-    return exists(key.signer().pubKey);
+    return exists(key.signer().pubKey, key.signer().accountID);
 }
 
 bool
-SignerHelperImpl::exists(PublicKey const &rawPubKey)
+SignerHelperImpl::exists(PublicKey const &rawPubKey, AccountID const& rawAccountID)
 {
     int exists = 0;
     {
         Database& db = getDatabase();
         auto timer = db.getSelectTimer("signer-exists");
         auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL "
-                                            "FROM signers WHERE public_key = :v1)");
+                                            "FROM signers "
+                                            "WHERE public_key = :p AND "
+                                            "      account_id = :a)");
         auto& st = prep.statement();
-        auto accountID = PubKeyUtils::toStrKey(rawPubKey);
-        st.exchange(use(accountID));
+        auto publicKey = PubKeyUtils::toStrKey(rawPubKey);
+        auto accountID = PubKeyUtils::toStrKey(rawAccountID);
+        st.exchange(use(publicKey, "p"));
+        st.exchange(use(accountID, "a"));
         st.exchange(into(exists));
         st.define_and_bind();
         st.execute(true);
@@ -215,6 +223,7 @@ SignerHelperImpl::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey(from.data.type());
     ledgerKey.signer().pubKey = from.data.signer().pubKey;
+    ledgerKey.signer().accountID = from.data.signer().accountID;
 
     return ledgerKey;
 }
@@ -222,7 +231,7 @@ SignerHelperImpl::getLedgerKey(LedgerEntry const& from)
 EntryFrame::pointer
 SignerHelperImpl::storeLoad(LedgerKey const& key)
 {
-    return loadSigner(key.signer().pubKey);
+    return loadSigner(key.signer().pubKey, key.signer().accountID);
 }
 
 EntryFrame::pointer
@@ -242,10 +251,11 @@ SignerHelperImpl::countObjects()
 }
 
 SignerFrame::pointer
-SignerHelperImpl::loadSigner(PublicKey const &publicKey)
+SignerHelperImpl::loadSigner(PublicKey const &publicKey, AccountID const& accountID)
 {
     LedgerKey key(LedgerEntryType::SIGNER);
     key.signer().pubKey = publicKey;
+    key.signer().accountID = accountID;
 
     if (cachedEntryExists(key))
     {
@@ -253,15 +263,17 @@ SignerHelperImpl::loadSigner(PublicKey const &publicKey)
         return p ? std::make_shared<SignerFrame>(*p) : nullptr;
     }
 
-    std::string actIDStrKey = PubKeyUtils::toStrKey(publicKey);
+    std::string pubKeyStr = PubKeyUtils::toStrKey(publicKey);
+    std::string actIDStrKey = PubKeyUtils::toStrKey(accountID);
 
     Database& db = getDatabase();
     std::string sql = mSignerColumnSelector;
-    sql += " WHERE public_key = :pub_k";
+    sql += " WHERE public_key = :pub_k AND account_id = :acc";
 
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(actIDStrKey, "pub_k"));
+    st.exchange(use(pubKeyStr, "pub_k"));
+    st.exchange(use(actIDStrKey, "acc"));
 
     SignerFrame::pointer result;
     load(prep, [&result](LedgerEntry const& entry)

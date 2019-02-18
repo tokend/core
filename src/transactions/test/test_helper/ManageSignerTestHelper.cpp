@@ -117,7 +117,7 @@ ManageSignerTestHelper::applyTx(Account &source, const ManageSignerOp &op,
             throw std::runtime_error("Unexpected action");
     }
 
-    auto signerFrame = signerHelper.loadSigner(signerKey);
+    auto signerFrame = signerHelper.loadSigner(signerKey, source.key.getPublicKey());
     if (isRequired)
     {
         REQUIRE(signerFrame);

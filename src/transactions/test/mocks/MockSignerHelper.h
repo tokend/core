@@ -20,11 +20,14 @@ public:
     MOCK_METHOD0(getDatabase, Database&());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
-    MOCK_METHOD1(loadSigner, SignerFrame::pointer(PublicKey const& publicKey));
+    MOCK_METHOD2(loadSigner, SignerFrame::pointer(
+            PublicKey const& publicKey, AccountID const& accountID));
     MOCK_METHOD1(loadSigners,
                  std::vector<SignerFrame::pointer>(AccountID const& accountID));
-    MOCK_METHOD1(isRoleIDUsed, bool(uint64_t const roleID));
-    MOCK_METHOD1(exists, bool(PublicKey const& publicKey));
+    MOCK_METHOD1(isRoleIDUsed, bool(uint64_t roleID));
+    MOCK_METHOD2(exists,
+                 bool(PublicKey const& publicKey, AccountID const& accountID));
+
 
 
 };

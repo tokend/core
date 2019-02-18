@@ -75,6 +75,7 @@ TEST_CASE("create account", "[tx][create_account]") {
         auto accountTestBuilder = createAccountTestBuilder
                 .setReferrer(&validReferrer)
                 .setToPublicKey(account.getPublicKey())
+                .addBasicSigner()
                 .setRoleID(emptyAccountRoleID);
         createAccountHelper.applyTx(accountTestBuilder);
     }

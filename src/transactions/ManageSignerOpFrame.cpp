@@ -37,7 +37,7 @@ ManageSignerOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
             roleID = mManageSigner.data.updateData().roleID;
             // checking for rules which allows to change signer with such role
             auto signer = storageHelper.getSignerHelper().loadSigner(
-                    mManageSigner.data.updateData().publicKey);
+                    mManageSigner.data.updateData().publicKey, getSourceID());
             if (!signer)
             {
                 mResult.code(OperationResultCode::opNO_ENTRY);
@@ -52,7 +52,7 @@ ManageSignerOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         case ManageSignerAction::REMOVE:
         {
             auto signer = storageHelper.getSignerHelper().loadSigner(
-                    mManageSigner.data.removeData().publicKey);
+                    mManageSigner.data.removeData().publicKey, getSourceID());
             if (!signer) {
                 mResult.code(OperationResultCode::opNO_ENTRY);
                 mResult.entryType() = LedgerEntryType::SIGNER;
@@ -132,7 +132,7 @@ ManageSignerOpFrame::createSigner(Application &app, StorageHelper &storageHelper
     auto data = mManageSigner.data.createData();
 
     auto& signerHelper = storageHelper.getSignerHelper();
-    if (signerHelper.exists(data.publicKey))
+    if (signerHelper.exists(data.publicKey, getSourceID()))
     {
         innerResult().code(ManageSignerResultCode::ALREADY_EXISTS);
         return false;
@@ -169,8 +169,8 @@ ManageSignerOpFrame::updateSigner(Application &app, StorageHelper &storageHelper
 
     auto& signerHelper = storageHelper.getSignerHelper();
 
-    auto signerFrame = signerHelper.loadSigner(data.publicKey);
-    if (!signerFrame || !(signerFrame->getAccountID() == getSourceID()))
+    auto signerFrame = signerHelper.loadSigner(data.publicKey, getSourceID());
+    if (!signerFrame)
     {
         innerResult().code(ManageSignerResultCode::NOT_FOUND);
         return false;
@@ -192,17 +192,18 @@ ManageSignerOpFrame::updateSigner(Application &app, StorageHelper &storageHelper
 bool
 ManageSignerOpFrame::deleteSigner(Application &app, StorageHelper &storageHelper)
 {
-    auto& signerHelper = storageHelper.getSignerHelper();
-    auto signerFrame = signerHelper.loadSigner(
-            mManageSigner.data.removeData().publicKey);
+    LedgerKey key(LedgerEntryType::SIGNER);
+    key.signer().pubKey = mManageSigner.data.removeData().publicKey;
+    key.signer().accountID = getSourceID();
 
-    if (!signerFrame || !(signerFrame->getAccountID() == getSourceID()))
+    auto& signerHelper = storageHelper.getSignerHelper();
+    if (!signerHelper.exists(key))
     {
         innerResult().code(ManageSignerResultCode::NOT_FOUND);
         return false;
     }
 
-    signerHelper.storeDelete(signerFrame->getKey());
+    signerHelper.storeDelete(key);
 
     innerResult().code(ManageSignerResultCode::SUCCESS);
 
