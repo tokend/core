@@ -5,19 +5,9 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "ledger/EntryFrame.h"
-#include "ledger/FeeFrame.h"
-#include "ledger/LedgerManager.h"
-#include <functional>
-#include <unordered_map>
-
-namespace soci
-{
-class session;
-}
 
 namespace stellar
 {
-class StatementContext;
 
 class BalanceFrame : public EntryFrame
 {

@@ -2,14 +2,12 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
 #include "TransactionFrameImpl.h"
-#include "OperationFrame.h"
-#include "crypto/Hex.h"
 #include "crypto/SHA.h"
-#include "crypto/SecretKey.h"
 #include "database/Database.h"
 #include "herder/TxSetFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
@@ -17,15 +15,11 @@
 #include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "util/Logging.h"
-#include "util/XDRStream.h"
-#include "util/asio.h"
 #include "util/basen.h"
-#include "xdrpp/marshal.h"
-#include <string>
 
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
+#include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
 
 namespace stellar
 {
@@ -37,47 +31,6 @@ TransactionFrameImpl::TransactionFrameImpl(Hash const& networkID,
                                            TransactionEnvelope const& envelope)
     : mEnvelope(envelope), mNetworkID(networkID)
 {
-}
-
-void
-TransactionFrameImpl::storeFeeForOpType(
-    OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,
-    AccountFrame::pointer source, AssetCode txFeeAssetCode, Database& db)
-{
-    auto opFeeFrame = FeeHelper::Instance()->loadForAccount(
-        FeeType::OPERATION_FEE, txFeeAssetCode, static_cast<int64_t>(opType),
-        source, 0, db);
-    feesForOpTypes[opType] =
-        opFeeFrame != nullptr ? static_cast<uint64_t>(opFeeFrame->getFixedFee())
-                              : 0;
-}
-
-bool
-TransactionFrameImpl::tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode)
-{
-
-    auto key = ManageKeyValueOpFrame::makeTransactionFeeAssetKey();
-    auto txFeeAssetKV = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
-
-    if (txFeeAssetKV == nullptr)
-    {
-        return false;
-    }
-
-    if (txFeeAssetKV->getKeyValue().value.type() != KeyValueEntryType::STRING)
-    {
-        throw std::runtime_error(
-            "Unexpected database state, expected issuance tasks to be STRING");
-    }
-
-    if (!AssetFrame::isAssetCodeValid(
-            txFeeAssetKV->getKeyValue().value.stringValue()))
-    {
-        throw std::invalid_argument("Tx fee asset code is invalid");
-    }
-
-    txFeeAssetCode = txFeeAssetKV->getKeyValue().value.stringValue();
-    return true;
 }
 
 Hash const&
@@ -160,7 +113,7 @@ TransactionFrameImpl::loadAccount(LedgerDelta* delta, Database& db,
                                   AccountID const& accountID)
 {
     AccountFrame::pointer res;
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
 
     if (mSigningAccount && mSigningAccount->getID() == accountID)
     {
@@ -207,17 +160,13 @@ TransactionFrameImpl::resetResults()
 }
 
 bool
-TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
-                                       AccountFrame& account)
+TransactionFrameImpl::doCheckSignature(Application& app,
+                                       StorageHelper& storageHelper,
+                                       AccountID const& accountID)
 {
-    auto signatureValidator = getSignatureValidator();
-    // block reasons are handeled on operation level
-    auto sourceDetails = SourceDetails(
-        getAllAccountTypes(), mSigningAccount->getLowThreshold(),
-        getAnySignerType() ^ static_cast<int32_t>(SignerType::READER),
-        getAnyBlockReason());
-    SignatureValidator::Result result =
-        signatureValidator->check(app, db, account, sourceDetails);
+    SignerRuleVerifierImpl signerRuleVerifier;
+    auto result = getSignatureValidator()->check(app, storageHelper,
+            signerRuleVerifier, accountID, {});
     switch (result)
     {
     case SignatureValidator::Result::SUCCESS:
@@ -231,7 +180,6 @@ TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
         getResult().result.code(TransactionResultCode::txBAD_AUTH);
         return false;
     case SignatureValidator::Result::EXTRA:
-    case SignatureValidator::Result::INVALID_SIGNER_TYPE:
         app.getMetrics()
             .NewMeter({"transaction", "invalid", "bad-auth-extra"},
                       "transaction")
@@ -297,13 +245,26 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
         return false;
     }
 
-    // error code already set
-    if (!doCheckSignature(app, db, *mSigningAccount))
+    StorageHelperImpl storageHelper(db, delta);
+    AccountRuleVerifierImpl accountRuleVerifier;
+    if (!checkSendTxRule(accountRuleVerifier, storageHelper))
     {
+        getResult().result.code(TransactionResultCode::txNO_ROLE_PERMISSION);
         return false;
     }
 
-    return true;
+    // error code already set
+    return doCheckSignature(app, storageHelper, getSourceID());
+}
+
+bool
+TransactionFrameImpl::checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
+                                      StorageHelper& storageHelper)
+{
+    OperationCondition operationCondition(AccountRuleResource(
+            LedgerEntryType::TRANSACTION), "send", mSigningAccount);
+
+    return accountRuleVerifier.isAllowed(operationCondition, storageHelper);
 }
 
 void
@@ -349,9 +310,10 @@ TransactionFrameImpl::checkValid(Application& app)
         return res;
     }
 
+    AccountRuleVerifierImpl accountRuleVerifier;
     for (auto& op : mOperations)
     {
-        if (!op->checkValid(app))
+        if (!op->checkValid(app, accountRuleVerifier))
         {
             // it's OK to just fast fail here and not try to call
             // checkValid on all operations as the resulting object
@@ -447,7 +409,6 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
             StorageHelperImpl storageHelperImpl(app.getDatabase(), &opDelta);
             StorageHelper& storageHelper = storageHelperImpl;
             storageHelper.begin();
-
 
             bool txRes = op->apply(storageHelper, app);
 

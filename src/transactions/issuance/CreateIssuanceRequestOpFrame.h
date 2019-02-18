@@ -22,10 +22,6 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
     }
 
 	CreateIssuanceRequestOp const& mCreateIssuanceRequest;
-	
-	std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
 
 	bool isAuthorizedToRequestIssuance(AssetFrame::pointer assetFrame);
 
@@ -33,7 +29,13 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
 	ReviewableRequestFrame::pointer tryCreateIssuanceRequest(Application& app, LedgerDelta& delta,
 		LedgerManager& ledgerManager);
 
-    bool isAllowedToReceive(BalanceID receivingBalance, Database &db);
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
 
@@ -55,7 +57,8 @@ public:
 		return xdr::xdr_traits<CreateIssuanceRequestResultCode>::enum_name(innerResult().code());
 	}
 
-    bool calculateFee(AccountID receiver, Database &db, Fee &fee);
+    bool
+    calculateFee(Application& app, AccountID receiver, Database &db, Fee &fee);
 
     static CreateIssuanceRequestOp build(AssetCode const& asset, uint64_t amount, BalanceID const& receiver,
                                          LedgerManager& lm, uint32_t allTasks);

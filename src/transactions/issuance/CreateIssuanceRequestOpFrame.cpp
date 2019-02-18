@@ -6,25 +6,18 @@
 #include <ledger/FeeHelper.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/KeyValueHelperLegacy.h>
-#include "util/asio.h"
+#include <ledger/BalanceHelper.h>
 #include "CreateIssuanceRequestOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
+#include "ledger/AccountHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/StorageHelperImpl.h"
-#include "ledger/StorageHelper.h"
-#include "util/Logging.h"
-#include "util/types.h"
-#include "database/Database.h"
-#include "ledger/LedgerDelta.h"
-#include "main/Application.h"
 #include "crypto/SHA.h"
 #include "xdrpp/marshal.h"
-#include "xdrpp/printer.h"
 
 namespace stellar
 {
@@ -43,6 +36,54 @@ CreateIssuanceRequestOpFrame::CreateIssuanceRequestOpFrame(Operation const& op,
     , mCreateIssuanceRequest(mOperation.body.createIssuanceRequestOp())
 {
     mIsFeeRequired = true;
+}
+
+bool
+CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+									 	std::vector<OperationCondition>& result) const
+{
+	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
+	if (!asset)
+	{
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::ASSET;
+		return false;
+	}
+
+	auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateIssuanceRequest.request.receiver);
+	if (!balance)
+	{
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::BALANCE;
+	    return false;
+	}
+
+	auto account = storageHelper.getAccountHelper().mustLoadAccount(balance->getAccountID());
+
+	AccountRuleResource resource(LedgerEntryType::ASSET);
+	resource.asset().assetCode = asset->getCode();
+	resource.asset().assetType = asset->getType();
+
+	result.emplace_back(resource, "receive_from_issuance", account);
+
+	// only asset owner can do issuance, it will be handled in doApply
+	return true;
+}
+
+bool
+CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+									   std::vector<SignerRequirement>& result) const
+{
+	auto asset = storageHelper.getAssetHelper().mustLoadAsset(
+			mCreateIssuanceRequest.request.asset);
+
+	SignerRuleResource resource(LedgerEntryType::ASSET);
+	resource.asset().assetCode = asset->getCode();
+	resource.asset().assetType = asset->getType();
+
+	result.emplace_back(resource, "issue");
+
+	return true;
 }
 
 bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
@@ -164,26 +205,6 @@ CreateIssuanceRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-std::unordered_map<AccountID, CounterpartyDetails> CreateIssuanceRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-	// no counterparties
-	return{};
-}
-
-SourceDetails CreateIssuanceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                    int32_t ledgerVersion) const
-{
-	if (!mCreateIssuanceRequest.allTasks)
-	{
-		return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-							 static_cast<uint32_t>(SignerType::ISSUANCE_MANAGER) |
-							 static_cast<uint32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
-	}
-
-	return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-						 static_cast<uint32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
-}
-
 bool CreateIssuanceRequestOpFrame::isAuthorizedToRequestIssuance(AssetFrame::pointer assetFrame)
 {
 	return assetFrame->getOwner() == getSourceID();
@@ -231,19 +252,16 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 		return nullptr;
 	}
 
-    if (!isAllowedToReceive(balance->getBalanceID(), db)) {
-        return nullptr;
-    }
-
     Fee feeToPay;
-    if (!calculateFee(balance->getAccountID(), db, feeToPay)) {
+    if (!calculateFee(app, balance->getAccountID(), db, feeToPay))
+    {
         innerResult().code(CreateIssuanceRequestResultCode::FEE_EXCEEDS_AMOUNT);
         return nullptr;
     }
 
 	auto reference = xdr::pointer<stellar::string64>(new stellar::string64(mCreateIssuanceRequest.reference));
 	ReviewableRequestEntry::_body_t body;
-	body.type(ReviewableRequestType::ISSUANCE_CREATE);
+	body.type(ReviewableRequestType::CREATE_ISSUANCE);
 	body.issuanceRequest() = mCreateIssuanceRequest.request;
     body.issuanceRequest().fee = feeToPay;
 	auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), asset->getOwner(), reference,
@@ -252,7 +270,9 @@ ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceR
 	return request;
 }
 
-bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db, Fee &fee)
+bool
+CreateIssuanceRequestOpFrame::calculateFee(Application& app, AccountID receiver,
+										   Database &db, Fee &fee)
 {
     // calculate fee which will be charged from receiver
     fee.percent = 0;
@@ -261,11 +281,13 @@ bool CreateIssuanceRequestOpFrame::calculateFee(AccountID receiver, Database &db
     if (!mIsFeeRequired)
         return true;
 
-    auto receiverFrame = AccountHelper::Instance()->mustLoadAccount(receiver, db);
-    if (isSystemAccountType(receiverFrame->getAccountType()))
-        return true;
+    if (app.getAdminID() == receiver)
+    {
+		return true;
+	}
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
+	auto receiverFrame = AccountHelperLegacy::Instance()->mustLoadAccount(receiver, db);
+	auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame,
                                                           mCreateIssuanceRequest.request.amount, db);
     if (feeFrame) {
@@ -300,29 +322,6 @@ CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
 	issuanceRequestOp.allTasks.activate() = allTasks;
 
     return issuanceRequestOp;
-}
-
-bool
-CreateIssuanceRequestOpFrame::isAllowedToReceive(BalanceID receivingBalance, Database &db)
-{
-	const auto result = AccountManager::isAllowedToReceive(receivingBalance, db);
-	switch (result){
-		case AccountManager::SUCCESS:
-			return true;
-		case AccountManager::BALANCE_NOT_FOUND:
-			innerResult().code(CreateIssuanceRequestResultCode::NO_COUNTERPARTY);
-			return false;
-		case AccountManager::REQUIRED_VERIFICATION:
-			innerResult().code(CreateIssuanceRequestResultCode::REQUIRES_VERIFICATION);
-			return false;
-		case AccountManager::REQUIRED_KYC:
-			innerResult().code(CreateIssuanceRequestResultCode::REQUIRES_KYC);
-			return false;
-		default:
-			CLOG(ERROR, Logging::OPERATION_LOGGER)
-					<< "Unexpected isAllowedToReceive method result from accountManager:" << result;
-			throw std::runtime_error("Unexpected isAllowedToReceive method result from accountManager");
-	}
 }
 
 std::vector<longstring> CreateIssuanceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {

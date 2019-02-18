@@ -1,16 +1,9 @@
 #include "ledger/ExternalSystemAccountIDHelperImpl.h"
 #include "LedgerDelta.h"
-#include "crypto/Hex.h"
-#include "crypto/SecretKey.h"
-#include "database/Database.h"
-#include "ledger/ExternalSystemAccountID.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/StorageHelper.h"
-#include "lib/util/format.h"
-#include "util/basen.h"
-#include "util/types.h"
+#include "database/Database.h"
 #include "xdrpp/printer.h"
-#include <algorithm>
 
 using namespace soci;
 using namespace std;

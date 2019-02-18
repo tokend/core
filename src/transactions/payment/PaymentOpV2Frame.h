@@ -10,19 +10,10 @@ namespace stellar {
 
         PaymentOpV2 const &mPayment;
 
-        std::unordered_map<AccountID, CounterpartyDetails>
-        getCounterpartyDetails(Database &db, LedgerDelta *delta) const override;
-
-        SourceDetails
-        getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                int32_t ledgerVersion) const override;
-
-        bool isRecipientFeeNotRequired();
-
         bool isDestinationFeeValid();
 
-        BalanceFrame::pointer tryLoadDestinationBalance(AssetCode asset, Database &db, LedgerDelta &delta,
-                                                        LedgerManager& lm);
+        BalanceFrame::pointer
+        tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
 
         bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db);
 
@@ -40,6 +31,17 @@ namespace stellar {
         void setErrorCode(AccountManager::Result transferResult);
 
         bool isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID);
+
+        bool
+        tryGetOperationConditions(StorageHelper& storageHelper,
+                                  std::vector<OperationCondition>& result) const override;
+
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
+
+        AccountFrame::pointer
+        tryLoadDestinationAccount(StorageHelper& storageHelper) const;
 
     public:
         PaymentOpV2Frame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);

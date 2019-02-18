@@ -12,6 +12,14 @@ namespace stellar
 class ReviewRequestOpFrame : public OperationFrame
 {
 	bool isRejectReasonValid(Application& app);
+
+	bool
+	tryGetOperationConditions(StorageHelper& storageHelper,
+							  std::vector<OperationCondition>& result) const override;
+	bool
+	tryGetSignerRequirements(StorageHelper& storageHelper,
+							 std::vector<SignerRequirement>& result) const override;
+
 protected:
     ReviewRequestResult&
     innerResult()
@@ -20,14 +28,6 @@ protected:
     }
 
     ReviewRequestOp const& mReviewRequest;
-
-	virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-	virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                      int32_t ledgerVersion) const override
-	{
-		// no one is allowed to run default implementation of ReviewRequestOp
-		return SourceDetails({}, mSourceAccount->getHighThreshold(), 0);
-	}
 
 	virtual bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 	virtual bool handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
@@ -66,7 +66,7 @@ protected:
 
     static uint64_t getTotalFee(uint64_t requestID, Fee fee);
 
-	bool removingNotSetTasks(ReviewableRequestEntry &requestEntry);
+	bool removingExistingTasks(ReviewableRequestEntry &requestEntry);
 
 };
 }

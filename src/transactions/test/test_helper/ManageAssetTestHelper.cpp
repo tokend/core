@@ -3,9 +3,9 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/test/TxTests.h>
-#include <cstdint>
+#include <crypto/SHA.h>
 #include "ManageAssetTestHelper.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetHelperImpl.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -76,7 +76,7 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
         return ManageAssetResult{};
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto sourceFrame = accountHelper->loadAccount(source.key.getPublicKey(),
                                                   mTestManager->getDB());
     auto manageAssetResult = opResult.tr().manageAssetResult();
@@ -156,25 +156,26 @@ TransactionFramePtr ManageAssetTestHelper::createManageAssetTx(
 ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     AssetCode code,
     AccountID preissuedAssetSigner,
-    std::string details,
+    std::string creatorDetails,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
     uint32_t* allTasks,
     uint64_t initialPreissuanceAmount,
-    uint32_t trailingDigitsCount
+    uint32_t trailingDigitsCount,
+    uint64_t assetType
     )
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
     AssetCreationRequest& assetCreationRequest = request.createAssetCreationRequest().createAsset;
     assetCreationRequest.code = code;
-    assetCreationRequest.details = details;
+    assetCreationRequest.creatorDetails = creatorDetails;
     assetCreationRequest.maxIssuanceAmount = maxIssuanceAmount;
     assetCreationRequest.policies = policies;
     assetCreationRequest.preissuedAssetSigner = preissuedAssetSigner;
     assetCreationRequest.initialPreissuedAmount = initialPreissuanceAmount;
+    assetCreationRequest.type = assetType;
     assetCreationRequest.trailingDigitsCount = trailingDigitsCount;
-
     if (allTasks){
         request.createAssetCreationRequest().allTasks.activate() = *allTasks;
     }
@@ -183,7 +184,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
 
 ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     AssetCode code,
-    std::string details,
+    std::string creatorDetails,
     uint32_t policies,
     uint32_t *allTasks
 )
@@ -192,7 +193,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     request.action(ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST);
     AssetUpdateRequest& assetUpdateRequest = request.createAssetUpdateRequest().updateAsset;
     assetUpdateRequest.code = code;
-    assetUpdateRequest.details = details;
+    assetUpdateRequest.creatorDetails = creatorDetails;
     assetUpdateRequest.policies = policies;
     if (allTasks){
         request.createAssetUpdateRequest().allTasks.activate() = *allTasks;
@@ -217,13 +218,20 @@ ManageAssetOp::_request_t ManageAssetTestHelper::updateMaxAmount(AssetCode asset
 }
 
 ManageAssetOp::_request_t ManageAssetTestHelper::createChangeSignerRequest(
-    AssetCode code, AccountID accountID)
+        Account& account, AssetCode code, AccountID accountID)
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER);
     request.changePreissuedSigner().accountID = accountID;
     request.changePreissuedSigner().code = code;
+
+    DecoratedSignature sig;
+    sig.signature = account.key.sign(Hash(sha256(std::string(code) + ":" + PubKeyUtils::toStrKey(accountID))));
+    sig.hint = PubKeyUtils::getHint(account.key.getPublicKey());
+    request.changePreissuedSigner().signature = sig;
+
     return request;
+
 }
 
 void ManageAssetTestHelper::createAsset(Account& assetOwner,
@@ -231,7 +239,8 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         AssetCode assetCode, Account& root,
                                         uint32_t policies,
                                         uint32_t* allTasks,
-                                        uint32_t trailingDigitsCount
+                                        uint32_t trailingDigitsCount,
+                                        uint64_t assetType
                                         )
 {
     const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
@@ -240,12 +249,12 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                                       preIssuedSigner.
                                                       getPublicKey(),
                                                       "{}", maxIssuanceAmount,
-                                                      policies, allTasks, 0);
-    creationRequest.createAssetCreationRequest().createAsset.trailingDigitsCount =
-            trailingDigitsCount;
+                                                      policies, allTasks, 0,
+                                                      trailingDigitsCount,
+                                                      assetType);
     auto creationResult = applyManageAssetTx(assetOwner, 0, creationRequest);
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     auto assetOwnerFrame = accountHelper->
         loadAccount(assetOwner.key.getPublicKey(), mTestManager->getDB());
     if (creationResult.code() == ManageAssetResultCode::SUCCESS
@@ -324,7 +333,7 @@ void ManageAssetTestHelper::validateManageAssetEffect(
                                                  mTestManager->getDB());
         REQUIRE(assetFrame);
         auto assetEntry = assetFrame->getAsset();
-        REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.details);
+        REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.creatorDetails);
         REQUIRE(assetEntry.policies == request.createAssetUpdateRequest().updateAsset.policies);
         break;
     }
@@ -337,15 +346,14 @@ void ManageAssetTestHelper::validateManageAssetEffect(
     auto balanceHelper = BalanceHelperLegacy::Instance();
     if (assetFrame->isPolicySet(AssetPolicy::BASE_ASSET))
     {
-        auto systemAccounts = mTestManager->getApp().getSystemAccounts();
-        for (auto systemAccount : systemAccounts)
-        {
+        auto systemAccount = mTestManager->getApp().getAdminID();
+
             auto balanceFrame = balanceHelper->loadBalance(systemAccount,
                                                            assetCode,
                                                            mTestManager->
                                                            getDB(), nullptr);
             REQUIRE(balanceFrame);
-        }
+
     }
 }
 }

@@ -135,8 +135,7 @@ class Config : public std::enable_shared_from_this<Config>
     std::string NETWORK_PASSPHRASE; // identifier for the network
 
 	PublicKey masterID; // account id of master account
-	PublicKey commissionID; // account id of commission account
-	PublicKey operationalID; // account id of operational account
+    uint64_t adminRoleID;
 
     std::string BASE_EXCHANGE_NAME;
     int64 TX_EXPIRATION_PERIOD;
@@ -216,8 +215,14 @@ class Config : public std::enable_shared_from_this<Config>
     bool resolveNodeID(std::string const& s, PublicKey& retKey) const;
 
 	std::vector<PublicKey> getSystemAccounts() const {
-		return{ masterID, commissionID, operationalID };
+		return{ masterID };
 	}
+
+	uint64_t const
+    getAdminRoleID() const
+    {
+        return adminRoleID;
+    }
 
     static std::vector<std::string> readStrVector(std::string name, std::shared_ptr<cpptoml::toml_base> values);
 };

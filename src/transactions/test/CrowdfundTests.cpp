@@ -83,7 +83,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();
 
-    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
+    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey);
     const AssetCode baseAsset = "XAU";
     // TODO: for now we need to keep maxIssuance = preIssuance to allow sale creation
     const uint64_t maxIssuanceAmount = 2000 * ONE;
@@ -124,7 +124,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
         // create participant
         Account participant = Account{ SecretKey::random(), Salt(0) };
         AccountID participantID = participant.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, participantID, AccountType::GENERAL);
+        createAccountTestHelper.applyCreateAccountTx(root, participantID);
 
         // create base balance for participant:
         auto manageBalanceRes = ManageBalanceTestHelper(testManager).applyManageBalanceTx(participant, participantID, baseAsset);

@@ -114,13 +114,22 @@ TransactionFramePtr ManageOfferTestHelper::creatManageOfferTx(Account& source,
 }
 
 ManageOfferResult ManageOfferTestHelper::applyManageOffer(Account& source,
-    ManageOfferOp& manageOfferOp, ManageOfferResultCode expectedResult)
+    ManageOfferOp& manageOfferOp, ManageOfferResultCode expectedResult,
+                      OperationResultCode expectedOpCode)
 {
     auto txFrame = createManageOfferTx(source, manageOfferOp);
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOps;
     mTestManager->applyCheck(txFrame, stateBeforeOps);
     auto txResult = txFrame->getResult();
-    const auto manageOfferResult = txResult.result.results()[0].tr().manageOfferResult();
+    auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == expectedOpCode);
+    if (expectedOpCode != OperationResultCode::opINNER)
+    {
+        return ManageOfferResult();
+    }
+
+    const auto manageOfferResult = opResult.tr().manageOfferResult();
     auto actualResultCode = manageOfferResult.code();
     REQUIRE(actualResultCode == expectedResult);
 

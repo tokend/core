@@ -1,28 +1,44 @@
-
-#include <ledger/ReviewableRequestHelper.h>
 #include "CancelSaleCreationRequestOpFrame.h"
+#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
 using xdr::operator==;
 
-
-std::unordered_map<AccountID, CounterpartyDetails>
-CancelSaleCreationRequestOpFrame::getCounterpartyDetails(
-        Database& db, LedgerDelta* delta) const
+bool
+CancelSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                            std::vector<OperationCondition>& result) const
 {
-    // source account is only counterparty
-    return {};
+    // only request creator can remove it
+    return true;
 }
 
-SourceDetails
-CancelSaleCreationRequestOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
 {
-    return SourceDetails({AccountType::SYNDICATE},
-                         mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mCancelSaleCreationRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+
+    resource.reviewableRequest().details.sale().type =
+            request->getRequestEntry().body.saleCreationRequest().saleType;
+    resource.reviewableRequest().allTasks = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().tasksToRemove = 0;
+
+    result.emplace_back(resource, "cancel");
+
+    return true;
 }
 
 CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(
@@ -33,7 +49,6 @@ CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(
 {
 }
 
-
 bool
 CancelSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
                                           LedgerManager& ledgerManager)
@@ -43,7 +58,7 @@ CancelSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     auto requestHelper = ReviewableRequestHelper::Instance();
 
     auto requestFrame = requestHelper->loadRequest(requestID, getSourceID(),
-            ReviewableRequestType::SALE, db, &delta);
+            ReviewableRequestType::CREATE_SALE, db, &delta);
     if (!requestFrame)
     {
         innerResult().code(CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND);

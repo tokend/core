@@ -2,10 +2,12 @@
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/KeyValueHelper.h>
+#include "ledger/StorageHelper.h"
 #include <ledger/ReviewableRequestFrame.h>
 #include <transactions/FeesManager.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/KeyValueHelperLegacy.h>
+#include <ledger/AssetHelper.h>
 #include "CreateASwapRequestOpFrame.h"
 
 using namespace std;
@@ -21,37 +23,56 @@ CreateASwapRequestOpFrame::CreateASwapRequestOpFrame(
 {
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateASwapRequestOpFrame::getCounterpartyDetails(Database & db,
-                                                  LedgerDelta* delta) const
-{
-    auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            mCreateASwapRequest.request.bidID, db);
-    if (bidFrame == nullptr)
+bool
+CreateASwapRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const
+{ 
+    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
+            mCreateASwapRequest.request.bidID, storageHelper.getDatabase());
+    if (!bid) 
     {
-        // no bid - no counterparties
-        return {};
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ATOMIC_SWAP_BID;
+        return false;
+    }
+    
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
+    
+    AccountRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetType = asset->getType();
+    resource.asset().assetCode = asset->getCode();
+    
+    result.emplace_back(resource, "receive_from_atomic_swap", mSourceAccount);
+    
+    return true;
+}
+
+bool
+CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                    std::vector<SignerRequirement> &result) const
+{
+    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
+            mCreateASwapRequest.request.bidID, storageHelper.getDatabase());
+    if (!bid)
+    {
+        throw std::runtime_error("Expected bid to exists");
     }
 
-    return {
-        {
-            bidFrame->getOwnerID(),
-            CounterpartyDetails(getAllAccountTypes(), true, true)
-        }
-    };
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetType = asset->getType();
+    resource.asset().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "receive_from_atomic_swap");
+
+    return true;
 }
 
-SourceDetails
-CreateASwapRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(),
-                         mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
-}
-
-bool CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTasks)
+bool
+CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTasks)
 {
     auto aSwapKV = KeyValueHelperLegacy::Instance()->loadKeyValue(
             ManageKeyValueOpFrame::atomicSwapTasksPrefix, db);
@@ -117,23 +138,6 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         throw runtime_error("Unexpected state: expected base asset to exist");
     }
 
-    auto& sourceAccount = getSourceAccount();
-
-    if (baseAssetFrame->isRequireVerification() &&
-        sourceAccount.getAccountType() == AccountType::NOT_VERIFIED)
-    {
-        innerResult().code(CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
-    if (baseAssetFrame->isRequireKYC() &&
-        (sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
-         sourceAccount.getAccountType() == AccountType::VERIFIED))
-    {
-        innerResult().code(CreateASwapRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
     if (!bidFrame->tryLockAmount(aSwapRequest.baseAmount))
     {
         innerResult().code(CreateASwapRequestResultCode::BID_UNDERFUNDED);
@@ -141,11 +145,11 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-                                                          app.getMasterID(), nullptr,
+                                                          app.getAdminID(), nullptr,
                                                           ledgerManager.getCloseTime());
 
     auto& requestEntry = requestFrame->getRequestEntry();
-    requestEntry.body.type(ReviewableRequestType::ATOMIC_SWAP);
+    requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP);
     requestEntry.body.aSwapRequest() = mCreateASwapRequest.request;
 
     uint32_t allTasks = 0;

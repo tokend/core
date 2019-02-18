@@ -27,7 +27,7 @@ ReviewRequestResult SaleRequestHelper::createApprovedSale(Account& root, Account
         auto result = ReviewRequestResult{};
         result.code(ReviewRequestResultCode::SUCCESS);
         result.success().fulfilled = true;
-        result.success().typeExt.requestType(ReviewableRequestType::SALE);
+        result.success().typeExt.requestType(ReviewableRequestType::CREATE_SALE);
         result.success().typeExt.saleExtended().saleID = requestCreationResult.success().saleID;
         return result;
     }
@@ -73,7 +73,7 @@ SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t reques
 
 CancelSaleCreationRequestResult
 SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
-        CancelSaleCreationRequestResultCode expectedResult)
+        CancelSaleCreationRequestResultCode expectedResult, OperationResultCode opExpectedResult)
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
@@ -84,6 +84,13 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == opExpectedResult);
+    if (opExpectedResult != OperationResultCode::opINNER)
+    {
+        return CancelSaleCreationRequestResult{};
+    }
+
     auto actualResultCode =
             CancelSaleCreationRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
@@ -103,12 +110,13 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
 
 SaleCreationRequest
 SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset, const uint64_t startTime, const uint64_t endTime,
-                                     const uint64_t softCap, const uint64_t hardCap, std::string details,
+                                     const uint64_t softCap, const uint64_t hardCap, std::string creatorDetails,
                                      std::vector<SaleCreationRequestQuoteAsset> quoteAssets, uint64_t requiredBaseAssetForHardCap,
-                                     SaleType saleType)
+                                     SaleType saleType, uint64_t saleTypeInt)
 {
     SaleCreationRequest request;
     request.baseAsset = base;
+    request.saleType = saleTypeInt;
     request.defaultQuoteAsset = defaultQuoteAsset;
     request.startTime = startTime;
     request.endTime = endTime;
@@ -116,7 +124,7 @@ SaleRequestHelper::createSaleRequest(AssetCode base, AssetCode defaultQuoteAsset
     request.quoteAssets.append(&quoteAssets[0], quoteAssets.size());
     request.softCap = softCap;
     request.hardCap = hardCap;
-    request.details = details;
+    request.creatorDetails = creatorDetails;
 
     request.saleTypeExt.saleType(saleType);
     request.requiredBaseAssetForHardCap = requiredBaseAssetForHardCap;

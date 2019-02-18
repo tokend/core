@@ -1,4 +1,4 @@
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/issuance/CreateIssuanceRequestOpFrame.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/PendingStatisticsHelper.h>
@@ -20,7 +20,7 @@ handleApprove(Application &app, LedgerDelta &delta,
 														   LedgerManager &ledgerManager,
 														   ReviewableRequestFrame::pointer request)
 {
-	request->checkRequestType(ReviewableRequestType::ISSUANCE_CREATE);
+	request->checkRequestType(ReviewableRequestType::CREATE_ISSUANCE);
 
 	auto& issuanceRequest = request->getRequestEntry().body.issuanceRequest();
 	Database& db = ledgerManager.getDatabase();
@@ -88,14 +88,6 @@ handleApprove(Application &app, LedgerDelta &delta,
 		throw std::runtime_error("Unexpected state. totalFee exceeds amount");
 	}
 
-	auto receiverAccount = AccountHelper::Instance()->mustLoadAccount(receiver->getAccountID(), db);
-	if (AccountManager::isAllowedToReceive(receiver->getBalanceID(), db) != AccountManager::SUCCESS)
-	{
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Asset requires receiver account to have KYC or be VERIFIED "
-											   << request->getRequestID();
-		throw std::runtime_error("Unexpected state. Asset requires KYC or VERIFIED but account is NOT_VERIFIED");
-	}
-
 	//transfer fee
 	AccountManager accountManager(app, db, delta, ledgerManager);
 	accountManager.transferFee(issuanceRequest.asset, totalFee);
@@ -122,22 +114,6 @@ bool ReviewIssuanceCreationRequestOpFrame::handleReject(Application & app, Ledge
 {
 	innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
 	return false;
-}
-
-SourceDetails ReviewIssuanceCreationRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                            int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    if ((mReviewRequest.reviewDetails.tasksToAdd & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0 ||
-    (mReviewRequest.reviewDetails.tasksToRemove & CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED) != 0)
-    {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                static_cast<int32_t>(SignerType::SUPER_ISSUANCE_MANAGER));
-    }
-
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-                         allowedSigners);
 }
 
 ReviewIssuanceCreationRequestOpFrame::ReviewIssuanceCreationRequestOpFrame(Operation const & op, OperationResult & res,
@@ -209,7 +185,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		LedgerDeltaImpl localDeltaImpl(delta);
 		LedgerDelta& localDelta = localDeltaImpl;
 
-		request->checkRequestType(ReviewableRequestType::ISSUANCE_CREATE);
+		request->checkRequestType(ReviewableRequestType::CREATE_ISSUANCE);
 		auto& requestEntry = request->getRequestEntry();
         auto& issuanceRequest = request->getRequestEntry().body.issuanceRequest();
 		auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(issuanceRequest.asset, db, &localDelta);

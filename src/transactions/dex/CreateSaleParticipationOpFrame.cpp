@@ -6,15 +6,14 @@
 #include "ledger/LedgerDelta.h"
 #include "database/Database.h"
 #include "ledger/SaleHelper.h"
+#include "ledger/StorageHelper.h"
 #include "main/Application.h"
-#include "ledger/OfferHelper.h"
 #include "OfferManager.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "ledger/FeeHelper.h"
-#include "transactions/CheckSaleStateOpFrame.h"
+#include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/printer.h"
 
 namespace stellar
@@ -22,6 +21,47 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
+bool
+CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                            std::vector<OperationCondition> &result) const
+{
+    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
+            storageHelper.getDatabase());
+    if (!sale) 
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::SALE;
+        return false;
+    }
+    
+    AccountRuleResource resource(LedgerEntryType::SALE);
+    resource.sale().saleID = sale->getID();
+    resource.sale().saleType = sale->getType();
+    
+    result.emplace_back(resource, "participate", mSourceAccount);
+
+    return CreateOfferOpFrame::tryGetOperationConditions(storageHelper, result);
+}
+
+bool
+CreateSaleParticipationOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result) const
+{
+    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
+            storageHelper.getDatabase());
+    if (!sale)
+    {
+        throw std::runtime_error("Expected sale to exists");
+    }
+
+    SignerRuleResource resource(LedgerEntryType::SALE);
+    resource.sale().saleID = sale->getID();
+    resource.sale().saleType = sale->getType();
+
+    result.emplace_back(resource, "participate");
+
+    return CreateOfferOpFrame::tryGetSignerRequirements(storageHelper, result);
+}
 
 SaleFrame::pointer CreateSaleParticipationOpFrame::loadSaleForOffer(
     Database& db, LedgerDelta& delta)

@@ -1,5 +1,4 @@
 #include "AccountRoleFrame.h"
-#include "AccountFrame.h"
 
 using namespace soci;
 using namespace std;
@@ -52,14 +51,14 @@ AccountRoleFrame::ensureValid() const
 }
 
 AccountRoleFrame::pointer
-AccountRoleFrame::createNew(uint64_t id, std::string const& name,
-                            LedgerDelta& delta)
+AccountRoleFrame::createNew(uint64_t id, CreateAccountRoleData data)
 {
     LedgerEntry entry;
     entry.data.type(LedgerEntryType::ACCOUNT_ROLE);
     auto& accountRole = entry.data.accountRole();
-    accountRole.accountRoleID = id;
-    accountRole.accountRoleName = name;
+    accountRole.id = id;
+    accountRole.details = data.details;
+    accountRole.ruleIDs = data.accountRuleIDs;
 
     return make_shared<AccountRoleFrame>(entry);
 }

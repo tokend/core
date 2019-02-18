@@ -20,14 +20,14 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::WITHDRAW) {
+    if (!request || request->getType() != ReviewableRequestType::CREATE_WITHDRAW) {
         return;
     }
     withdrawalRequest = std::make_shared<WithdrawalRequest>(request->getRequestEntry().body.withdrawalRequest());
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(withdrawalRequest->balance, mTestManager->getDB());
     auto assetCode = balanceBeforeTx->getAsset();
     assetBeforeTx = AssetHelperLegacy::Instance()->loadAsset(assetCode, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                              assetCode, testManager->getDB(),
                                                                              nullptr);
 }

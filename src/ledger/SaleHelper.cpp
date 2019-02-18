@@ -1,7 +1,6 @@
 #include "SaleHelper.h"
 #include "xdrpp/printer.h"
 #include "LedgerDelta.h"
-#include "util/basen.h"
 #include "SaleQuoteAssetHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelperImpl.h"
@@ -14,7 +13,7 @@ namespace stellar
 using xdr::operator<;
 
 const char* selectorSale =
-    "SELECT id, owner_id, base_asset, default_quote_asset, start_time, "
+    "SELECT id, type, owner_id, base_asset, default_quote_asset, start_time, "
     "end_time, soft_cap, hard_cap, details, base_balance, version, lastmodified, current_cap_in_base, hard_cap_in_base, sale_type FROM sale";
 
 void SaleHelper::dropAll(Database& db)
@@ -23,6 +22,7 @@ void SaleHelper::dropAll(Database& db)
     db.getSession() << "CREATE TABLE sale"
         "("
         "id                  BIGINT        NOT NULL CHECK (id >= 0),"
+        "type                BIGINT        NOT NULL,"
         "owner_id            VARCHAR(56)   NOT NULL,"
         "base_asset          VARCHAR(16)   NOT NULL,"
         "default_quote_asset VARCHAR(16)   NOT NULL,"
@@ -166,15 +166,15 @@ void SaleHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     if (insert)
     {
         sql =
-            "INSERT INTO sale (id, owner_id, base_asset, default_quote_asset, start_time,"
+            "INSERT INTO sale (id, type, owner_id, base_asset, default_quote_asset, start_time,"
             " end_time, soft_cap, hard_cap, details, version, lastmodified, base_balance, current_cap_in_base, hard_cap_in_base, sale_type)"
-            " VALUES (:id, :owner_id, :base_asset, :default_quote_asset, :start_time,"
+            " VALUES (:id, :t, :owner_id, :base_asset, :default_quote_asset, :start_time,"
             " :end_time, :soft_cap, :hard_cap, :details, :v, :lm, :base_balance, :current_cap_in_base, :hard_cap_in_base, :sale_type)";
     }
     else
     {
         sql =
-            "UPDATE sale SET owner_id=:owner_id, base_asset = :base_asset, default_quote_asset = :default_quote_asset, start_time = :start_time,"
+            "UPDATE sale SET type = :t, owner_id=:owner_id, base_asset = :base_asset, default_quote_asset = :default_quote_asset, start_time = :start_time,"
             " end_time= :end_time, soft_cap = :soft_cap, hard_cap = :hard_cap, details = :details, version=:v, lastmodified=:lm, "
             " base_balance = :base_balance, current_cap_in_base = :current_cap_in_base, hard_cap_in_base = :hard_cap_in_base, sale_type = :sale_type "
             " WHERE id = :id";
@@ -184,6 +184,7 @@ void SaleHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     auto& st = prep.statement();
 
     st.exchange(use(saleEntry.saleID, "id"));
+    st.exchange(use(saleEntry.saleType, "t"));
     auto ownerID = PubKeyUtils::toStrKey(saleEntry.ownerID);
     st.exchange(use(ownerID, "owner_id"));
     st.exchange(use(saleEntry.baseAsset, "base_asset"));
@@ -239,6 +240,7 @@ void SaleHelper::loadSales(Database& db, StatementContext& prep,
 
         statement& st = prep.statement();
         st.exchange(into(oe.saleID));
+        st.exchange(into(oe.saleType));
         st.exchange(into(oe.ownerID));
         st.exchange(into(oe.baseAsset));
         st.exchange(into(oe.defaultQuoteAsset));

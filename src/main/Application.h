@@ -253,10 +253,7 @@ class Application
 
     virtual void newDB() = 0;
 
-	virtual AccountID getMasterID() const = 0;
-	virtual AccountID getCommissionID() const = 0;
-	virtual AccountID getOperationalID() const = 0;
-	virtual std::vector<PublicKey> getSystemAccounts() const = 0;
+	virtual AccountID getAdminID() const = 0;
 
     virtual std::string getBaseExchangeName() const = 0;
     virtual uint64 getTxExpirationPeriod() const = 0;

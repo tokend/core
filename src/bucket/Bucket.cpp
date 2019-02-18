@@ -7,39 +7,22 @@
 #include "bucket/BucketManager.h"
 #include "bucket/BucketList.h"
 #include "bucket/LedgerCmp.h"
-#include "crypto/Hex.h"
 #include "crypto/Random.h"
-#include "crypto/SHA.h"
-#include "database/Database.h"
 #include "main/Application.h"
 #include "util/Fs.h"
-#include "util/Logging.h"
-#include "util/TmpDir.h"
-#include "util/XDRStream.h"
-#include "util/make_unique.h"
-#include "xdrpp/message.h"
-#include "database/Database.h"
-#include "ledger/EntryFrame.h"
 #include "ledger/EntryHelperLegacy.h"
-#include "ledger/AccountFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/OfferFrame.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/AccountTypeLimitsFrame.h"
-#include "ledger/AccountTypeLimitsHelper.h"
-#include "ledger/TrustFrame.h"
-#include "ledger/TrustHelper.h"
 #include "ledger/AccountLimitsFrame.h"
 #include "ledger/AccountLimitsHelper.h"
 #include "ledger/StatisticsFrame.h"
@@ -48,8 +31,6 @@
 #include "ledger/ExternalSystemAccountID.h"
 #include "medida/medida.h"
 #include "lib/util/format.h"
-#include <cassert>
-#include <future>
 
 namespace stellar
 {
@@ -233,7 +214,7 @@ class Bucket::OutputIterator
         }
         else
         {
-            mBuf = make_unique<BucketEntry>();
+            mBuf = std::make_unique<BucketEntry>();
         }
 
         // In any case, replace *mBuf with e.

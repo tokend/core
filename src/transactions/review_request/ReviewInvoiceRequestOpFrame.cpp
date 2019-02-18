@@ -20,21 +20,12 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-
-SourceDetails
-ReviewInvoiceRequestOpFrame::getSourceAccountDetails(
-        unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::INVOICE_MANAGER));
-}
-
 bool
 ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::INVOICE)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected INVOICE, but got "
                                << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
@@ -242,7 +233,7 @@ ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
                                LedgerDelta& delta, LedgerManager& ledgerManager,
                                ReviewableRequestFrame::pointer request)
 {
-    request->checkRequestType(ReviewableRequestType::INVOICE);
+    request->checkRequestType(ReviewableRequestType::CREATE_INVOICE);
 
     if (request->getRequestEntry().body.invoiceRequest().isApproved)
     {

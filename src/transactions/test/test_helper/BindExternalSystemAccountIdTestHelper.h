@@ -2,7 +2,7 @@
 
 #include "overlay/StellarXDR.h"
 #include "TxHelper.h"
-#include "transactions/BindExternalSystemAccountIdOpFrame.h"
+#include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
 
 namespace stellar
 {

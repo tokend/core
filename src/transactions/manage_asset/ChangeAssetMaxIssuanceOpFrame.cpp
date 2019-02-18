@@ -6,8 +6,10 @@
 #include <transactions/review_request/ReviewIssuanceCreationRequestOpFrame.h>
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
+#include <ledger/StorageHelper.h>
 #include "ChangeAssetMaxIssuanceOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 
 namespace stellar
@@ -24,13 +26,41 @@ ChangeAssetMaxIssuanceOpFrame::ChangeAssetMaxIssuanceOpFrame(Operation const& op
     mUpdateMaxIssuance = mManageAsset.request.updateMaxIssuance();
 }
 
-SourceDetails ChangeAssetMaxIssuanceOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    // No one is allowed to perform such operation
-    return SourceDetails({}, mSourceAccount->getHighThreshold(),
-        static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    auto asset = storageHelper.getAssetHelper().loadAsset(mUpdateMaxIssuance.assetCode);
+    if (!asset)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
+    }
+
+    AccountRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update_max_issuance", mSourceAccount);
+
+    // only asset owner can do it, but it is useful to restrict him
+    return true;
+}
+
+bool
+ChangeAssetMaxIssuanceOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
+{
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(mUpdateMaxIssuance.assetCode);
+
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, "update_max_issuance");
+
+    return true;
 }
 
 bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta,
@@ -38,7 +68,7 @@ bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta
 {
     Database& db = ledgerManager.getDatabase();
     auto assetFrame = AssetHelperLegacy::Instance()->
-        loadAsset(mUpdateMaxIssuance.assetCode, db, &delta);
+        loadAsset(mUpdateMaxIssuance.assetCode, getSourceID(), db, &delta);
     if (!assetFrame)
     {
         innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);

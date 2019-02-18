@@ -2,6 +2,9 @@
 #include "database/Database.h"
 #include <transactions/dex/OfferManager.h>
 #include <ledger/LedgerDelta.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/ReviewableRequestFrame.h>
@@ -22,20 +25,50 @@ CreateASwapBidCreationRequestOpFrame::CreateASwapBidCreationRequestOpFrame(
 {
 }
 
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateASwapBidCreationRequestOpFrame::getCounterpartyDetails(Database &db,
-                                                          LedgerDelta *delta) const
+bool
+CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
+                                StorageHelper &storageHelper,
+                                std::vector<OperationCondition> &result) const
 {
-    // no counterparties
-    return {};
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balance = balanceHelper.loadBalance(mCreateASwapBidCreationRequest.request.baseBalance);
+    if (!balance)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
+        return false;
+    }
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(balance->getAsset());
+
+    AccountRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    resource.atomicSwapBid().assetType = asset->getType();
+    resource.atomicSwapBid().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "create", mSourceAccount);
+
+    return true;
 }
 
-SourceDetails CreateASwapBidCreationRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
+bool
+CreateASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+        std::vector<SignerRequirement> &result) const
 {
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balance = balanceHelper.mustLoadBalance(
+            mCreateASwapBidCreationRequest.request.baseBalance);
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.mustLoadAsset(balance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::ATOMIC_SWAP_BID);
+    resource.atomicSwapBid().assetType = asset->getType();
+    resource.atomicSwapBid().assetCode = asset->getCode();
+
+    result.emplace_back(resource, "create");
+
+    return true;
 }
 
 CreateASwapBidCreationRequestResultCode
@@ -176,25 +209,6 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
         return false;
     }
 
-    auto& sourceAccount = getSourceAccount();
-
-    if (baseAssetFrame->isRequireVerification() &&
-        sourceAccount.getAccountType() == AccountType::NOT_VERIFIED)
-    {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
-    if (baseAssetFrame->isRequireKYC() &&
-        (sourceAccount.getAccountType() == AccountType::NOT_VERIFIED ||
-         sourceAccount.getAccountType() == AccountType::VERIFIED))
-    {
-        innerResult().code(
-                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-        return false;
-    }
-
     auto lockResult = baseBalanceFrame->tryLock(aSwapBidCreationRequest.amount);
     if (lockResult != BalanceFrame::Result::SUCCESS)
     {
@@ -204,7 +218,7 @@ bool CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta
     }
 
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-                                                          app.getMasterID(), nullptr,
+                                                          app.getAdminID(), nullptr,
                                                           ledgerManager.getCloseTime());
     auto& requestEntry = requestFrame->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
@@ -236,7 +250,7 @@ bool CreateASwapBidCreationRequestOpFrame::doCheckValid(Application &app)
         return false;
     }
 
-    if (!isValidJson(aSwapCreationRequest.details))
+    if (!isValidJson(aSwapCreationRequest.creatorDetails))
     {
         innerResult().code(CreateASwapBidCreationRequestResultCode::INVALID_DETAILS);
         return false;

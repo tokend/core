@@ -186,20 +186,8 @@ namespace stellar {
         return mNetworkID;
     }
 
-    AccountID ApplicationImpl::getMasterID() const {
+    AccountID ApplicationImpl::getAdminID() const {
         return mConfig.masterID;
-    }
-
-    AccountID ApplicationImpl::getCommissionID() const {
-        return mConfig.commissionID;
-    }
-
-    AccountID ApplicationImpl::getOperationalID() const {
-        return mConfig.operationalID;
-    }
-
-    std::vector<PublicKey> ApplicationImpl::getSystemAccounts() const {
-        return mConfig.getSystemAccounts();
     }
 
     std::string ApplicationImpl::getBaseExchangeName() const {

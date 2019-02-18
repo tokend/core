@@ -42,7 +42,6 @@ TEST_CASE("Flexible fees", "[dep_tx][flexible_fees]")
 	closeLedgerOn(app, 3, 1, 7, 2014);
 	applySetFees(app, root, rootSeq, nullptr, false, nullptr);
 	closeLedgerOn(app, 4, 1, 7, 2014);
-    auto accountType = AccountType::GENERAL;
 
 	auto feeHelper = FeeHelper::Instance();
 
@@ -58,7 +57,7 @@ TEST_CASE("Flexible fees", "[dep_tx][flexible_fees]")
 
 		auto a = SecretKey::random();
 		auto aPubKey = a.getPublicKey();
-		applyCreateAccountTx(app, root, a, rootSeq++, accountType);
+		applyCreateAccountTx(app, root, a, rootSeq++);
 		auto accountFee = createFeeEntry(FeeType::OFFER_FEE, 0, 10 * ONE, asset->getCode(), &aPubKey, nullptr);
 		applySetFees(app, root, rootSeq++, &accountFee, false, nullptr);
 

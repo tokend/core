@@ -11,6 +11,8 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "main/Application.h"
 #include "ChangeAssetPreIssuerOpFrame.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -24,19 +26,6 @@ ManageAssetOpFrame::ManageAssetOpFrame(Operation const& op,
     : OperationFrame(op, res, parentTx)
     , mManageAsset(mOperation.body.manageAssetOp())
 {
-}
-
-std::unordered_map<AccountID, CounterpartyDetails> ManageAssetOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-	// no counterparties
-	return std::unordered_map<AccountID, CounterpartyDetails>();
-}
-
-SourceDetails ManageAssetOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                          int32_t ledgerVersion) const
-{
-	return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-						 static_cast<int32_t>(SignerType::ASSET_MANAGER));
 }
 
 ManageAssetOpFrame* ManageAssetOpFrame::makeHelper(Operation const & op, OperationResult & res, TransactionFrame & parentTx)
@@ -61,7 +50,8 @@ ReviewableRequestFrame::pointer ManageAssetOpFrame::getOrCreateReviewableRequest
 {
 	if (mManageAsset.requestID == 0) {
 	        const auto reference = xdr::pointer<string64>(new string64(getAssetCode()));
-		return ReviewableRequestFrame::createNew(delta, getSourceID(), app.getMasterID(), reference,
+		return ReviewableRequestFrame::createNew(delta, getSourceID(),
+                                                 app.getAdminID(), reference,
                                                  app.getLedgerManager().getCloseTime());
 	}
 

@@ -26,7 +26,7 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::WITHDRAW)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) <<
             "Unexpected request type. Expected WITHDRAW, but got " << xdr::
@@ -115,7 +115,7 @@ bool ReviewWithdrawalRequestOpFrame::handlePermanentReject(Application& app,
     LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::WITHDRAW)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) <<
             "Unexpected request type. Expected WITHDRAW, but got " << xdr::
@@ -141,18 +141,7 @@ bool ReviewWithdrawalRequestOpFrame::doCheckValid(Application &app)
     return ReviewRequestOpFrame::doCheckValid(app);
 }
 
-SourceDetails ReviewWithdrawalRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-
-    auto allowedSigners = static_cast<int32_t>(SignerType::WITHDRAW_MANAGER);
-
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE},
-                         mSourceAccount->getHighThreshold(), allowedSigners);
-}
-
-
-    uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
+uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
 {
     uint64_t totalFee;
     if (!safeSum(withdrawRequest.fee.percent, withdrawRequest.fee.fixed, totalFee))

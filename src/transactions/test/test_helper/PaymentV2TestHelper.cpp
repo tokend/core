@@ -65,7 +65,8 @@ namespace stellar {
                                                               PaymentOpV2::_destination_t destination, uint64_t amount,
                                                               PaymentFeeDataV2 feeData, std::string subject,
                                                               std::string reference, PaymentV2Delta *paymentDelta,
-                                                              PaymentV2ResultCode expectedResultCode) {
+                                                              PaymentV2ResultCode expectedResultCode,
+                                                              OperationResultCode expectedOpResultCode) {
             auto &db = mTestManager->getDB();
             auto balanceHelper = BalanceHelperLegacy::Instance();
 
@@ -78,7 +79,7 @@ namespace stellar {
             }
 
             std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
-            balanceHelper->loadBalances(mTestManager->getApp().getCommissionID(), commissionBalancesBeforeTx, db);
+            balanceHelper->loadBalances(mTestManager->getApp().getAdminID(), commissionBalancesBeforeTx, db);
 
             std::unordered_map<std::string, BalanceFrame::pointer> commissionBalancesBeforeTxByAsset;
             for (auto& balanceFrame : commissionBalancesBeforeTx)
@@ -92,17 +93,30 @@ namespace stellar {
             mTestManager->applyCheck(txFrame);
 
             auto txResult = txFrame->getResult();
-            auto actualResultCode = PaymentOpV2Frame::getInnerCode(txResult.result.results()[0]);
+            auto opResult = txResult.result.results()[0];
+
+            REQUIRE(opResult.code() == expectedOpResultCode);
+            if (expectedOpResultCode != OperationResultCode::opINNER)
+            {
+                return PaymentV2Result();
+            }
+
+            auto actualResultCode = PaymentOpV2Frame::getInnerCode(opResult);
 
             REQUIRE(actualResultCode == expectedResultCode);
 
             auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
             REQUIRE(txResult.feeCharged == txFee);
 
-            auto opResult = txResult.result.results()[0].tr().paymentV2Result();
+            auto actualPaymentResult = opResult.tr().paymentV2Result();
+
+            if (expectedResultCode != PaymentV2ResultCode::SUCCESS)
+            {
+                return actualPaymentResult;
+            }
 
             if (!paymentDelta)
-                return opResult;
+                return actualPaymentResult;
 
             REQUIRE(paymentDelta->source.size() < 3);
             REQUIRE(paymentDelta->destination.size() < 2);
@@ -151,7 +165,7 @@ namespace stellar {
                 if (commissionBalancesBeforeTxByAsset.count(item.asset) > 0)
                     commissionBalanceBeforeTx = commissionBalancesBeforeTxByAsset[item.asset];
 
-                auto commissionBalanceAfterTx = balanceHelper->loadBalance(mTestManager->getApp().getCommissionID(),
+                auto commissionBalanceAfterTx = balanceHelper->loadBalance(mTestManager->getApp().getAdminID(),
                                                                            item.asset, db, nullptr);
                 if (!commissionBalanceBeforeTx) {
                     REQUIRE(commissionBalanceAfterTx->getAmount() == item.amountDelta);
@@ -160,7 +174,7 @@ namespace stellar {
                 REQUIRE(commissionBalanceAfterTx->getAmount() == commissionBalanceBeforeTx->getAmount() +
                                                                  item.amountDelta);
             }
-            return opResult;
+            return actualPaymentResult;
         }
     }
 }

@@ -119,7 +119,7 @@ void AssetHelperLegacy::loadBaseAssets(std::vector<AssetFrame::pointer>& retAsse
 {
     auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
     storageHelper->release();
-    return storageHelper->getAssetHelper().loadBaseAssets(retAssets);
+    retAssets = storageHelper->getAssetHelper().loadBaseAssets();
 }
 
 std::map<AssetCode, uint64_t>

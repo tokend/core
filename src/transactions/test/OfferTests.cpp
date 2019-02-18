@@ -2,12 +2,11 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "main/Application.h"
-#include "main/Config.h"
-#include "util/Timer.h"
+#include <transactions/test/test_helper/CreateAccountTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "overlay/LoopbackPeer.h"
 #include "main/test.h"
-#include "TxTests.h"
 #include "transactions/dex/OfferExchange.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -39,6 +38,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     Application& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
+    TestManager::upgradeToCurrentLedgerVersion(app);
     auto& db = testManager->getDB();
     LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(),
                           testManager->getDB());
@@ -49,7 +49,16 @@ TEST_CASE("manage offer", "[tx][offer]")
 
     Salt rootSeq = 1;
 
+    // test helpers
+    auto assetTestHelper = ManageAssetTestHelper(testManager);
+    auto assetPairHelper = ManageAssetPairTestHelper(testManager);
+    auto issuanceHelper = IssuanceRequestHelper(testManager);
+    auto offerTestHelper = ManageOfferTestHelper(testManager);
+    CreateAccountTestHelper createAccountTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+
     longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
     manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
@@ -63,16 +72,59 @@ TEST_CASE("manage offer", "[tx][offer]")
     manageKeyValueHelper.setKey(key)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
-    auto assetTestHelper = ManageAssetTestHelper(testManager);
     AssetCode base = "BTC";
-    assetTestHelper.createAsset(rootAccount, rootAccount.key, base, rootAccount, int32(AssetPolicy::BASE_ASSET));
+    uint64_t baseType = 1;
+    assetTestHelper.createAsset(rootAccount, rootAccount.key, base, rootAccount, 
+                                int32(AssetPolicy::BASE_ASSET), nullptr, 6, baseType);
     AssetCode quote = "USD";
-    assetTestHelper.createAsset(rootAccount, rootAccount.key, quote, rootAccount,int32(AssetPolicy::BASE_ASSET));
+    uint64_t quoteType = 2;
+    assetTestHelper.createAsset(rootAccount, rootAccount.key, quote, rootAccount,
+                                int32(AssetPolicy::BASE_ASSET), nullptr, 6, quoteType);
 
-    auto assetPairHelper = ManageAssetPairTestHelper(testManager);
-    assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote, 1, 0, 0, int32(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET));
+    assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote, 1, 0, 0, 
+                                           int32(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET));
 
-    auto issuanceHelper = IssuanceRequestHelper(testManager);
+    // create roles for token exchanging
+    AccountRuleResource offerResource(LedgerEntryType::OFFER_ENTRY);
+    offerResource.offer().baseAssetCode = base;
+    offerResource.offer().baseAssetType = baseType;
+    offerResource.offer().quoteAssetCode = quote;
+    offerResource.offer().quoteAssetType = quoteType;
+    
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+            offerResource, "create", false);
+    auto offerRuleID = manageAccountRuleTestHelper.applyTx(rootAccount, ruleEntry,
+            ManageAccountRuleAction::CREATE).success().ruleID;
+
+    AccountRuleResource baseAssetResource(LedgerEntryType::ASSET);
+    baseAssetResource.asset().assetType = baseType;
+    baseAssetResource.asset().assetCode = base;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+            baseAssetResource, "receive", false);
+    auto baseRuleID = manageAccountRuleTestHelper.applyTx(rootAccount, ruleEntry,
+            ManageAccountRuleAction::CREATE).success().ruleID;
+
+    AccountRuleResource quoteAssetResource(LedgerEntryType::ASSET);
+    quoteAssetResource.asset().assetType = quoteType;
+    quoteAssetResource.asset().assetCode = quote;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+            quoteAssetResource, "receive", false);
+    auto quoteRuleID = manageAccountRuleTestHelper.applyTx(rootAccount, ruleEntry,
+            ManageAccountRuleAction::CREATE).success().ruleID;
+
+    auto createExchangeRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            "{}", {offerRuleID, baseRuleID, quoteRuleID});
+    auto exchangeRoleID = manageAccountRoleTestHelper.applyTx(rootAccount,
+            createExchangeRoleOp).success().roleID;
+
+
+    // basic create account builder
+    auto createAccountBuilder = CreateAccountTestBuilder()
+            .setSource(rootAccount)
+            .setRoleID(1);
+
     auto fundAccount = [&issuanceHelper, &rootAccount](AssetCode code, uint64_t amount, BalanceID receiver)
     {
         issuanceHelper.authorizePreIssuedAmount(rootAccount, rootAccount.key, code, amount, rootAccount);
@@ -82,16 +134,15 @@ TEST_CASE("manage offer", "[tx][offer]")
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto offerHelper = OfferHelper::Instance();
 
-    auto offerTestHelper = ManageOfferTestHelper(testManager);
-
-    SECTION("Can cancel order even if blocked, but can not create")
+    // TODO implement when new flow of blocking account will work
+    /*SECTION("Can cancel order even if blocked, but can not create")
     {
         auto quoteAssetAmount = 1000 * ONE;
         for (auto blockReason : xdr::xdr_traits<BlockReasons>::enum_values())
         {
             auto buyer = Account{ SecretKey::random(), 0 };
-            applyCreateAccountTx(app, root, buyer.key, rootSeq,
-                                 AccountType::GENERAL);
+            createAccountTestHelper.applyTx(createAccountBuilder
+                                    .setToPublicKey(buyer.key.getPublicKey()));
             auto quoteBuyerBalance = balanceHelper->
                 loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
             fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
@@ -119,11 +170,13 @@ TEST_CASE("manage offer", "[tx][offer]")
             auto opResult = getFirstResultCode(*orderTx);
             REQUIRE(opResult == OperationResultCode::opACCOUNT_BLOCKED);
         }
-    }
+    }*/
     SECTION("basics")
     {
         auto buyer = Account{ SecretKey::random() , 0};
-        applyCreateAccountTx(app, root, buyer.key, rootSeq, AccountType::GENERAL);
+        createAccountTestHelper.applyTx(createAccountBuilder
+                                    .setToPublicKey(buyer.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
                                                            base, db, &delta);
         REQUIRE(baseBuyerBalance);
@@ -133,7 +186,11 @@ TEST_CASE("manage offer", "[tx][offer]")
         auto quoteAssetAmount = 1000 * ONE;
         fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
         auto seller = Account{ SecretKey::random() , 0};
-        applyCreateAccountTx(app, root, seller.key, rootSeq, AccountType::GENERAL);
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                    .setSource(rootAccount)
+                                    .setRoleID(1)
+                                    .setToPublicKey(seller.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseSellerBalance = balanceHelper->
             loadBalance(seller.key.getPublicKey(), base, db, &delta);
         REQUIRE(baseBuyerBalance);
@@ -533,7 +590,7 @@ TEST_CASE("manage offer", "[tx][offer]")
                     - sellerMatchFee);
 
                 auto commissionQuoteBalance = balanceHelper->
-                    loadBalance(app.getCommissionID(), quote, db, &delta);
+                    loadBalance(app.getAdminID(), quote, db, &delta);
                 REQUIRE(commissionQuoteBalance);
                 REQUIRE(commissionQuoteBalance->getAmount() == buyerOfferFee +
                     sellerMatchFee);
@@ -549,7 +606,9 @@ TEST_CASE("manage offer", "[tx][offer]")
         applySetFees(app, root, rootSeq, &offerFee, false, nullptr);
 
         auto buyer = Account{ SecretKey::random(), 0 };
-        applyCreateAccountTx(app, root, buyer.key, rootSeq, AccountType::GENERAL);
+        createAccountTestHelper.applyTx(createAccountBuilder
+                                    .setToPublicKey(buyer.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
                                                            base, db, &delta);
         REQUIRE(baseBuyerBalance);
@@ -560,7 +619,9 @@ TEST_CASE("manage offer", "[tx][offer]")
         fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
 
         auto seller = Account{ SecretKey::random() , 0};
-        applyCreateAccountTx(app, root, seller.key, rootSeq, AccountType::GENERAL);
+        createAccountTestHelper.applyTx(createAccountBuilder
+                                    .setToPublicKey(seller.key.getPublicKey())
+                                    .addBasicSigner());
         auto baseSellerBalance = balanceHelper->
             loadBalance(seller.key.getPublicKey(), base, db, &delta);
         REQUIRE(baseSellerBalance);
@@ -689,7 +750,7 @@ TEST_CASE("manage offer", "[tx][offer]")
             == baseAssetAmount);
 
         auto comissionAccount = balanceHelper->
-            loadBalance(app.getCommissionID(), quote, db, nullptr);
+            loadBalance(app.getAdminID(), quote, db, nullptr);
         REQUIRE(comissionAccount);
         REQUIRE(comissionAccount->getAmount() + quoteBuyerBalance->getAmount() +
             quoteSellerBalance->getAmount() == quoteAssetAmount);
