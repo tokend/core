@@ -53,7 +53,7 @@ CreateChangeRoleRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
         resource.reviewableRequest().allTasks = *mCreateChangeRoleRequestOp.allTasks;
     }
 
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

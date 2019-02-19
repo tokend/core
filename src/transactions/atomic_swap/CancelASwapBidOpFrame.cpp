@@ -51,7 +51,7 @@ CancelASwapBidOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     resource.atomicSwapBid().assetCode = asset->getCode();
     resource.atomicSwapBid().assetType = asset->getType();
 
-    result.emplace_back(resource, "cancel");
+    result.emplace_back(resource, SignerRuleAction::CANCEL);
 
     return true;
 }

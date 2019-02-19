@@ -120,7 +120,7 @@ ManageSignerRuleOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     SignerRuleResource resource(LedgerEntryType::SIGNER_RULE);
     resource.signerRule().isDefault = isDefault;
 
-    result.emplace_back(resource, "manage");
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }

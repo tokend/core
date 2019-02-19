@@ -39,7 +39,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, "manage");
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }

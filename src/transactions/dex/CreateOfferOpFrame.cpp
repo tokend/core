@@ -90,10 +90,10 @@ CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     resource.offer().baseAssetType = baseAsset->getType();
     resource.offer().quoteAssetType = quoteAsset->getType();
 
-    std::string action = "create_to_sell";
+    SignerRuleAction action = SignerRuleAction::CREATE_TO_SELL;
     if (mManageOffer.isBuy)
     {
-        action = "create_to_buy";
+        action = SignerRuleAction::CREATE_TO_BUY;
     }
 
     result.emplace_back(resource, action);

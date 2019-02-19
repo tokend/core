@@ -61,7 +61,7 @@ public:
         return mSignerRuleEntry.isDefault;
     }
 
-    std::string const
+    SignerRuleAction const
     getAction() const
     {
         return mSignerRuleEntry.action;

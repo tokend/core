@@ -58,7 +58,7 @@ CreateSaleParticipationOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, "participate");
+    result.emplace_back(resource, SignerRuleAction::PARTICIPATE);
 
     return CreateOfferOpFrame::tryGetSignerRequirements(storageHelper, result);
 }

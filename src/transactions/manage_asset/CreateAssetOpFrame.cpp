@@ -45,7 +45,7 @@ CreateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     SignerRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetType = mAssetCreationRequest.type;
     resource.asset().assetCode = mAssetCreationRequest.code;
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

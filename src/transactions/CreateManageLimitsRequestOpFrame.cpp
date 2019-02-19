@@ -37,7 +37,7 @@ CreateManageLimitsRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
         resource.reviewableRequest().allTasks = *mCreateManageLimitsRequest.allTasks;
     }
 
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

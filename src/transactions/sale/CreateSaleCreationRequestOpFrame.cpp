@@ -55,7 +55,7 @@ CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
         resource.reviewableRequest().allTasks = *mCreateSaleCreationRequest.allTasks;
     }
 
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

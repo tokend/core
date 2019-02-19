@@ -53,7 +53,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             SECTION("create")
             {
                 auto op = manageSignerRuleTestHelper.buildCreateRuleOp(
-                        SignerRuleResource(LedgerEntryType::FEE), "manage", true, true, true);
+                        SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, true, true, true);
                 manageSignerRuleTestHelper.applyTx(master, op,
                                                    ManageSignerRuleResultCode::SUCCESS,
                                                    OperationResultCode::opBAD_AUTH,
@@ -63,7 +63,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             SECTION("update")
             {
                 auto op = manageSignerRuleTestHelper.buildUpdateRuleOp(2,
-                        SignerRuleResource(LedgerEntryType::FEE), "manage", false, false);
+                        SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, false, false);
                 manageSignerRuleTestHelper.applyTx(master, op,
                                                    ManageSignerRuleResultCode::SUCCESS,
                                                    OperationResultCode::opBAD_AUTH,
@@ -89,7 +89,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
                                                TransactionResultCode::txFAILED, &signer);
 
             op = manageSignerRuleTestHelper.buildUpdateRuleOp(ownerSignerRoleID,
-                    SignerRuleResource(LedgerEntryType::FEE), "manage", false, false);
+                    SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, false, false);
             manageSignerRuleTestHelper.applyTx(master, op,
                                                ManageSignerRuleResultCode::NOT_FOUND,
                                                OperationResultCode::opINNER,

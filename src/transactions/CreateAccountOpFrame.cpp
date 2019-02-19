@@ -34,7 +34,8 @@ bool
 CreateAccountOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                    std::vector<SignerRequirement> &result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT), "create");
+    result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT),
+                        SignerRuleAction::CREATE);
 
     return true;
 }

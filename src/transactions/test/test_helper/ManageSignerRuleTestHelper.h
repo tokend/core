@@ -24,12 +24,12 @@ public:
             TransactionResultCode::txSUCCESS, Account* signer = nullptr);
 
     ManageSignerRuleOp buildCreateRuleOp(SignerRuleResource resource,
-                                         std::string action, bool isForbid,
+                                         SignerRuleAction action, bool isForbid,
                                          bool isDefault, bool isReadOnly);
 
     ManageSignerRuleOp buildUpdateRuleOp(uint64_t id,
                                          SignerRuleResource resource,
-                                         std::string action, bool isForbid,
+                                         SignerRuleAction action, bool isForbid,
                                          bool isDefault);
 
     ManageSignerRuleOp buildRemoveRuleOp(uint64_t ruleID);

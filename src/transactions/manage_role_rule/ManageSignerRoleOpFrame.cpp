@@ -51,7 +51,7 @@ ManageSignerRoleOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     SignerRuleResource resource(LedgerEntryType::SIGNER_ROLE);
     resource.signerRole().roleID = roleID;
 
-    result.emplace_back(resource, "manage");
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }

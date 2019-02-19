@@ -70,7 +70,8 @@ bool
 ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                 std::vector<SignerRequirement> &result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE), "manage");
+    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE),
+                        SignerRuleAction::MANAGE);
 
     return true;
 }

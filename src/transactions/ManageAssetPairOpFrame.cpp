@@ -46,7 +46,8 @@ bool
 ManageAssetPairOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 								 	std::vector<SignerRequirement>& result) const
 {
-	result.emplace_back(SignerRuleResource(LedgerEntryType::ASSET_PAIR), "manage");
+	result.emplace_back(SignerRuleResource(LedgerEntryType::ASSET_PAIR),
+						SignerRuleAction::MANAGE);
 
 	return true;
 }

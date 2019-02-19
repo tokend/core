@@ -22,7 +22,8 @@ bool
 ManageExternalSystemAccountIdPoolEntryOpFrame::tryGetSignerRequirements(
         StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "manage");
+    result.emplace_back(SignerRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY),
+                        SignerRuleAction::MANAGE);
 
     return true;
 }

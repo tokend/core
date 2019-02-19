@@ -45,9 +45,9 @@ struct OperationCondition
 struct SignerRequirement
 {
     SignerRuleResource resource;
-    string256 action;
+    SignerRuleAction action;
 
-    SignerRequirement(SignerRuleResource res, string256 act)
+    SignerRequirement(SignerRuleResource res, SignerRuleAction act)
             : resource(res), action(act)
     {
     }

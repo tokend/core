@@ -66,7 +66,7 @@ CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
     resource.asset().assetType = asset->getType();
     resource.asset().assetCode = asset->getCode();
 
-    result.emplace_back(resource, "receive_from_atomic_swap");
+    result.emplace_back(resource, SignerRuleAction::RECEIVE_ATOMIC_SWAP);
 
     return true;
 }

@@ -30,7 +30,7 @@ TEST_CASE("Signer role tests", "[tx][manage_signer_role]")
     ManageSignerRuleTestHelper manageSignerRuleTestHelper(testManager);
 
     auto op = manageSignerRuleTestHelper.buildCreateRuleOp(
-            SignerRuleResource(LedgerEntryType::FEE), "manage", true, false, true);
+            SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, true, false, true);
     auto ruleID = manageSignerRuleTestHelper.applyTx(master, op).success().ruleID;
 
     SECTION("Create signer role")

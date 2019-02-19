@@ -54,7 +54,7 @@ CreateWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     assetResource.asset().assetType = asset->getAsset().type;
     assetResource.asset().assetCode = asset->getCode();
 
-    result.emplace_back(assetResource, "withdraw");
+    result.emplace_back(assetResource, SignerRuleAction::WITHDRAW);
 
     return true;
 }

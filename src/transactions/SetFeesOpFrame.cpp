@@ -38,7 +38,8 @@ bool
 SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                 std::vector<SignerRequirement>& result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::FEE), "manage");
+    result.emplace_back(SignerRuleResource(LedgerEntryType::FEE),
+                        SignerRuleAction::MANAGE);
 
     return true;
 }

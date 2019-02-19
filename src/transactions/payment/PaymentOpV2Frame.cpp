@@ -70,7 +70,7 @@ PaymentOpV2Frame::tryGetSignerRequirements(StorageHelper &storageHelper,
     resource.asset().assetType = assetFrame->getType();
     resource.asset().assetCode = assetFrame->getCode();
 
-    result.emplace_back(resource, "send");
+    result.emplace_back(resource, SignerRuleAction::SEND);
 
     return true;
 }

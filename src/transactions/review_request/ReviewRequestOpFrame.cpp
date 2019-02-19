@@ -53,7 +53,7 @@ ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
 	resource.reviewableRequest().allTasks = 0;
 
-	result.emplace_back(resource, "review");
+	result.emplace_back(resource, SignerRuleAction::REVIEW);
 
 	return true;
 }
