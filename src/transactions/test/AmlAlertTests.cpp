@@ -74,7 +74,7 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
         assetResource.asset().assetType = assetType;
 
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                0, assetResource, "receive", false);
+                0, assetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
         // write this entry to DB
         auto createReceiverRuleResult = manageAccountRuleTestHelper.applyTx(
                 root, ruleEntry, ManageAccountRuleAction::CREATE);

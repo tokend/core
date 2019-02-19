@@ -68,7 +68,8 @@ bool
 ManageAccountRuleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                     std::vector<OperationCondition> &result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT_RULE), "manage", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT_RULE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }

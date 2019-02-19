@@ -69,7 +69,8 @@ bool
 ManageSignerRuleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                    std::vector<OperationCondition> &result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::SIGNER_RULE), "manage", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::SIGNER_RULE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }

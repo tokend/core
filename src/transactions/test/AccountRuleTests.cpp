@@ -44,7 +44,7 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Successful creation")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+                0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
         auto createRuleResult = manageAccountRuleTestHelper.applyTx(
                 master, ruleEntry, ManageAccountRuleAction::CREATE);
 
@@ -52,7 +52,7 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
 
         SECTION("Successful updating")
         {
-            ruleEntry.action = "*";
+            ruleEntry.action = AccountRuleAction::ANY;
             manageAccountRuleTestHelper.applyTx(master, ruleEntry,
                                                 ManageAccountRuleAction::UPDATE);
         }
@@ -81,7 +81,7 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Rule not found when trying to delete it")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
         manageAccountRuleTestHelper.applyTx(master, ruleEntry,
                                         ManageAccountRuleAction::REMOVE,
                                         ManageAccountRuleResultCode::NOT_FOUND,
@@ -91,7 +91,7 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Rule not found for update")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
         manageAccountRuleTestHelper.applyTx(master, ruleEntry,
                                             ManageAccountRuleAction::UPDATE,
                                             ManageAccountRuleResultCode::NOT_FOUND,

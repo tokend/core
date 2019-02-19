@@ -46,13 +46,13 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, poolResource, "manage", false);
+            0, poolResource, AccountRuleAction::MANAGE, false);
     // write this entry to DB
     auto createManagePoolRuleResult = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE);
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, poolResource, "bind", false);
+            0, poolResource, AccountRuleAction::BIND, false);
     // write this entry to DB
     auto createBindPoolRuleResult = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE);

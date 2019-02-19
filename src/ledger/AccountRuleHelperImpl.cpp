@@ -20,7 +20,7 @@ AccountRuleHelperImpl::dropAll()
            "("
            "id              BIGINT          NOT NULL CHECK (id > 0),"
            "resource        TEXT            NOT NULL,"
-           "action          VARCHAR(256)    NOT NULL,"
+           "action          INT             NOT NULL,"
            "is_forbid       BOOLEAN         NOT NULL,"
            "details         TEXT            NOT NULL,"
            "lastmodified    INT             NOT NULL,"
@@ -97,6 +97,7 @@ AccountRuleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     std::string strResource = bn::encode_b64(resourceBody);
     int isForbid = accountRuleFrame->isForbid() ? 1 : 0;
     const auto version = static_cast<int32_t>(accountRuleEntry.ext.v());
+    const auto action = static_cast<int32_t>(accountRuleEntry.action);
 
     std::string sql;
 
@@ -120,7 +121,7 @@ AccountRuleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     soci::statement& st = prep.statement();
     st.exchange(use(accountRuleEntry.id, "id"));
     st.exchange(use(strResource, "res"));
-    st.exchange(use(accountRuleEntry.action, "act"));
+    st.exchange(use(action, "act"));
     st.exchange(use(isForbid, "is_f"));
     st.exchange(use(accountRuleEntry.details, "det"));
     st.exchange(use(accountRuleFrame->mEntry.lastModifiedLedgerSeq, "lm"));
@@ -271,11 +272,12 @@ AccountRuleHelperImpl::load(StatementContext &prep,
         string strResource;
         int32_t isForbid;
         int32_t version;
+        int32_t action;
 
         auto& st = prep.statement();
         st.exchange(into(accountRuleEntry.id));
         st.exchange(into(strResource));
-        st.exchange(into(accountRuleEntry.action));
+        st.exchange(into(action));
         st.exchange(into(isForbid));
         st.exchange(into(accountRuleEntry.details));
         st.exchange(into(le.lastModifiedLedgerSeq));
@@ -292,6 +294,7 @@ AccountRuleHelperImpl::load(StatementContext &prep,
             unmarshaler.done();
 
             accountRuleEntry.isForbid = isForbid > 0;
+            accountRuleEntry.action = static_cast<AccountRuleAction>(action);
             accountRuleEntry.ext.v(static_cast<LedgerVersion>(version));
 
             processor(le);

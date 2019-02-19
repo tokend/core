@@ -36,7 +36,7 @@ CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storage
     assetResource.asset().assetType = asset->getAsset().type;
     assetResource.asset().assetCode = asset->getCode();
 
-    result.emplace_back(assetResource, "withdraw", mSourceAccount);
+    result.emplace_back(assetResource, AccountRuleAction::WITHDRAW, mSourceAccount);
 
     return true;
 }

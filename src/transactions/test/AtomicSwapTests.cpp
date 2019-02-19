@@ -64,7 +64,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     assetResource.asset().assetType = UINT64_MAX;
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, "*", false);
+            0, assetResource, AccountRuleAction::ANY, false);
     auto baseAssetOwnerRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
@@ -73,17 +73,17 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     bidResource.atomicSwapBid().assetType = UINT64_MAX;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, bidResource, "create", false);
+            0, bidResource, AccountRuleAction::CREATE, false);
     auto baseAssetASwapBidCreationRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, "receive", false);
+            0, assetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
     auto baseAssetReceiverRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, AccountRuleResource(LedgerEntryType::BALANCE), "create", false);
+            0, AccountRuleResource(LedgerEntryType::BALANCE), AccountRuleAction::CREATE, false);
     auto ownBalanceCreationRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 

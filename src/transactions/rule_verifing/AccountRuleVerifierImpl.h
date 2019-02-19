@@ -16,6 +16,10 @@ private:
     isResourceMatches(AccountRuleResource const conditionResource,
                       AccountRuleResource const actualResource);
 
+    bool
+    isAccountRuleActionMatches(AccountRuleAction const conditionAction,
+                              AccountRuleAction const actualAction);
+
 public:
     AccountRuleVerifierImpl()
     {

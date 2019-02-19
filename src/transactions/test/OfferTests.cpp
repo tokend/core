@@ -92,7 +92,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     offerResource.offer().quoteAssetType = quoteType;
     
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            offerResource, "create", false);
+            offerResource, AccountRuleAction::CREATE, false);
     auto offerRuleID = manageAccountRuleTestHelper.applyTx(rootAccount, ruleEntry,
             ManageAccountRuleAction::CREATE).success().ruleID;
 
@@ -101,7 +101,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     baseAssetResource.asset().assetCode = base;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            baseAssetResource, "receive", false);
+            baseAssetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
     auto baseRuleID = manageAccountRuleTestHelper.applyTx(rootAccount, ruleEntry,
             ManageAccountRuleAction::CREATE).success().ruleID;
 
@@ -110,7 +110,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     quoteAssetResource.asset().assetCode = quote;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            quoteAssetResource, "receive", false);
+            quoteAssetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
     auto quoteRuleID = manageAccountRuleTestHelper.applyTx(rootAccount, ruleEntry,
             ManageAccountRuleAction::CREATE).success().ruleID;
 

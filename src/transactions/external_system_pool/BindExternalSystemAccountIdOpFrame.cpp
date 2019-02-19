@@ -21,7 +21,7 @@ BindExternalSystemAccountIdOpFrame::tryGetOperationConditions(StorageHelper& sh,
 {
     AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
 
-    result.emplace_back(poolResource, "bind", mSourceAccount);
+    result.emplace_back(poolResource, AccountRuleAction::BIND, mSourceAccount);
 
     return true;
 }

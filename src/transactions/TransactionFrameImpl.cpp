@@ -262,7 +262,7 @@ TransactionFrameImpl::checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
                                       StorageHelper& storageHelper)
 {
     OperationCondition operationCondition(AccountRuleResource(
-            LedgerEntryType::TRANSACTION), "send", mSigningAccount);
+            LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, mSigningAccount);
 
     return accountRuleVerifier.isAllowed(operationCondition, storageHelper);
 }

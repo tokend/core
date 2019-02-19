@@ -33,10 +33,10 @@ class TransactionFrame;
 struct OperationCondition
 {
     AccountRuleResource resource;
-    string256 action;
+    AccountRuleAction action;
     AccountFrame::pointer account;
 
-    OperationCondition(AccountRuleResource res, string256 act, AccountFrame::pointer acc)
+    OperationCondition(AccountRuleResource res, AccountRuleAction act, AccountFrame::pointer acc)
             : resource(res), action(act), account(acc)
     {
     }

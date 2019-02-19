@@ -88,7 +88,7 @@ ManageAccountRoleTestHelper::createTxSenderRole(Account &root)
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(mTestManager);
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            AccountRuleResource(LedgerEntryType::TRANSACTION), "send", false);
+            AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
 
     auto ruleID = manageAccountRuleTestHelper.applyTx(root, ruleEntry,
             ManageAccountRuleAction::CREATE).success().ruleID;

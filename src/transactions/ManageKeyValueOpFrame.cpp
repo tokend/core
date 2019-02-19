@@ -61,7 +61,7 @@ ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                  std::vector<OperationCondition>& result) const
 {
     result.emplace_back(AccountRuleResource(LedgerEntryType::KEY_VALUE),
-                        "manage", mSourceAccount);
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }

@@ -257,7 +257,7 @@ LedgerManagerImpl::createAdminRole(StorageHelper& storageHelper)
 
     AccountRuleEntry adminRule;
     adminRule.resource = AccountRuleResource(LedgerEntryType::ANY);
-    adminRule.action = "*";
+    adminRule.action = AccountRuleAction::ANY;
     adminRule.details = "{}";
     adminRule.isForbid = false;
     adminRule.id = ledgerHeader.generateID(LedgerEntryType::ACCOUNT_RULE);

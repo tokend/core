@@ -25,11 +25,11 @@ ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
     if (getSourceID() == mManageBalance.destination)
     {
-        result.emplace_back(resource, "create", mSourceAccount);
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
         return true;
     }
 
-    result.emplace_back(resource, "create_for_other", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::CREATE_FOR_OTHER, mSourceAccount);
     return true;
 }
 

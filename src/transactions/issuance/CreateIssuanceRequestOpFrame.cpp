@@ -64,7 +64,7 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	resource.asset().assetCode = asset->getCode();
 	resource.asset().assetType = asset->getType();
 
-	result.emplace_back(resource, "receive_from_issuance", account);
+	result.emplace_back(resource, AccountRuleAction::RECEIVE_ISSUANCE, account);
 
 	// only asset owner can do issuance, it will be handled in doApply
 	return true;

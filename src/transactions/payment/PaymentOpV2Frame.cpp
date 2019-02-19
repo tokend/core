@@ -50,8 +50,8 @@ PaymentOpV2Frame::tryGetOperationConditions(StorageHelper& storageHelper,
     resource.asset().assetType = assetFrame->getType();
     resource.asset().assetCode = assetFrame->getCode();
 
-    result.emplace_back(resource, "send", mSourceAccount);
-    result.emplace_back(resource, "receive_from_payment", destinationAccountFrame);
+    result.emplace_back(resource, AccountRuleAction::SEND, mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::RECEIVE_PAYMENT, destinationAccountFrame);
 
     return true;
 }

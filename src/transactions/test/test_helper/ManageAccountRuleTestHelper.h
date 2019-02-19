@@ -26,7 +26,7 @@ class ManageAccountRuleTestHelper : TxHelper
 
     AccountRuleEntry
     createAccountRuleEntry(uint64_t id, AccountRuleResource resource,
-                           std::string action, bool isForbid);
+                           AccountRuleAction action, bool isForbid);
 };
 
 } // namespace txtest

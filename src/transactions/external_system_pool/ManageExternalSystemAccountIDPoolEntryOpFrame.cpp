@@ -1,7 +1,6 @@
 #include "ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "CreateExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "DeleteExternalSystemAccountIDPoolEntryOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 
 namespace stellar
 {
@@ -14,7 +13,7 @@ ManageExternalSystemAccountIdPoolEntryOpFrame::tryGetOperationConditions(
                                 std::vector<OperationCondition>& result) const
 {
     result.emplace_back(AccountRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY),
-                        "manage", mSourceAccount);
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }

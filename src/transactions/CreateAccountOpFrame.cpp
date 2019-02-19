@@ -24,7 +24,8 @@ bool
 CreateAccountOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                     std::vector<OperationCondition> &result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT), "create", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::ACCOUNT),
+                        AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
 }

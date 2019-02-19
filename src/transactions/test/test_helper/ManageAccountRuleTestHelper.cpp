@@ -116,7 +116,7 @@ ManageAccountRuleTestHelper::applyTx(
 
 AccountRuleEntry
 ManageAccountRuleTestHelper::createAccountRuleEntry(
-        uint64_t id, AccountRuleResource resource, std::string action,
+        uint64_t id, AccountRuleResource resource, AccountRuleAction action,
         bool isForbid)
 {
     LedgerEntry le;

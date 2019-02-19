@@ -19,7 +19,8 @@ bool
 ManageLimitsOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                 std::vector<OperationCondition>& result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::LIMITS_V2), "manage", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::LIMITS_V2),
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }

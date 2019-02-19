@@ -42,7 +42,7 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, AccountRuleResource(LedgerEntryType::KEY_VALUE), "manage", false);
+            0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
     auto createRuleResult = manageAccountRuleTestHelper.applyTx(
             master, ruleEntry, ManageAccountRuleAction::CREATE);
 

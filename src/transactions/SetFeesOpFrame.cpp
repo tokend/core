@@ -28,7 +28,8 @@ bool
 SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                 std::vector<OperationCondition>& result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::FEE), "manage", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::FEE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }

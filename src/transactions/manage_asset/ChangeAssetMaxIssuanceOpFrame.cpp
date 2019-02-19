@@ -42,7 +42,7 @@ ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageH
     resource.asset().assetCode = asset->getCode();
     resource.asset().assetType = asset->getType();
 
-    result.emplace_back(resource, "update_max_issuance", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::UPDATE_MAX_ISSUANCE, mSourceAccount);
 
     // only asset owner can do it, but it is useful to restrict him
     return true;
