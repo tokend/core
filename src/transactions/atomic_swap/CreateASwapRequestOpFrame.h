@@ -23,6 +23,12 @@ class CreateASwapRequestOpFrame : public OperationFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
+    bool
+    isSupported() const
+    {
+        return false;
+    }
+
 public:
     CreateASwapRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);

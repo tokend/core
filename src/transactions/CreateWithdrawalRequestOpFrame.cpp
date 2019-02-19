@@ -47,14 +47,21 @@ CreateWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
 {
     auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
             mCreateWithdrawalRequest.request.balance);
-
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
 
-    SignerRuleResource assetResource(LedgerEntryType::ASSET);
-    assetResource.asset().assetType = asset->getAsset().type;
-    assetResource.asset().assetCode = asset->getCode();
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);
+    resource.reviewableRequest().details.withdraw().assetCode = asset->getCode();
+    resource.reviewableRequest().details.withdraw().assetType = asset->getType();
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateWithdrawalRequest.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateWithdrawalRequest.allTasks;
+    }
 
-    result.emplace_back(assetResource, SignerRuleAction::WITHDRAW);
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

@@ -89,7 +89,7 @@ CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 		resource.reviewableRequest().allTasks = *mCreateIssuanceRequest.allTasks;
 	}
 
-	result.emplace_back(resource, SignerRuleAction::ISSUE);
+	result.emplace_back(resource, SignerRuleAction::CREATE);
 
 	return true;
 }
