@@ -8,12 +8,43 @@
 #include "main/Application.h"
 #include "xdrpp/printer.h"
 #include "ReviewRequestHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
 
 namespace stellar
 {
 
 using namespace std;
 using xdr::operator==;
+
+bool
+ReviewIssuanceCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+											   std::vector<SignerRequirement>& result) const
+{
+	auto request = ReviewableRequestHelper::Instance()->loadRequest(
+			mReviewRequest.requestID, storageHelper.getDatabase());
+	if (!request || (request->getType() != ReviewableRequestType::CREATE_ISSUANCE))
+	{
+		mResult.code(OperationResultCode::opNO_ENTRY);
+		mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+		return false;
+	}
+
+	auto asset = storageHelper.getAssetHelper().mustLoadAsset(
+			request->getRequestEntry().body.issuanceRequest().asset);
+
+	SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+	resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
+	resource.reviewableRequest().details.issuance().assetCode = asset->getCode();
+	resource.reviewableRequest().details.issuance().assetType = asset->getType();
+	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+	resource.reviewableRequest().allTasks = 0;
+
+	result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+	return true;
+}
 
 bool ReviewIssuanceCreationRequestOpFrame::
 handleApprove(Application &app, LedgerDelta &delta,

@@ -119,6 +119,11 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                 case ReviewableRequestType::CREATE_SALE:
                     return isTypeMatches(expectedDetails.sale().type,
                                          actualDetails.sale().type);
+                case ReviewableRequestType::CREATE_ISSUANCE:
+                    return isTypeMatches(expectedDetails.issuance().assetType,
+                                         actualDetails.issuance().assetType) &&
+                           isStringMatches(expectedDetails.issuance().assetCode,
+                                           actualDetails.issuance().assetCode);
                 default:
                     return true;
             }
