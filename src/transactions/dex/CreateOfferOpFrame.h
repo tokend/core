@@ -25,8 +25,6 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
 
     bool lockSellingAmount(OfferEntry const& offer);
 
-    bool isAllowedToReceive(BalanceID receivingBalance, Database &db);
-
     FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
 
 protected:
@@ -34,6 +32,14 @@ protected:
     BalanceFrame::pointer loadBalanceValidForTrading(
         BalanceID const& balanceID,
         Database& db, LedgerDelta& delta);
+
+    bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
     bool isCapitalDeployment = false;

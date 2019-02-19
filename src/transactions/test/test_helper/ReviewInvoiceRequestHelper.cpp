@@ -36,7 +36,7 @@ ReviewInvoiceRequestHelper::applyReviewRequestTx(Account &source, uint64_t reque
     auto checker = InvoiceReviewChecker(mTestManager, requestID);
     requestMustBeDeletedAfterApproval = true;
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, mTestManager->getDB());
-    if (request && (request->getType() == ReviewableRequestType::INVOICE) &&
+    if (request && (request->getType() == ReviewableRequestType::CREATE_INVOICE) &&
         request->getRequestEntry().body.invoiceRequest().contractID)
         requestMustBeDeletedAfterApproval = false;
 

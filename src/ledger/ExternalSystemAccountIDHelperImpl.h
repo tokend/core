@@ -12,6 +12,7 @@ class session;
 namespace stellar
 {
 class StorageHelper;
+class StatementContext;
 
 class ExternalSystemAccountIDHelperImpl : public ExternalSystemAccountIDHelper,
                                           NonCopyable

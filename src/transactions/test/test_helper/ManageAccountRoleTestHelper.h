@@ -11,17 +11,24 @@ class ManageAccountRoleTestHelper : TxHelper
   public:
     explicit ManageAccountRoleTestHelper(TestManager::pointer testManager);
 
-    ManageAccountRoleOp createCreationOpInput(const std::string& name);
+    ManageAccountRoleOp buildCreateRoleOp(const std::string &name,
+                                          std::vector<uint64_t> ruleIDs);
 
-    ManageAccountRoleOp createDeletionOpInput(uint64_t accountRoleID);
+    ManageAccountRoleOp buildUpdateRoleOp(uint64_t accountRoleID,
+                                          const std::string &name,
+                                          std::vector<uint64_t> ruleIDs);
+
+    ManageAccountRoleOp buildRemoveRoleOp(uint64_t accountRoleID);
 
     TransactionFramePtr createAccountRoleTx(Account& source,
                                             const ManageAccountRoleOp& op);
 
     ManageAccountRoleResult
-    applySetAccountRole(Account& source, const ManageAccountRoleOp& op,
-                        ManageAccountRoleResultCode expectedResultCode =
-                            ManageAccountRoleResultCode::SUCCESS);
+    applyTx(Account &source, const ManageAccountRoleOp &op,
+            ManageAccountRoleResultCode expectedResultCode =
+            ManageAccountRoleResultCode::SUCCESS);
+
+    uint64_t createTxSenderRole(Account& root);
 };
 } // namespace txtest
 } // namespace stellar

@@ -72,17 +72,11 @@ bool ReviewAMLAlertRequestOpFrame::handleReject(Application &app, LedgerDelta &d
         return false;
     }
 
-    SourceDetails ReviewAMLAlertRequestOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const {
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::AML_ALERT_REVIEWER));
-    }
-
 AMLAlertRequest ReviewAMLAlertRequestOpFrame::getAmlAlert(
     ReviewableRequestFrame::pointer request)
 {
     auto requestEntry = request->getRequestEntry();
-    if (requestEntry.body.type() != ReviewableRequestType::AML_ALERT)
+    if (requestEntry.body.type() != ReviewableRequestType::CREATE_AML_ALERT)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Review aml alert: expected aml alert but got " << xdr::xdr_to_string(requestEntry.body.type());
         throw runtime_error("Expected request to be AML alert");

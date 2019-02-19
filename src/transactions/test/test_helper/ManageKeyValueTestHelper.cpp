@@ -3,6 +3,8 @@
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "test/test_marshaler.h"
+#include "TxHelper.h"
+#include "Account.h"
 
 namespace stellar {
     namespace txtest {
@@ -44,6 +46,17 @@ namespace stellar {
             this->expectedResult = resultCode;
             return  this;
         }
+
+        TransactionFramePtr
+        ManageKeyValueTestHelper::createManageKVTx(Account& source,
+                                                   const ManageKeyValueOp& op)
+        {
+            Operation baseOp;
+            baseOp.body.type(OperationType::MANAGE_KEY_VALUE);
+            baseOp.body.manageKeyValueOp() = op;
+            return txFromOperation(source, baseOp, nullptr);
+        }
+
 
         void ManageKeyValueTestHelper::doApply(Application &app, ManageKVAction action, bool require,
                                                KeyValueEntryType type)
@@ -94,6 +107,23 @@ namespace stellar {
                                          ManageKVAction::PUT, true);
         }
 
+        void
+        ManageKeyValueTestHelper::applyTx(Account& source,
+                                          const ManageKeyValueOp& op,
+                                          ManageKeyValueResultCode expectedResultCode)
+        {
+            TransactionFramePtr txFrame = createManageKVTx(source, op);
+            mTestManager->applyCheck(txFrame);
+
+            auto txResult = txFrame->getResult();
+
+            REQUIRE(txResult.result.results()[0].code() == OperationResultCode::opINNER);
+
+            auto actualResultCode =
+                    ManageKeyValueOpFrame::getInnerCode(txResult.result.results()[0]);
+
+            REQUIRE(actualResultCode == expectedResultCode);
+        }
 
         Operation ManageKeyValueTestBuilder::buildOp()
         {

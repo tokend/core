@@ -43,14 +43,13 @@ TEST_CASE("account_manager", "[dep_tx][account_manager]")
     Salt rootSeq = 1;
 
 	Limits limits(ONE, 2 * ONE, 4 * ONE, 4 * ONE, Limits::_ext_t(LedgerVersion::EMPTY_VERSION));
-	AccountType accountType = AccountType::GENERAL;
     
     auto amount = ONE;
 
     //applySetLimits(app, root, rootSeq++, nullptr, &accountType, limits);
 
     auto a = SecretKey::random();
-    applyCreateAccountTx(app, root, a, rootSeq++, accountType);
+    applyCreateAccountTx(app, root, a, rootSeq++);
     auto account = loadAccount(a, app);
 	REQUIRE(account);
 
@@ -113,7 +112,7 @@ TEST_CASE("account_manager", "[dep_tx][account_manager]")
     {
         auto a2 = SecretKey::random();
 
-        applyCreateAccountTx(app, root, a2, rootSeq++, accountType);
+        applyCreateAccountTx(app, root, a2, rootSeq++);
         auto balanceID = a2.getPublicKey();
 
         fundAccount(app, root, issuance, rootSeq, balanceID,

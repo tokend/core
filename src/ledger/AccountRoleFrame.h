@@ -37,24 +37,35 @@ class AccountRoleFrame : public EntryFrame
         return mAccountRole;
     }
 
+    AccountRoleEntry&
+    getAccountRole()
+    {
+        return mAccountRole;
+    }
+
     uint64_t
     getID() const
     {
-        return mAccountRole.accountRoleID;
+        return mAccountRole.id;
+    }
+
+    std::vector<uint64_t> const
+    getRuleIDs() const
+    {
+        return mAccountRole.ruleIDs;
     }
 
     std::string
-    getName() const
+    getDetails() const
     {
-        return mAccountRole.accountRoleName;
+        return mAccountRole.details;
     }
 
     static void ensureValid(const LedgerEntry& entry);
 
     void ensureValid() const;
 
-    static pointer createNew(uint64_t id,
-                             std::string const& name,
-                             LedgerDelta& delta);
+    static pointer
+    createNew(uint64_t id, CreateAccountRoleData data);
 };
 } // namespace stellar

@@ -32,19 +32,24 @@ ManageAssetPairOpFrame::ManageAssetPairOpFrame(Operation const& op,
 {
 }
 
-std::unordered_map<AccountID, CounterpartyDetails> ManageAssetPairOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
+bool
+ManageAssetPairOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+												  std::vector<OperationCondition>& result) const
 {
-	// no counterparties
-	return std::unordered_map<AccountID, CounterpartyDetails>();
+	result.emplace_back(AccountRuleResource(LedgerEntryType::ASSET_PAIR),
+						AccountRuleAction::MANAGE, mSourceAccount);
+
+	return true;
 }
 
-SourceDetails ManageAssetPairOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                              int32_t ledgerVersion) const
+bool
+ManageAssetPairOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+								 	std::vector<SignerRequirement>& result) const
 {
-	int32_t signerType = mManageAssetPair.action == ManageAssetPairAction::UPDATE_PRICE ?
-						 							static_cast<int32_t >(SignerType::ASSET_RATE_MANAGER):
-                                                    static_cast<int32_t >(SignerType::ASSET_MANAGER);
-	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), signerType);
+	result.emplace_back(SignerRuleResource(LedgerEntryType::ASSET_PAIR),
+						SignerRuleAction::MANAGE);
+
+	return true;
 }
 
 bool ManageAssetPairOpFrame::createNewAssetPair(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair)
@@ -76,7 +81,7 @@ bool ManageAssetPairOpFrame::createNewAssetPair(Application& app, LedgerDelta& d
 		mManageAssetPair.physicalPrice, mManageAssetPair.physicalPriceCorrection,
 		mManageAssetPair.maxPriceStep, mManageAssetPair.policies);
 	EntryHelperProvider::storeAddEntry(delta, db, assetPair->mEntry);
-        AccountManager::loadOrCreateBalanceForAsset(app.getCommissionID(), assetPair->getQuoteAsset(), db, delta);
+        AccountManager::loadOrCreateBalanceForAsset(app.getAdminID(), assetPair->getQuoteAsset(), db, delta);
 
 	app.getMetrics().NewMeter({ "op-manage-asset-pair", "success", "apply" },
 		"operation").Mark();

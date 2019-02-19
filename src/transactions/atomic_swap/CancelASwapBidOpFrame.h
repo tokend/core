@@ -7,7 +7,7 @@ namespace stellar
 
 class CancelASwapBidOpFrame : public OperationFrame
 {
-protected:
+private:
     CancelASwapBidOp const& mCancelASwapBid;
 
     CancelASwapBidResult& innerResult()
@@ -15,12 +15,13 @@ protected:
         return mResult.tr().cancelASwapBidResult();
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    getCounterpartyDetails(Database &db, LedgerDelta *delta) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
-    SourceDetails
-    getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails>
-                            counterpartiesDetails, int32_t ledgerVersion) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
     CancelASwapBidOpFrame(Operation const &op, OperationResult &opRes,

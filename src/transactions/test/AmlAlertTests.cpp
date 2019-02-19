@@ -1,5 +1,5 @@
-#include "main/Application.h"
-#include "test_helper/TestManager.h"
+#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include "test/test_marshaler.h"
 #include "TxTests.h"
 #include "main/test.h"
@@ -31,7 +31,13 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
     Database& db = testManager->getDB();
 
     auto root = Account{ getRoot(), Salt(0) };
+
+    // helpers
     auto amlAlertHelper = ManageAMLAlertTestHelper(testManager);
+    CreateAccountTestHelper createAccountTestHelper(testManager);
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+
     uint32_t zeroTasks = 0;
     SECTION("Empty reason is not allowed")
     {
@@ -54,16 +60,38 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
     {
         auto issuanceHelper = IssuanceRequestHelper(testManager);
         const AssetCode asset = "USD";
+        const uint64_t  assetType = 1;
         const uint64_t preIssuedAmount = 10000 * ONE;
 
         ManageKeyValueTestHelper manageKeyValueHelper(testManager);
         manageKeyValueHelper.assetOpWithoutReview();
 
-        issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
+        issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root, 6, assetType);
         ManageAssetTestHelper(testManager).updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
 
+        AccountRuleResource assetResource(LedgerEntryType::ASSET);
+        assetResource.asset().assetCode = asset;
+        assetResource.asset().assetType = assetType;
+
+        auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+                0, assetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
+        // write this entry to DB
+        auto createReceiverRuleResult = manageAccountRuleTestHelper.applyTx(
+                root, ruleEntry, ManageAccountRuleAction::CREATE);
+
+        // create account role using root as source
+        auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+                R"({"name":"usd_receiver"})", {createReceiverRuleResult.success().ruleID});
+
+        auto recipientAccountRoleID = manageAccountRoleTestHelper.applyTx(
+                root, createReceiverAccountRoleOp).success().roleID;
+
         auto account = SecretKey::random();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.getPublicKey(), AccountType::GENERAL);
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                .setSource(root)
+                                                .setToPublicKey(account.getPublicKey())
+                                                .addBasicSigner()
+                                                .setRoleID(1));
         auto balance = BalanceHelperLegacy::Instance()->loadBalance(account.getPublicKey(), asset, testManager->getDB(), nullptr);
         REQUIRE(!!balance);
         uint32_t allTasks = 0;

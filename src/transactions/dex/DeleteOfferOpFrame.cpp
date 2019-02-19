@@ -10,6 +10,9 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/OfferHelper.h"
 #include "main/Application.h"
+#include "OfferManager.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
 
 namespace stellar
 {
@@ -21,6 +24,42 @@ DeleteOfferOpFrame::DeleteOfferOpFrame(Operation const& op,
                                        TransactionFrame& parentTx)
     : ManageOfferOpFrame(op, res, parentTx)
 {
+}
+
+bool
+DeleteOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                std::vector<OperationCondition> &result) const
+{
+    // only offer owner can remove it
+    return true;
+}
+
+bool
+DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                 std::vector<SignerRequirement> &result) const
+{
+    auto offerFrame = OfferHelper::Instance()->loadOffer(getSourceID(),
+            mManageOffer.offerID, storageHelper.getDatabase());
+    if (!offerFrame)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::OFFER_ENTRY;
+        return false;
+    }
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto baseAsset = assetHelper.mustLoadAsset(offerFrame->getOffer().base);
+    auto quoteAsset = assetHelper.mustLoadAsset(offerFrame->getOffer().quote);
+
+    SignerRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    resource.offer().baseAssetCode = baseAsset->getCode();
+    resource.offer().quoteAssetCode = quoteAsset->getCode();
+    resource.offer().baseAssetType = baseAsset->getType();
+    resource.offer().quoteAssetType = quoteAsset->getType();
+
+    result.emplace_back(resource, SignerRuleAction::REMOVE);
+
+    return true;
 }
 
 bool

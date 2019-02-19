@@ -6,11 +6,11 @@
 #include <transactions/test/test_helper/PaymentV2TestHelper.h>
 #include <transactions/test/test_helper/SetFeesTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
-#include "test_helper/TxHelper.h"
+#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 #include "main/test.h"
-#include "TxTests.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -45,6 +45,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     auto paymentV2TestHelper = PaymentV2TestHelper(testManager);
     auto setFeesTestHelper = SetFeesTestHelper(testManager);
     auto manageLimitsTestHelper = ManageLimitsTestHelper(testManager);
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     // db helpers
     auto balanceHelper = BalanceHelperLegacy::Instance();
@@ -72,13 +74,63 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     const uint64_t preIssuedAmount = INT64_MAX - (INT64_MAX % precision);
 
     // create asset
-    issuanceTestHelper.createAssetWithPreIssuedAmount(root, paymentAsset, preIssuedAmount, root, testSet.trailingDigitsCount);
+    uint64_t assetType = 1;
+    issuanceTestHelper.createAssetWithPreIssuedAmount(root, paymentAsset, preIssuedAmount, root, testSet.trailingDigitsCount, assetType);
     manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                 static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
                                                                 static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
-    // create payment participants
-    createAccountTestHelper.applyCreateAccountTx(root, payer.key.getPublicKey(), AccountType::GENERAL);
-    createAccountTestHelper.applyCreateAccountTx(root, recipient.key.getPublicKey(), AccountType::GENERAL);
+
+    // create policy (just entry)
+    AccountRuleResource assetResource(LedgerEntryType::ASSET);
+    assetResource.asset().assetType = assetType;
+    assetResource.asset().assetCode = paymentAsset;
+
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, assetResource, AccountRuleAction::ANY, false);
+    // write this entry to DB
+    auto createSenderRuleResult = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE);
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, assetResource, AccountRuleAction::ANY, false);
+    // write this entry to DB
+    auto createReceiverRuleResult = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE);
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
+    // write this entry to DB
+    auto sendTxRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    // create account role using root as source
+    auto createSenderAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            R"({"name":"usd_sender"})", {createSenderRuleResult.success().ruleID, sendTxRuleID});
+
+    auto senderAccountRoleID = manageAccountRoleTestHelper.applyTx(
+            root, createSenderAccountRoleOp).success().roleID;
+
+    // create account role using root as source
+    auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            R"({"name":"usd_receiver"})", {createReceiverRuleResult.success().ruleID, sendTxRuleID});
+
+    auto recipientAccountRoleID = manageAccountRoleTestHelper.applyTx(
+            root, createReceiverAccountRoleOp).success().roleID;
+
+    payer = Account{SecretKey::random(), Salt(1)};
+    recipient = Account{SecretKey::random(), Salt(1)};
+
+    createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                            .setSource(root)
+                                            .setToPublicKey(payer.key.getPublicKey())
+                                            .addBasicSigner()
+                                            .setRoleID(senderAccountRoleID));
+
+    createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                            .setSource(root)
+                                            .setToPublicKey(recipient.key.getPublicKey())
+                                            .addBasicSigner()
+                                            .setRoleID(recipientAccountRoleID));
 
     //create limits
     ManageLimitsOp manageLimitsOp;
@@ -162,7 +214,8 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  accountDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
+                                                 PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Destination balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
@@ -170,16 +223,19 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  balanceDestination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND);
+                                                 PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND,
+                                                 OperationResultCode::opNO_ENTRY);
         }
         SECTION("Source balance not found") {
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
             paymentV2TestHelper.applyPaymentV2Tx(payer, nonExistingBalance,
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND);
+                                                 PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND,
+                                                 OperationResultCode::opNO_ENTRY);
         }
-        SECTION("Not allowed by asset policy") {
+        SECTION("Not allowed by asset policy")
+        {
             manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET));
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
@@ -188,34 +244,18 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
             manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                         static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
-                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET) |
-                                                                        static_cast<uint32_t>(AssetPolicy::REQUIRES_VERIFICATION));
-            auto newPayer = Account{SecretKey::random(), Salt(1)};
-            createAccountTestHelper.applyCreateAccountTx(root, newPayer.key.getPublicKey(), AccountType::NOT_VERIFIED);
-            payerBalance = balanceHelper->loadBalance(newPayer.key.getPublicKey(), paymentAsset, db, nullptr);
-            REQUIRE(!!payerBalance);
-            paymentV2TestHelper.applyPaymentV2Tx(newPayer, payerBalance->getBalanceID(),
-                                                 destination, paymentAmount, paymentFeeData, "",
-                                                 "", nullptr,
-                                                 PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
+                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
+            assetResource.asset().assetCode = "XRP";
 
-            manageAssetTestHelper.updateAsset(root, paymentAsset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
-                                                                        static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
-                                                                        static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET) |
-                                                                        static_cast<uint32_t>(AssetPolicy::REQUIRES_KYC));
-            paymentV2TestHelper.applyPaymentV2Tx(newPayer, payerBalance->getBalanceID(),
+            ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+                    createSenderRuleResult.success().ruleID, assetResource, AccountRuleAction::SEND, false);
+            // write this entry to DB
+            manageAccountRuleTestHelper.applyTx(root, ruleEntry, ManageAccountRuleAction::UPDATE);
+            paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),
                                                  destination, paymentAmount, paymentFeeData, "",
                                                  "", nullptr,
-                                                 PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-
-            newPayer = Account{SecretKey::random(), Salt(1)};
-            createAccountTestHelper.applyCreateAccountTx(root, newPayer.key.getPublicKey(), AccountType::VERIFIED);
-            payerBalance = balanceHelper->loadBalance(newPayer.key.getPublicKey(), paymentAsset, db, nullptr);
-            REQUIRE(!!payerBalance);
-            paymentV2TestHelper.applyPaymentV2Tx(newPayer, payerBalance->getBalanceID(),
-                                                 destination, paymentAmount, paymentFeeData, "",
-                                                 "", nullptr,
-                                                 PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
+                                                 PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
+                                                 OperationResultCode::opNO_ROLE_PERMISSION);
         }
 
         SECTION("Insufficient fee amount") {
@@ -265,6 +305,13 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                      paymentAmount, paymentFeeData, "", "",
                                                      &paymentV2Delta);
             }
+
+            SECTION("Happy path using account rule and rules")
+            {
+                paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,
+                                                     paymentAmount, paymentFeeData, "", "");
+            }
+
             SECTION("Incorrect amount precision") {
                 if (testSet.paymentAsset == "USDN") {
                     paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(), destination,

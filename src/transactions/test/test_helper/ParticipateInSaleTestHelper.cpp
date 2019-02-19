@@ -1,5 +1,5 @@
 #include <ledger/FeeHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include "ParticipateInSaleTestHelper.h"
 #include "transactions/test/TxTests.h"
@@ -64,7 +64,7 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
         REQUIRE(saleBeforeTx.getSaleEntry().currentCapInBase + op.amount == saleAfterTx->getSaleEntry().currentCapInBase);
     }
 
-    auto sourceAccountFrame = AccountHelper::Instance()->loadAccount(source.key.getPublicKey(), db);
+    auto sourceAccountFrame = AccountHelperLegacy::Instance()->loadAccount(source.key.getPublicKey(), db);
     auto investFee = FeeHelper::Instance()->loadForAccount(FeeType::INVEST_FEE, balanceBeforeTx.asset, 0,
                                                            sourceAccountFrame, op.amount, db);
     if (!!investFee) {
@@ -102,7 +102,7 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
                                const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee)
     {
         auto account = Account{ SecretKey::random(), 0 };
-        CreateAccountTestHelper(mTestManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
+        CreateAccountTestHelper(mTestManager).applyCreateAccountTx(root, account.key.getPublicKey(), 1);
         return addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, fee);
     }
 

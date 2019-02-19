@@ -7,7 +7,7 @@
 #include "util/Timer.h"
 #include "main/test.h"
 #include "AccountFrame.h"
-#include "AccountHelper.h"
+#include "AccountHelperLegacy.h"
 #include "LedgerDeltaImpl.h"
 #include "xdrpp/autocheck.h"
 #include "ledger/LedgerTestUtils.h"
@@ -27,7 +27,7 @@ TEST_CASE("Ledger Entry tests", "[ledgerentry]")
     app->start();
     Database& db = app->getDatabase();
 
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
 
     SECTION("round trip with database")
     {

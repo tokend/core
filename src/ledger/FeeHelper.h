@@ -52,7 +52,7 @@ namespace stellar {
         EntryFrame::pointer storeLoad(LedgerKey const &key, Database &db) override;
 
         FeeFrame::pointer loadFee(FeeType feeType, AssetCode asset, AccountID *accountID,
-                                  AccountType *accountType, int64_t subtype, int64_t lowerBound,
+                                  uint64_t* accountType, int64_t subtype, int64_t lowerBound,
                                   int64_t upperBound, Database &db, LedgerDelta *delta = nullptr);
 
         FeeFrame::pointer loadFee(Hash hash, int64_t lowerBound, int64_t upperBound,

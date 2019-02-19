@@ -25,7 +25,8 @@ WithdrawRequestHelper(TestManager::pointer testManager) : TxHelper(testManager)
 CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     Account& source, WithdrawalRequest request,
     uint32_t *allTasks,
-    CreateWithdrawalRequestResultCode expectedResult)
+    CreateWithdrawalRequestResultCode expectedResult,
+    OperationResultCode expectedOpResultCode)
 {
     Database& db = mTestManager->getDB();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -55,6 +56,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == expectedOpResultCode);
+    if (expectedOpResultCode != OperationResultCode::opINNER)
+    {
+        return CreateWithdrawalRequestResult();
+    }
+
     auto actualResultCode = CreateWithdrawalRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
@@ -94,13 +102,13 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
 }
 
 WithdrawalRequest WithdrawRequestHelper::createWithdrawRequest(
-    const BalanceID balance, const uint64_t amount, const Fee fee, std::string externalDetails)
+    const BalanceID balance, const uint64_t amount, const Fee fee, std::string creatorDetails)
 {
     WithdrawalRequest result;
     result.balance = balance;
     result.amount = amount;
     result.fee = fee;
-    result.externalDetails = externalDetails;
+    result.creatorDetails = creatorDetails;
     result.ext.v(LedgerVersion::EMPTY_VERSION);
     return result;
 }
@@ -126,7 +134,7 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
     uint64_t universalAmount = 0;
     switch (withdrawRequest->getRequestType())
     {
-    case ReviewableRequestType::WITHDRAW:
+    case ReviewableRequestType::CREATE_WITHDRAW:
         universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
         break;
     default:

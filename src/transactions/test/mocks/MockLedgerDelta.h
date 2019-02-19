@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ledger/LedgerDelta.h"
+
 namespace stellar
 {
 

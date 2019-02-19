@@ -19,7 +19,7 @@ SaleReviewChecker::SaleReviewChecker(const TestManager::pointer testManager,
                                      const uint64_t requestID) : ReviewChecker(testManager)
 {
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::SALE)
+    if (!request || request->getType() != ReviewableRequestType::CREATE_SALE)
     {
         return;
     }

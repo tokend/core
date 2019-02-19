@@ -44,11 +44,9 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
     auto account2 = Account{SecretKey::random(), 0};
     CreateAccountTestHelper createAccountTestHelper(testManager);
     createAccountTestHelper.
-        applyCreateAccountTx(root, account.key.getPublicKey(),
-                             AccountType::GENERAL);
+        applyCreateAccountTx(root, account.key.getPublicKey(), 1);
     createAccountTestHelper.
-        applyCreateAccountTx(root, account2.key.getPublicKey(),
-                             AccountType::GENERAL);
+        applyCreateAccountTx(root, account2.key.getPublicKey(), 1);
 
     AssetCode asset = "EUR";
     AssetCode asset2 = "USD";
@@ -93,18 +91,15 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
     {
         auto account3 = Account{SecretKey::random(), Salt(0)};
         auto accountID = account3.key.getPublicKey();
-        TransactionFramePtr txFrame = manageBalanceTestHelper.
-            createManageBalanceTx(account2, accountID, asset2,
-                                  ManageBalanceAction::CREATE);
-        checkTransactionForOpResult(txFrame, app,
-                                    OperationResultCode::opNO_COUNTERPARTY);
+        manageBalanceTestHelper.applyManageBalanceTx(account2, accountID, asset2,
+                                                     ManageBalanceAction::CREATE_UNIQUE,
+                                                     ManageBalanceResultCode::DESTINATION_NOT_FOUND);
     }
     SECTION("Can create unique")
     {
         account = Account{ SecretKey::random() , 0 };
         createAccountTestHelper.
-            applyCreateAccountTx(root, account.key.getPublicKey(),
-                AccountType::GENERAL);
+            applyCreateAccountTx(root, account.key.getPublicKey(), 1);
         auto accountID = account.key.getPublicKey();
         manageBalanceTestHelper.applyManageBalanceTx(root, accountID, asset,
             ManageBalanceAction::CREATE_UNIQUE);

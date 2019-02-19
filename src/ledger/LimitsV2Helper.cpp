@@ -1,11 +1,6 @@
-#include <search.h>
 #include <lib/xdrpp/xdrpp/printer.h>
 #include "LimitsV2Helper.h"
-#include "LimitsV2Frame.h"
-#include "crypto/SecretKey.h"
 #include "LedgerDelta.h"
-#include "AccountFrame.h"
-#include "BalanceFrame.h"
 
 using namespace std;
 using namespace soci;
@@ -23,7 +18,7 @@ namespace  stellar
         db.getSession() << "CREATE TABLE limits_v2"
                    "("
                    "id                  BIGINT          NOT NULL CHECK (id >= 0) PRIMARY KEY,"
-                   "account_type        INT             DEFAULT NULL,"
+                   "account_type        BIGINT          DEFAULT NULL,"
                    "account_id          VARCHAR(56)     DEFAULT NULL,"
                    "stats_op_type       INT             NOT NULL,"
                    "asset_code          TEXT            NOT NULL,"
@@ -76,11 +71,11 @@ namespace  stellar
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
 
-        int32_t accountType = 0;
+        uint64_t accountType = 0;
         indicator accountTypeIndicator = i_null;
-        if (!!limitsV2Entry.accountType)
+        if (!!limitsV2Entry.accountRole)
         {
-            accountType = static_cast<int32_t>(*limitsV2Entry.accountType);
+            accountType = *limitsV2Entry.accountRole;
             accountTypeIndicator = i_ok;
         }
 
@@ -240,13 +235,13 @@ namespace  stellar
 
     std::vector<LimitsV2Frame::pointer>
     LimitsV2Helper::loadLimits(Database &db, vector<StatsOpType> statsOpTypes, AssetCode assetCode,
-                               xdr::pointer<AccountID> accountID, xdr::pointer<AccountType> accountType)
+                               xdr::pointer<AccountID> accountID, uint64_t* roleID)
     {
-        int32_t accountTypeInt = 0;
+        uint64_t accountRole = 0;
         indicator accountTypeIndicator = i_null;
-        if (!!accountType)
+        if (roleID != nullptr)
         {
-            accountTypeInt = static_cast<int32_t>(*accountType);
+            accountRole = *roleID;
             accountTypeIndicator = i_ok;
         }
 
@@ -273,7 +268,7 @@ namespace  stellar
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
         st.exchange(use(accountIDStr, accountIDIndicator, "acc_id"));
-        st.exchange(use(accountTypeInt, accountTypeIndicator, "acc_t"));
+        st.exchange(use(accountRole, accountTypeIndicator, "acc_t"));
         st.exchange(use(assetCode, "asset_c"));
 
         std::vector<LimitsV2Frame::pointer> result;
@@ -288,14 +283,14 @@ namespace  stellar
 
     LimitsV2Frame::pointer
     LimitsV2Helper::loadLimits(Database &db, StatsOpType statsOpType, AssetCode assetCode,
-                               xdr::pointer<AccountID> accountID, xdr::pointer<AccountType> accountType,
+                               xdr::pointer<AccountID> accountID, uint64_t* roleID,
                                bool isConvertNeeded, LedgerDelta *delta)
     {
-        int32_t accountTypeInt = 0;
+        uint64_t accountRole = 0;
         indicator accountTypeIndicator = i_null;
-        if (!!accountType)
+        if (roleID != nullptr)
         {
-            accountTypeInt = static_cast<int32_t>(*accountType);
+            accountRole = *roleID;
             accountTypeIndicator = i_ok;
         }
 
@@ -319,7 +314,7 @@ namespace  stellar
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
         st.exchange(use(accountIDStr, accountIDIndicator, "acc_id"));
-        st.exchange(use(accountTypeInt, accountTypeIndicator, "acc_t"));
+        st.exchange(use(accountRole, accountTypeIndicator, "acc_t"));
         st.exchange(use(assetCode, "asset_c"));
         st.exchange(use(statsOpTypeInt, "stats_t"));
         st.exchange(use(isConvertNeededInt, "is_c"));
@@ -349,7 +344,7 @@ namespace  stellar
             le.data.type(LedgerEntryType::LIMITS_V2);
             auto& limitsV2 = le.data.limitsV2();
 
-            int32_t accountType;
+            uint64_t accountType;
             string accountIDStr;
             indicator accountTypeIndicator = i_null;
             indicator accountIDIndicator = i_null;
@@ -376,7 +371,7 @@ namespace  stellar
             while (st.got_data())
             {
                 if (accountTypeIndicator == i_ok)
-                    limitsV2.accountType.activate() = static_cast<AccountType>(accountType);
+                    limitsV2.accountRole.activate() = accountType;
 
                 if (accountIDIndicator == i_ok)
                     limitsV2.accountID.activate() = PubKeyUtils::fromStrKey(accountIDStr);

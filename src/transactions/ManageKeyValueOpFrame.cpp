@@ -1,24 +1,17 @@
-
 #include "ManageKeyValueOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/KeyValueHelperLegacy.h"
-#include "database/Database.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
-#include <string>
-#include <ledger/AccountHelper.h>
-#include <transactions/kyc/CreateKYCReviewableRequestOpFrame.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "xdrpp/printer.h"
-#include <map>
 
-namespace stellar {
+namespace stellar
+{
     using namespace std;
     using xdr::operator==;
 
-    char const * ManageKeyValueOpFrame::kycRulesPrefix = "kyc_lvlup_rules";
+    char const * ManageKeyValueOpFrame::changeRoleTasks = "change_role_tasks";
     char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
-    char const * ManageKeyValueOpFrame::transactionFeeAssetKey = "tx_fee_asset";
     char const * ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
     char const * ManageKeyValueOpFrame::withdrawalTasksPrefix = "withdrawal_tasks";
     char const * ManageKeyValueOpFrame::preIssuanceTasksPrefix = "preissuance_tasks";
@@ -36,16 +29,20 @@ namespace stellar {
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
     char const* ManageKeyValueOpFrame::limitsUpdateTasks =
         "limits_update_tasks";
-    char const* ManageKeyValueOpFrame::transactionFeeAssetPrefix =
-        "tx_fee_asset";
     char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix =
         "atomic_swap_tasks";
     char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix =
         "withdraw_lower_bound";
 
-
-    map<std::string, KeyValueEntryType> ManageKeyValueOpFrame::valueTypes = {
-        {kycRulesPrefix, KeyValueEntryType::UINT32},
+ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
+                                             stellar::TransactionFrame &parentTx)
+        : OperationFrame(op, res, parentTx),
+          mManageKeyValue(mOperation.body.manageKeyValueOp())
+{
+    // is used for validation type
+    mValueTypes =
+    {
+        {changeRoleTasks, KeyValueEntryType::UINT32},
         {externalSystemPrefix, KeyValueEntryType::UINT32},
         {issuanceTasksPrefix, KeyValueEntryType::UINT32},
         {maxContractDetailLengthPrefix, KeyValueEntryType::UINT32},
@@ -55,16 +52,29 @@ namespace stellar {
         {maxInvoicesCountPrefix, KeyValueEntryType::UINT32},
         {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
         {withdrawLowerBoundPrefix, KeyValueEntryType::UINT64},
-        {transactionFeeAssetPrefix, KeyValueEntryType::STRING},
         {limitsUpdateTasks, KeyValueEntryType::UINT32},
     };
+}
 
-    ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
-                                                 stellar::TransactionFrame &parentTx)
-            : OperationFrame(op, res, parentTx),
-              mManageKeyValue(mOperation.body.manageKeyValueOp())
-    {
-    }
+bool
+ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                 std::vector<OperationCondition>& result) const
+{
+    result.emplace_back(AccountRuleResource(LedgerEntryType::KEY_VALUE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
+
+    return true;
+}
+
+bool
+ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                std::vector<SignerRequirement> &result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE),
+                        SignerRuleAction::MANAGE);
+
+    return true;
+}
 
     bool ManageKeyValueOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) {
         innerResult().code(ManageKeyValueResultCode::SUCCESS);
@@ -105,9 +115,9 @@ namespace stellar {
     bool ManageKeyValueOpFrame::doCheckValid(Application &app) {
         auto prefix = getPrefix();
 
-        auto valueTypesIter = valueTypes.find(prefix);
-        if (valueTypesIter != valueTypes.end()) {
-            if (mManageKeyValue.action.value().type() != valueTypes[prefix]) {
+        auto valueTypesIter = mValueTypes.find(prefix);
+        if (valueTypesIter != mValueTypes.end()) {
+            if (mManageKeyValue.action.value().type() != mValueTypes[prefix]) {
                 innerResult().code(ManageKeyValueResultCode::INVALID_TYPE);
                 return false;
             }
@@ -115,30 +125,10 @@ namespace stellar {
         return true;
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    ManageKeyValueOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        return unordered_map<AccountID, CounterpartyDetails>();
-    }
-
-    SourceDetails ManageKeyValueOpFrame::getSourceAccountDetails(
-            std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-    {
-        auto prefix = getPrefix();
-
-        if(strcmp(prefix.c_str(),kycRulesPrefix) == 0) {
-            return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                                 static_cast<int32_t>(SignerType::KYC_SUPER_ADMIN));
-        }
-
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::KEY_VALUE_MANAGER));
-    }
-
     longstring
-    ManageKeyValueOpFrame::makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet,
-                                          uint32 kycLevelToSet) {
-        return string(kycRulesPrefix) + ":" + to_string(static_cast<uint32 >(accountType)) + ":" + to_string(kycLevel) + ":"
-               + to_string(static_cast<uint32>(accountTypeToSet)) + ":" + to_string(kycLevelToSet);
+    ManageKeyValueOpFrame::makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet)
+    {
+        return string(changeRoleTasks) + ":" + to_string(currentRoleID) + ":" + to_string(roleIDToSet);
     }
 
     longstring
@@ -151,11 +141,6 @@ namespace stellar {
     ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(int32 externalSystemType)
     {
         return string(externalSystemPrefix) + ":" + to_string(externalSystemType);
-    }
-
-    longstring
-    ManageKeyValueOpFrame::makeTransactionFeeAssetKey() {
-        return transactionFeeAssetPrefix;
     }
 
     longstring

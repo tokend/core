@@ -3,16 +3,9 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "AssetFrame.h"
-#include "database/Database.h"
-#include "LedgerDelta.h"
-#include "ledger/LedgerManager.h"
 #include "util/types.h"
-#include <util/basen.h>
-#include "util/format.h"
 #include "xdrpp/printer.h"
-#include <locale>
 
-using namespace soci;
 using namespace std;
 
 namespace stellar
@@ -55,11 +48,12 @@ AssetFrame::pointer AssetFrame::create(AssetCreationRequest const& request,
     AssetEntry& asset = le.data.asset();
     asset.availableForIssueance = request.initialPreissuedAmount;
     asset.code = request.code;
-    asset.details = request.details;
+    asset.details = request.creatorDetails;
     asset.issued = 0;
     asset.maxIssuanceAmount = request.maxIssuanceAmount;
     asset.owner = owner;
     asset.policies = request.policies;
+    asset.type = request.type;
     asset.preissuedAssetSigner = request.preissuedAssetSigner;
     asset.pendingIssuance = 0;
     asset.trailingDigitsCount = request.trailingDigitsCount;

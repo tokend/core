@@ -42,9 +42,9 @@ public:
 
     std::vector<LimitsV2Frame::pointer> loadLimits(Database &db, std::vector<StatsOpType> statsOpTypes,
                                       AssetCode assetCode, xdr::pointer<AccountID> accountID = nullptr,
-                                      xdr::pointer<AccountType> accountType = nullptr);
+                                      uint64_t* accountType = nullptr);
     LimitsV2Frame::pointer loadLimits(Database &db, StatsOpType statsOpType, AssetCode assetCode,
-                                      xdr::pointer<AccountID> accountID, xdr::pointer<AccountType> accountType,
+                                      xdr::pointer<AccountID> accountID, uint64_t* accountType,
                                       bool isConvertNeeded, LedgerDelta *delta = nullptr);
     LimitsV2Frame::pointer loadLimits(uint64_t id, Database& db, LedgerDelta* delta = nullptr);
 

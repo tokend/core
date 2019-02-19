@@ -4,7 +4,7 @@
 #include "ledger/LedgerHeaderFrame.h"
 #include <ledger/BalanceHelperLegacy.h>
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "ReviewASwapBidCreationRequestOpFrame.h"
 
 using namespace std;
@@ -16,14 +16,6 @@ ReviewASwapBidCreationRequestOpFrame::ReviewASwapBidCreationRequestOpFrame(
         Operation const &op, OperationResult &res, TransactionFrame &parentTx)
         : ReviewRequestOpFrame(op, res, parentTx)
 {
-}
-
-SourceDetails ReviewASwapBidCreationRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
-{
-    return SourceDetails({ AccountType::MASTER }, mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ATOMIC_SWAP_MANAGER));
 }
 
 bool ReviewASwapBidCreationRequestOpFrame::handleReject(
@@ -92,7 +84,7 @@ ReviewASwapBidCreationRequestOpFrame::buildNewBid(AccountID ownerID, AssetCode b
     bidEntry.lockedAmount = 0;
     bidEntry.isCancelled = false;
     bidEntry.createdAt = ledgerCloseTime;
-    bidEntry.details = request.details;
+    bidEntry.details = request.creatorDetails;
     bidEntry.quoteAssets = request.quoteAssets;
 
     LedgerEntry le;
@@ -130,7 +122,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
         return handleAllAssetsValidationResultCode(validationResultCode);
     }
 
-    auto requestor = AccountHelper::Instance()->mustLoadAccount(request->getRequestor(),
+    auto requestor = AccountHelperLegacy::Instance()->mustLoadAccount(request->getRequestor(),
                                                                 db);
 
     auto bidFrame = buildNewBid(requestor->getID(), baseBalanceFrame->getAsset(),

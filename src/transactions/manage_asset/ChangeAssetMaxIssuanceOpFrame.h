@@ -11,11 +11,15 @@ namespace stellar
 
 class ChangeAssetMaxIssuanceOpFrame : public ManageAssetOpFrame
 {
-
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
-
     UpdateMaxIssuance mUpdateMaxIssuance;
+
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
     ChangeAssetMaxIssuanceOpFrame(Operation const& op, OperationResult& res,
@@ -25,6 +29,7 @@ public:
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
+
 protected:
     std::string getAssetCode() const override;
 };

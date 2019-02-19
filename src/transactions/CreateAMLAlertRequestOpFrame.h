@@ -1,15 +1,6 @@
-//
-// Created by Roman on 02.03.18.
-//
-
 #pragma once
 
-// Copyright 2015 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include "transactions/OperationFrame.h"
-#include "ledger/ReviewableRequestFrame.h"
 
 namespace stellar {
     class CreateAMLAlertRequestOpFrame : public OperationFrame {
@@ -19,12 +10,13 @@ namespace stellar {
 
         CreateAMLAlertRequestOp const &mCreateAMLAlertRequest;
 
-        std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(
-                Database &db, LedgerDelta *delta) const override;
+        bool
+        tryGetOperationConditions(StorageHelper& storageHelper,
+                                  std::vector<OperationCondition>& result) const override;
 
-        SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
-
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
 
     public:
 

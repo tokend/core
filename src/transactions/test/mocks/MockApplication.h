@@ -32,7 +32,7 @@ class MockApplication : public Application
   public:
     MOCK_METHOD0(timeNow, uint64_t());
     MOCK_METHOD0(getConfig, Config const&());
-    MOCK_CONST_METHOD0(getState, State());
+    MOCK_CONST_METHOD0(getState, Application::State());
     MOCK_CONST_METHOD0(getStateHuman, std::string());
     MOCK_CONST_METHOD0(isStopping, bool());
     MOCK_METHOD0(getClock, VirtualClock&());
@@ -74,9 +74,7 @@ class MockApplication : public Application
     MOCK_CONST_METHOD0(getNetworkID, Hash const&());
     MOCK_METHOD0(newDB, void());
 
-    MOCK_CONST_METHOD0(getMasterID, AccountID());
-    MOCK_CONST_METHOD0(getCommissionID, AccountID());
-    MOCK_CONST_METHOD0(getOperationalID, AccountID());
+    MOCK_CONST_METHOD0(getAdminID, AccountID());
     MOCK_CONST_METHOD0(getSystemAccounts, std::vector<PublicKey>());
     MOCK_CONST_METHOD0(getBaseExchangeName, std::string());
     MOCK_CONST_METHOD0(getTxExpirationPeriod, uint64());

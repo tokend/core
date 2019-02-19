@@ -33,8 +33,8 @@ public:
 	virtual AssetFrame::pointer
 	loadStatsAsset() = 0;
 
-    virtual void
-    loadBaseAssets(std::vector<AssetFrame::pointer>& retAssets) = 0;
+    virtual std::vector<AssetFrame::pointer>
+    loadBaseAssets() = 0;
 
 	virtual void
 	addTrailingDigits() = 0;
