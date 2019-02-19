@@ -47,7 +47,7 @@ UpdateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     resource.asset().assetCode = asset->getCode();
     resource.asset().assetType = asset->getType();
 
-    result.emplace_back(resource, "update");
+    result.emplace_back(resource, SignerRuleAction::UPDATE);
 
     return true;
 }

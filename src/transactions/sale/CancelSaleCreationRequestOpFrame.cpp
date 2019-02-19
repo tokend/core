@@ -36,7 +36,7 @@ CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().tasksToRemove = 0;
 
-    result.emplace_back(resource, "cancel");
+    result.emplace_back(resource, SignerRuleAction::CANCEL);
 
     return true;
 }

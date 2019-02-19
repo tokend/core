@@ -75,7 +75,7 @@ CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, "check", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::CHECK, mSourceAccount);
 
     return true;
 }
@@ -94,7 +94,7 @@ CheckSaleStateOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, "check");
+    result.emplace_back(resource, SignerRuleAction::CHECK);
 
     return true;
 }

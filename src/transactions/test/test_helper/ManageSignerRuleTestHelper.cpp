@@ -14,7 +14,7 @@ ManageSignerRuleTestHelper::ManageSignerRuleTestHelper(
 
 ManageSignerRuleOp
 ManageSignerRuleTestHelper::buildCreateRuleOp(SignerRuleResource resource,
-                                              std::string action, bool isForbid,
+                                              SignerRuleAction action, bool isForbid,
                                               bool isDefault, bool isReadOnly)
 {
     ManageSignerRuleOp result;
@@ -33,7 +33,7 @@ ManageSignerRuleTestHelper::buildCreateRuleOp(SignerRuleResource resource,
 ManageSignerRuleOp
 ManageSignerRuleTestHelper::buildUpdateRuleOp(uint64_t id,
                                               SignerRuleResource resource,
-                                              std::string action, bool isForbid,
+                                              SignerRuleAction action, bool isForbid,
                                               bool isDefault)
 {
     ManageSignerRuleOp result;

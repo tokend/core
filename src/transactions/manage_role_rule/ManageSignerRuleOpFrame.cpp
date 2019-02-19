@@ -69,7 +69,8 @@ bool
 ManageSignerRuleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                    std::vector<OperationCondition> &result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::SIGNER_RULE), "manage", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::SIGNER_RULE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }
@@ -119,7 +120,7 @@ ManageSignerRuleOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     SignerRuleResource resource(LedgerEntryType::SIGNER_RULE);
     resource.signerRule().isDefault = isDefault;
 
-    result.emplace_back(resource, "manage");
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }

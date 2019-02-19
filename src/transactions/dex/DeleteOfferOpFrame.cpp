@@ -57,7 +57,7 @@ DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     resource.offer().baseAssetType = baseAsset->getType();
     resource.offer().quoteAssetType = quoteAsset->getType();
 
-    result.emplace_back(resource, "remove");
+    result.emplace_back(resource, SignerRuleAction::REMOVE);
 
     return true;
 }

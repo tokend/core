@@ -22,7 +22,8 @@ bool
 ManageSignerRoleOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                                    std::vector<OperationCondition> &result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::SIGNER_ROLE), "manage", mSourceAccount);
+    result.emplace_back(AccountRuleResource(LedgerEntryType::SIGNER_ROLE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }
@@ -50,7 +51,7 @@ ManageSignerRoleOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     SignerRuleResource resource(LedgerEntryType::SIGNER_ROLE);
     resource.signerRole().roleID = roleID;
 
-    result.emplace_back(resource, "manage");
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }

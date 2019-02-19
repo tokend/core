@@ -38,7 +38,7 @@ CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storage
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
     
-    result.emplace_back(resource, "participate", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::PARTICIPATE, mSourceAccount);
 
     return CreateOfferOpFrame::tryGetOperationConditions(storageHelper, result);
 }
@@ -58,7 +58,7 @@ CreateSaleParticipationOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, "participate");
+    result.emplace_back(resource, SignerRuleAction::PARTICIPATE);
 
     return CreateOfferOpFrame::tryGetSignerRequirements(storageHelper, result);
 }

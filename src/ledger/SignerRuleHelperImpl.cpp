@@ -29,7 +29,7 @@ SignerRuleHelperImpl::dropAll()
                        "("
                        "id              BIGINT         NOT NULL,"
                        "resource        TEXT           NOT NULL, "
-                       "action          VARCHAR(256)   NOT NULL,"
+                       "action          INT            NOT NULL,"
                        "owner_id        VARCHAR(56)    NOT NULL,"
                        "is_forbid       BOOLEAN        NOT NULL,"
                        "is_default      BOOLEAN        NOT NULL,"
@@ -57,6 +57,7 @@ SignerRuleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     int isForbid = signerRuleFrame->isForbid() ? 1 : 0;
     int isDefault = signerRuleFrame->isDefault() ? 1 : 0;
     auto version = static_cast<int32_t>(signerRuleEntry.ext.v());
+    auto const action = static_cast<int32_t>(signerRuleEntry.action);
 
     std::string sql;
     if (insert)
@@ -79,7 +80,7 @@ SignerRuleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     auto& st = prep.statement();
     st.exchange(use(signerRuleEntry.id, "id"));
     st.exchange(use(strResource, "res"));
-    st.exchange(use(signerRuleEntry.action, "act"));
+    st.exchange(use(action, "act"));
     st.exchange(use(ownerID, "own"));
     st.exchange(use(isForbid, "is_f"));
     st.exchange(use(isDefault, "is_d"));
@@ -287,11 +288,12 @@ SignerRuleHelperImpl::load(StatementContext& prep,
         int32_t isForbid;
         int32_t isDefault;
         int32_t version;
+        int32_t action;
 
         auto& st = prep.statement();
         st.exchange(into(signerRule.id));
         st.exchange(into(resource));
-        st.exchange(into(signerRule.action));
+        st.exchange(into(action));
         st.exchange(into(accountIDStr));
         st.exchange(into(isForbid));
         st.exchange(into(isDefault));
@@ -312,6 +314,7 @@ SignerRuleHelperImpl::load(StatementContext& prep,
             signerRule.ownerID = PubKeyUtils::fromStrKey(accountIDStr);
             signerRule.isForbid = isForbid > 0;
             signerRule.isDefault = isDefault > 0;
+            signerRule.action = static_cast<SignerRuleAction>(action);
             signerRule.ext.v(static_cast<LedgerVersion>(version));
 
             processor(le);

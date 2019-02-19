@@ -3,6 +3,8 @@
 #include <ledger/StatisticsHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/SignerRuleFrame.h>
+#include <lib/xdrpp/xdrpp/marshal.h>
+#include <lib/util/basen.h>
 #include "CreateAccountTestHelper.h"
 #include "test/test_marshaler.h"
 

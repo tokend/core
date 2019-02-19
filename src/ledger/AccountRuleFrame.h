@@ -33,7 +33,7 @@ class AccountRuleFrame : public EntryFrame
         return mAccountRuleEntry.resource;
     }
 
-    std::string const
+    AccountRuleAction const
     getAction() const
     {
         return mAccountRuleEntry.action;

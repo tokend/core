@@ -34,7 +34,7 @@ CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
     resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
 
-    result.emplace_back(resource, "create", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     // only asset owner can create sale, but restrict him to create sale - feature
     return true;
@@ -55,7 +55,7 @@ CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
         resource.reviewableRequest().allTasks = *mCreateSaleCreationRequest.allTasks;
     }
 
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

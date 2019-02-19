@@ -21,7 +21,7 @@ BindExternalSystemAccountIdOpFrame::tryGetOperationConditions(StorageHelper& sh,
 {
     AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
 
-    result.emplace_back(poolResource, "bind", mSourceAccount);
+    result.emplace_back(poolResource, AccountRuleAction::BIND, mSourceAccount);
 
     return true;
 }
@@ -30,7 +30,8 @@ bool
 BindExternalSystemAccountIdOpFrame::tryGetSignerRequirements(
         StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY), "bind");
+    result.emplace_back(SignerRuleResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY),
+                        SignerRuleAction::BIND);
 
     return true;
 }

@@ -36,7 +36,8 @@ bool
 ManageAssetPairOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
 												  std::vector<OperationCondition>& result) const
 {
-	result.emplace_back(AccountRuleResource(LedgerEntryType::ASSET_PAIR), "manage", mSourceAccount);
+	result.emplace_back(AccountRuleResource(LedgerEntryType::ASSET_PAIR),
+						AccountRuleAction::MANAGE, mSourceAccount);
 
 	return true;
 }
@@ -45,7 +46,8 @@ bool
 ManageAssetPairOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 								 	std::vector<SignerRequirement>& result) const
 {
-	result.emplace_back(SignerRuleResource(LedgerEntryType::ASSET_PAIR), "manage");
+	result.emplace_back(SignerRuleResource(LedgerEntryType::ASSET_PAIR),
+						SignerRuleAction::MANAGE);
 
 	return true;
 }

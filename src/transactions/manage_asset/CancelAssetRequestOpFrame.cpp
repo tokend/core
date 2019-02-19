@@ -68,7 +68,7 @@ CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
             throw std::runtime_error("Unexpected request type");
     }
 
-    result.emplace_back(resource, "cancel");
+    result.emplace_back(resource, SignerRuleAction::CANCEL);
 
     return true;
 }

@@ -61,7 +61,7 @@ ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                  std::vector<OperationCondition>& result) const
 {
     result.emplace_back(AccountRuleResource(LedgerEntryType::KEY_VALUE),
-                        "manage", mSourceAccount);
+                        AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }
@@ -70,7 +70,8 @@ bool
 ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                 std::vector<SignerRequirement> &result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE), "manage");
+    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE),
+                        SignerRuleAction::MANAGE);
 
     return true;
 }

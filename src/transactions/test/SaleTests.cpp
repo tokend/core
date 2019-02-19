@@ -226,7 +226,7 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     baseAssetResource.asset().assetCode = baseAsset;
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            baseAssetResource, "*", false);
+            baseAssetResource, AccountRuleAction::ANY, false);
     auto baseAssetOwnerRuleID = manageAccountRuleTestHelper.applyTx(root,
             ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
@@ -235,7 +235,7 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
     saleResource.reviewableRequest().details.sale().type = saleTypeInt;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            saleResource, "create", false);
+            saleResource, AccountRuleAction::CREATE, false);
     auto saleCreatorRuleID = manageAccountRuleTestHelper.applyTx(root,
             ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
@@ -395,7 +395,7 @@ TEST_CASE("Sale", "[tx][sale]")
     baseAssetResource.asset().assetCode = baseAsset;
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-            baseAssetResource, "*", false);
+            baseAssetResource, AccountRuleAction::ANY, false);
     auto baseAssetOwnerRuleID = manageAccountRuleTestHelper.applyTx(root,
             ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 

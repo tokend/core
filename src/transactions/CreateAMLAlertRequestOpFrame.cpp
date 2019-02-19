@@ -20,7 +20,7 @@ CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHe
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
 
-    result.emplace_back(resource, "create", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
 }
@@ -39,7 +39,7 @@ CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHel
         resource.reviewableRequest().allTasks = *mCreateAMLAlertRequest.allTasks;
     }
 
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

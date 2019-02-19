@@ -86,19 +86,19 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     assetResource.asset().assetCode = paymentAsset;
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, "*", false);
+            0, assetResource, AccountRuleAction::ANY, false);
     // write this entry to DB
     auto createSenderRuleResult = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE);
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, "*", false);
+            0, assetResource, AccountRuleAction::ANY, false);
     // write this entry to DB
     auto createReceiverRuleResult = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE);
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, AccountRuleResource(LedgerEntryType::TRANSACTION), "send", false);
+            0, AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
     // write this entry to DB
     auto sendTxRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
@@ -248,7 +248,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
             assetResource.asset().assetCode = "XRP";
 
             ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                    createSenderRuleResult.success().ruleID, assetResource, "send", false);
+                    createSenderRuleResult.success().ruleID, assetResource, AccountRuleAction::SEND, false);
             // write this entry to DB
             manageAccountRuleTestHelper.applyTx(root, ruleEntry, ManageAccountRuleAction::UPDATE);
             paymentV2TestHelper.applyPaymentV2Tx(payer, payerBalance->getBalanceID(),

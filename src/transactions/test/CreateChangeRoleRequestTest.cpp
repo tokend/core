@@ -44,7 +44,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
     // create new account with empty role
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CHANGE_ROLE);
-    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0, resource, "create", false);
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0, resource, AccountRuleAction::CREATE, false);
     auto ruleID = manageAccountRuleTestHelper.applyTx(master, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     auto createEmptyRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
@@ -66,7 +66,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
     assetResource.asset().assetType = UINT64_MAX;
     assetResource.asset().assetCode = "COOL0TOKEN";
 
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0, assetResource, "*", false);
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0, assetResource, AccountRuleAction::ANY, false);
     ruleID = manageAccountRuleTestHelper.applyTx(master, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     auto createTokenOwnerRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(

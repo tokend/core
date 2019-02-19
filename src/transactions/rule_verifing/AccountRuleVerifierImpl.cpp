@@ -43,7 +43,7 @@ AccountRuleVerifierImpl::isAllowed(OperationCondition& condition,
             continue;
         }
 
-        bool actionMatches = isActionMatches(condition.action, accountRuleFrame->getAction());
+        bool actionMatches = isAccountRuleActionMatches(condition.action, accountRuleFrame->getAction());
 
         if (!actionMatches)
         {
@@ -59,6 +59,14 @@ AccountRuleVerifierImpl::isAllowed(OperationCondition& condition,
     }
 
     return isAllowed;
+}
+
+bool
+AccountRuleVerifierImpl::isAccountRuleActionMatches(
+        AccountRuleAction const conditionAction,
+        AccountRuleAction const actualAction)
+{
+    return (conditionAction == actualAction) || (actualAction == AccountRuleAction::ANY);
 }
 
 bool

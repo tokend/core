@@ -15,7 +15,7 @@ using namespace soci;
 namespace stellar
 {
 
-AccountLimitsFrame::AccountLimitsFrame() : EntryFrame(LedgerEntryType::ACCOUNT_TYPE_LIMITS), mAccountLimits(mEntry.data.accountLimits())
+AccountLimitsFrame::AccountLimitsFrame() : EntryFrame(LedgerEntryType::ACCOUNT_LIMITS), mAccountLimits(mEntry.data.accountLimits())
 {
 }
 

@@ -166,7 +166,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     SignerRuleResource ruleResource(LedgerEntryType::SIGNER_RULE);
     ruleResource.signerRule().isDefault = true;
     firstSignerRule.resource = ruleResource;
-    firstSignerRule.action = "*";
+    firstSignerRule.action = SignerRuleAction::ANY;
     firstSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     firstSignerRule.isDefault = true;
     firstSignerRule.isForbid = true;
@@ -182,7 +182,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     SignerRuleResource roleResource(LedgerEntryType::SIGNER_ROLE);
     roleResource.signerRole().roleID = ownerRoleID;
     secondSignerRule.resource = roleResource;
-    secondSignerRule.action = "*";
+    secondSignerRule.action = SignerRuleAction::ANY;
     secondSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     secondSignerRule.isDefault = true;
     secondSignerRule.isForbid = true;
@@ -197,7 +197,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     SignerRuleResource signerResource(LedgerEntryType::SIGNER);
     signerResource.signer().roleID = ownerRoleID;
     thirdSignerRule.resource = signerResource;
-    thirdSignerRule.action = "*";
+    thirdSignerRule.action = SignerRuleAction::ANY;
     thirdSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     thirdSignerRule.isDefault = true;
     thirdSignerRule.isForbid = true;
@@ -216,7 +216,7 @@ LedgerManagerImpl::createAdminSigner(StorageHelper &storageHelper)
     signerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& signerRule = signerRuleEntry.data.signerRule();
     signerRule.resource = SignerRuleResource(LedgerEntryType::ANY);
-    signerRule.action = "*";
+    signerRule.action = SignerRuleAction::ANY;
     signerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     signerRule.isDefault = false;
     signerRule.isForbid = false;
@@ -257,7 +257,7 @@ LedgerManagerImpl::createAdminRole(StorageHelper& storageHelper)
 
     AccountRuleEntry adminRule;
     adminRule.resource = AccountRuleResource(LedgerEntryType::ANY);
-    adminRule.action = "*";
+    adminRule.action = AccountRuleAction::ANY;
     adminRule.details = "{}";
     adminRule.isForbid = false;
     adminRule.id = ledgerHeader.generateID(LedgerEntryType::ACCOUNT_RULE);

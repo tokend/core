@@ -64,7 +64,7 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	resource.asset().assetCode = asset->getCode();
 	resource.asset().assetType = asset->getType();
 
-	result.emplace_back(resource, "receive_from_issuance", account);
+	result.emplace_back(resource, AccountRuleAction::RECEIVE_ISSUANCE, account);
 
 	// only asset owner can do issuance, it will be handled in doApply
 	return true;
@@ -77,11 +77,19 @@ CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 	auto asset = storageHelper.getAssetHelper().mustLoadAsset(
 			mCreateIssuanceRequest.request.asset);
 
-	SignerRuleResource resource(LedgerEntryType::ASSET);
-	resource.asset().assetCode = asset->getCode();
-	resource.asset().assetType = asset->getType();
+	SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+	resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
+	resource.reviewableRequest().details.issuance().assetCode = asset->getCode();
+	resource.reviewableRequest().details.issuance().assetType = asset->getType();
+	resource.reviewableRequest().tasksToRemove = 0;
+	resource.reviewableRequest().tasksToAdd = 0;
+	resource.reviewableRequest().allTasks = 0;
+	if (mCreateIssuanceRequest.allTasks)
+	{
+		resource.reviewableRequest().allTasks = *mCreateIssuanceRequest.allTasks;
+	}
 
-	result.emplace_back(resource, "issue");
+	result.emplace_back(resource, SignerRuleAction::ISSUE);
 
 	return true;
 }

@@ -81,7 +81,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(signatureValidator.checkAllSignaturesUsed());
@@ -100,7 +100,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::NOT_ENOUGH_WEIGHT);
         }
@@ -119,7 +119,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
@@ -154,7 +154,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
@@ -171,7 +171,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
         SECTION("Success")
         {
-            SignerRequirement saleReq(SignerRuleResource(LedgerEntryType::SALE), "manage");
+            SignerRequirement saleReq(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE);
             EXPECT_CALL(appMock, getConfig())
                     .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
@@ -188,7 +188,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
 
-            SignerRequirement feeReq(SignerRuleResource(LedgerEntryType::FEE), "manage");
+            SignerRequirement feeReq(SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE);
             EXPECT_CALL(appMock, getConfig())
                     .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
@@ -219,7 +219,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
@@ -235,7 +235,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::NOT_ENOUGH_WEIGHT);
         }
@@ -255,7 +255,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
@@ -271,7 +271,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
 
             result = signatureValidator.check(appMock, storageHelperMock,
                     signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), "manage")});
+                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());

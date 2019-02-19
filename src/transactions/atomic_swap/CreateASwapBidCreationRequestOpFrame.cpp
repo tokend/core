@@ -46,7 +46,7 @@ CreateASwapBidCreationRequestOpFrame::tryGetOperationConditions(
     resource.atomicSwapBid().assetType = asset->getType();
     resource.atomicSwapBid().assetCode = asset->getCode();
 
-    result.emplace_back(resource, "create", mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
 }
@@ -66,7 +66,7 @@ CreateASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper &st
     resource.atomicSwapBid().assetType = asset->getType();
     resource.atomicSwapBid().assetCode = asset->getCode();
 
-    result.emplace_back(resource, "create");
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }

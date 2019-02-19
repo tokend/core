@@ -40,7 +40,7 @@ SignerRuleVerifierImpl::isAllowed(const SignerRequirement &requirement,
             continue;
         }
 
-        if (!isActionMatches(requirement.action, signerRuleFrame->getAction()))
+        if (!isSignerRuleActionMatches(requirement.action, signerRuleFrame->getAction()))
         {
             continue;
         }
@@ -54,6 +54,14 @@ SignerRuleVerifierImpl::isAllowed(const SignerRequirement &requirement,
     }
 
     return isAllowed;
+}
+
+bool
+SignerRuleVerifierImpl::isSignerRuleActionMatches(
+        SignerRuleAction const requiredAction,
+        SignerRuleAction const actualAction) 
+{
+    return (requiredAction == actualAction) || (actualAction == SignerRuleAction::ANY);
 }
 
 bool

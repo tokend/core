@@ -101,7 +101,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
         auto& createData = operation.data.createData();
         createData.details = "{}";
         createData.isReadOnly = false;
-        createData.action = "manage";
+        createData.action = SignerRuleAction::MANAGE;
         createData.resource = SignerRuleResource(LedgerEntryType::ASSET_PAIR);
         createData.isDefault = false;
         createData.isForbid = false;

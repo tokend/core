@@ -17,6 +17,10 @@ private:
     isResourceMatches(SignerRuleResource const requiredResource,
                       SignerRuleResource const actualResource);
 
+    bool
+    isSignerRuleActionMatches(SignerRuleAction const requiredAction,
+                              SignerRuleAction const actualAction);
+
 public:
     SignerRuleVerifierImpl()
     {
