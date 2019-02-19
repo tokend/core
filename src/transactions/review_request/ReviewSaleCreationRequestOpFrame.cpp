@@ -14,11 +14,39 @@
 #include "xdrpp/printer.h"
 #include <ledger/AccountHelperLegacy.h>
 #include <transactions/ManageAssetPairOpFrame.h>
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
+
+bool
+ReviewSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
+{
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+    resource.reviewableRequest().details.sale().type =
+            request->getRequestEntry().body.saleCreationRequest().saleType;
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
 
 SaleCreationRequest&
 ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(

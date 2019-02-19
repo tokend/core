@@ -10,6 +10,11 @@
 
 namespace stellar {
     class ReviewSaleCreationRequestOpFrame : public ReviewRequestOpFrame {
+
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
+
     public:
 
         ReviewSaleCreationRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
