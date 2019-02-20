@@ -743,7 +743,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                                            ReviewRequestOpAction::REJECT, "because",
                                                                                            ReviewRequestResultCode::SUCCESS);
                     manageSaleData.updateSaleDetailsData().requestID = requestID;
-                    manageSaleData.updateSaleDetailsData().newDetails = "{\n \"a\": \"updated string\" \n}";
+                    manageSaleData.updateSaleDetailsData().creatorDetails = "{\n \"a\": \"updated string\" \n}";
                     manageSaleData.updateSaleDetailsData().allTasks = nullptr;
                     manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
                 }

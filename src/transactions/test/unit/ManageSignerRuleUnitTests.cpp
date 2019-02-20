@@ -104,7 +104,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
         createData.action = SignerRuleAction::MANAGE;
         createData.resource = SignerRuleResource(LedgerEntryType::ASSET_PAIR);
         createData.isDefault = false;
-        createData.isForbid = false;
+        createData.forbids = false;
 
         auto signerRuleFrame = std::make_shared<SignerRuleFrame>(1,
                 secretKey.getPublicKey(), operation.data.createData());
@@ -143,7 +143,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
             updateData.action = data.action;
             updateData.resource = data.resource;
             updateData.isDefault = data.isDefault;
-            updateData.isForbid = data.isForbid;
+            updateData.forbids = data.forbids;
 
             signerRuleFrame->getEntry().details = updateData.details;
 

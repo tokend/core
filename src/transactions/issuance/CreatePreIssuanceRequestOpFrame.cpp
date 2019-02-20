@@ -113,6 +113,12 @@ CreatePreIssuanceRequestOpFrame::doCheckValid(Application& app)
 		innerResult().code(CreatePreIssuanceRequestResultCode::INVALID_REFERENCE);
 		return false;
 	}
+
+	if (!isValidJson(mCreatePreIssuanceRequest.request.creatorDetails))
+	{
+		innerResult().code(CreatePreIssuanceRequestResultCode::INVALID_CREATOR_DETAILS);
+		return false;
+	}
 	
     return true;
 }

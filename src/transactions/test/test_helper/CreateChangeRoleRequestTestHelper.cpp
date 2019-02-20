@@ -154,8 +154,8 @@ CreateChangeRoleTestHelper::createUpdateKYCRequestTx(Account &source, uint64_t r
     op.requestID = requestID;
     op.destinationAccount = accountToUpdateKYC;
     op.accountRoleToSet = roleIDToSet;
-    op.kycData = kycData;
-    if (!!allTasks) {
+    op.creatorDetails = kycData;
+    if (allTasks != nullptr) {
         op.allTasks.activate() = *allTasks;
     }
 

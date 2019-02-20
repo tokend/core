@@ -161,7 +161,7 @@ bool CreateManageLimitsRequestOpFrame::doCheckValid(Application& app)
 {
     if (!isValidJson(mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails))
     {
-        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
+        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 

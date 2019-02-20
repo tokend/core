@@ -86,6 +86,7 @@ namespace txtest
         preIssuanceRequest.asset = assetCode;
         preIssuanceRequest.reference = reference;
         preIssuanceRequest.signature = createPreIssuanceRequestSignature(preIssuedAssetSigner, assetCode, amount, reference);
+        preIssuanceRequest.creatorDetails = "{}";
         preIssuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
         return preIssuanceRequest;
     }

@@ -67,8 +67,8 @@ ReviewInvoiceRequestHelper::createReviewRequestTx(Account& source,
 }
 
 void
-ReviewInvoiceRequestHelper::initializePaymentDetails(PaymentOpV2::_destination_t& destination, uint64_t amount,
-                                                     PaymentFeeDataV2& feeData, std::string subject,
+ReviewInvoiceRequestHelper::initializePaymentDetails(PaymentOp::_destination_t& destination, uint64_t amount,
+                                                     PaymentFeeData& feeData, std::string subject,
                                                      std::string reference, BalanceID sourceBalance)
 {
     paymentDetails.amount = amount;

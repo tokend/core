@@ -358,7 +358,7 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
 
     if (!isValidJson(saleCreationRequest.creatorDetails))
     {
-        return CreateSaleCreationRequestResultCode::INVALID_DETAILS;
+        return CreateSaleCreationRequestResultCode::INVALID_CREATOR_DETAILS;
     }
 
     return CreateSaleCreationRequestResultCode::SUCCESS;

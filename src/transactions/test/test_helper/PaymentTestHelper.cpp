@@ -47,7 +47,7 @@ namespace stellar {
                                                                    uint64_t amount, PaymentFeeData feeData,
                                                                    std::string subject, std::string reference) {
             Operation baseOp;
-            baseOp.body.type(OperationType::PAYMENT_);
+            baseOp.body.type(OperationType::PAYMENT);
             auto &op = baseOp.body.paymentOp();
             op.sourceBalanceID = sourceBalanceID;
             op.destination = destination;

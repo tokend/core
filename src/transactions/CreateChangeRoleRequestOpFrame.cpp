@@ -196,9 +196,9 @@ CreateChangeRoleRequestOpFrame::tryAutoApprove(Database &db, LedgerDelta &delta,
 bool
 CreateChangeRoleRequestOpFrame::doCheckValid(Application &app)
 {
-    if (!isValidJson(mCreateChangeRoleRequestOp.kycData))
+    if (!isValidJson(mCreateChangeRoleRequestOp.creatorDetails))
     {
-        innerResult().code(CreateChangeRoleRequestResultCode::INVALID_KYC_DATA);
+        innerResult().code(CreateChangeRoleRequestResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 
@@ -219,7 +219,7 @@ CreateChangeRoleRequestOpFrame::createRequest(ReviewableRequestEntry &requestEnt
 
     changeRoleRequest.destinationAccount = mCreateChangeRoleRequestOp.destinationAccount;
     changeRoleRequest.accountRoleToSet = mCreateChangeRoleRequestOp.accountRoleToSet;
-    changeRoleRequest.creatorDetails = mCreateChangeRoleRequestOp.kycData;
+    changeRoleRequest.creatorDetails = mCreateChangeRoleRequestOp.creatorDetails;
     changeRoleRequest.sequenceNumber = 0;
 
     requestEntry.tasks.allTasks = mCreateChangeRoleRequestOp.allTasks.get()
@@ -255,7 +255,7 @@ CreateChangeRoleRequestOpFrame::getChangeRoleTasks(Database &db, LedgerManager &
 void
 CreateChangeRoleRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)
 {
-    requestEntry.body.changeRoleRequest().creatorDetails = mCreateChangeRoleRequestOp.kycData;
+    requestEntry.body.changeRoleRequest().creatorDetails = mCreateChangeRoleRequestOp.creatorDetails;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.changeRoleRequest().sequenceNumber++;
 }

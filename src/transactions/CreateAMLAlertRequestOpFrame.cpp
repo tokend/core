@@ -133,7 +133,7 @@ bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
 {
     if (mCreateAMLAlertRequest.amlAlertRequest.creatorDetails.empty())
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::INVALID_REASON);
+        innerResult().code(CreateAMLAlertRequestResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 

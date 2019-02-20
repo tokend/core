@@ -42,7 +42,7 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
     SECTION("Empty reason is not allowed")
     {
         BalanceID balanceID;
-        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 0, "", "", &zeroTasks, CreateAMLAlertRequestResultCode::INVALID_REASON);
+        amlAlertHelper.applyCreateAmlAlert(root, balanceID, 0, "", "", &zeroTasks, CreateAMLAlertRequestResultCode::INVALID_CREATOR_DETAILS);
     }
     SECTION("Zero amount is not allowed")
     {
