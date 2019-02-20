@@ -50,7 +50,7 @@ AccountRuleVerifierImpl::isAllowed(OperationCondition& condition,
             continue;
         }
 
-        if (accountRuleFrame->isForbid())
+        if (accountRuleFrame->forbids())
         {
             return false;
         }

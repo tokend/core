@@ -45,7 +45,7 @@ SignerRuleVerifierImpl::isAllowed(const SignerRequirement &requirement,
             continue;
         }
 
-        if (signerRuleFrame->isForbid())
+        if (signerRuleFrame->forbids())
         {
             return false;
         }

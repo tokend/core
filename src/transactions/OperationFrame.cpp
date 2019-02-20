@@ -16,7 +16,7 @@
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
-#include "transactions/payment/PaymentOpV2Frame.h"
+#include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/SetFeesOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
@@ -97,8 +97,8 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new CreateAMLAlertRequestOpFrame(op,res,tx));
 	case OperationType::CREATE_CHANGE_ROLE_REQUEST:
 		return shared_ptr<OperationFrame>(new CreateChangeRoleRequestOpFrame(op, res, tx));
-    case OperationType::PAYMENT_V2:
-        return shared_ptr<OperationFrame>(new PaymentOpV2Frame(op, res, tx));
+    case OperationType::PAYMENT:
+        return make_shared<PaymentOpFrame>(op, res, tx);
     case OperationType::MANAGE_KEY_VALUE:
         return shared_ptr<OperationFrame>(new ManageKeyValueOpFrame(op, res, tx));
     case OperationType::MANAGE_SALE:

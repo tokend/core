@@ -40,9 +40,9 @@ class AccountRuleFrame : public EntryFrame
     }
 
     bool const
-    isForbid() const
+    forbids() const
     {
-        return mAccountRuleEntry.isForbid;
+        return mAccountRuleEntry.forbids;
     }
 
     std::string const

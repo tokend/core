@@ -14,7 +14,7 @@ SignerRuleHelperImpl::SignerRuleHelperImpl(StorageHelper &storageHelper)
         : mStorageHelper(storageHelper)
 {
     mSignerRuleColumnSelector = "SELECT id, resource, action, owner_id, "
-                                "       is_forbid, is_default, details, "
+                                "       forbids, is_default, details, "
                                 "       version, lastmodified "
                                 " FROM  signer_rules";
 }
@@ -31,7 +31,7 @@ SignerRuleHelperImpl::dropAll()
                        "resource        TEXT           NOT NULL, "
                        "action          INT            NOT NULL,"
                        "owner_id        VARCHAR(56)    NOT NULL,"
-                       "is_forbid       BOOLEAN        NOT NULL,"
+                       "forbids         BOOLEAN        NOT NULL,"
                        "is_default      BOOLEAN        NOT NULL,"
                        "details         TEXT           NOT NULL DEFAULT '{}',"
                        "version         INT            NOT NULL DEFAULT 0,"
@@ -54,7 +54,7 @@ SignerRuleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     auto resourceBody = xdr::xdr_to_opaque(signerRuleFrame->getResource());
     std::string strResource = bn::encode_b64(resourceBody);
     std::string ownerID = PubKeyUtils::toStrKey(signerRuleEntry.ownerID);
-    int isForbid = signerRuleFrame->isForbid() ? 1 : 0;
+    int isForbid = signerRuleFrame->forbids() ? 1 : 0;
     int isDefault = signerRuleFrame->isDefault() ? 1 : 0;
     auto version = static_cast<int32_t>(signerRuleEntry.ext.v());
     auto const action = static_cast<int32_t>(signerRuleEntry.action);
@@ -63,14 +63,14 @@ SignerRuleHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     if (insert)
     {
         sql = "INSERT INTO signer_rules "
-              "(id, resource, action, owner_id, is_forbid, is_default, "
+              "(id, resource, action, owner_id, forbids, is_default, "
               " details, version, lastmodified) "
               "VALUES (:id, :res, :act, :own, :is_f, :is_d, :det, :v, :lm)";
     }
     else
     {
         sql = "UPDATE signer_rules SET resource = :res, action = :act, "
-              " owner_id = :own, is_forbid = :is_f, is_default = :is_d, "
+              " owner_id = :own, forbids = :is_f, is_default = :is_d, "
               " details = :det, version = :v, lastmodified = :lm "
               "WHERE id = :id";
     }
@@ -312,7 +312,7 @@ SignerRuleHelperImpl::load(StatementContext& prep,
             unmarshaler.done();
 
             signerRule.ownerID = PubKeyUtils::fromStrKey(accountIDStr);
-            signerRule.isForbid = isForbid > 0;
+            signerRule.forbids = isForbid > 0;
             signerRule.isDefault = isDefault > 0;
             signerRule.action = static_cast<SignerRuleAction>(action);
             signerRule.ext.v(static_cast<LedgerVersion>(version));

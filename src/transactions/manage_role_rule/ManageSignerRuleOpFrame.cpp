@@ -142,7 +142,7 @@ ManageSignerRuleOpFrame::updateRule(Application &app,
     auto& rule = signerRuleFrame->getEntry();
     rule.resource = updateData.resource;
     rule.action = updateData.action;
-    rule.isForbid = updateData.isForbid;
+    rule.forbids = updateData.forbids;
     rule.details = updateData.details;
 
     helper.storeChange(signerRuleFrame->mEntry);

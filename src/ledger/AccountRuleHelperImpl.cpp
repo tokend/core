@@ -21,7 +21,7 @@ AccountRuleHelperImpl::dropAll()
            "id              BIGINT          NOT NULL CHECK (id > 0),"
            "resource        TEXT            NOT NULL,"
            "action          INT             NOT NULL,"
-           "is_forbid       BOOLEAN         NOT NULL,"
+           "forbids         BOOLEAN         NOT NULL,"
            "details         TEXT            NOT NULL,"
            "lastmodified    INT             NOT NULL,"
            "version         INT             NOT NULL,"
@@ -34,7 +34,7 @@ AccountRuleHelperImpl::AccountRuleHelperImpl(
     : mDb(storageHelper.getDatabase())
     , mLedgerDelta(storageHelper.getLedgerDelta())
 {
-    mAccountRuleSelector = "SELECT id, resource, action, is_forbid, details, "
+    mAccountRuleSelector = "SELECT id, resource, action, forbids, details, "
                            "       lastmodified, version "
                            "FROM   account_rules ";
 }
@@ -95,7 +95,7 @@ AccountRuleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 
     auto resourceBody = xdr::xdr_to_opaque(accountRuleFrame->getResource());
     std::string strResource = bn::encode_b64(resourceBody);
-    int isForbid = accountRuleFrame->isForbid() ? 1 : 0;
+    int isForbid = accountRuleFrame->forbids() ? 1 : 0;
     const auto version = static_cast<int32_t>(accountRuleEntry.ext.v());
     const auto action = static_cast<int32_t>(accountRuleEntry.action);
 
@@ -104,14 +104,14 @@ AccountRuleHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     if (insert)
     {
         sql = std::string("INSERT INTO account_rules (id, resource, action, "
-                          "is_forbid, details, lastmodified, version) "
+                          "forbids, details, lastmodified, version) "
                           "VALUES (:id, :res, :act, :is_f, :det, :lm, :v)");
     }
     else
     {
         sql = std::string("UPDATE account_rules "
                           "SET    resource=:res, action=:act, "
-                          "       is_forbid=:is_f, details=:det, "
+                          "       forbids=:is_f, details=:det, "
                           "       lastmodified=:lm, version=:v "
                           "WHERE  id=:id");
     }
@@ -293,7 +293,7 @@ AccountRuleHelperImpl::load(StatementContext &prep,
             xdr::xdr_argpack_archive(unmarshaler, accountRuleEntry.resource);
             unmarshaler.done();
 
-            accountRuleEntry.isForbid = isForbid > 0;
+            accountRuleEntry.forbids = isForbid > 0;
             accountRuleEntry.action = static_cast<AccountRuleAction>(action);
             accountRuleEntry.ext.v(static_cast<LedgerVersion>(version));
 

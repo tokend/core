@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
-#include <transactions/payment/PaymentOpV2Frame.h>
+#include <transactions/payment/PaymentOpFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "util/asio.h"
 #include "ReviewInvoiceRequestOpFrame.h"
@@ -189,14 +189,14 @@ ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &del
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::PAYMENT_V2);
-    PaymentOpV2Frame paymentOpV2Frame(op, opRes, mParentTx);
+    PaymentOpFrame paymentOpV2Frame(op, opRes, mParentTx);
 
     paymentOpV2Frame.setSourceAccountPtr(mSourceAccount);
 
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
     if (!paymentOpV2Frame.doCheckValid(app) || !paymentOpV2Frame.doApply(app, storageHelper, ledgerManager))
     {
-        auto resultCode = PaymentOpV2Frame::getInnerCode(opRes);
+        auto resultCode = PaymentOpFrame::getInnerCode(opRes);
         trySetErrorCode(resultCode);
         return false;
     }

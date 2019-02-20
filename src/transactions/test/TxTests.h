@@ -28,8 +28,8 @@ FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
     AssetCode asset, AccountID* accountID = nullptr, uint64_t* accountType = nullptr,
     int64_t subtype = FeeFrame::SUBTYPE_ANY, int64_t lowerBound = 0, int64_t upperBound = INT64_MAX);
 
-PaymentFeeDataV2 getNoPaymentFee();
-PaymentFeeDataV2 getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee);
+PaymentFeeData getNoPaymentFee();
+PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee);
     
 bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app);
 
@@ -89,12 +89,12 @@ applyManageAssetTx(Application& app, SecretKey& source, Salt seq,
 
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from,
     BalanceID fromBalanceID, BalanceID toBalanceID, Salt seq, int64_t amount,
-    PaymentFeeDataV2 paymentFee, bool isSourceFee = false, std::string subject = "",
+    PaymentFeeData paymentFee, bool isSourceFee = false, std::string subject = "",
     std::string reference="", TimeBounds* timeBounds = nullptr);
 
 
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-    Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee = false,
+    Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee = false,
     std::string subject = "", std::string reference="", TimeBounds* timeBounds = nullptr);
 
 TransactionFramePtr createSetFees(Hash const& networkID,

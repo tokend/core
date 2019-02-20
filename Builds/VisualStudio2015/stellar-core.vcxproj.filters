@@ -816,7 +816,7 @@
     <ClCompile Include="..\..\src\transactions\manage_role_rule\ManageSignerRuleOpFrame.cpp">
       <Filter>transactions\manage_role_rule</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\payment\PaymentOpV2Frame.cpp">
+    <ClCompile Include="..\..\src\transactions\payment\PaymentOpFrame.cpp">
       <Filter>transactions\payment</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.cpp">
@@ -2004,7 +2004,7 @@
     <ClInclude Include="..\..\src\transactions\manage_role_rule\ManageSignerRuleOpFrame.h">
       <Filter>transactions\manage_role_rule</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\payment\PaymentOpV2Frame.h">
+    <ClInclude Include="..\..\src\transactions\payment\PaymentOpFrame.h">
       <Filter>transactions\payment</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.h">

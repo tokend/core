@@ -104,7 +104,7 @@ ManageAccountRuleOpFrame::updateRule(Application &app,
     rule.id = mManageAccountRule.data.updateData().accountRuleID;
     rule.resource = mManageAccountRule.data.updateData().resource;
     rule.action = mManageAccountRule.data.updateData().action;
-    rule.isForbid = mManageAccountRule.data.updateData().isForbid;
+    rule.forbids = mManageAccountRule.data.updateData().isForbid;
     rule.details = mManageAccountRule.data.updateData().details;
 
     helper.storeChange(le);
@@ -127,7 +127,7 @@ ManageAccountRuleOpFrame::createRule(Application &app,
     rule.id = headerFrame.generateID(LedgerEntryType::ACCOUNT_RULE);
     rule.resource = mManageAccountRule.data.createData().resource;
     rule.action = mManageAccountRule.data.createData().action;
-    rule.isForbid = mManageAccountRule.data.createData().isForbid;
+    rule.forbids = mManageAccountRule.data.createData().forbids;
     rule.details = mManageAccountRule.data.createData().details;
 
     storageHelper.getAccountRuleHelper().storeAdd(le);

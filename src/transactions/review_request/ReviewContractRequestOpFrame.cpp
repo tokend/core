@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
-#include <transactions/payment/PaymentOpV2Frame.h>
+#include <transactions/payment/PaymentOpFrame.h>
 #include <transactions/deprecated/ManageContractOpFrame.h>
 #include "util/asio.h"
 #include "ReviewContractRequestOpFrame.h"

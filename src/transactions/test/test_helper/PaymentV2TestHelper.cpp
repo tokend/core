@@ -1,6 +1,6 @@
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/FeeHelper.h>
-#include <transactions/payment/PaymentOpV2Frame.h>
+#include <transactions/payment/PaymentOpFrame.h>
 #include <iterator>
 #include "PaymentV2TestHelper.h"
 #include "test/test_marshaler.h"
@@ -101,7 +101,7 @@ namespace stellar {
                 return PaymentV2Result();
             }
 
-            auto actualResultCode = PaymentOpV2Frame::getInnerCode(opResult);
+            auto actualResultCode = PaymentOpFrame::getInnerCode(opResult);
 
             REQUIRE(actualResultCode == expectedResultCode);
 
