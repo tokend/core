@@ -119,6 +119,12 @@ AccountRuleVerifierImpl::isResourceMatches(
         }
         case LedgerEntryType::OFFER_ENTRY:
         {
+            if (!isBoolMatches(conditionResource.offer().isBuy,
+                               actualResource.offer().isBuy))
+            {
+                return false;
+            }
+
             AssetFields expectedBase{conditionResource.offer().baseAssetCode,
                                      conditionResource.offer().baseAssetType};
             AssetFields expectedQuote{conditionResource.offer().quoteAssetCode,
