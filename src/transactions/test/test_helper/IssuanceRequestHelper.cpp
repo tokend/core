@@ -199,7 +199,7 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode as
         issuanceRequest.amount = amount;
         issuanceRequest.asset = assetCode;
         issuanceRequest.receiver = receiver;
-        issuanceRequest.externalDetails = externalDetails;
+        issuanceRequest.creatorDetails = externalDetails;
         issuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
         return issuanceRequest;
     }

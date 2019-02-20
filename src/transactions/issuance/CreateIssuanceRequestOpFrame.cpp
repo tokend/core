@@ -192,8 +192,8 @@ CreateIssuanceRequestOpFrame::doCheckValid(Application& app)
 		return false;
 	}
 
-	if (mCreateIssuanceRequest.request.externalDetails.size() > app.getIssuanceDetailsMaxLength()
-            || !isValidJson(mCreateIssuanceRequest.request.externalDetails))
+	if (mCreateIssuanceRequest.request.creatorDetails.size() > app.getIssuanceDetailsMaxLength()
+            || !isValidJson(mCreateIssuanceRequest.request.creatorDetails))
 	{
 		innerResult().code(CreateIssuanceRequestResultCode::INVALID_EXTERNAL_DETAILS);
         return false;
@@ -319,7 +319,7 @@ CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
     IssuanceRequest request;
     request.amount = amount;
     request.asset = asset;
-    request.externalDetails = "{}";
+    request.creatorDetails = "{}";
     request.fee.percent = 0;
     request.fee.fixed = 0;
     request.receiver = receiver;

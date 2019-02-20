@@ -118,7 +118,7 @@ void ReviewableRequestFrame::ensureIssuanceValid(IssuanceRequest const & request
         throw runtime_error("invalid amount");
     }
 
-    if (!isValidJson(request.externalDetails))
+    if (!isValidJson(request.creatorDetails))
     {
         throw runtime_error("invalid external details");
     }
