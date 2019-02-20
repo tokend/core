@@ -22,7 +22,7 @@ ManageSignerRuleTestHelper::buildCreateRuleOp(SignerRuleResource resource,
     auto& data = result.data.createData();
     data.resource = resource;
     data.action = action;
-    data.isForbid = isForbid;
+    data.forbids = isForbid;
     data.isDefault = isDefault;
     data.isReadOnly = isReadOnly;
     data.details = R"({"from" : "tests"})";
@@ -42,7 +42,7 @@ ManageSignerRuleTestHelper::buildUpdateRuleOp(uint64_t id,
     data.ruleID = id;
     data.resource = resource;
     data.action = action;
-    data.isForbid = isForbid;
+    data.forbids = isForbid;
     data.isDefault = isDefault;
     data.details = R"({"from" : "tests"})";
 

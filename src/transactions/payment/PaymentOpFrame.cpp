@@ -367,13 +367,13 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         }
 
         innerResult().code(PaymentResultCode::SUCCESS);
-        innerResult().paymentV2Response().destination = destAccount->getID();
-        innerResult().paymentV2Response().destinationBalanceID = destBalance->getBalanceID();
-        innerResult().paymentV2Response().asset = destBalance->getAsset();
-        innerResult().paymentV2Response().sourceSentUniversal = sourceSentUniversal;
-        innerResult().paymentV2Response().paymentID = paymentID;
-        innerResult().paymentV2Response().actualSourcePaymentFee = sourceFee;
-        innerResult().paymentV2Response().actualDestinationPaymentFee = destFee;
+        innerResult().paymentResponse().destination = destAccount->getID();
+        innerResult().paymentResponse().destinationBalanceID = destBalance->getBalanceID();
+        innerResult().paymentResponse().asset = destBalance->getAsset();
+        innerResult().paymentResponse().sourceSentUniversal = sourceSentUniversal;
+        innerResult().paymentResponse().paymentID = paymentID;
+        innerResult().paymentResponse().actualSourcePaymentFee = sourceFee;
+        innerResult().paymentResponse().actualDestinationPaymentFee = destFee;
 
         return true;
     }

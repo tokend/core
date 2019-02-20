@@ -1,30 +1,28 @@
 #include <ledger/BalanceHelperLegacy.h>
-#include <ledger/FeeHelper.h>
 #include <transactions/payment/PaymentOpFrame.h>
-#include <iterator>
-#include "PaymentV2TestHelper.h"
+#include "PaymentTestHelper.h"
 #include "test/test_marshaler.h"
 
 namespace stellar {
     namespace txtest {
-        PaymentV2TestHelper::PaymentV2TestHelper(TestManager::pointer testManager) : TxHelper(testManager) {
+        PaymentTestHelper::PaymentTestHelper(TestManager::pointer testManager) : TxHelper(testManager) {
         }
 
-        PaymentOpV2::_destination_t PaymentV2TestHelper::createDestinationForAccount(AccountID destAccountID) {
-            PaymentOpV2::_destination_t destination;
+        PaymentOp::_destination_t PaymentTestHelper::createDestinationForAccount(AccountID destAccountID) {
+            PaymentOp::_destination_t destination;
             destination.type(PaymentDestinationType::ACCOUNT);
             destination.accountID() = destAccountID;
             return destination;
         }
 
-        PaymentOpV2::_destination_t PaymentV2TestHelper::createDestinationForBalance(BalanceID destBalanceID) {
-            PaymentOpV2::_destination_t destination;
+        PaymentOp::_destination_t PaymentTestHelper::createDestinationForBalance(BalanceID destBalanceID) {
+            PaymentOp::_destination_t destination;
             destination.type(PaymentDestinationType::BALANCE);
             destination.balanceID() = destBalanceID;
             return destination;
         }
 
-        Fee PaymentV2TestHelper::createFeeData(uint64 fixedFee, uint64 paymentFee) {
+        Fee PaymentTestHelper::createFeeData(uint64 fixedFee, uint64 paymentFee) {
             Fee feeData;
 
             feeData.fixed= fixedFee;
@@ -33,9 +31,9 @@ namespace stellar {
             return feeData;
         }
 
-        PaymentFeeDataV2 PaymentV2TestHelper::createPaymentFeeData(Fee sourceFeeData, Fee destFeeData,
+        PaymentFeeData PaymentTestHelper::createPaymentFeeData(Fee sourceFeeData, Fee destFeeData,
                                                                    bool sourcePaysForDest) {
-            PaymentFeeDataV2 paymentFeeData;
+            PaymentFeeData paymentFeeData;
 
             paymentFeeData.sourceFee = sourceFeeData;
             paymentFeeData.destinationFee = destFeeData;
@@ -44,13 +42,13 @@ namespace stellar {
             return paymentFeeData;
         }
 
-        TransactionFramePtr PaymentV2TestHelper::createPaymentV2Tx(Account &source, BalanceID sourceBalanceID,
-                                                                   PaymentOpV2::_destination_t destination,
-                                                                   uint64_t amount, PaymentFeeDataV2 feeData,
+        TransactionFramePtr PaymentTestHelper::createPaymentTx(Account &source, BalanceID sourceBalanceID,
+                                                                   PaymentOp::_destination_t destination,
+                                                                   uint64_t amount, PaymentFeeData feeData,
                                                                    std::string subject, std::string reference) {
             Operation baseOp;
-            baseOp.body.type(OperationType::PAYMENT_V2);
-            auto &op = baseOp.body.paymentOpV2();
+            baseOp.body.type(OperationType::PAYMENT_);
+            auto &op = baseOp.body.paymentOp();
             op.sourceBalanceID = sourceBalanceID;
             op.destination = destination;
             op.amount = amount;
@@ -61,11 +59,11 @@ namespace stellar {
             return txFromOperation(source, baseOp, nullptr);
         }
 
-        PaymentV2Result PaymentV2TestHelper::applyPaymentV2Tx(Account &source, BalanceID sourceBalanceID,
-                                                              PaymentOpV2::_destination_t destination, uint64_t amount,
-                                                              PaymentFeeDataV2 feeData, std::string subject,
-                                                              std::string reference, PaymentV2Delta *paymentDelta,
-                                                              PaymentV2ResultCode expectedResultCode,
+        PaymentResult PaymentTestHelper::applyPaymentTx(Account &source, BalanceID sourceBalanceID,
+                                                              PaymentOp::_destination_t destination, uint64_t amount,
+                                                              PaymentFeeData feeData, std::string subject,
+                                                              std::string reference, PaymentDelta *paymentDelta,
+                                                              PaymentResultCode expectedResultCode,
                                                               OperationResultCode expectedOpResultCode) {
             auto &db = mTestManager->getDB();
             auto balanceHelper = BalanceHelperLegacy::Instance();
@@ -89,7 +87,7 @@ namespace stellar {
 
             TransactionFramePtr txFrame;
 
-            txFrame = createPaymentV2Tx(source, sourceBalanceID, destination, amount, feeData, subject, reference);
+            txFrame = createPaymentTx(source, sourceBalanceID, destination, amount, feeData, subject, reference);
             mTestManager->applyCheck(txFrame);
 
             auto txResult = txFrame->getResult();
@@ -98,7 +96,7 @@ namespace stellar {
             REQUIRE(opResult.code() == expectedOpResultCode);
             if (expectedOpResultCode != OperationResultCode::opINNER)
             {
-                return PaymentV2Result();
+                return PaymentResult();
             }
 
             auto actualResultCode = PaymentOpFrame::getInnerCode(opResult);
@@ -108,9 +106,9 @@ namespace stellar {
             auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
             REQUIRE(txResult.feeCharged == txFee);
 
-            auto actualPaymentResult = opResult.tr().paymentV2Result();
+            auto actualPaymentResult = opResult.tr().paymentResult();
 
-            if (expectedResultCode != PaymentV2ResultCode::SUCCESS)
+            if (expectedResultCode != PaymentResultCode::SUCCESS)
             {
                 return actualPaymentResult;
             }

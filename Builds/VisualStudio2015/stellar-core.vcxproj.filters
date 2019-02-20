@@ -1062,7 +1062,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.cpp">
       <Filter>transactions\test\test_helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.cpp">
+    <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentTestHelper.cpp">
       <Filter>transactions\test\test_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.cpp">
@@ -2232,7 +2232,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.h">
       <Filter>transactions\test\test_helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.h">
+    <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentTestHelper.h">
       <Filter>transactions\test\test_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.h">
