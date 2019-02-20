@@ -33,6 +33,7 @@ CreateChangeRoleRequestOpFrame::tryGetOperationConditions(StorageHelper& storage
     if (!(getSourceID() == destAccountID) || (mCreateChangeRoleRequestOp.allTasks))
     {
         result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        return true;
     }
 
     result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);

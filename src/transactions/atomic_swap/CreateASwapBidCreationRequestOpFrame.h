@@ -25,7 +25,7 @@ private:
                              std::vector<SignerRequirement>& result) const override;
 
     bool
-    isSupported() const
+    isSupported() const override
     {
         return false;
     }
