@@ -17,7 +17,7 @@ class AccountRoleFrame : public EntryFrame
 
     AccountRoleFrame(AccountRoleFrame const& from);
 
-  public:
+public:
     typedef std::shared_ptr<AccountRoleFrame> pointer;
 
     AccountRoleFrame();

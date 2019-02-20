@@ -149,6 +149,8 @@ class Config : public std::enable_shared_from_this<Config>
 
     int32 KYC_SUPER_ADMIN_MASK = 1;
 
+    size_t mSignerRuleIDsMaxCount = 128;
+
     // overlay config
     unsigned short PEER_PORT;
     unsigned TARGET_PEER_CONNECTIONS;

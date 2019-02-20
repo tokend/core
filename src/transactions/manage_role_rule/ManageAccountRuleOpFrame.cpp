@@ -89,7 +89,7 @@ ManageAccountRuleOpFrame::updateRule(Application &app,
                                      StorageHelper &storageHelper)
 {
     LedgerKey ruleKey(LedgerEntryType::ACCOUNT_RULE);
-    ruleKey.accountRule().id = mManageAccountRule.data.updateData().accountRuleID;
+    ruleKey.accountRule().id = mManageAccountRule.data.updateData().ruleID;
 
     auto& helper = storageHelper.getAccountRuleHelper();
     if (!helper.exists(ruleKey))
@@ -101,7 +101,7 @@ ManageAccountRuleOpFrame::updateRule(Application &app,
     LedgerEntry le;
     le.data.type(LedgerEntryType::ACCOUNT_RULE);
     auto& rule = le.data.accountRule();
-    rule.id = mManageAccountRule.data.updateData().accountRuleID;
+    rule.id = mManageAccountRule.data.updateData().ruleID;
     rule.resource = mManageAccountRule.data.updateData().resource;
     rule.action = mManageAccountRule.data.updateData().action;
     rule.forbids = mManageAccountRule.data.updateData().forbids;
@@ -144,7 +144,7 @@ ManageAccountRuleOpFrame::deleteAccountRule(Application &app,
 {
     LedgerKey key;
     key.type(LedgerEntryType::ACCOUNT_RULE);
-    auto ruleID = mManageAccountRule.data.removeData().accountRuleID;
+    auto ruleID = mManageAccountRule.data.removeData().ruleID;
     key.accountRule().id = ruleID;
 
     auto frame = storageHelper.getAccountRuleHelper().storeLoad(key);

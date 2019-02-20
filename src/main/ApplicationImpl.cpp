@@ -242,6 +242,10 @@ namespace stellar {
         return mConfig.KYC_SUPER_ADMIN_MASK;
     }
 
+    size_t ApplicationImpl::getSignerRuleIDsMaxCount() const {
+        return mConfig.mSignerRuleIDsMaxCount;
+    }
+
     bool ApplicationImpl::isCheckingPolicies() const
     {
         return mIsCheckingPolicies;

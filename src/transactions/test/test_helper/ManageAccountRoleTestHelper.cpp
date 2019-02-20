@@ -21,7 +21,7 @@ ManageAccountRoleTestHelper::buildCreateRoleOp(const std::string &name,
     ManageAccountRoleOp opData;
     opData.data.action(ManageAccountRoleAction::CREATE);
     opData.data.createData().details = name;
-    opData.data.createData().accountRuleIDs.assign(ruleIDs.begin(), ruleIDs.end());
+    opData.data.createData().ruleIDs.assign(ruleIDs.begin(), ruleIDs.end());
     return opData;
 }
 
@@ -34,7 +34,7 @@ ManageAccountRoleTestHelper::buildUpdateRoleOp(uint64_t accountRoleID,
     opData.data.action(ManageAccountRoleAction::UPDATE);
     opData.data.updateData().details = name;
     opData.data.updateData().roleID = accountRoleID;
-    opData.data.updateData().accountRuleIDs.assign(ruleIDs.begin(), ruleIDs.end());
+    opData.data.updateData().ruleIDs.assign(ruleIDs.begin(), ruleIDs.end());
     return opData;
 }
 
@@ -43,7 +43,7 @@ ManageAccountRoleTestHelper::buildRemoveRoleOp(uint64_t accountRoleID)
 {
     ManageAccountRoleOp opData;
     opData.data.action(ManageAccountRoleAction::REMOVE);
-    opData.data.removeData().accountRoleID = accountRoleID;
+    opData.data.removeData().roleID = accountRoleID;
     return opData;
 }
 

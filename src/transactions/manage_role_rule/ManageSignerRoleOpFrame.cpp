@@ -104,6 +104,11 @@ ManageSignerRoleOpFrame::tryObtainRuleIDs(StorageHelper &storageHelper,
         ruleIDs.insert(id);
     }
 
+    if (!checkRulesExisting(storageHelper, incomingIDs))
+    {
+        return false;
+    }
+
     auto defaultRuleIDs = storageHelper.getSignerRuleHelper().loadDefaultRuleIDs();
 
     for (auto id : defaultRuleIDs)
@@ -132,11 +137,6 @@ ManageSignerRoleOpFrame::createRole(Application& app,
                                     StorageHelper& storageHelper)
 {
     auto creationData = mManageSignerRole.data.createData();
-
-    if (!checkRulesExisting(storageHelper, creationData.ruleIDs))
-    {
-        return false;
-    }
 
     auto& headerFrame = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
@@ -245,14 +245,17 @@ bool
 ManageSignerRoleOpFrame::doCheckValid(Application& app)
 {
     std::string details;
+    size_t ruleIDsCount;
 
     switch (mManageSignerRole.data.action())
     {
         case ManageSignerRoleAction::CREATE:
             details = mManageSignerRole.data.createData().details;
+            ruleIDsCount = mManageSignerRole.data.createData().ruleIDs.size();
             break;
         case ManageSignerRoleAction::UPDATE:
             details = mManageSignerRole.data.updateData().details;
+            ruleIDsCount = mManageSignerRole.data.updateData().ruleIDs.size();
             break;
         case ManageSignerRoleAction::REMOVE:
             return true;
@@ -263,6 +266,13 @@ ManageSignerRoleOpFrame::doCheckValid(Application& app)
     if (!isValidJson(details))
     {
         innerResult().code(ManageSignerRoleResultCode::INVALID_DETAILS);
+        return false;
+    }
+
+    if (ruleIDsCount > app.getSignerRuleIDsMaxCount())
+    {
+        innerResult().code(ManageSignerRoleResultCode::TOO_MANY_RULE_IDS);
+        innerResult().maxRuleIDsCount() = app.getSignerRuleIDsMaxCount();
         return false;
     }
 

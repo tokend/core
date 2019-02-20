@@ -154,6 +154,8 @@ namespace stellar {
 
         virtual int32 getKYCSuperAdminMask() const override;
 
+        virtual size_t getSignerRuleIDsMaxCount() const override;
+
         bool isCheckingPolicies() const override;
         void stopCheckingPolicies() override;
         void resumeCheckingPolicies() override;

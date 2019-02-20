@@ -65,7 +65,7 @@ ManageAccountRoleOpFrame::createAccountRole(Application& app,
 {
     auto creationData =  mManageAccountRole.data.createData();
 
-    if (!checkRulesExisting(storageHelper, creationData.accountRuleIDs))
+    if (!checkRulesExisting(storageHelper, creationData.ruleIDs))
     {
         return false;
     }
@@ -97,8 +97,13 @@ ManageAccountRoleOpFrame::updateAccountRole(Application& app,
         return false;
     }
 
+    if (!checkRulesExisting(storageHelper, updateData.ruleIDs))
+    {
+        return false;
+    }
+
     auto& roleEntry = accountRole->getAccountRole();
-    roleEntry.ruleIDs = updateData.accountRuleIDs;
+    roleEntry.ruleIDs = updateData.ruleIDs;
     roleEntry.details = updateData.details;
 
     helper.storeChange(accountRole->mEntry);
@@ -116,7 +121,7 @@ ManageAccountRoleOpFrame::deleteAccountRole(Application& app,
     auto& data = mManageAccountRole.data.removeData();
 
     auto& accountHelper = storageHelper.getAccountHelper();
-    if (accountHelper.isRoleIDUsed(data.accountRoleID))
+    if (accountHelper.isRoleIDUsed(data.roleID))
     {
         innerResult().code(ManageAccountRoleResultCode::ROLE_IS_USED);
         return false;
@@ -124,7 +129,7 @@ ManageAccountRoleOpFrame::deleteAccountRole(Application& app,
 
     LedgerKey ledgerKey;
     ledgerKey.type(LedgerEntryType::ACCOUNT_ROLE);
-    ledgerKey.accountRole().id = data.accountRoleID;
+    ledgerKey.accountRole().id = data.roleID;
 
     auto& accountRoleHelper = storageHelper.getAccountRoleHelper();
 
@@ -138,7 +143,7 @@ ManageAccountRoleOpFrame::deleteAccountRole(Application& app,
 
 
     innerResult().code(ManageAccountRoleResultCode::SUCCESS);
-    innerResult().success().roleID = data.accountRoleID;
+    innerResult().success().roleID = data.roleID;
 
     return true;
 }
@@ -171,11 +176,11 @@ ManageAccountRoleOpFrame::doCheckValid(Application& app)
     {
         case ManageAccountRoleAction::CREATE:
             details = mManageAccountRole.data.createData().details;
-            incomingIDs = mManageAccountRole.data.createData().accountRuleIDs;
+            incomingIDs = mManageAccountRole.data.createData().ruleIDs;
             break;
         case ManageAccountRoleAction::UPDATE:
             details = mManageAccountRole.data.updateData().details;
-            incomingIDs = mManageAccountRole.data.updateData().accountRuleIDs;
+            incomingIDs = mManageAccountRole.data.updateData().ruleIDs;
             break;
         case ManageAccountRoleAction::REMOVE:
             return true;
