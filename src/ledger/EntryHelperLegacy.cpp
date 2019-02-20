@@ -163,22 +163,55 @@ namespace stellar
 	void
 	EntryHelperProvider::storeAddOrChangeEntry(LedgerDelta &delta, Database &db, LedgerEntry const& entry)
 	{
-		auto key = LedgerEntryKey(entry);
-		if (existsEntry(db, key))
+		try
 		{
-			storeChangeEntry(delta, db, entry);
+			auto key = LedgerEntryKey(entry);
+			if (existsEntry(db, key))
+			{
+				storeChangeEntry(delta, db, entry);
+			}
+			else
+			{
+				storeAddEntry(delta, db, entry);
+			}
 		}
-		else
+		catch (...)
 		{
-			storeAddEntry(delta, db, entry);
+			CLOG(INFO, Logging::ENTRY_LOGGER) << "Using new helpers in storeAddOrChangeEntry";
+			StorageHelperImpl storageHelperImpl(db, &delta);
+			StorageHelper& storageHelper = storageHelperImpl;
+
+			auto helper = storageHelper.getHelper(entry.data.type());
+
+			auto key = helper->getLedgerKey(entry);
+			if (helper->exists(key))
+			{
+				helper->storeAdd(entry);
+			}
+			else
+			{
+				helper->storeChange(entry);
+			}
 		}
 	}
 
 	void
 	EntryHelperProvider::storeDeleteEntry(LedgerDelta& delta, Database& db, LedgerKey const& key)
 	{
-		EntryHelperLegacy* helper = getHelper(key.type());
-		helper->storeDelete(delta, db, key);
+		try
+		{
+			EntryHelperLegacy *helper = getHelper(key.type());
+			helper->storeDelete(delta, db, key);
+		}
+		catch (...)
+		{
+			CLOG(INFO, Logging::ENTRY_LOGGER) << "Using new helpers in storeDeleteEntry";
+			StorageHelperImpl storageHelperImpl(db, &delta);
+			StorageHelper& storageHelper = storageHelperImpl;
+
+			auto helper = storageHelper.getHelper(key.type());
+			helper->storeDelete(key);
+		}
 	}
 
 	bool
