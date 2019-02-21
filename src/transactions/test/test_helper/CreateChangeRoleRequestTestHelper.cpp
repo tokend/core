@@ -120,7 +120,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
         REQUIRE(requestAfterTxEntry.tasks.allTasks == *allTasks);
     } else {
         auto key = ManageKeyValueOpFrame::makeChangeRoleKey(
-                accountBefore->getAccountRole(), roleIDToSet);
+                std::to_string(accountBefore->getAccountRole()), std::to_string(roleIDToSet));
         auto kvEntry = KeyValueHelperLegacy::Instance()->loadKeyValue(key,db);
         REQUIRE(kvEntry);
 
@@ -154,8 +154,8 @@ CreateChangeRoleTestHelper::createUpdateKYCRequestTx(Account &source, uint64_t r
     op.requestID = requestID;
     op.destinationAccount = accountToUpdateKYC;
     op.accountRoleToSet = roleIDToSet;
-    op.kycData = kycData;
-    if (!!allTasks) {
+    op.creatorDetails = kycData;
+    if (allTasks != nullptr) {
         op.allTasks.activate() = *allTasks;
     }
 

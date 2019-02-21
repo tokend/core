@@ -63,7 +63,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
             return false;
         }
 
-        requestEntry.body.updateSaleDetailsRequest().creatorDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
+        requestEntry.body.updateSaleDetailsRequest().creatorDetails = mManageSaleOp.data.updateSaleDetailsData().creatorDetails;
         requestEntry.body.updateSaleDetailsRequest().sequenceNumber++;
         requestFrame->setTasks(requestEntry.tasks.allTasks);
 
@@ -107,7 +107,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         auto &requestEntry = request->getRequestEntry();
         requestEntry.body.type(ReviewableRequestType::UPDATE_SALE_DETAILS);
         requestEntry.body.updateSaleDetailsRequest().saleID = mManageSaleOp.saleID;
-        requestEntry.body.updateSaleDetailsRequest().creatorDetails = mManageSaleOp.data.updateSaleDetailsData().newDetails;
+        requestEntry.body.updateSaleDetailsRequest().creatorDetails = mManageSaleOp.data.updateSaleDetailsData().creatorDetails;
         requestEntry.body.updateSaleDetailsRequest().sequenceNumber = 0;
 
         request->recalculateHashRejectReason();
@@ -206,8 +206,8 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
             return true;
         }
 
-        if (!isValidJson(mManageSaleOp.data.updateSaleDetailsData().newDetails)) {
-            innerResult().code(ManageSaleResultCode::INVALID_NEW_DETAILS);
+        if (!isValidJson(mManageSaleOp.data.updateSaleDetailsData().creatorDetails)) {
+            innerResult().code(ManageSaleResultCode::INVALID_CREATOR_DETAILS);
             return false;
         }
 

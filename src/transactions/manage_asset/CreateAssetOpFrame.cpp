@@ -35,6 +35,13 @@ CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
     resource.asset().assetCode = mAssetCreationRequest.code;
     result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
+    if (mManageAsset.request.createAssetCreationRequest().allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        return true;
+    }
+
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
     return true;
 }
 
@@ -154,7 +161,7 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
 
     if (!isValidJson(mAssetCreationRequest.creatorDetails))
     {
-        innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
+        innerResult().code(ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 

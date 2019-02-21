@@ -169,7 +169,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     firstSignerRule.action = SignerRuleAction::ANY;
     firstSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     firstSignerRule.isDefault = true;
-    firstSignerRule.isForbid = true;
+    firstSignerRule.forbids = true;
     firstSignerRule.ownerID = mNotExistingAccount;
     firstSignerRule.details = "{}";
 
@@ -185,7 +185,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     secondSignerRule.action = SignerRuleAction::ANY;
     secondSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     secondSignerRule.isDefault = true;
-    secondSignerRule.isForbid = true;
+    secondSignerRule.forbids = true;
     secondSignerRule.ownerID = mNotExistingAccount;
     secondSignerRule.details = "{}";
 
@@ -200,7 +200,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     thirdSignerRule.action = SignerRuleAction::ANY;
     thirdSignerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     thirdSignerRule.isDefault = true;
-    thirdSignerRule.isForbid = true;
+    thirdSignerRule.forbids = true;
     thirdSignerRule.ownerID = mNotExistingAccount;
     thirdSignerRule.details = "{}";
 
@@ -219,7 +219,7 @@ LedgerManagerImpl::createAdminSigner(StorageHelper &storageHelper)
     signerRule.action = SignerRuleAction::ANY;
     signerRule.id = ledgerHeader.generateID(LedgerEntryType::SIGNER_RULE);
     signerRule.isDefault = false;
-    signerRule.isForbid = false;
+    signerRule.forbids = false;
     signerRule.ownerID = mNotExistingAccount;
     signerRule.details = "{}";
 
@@ -259,7 +259,7 @@ LedgerManagerImpl::createAdminRole(StorageHelper& storageHelper)
     adminRule.resource = AccountRuleResource(LedgerEntryType::ANY);
     adminRule.action = AccountRuleAction::ANY;
     adminRule.details = "{}";
-    adminRule.isForbid = false;
+    adminRule.forbids = false;
     adminRule.id = ledgerHeader.generateID(LedgerEntryType::ACCOUNT_RULE);
 
     LedgerEntry ledgerRuleEntry;

@@ -145,7 +145,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
             limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
                                                                                           limitsUpdateRequest, nullptr,
                                                                                           &requestID,
-                                                                                          CreateManageLimitsRequestResultCode::INVALID_DETAILS);
+                                                                                          CreateManageLimitsRequestResultCode::INVALID_CREATOR_DETAILS);
         }
 
         SECTION("Update non existing request")

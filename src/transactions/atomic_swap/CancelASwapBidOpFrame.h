@@ -23,6 +23,12 @@ private:
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
+    bool
+    isSupported() const override
+    {
+        return false;
+    }
+
 public:
     CancelASwapBidOpFrame(Operation const &op, OperationResult &opRes,
                           TransactionFrame &parentTx);

@@ -38,15 +38,15 @@ class CreateChangeRoleRequestOpFrame : public OperationFrame
 
     bool ensureDestinationNotChanged(ReviewableRequestEntry &requestEntry);
 
+    std::vector<longstring>
+    makeTasksKeyVector(StorageHelper &storageHelper) override;
+
 public:
     CreateChangeRoleRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
 
     bool doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) override;
 
     bool doCheckValid(Application &app) override;
-
-    bool getChangeRoleTasks(Database &db, LedgerManager &ledgerManager,
-                            AccountFrame::pointer account, uint32 &defaultMask);
 
     static CreateChangeRoleRequestResultCode getInnerCode(OperationResult const &res)
     {

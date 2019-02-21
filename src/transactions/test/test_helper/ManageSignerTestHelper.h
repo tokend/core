@@ -22,6 +22,9 @@ public:
     TransactionFramePtr
     buildTx(Account &source, const ManageSignerOp &op, Account* signer = nullptr);
 
+    TransactionFramePtr
+    buildTx(Account &source, std::vector<ManageSignerOp> ops, Account* signer);
+
     ManageSignerResult applyTx(Account &source, const ManageSignerOp &op,
                                ManageSignerResultCode expectedResultCode =
                                        ManageSignerResultCode::SUCCESS,
@@ -29,6 +32,15 @@ public:
                                        OperationResultCode::opINNER,
                                TransactionResultCode expectedTxResult =
                                        TransactionResultCode::txSUCCESS,
+                               Account* signer = nullptr);
+
+    ManageSignerResult applyTx(Account &source, std::vector<ManageSignerOp> ops,
+                               ManageSignerResultCode expectedResultCode =
+                               ManageSignerResultCode::SUCCESS,
+                               OperationResultCode expectedOpCode =
+                               OperationResultCode::opINNER,
+                               TransactionResultCode expectedTxResult =
+                               TransactionResultCode::txSUCCESS,
                                Account* signer = nullptr);
 
     void applyCreateOperationalSigner(Account& source, PublicKey signerKey);

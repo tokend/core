@@ -4,11 +4,8 @@
 
 #include "util/asio.h"
 #include "ReviewWithdrawalRequestOpFrame.h"
-#include "util/Logging.h"
-#include "util/types.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -16,11 +13,44 @@
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "main/Application.h"
 #include "xdrpp/printer.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
+
+bool
+ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result) const
+{
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_WITHDRAW))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
+            request->getRequestEntry().body.withdrawalRequest().balance);
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);
+    resource.reviewableRequest().details.withdraw().assetCode = asset->getCode();
+    resource.reviewableRequest().details.withdraw().assetType = asset->getType();
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
 
 bool ReviewWithdrawalRequestOpFrame::handleApprove(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,

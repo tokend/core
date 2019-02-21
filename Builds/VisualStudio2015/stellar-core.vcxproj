@@ -381,7 +381,7 @@
     <ClCompile Include="..\..\src\transactions\manage_role_rule\ManageSignerRoleOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\manage_role_rule\ManageSignerRuleOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\OperationFrame.cpp" />
-    <ClCompile Include="..\..\src\transactions\payment\PaymentOpV2Frame.cpp" />
+    <ClCompile Include="..\..\src\transactions\payment\PaymentOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetCreationRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.cpp" />
@@ -464,7 +464,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSignerRuleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSignerTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.cpp" />
-    <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAMLAlertRequestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewAssetRequestHelper.cpp" />
@@ -742,7 +742,7 @@
     <ClInclude Include="..\..\src\transactions\manage_role_rule\ManageSignerRuleOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\OperationFrame.h" />
     <ClInclude Include="..\..\src\transactions\PaymentOpFrame.h" />
-    <ClInclude Include="..\..\src\transactions\payment\PaymentOpV2Frame.h" />
+    <ClInclude Include="..\..\src\transactions\payment\PaymentOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetCreationRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.h" />
@@ -821,7 +821,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSignerRuleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSignerTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.h" />
-    <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentV2TestHelper.h" />
+    <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAMLAlertRequestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewAssetRequestHelper.h" />

@@ -13,7 +13,7 @@
 #include "ledger/LedgerDeltaImpl.h"
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/ManageBalanceOpFrame.h"
-#include "transactions/payment/PaymentOpV2Frame.h"
+#include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -64,12 +64,12 @@ FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
 	return fee;
 }
 
-PaymentFeeDataV2 getNoPaymentFee() {
+PaymentFeeData getNoPaymentFee() {
     return getGeneralPaymentFee(0, 0);
 }
 
-PaymentFeeDataV2 getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
-    PaymentFeeDataV2 paymentFeeData;
+PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
+    PaymentFeeData paymentFeeData;
     Fee generalFeeData;
     generalFeeData.fixed = fixedFee;
     generalFeeData.percent = paymentFee;
@@ -432,7 +432,7 @@ void applyManageAssetTx(Application & app, SecretKey & source, Salt seq, AssetCo
 // For base balance
 TransactionFramePtr
 createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-                Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
+                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
 {
     return createPaymentTx(networkID, from, from.getPublicKey(), to.getPublicKey(), seq, amount,paymentFee,
         isSourceFee, subject, reference, timeBounds);
@@ -440,15 +440,15 @@ createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
 
 TransactionFramePtr
 createPaymentTx(Hash const& networkID, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID,
-                Salt seq, int64_t amount, PaymentFeeDataV2 paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
+                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
 {
     Operation op;
-    op.body.type(OperationType::PAYMENT_V2);
-    op.body.paymentOpV2().amount = amount;
-	op.body.paymentOpV2().feeData = paymentFee;
-    op.body.paymentOpV2().subject = subject;
-    op.body.paymentOpV2().sourceBalanceID = fromBalanceID;
-    op.body.paymentOpV2().reference = reference;
+    op.body.type(OperationType::PAYMENT);
+    op.body.paymentOp().amount = amount;
+	op.body.paymentOp().feeData = paymentFee;
+    op.body.paymentOp().subject = subject;
+    op.body.paymentOp().sourceBalanceID = fromBalanceID;
+    op.body.paymentOp().reference = reference;
 
     return transactionFromOperation(networkID, from, seq, op, nullptr, timeBounds);
 }

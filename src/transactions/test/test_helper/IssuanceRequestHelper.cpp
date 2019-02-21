@@ -86,6 +86,7 @@ namespace txtest
         preIssuanceRequest.asset = assetCode;
         preIssuanceRequest.reference = reference;
         preIssuanceRequest.signature = createPreIssuanceRequestSignature(preIssuedAssetSigner, assetCode, amount, reference);
+        preIssuanceRequest.creatorDetails = "{}";
         preIssuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
         return preIssuanceRequest;
     }
@@ -199,7 +200,7 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode as
         issuanceRequest.amount = amount;
         issuanceRequest.asset = assetCode;
         issuanceRequest.receiver = receiver;
-        issuanceRequest.externalDetails = externalDetails;
+        issuanceRequest.creatorDetails = externalDetails;
         issuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
         return issuanceRequest;
     }

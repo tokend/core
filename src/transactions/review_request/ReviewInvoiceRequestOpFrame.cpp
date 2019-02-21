@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
-#include <transactions/payment/PaymentOpV2Frame.h>
+#include <transactions/payment/PaymentOpFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "util/asio.h"
 #include "ReviewInvoiceRequestOpFrame.h"
@@ -183,20 +183,20 @@ bool
 ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager)
 {
     Operation op;
-    op.body.type(OperationType::PAYMENT_V2);
-    op.body.paymentOpV2() = mReviewRequest.requestDetails.billPay().paymentDetails;
+    op.body.type(OperationType::PAYMENT);
+    op.body.paymentOp() = mReviewRequest.requestDetails.billPay().paymentDetails;
 
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
-    opRes.tr().type(OperationType::PAYMENT_V2);
-    PaymentOpV2Frame paymentOpV2Frame(op, opRes, mParentTx);
+    opRes.tr().type(OperationType::PAYMENT);
+    PaymentOpFrame paymentOpV2Frame(op, opRes, mParentTx);
 
     paymentOpV2Frame.setSourceAccountPtr(mSourceAccount);
 
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
     if (!paymentOpV2Frame.doCheckValid(app) || !paymentOpV2Frame.doApply(app, storageHelper, ledgerManager))
     {
-        auto resultCode = PaymentOpV2Frame::getInnerCode(opRes);
+        auto resultCode = PaymentOpFrame::getInnerCode(opRes);
         trySetErrorCode(resultCode);
         return false;
     }
@@ -205,7 +205,7 @@ ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &del
 }
 
 void
-ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentV2ResultCode paymentResult)
+ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentResultCode paymentResult)
 {
     try
     {
@@ -214,7 +214,7 @@ ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentV2ResultCode paymentResult)
     catch(...)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from payment v2 operation: "
-                                               << xdr::xdr_traits<PaymentV2ResultCode>::enum_name(paymentResult);
+                                               << xdr::xdr_traits<PaymentResultCode>::enum_name(paymentResult);
         throw std::runtime_error("Unexpected result code from payment v2 operation");
     }
 }

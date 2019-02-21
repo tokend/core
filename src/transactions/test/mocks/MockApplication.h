@@ -88,6 +88,8 @@ class MockApplication : public Application
     MOCK_CONST_METHOD0(getMaxInvoicesForReceiverAccount, int64());
     MOCK_CONST_METHOD0(getKYCSuperAdminMask, int32());
 
+    MOCK_CONST_METHOD0(getSignerRuleIDsMaxCount, size_t());
+
     MOCK_CONST_METHOD0(isCheckingPolicies, bool());
     MOCK_METHOD0(stopCheckingPolicies, void());
     MOCK_METHOD0(resumeCheckingPolicies, void());

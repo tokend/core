@@ -160,7 +160,7 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 	}
 
     if (!isValidJson(mAssetUpdateRequest.creatorDetails)) {
-        innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
+        innerResult().code(ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 

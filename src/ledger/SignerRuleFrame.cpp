@@ -24,7 +24,7 @@ SignerRuleFrame::SignerRuleFrame(uint64_t const ruleID, AccountID ownerID,
 
 {
     mSignerRuleEntry.id = ruleID;
-    mSignerRuleEntry.isForbid = data.isForbid;
+    mSignerRuleEntry.forbids = data.forbids;
     mSignerRuleEntry.isDefault = data.isDefault;
     mSignerRuleEntry.resource = data.resource;
     mSignerRuleEntry.action = data.action;

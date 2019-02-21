@@ -58,7 +58,7 @@ AccountRoleFrame::createNew(uint64_t id, CreateAccountRoleData data)
     auto& accountRole = entry.data.accountRole();
     accountRole.id = id;
     accountRole.details = data.details;
-    accountRole.ruleIDs = data.accountRuleIDs;
+    accountRole.ruleIDs = data.ruleIDs;
 
     return make_shared<AccountRoleFrame>(entry);
 }

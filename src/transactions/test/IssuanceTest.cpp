@@ -418,7 +418,7 @@ void createIssuanceRequestHardPath(TestManager::pointer testManager, Account &as
         std::string invalidDetails = "{\"key\"}";
         issuanceRequestHelper.applyCreateIssuanceRequest(assetOwner, assetCode, amount, receiverBalance->getBalanceID(),
                                                          reference, &issuanceTasks,
-                                                         CreateIssuanceRequestResultCode::INVALID_EXTERNAL_DETAILS,
+                                                         CreateIssuanceRequestResultCode::INVALID_CREATOR_DETAILS,
                                                          invalidDetails);
     }
 

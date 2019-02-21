@@ -5,20 +5,17 @@
 #include "CreateSaleCreationRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
-#include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/StorageHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/AssetHelper.h"
 #include "xdrpp/printer.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "bucket/BucketApplicator.h"
-#include "ledger/SaleFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 
@@ -33,6 +30,12 @@ CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
     resource.reviewableRequest().details.sale().type = mCreateSaleCreationRequest.request.saleType;
+
+    if (mCreateSaleCreationRequest.allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        return true;
+    }
 
     result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
@@ -355,7 +358,7 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
 
     if (!isValidJson(saleCreationRequest.creatorDetails))
     {
-        return CreateSaleCreationRequestResultCode::INVALID_DETAILS;
+        return CreateSaleCreationRequestResultCode::INVALID_CREATOR_DETAILS;
     }
 
     return CreateSaleCreationRequestResultCode::SUCCESS;

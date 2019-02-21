@@ -45,7 +45,7 @@ SignerRuleVerifierImpl::isAllowed(const SignerRequirement &requirement,
             continue;
         }
 
-        if (signerRuleFrame->isForbid())
+        if (signerRuleFrame->forbids())
         {
             return false;
         }
@@ -124,12 +124,23 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                          actualDetails.issuance().assetType) &&
                            isStringMatches(expectedDetails.issuance().assetCode,
                                            actualDetails.issuance().assetCode);
+                case ReviewableRequestType::CREATE_WITHDRAW:
+                    return isTypeMatches(expectedDetails.withdraw().assetType,
+                                         actualDetails.withdraw().assetType) &&
+                           isStringMatches(expectedDetails.withdraw().assetCode,
+                                           actualDetails.withdraw().assetCode);
                 default:
                     return true;
             }
         }
         case LedgerEntryType::OFFER_ENTRY:
         {
+            if (!isBoolMatches(requiredResource.offer().isBuy,
+                               actualResource.offer().isBuy))
+            {
+                return false;
+            }
+
             AssetFields expectedBase{requiredResource.offer().baseAssetCode,
                                      requiredResource.offer().baseAssetType};
             AssetFields expectedQuote{requiredResource.offer().quoteAssetCode,

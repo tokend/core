@@ -29,6 +29,11 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::SIGNER, &getSignerHelper()},
         {LedgerEntryType::SIGNER_ROLE, &getSignerRoleHelper()},
         {LedgerEntryType::SIGNER_RULE, &getSignerRuleHelper()},
+        {LedgerEntryType::KEY_VALUE, &getKeyValueHelper()},
+        {LedgerEntryType::BALANCE, &getBalanceHelper()},
+        {LedgerEntryType::ASSET, &getAssetHelper()},
+        {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
+        {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, &getExternalSystemAccountIDHelper()},
     };
 }
 

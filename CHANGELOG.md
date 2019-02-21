@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+* Add change role tasks keys with `*`
+* EntryHelperLegacyImpl
+
+### Fixed
+
+* Manage account and signer role operations
+* EntryHelperProvider work with new entries
+
+### Changed
+
+* Rename paymentV2 to payment
+* Rename isForbid to forbids, in db too
+* SignerRequirements for create and review withdraw
+* Create asset request operation conditions
+* Use error code invalid creator details
+
+### Deprecated
+
+* atomic swap
+
 ## 3.0.0-x.4
 
 ### Added

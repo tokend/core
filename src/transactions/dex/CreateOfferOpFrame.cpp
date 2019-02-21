@@ -59,14 +59,9 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
     resource.offer().quoteAssetCode = quoteAsset->getCode();
     resource.offer().baseAssetType = baseAsset->getType();
     resource.offer().quoteAssetType = quoteAsset->getType();
+    resource.offer().isBuy = mManageOffer.isBuy;
 
-    AccountRuleAction action = AccountRuleAction::CREATE_TO_SELL;
-    if (mManageOffer.isBuy)
-    {
-        action = AccountRuleAction::CREATE_TO_BUY;
-    }
-
-    result.emplace_back(resource, action, mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
 }
@@ -89,14 +84,9 @@ CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     resource.offer().quoteAssetCode = quoteAsset->getCode();
     resource.offer().baseAssetType = baseAsset->getType();
     resource.offer().quoteAssetType = quoteAsset->getType();
+    resource.offer().isBuy = mManageOffer.isBuy;
 
-    SignerRuleAction action = SignerRuleAction::CREATE_TO_SELL;
-    if (mManageOffer.isBuy)
-    {
-        action = SignerRuleAction::CREATE_TO_BUY;
-    }
-
-    result.emplace_back(resource, action);
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 };

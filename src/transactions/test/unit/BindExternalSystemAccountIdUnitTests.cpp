@@ -39,10 +39,6 @@
 using namespace stellar;
 using namespace testing;
 
-static int32 externalSystemType = 5;
-static uint256 sourceAccountPublicKey = hexToBin256(
-    "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB");
-
 TEST_CASE("bind external system account_id - unit test",
           "[tx][bind_external_system_account_id_unit_test]")
 {
@@ -65,14 +61,15 @@ TEST_CASE("bind external system account_id - unit test",
         std::make_shared<MockSignatureValidator>();
 
     BindExternalSystemAccountIdOp op;
-    op.externalSystemType = externalSystemType;
+    op.externalSystemType = 5;
     Operation operation;
     operation.body = Operation::_body_t(
         stellar::OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID);
     operation.body.bindExternalSystemAccountIdOp() = op;
     operation.sourceAccount =
         xdr::pointer<AccountID>(new AccountID(CryptoKeyType::KEY_TYPE_ED25519));
-    operation.sourceAccount->ed25519() = sourceAccountPublicKey;
+    operation.sourceAccount->ed25519() = hexToBin256(
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB");
     OperationResult operationResult;
 
     AccountFrame::pointer accountFrameFake =

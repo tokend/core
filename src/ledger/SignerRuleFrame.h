@@ -50,9 +50,9 @@ public:
     }
 
     bool const
-    isForbid() const
+    forbids() const
     {
-        return mSignerRuleEntry.isForbid;
+        return mSignerRuleEntry.forbids;
     }
 
     bool const

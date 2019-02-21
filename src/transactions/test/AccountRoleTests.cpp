@@ -64,6 +64,19 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
             manageAccountRoleHelper.applyTx(master, updateRoleOp);
         }
 
+        SECTION("no such rule")
+        {
+            uint64_t nonExistingRuleID = 1408;
+
+            auto updateRoleOp = manageAccountRoleHelper.buildUpdateRoleOp(
+                    accountRoleID, R"({"data": "new_details"})", {nonExistingRuleID});
+
+            result = manageAccountRoleHelper.applyTx(master, updateRoleOp,
+                    ManageAccountRoleResultCode::NO_SUCH_RULE);
+
+            REQUIRE(result.ruleID() == nonExistingRuleID);
+        }
+
         auto removeRoleOp = manageAccountRoleHelper.buildRemoveRoleOp(accountRoleID);
         SECTION("Delete account role")
         {

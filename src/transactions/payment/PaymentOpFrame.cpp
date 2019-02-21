@@ -1,4 +1,4 @@
-#include "PaymentOpV2Frame.h"
+#include "PaymentOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
@@ -18,14 +18,14 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-PaymentOpV2Frame::PaymentOpV2Frame(const stellar::Operation &op, OperationResult &res,
-                                   TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx), mPayment(mOperation.body.paymentOpV2())
+PaymentOpFrame::PaymentOpFrame(const stellar::Operation &op, OperationResult &res,
+                               TransactionFrame &parentTx)
+        : OperationFrame(op, res, parentTx), mPayment(mOperation.body.paymentOp())
 {
 }
 
 bool
-PaymentOpV2Frame::tryGetOperationConditions(StorageHelper& storageHelper,
+PaymentOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                     std::vector<OperationCondition>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
@@ -57,7 +57,7 @@ PaymentOpV2Frame::tryGetOperationConditions(StorageHelper& storageHelper,
 }
 
 bool
-PaymentOpV2Frame::tryGetSignerRequirements(StorageHelper &storageHelper,
+PaymentOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                     std::vector<SignerRequirement> &result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
@@ -76,7 +76,7 @@ PaymentOpV2Frame::tryGetSignerRequirements(StorageHelper &storageHelper,
 }
 
 AccountFrame::pointer
-PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
+PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
 {
     AccountID accountID;
     switch (mPayment.destination.type())
@@ -114,7 +114,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
     return account;
 }
 
-    bool PaymentOpV2Frame::processTransfer(AccountManager &accountManager, AccountFrame::pointer payer,
+    bool PaymentOpFrame::processTransfer(AccountManager &accountManager, AccountFrame::pointer payer,
                                            BalanceFrame::pointer from, BalanceFrame::pointer to, uint64_t amount,
                                            uint64_t &universalAmount, Database &db) {
         auto transferResult = accountManager.processTransferV2(payer, from, to, amount);
@@ -124,14 +124,14 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         }
 
         if (!safeSum(universalAmount, transferResult.universalAmount, universalAmount)) {
-            innerResult().code(PaymentV2ResultCode::STATS_OVERFLOW);
+            innerResult().code(PaymentResultCode::STATS_OVERFLOW);
             return false;
         }
 
         return true;
     }
 
-    bool PaymentOpV2Frame::processTransferFee(AccountManager &accountManager, AccountFrame::pointer payer,
+    bool PaymentOpFrame::processTransferFee(AccountManager &accountManager, AccountFrame::pointer payer,
                                               BalanceFrame::pointer chargeFrom, Fee expectedFee,
                                               Fee actualFee, AccountID const &commissionID,
                                               Database &db, LedgerDelta &delta, bool ignoreStats,
@@ -141,7 +141,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         }
 
         if (expectedFee.fixed < actualFee.fixed || expectedFee.percent < actualFee.percent) {
-            innerResult().code(PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT);
+            innerResult().code(PaymentResultCode::INSUFFICIENT_FEE_AMOUNT);
             return false;
         }
 
@@ -163,26 +163,26 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         return processTransfer(accountManager, payer, chargeFrom, commissionBalance, totalFee, universalAmount, db);
     }
 
-    void PaymentOpV2Frame::setErrorCode(AccountManager::Result transferResult) {
+    void PaymentOpFrame::setErrorCode(AccountManager::Result transferResult) {
         switch (transferResult) {
             case AccountManager::Result::UNDERFUNDED: {
-                innerResult().code(PaymentV2ResultCode::UNDERFUNDED);
+                innerResult().code(PaymentResultCode::UNDERFUNDED);
                 return;
             }
             case AccountManager::Result::STATS_OVERFLOW: {
-                innerResult().code(PaymentV2ResultCode::STATS_OVERFLOW);
+                innerResult().code(PaymentResultCode::STATS_OVERFLOW);
                 return;
             }
             case AccountManager::Result::LIMITS_EXCEEDED: {
-                innerResult().code(PaymentV2ResultCode::LIMITS_EXCEEDED);
+                innerResult().code(PaymentResultCode::LIMITS_EXCEEDED);
                 return;
             }
             case AccountManager::Result::LINE_FULL: {
-                innerResult().code(PaymentV2ResultCode::LINE_FULL);
+                innerResult().code(PaymentResultCode::LINE_FULL);
                 return;
             }
             case AccountManager::Result::INCORRECT_PRECISION: {
-                innerResult().code(PaymentV2ResultCode::INCORRECT_AMOUNT_PRECISION);
+                innerResult().code(PaymentResultCode::INCORRECT_AMOUNT_PRECISION);
                 return;
             }
             default: {
@@ -194,7 +194,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
     }
 
     BalanceFrame::pointer
-    PaymentOpV2Frame::tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper)
+    PaymentOpFrame::tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper)
     {
         switch (mPayment.destination.type())
         {
@@ -202,12 +202,12 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             {
                 auto dest = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
                 if (!dest) {
-                    innerResult().code(PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND);
+                    innerResult().code(PaymentResultCode::DESTINATION_BALANCE_NOT_FOUND);
                     return nullptr;
                 }
 
                 if (dest->getAsset() != asset) {
-                    innerResult().code(PaymentV2ResultCode::BALANCE_ASSETS_MISMATCHED);
+                    innerResult().code(PaymentResultCode::BALANCE_ASSETS_MISMATCHED);
                     return nullptr;
                 }
 
@@ -215,7 +215,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             }
             case PaymentDestinationType::ACCOUNT: {
                 if (!storageHelper.getAccountHelper().exists(mPayment.destination.accountID())) {
-                    innerResult().code(PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
+                    innerResult().code(PaymentResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
                     return nullptr;
                 }
 
@@ -236,17 +236,17 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         }
     }
 
-    bool PaymentOpV2Frame::isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db) {
+    bool PaymentOpFrame::isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db) {
         if (from->getAsset() != to->getAsset())
         {
-            innerResult().code(PaymentV2ResultCode::BALANCE_ASSETS_MISMATCHED);
+            innerResult().code(PaymentResultCode::BALANCE_ASSETS_MISMATCHED);
             return false;
         }
 
         // is transfer allowed by asset policy
         auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(from->getAsset(), db);
         if (!asset->isPolicySet(AssetPolicy::TRANSFERABLE)) {
-            innerResult().code(PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
+            innerResult().code(PaymentResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
             return false;
         }
 
@@ -254,7 +254,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
     }
 
     Fee
-    PaymentOpV2Frame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
+    PaymentOpFrame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
                                    PaymentFeeType feeType, Database &db, LedgerManager& lm) {
         Fee actualFee;
         actualFee.percent = 0;
@@ -279,13 +279,13 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
     }
 
     bool
-    PaymentOpV2Frame::isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID)
+    PaymentOpFrame::isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID)
     {
         return sourceBalanceID == destBalanceID;
     }
 
     bool
-    PaymentOpV2Frame::doApply(Application& app, StorageHelper& storageHelper,
+    PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                             LedgerManager& ledgerManager)
     {
         Database& db = storageHelper.getDatabase();
@@ -294,7 +294,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             getSourceID(), mPayment.sourceBalanceID, db, &delta);
         if (!sourceBalance)
         {
-            innerResult().code(PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND);
+            innerResult().code(PaymentResultCode::SRC_BALANCE_NOT_FOUND);
             return false;
         }
 
@@ -307,7 +307,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
 
         if (isSendToSelf(ledgerManager, mPayment.sourceBalanceID, destBalanceID))
         {
-            innerResult().code(PaymentV2ResultCode::MALFORMED);
+            innerResult().code(PaymentResultCode::MALFORMED);
             return false;
         }
 
@@ -360,29 +360,29 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             AccountID sourceAccountID = mSourceAccount->getID();
 
             if (ReferenceHelper::Instance()->exists(db, mPayment.reference, sourceAccountID)) {
-                innerResult().code(PaymentV2ResultCode::REFERENCE_DUPLICATION);
+                innerResult().code(PaymentResultCode::REFERENCE_DUPLICATION);
                 return false;
             }
         createReferenceEntry(mPayment.reference, sourceAccountID, storageHelper);
         }
 
-        innerResult().code(PaymentV2ResultCode::SUCCESS);
-        innerResult().paymentV2Response().destination = destAccount->getID();
-        innerResult().paymentV2Response().destinationBalanceID = destBalance->getBalanceID();
-        innerResult().paymentV2Response().asset = destBalance->getAsset();
-        innerResult().paymentV2Response().sourceSentUniversal = sourceSentUniversal;
-        innerResult().paymentV2Response().paymentID = paymentID;
-        innerResult().paymentV2Response().actualSourcePaymentFee = sourceFee;
-        innerResult().paymentV2Response().actualDestinationPaymentFee = destFee;
+        innerResult().code(PaymentResultCode::SUCCESS);
+        innerResult().paymentResponse().destination = destAccount->getID();
+        innerResult().paymentResponse().destinationBalanceID = destBalance->getBalanceID();
+        innerResult().paymentResponse().asset = destBalance->getAsset();
+        innerResult().paymentResponse().sourceSentUniversal = sourceSentUniversal;
+        innerResult().paymentResponse().paymentID = paymentID;
+        innerResult().paymentResponse().actualSourcePaymentFee = sourceFee;
+        innerResult().paymentResponse().actualDestinationPaymentFee = destFee;
 
         return true;
     }
 
-    bool PaymentOpV2Frame::isDestinationFeeValid() {
+    bool PaymentOpFrame::isDestinationFeeValid() {
         uint64_t totalDestinationFee;
         if (!safeSum(mPayment.feeData.destinationFee.fixed, mPayment.feeData.destinationFee.percent,
                      totalDestinationFee)) {
-            innerResult().code(PaymentV2ResultCode::INVALID_DESTINATION_FEE);
+            innerResult().code(PaymentResultCode::INVALID_DESTINATION_FEE);
             return false;
         }
 
@@ -390,16 +390,16 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             return true;
 
         if (mPayment.amount < totalDestinationFee) {
-            innerResult().code(PaymentV2ResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE);
+            innerResult().code(PaymentResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE);
             return false;
         }
 
         return true;
     }
 
-    bool PaymentOpV2Frame::doCheckValid(Application &app) {
+    bool PaymentOpFrame::doCheckValid(Application &app) {
         if (mPayment.reference.length() > 64) {
-            innerResult().code(PaymentV2ResultCode::MALFORMED);
+            innerResult().code(PaymentResultCode::MALFORMED);
             return false;
         }
 
@@ -412,7 +412,7 @@ PaymentOpV2Frame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
         }
 
         if (mPayment.sourceBalanceID == mPayment.destination.balanceID()) {
-            innerResult().code(PaymentV2ResultCode::MALFORMED);
+            innerResult().code(PaymentResultCode::MALFORMED);
             return false;
         }
 

@@ -43,7 +43,7 @@ ManageSaleTestHelper::createDataForAction(ManageSaleAction action,
         }
         data.action(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST);
         data.updateSaleDetailsData().requestID = *requestID;
-        data.updateSaleDetailsData().newDetails = *newDetails;
+        data.updateSaleDetailsData().creatorDetails = *newDetails;
         if (allTasks)
         {
             data.updateSaleDetailsData().allTasks.activate() = *allTasks;
@@ -145,21 +145,17 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 
             REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
                     saleID);
-            REQUIRE(
-                    requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails ==
-                    data.updateSaleDetailsData().newDetails);
+            REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails ==
+                    data.updateSaleDetailsData().creatorDetails);
 
             if (!!requestBeforeTx)
             {
                 auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
 
-                REQUIRE(
-                        requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
+                REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
                         requestAfterTxEntry.body.updateSaleDetailsRequest().saleID);
 
-                REQUIRE(
-                        requestBeforeTxEntry.body.updateSaleDetailsRequest()
-                                .creatorDetails !=
+                REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().creatorDetails !=
                         requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails);
             }
         }

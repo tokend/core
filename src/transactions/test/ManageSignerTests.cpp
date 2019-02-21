@@ -125,14 +125,14 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             SECTION("create")
             {
                 auto op = manageSignerTestHelper.buildCreateOp(
-                        master.key.getPublicKey(), 1, 0, ownerSignerRoleID);
+                        SecretKey::random().getPublicKey(), 1, 0, ownerSignerRoleID);
                 manageSignerTestHelper.applyTx(master, op,
                                                ManageSignerResultCode::SUCCESS,
                                                OperationResultCode::opBAD_AUTH,
                                                TransactionResultCode::txFAILED, &signer);
             }
 
-            SECTION("update")
+            SECTION("update owner")
             {
                 auto op = manageSignerTestHelper.buildUpdateOp(
                         master.key.getPublicKey(), 1, 0, roleID);
@@ -140,6 +140,17 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
                                                ManageSignerResultCode::SUCCESS,
                                                OperationResultCode::opBAD_AUTH,
                                                TransactionResultCode::txFAILED, &signer);
+            }
+
+            SECTION("change own role to owner roleID")
+            {
+                auto op = manageSignerTestHelper.buildUpdateOp(
+                        signer.key.getPublicKey(), 1, 0, ownerSignerRoleID);
+                manageSignerTestHelper.applyTx(master, op,
+                                               ManageSignerResultCode::SUCCESS,
+                                               OperationResultCode::opBAD_AUTH,
+                                               TransactionResultCode::txFAILED,
+                                               &signer);
             }
 
             SECTION("remove")
@@ -185,5 +196,43 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
                                                     .addBasicSigner()
                                                     .addSignerData(signerData));
         }
+    }
+
+    SECTION("Create owner")
+    {
+        // create signer
+        auto signerKey = SecretKey::random();
+        auto signer = Account{signerKey, Salt(4)};
+        auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                signerKey.getPublicKey(), SignerRuleFrame::threshold, 200, 1);
+        manageSignerTestHelper.applyTx(master, createSignerOp);
+
+        SECTION("Remove previous owner") {
+            auto op = manageSignerTestHelper.buildRemoveOp(
+                    master.key.getPublicKey());
+            manageSignerTestHelper.applyTx(master, op,
+                                           ManageSignerResultCode::SUCCESS,
+                                           OperationResultCode::opINNER,
+                                           TransactionResultCode::txSUCCESS,
+                                           &signer);
+        }
+    }
+
+    SECTION("Create owner and Remove previous owner in one tx")
+    {
+        // create signer
+        auto signerKey = SecretKey::random();
+        auto signer = Account{signerKey, Salt(4)};
+        auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                signerKey.getPublicKey(), SignerRuleFrame::threshold, 200, ownerSignerRoleID);
+
+
+        auto op = manageSignerTestHelper.buildRemoveOp(
+                master.key.getPublicKey());
+        std::vector<ManageSignerOp> ops = {createSignerOp, op};
+        manageSignerTestHelper.applyTx(master, ops,
+                                       ManageSignerResultCode::SUCCESS,
+                                       OperationResultCode::opINNER,
+                                       TransactionResultCode::txSUCCESS);
     }
 }

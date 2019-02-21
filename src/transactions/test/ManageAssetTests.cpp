@@ -197,7 +197,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             const auto request = manageAssetHelper.createAssetCreationRequest(assetCode, root.key.getPublicKey(),
                                                                               invalidDetails, 100, 0);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
-                                                 ManageAssetResultCode::INVALID_DETAILS);
+                                                 ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         }
         /*SECTION("Try to review manage asset request from blocked syndicate")
         {
@@ -263,7 +263,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             const std::string invalidDetails = "{\"key\"}";
             const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, invalidDetails, 0);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
-                                                 ManageAssetResultCode::INVALID_DETAILS);
+                                                 ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         }
     }
     SECTION("create base asset")

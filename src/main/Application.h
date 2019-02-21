@@ -266,6 +266,7 @@ class Application
     virtual uint64 getMaxInvoiceDetailLength() const = 0;
     virtual int64 getMaxInvoicesForReceiverAccount() const = 0;
     virtual int32 getKYCSuperAdminMask() const = 0;
+    virtual size_t getSignerRuleIDsMaxCount() const = 0;
 
     // Returns false if policies should not be checked,
     // for sake of testing or otherwise.

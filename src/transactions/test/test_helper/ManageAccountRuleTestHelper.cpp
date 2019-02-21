@@ -33,18 +33,18 @@ ManageAccountRuleTestHelper::createManageAccountRuleTx(
     case ManageAccountRuleAction::CREATE:
         manageAccountRolePermissionOp.data.createData().resource = permissionEntry.resource;
         manageAccountRolePermissionOp.data.createData().action = permissionEntry.action;
-        manageAccountRolePermissionOp.data.createData().isForbid = permissionEntry.isForbid;
+        manageAccountRolePermissionOp.data.createData().forbids = permissionEntry.forbids;
         manageAccountRolePermissionOp.data.createData().details = permissionEntry.details;
         break;
     case ManageAccountRuleAction::UPDATE:
-        manageAccountRolePermissionOp.data.updateData().accountRuleID = permissionEntry.id;
+        manageAccountRolePermissionOp.data.updateData().ruleID = permissionEntry.id;
         manageAccountRolePermissionOp.data.updateData().resource = permissionEntry.resource;
         manageAccountRolePermissionOp.data.updateData().action = permissionEntry.action;
-        manageAccountRolePermissionOp.data.updateData().isForbid = permissionEntry.isForbid;
+        manageAccountRolePermissionOp.data.updateData().forbids = permissionEntry.forbids;
         manageAccountRolePermissionOp.data.updateData().details = permissionEntry.details;
         break;
     case ManageAccountRuleAction::REMOVE:
-        manageAccountRolePermissionOp.data.removeData().accountRuleID = permissionEntry.id;
+        manageAccountRolePermissionOp.data.removeData().ruleID = permissionEntry.id;
         break;
     default:
         throw std::runtime_error("Unknown action");
@@ -126,7 +126,7 @@ ManageAccountRuleTestHelper::createAccountRuleEntry(
     ruleEntry.id = id;
     ruleEntry.resource = resource;
     ruleEntry.action = action;
-    ruleEntry.isForbid = isForbid;
+    ruleEntry.forbids = isForbid;
     ruleEntry.details = "{\"data\": \"some_details\"}";
 
     return ruleEntry;

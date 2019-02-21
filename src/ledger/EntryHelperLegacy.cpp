@@ -36,54 +36,15 @@
 #include "PendingStatisticsHelper.h"
 #include "ContractHelper.h"
 #include "AccountRuleHelperImpl.h"
+#include "EntryHelperLegacyImpl.h"
 
 namespace stellar
 {
 	using xdr::operator==;
 
-    static std::shared_ptr<EntryHelper> createHelper(LedgerEntryType entryType, StorageHelper& storageHelper)
-    {
-        switch (entryType)
-        {
-            case LedgerEntryType::ACCOUNT_ROLE:
-                return std::make_shared<AccountRoleHelperImpl>(storageHelper);
-            case LedgerEntryType::ACCOUNT_RULE:
-                return std::make_shared<AccountRuleHelperImpl>(storageHelper);
-            default:
-                return nullptr;
-        }
-    }
-
     LedgerKey LedgerEntryKey(LedgerEntry const &e)
     {
-        // TODO: move this to helpers somehow
-        if (e.data.type() == LedgerEntryType::ACCOUNT_ROLE || e.data.type() == LedgerEntryType::ACCOUNT_RULE)
-        {
-            LedgerKey key;
-            key.type(e.data.type());
-            switch (e.data.type())
-            {
-                case LedgerEntryType::ACCOUNT_ROLE:
-                {
-                    key.accountRole().id = e.data.accountRole().id;
-                    break;
-                }
-                case LedgerEntryType::ACCOUNT_RULE:
-                {
-                    auto& sourceData = e.data.accountRule();
-                    key.accountRule().id = sourceData.id;
-                    break;
-                }
-                default:
-                    throw std::runtime_error("Unknown key type");
-            }
-            return key;
-        }
-        EntryHelperLegacy* helper = EntryHelperProvider::getHelper(e.data.type());
-        if (helper == nullptr)
-        {
-            throw std::runtime_error("There's no legacy helper for this entry.");
-        }
+		EntryHelperLegacy* helper = EntryHelperProvider::getHelper(e.data.type());
 		return helper->getLedgerKey(e);
 	}
 
@@ -113,29 +74,20 @@ namespace stellar
 		db.getEntryCache().put(s, p);
 	}
 
+	uint64_t
+    EntryHelperLegacy::countObjects(Database &db)
+    {
+        return countObjects(db.getSession());
+    }
+
     void
     EntryHelperProvider::checkAgainstDatabase(LedgerEntry const& entry, Database& db)
     {
-		StorageHelperImpl storageHelperImpl(db, nullptr);
-		StorageHelper& storageHelper = storageHelperImpl;
+		LedgerKey key = LedgerEntryKey(entry);
+		auto legacyHelper = getHelper(entry.data.type()); // helper existing handled above
+		legacyHelper->flushCachedEntry(key, db);
+		EntryFrame::pointer fromDb = legacyHelper->storeLoad(key, db);
 
-		LedgerKey key;
-		EntryFrame::pointer fromDb;
-
-		auto helper = storageHelper.getHelper(entry.data.type());
-		if (helper != nullptr)
-		{
-			key = helper->getLedgerKey(entry);
-			helper->flushCachedEntry(key);
-			fromDb = helper->storeLoad(key);
-		}
-        else
-        {
-			key = LedgerEntryKey(entry);
-			auto legacyHelper = getHelper(entry.data.type()); // helper existing handled above
-			legacyHelper->flushCachedEntry(key, db);
-            fromDb = legacyHelper->storeLoad(key, db);
-        }
         if (!fromDb || !(fromDb->mEntry == entry))
         {
             std::string s;
@@ -177,7 +129,7 @@ namespace stellar
 	void
 	EntryHelperProvider::storeDeleteEntry(LedgerDelta& delta, Database& db, LedgerKey const& key)
 	{
-		EntryHelperLegacy* helper = getHelper(key.type());
+		EntryHelperLegacy *helper = getHelper(key.type());
 		helper->storeDelete(delta, db, key);
 	}
 
@@ -185,19 +137,7 @@ namespace stellar
 	EntryHelperProvider::existsEntry(Database& db, LedgerKey const& key)
 	{
 		EntryHelperLegacy* helper = getHelper(key.type());
-		if (helper)
-        {
-            return helper->exists(db, key);
-        }
-        StorageHelperImpl storageHelper(db, nullptr);
-		static_cast<StorageHelper&>(storageHelper).begin();
-        auto createdHelper = createHelper(key.type(), storageHelper);
-        if (!createdHelper)
-        {
-            throw std::runtime_error("There's no legacy helper for this entry, "
-                                     "and no helper can be created.");
-        }
-        return createdHelper->exists(key);
+		return helper->exists(db, key);
     }
 
 	EntryFrame::pointer
@@ -207,18 +147,11 @@ namespace stellar
 		return helper->storeLoad(key, db);
 	}
 
-	EntryFrame::pointer
-	EntryHelperProvider::fromXDREntry(LedgerEntry const& from)
-	{
-		EntryHelperLegacy* helper = getHelper(from.data.type());
-		return helper->fromXDR(from);
-	}
-
 	uint64_t
-	EntryHelperProvider::countObjectsEntry(soci::session& sess, LedgerEntryType const& type)
+	EntryHelperProvider::countObjectsEntry(Database& db, LedgerEntryType const& type)
 	{
 		EntryHelperLegacy* helper = getHelper(type);
-		return helper->countObjects(sess);
+		return helper->countObjects(db);
 	}
 
 	void EntryHelperProvider::dropAll(Database& db)
@@ -248,6 +181,11 @@ namespace stellar
 		{ LedgerEntryType::STATISTICS_V2, StatisticsV2Helper::Instance() },
 		{ LedgerEntryType::PENDING_STATISTICS, PendingStatisticsHelper::Instance() },
 		{ LedgerEntryType::CONTRACT, ContractHelper::Instance() },
-		{ LedgerEntryType::ATOMIC_SWAP_BID, AtomicSwapBidHelper::Instance() }
+		{ LedgerEntryType::ATOMIC_SWAP_BID, AtomicSwapBidHelper::Instance() },
+        { LedgerEntryType::SIGNER, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER) },
+        { LedgerEntryType::ACCOUNT_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_RULE) },
+        { LedgerEntryType::ACCOUNT_ROLE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_ROLE) },
+        { LedgerEntryType::SIGNER_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_RULE) },
+        { LedgerEntryType::SIGNER_ROLE, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_ROLE) }
 	};
 }

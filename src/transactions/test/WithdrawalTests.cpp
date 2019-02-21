@@ -243,7 +243,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             std::string longExternalDetails(maxLength + 1, 'x');
             withdrawRequest.creatorDetails = longExternalDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
+                                                             CreateWithdrawalRequestResultCode::INVALID_CREATOR_DETAILS);
         }
 
         SECTION("invalid external details json")
@@ -252,7 +252,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             std::string invalidExternalDetails = "{ \"key\" \"value\" }";
             withdrawRequest.creatorDetails = invalidExternalDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
+                                                             CreateWithdrawalRequestResultCode::INVALID_CREATOR_DETAILS);
         }
 
         SECTION("try to review with invalid external details")

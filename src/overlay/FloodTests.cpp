@@ -66,7 +66,6 @@ TEST_CASE("Flooding", "[flood][overlay]")
                 sources.emplace_back(SecretKey::random());
                 sourcesPub.emplace_back(sources.back().getPublicKey());
                 account.accountID = sourcesPub.back();
-                auto newAccount = EntryHelperProvider::fromXDREntry(gen);
 
                 // need to create on all nodes
                 for (auto n : nodes)
@@ -74,7 +73,7 @@ TEST_CASE("Flooding", "[flood][overlay]")
                     LedgerHeader lh;
                     Database& db = n->getDatabase();
                     LedgerDeltaImpl delta(lh, db, false);
-					EntryHelperProvider::storeAddEntry(delta, db, newAccount->mEntry);
+					EntryHelperProvider::storeAddEntry(delta, db, gen);
                 }
             }
         }
