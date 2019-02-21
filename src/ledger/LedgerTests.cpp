@@ -28,15 +28,14 @@ TEST_CASE("Ledger entry db lifecycle", "[ledger]")
     auto& db = app->getDatabase();
     for (size_t i = 0; i < 1000; ++i)
     {
-        auto le =
-            EntryHelperProvider::fromXDREntry(LedgerTestUtils::generateValidLedgerEntry(3));
-        CHECK(!EntryHelperProvider::existsEntry(db, le->getKey()));
-		EntryHelperProvider::storeAddOrChangeEntry(delta, db, le->mEntry);
-        CHECK(EntryHelperProvider::existsEntry(db, le->getKey()));
-		CHECK(EntryHelperProvider::storeLoadEntry(le->getKey(), db));
-		EntryHelperProvider::storeDeleteEntry(delta, db, le->getKey());
-        CHECK(!EntryHelperProvider::existsEntry(db, le->getKey()));
-		CHECK(!EntryHelperProvider::storeLoadEntry(le->getKey(), db));
+        auto le = LedgerTestUtils::generateValidLedgerEntry(3);
+        CHECK(!EntryHelperProvider::existsEntry(db, LedgerEntryKey(le)));
+		EntryHelperProvider::storeAddOrChangeEntry(delta, db, le);
+        CHECK(EntryHelperProvider::existsEntry(db, LedgerEntryKey(le)));
+		CHECK(EntryHelperProvider::storeLoadEntry(LedgerEntryKey(le), db));
+		EntryHelperProvider::storeDeleteEntry(delta, db, LedgerEntryKey(le));
+        CHECK(!EntryHelperProvider::existsEntry(db, LedgerEntryKey(le)));
+		CHECK(!EntryHelperProvider::storeLoadEntry(LedgerEntryKey(le), db));
     }
 }
 
@@ -56,9 +55,9 @@ TEST_CASE("single ledger entry insert SQL", "[singlesql][entrysql]")
     LedgerDeltaImpl delta(app->getLedgerManager().getCurrentLedgerHeader(),
                           app->getDatabase());
     auto& db = app->getDatabase();
-    auto le = EntryHelperProvider::fromXDREntry(LedgerTestUtils::generateValidLedgerEntry(3));
+    auto le = LedgerTestUtils::generateValidLedgerEntry(3);
     auto ctx = db.captureAndLogSQL("ledger-insert");
-	EntryHelperProvider::storeAddOrChangeEntry(delta, db, le->mEntry);
+	EntryHelperProvider::storeAddOrChangeEntry(delta, db, le);
 }
 
 TEST_CASE("DB cache interaction with transactions", "[ledger][dbcache]")
@@ -77,19 +76,19 @@ TEST_CASE("DB cache interaction with transactions", "[ledger][dbcache]")
     auto& db = app->getDatabase();
     auto& session = db.getSession();
 
-    EntryFrame::pointer le;
+    LedgerEntry le;
     do
     {
-        le = EntryHelperProvider::fromXDREntry(LedgerTestUtils::generateValidLedgerEntry(3));
-    } while (le->mEntry.data.type() != LedgerEntryType::ACCOUNT);
+        le = LedgerTestUtils::generateValidLedgerEntry(3);
+    } while (le.data.type() != LedgerEntryType::ACCOUNT);
 
-    auto key = le->getKey();
+    auto key = LedgerEntryKey(le);
 
     {
         LedgerDeltaImpl delta(app->getLedgerManager().getCurrentLedgerHeader(),
                               app->getDatabase());
         soci::transaction sqltx(session);
-        EntryHelperProvider::storeAddOrChangeEntry(delta, db, le->mEntry);
+        EntryHelperProvider::storeAddOrChangeEntry(delta, db, le);
         sqltx.commit();
     }
 

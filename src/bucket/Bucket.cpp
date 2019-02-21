@@ -530,10 +530,9 @@ checkDBAgainstBuckets(medida::MetricsRegistry& metrics,
 	}
 
     // Step 4: confirm size of datasets matches size of datasets in DB.
-    soci::session& sess = db.getSession();
 	for (auto& counter : counters)
 	{
-		compareSizes(xdr::xdr_traits<LedgerEntryType>::enum_name(counter.first), EntryHelperProvider::countObjectsEntry(sess, counter.first), counter.second);
+		compareSizes(xdr::xdr_traits<LedgerEntryType>::enum_name(counter.first), EntryHelperProvider::countObjectsEntry(db, counter.first), counter.second);
 	}
 }
 }

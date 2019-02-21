@@ -5,6 +5,7 @@
 ### Added
 
 * Add change role tasks keys with `*`
+* EntryHelperLegacyImpl
 
 ### Fixed
 

@@ -153,8 +153,7 @@ ManageSignerTestHelper::applyTx(Account &source, std::vector<ManageSignerOp> ops
                                 ManageSignerResultCode expectedResultCode,
                                 OperationResultCode expectedOpCode,
                                 TransactionResultCode expectedTxResult,
-                                Account* signer)
-{
+                                Account* signer) {
     auto txFrame = buildTx(source, ops, signer);
 
     mTestManager->applyCheck(txFrame);
@@ -162,20 +161,23 @@ ManageSignerTestHelper::applyTx(Account &source, std::vector<ManageSignerOp> ops
 
     REQUIRE(txResult.result.code() == expectedTxResult);
 
-    auto opResult = txResult.result.results()[0];
+    auto opResults = txResult.result.results();
 
-    REQUIRE(opResult.code() == expectedOpCode);
-    if (opResult.code() != OperationResultCode::opINNER) {
-        return ManageSignerResult();
+    for (auto const& opResult : opResults)
+    {
+        REQUIRE(opResult.code() == expectedOpCode);
+        if (opResult.code() != OperationResultCode::opINNER) {
+            return ManageSignerResult();
+        }
+        auto actualResultCode = ManageSignerOpFrame::getInnerCode(opResult);
+        REQUIRE(actualResultCode == expectedResultCode);
+
+        if (expectedResultCode != ManageSignerResultCode::SUCCESS) {
+            return ManageSignerResult{};
+        }
     }
-    auto actualResultCode = ManageSignerOpFrame::getInnerCode(opResult);
-    REQUIRE(actualResultCode == expectedResultCode);
 
-    if (expectedResultCode != ManageSignerResultCode::SUCCESS) {
-        return ManageSignerResult{};
-    }
-
-    return opResult.tr().manageSignerResult();
+    return ManageSignerResult{};
 }
 
 void
