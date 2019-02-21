@@ -43,7 +43,7 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
         testHelper.setResult(ManageKeyValueResultCode::INVALID_TYPE);
         auto kvFrame = keyValueHelper->loadKeyValue(key,testManager->getDB());
         REQUIRE(!kvFrame);
-        longstring localKey = ManageKeyValueOpFrame::makeChangeRoleKey(3, 5);
+        longstring localKey = ManageKeyValueOpFrame::makeChangeRoleKey(std::to_string(3), std::to_string(5));
         testHelper.setKey(localKey);
         testHelper.setValue("smth");
         testHelper.doApply(app, ManageKVAction::PUT, false, KeyValueEntryType::STRING);

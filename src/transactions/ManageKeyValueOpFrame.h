@@ -55,7 +55,7 @@ public:
     }
 
     static longstring
-    makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet);
+    makeChangeRoleKey(std::string currentRoleID, std::string roleIDToSet);
 
     static longstring makeLimitsUpdateTasksKey();
 

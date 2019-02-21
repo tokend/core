@@ -126,9 +126,9 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     }
 
     longstring
-    ManageKeyValueOpFrame::makeChangeRoleKey(uint64_t currentRoleID, uint64_t roleIDToSet)
+    ManageKeyValueOpFrame::makeChangeRoleKey(string currentRoleID, string roleIDToSet)
     {
-        return string(changeRoleTasks) + ":" + to_string(currentRoleID) + ":" + to_string(roleIDToSet);
+        return string(changeRoleTasks) + ":" + currentRoleID + ":" + roleIDToSet;
     }
 
     longstring

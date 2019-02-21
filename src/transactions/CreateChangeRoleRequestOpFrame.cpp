@@ -1,6 +1,9 @@
 #include "CreateChangeRoleRequestOpFrame.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include "ledger/AccountHelperLegacy.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include <crypto/SHA.h>
 #include "xdrpp/printer.h"
@@ -102,7 +105,7 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(Database &db, LedgerDelt
     auto &requestEntry = request->getRequestEntry();
     if (!ensureDestinationNotChanged(requestEntry))
     {
-        innerResult().code(CreateChangeRoleRequestResultCode::INVALID_UPDATE_KYC_REQUEST_DATA);
+        innerResult().code(CreateChangeRoleRequestResultCode::INVALID_CHANGE_ROLE_REQUEST_DATA);
         return false;
     }
 
@@ -150,10 +153,12 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, Le
         return false;
     }
 
+    StorageHelperImpl storageHelper(db, &delta);
+
     uint32 defaultMask;
-    if(!getChangeRoleTasks(db, ledgerManager, accountFrame, defaultMask))
+    if(!loadTasks(storageHelper, defaultMask, mCreateChangeRoleRequestOp.allTasks))
     {
-        innerResult().code(CreateChangeRoleRequestResultCode::KYC_RULE_NOT_FOUND);
+        innerResult().code(CreateChangeRoleRequestResultCode::CHANGE_ROLE_TASKS_NOT_FOUND);
         return false;
     }
 
@@ -222,35 +227,27 @@ CreateChangeRoleRequestOpFrame::createRequest(ReviewableRequestEntry &requestEnt
     changeRoleRequest.creatorDetails = mCreateChangeRoleRequestOp.creatorDetails;
     changeRoleRequest.sequenceNumber = 0;
 
-    requestEntry.tasks.allTasks = mCreateChangeRoleRequestOp.allTasks.get()
-            ? mCreateChangeRoleRequestOp.allTasks.activate()
-            : defaultMask;
-
+    requestEntry.tasks.allTasks = defaultMask;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
 }
 
-bool
-CreateChangeRoleRequestOpFrame::getChangeRoleTasks(Database &db, LedgerManager &ledgerManager,
-                                                   AccountFrame::pointer account, uint32 &defaultMask)
+std::vector<longstring>
+CreateChangeRoleRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
 {
-    auto key = ManageKeyValueOpFrame::makeChangeRoleKey(
-            account->getAccountRole(), mCreateChangeRoleRequestOp.accountRoleToSet);
+    auto account = storageHelper.getAccountHelper().mustLoadAccount(
+            mCreateChangeRoleRequestOp.destinationAccount);
 
-    auto kvEntry = KeyValueHelperLegacy::Instance()->loadKeyValue(key,db);
-
-    if (!kvEntry)
+    return std::vector<longstring>
     {
-        return false;
-    }
-
-    if (kvEntry.get()->getKeyValue().value.type() != KeyValueEntryType::UINT32){
-        throw std::runtime_error("Unexpected database state, expected kyc rule to be UINT32");
-    }
-
-    defaultMask = kvEntry.get()->getKeyValue().value.ui32Value();
-
-    return true;
-}
+        ManageKeyValueOpFrame::makeChangeRoleKey(to_string(account->getAccountRole()),
+                                                 to_string(mCreateChangeRoleRequestOp.accountRoleToSet)),
+        ManageKeyValueOpFrame::makeChangeRoleKey("*",
+                                                 to_string(mCreateChangeRoleRequestOp.accountRoleToSet)),
+        ManageKeyValueOpFrame::makeChangeRoleKey(to_string(account->getAccountRole()),
+                                                 "*"),
+        ManageKeyValueOpFrame::makeChangeRoleKey("*", "*"),
+    };
+};
 
 void
 CreateChangeRoleRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)

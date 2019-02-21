@@ -120,7 +120,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
         REQUIRE(requestAfterTxEntry.tasks.allTasks == *allTasks);
     } else {
         auto key = ManageKeyValueOpFrame::makeChangeRoleKey(
-                accountBefore->getAccountRole(), roleIDToSet);
+                std::to_string(accountBefore->getAccountRole()), std::to_string(roleIDToSet));
         auto kvEntry = KeyValueHelperLegacy::Instance()->loadKeyValue(key,db);
         REQUIRE(kvEntry);
 
