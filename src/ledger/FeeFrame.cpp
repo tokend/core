@@ -106,14 +106,14 @@ FeeFrame::calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, uint6
     buffAsStdStr = buff;
     data += buffAsStdStr;
 
-    if (accountID) {
+    if (accountID != nullptr) {
         std::string actIDStrKey = PubKeyUtils::toStrKey(*accountID);
         snprintf(buff, sizeof(buff), "accountID:%s", actIDStrKey.c_str());
         buffAsStdStr = buff;
         data += buffAsStdStr;
     }
-    if (accountRole) {
-        snprintf(buff, sizeof(buff), "accountRole:%i", static_cast<int32_t>(*accountRole));
+    if (accountRole != nullptr) {
+        snprintf(buff, sizeof(buff), "accountRole:%lu", *accountRole);
         buffAsStdStr = buff;
         data += buffAsStdStr;
     }
