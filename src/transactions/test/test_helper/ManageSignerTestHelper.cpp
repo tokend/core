@@ -68,6 +68,24 @@ ManageSignerTestHelper::buildTx(Account &source, const ManageSignerOp &op,
     return txFromOperation(source, baseOp, signer);
 }
 
+TransactionFramePtr
+ManageSignerTestHelper::buildTx(Account &source, std::vector<ManageSignerOp> ops,
+                                Account* signer)
+{
+    std::vector<Operation> baseOps;
+
+    for (auto const op : ops)
+    {
+        Operation baseOp;
+        baseOp.body.type(OperationType::MANAGE_SIGNER);
+        baseOp.body.manageSignerOp() = op;
+
+        baseOps.emplace_back(baseOp);
+    }
+
+    return txFromOperations(source, baseOps, nullptr, signer);
+}
+
 ManageSignerResult
 ManageSignerTestHelper::applyTx(Account &source, const ManageSignerOp &op,
                                 ManageSignerResultCode expectedResultCode,
@@ -125,6 +143,36 @@ ManageSignerTestHelper::applyTx(Account &source, const ManageSignerOp &op,
     else
     {
         REQUIRE(!signerFrame);
+    }
+
+    return opResult.tr().manageSignerResult();
+}
+
+ManageSignerResult
+ManageSignerTestHelper::applyTx(Account &source, std::vector<ManageSignerOp> ops,
+                                ManageSignerResultCode expectedResultCode,
+                                OperationResultCode expectedOpCode,
+                                TransactionResultCode expectedTxResult,
+                                Account* signer)
+{
+    auto txFrame = buildTx(source, ops, signer);
+
+    mTestManager->applyCheck(txFrame);
+    auto txResult = txFrame->getResult();
+
+    REQUIRE(txResult.result.code() == expectedTxResult);
+
+    auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == expectedOpCode);
+    if (opResult.code() != OperationResultCode::opINNER) {
+        return ManageSignerResult();
+    }
+    auto actualResultCode = ManageSignerOpFrame::getInnerCode(opResult);
+    REQUIRE(actualResultCode == expectedResultCode);
+
+    if (expectedResultCode != ManageSignerResultCode::SUCCESS) {
+        return ManageSignerResult{};
     }
 
     return opResult.tr().manageSignerResult();
