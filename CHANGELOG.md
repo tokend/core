@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.0.0-x.5
+
 ### Added
 
 * Add change role tasks keys with `*`
