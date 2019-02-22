@@ -57,8 +57,11 @@ StampOpFrame::doApply(Application& app,
         oldLicenseHash = licenseFrame->getFullHash();
     }
     auto newStamp = StampFrame::createNew(ledgerHash, oldLicenseHash);
-
-    stampHelper.storeAdd(newStamp->mEntry);
+    auto key = stampHelper.getLedgerKey(newStamp->mEntry);
+    if (!stampHelper.exists(key))
+    {
+        stampHelper.storeAdd(newStamp->mEntry);
+    }
 
     innerResult().code(StampResultCode::SUCCESS);
     innerResult().success().licenseHash = oldLicenseHash;

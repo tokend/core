@@ -32,11 +32,6 @@ LedgerKey StampHelperImpl::getLedgerKey(LedgerEntry const& from)
 
 void StampHelperImpl::storeAdd(LedgerEntry const& entry)
 {
-    auto key = getLedgerKey(entry);
-    if (exists(key))
-    {
-        return;
-    }
     auto delta = mStorageHelper.getLedgerDelta();
     auto& db = getDatabase();
 
