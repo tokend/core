@@ -186,20 +186,8 @@ namespace stellar {
         return mNetworkID;
     }
 
-    AccountID ApplicationImpl::getMasterID() const {
+    AccountID ApplicationImpl::getAdminID() const {
         return mConfig.masterID;
-    }
-
-    AccountID ApplicationImpl::getCommissionID() const {
-        return mConfig.commissionID;
-    }
-
-    AccountID ApplicationImpl::getOperationalID() const {
-        return mConfig.operationalID;
-    }
-
-    std::vector<PublicKey> ApplicationImpl::getSystemAccounts() const {
-        return mConfig.getSystemAccounts();
     }
 
     std::string ApplicationImpl::getBaseExchangeName() const {
@@ -239,7 +227,7 @@ namespace stellar {
     }
 
     uint64 ApplicationImpl::getWithdrawalDetailsMaxLength() const {
-        return this->mLedgerManager->shouldUse(LedgerVersion::DETAILS_MAX_LENGTH_EXTENDED) ? 20000 : 1000;
+        return 20000;
     }
 
 	uint64 ApplicationImpl::getIssuanceDetailsMaxLength() const {
@@ -247,11 +235,15 @@ namespace stellar {
 	}
 
 	uint64 ApplicationImpl::getRejectReasonMaxLength() const {
-        return this->mLedgerManager->shouldUse(LedgerVersion::DETAILS_MAX_LENGTH_EXTENDED) ? 2000 : 256;
+        return 2000;
     }
 
     int32 ApplicationImpl::getKYCSuperAdminMask() const {
         return mConfig.KYC_SUPER_ADMIN_MASK;
+    }
+
+    size_t ApplicationImpl::getSignerRuleIDsMaxCount() const {
+        return mConfig.mSignerRuleIDsMaxCount;
     }
 
     bool ApplicationImpl::isCheckingPolicies() const

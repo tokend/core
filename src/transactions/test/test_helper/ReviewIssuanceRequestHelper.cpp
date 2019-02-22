@@ -4,7 +4,7 @@
 
 #include <transactions/review_request/ReviewRequestOpFrame.h>
 #include <ledger/FeeHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "ReviewIssuanceRequestHelper.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
@@ -26,13 +26,13 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::ISSUANCE_CREATE) {
+    if (!request || request->getType() != ReviewableRequestType::CREATE_ISSUANCE) {
         return;
     }
     issuanceRequest = std::make_shared<IssuanceRequest>(request->getRequestEntry().body.issuanceRequest());
     assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                        issuanceRequest->asset, testManager->getDB(),
                                                                        nullptr);    
 }
@@ -44,7 +44,7 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
     issuanceRequest = request;
     assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getCommissionID(),
+    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                        issuanceRequest->asset, testManager->getDB(),
                                                                        nullptr);
 }
@@ -70,7 +70,7 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
     REQUIRE(assetFrameAfterTx->getAvailableForIssuance() == assetFrameBeforeTx->getAvailableForIssuance() - issuanceRequest->amount);
     REQUIRE(assetFrameAfterTx->getIssued() == assetFrameBeforeTx->getIssued() + issuanceRequest->amount);
     REQUIRE(!!balanceBeforeTx);
-    auto receiverFrame = AccountHelper::Instance()->loadAccount(balanceBeforeTx->getAccountID(), mTestManager->getDB());
+    auto receiverFrame = AccountHelperLegacy::Instance()->loadAccount(balanceBeforeTx->getAccountID(), mTestManager->getDB());
     auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, issuanceRequest->asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame, issuanceRequest->amount,
                                                           mTestManager->getDB());
@@ -80,7 +80,7 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
                                               assetFrameAfterTx->getMinimumAmount()));
         totalFee += feeFrame->getFee().fixedFee;
         REQUIRE(!!commissionBalanceBeforeTx);
-        auto commissionBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getCommissionID(),
+        auto commissionBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getAdminID(),
                                                                                issuanceRequest->asset, mTestManager->getDB(),
                                                                                nullptr);
         REQUIRE(!!commissionBalanceAfterTx);

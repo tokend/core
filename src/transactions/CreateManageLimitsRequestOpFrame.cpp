@@ -6,45 +6,54 @@
 #include "review_request/ReviewRequestHelper.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "CreateManageLimitsRequestOpFrame.h"
-#include "main/Application.h"
+#include "ManageKeyValueOpFrame.h"
 
 namespace stellar
 {
 
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateManageLimitsRequestOpFrame::getCounterpartyDetails(Database& db, LedgerDelta* delta) const
+bool
+CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                        std::vector<OperationCondition>& result) const
 {
-    return {};
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
+
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+
+    return true;
 }
 
-SourceDetails
-CreateManageLimitsRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion) const
+bool
+CreateManageLimitsRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
 {
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getMediumThreshold(),
-                         static_cast<int32_t>(SignerType::LIMITS_MANAGER),
-                         static_cast<uint32_t>(BlockReasons::WITHDRAWAL)
-    );
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateManageLimitsRequest.allTasks)
+    {
+        resource.reviewableRequest().allTasks = *mCreateManageLimitsRequest.allTasks;
+    }
+
+    result.emplace_back(resource, SignerRuleAction::CREATE);
+
+    return true;
 }
 
 CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(
         Operation const& op, OperationResult& res,
         TransactionFrame& parentTx)
         : OperationFrame(op, res, parentTx)
-        , mCreateManageLimitsRequest(mOperation.body.createManageLimitsRequestOp()){}
-
-std::string
-CreateManageLimitsRequestOpFrame::getLimitsManageRequestReference(Hash const& documentHash) const
+        , mCreateManageLimitsRequest(mOperation.body.createManageLimitsRequestOp())
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, documentHash));
-    return binToHex(hash);
 }
 
 std::string
 CreateManageLimitsRequestOpFrame::getLimitsManageRequestDetailsReference(longstring const& details) const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::LIMITS_UPDATE, details));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::UPDATE_LIMITS, details));
     return binToHex(hash);
 }
 
@@ -53,8 +62,9 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     auto& db = storageHelper.getDatabase();
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.ext.requestID(), getSourceID(),
-                                                             ReviewableRequestType::LIMITS_UPDATE, db, delta);
+
+    auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.requestID, getSourceID(),
+                                                             ReviewableRequestType::UPDATE_LIMITS, db, delta);
     if (!requestFrame)
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
@@ -68,7 +78,8 @@ bool CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &ap
     }
 
     auto& limitsUpdateRequest = requestFrame->getRequestEntry().body.limitsUpdateRequest();
-    limitsUpdateRequest.ext.details() = mCreateManageLimitsRequest.manageLimitsRequest.ext.details();
+
+    limitsUpdateRequest.creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
 
     requestFrame->recalculateHashRejectReason();
     reviewableRequestHelper->storeChange(*delta, db, requestFrame->mEntry);
@@ -87,17 +98,10 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     Database& db = ledgerManager.getDatabase();
     auto delta = storageHelper.getLedgerDelta();
 
-    longstring reference;
     auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
-    if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH) &&
-        manageLimitsRequest.ext.v() == LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH)
-    {
-        auto details = manageLimitsRequest.ext.details();
-        reference = getLimitsManageRequestDetailsReference(details);
-    }
-    else
-        reference = getLimitsManageRequestReference(mCreateManageLimitsRequest.manageLimitsRequest.deprecatedDocumentHash);
 
+    auto details = manageLimitsRequest.creatorDetails;
+    longstring reference = getLimitsManageRequestDetailsReference(details);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -108,17 +112,13 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     }
 
     ReviewableRequestEntry::_body_t body;
-    body.type(ReviewableRequestType::LIMITS_UPDATE);
-    if (ledgerManager.shouldUse(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH))
-    {
-        body.limitsUpdateRequest().ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-        body.limitsUpdateRequest().ext.details() = mCreateManageLimitsRequest.manageLimitsRequest.ext.details();
-    }
-    else
-        body.limitsUpdateRequest().deprecatedDocumentHash =
-                mCreateManageLimitsRequest.manageLimitsRequest.deprecatedDocumentHash;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), app.getMasterID(), referencePtr,
+    body.type(ReviewableRequestType::UPDATE_LIMITS);
+
+    body.limitsUpdateRequest().creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
+
+    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
+                                                             app.getAdminID(), referencePtr,
                                                              body, ledgerManager.getCloseTime());
 
 
@@ -147,31 +147,8 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
 bool
 CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    if(!ledgerManager.shouldUse(mCreateManageLimitsRequest.ext.v()))
-    {
-        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_MANAGE_LIMITS_REQUEST_VERSION);
-        return false;
-    }
-    auto delta = storageHelper.getLedgerDelta();
-    if (!ledgerManager.shouldUse(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS))
-    {
-        return createManageLimitsRequest(app, storageHelper, ledgerManager);
-    }
-
-    auto& manageLimitsRequest = mCreateManageLimitsRequest.manageLimitsRequest;
-    bool requestHasNewDetails = manageLimitsRequest.ext.v() ==
-                                LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH;
-
-    if (requestHasNewDetails && !isValidJson(manageLimitsRequest.ext.details()))
-    {
-        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_DETAILS);
-        return false;
-    }
-
     // required for the new flow, when source have to specify request id for creation or update of the request
-    bool isUpdating = mCreateManageLimitsRequest.ext.v() ==
-                      LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS &&
-                      mCreateManageLimitsRequest.ext.requestID() != 0;
+    bool isUpdating = mCreateManageLimitsRequest.requestID != 0;
     if (isUpdating)
     {
         return updateManageLimitsRequest(app, storageHelper, ledgerManager);
@@ -182,7 +159,20 @@ CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &stora
 
 bool CreateManageLimitsRequestOpFrame::doCheckValid(Application& app)
 {
+    if (!isValidJson(mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails))
+    {
+        innerResult().code(CreateManageLimitsRequestResultCode::INVALID_CREATOR_DETAILS);
+        return false;
+    }
+
     return true;
+}
+
+std::vector<longstring>
+CreateManageLimitsRequestOpFrame::makeTasksKeyVector(
+    StorageHelper& storageHelper)
+{
+    return {ManageKeyValueOpFrame::makeLimitsUpdateTasksKey()};
 }
 
 bool CreateManageLimitsRequestOpFrame::ensureLimitsUpdateValid()

@@ -6,7 +6,7 @@
 #include "main/Config.h"
 #include "transactions/test/TxTests.h"
 #include "herder/Herder.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "overlay/OverlayManager.h"
@@ -407,7 +407,7 @@ LoadGenerator::loadAccount(Application& app, AccountInfo& account)
 {
     AccountFrame::pointer ret;
 	
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
     ret = accountHelper->loadAccount(account.mKey.getPublicKey(),
                                     app.getDatabase());
     if (!ret)
@@ -645,7 +645,7 @@ LoadGenerator::TxInfo::toTransactionFrames(
         {
 
             auto resultingEnvelope = txtest::createCreateAccountTx(app.getNetworkID(), mFrom->mKey, mTo->mKey, 1,
-                AccountType::GENERAL, nullptr, &timeBounds)->getEnvelope();
+                nullptr, &timeBounds)->getEnvelope();
 
 			Salt seq = 1;
 			auto issuenceKey = mFrom->mKey;

@@ -1,7 +1,10 @@
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/CreateAccountOpFrame.h>
 #include <ledger/StatisticsHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
+#include <ledger/SignerRuleFrame.h>
+#include <lib/xdrpp/xdrpp/marshal.h>
+#include <lib/util/basen.h>
 #include "CreateAccountTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -15,19 +18,14 @@ namespace stellar {
             Operation op;
             op.body.type(OperationType::CREATE_ACCOUNT);
             CreateAccountOp &createAccountOp = op.body.createAccountOp();
-            createAccountOp.accountType = accountType;
             createAccountOp.destination = to;
-            createAccountOp.recoveryKey = recovery;
-
-            if (policies != -1)
-                createAccountOp.policies = policies;
-            if (referrer)
-                createAccountOp.referrer.activate() = *referrer;
-            if (isRoleIDSpecified)
+            createAccountOp.roleID = roleID;
+            if (referrer != nullptr)
             {
-                createAccountOp.ext.v(LedgerVersion::REPLACE_ACCOUNT_TYPES_WITH_POLICIES);
-                createAccountOp.ext.opExt().roleID.activate() = roleID;
+                createAccountOp.referrer.activate() = *referrer;
             }
+            createAccountOp.signersData = signersData;
+
             return op;
         }
 
@@ -35,16 +33,6 @@ namespace stellar {
             auto newTestHelper = copy();
             newTestHelper.to = to;
             return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(AccountType accountType) {
-            auto newTestHelper = copy();
-            newTestHelper.accountType = accountType;
-            return newTestHelper;
-        }
-
-        CreateAccountTestBuilder CreateAccountTestBuilder::setType(int32_t accountType) {
-            return setType(static_cast<AccountType>(accountType));
         }
 
         CreateAccountTestBuilder CreateAccountTestBuilder::setReferrer(AccountID *referrer) {
@@ -59,14 +47,9 @@ namespace stellar {
             return newTestHelper;
         }
 
-        CreateAccountTestBuilder CreateAccountTestBuilder::setPolicies(AccountPolicies policies) {
-            return setPolicies(static_cast<int32_t>(policies));
-        }
-
         CreateAccountTestBuilder CreateAccountTestBuilder::setRoleID(uint64_t roleID)
         {
             auto newTestHelper = copy();
-            newTestHelper.isRoleIDSpecified = true;
             newTestHelper.roleID = roleID;
             return newTestHelper;
         }
@@ -77,25 +60,49 @@ namespace stellar {
             return newTestHelper;
         }
 
-        CreateAccountTestBuilder CreateAccountTestBuilder::setRecovery(const PublicKey& recovery) {
+        CreateAccountTestBuilder CreateAccountTestBuilder::setTxResultCode(
+                TransactionResultCode expectedResult)
+        {
             auto newTestHelper = copy();
-            newTestHelper.recovery = recovery;
+            newTestHelper.expectedTxResult = expectedResult;
+            return newTestHelper;
+        }
+
+        CreateAccountTestBuilder CreateAccountTestBuilder::addSignerData(
+                UpdateSignerData data)
+        {
+            auto newTestHelper = copy();
+            newTestHelper.signersData.emplace_back(data);
+            return newTestHelper;
+        }
+
+        CreateAccountTestBuilder CreateAccountTestBuilder::addBasicSigner(
+                uint64_t roleID)
+        {
+            auto newTestHelper = copy();
+            UpdateSignerData data;
+            data.publicKey = to;
+            data.roleID = roleID;
+            data.weight = SignerRuleFrame::threshold;
+            data.identity = 1;
+            data.details = "{}";
+            newTestHelper.signersData.emplace_back(data);
             return newTestHelper;
         }
 
         CreateAccountResultCode
-        CreateAccountTestHelper::applyCreateAccountTx(Account &from, PublicKey to, AccountType accountType,
+        CreateAccountTestHelper::applyCreateAccountTx(Account &from, PublicKey to, uint64_t roleID,
                                                       Account *signer, AccountID *referrer, int32 policies,
                                                       CreateAccountResultCode expectedResult) {
             auto builder = CreateAccountTestBuilder()
                     .setSource(from)
                     .setToPublicKey(to)
-                    .setType(accountType)
                     .setSigner(signer)
                     .setReferrer(referrer)
                     .setPolicies(policies)
                     .setResultCode(expectedResult)
-                    .setRecovery(SecretKey::random().getPublicKey());
+                    .addBasicSigner()
+                    .setRoleID(roleID);
             return applyTx(builder);
         }
 
@@ -117,13 +124,12 @@ namespace stellar {
         }
 
         TransactionFramePtr
-        CreateAccountTestHelper::createCreateAccountTx(Account &source, PublicKey to, AccountType accountType,
+        CreateAccountTestHelper::createCreateAccountTx(Account &source, PublicKey to,
                                                        uint32_t policies)
         {
             auto builder = CreateAccountTestBuilder()
                     .setSource(source)
                     .setToPublicKey(to)
-                    .setType(accountType)
                     .setPolicies(policies);
 
             return builder.buildTx(mTestManager);
@@ -133,13 +139,14 @@ namespace stellar {
         CreateAccountChecker::doCheck(CreateAccountTestBuilder builder, TransactionFramePtr txFrame) {
 
             auto txResult = txFrame->getResult();
+            REQUIRE(txResult.result.code() == builder.expectedTxResult);
             auto opResult = txResult.result.results()[0];
             auto actualResultCode = CreateAccountOpFrame::getInnerCode(opResult);
             REQUIRE(actualResultCode == builder.expectedResult);
             REQUIRE(txResult.feeCharged == mTestManager->getApp().getLedgerManager().getTxFee());
             Database& db = mTestManager->getDB();
 
-            auto accountHelper = AccountHelper::Instance();
+            auto accountHelper = AccountHelperLegacy::Instance();
             AccountFrame::pointer fromAccount = accountHelper->loadAccount(builder.source.key.getPublicKey(), db);
             AccountFrame::pointer toAccount = accountHelper->loadAccount(builder.to, db);
 
@@ -158,21 +165,6 @@ namespace stellar {
 
             }
             REQUIRE(toAccountAfter);
-            REQUIRE(!toAccountAfter->isBlocked());
-            REQUIRE(toAccountAfter->getAccountType() == builder.accountType);
-            REQUIRE(toAccountAfter->getAccount().recoveryID == builder.recovery);
-            if (builder.policies != -1){
-                REQUIRE(toAccountAfter->getPolicies() == builder.policies);
-            }
-
-            auto statisticsHelper = StatisticsHelper::Instance();
-            auto statisticsFrame = statisticsHelper->loadStatistics(builder.to, db);
-            REQUIRE(statisticsFrame);
-            auto statistics = statisticsFrame->getStatistics();
-            REQUIRE(statistics.dailyOutcome == 0);
-            REQUIRE(statistics.weeklyOutcome == 0);
-            REQUIRE(statistics.monthlyOutcome == 0);
-            REQUIRE(statistics.annualOutcome == 0);
 
             if (!toAccount)
             {

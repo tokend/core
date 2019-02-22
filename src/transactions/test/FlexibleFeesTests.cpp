@@ -42,9 +42,7 @@ TEST_CASE("Flexible fees", "[dep_tx][flexible_fees]")
 	closeLedgerOn(app, 3, 1, 7, 2014);
 	applySetFees(app, root, rootSeq, nullptr, false, nullptr);
 	closeLedgerOn(app, 4, 1, 7, 2014);
-    auto accountType = AccountType::GENERAL;
 
-	auto balanceHelper = BalanceHelperLegacy::Instance();
 	auto feeHelper = FeeHelper::Instance();
 
         std::vector<AssetFrame::pointer> baseAssets;
@@ -59,7 +57,7 @@ TEST_CASE("Flexible fees", "[dep_tx][flexible_fees]")
 
 		auto a = SecretKey::random();
 		auto aPubKey = a.getPublicKey();
-		applyCreateAccountTx(app, root, a, rootSeq++, accountType);
+		applyCreateAccountTx(app, root, a, rootSeq++);
 		auto accountFee = createFeeEntry(FeeType::OFFER_FEE, 0, 10 * ONE, asset->getCode(), &aPubKey, nullptr);
 		applySetFees(app, root, rootSeq++, &accountFee, false, nullptr);
 
@@ -71,46 +69,4 @@ TEST_CASE("Flexible fees", "[dep_tx][flexible_fees]")
 		REQUIRE(accountFeeFrame);
 		REQUIRE(accountFeeFrame->getFee() == accountFee);
 	}
-
-	SECTION("Custom payment fee for receiver")
-    {
-		auto account = SecretKey::random();
-        auto aPubKey = account.getPublicKey();
-		applyCreateAccountTx(app, root, account, rootSeq++, AccountType::GENERAL);
-		auto dest = SecretKey::random();
-        auto destPubKey = dest.getPublicKey();
-		applyCreateAccountTx(app, root, dest, rootSeq++, AccountType::GENERAL);
-
-        auto feeFrame = FeeFrame::create(FeeType::PAYMENT_FEE, 1, 0, asset->getCode());
-        auto fee = feeFrame->getFee();
-		applySetFees(app, root, rootSeq++, &fee, false, nullptr);
-
-
-        auto specificFeeFrame = FeeFrame::create(FeeType::PAYMENT_FEE, 0, 10 * ONE, asset->getCode(), &destPubKey);
-        auto specificFee = specificFeeFrame->getFee();
-        applySetFees(app, root, rootSeq++, &specificFee, false, nullptr);
-
-        
-		auto accountSeq = 1;
-		int64 balance = 60 * ONE;
-		int64 paymentAmount = ONE;
-		PaymentFeeData paymentFee = getNoPaymentFee();
-        paymentFee.sourcePaysForDest = true;
-        
-		fundAccount(app, root, issuance, rootSeq, account.getPublicKey(), balance);
-
-        applyPaymentTx(app, account, dest, accountSeq++, paymentAmount, paymentFee,
-                true, "", "", PaymentResultCode::FEE_MISMATCHED);
-        paymentFee = getGeneralPaymentFee(1, 0);
-
-		applyPaymentTx(app, account, dest, accountSeq++, paymentAmount, paymentFee,
-			true, "", "", PaymentResultCode::FEE_MISMATCHED);
-            
-        paymentFee.destinationFee.paymentFee = paymentAmount * 0.1;
-		paymentFee.destinationFee.fixedFee = 0;
-
-		applyPaymentTx(app, account, dest, accountSeq++, paymentAmount, paymentFee,
-			true, "", "");
-    }
-
 }

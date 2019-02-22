@@ -1,8 +1,8 @@
 #include "BalanceHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AssetHelper.h"
-#include <memory>
+#include "database/Database.h"
+#include "AssetHelper.h"
 
 using namespace soci;
 using namespace std;
@@ -221,6 +221,20 @@ BalanceHelperImpl::countObjects()
     uint64_t count = 0;
     getDatabase().getSession() << "SELECT COUNT(*) FROM balance;", into(count);
     return count;
+}
+
+BalanceFrame::pointer
+BalanceHelperImpl::mustLoadBalance(BalanceID balanceID)
+{
+    auto result = loadBalance(balanceID);
+    if (result)
+    {
+        return result;
+    }
+
+    CLOG(ERROR, Logging::ENTRY_LOGGER) << "Expected balance to exist: "
+                                       << BalanceKeyUtils::toStrKey(balanceID);
+    throw std::runtime_error("Expected balance to exist");
 }
 
 BalanceFrame::pointer
@@ -446,14 +460,8 @@ BalanceHelperImpl::loadBalances(StatementContext& prep,
         }
 
         auto balanceFrame = std::make_shared<BalanceFrame>(le);
-        if (assetVersion >= (uint32)LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-        {
-            balanceFrame->setPrecisionForAmounts(AssetFrame::kMaximumTrailingDigits - trailingDigits);
-        }
-        else
-        {
-            balanceFrame->setPrecisionForAmounts(0);
-        }
+        balanceFrame->setPrecisionForAmounts(AssetFrame::kMaximumTrailingDigits - trailingDigits);
+
 
         if (mStorageHelper.getLedgerDelta())
         {

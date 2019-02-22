@@ -10,7 +10,7 @@
 #include "ledger/OfferHelper.h"
 #include "CreateSaleParticipationOpFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 
 namespace stellar
 {
@@ -96,7 +96,7 @@ void DeleteSaleParticipationOpFrame::deleteSaleParticipation(
     opRes.tr().type(OperationType::MANAGE_OFFER);
     DeleteSaleParticipationOpFrame opFrame(op, opRes, parentTx);
     opFrame.doNotCheckSaleState();
-    const auto offerOwner = AccountHelper::Instance()->mustLoadAccount(offerEntry.ownerID, db);
+    const auto offerOwner = AccountHelperLegacy::Instance()->mustLoadAccount(offerEntry.ownerID, db);
     opFrame.setSourceAccountPtr(offerOwner);
     if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, delta, ledgerManager))
     {
@@ -111,10 +111,6 @@ void DeleteSaleParticipationOpFrame::doNotCheckSaleState()
 }
 BalanceID DeleteSaleParticipationOpFrame::getQuoteBalanceID(OfferFrame::pointer offer, LedgerManager& lm)
 {
-    if (!lm.shouldUse(LedgerVersion::ALLOW_TO_CANCEL_SALE_PARTICIP_WITHOUT_SPECIFING_BALANCE)) {
-        return mManageOffer.quoteBalance;
-    }
-
     return offer->getOffer().quoteBalance;
 }
 }

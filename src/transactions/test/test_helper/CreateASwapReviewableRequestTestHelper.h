@@ -21,7 +21,9 @@ public:
     CreateASwapRequestResult applyCreateASwapRequest(Account& source,
                           CreateASwapRequestOp& createASwapRequestOp,
                           CreateASwapRequestResultCode expectedResult =
-                          CreateASwapRequestResultCode::SUCCESS);
+                          CreateASwapRequestResultCode::SUCCESS,
+                          OperationResultCode expectedOpRes =
+                          OperationResultCode::opINNER);
 };
 
 }

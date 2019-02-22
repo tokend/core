@@ -64,6 +64,7 @@ class SaleFrame : public EntryFrame
     uint64_t getHardCap() const;
     uint64_t getEndTime() const;
     uint64_t getID() const;
+    uint64_t getType() const;
     uint64_t getPrice(AssetCode const& code);
     uint64_t getMaxAmountToBeSold() const;
     uint64_t getCurrentCapInBase() const;

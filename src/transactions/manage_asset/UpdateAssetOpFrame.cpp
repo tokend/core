@@ -5,7 +5,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "UpdateAssetOpFrame.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
@@ -23,31 +23,44 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-SourceDetails UpdateAssetOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                          int32_t ledgerVersion) const
+bool
+UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    vector<AccountType> allowedAccountTypes = {AccountType::MASTER};
+    // only asset owner can update asset
+    return true;
+}
 
-    bool isBaseAsset = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::BASE_ASSET);
-    bool isStatsAsset = isSetFlag(mAssetUpdateRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
-    if (!isBaseAsset && !isStatsAsset)
+bool
+UpdateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                   std::vector<SignerRequirement>& result) const
+{
+    auto asset = storageHelper.getAssetHelper().loadAsset(mAssetUpdateRequest.code);
+    if (!asset)
     {
-        allowedAccountTypes.push_back(AccountType::SYNDICATE);
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
     }
 
-    return SourceDetails(allowedAccountTypes, mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetCode = asset->getCode();
+    resource.asset().assetType = asset->getType();
+
+    result.emplace_back(resource, SignerRuleAction::UPDATE);
+
+    return true;
 }
 
 ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta)
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_UPDATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::UPDATE_ASSET);
     if (!request) {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_UPDATE);
+	requestEntry.body.type(ReviewableRequestType::UPDATE_ASSET);
 	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
 	requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
 	request->recalculateHashRejectReason();
@@ -64,7 +77,7 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
     auto& db = storageHelper.getDatabase();
     auto delta = storageHelper.getLedgerDelta();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    bool isRequestReferenceCheckNeeded = mManageAsset.requestID == 0 && ledgerManager.shouldUse(LedgerVersion::ASSET_UPDATE_CHECK_REFERENCE_EXISTS);
+    bool isRequestReferenceCheckNeeded = mManageAsset.requestID == 0;
     if (isRequestReferenceCheckNeeded && reviewableRequestHelper->exists(db, getSourceID(), mAssetUpdateRequest.code)) {
         innerResult().code(ManageAssetResultCode::REQUEST_ALREADY_EXISTS);
         return false;
@@ -146,8 +159,8 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 		return false;
 	}
 
-    if (!isValidJson(mAssetUpdateRequest.details)) {
-        innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
+    if (!isValidJson(mAssetUpdateRequest.creatorDetails)) {
+        innerResult().code(ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 
@@ -183,7 +196,7 @@ bool UpdateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointe
 
 void UpdateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
     requestEntry.body.assetUpdateRequest().code = mManageAsset.request.createAssetUpdateRequest().updateAsset.code;
-    requestEntry.body.assetUpdateRequest().details = mManageAsset.request.createAssetUpdateRequest().updateAsset.details;
+    requestEntry.body.assetUpdateRequest().creatorDetails = mManageAsset.request.createAssetUpdateRequest().updateAsset.creatorDetails;
     requestEntry.body.assetUpdateRequest().policies = mManageAsset.request.createAssetUpdateRequest().updateAsset.policies;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.assetUpdateRequest().sequenceNumber++;

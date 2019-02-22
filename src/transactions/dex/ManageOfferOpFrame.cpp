@@ -2,21 +2,17 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "util/asio.h"
+#include <ledger/AssetHelper.h>
 #include "ManageOfferOpFrame.h"
 #include "OfferExchange.h"
-#include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelper.h"
-#include "ledger/AssetPairHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "main/Application.h"
-#include "util/Logging.h"
-#include "util/types.h"
 #include "DeleteOfferOpFrame.h"
 #include "CreateOfferOpFrame.h"
 #include "DeleteSaleParticipationOpFrame.h"
 #include "CreateSaleParticipationOpFrame.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
@@ -59,29 +55,5 @@ std::string ManageOfferOpFrame::getInnerResultCodeAsStr()
     const auto result = getResult();
     const auto code = getInnerCode(result);
     return xdr::xdr_traits<ManageOfferResultCode>::enum_name(code);
-}
-
-std::unordered_map<AccountID, CounterpartyDetails> ManageOfferOpFrame::
-getCounterpartyDetails(Database& db, LedgerDelta* delta) const
-{
-    // no counterparties
-    return {};
-}
-
-SourceDetails ManageOfferOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                          int32_t ledgerVersion)
-const
-{
-    uint32_t allowedBlockedReasons = 0;
-    if (mManageOffer.offerID != 0 && mManageOffer.amount == 0)
-        allowedBlockedReasons = getAnyBlockReason();
-    return SourceDetails({
-                             AccountType::GENERAL, AccountType::NOT_VERIFIED,
-                             AccountType::SYNDICATE, AccountType::EXCHANGE, AccountType::VERIFIED,
-                             AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR
-                         },
-                         mSourceAccount->getMediumThreshold(),
-                         static_cast<int32_t>(SignerType::BALANCE_MANAGER),
-                         allowedBlockedReasons);
 }
 }

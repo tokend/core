@@ -9,7 +9,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
-#include <transactions/dex/ManageSaleOpFrame.h>
+#include <transactions/sale/ManageSaleOpFrame.h>
 
 class pointer;
 namespace stellar
@@ -43,7 +43,7 @@ ManageSaleTestHelper::createDataForAction(ManageSaleAction action,
         }
         data.action(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST);
         data.updateSaleDetailsData().requestID = *requestID;
-        data.updateSaleDetailsData().newDetails = *newDetails;
+        data.updateSaleDetailsData().creatorDetails = *newDetails;
         if (allTasks)
         {
             data.updateSaleDetailsData().allTasks.activate() = *allTasks;
@@ -80,7 +80,8 @@ ManageSaleTestHelper::createManageSaleTx(Account& source, uint64_t saleID,
 ManageSaleResult
 ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         ManageSaleOp::_data_t data,
-                                        ManageSaleResultCode expectedResultCode)
+                                        ManageSaleResultCode expectedResultCode,
+                                        OperationResultCode opExpectedCode)
 {
     auto& db = mTestManager->getDB();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -108,16 +109,22 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     mTestManager->applyCheck(txFrame, stateBeforeOp);
 
     auto txResult = txFrame->getResult();
-    auto actualResultCode =
-        ManageSaleOpFrame::getInnerCode(txResult.result.results()[0]);
+    auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == opExpectedCode);
+    if (opExpectedCode != OperationResultCode::opINNER)
+    {
+        return ManageSaleResult{};
+    }
+
+    auto actualResultCode = ManageSaleOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResultCode);
 
     auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
     REQUIRE(txResult.feeCharged == txFee);
 
-    ManageSaleResult manageSaleResult =
-        txResult.result.results()[0].tr().manageSaleResult();
+    ManageSaleResult manageSaleResult = opResult.tr().manageSaleResult();
 
     if (actualResultCode != ManageSaleResultCode::SUCCESS)
         return manageSaleResult;
@@ -138,22 +145,18 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 
             REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
                     saleID);
-            REQUIRE(
-                    requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails ==
-                    data.updateSaleDetailsData().newDetails);
+            REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails ==
+                    data.updateSaleDetailsData().creatorDetails);
 
             if (!!requestBeforeTx)
             {
                 auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
 
-                REQUIRE(
-                        requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
+                REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
                         requestAfterTxEntry.body.updateSaleDetailsRequest().saleID);
 
-                REQUIRE(
-                        requestBeforeTxEntry.body.updateSaleDetailsRequest()
-                                .newDetails !=
-                        requestAfterTxEntry.body.updateSaleDetailsRequest().newDetails);
+                REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().creatorDetails !=
+                        requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails);
             }
         }
 

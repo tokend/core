@@ -10,7 +10,6 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "transactions/SetOptionsOpFrame.h"
 #include "test/test_marshaler.h"
 
 namespace stellar
@@ -65,18 +64,17 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
 
     REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestID() == limitsUpdateRequestAfterTx->getRequestID());
-    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().ext.details() !=
-    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().ext.details());
+    REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails !=
+    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails);
 
     return createManageLimitsRequestResult;
 }
 
 LimitsUpdateRequest
-LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring details)
+LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring creatorDetails)
 {
     LimitsUpdateRequest result;
-    result.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-    result.ext.details() = details;
+    result.creatorDetails = creatorDetails;
     return result;
 }
 
@@ -88,8 +86,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_MANAGE_LIMITS_REQUEST);
     auto& op = baseOp.body.createManageLimitsRequestOp();
-    op.manageLimitsRequest.ext.v(LedgerVersion::LIMITS_UPDATE_REQUEST_DEPRECATED_DOCUMENT_HASH);
-    op.manageLimitsRequest.ext.details() = request.ext.details();
+    op.manageLimitsRequest.creatorDetails = request.creatorDetails;
 
     if (allTasks)
     {
@@ -102,8 +99,7 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUp
         return txFromOperation(source, baseOp, nullptr);
     }
 
-    op.ext.v(LedgerVersion::ALLOW_TO_UPDATE_AND_REJECT_LIMITS_UPDATE_REQUESTS);
-    op.ext.requestID() = *requestID;
+    op.requestID = *requestID;
 
     return txFromOperation(source, baseOp, nullptr);
 }

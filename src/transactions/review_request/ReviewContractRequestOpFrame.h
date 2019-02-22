@@ -18,9 +18,6 @@ protected:
     bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
 
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
-
     bool checkCustomerDetailsLength(Application& app, Database& db, LedgerDelta& delta);
 
 public:

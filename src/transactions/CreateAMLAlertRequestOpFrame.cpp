@@ -1,66 +1,51 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
-#include "database/Database.h"
-#include "main/Application.h"
-#include "medida/metrics_registry.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ReviewableRequestFrame.h"
-#include "ledger/KeyValueHelper.h"
 #include "review_request/ReviewRequestHelper.h"
-#include "xdrpp/printer.h"
-#include "bucket/BucketApplicator.h"
 
 
 namespace stellar
 {
 using xdr::operator==;
 
-
-std::unordered_map<AccountID, CounterpartyDetails>
-CreateAMLAlertRequestOpFrame::getCounterpartyDetails(
-    Database& db, LedgerDelta* delta) const
+bool
+CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const
 {
-    BalanceFrame::pointer balanceFrame = BalanceHelperLegacy::Instance()->
-        loadBalance(mCreateAMLAlertRequest.amlAlertRequest.balanceID, db,
-                    delta);
-    if (!balanceFrame)
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
+
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                        std::vector<SignerRequirement> &result) const
+{
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
+    if (mCreateAMLAlertRequest.allTasks)
     {
-        return {};
+        resource.reviewableRequest().allTasks = *mCreateAMLAlertRequest.allTasks;
     }
 
-    return {
-        {
-            balanceFrame->getAccountID(), CounterpartyDetails({
-                AccountType::GENERAL, AccountType::SYNDICATE,
-                AccountType::EXCHANGE,AccountType::NOT_VERIFIED,
-                AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR,
-                AccountType::VERIFIED
-            }, true, true)
-        }
-    };
-}
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
-SourceDetails CreateAMLAlertRequestOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion)
-const
-{
-    return SourceDetails({AccountType::MASTER,},
-                         mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::AML_ALERT_MANAGER));
+    return true;
 }
-
 
 CreateAMLAlertRequestOpFrame::CreateAMLAlertRequestOpFrame(
-    Operation const& op, OperationResult& res,
-    TransactionFrame& parentTx)
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
     : OperationFrame(op, res, parentTx)
     , mCreateAMLAlertRequest(mOperation.body.createAMLAlertRequestOp())
 {
@@ -103,14 +88,14 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     const auto referencePtr = xdr::pointer<string64>(new string64(mCreateAMLAlertRequest.reference));
     auto request = ReviewableRequestFrame::createNew(requestID,
                                                           getSourceID(),
-                                                          app.getMasterID(),
+                                                     app.getAdminID(),
                                                           referencePtr,
                                                           ledgerManager.
                                                           getCloseTime());
 
 
     auto& requestEntry = request->getRequestEntry();
-    requestEntry.body.type(ReviewableRequestType::AML_ALERT);
+    requestEntry.body.type(ReviewableRequestType::CREATE_AML_ALERT);
     requestEntry.body.amlAlertRequest() = amlAlertRequest;
     request->recalculateHashRejectReason();
     balanceHelper.storeChange(balanceFrame->mEntry);
@@ -146,9 +131,9 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
 
 bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
 {
-    if (mCreateAMLAlertRequest.amlAlertRequest.reason.empty())
+    if (mCreateAMLAlertRequest.amlAlertRequest.creatorDetails.empty())
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::INVALID_REASON);
+        innerResult().code(CreateAMLAlertRequestResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 

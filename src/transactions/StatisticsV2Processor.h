@@ -7,7 +7,8 @@
 namespace stellar
 {
 
-class StatisticsV2Processor {
+class StatisticsV2Processor
+{
 
     Database& mDb;
     LedgerDelta& mDelta;
@@ -31,7 +32,8 @@ public:
         PAYOUT,
     };
 
-    StatisticsV2Processor::Result addStatsV2(SpendType spendType, uint64_t amountToAdd, uint64_t& universalAmount,
+    StatisticsV2Processor::Result
+    addStatsV2(SpendType spendType, uint64_t amountToAdd, uint64_t& universalAmount,
                                              AccountFrame::pointer account = nullptr,
                                              BalanceFrame::pointer balance = nullptr,
                                              uint64_t* requestID = nullptr);

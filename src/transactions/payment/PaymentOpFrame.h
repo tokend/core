@@ -1,72 +1,63 @@
 #pragma once
 
-// Copyright 2015 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
-#include "transactions/OperationFrame.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include <transactions/OperationFrame.h>
 
 namespace stellar
 {
-
 class PaymentOpFrame : public OperationFrame
 {
-    PaymentResult&
-    innerResult()
-    {
+    PaymentResult &innerResult() {
         return mResult.tr().paymentResult();
     }
-    PaymentOp const& mPayment;
-    int64_t sourceSent;
-    int64_t destReceived;
-    
-	std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-	SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
 
-	bool isRecipeintFeeNotRequired(Database& db);
+    PaymentOp const &mPayment;
 
-	bool isAllowedToTransfer(Database& db, AssetFrame::pointer asset);
-    bool processFees(Application& app, LedgerManager& lm, LedgerDelta& delta, Database& db);
-    bool processFees_v1(Application& app, LedgerDelta& delta, Database& db);
-    bool processFees_v2(Application& app, LedgerDelta& delta, Database& db);
+    bool isDestinationFeeValid();
 
-protected:
+    BalanceFrame::pointer
+    tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
 
-      AccountFrame::pointer mDestAccount;
-	  BalanceFrame::pointer mSourceBalance;
-	  BalanceFrame::pointer mDestBalance;
+    bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db);
 
-	  // returns false, if failed to load (tx result is set on error)
-	  bool tryLoadBalances(Application& app, Database& db, LedgerDelta& delta);
-	  // returns false, if fees are insufficient
-	  bool checkFeesV1(Application& app, Database& db, LedgerDelta& delta);
-	  bool checkFees(Application& app, Database& db, LedgerDelta& delta);
-	  // calculates amount source sent and destination received. Returns false on overflow
-	  bool calculateSourceDestAmount();
-  public:
-    
-    PaymentOpFrame(Operation const& op, OperationResult& res,
-                   TransactionFrame& parentTx);
+    Fee getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
+                           PaymentFeeType feeType, Database &db, LedgerManager& lm);
 
-    bool doApply(Application& app, StorageHelper& storageHelper,
-                 LedgerManager& ledgerManager) override;
-    bool doCheckValid(Application& app) override;
+    bool processTransfer(AccountManager &accountManager, AccountFrame::pointer payer, BalanceFrame::pointer from, BalanceFrame::pointer to,
+                         uint64_t amount, uint64_t& universalAmount, Database &db);
+
+    bool processTransferFee(AccountManager &accountManager, AccountFrame::pointer payer,
+                            BalanceFrame::pointer candidateToCharge, Fee expectedFee, Fee actualFee,
+                            AccountID const &commissionID, Database &db, LedgerDelta &delta, bool ignoreStats,
+                            uint64_t& universalAmount);
+
+    void setErrorCode(AccountManager::Result transferResult);
+
+    bool isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID);
 
     bool
-    processInvoice(Application& app, LedgerDelta& delta, Database& db);
-
-    static bool isTransferFeeMatch(AccountFrame::pointer account, AssetCode const& assetCode, FeeData const& feeData, int64_t const& amount, Database& db, LedgerDelta& delta);
-
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
     bool
-    processBalanceChange(Application& app, AccountManager::Result balanceChangeResult);
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
-    static PaymentResultCode
-    getInnerCode(OperationResult const& res)
-    {
+    AccountFrame::pointer
+    tryLoadDestinationAccount(StorageHelper& storageHelper) const;
+
+public:
+    PaymentOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+
+    bool doApply(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager) override;
+
+    bool doCheckValid(Application &app) override;
+
+    static PaymentResultCode getInnerCode(OperationResult const &res) {
         return res.tr().paymentResult().code();
+    }
+
+    std::string getInnerResultCodeAsStr() override {
+        return xdr::xdr_traits<PaymentResultCode>::enum_name(innerResult().code());
     }
 };
 }

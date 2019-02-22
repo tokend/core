@@ -8,9 +8,8 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateAssetOpFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 
@@ -21,38 +20,52 @@ using namespace std;
 using xdr::operator==;
 
 CreateAssetOpFrame::CreateAssetOpFrame(Operation const& op,
-                                           OperationResult& res,
-                                           TransactionFrame& parentTx)
-    : ManageAssetOpFrame(op, res, parentTx), mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
+        OperationResult& res, TransactionFrame& parentTx)
+        : ManageAssetOpFrame(op, res, parentTx)
+        , mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
 {
-
 }
 
-SourceDetails CreateAssetOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                          int32_t ledgerVersion) const
+bool
+CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    vector<AccountType> allowedAccountTypes = {AccountType::MASTER};
+    AccountRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetType = mAssetCreationRequest.type;
+    resource.asset().assetCode = mAssetCreationRequest.code;
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
-    bool isBaseAsset = isSetFlag(mAssetCreationRequest.policies, AssetPolicy::BASE_ASSET);
-    bool isStatsAsset = isSetFlag(mAssetCreationRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
-    if (!isBaseAsset && !isStatsAsset)
+    if (mManageAsset.request.createAssetCreationRequest().allTasks)
     {
-        allowedAccountTypes.push_back(AccountType::SYNDICATE);
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        return true;
     }
 
-    return SourceDetails(allowedAccountTypes, mSourceAccount->getHighThreshold(),
-                             static_cast<int32_t>(SignerType::ASSET_MANAGER));
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    return true;
+}
+
+bool
+CreateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const
+{
+    SignerRuleResource resource(LedgerEntryType::ASSET);
+    resource.asset().assetType = mAssetCreationRequest.type;
+    resource.asset().assetCode = mAssetCreationRequest.code;
+    result.emplace_back(resource, SignerRuleAction::CREATE);
+
+    return true;
 }
 
 ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::ASSET_CREATE);
+    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::CREATE_ASSET);
 	if (!request) {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::ASSET_CREATE);
+	requestEntry.body.type(ReviewableRequestType::CREATE_ASSET);
 	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
     requestEntry.body.assetCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();
@@ -146,32 +159,29 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
         return false;
     }
 
-    if (!isValidJson(mAssetCreationRequest.details))
+    if (!isValidJson(mAssetCreationRequest.creatorDetails))
     {
-        innerResult().code(ManageAssetResultCode::INVALID_DETAILS);
+        innerResult().code(ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 
-    if (mAssetCreationRequest.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+    if (mAssetCreationRequest.trailingDigitsCount > AssetFrame::kMaximumTrailingDigits)
     {
-        if (mAssetCreationRequest.ext.trailingDigitsCount() > AssetFrame::kMaximumTrailingDigits)
-        {
-            innerResult().code(ManageAssetResultCode::INVALID_TRAILING_DIGITS_COUNT);
-            return false;
-        }
+        innerResult().code(ManageAssetResultCode::INVALID_TRAILING_DIGITS_COUNT);
+        return false;
+    }
 
-        const uint64 precision = AssetFrame::getMinimumAmountFromTrailingDigits(
-                mAssetCreationRequest.ext.trailingDigitsCount());
-        if (mAssetCreationRequest.initialPreissuedAmount % precision != 0)
-        {
-            innerResult().code(ManageAssetResultCode::INVALID_PREISSUED_AMOUNT_PRECISION);
-            return false;
-        }
-        if (mAssetCreationRequest.maxIssuanceAmount % precision != 0)
-        {
-            innerResult().code(ManageAssetResultCode::INVALID_MAX_ISSUANCE_AMOUNT_PRECISION);
-            return false;
-        }
+    const uint64 precision = AssetFrame::getMinimumAmountFromTrailingDigits(
+            mAssetCreationRequest.trailingDigitsCount);
+    if (mAssetCreationRequest.initialPreissuedAmount % precision != 0)
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_PREISSUED_AMOUNT_PRECISION);
+        return false;
+    }
+    if (mAssetCreationRequest.maxIssuanceAmount % precision != 0)
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_MAX_ISSUANCE_AMOUNT_PRECISION);
+        return false;
     }
 
 	return true;
@@ -205,7 +215,7 @@ bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointe
 
 void CreateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
     requestEntry.body.assetCreationRequest().code = mManageAsset.request.createAssetCreationRequest().createAsset.code;
-    requestEntry.body.assetCreationRequest().details = mManageAsset.request.createAssetCreationRequest().createAsset.details;
+    requestEntry.body.assetCreationRequest().creatorDetails= mManageAsset.request.createAssetCreationRequest().createAsset.creatorDetails;
     requestEntry.body.assetCreationRequest().policies = mManageAsset.request.createAssetCreationRequest().createAsset.policies;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.assetCreationRequest().sequenceNumber++;

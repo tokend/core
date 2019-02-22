@@ -13,8 +13,7 @@ variables:
   LEGACY_DOCKERFILE: legacy.dockerfile
   PG_IMAGE: $IMAGE_NAME:pg-$CI_COMMIT_SHA
   PG_DOCKERFILE: pg.dockerfile
-  DH_IMAGE: tokend/core:latest
-  DH_IMAGE_BE: tokend/core:bleeding-edge
+  DH_IMAGE: tokend/core
 
 stages:
   - build
@@ -50,32 +49,18 @@ build:
     - docker build -t $PG_IMAGE -f $PG_DOCKERFILE .
     - docker push $PG_IMAGE
 
-publish-dh:
+publish dockerhub:
   image: docker:latest
   stage: publish
   tags:
     - tokend
   only:
-    - dockerhub
+    - /^.+\..+\..+$/
   script:
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - RELEASE=$CI_COMMIT_REF_NAME
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
     - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $BUILD_IMAGE -f $DE_DOCKERFILE .
     - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
-    - docker build -t $DH_IMAGE -f $PG_DOCKERFILE .
-    - docker push $DH_IMAGE
-
-publish-dh-be:
-  image: docker:latest
-  stage: publish
-  tags:
-  - tokend
-  only:
-  - bleeding-edge
-  script:
-  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-  - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
-  - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $BUILD_IMAGE -f $DE_DOCKERFILE .
-  - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
-  - docker build -t $DH_IMAGE_BE -f $PG_DOCKERFILE .
-  - docker push $DH_IMAGE_BE
+    - docker build -t $DH_IMAGE:$RELEASE -f $PG_DOCKERFILE .
+    - docker push $DH_IMAGE:$RELEASE

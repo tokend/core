@@ -1,7 +1,7 @@
 #include <ledger/ExternalSystemAccountIDHelperLegacy.h>
 #include "ManageExternalSystemAccountIDPoolEntryTestHelper.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
-#include "transactions/manage_external_system_account_id_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
+#include "transactions/external_system_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "test/test_marshaler.h"
 
 namespace stellar

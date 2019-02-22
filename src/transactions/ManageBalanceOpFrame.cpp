@@ -5,53 +5,48 @@
 #include "transactions/ManageBalanceOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "database/Database.h"
+#include "ledger/StorageHelper.h"
 #include "main/Application.h"
-#include "medida/meter.h"
-#include "medida/metrics_registry.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
 
-std::unordered_map<AccountID, CounterpartyDetails> ManageBalanceOpFrame::
-getCounterpartyDetails(Database& db, LedgerDelta* delta) const
-{
-    const std::vector<AccountType> allowedCounterparties = {
-        AccountType::GENERAL, AccountType::NOT_VERIFIED, AccountType::SYNDICATE, AccountType::VERIFIED,
-        AccountType::EXCHANGE, AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR
-    };
 
-    return {
-        {
-            mManageBalance.destination,
-            CounterpartyDetails(allowedCounterparties, true, true)
-        }
-    };
+bool
+ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const
+{
+    AccountRuleResource resource(LedgerEntryType::BALANCE);
+
+    if (getSourceID() == mManageBalance.destination)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+        return true;
+    }
+
+    result.emplace_back(resource, AccountRuleAction::CREATE_FOR_OTHER, mSourceAccount);
+    return true;
 }
 
-SourceDetails ManageBalanceOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ManageBalanceOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                std::vector<SignerRequirement> &result) const
 {
-    std::vector<AccountType> allowedSourceAccounts;
+    SignerRuleResource resource(LedgerEntryType::BALANCE);
+
     if (getSourceID() == mManageBalance.destination)
-        allowedSourceAccounts = {
-            AccountType::GENERAL, AccountType::NOT_VERIFIED,
-            AccountType::SYNDICATE, AccountType::EXCHANGE, AccountType::VERIFIED,
-            AccountType::ACCREDITED_INVESTOR, AccountType::INSTITUTIONAL_INVESTOR
-        };
-    else
-        allowedSourceAccounts = {AccountType::MASTER};
-    return SourceDetails(allowedSourceAccounts,
-                         mSourceAccount->getLowThreshold(),
-                         static_cast<int32_t>(SignerType::BALANCE_MANAGER),
-                         static_cast<int32_t>(BlockReasons::TOO_MANY_KYC_UPDATE_REQUESTS) |
-                         static_cast<uint32_t>(BlockReasons::WITHDRAWAL));
+    {
+        result.emplace_back(resource, SignerRuleAction::CREATE);
+        return true;
+    }
+
+    result.emplace_back(resource, SignerRuleAction::CREATE_FOR_OTHER);
+    return true;
 }
 
 ManageBalanceOpFrame::ManageBalanceOpFrame(Operation const& op,
@@ -69,12 +64,6 @@ ManageBalanceOpFrame::doApply(Application& app,
     Database& db = ledgerManager.getDatabase();
     if (mManageBalance.action == ManageBalanceAction::CREATE_UNIQUE)
     {
-        if (!ledgerManager.shouldUse(LedgerVersion::UNIQUE_BALANCE_CREATION))
-        {
-            innerResult().code(ManageBalanceResultCode::VERSION_IS_NOT_SUPPORTED_YET);
-            return false;
-        }
-
         const auto balance = BalanceHelperLegacy::Instance()->loadBalance(mManageBalance.destination, mManageBalance.asset, db, nullptr);
         if (!!balance)
         {
@@ -83,7 +72,7 @@ ManageBalanceOpFrame::doApply(Application& app,
         }
     }
 
-    auto accountHelper = AccountHelper::Instance();
+    auto accountHelper = AccountHelperLegacy::Instance();
     const AccountFrame::pointer destAccountFrame = accountHelper->
         loadAccount(delta, mManageBalance.destination, db);
     if (!destAccountFrame)

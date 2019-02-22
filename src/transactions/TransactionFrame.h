@@ -70,7 +70,8 @@ class TransactionFrame
     virtual void addSignature(SecretKey const& secretKey) = 0;
 
 	// Checks signature, if not valid - returns false and sets valid error code
-    virtual bool doCheckSignature(Application& app, Database& db, AccountFrame& account) = 0;
+    virtual bool doCheckSignature(Application& app, StorageHelper& storageHelper,
+                                  AccountID const& accountID) = 0;
 
     virtual bool checkValid(Application& app) = 0;
 
@@ -104,15 +105,6 @@ class TransactionFrame
 
     virtual void storeTransactionTiming(LedgerManager& ledgerManager,
                                         uint64 maxTime) const = 0;
-
-    // transaction fee
-    virtual bool processTxFee(Application& app, LedgerDelta* delta) = 0;
-
-    virtual bool tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode) = 0;
-
-    virtual void storeFeeForOpType(OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,
-                                   AccountFrame::pointer source, AssetCode txFeeAssetCode, Database& db) = 0;
-
 
     // access to history tables
     static TransactionResultSet getTransactionHistoryResults(Database& db,

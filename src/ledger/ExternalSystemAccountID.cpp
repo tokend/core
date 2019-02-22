@@ -1,21 +1,5 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
-#include "crypto/SecretKey.h"
-#include "crypto/Hex.h"
-#include "database/Database.h"
-#include "LedgerDelta.h"
-#include "ledger/LedgerManager.h"
 #include "ledger/ExternalSystemAccountID.h"
-#include "util/basen.h"
-#include "util/types.h"
-#include "lib/util/format.h"
 #include "xdrpp/printer.h"
-#include <algorithm>
-
-using namespace soci;
-using namespace std;
 
 namespace stellar
 {
@@ -56,7 +40,7 @@ ExternalSystemAccountIDFrame& ExternalSystemAccountIDFrame::operator=(
 
 ExternalSystemAccountIDFrame::pointer ExternalSystemAccountIDFrame::createNew(
     AccountID const accountID, int32 const externalSystemType,
-    string const data)
+    std::string const data)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID);

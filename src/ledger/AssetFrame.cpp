@@ -3,16 +3,9 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "AssetFrame.h"
-#include "database/Database.h"
-#include "LedgerDelta.h"
-#include "ledger/LedgerManager.h"
 #include "util/types.h"
-#include <util/basen.h>
-#include "util/format.h"
 #include "xdrpp/printer.h"
-#include <locale>
 
-using namespace soci;
 using namespace std;
 
 namespace stellar
@@ -55,18 +48,16 @@ AssetFrame::pointer AssetFrame::create(AssetCreationRequest const& request,
     AssetEntry& asset = le.data.asset();
     asset.availableForIssueance = request.initialPreissuedAmount;
     asset.code = request.code;
-    asset.details = request.details;
+    asset.details = request.creatorDetails;
     asset.issued = 0;
     asset.maxIssuanceAmount = request.maxIssuanceAmount;
     asset.owner = owner;
     asset.policies = request.policies;
+    asset.type = request.type;
     asset.preissuedAssetSigner = request.preissuedAssetSigner;
     asset.pendingIssuance = 0;
-    if (request.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-    {
-        asset.ext.v(LedgerVersion::ADD_ASSET_BALANCE_PRECISION);
-        asset.ext.trailingDigitsCount() = request.ext.trailingDigitsCount();
-    }
+    asset.trailingDigitsCount = request.trailingDigitsCount;
+
     return std::make_shared<AssetFrame>(le);
 }
 
@@ -210,29 +201,17 @@ bool AssetFrame::isAssetCodeValid(AssetCode const& code)
 
 uint32 AssetFrame::getTrailingDigitsCount() const
 {
-    if (mAsset.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-    {
-        return mAsset.ext.trailingDigitsCount();
-    }
-    return kMaximumTrailingDigits;
+    return mAsset.trailingDigitsCount;
 }
 
 void AssetFrame::setTrailingDigitsCount(uint32 trailingDigitsCount)
 {
-    if (mAsset.ext.v() != LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-    {
-        throw runtime_error("Unable to set trailing digits count");
-    }
-    mAsset.ext.trailingDigitsCount() = trailingDigitsCount;
+    mAsset.trailingDigitsCount = trailingDigitsCount;
 }
 
 uint64 AssetFrame::getMinimumAmount() const
 {
-    if (mAsset.ext.v() != LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
-    {
-        return 1;
-    }
-    return getMinimumAmountFromTrailingDigits(mAsset.ext.trailingDigitsCount());
+    return getMinimumAmountFromTrailingDigits(mAsset.trailingDigitsCount);
 }
 
 uint64 AssetFrame::getMinimumAmountFromTrailingDigits(stellar::uint32 trailingDigitsCount)
@@ -275,25 +254,22 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
             throw runtime_error("details is invalid");
         }
 
-        if (oe.ext.v() == LedgerVersion::ADD_ASSET_BALANCE_PRECISION)
+        if (oe.trailingDigitsCount > kMaximumTrailingDigits)
         {
-            if (oe.ext.trailingDigitsCount() > kMaximumTrailingDigits)
-            {
-                throw runtime_error("Too many trailing digits");
-            }
-            const int precision = getMinimumAmountFromTrailingDigits(oe.ext.trailingDigitsCount());
-            if (oe.availableForIssueance % precision != 0)
-            {
-                throw runtime_error("Invalid available for issuance amount");
-            }
-            if (oe.issued % precision != 0)
-            {
-                throw runtime_error("Invalid issued amount");
-            }
-            if (oe.pendingIssuance % precision != 0)
-            {
-                throw runtime_error("Invalid pending issuance amount");
-            }
+            throw runtime_error("Too many trailing digits");
+        }
+        const int precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
+        if (oe.availableForIssueance % precision != 0)
+        {
+            throw runtime_error("Invalid available for issuance amount");
+        }
+        if (oe.issued % precision != 0)
+        {
+            throw runtime_error("Invalid issued amount");
+        }
+        if (oe.pendingIssuance % precision != 0)
+        {
+            throw runtime_error("Invalid pending issuance amount");
         }
     }
     catch (...)

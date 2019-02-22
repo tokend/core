@@ -4,11 +4,8 @@
 
 #include "util/asio.h"
 #include "ReviewWithdrawalRequestOpFrame.h"
-#include "util/Logging.h"
-#include "util/types.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
@@ -16,17 +13,50 @@
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "main/Application.h"
 #include "xdrpp/printer.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
 
+bool
+ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result) const
+{
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_WITHDRAW))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
+            request->getRequestEntry().body.withdrawalRequest().balance);
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);
+    resource.reviewableRequest().details.withdraw().assetCode = asset->getCode();
+    resource.reviewableRequest().details.withdraw().assetType = asset->getType();
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
+
 bool ReviewWithdrawalRequestOpFrame::handleApprove(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::WITHDRAW)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) <<
             "Unexpected request type. Expected WITHDRAW, but got " << xdr::
@@ -115,7 +145,7 @@ bool ReviewWithdrawalRequestOpFrame::handlePermanentReject(Application& app,
     LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::WITHDRAW)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) <<
             "Unexpected request type. Expected WITHDRAW, but got " << xdr::
@@ -141,18 +171,7 @@ bool ReviewWithdrawalRequestOpFrame::doCheckValid(Application &app)
     return ReviewRequestOpFrame::doCheckValid(app);
 }
 
-SourceDetails ReviewWithdrawalRequestOpFrame::getSourceAccountDetails(
-        std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-
-    auto allowedSigners = static_cast<int32_t>(SignerType::WITHDRAW_MANAGER);
-
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE},
-                         mSourceAccount->getHighThreshold(), allowedSigners);
-}
-
-
-    uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
+uint64_t ReviewWithdrawalRequestOpFrame::getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawRequest)
 {
     uint64_t totalFee;
     if (!safeSum(withdrawRequest.fee.percent, withdrawRequest.fee.fixed, totalFee))
@@ -179,18 +198,8 @@ bool ReviewWithdrawalRequestOpFrame::rejectWithdrawalRequest(Application& app, L
     const uint64_t universalAmount = withdrawRequest.universalAmount;
     if (universalAmount > 0)
     {
-        if (!ledgerManager.shouldUse(LedgerVersion::CREATE_ONLY_STATISTICS_V2))
-        {
-            AccountManager accountManager(app, ledgerManager.getDatabase(), delta, ledgerManager);
-            const AccountID requestor = request->getRequestor();
-            const time_t timePerformed = request->getCreatedAt();
-            accountManager.revertStats(requestor, universalAmount, timePerformed);
-        }
-        else
-        {
-            StatisticsV2Processor statisticsV2Processor(ledgerManager.getDatabase(), delta, ledgerManager);
-            statisticsV2Processor.revertStatsV2(request->getRequestID());
-        }
+        StatisticsV2Processor statisticsV2Processor(ledgerManager.getDatabase(), delta, ledgerManager);
+        statisticsV2Processor.revertStatsV2(request->getRequestID());
     }
 
     EntryHelperProvider::storeChangeEntry(delta, db, balance->mEntry);

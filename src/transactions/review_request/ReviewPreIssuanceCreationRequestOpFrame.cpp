@@ -19,10 +19,13 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-bool ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
+bool
+ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta,
+													   LedgerManager & ledgerManager,
+													   ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::PRE_ISSUANCE_CREATE) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected PRE_ISSUANCE_CREATE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+	if (request->getRequestType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
+		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CREATE_PRE_ISSUANCE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
 		throw std::invalid_argument("Unexpected request type for review preIssuance creation request");
 	}
 
@@ -64,22 +67,9 @@ bool ReviewPreIssuanceCreationRequestOpFrame::handleReject(Application & app, Le
 	return false;
 }
 
-SourceDetails ReviewPreIssuanceCreationRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                               int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    auto newSingersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSingersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ISSUANCE_MANAGER);
-    }
-
-	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
-}
-
-ReviewPreIssuanceCreationRequestOpFrame::ReviewPreIssuanceCreationRequestOpFrame(Operation const & op, OperationResult & res, TransactionFrame & parentTx) :
-	ReviewRequestOpFrame(op, res, parentTx)
+ReviewPreIssuanceCreationRequestOpFrame::ReviewPreIssuanceCreationRequestOpFrame(
+		Operation const & op, OperationResult & res, TransactionFrame & parentTx)
+		: ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 

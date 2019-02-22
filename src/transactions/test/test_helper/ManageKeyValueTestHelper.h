@@ -26,10 +26,14 @@ namespace stellar{
 
             ManageKeyValueTestHelper* setResult(ManageKeyValueResultCode resultCode);
 
+            TransactionFramePtr createManageKVTx(Account& source, const ManageKeyValueOp& op);
+
             void doApply(Application &app, ManageKVAction action, bool require, KeyValueEntryType type =
                                                                                 KeyValueEntryType::UINT32);
 
             void assetOpWithoutReview();
+            void applyTx(Account& source, const ManageKeyValueOp& op,
+                         ManageKeyValueResultCode expectedResultCode = ManageKeyValueResultCode::SUCCESS);
 
         private:
 
@@ -58,7 +62,7 @@ namespace stellar{
             KeyValueEntryValue value;
             KeyValueEntryType type;
             ManageKVAction kvAction;
-            ManageKeyValueOpFrame* kvManager;
+            std::shared_ptr<ManageKeyValueOpFrame> kvManager;
             Operation op;
             TransactionFramePtr tx;
             OperationResult res;

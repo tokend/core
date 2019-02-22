@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include "util/asio.h"
 #include "ReviewRequestOpFrame.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
@@ -23,7 +23,7 @@
 #include "main/Application.h"
 #include "ReviewSaleCreationRequestOpFrame.h"
 #include "ReviewAMLAlertRequestOpFrame.h"
-#include "ReviewUpdateKYCRequestOpFrame.h"
+#include "ReviewChangeRoleRequestOpFrame.h"
 #include "ReviewInvoiceRequestOpFrame.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "ReviewASwapBidCreationRequestOpFrame.h"
@@ -35,28 +35,43 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
+bool
+ReviewRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+							  std::vector<OperationCondition>& result) const
+{
+	// only reviewer can review request
+	return true;
+}
+
+bool
+ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+									std::vector<SignerRequirement>& result) const
+{
+	SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+	resource.reviewableRequest().details.requestType(mReviewRequest.requestDetails.requestType());
+	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+	resource.reviewableRequest().allTasks = 0;
+
+	result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+	return true;
+}
+
 bool ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database & db, LedgerDelta & delta)
 {
-    auto requestorAccount = AccountHelper::Instance()->loadAccount(request->getRequestor(), db, &delta);
-    // just go through old flow
-    if (!lm.shouldUse(LedgerVersion::ALLOW_REJECT_REQUEST_OF_BLOCKED_REQUESTOR)) {
-        if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
-            innerResult().code(ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
-            return false;
-        }
-
-        return true;
-    }
+    auto requestorAccount = AccountHelperLegacy::Instance()->
+            loadAccount(request->getRequestor(), db, &delta);
 
     // we do not care about user state if it's not approval
     if (mReviewRequest.action != ReviewRequestOpAction::APPROVE) {
         return true;
     }
-
-    if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
+	//TODO
+    /*if (isSetFlag(requestorAccount->getBlockReasons(), BlockReasons::SUSPICIOUS_BEHAVIOR)) {
         innerResult().code(ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
         return false;
-    }
+    }*/
 
     return true;
     
@@ -91,43 +106,37 @@ ReviewRequestOpFrame::ReviewRequestOpFrame(Operation const& op,
 ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, OperationResult & res, TransactionFrame & parentTx)
 {
 	switch (op.body.reviewRequestOp().requestDetails.requestType()) {
-	case ReviewableRequestType::ASSET_CREATE:
+	case ReviewableRequestType::CREATE_ASSET:
 		return new ReviewAssetCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::ASSET_UPDATE:
+	case ReviewableRequestType::UPDATE_ASSET:
 		return new ReviewAssetUpdateRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::ISSUANCE_CREATE:
+	case ReviewableRequestType::CREATE_ISSUANCE:
 		return new ReviewIssuanceCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::PRE_ISSUANCE_CREATE:
+	case ReviewableRequestType::CREATE_PRE_ISSUANCE:
 		return new ReviewPreIssuanceCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::WITHDRAW:
+	case ReviewableRequestType::CREATE_WITHDRAW:
 		return new ReviewWithdrawalRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::SALE:
+	case ReviewableRequestType::CREATE_SALE:
 		return new ReviewSaleCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::LIMITS_UPDATE:
+	case ReviewableRequestType::UPDATE_LIMITS:
 		return new ReviewLimitsUpdateRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::AML_ALERT:
+	case ReviewableRequestType::CREATE_AML_ALERT:
 		return new ReviewAMLAlertRequestOpFrame(op,res,parentTx);
-    case ReviewableRequestType::UPDATE_KYC:
-        return new ReviewUpdateKYCRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CHANGE_ROLE:
+        return new ReviewChangeRoleRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::UPDATE_SALE_DETAILS:
 		return new ReviewUpdateSaleDetailsRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::INVOICE:
+	case ReviewableRequestType::CREATE_INVOICE:
 		return new ReviewInvoiceRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CONTRACT:
+	case ReviewableRequestType::MANAGE_CONTRACT:
 		return new ReviewContractRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
 		return new ReviewASwapBidCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::ATOMIC_SWAP:
+	case ReviewableRequestType::CREATE_ATOMIC_SWAP:
 		return new ReviewASwapRequestOpFrame(op, res, parentTx);
 	default:
 		throw std::runtime_error("Unexpected request type for review request op");
 	}
-}
-
-std::unordered_map<AccountID, CounterpartyDetails> ReviewRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
-{
-	// no counterparties
-	return std::unordered_map<AccountID, CounterpartyDetails>();
 }
 
 bool ReviewRequestOpFrame::handleReject(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
@@ -172,7 +181,8 @@ ReviewRequestOpFrame::doApply(Application& app,
 		return false;
 	}
 
-	if (removingNotSetTasks(request->getRequestEntry())){
+	if (!removingExistingTasks(request->getRequestEntry()))
+	{
 		innerResult().code(ReviewRequestResultCode::REMOVING_NOT_SET_TASKS);
 		return false;
 	}
@@ -230,11 +240,10 @@ uint64_t ReviewRequestOpFrame::getTotalFee(uint64_t requestID, Fee fee)
     return totalFee;
 }
 
-bool ReviewRequestOpFrame::removingNotSetTasks(ReviewableRequestEntry &requestEntry) {
-	bool emptyTasksToRemove = mReviewRequest.reviewDetails.tasksToRemove == 0;
-	bool removingTasksPresent = (~requestEntry.tasks.pendingTasks & mReviewRequest.reviewDetails.tasksToRemove) != 0;
-
-	return !emptyTasksToRemove && removingTasksPresent;
+bool
+ReviewRequestOpFrame::removingExistingTasks(ReviewableRequestEntry &requestEntry)
+{
+	return (requestEntry.tasks.pendingTasks | mReviewRequest.reviewDetails.tasksToRemove) == requestEntry.tasks.pendingTasks;
 }
 
 void ReviewRequestOpFrame::handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request)

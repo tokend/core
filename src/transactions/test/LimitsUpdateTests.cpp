@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "ledger/AccountLimitsHelper.h"
@@ -46,8 +46,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
     // create requestor
     auto requestor = Account{ SecretKey::random(), Salt(0) };
     AccountID requestorID = requestor.key.getPublicKey();
-    createAccountTestHelper.applyCreateAccountTx(root, requestorID,
-                                                 AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, requestorID, 1);
 
     // set default limits for review request
     reviewLimitsUpdateHelper.initializeLimits(requestorID);
@@ -93,8 +92,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
             SECTION("Approve for account with limits") {
                 auto accountWithLimits = Account{SecretKey::random(), Salt(0)};
                 AccountID accountWithoutLimitsID = accountWithLimits.key.getPublicKey();
-                createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID,
-                                                             AccountType::GENERAL);
+                createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID, 1);
                 ManageLimitsOp manageLimitsOp;
                 manageLimitsOp.details.action(ManageLimitsAction::CREATE);
                 manageLimitsOp.details.limitsCreateDetails().accountID.activate() = accountWithoutLimitsID;
@@ -129,7 +127,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
             }
             SECTION("Update limits update request") {
                 std::string newDocumentData = "{\n \"a\": \"New document data\" \n}";
-                limitsUpdateRequest.ext.details() = newDocumentData;
+                limitsUpdateRequest.creatorDetails = newDocumentData;
                 uint64_t limitsUpdateRequestID = limitsUpdateResult.success().manageLimitsRequestID;
                 limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
                                                                                               limitsUpdateRequest,
@@ -142,12 +140,12 @@ TEST_CASE("limits update", "[tx][limits_update]")
 
         SECTION("Invalid details")
         {
-            limitsUpdateRequest.ext.details() = "Some document data, huge data, very huge data to check convert to string64"
+            limitsUpdateRequest.creatorDetails = "Some document data, huge data, very huge data to check convert to string64"
                                                 " when get reference to write to database information about request";
             limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
                                                                                           limitsUpdateRequest, nullptr,
                                                                                           &requestID,
-                                                                                          CreateManageLimitsRequestResultCode::INVALID_DETAILS);
+                                                                                          CreateManageLimitsRequestResultCode::INVALID_CREATOR_DETAILS);
         }
 
         SECTION("Update non existing request")

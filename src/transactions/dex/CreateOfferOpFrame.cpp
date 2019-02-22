@@ -3,20 +3,17 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <ledger/AssetHelperLegacy.h>
-#include "util/asio.h"
 #include "CreateOfferOpFrame.h"
-#include "OfferExchange.h"
-#include "database/Database.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "ledger/OfferFrame.h"
 #include "main/Application.h"
-#include "util/Logging.h"
 #include "OfferManager.h"
-#include "transactions/FeesManager.h"
 
 namespace stellar
 {
@@ -30,6 +27,69 @@ CreateOfferOpFrame::CreateOfferOpFrame(Operation const& op,
     : ManageOfferOpFrame(op, res, parentTx)
 {
 }
+
+bool
+CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+                                              std::vector<OperationCondition> &result) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    auto baseBalance = balanceHelper.loadBalance(mManageOffer.baseBalance);
+    if (!baseBalance)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
+        return false;
+    }
+
+    auto quoteBalance = balanceHelper.loadBalance(mManageOffer.quoteBalance);
+    if (!quoteBalance)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
+        return false;
+    }
+
+    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
+    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+
+    AccountRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    resource.offer().baseAssetCode = baseAsset->getCode();
+    resource.offer().quoteAssetCode = quoteAsset->getCode();
+    resource.offer().baseAssetType = baseAsset->getType();
+    resource.offer().quoteAssetType = quoteAsset->getType();
+    resource.offer().isBuy = mManageOffer.isBuy;
+
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+
+    return true;
+}
+
+bool
+CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    auto baseBalance = balanceHelper.mustLoadBalance(mManageOffer.baseBalance);
+    auto quoteBalance = balanceHelper.mustLoadBalance(mManageOffer.quoteBalance);
+
+    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
+    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+
+    SignerRuleResource resource(LedgerEntryType::OFFER_ENTRY);
+    resource.offer().baseAssetCode = baseAsset->getCode();
+    resource.offer().quoteAssetCode = quoteAsset->getCode();
+    resource.offer().baseAssetType = baseAsset->getType();
+    resource.offer().quoteAssetType = quoteAsset->getType();
+    resource.offer().isBuy = mManageOffer.isBuy;
+
+    result.emplace_back(resource, SignerRuleAction::CREATE);
+
+    return true;
+};
 
 BalanceFrame::pointer CreateOfferOpFrame::loadBalanceValidForTrading(
     BalanceID const& balanceID, Database& db,
@@ -99,8 +159,10 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
     else
         receivingBalance = mManageOffer.quoteBalance;
 
-    if (!isAllowedToReceive(receivingBalance, db))
+    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(receivingBalance, db);
+    if (!balanceFrame)
     {
+        innerResult().code(ManageOfferResultCode::BALANCE_NOT_FOUND);
         return false;
     }
 
@@ -159,11 +221,10 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 FeeManager::FeeResult
 CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const
 {
-    if (lm.shouldUse(LedgerVersion::ADD_CAPITAL_DEPLOYMENT_FEE_TYPE) && isCapitalDeployment)
-    {
-        return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
+    if (isCapitalDeployment) {
+        return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount,
+                                                                   db);
     }
-
     return FeeManager::calculateOfferFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
 }
 
@@ -221,7 +282,8 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     innerResult().code(ManageOfferResultCode::SUCCESS);
 
-    const BalanceFrame::pointer commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(app.getCommissionID(), mAssetPair->getQuoteAsset(), db, delta);
+    const auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
+            app.getAdminID(), mAssetPair->getQuoteAsset(), db, delta);
 
     AccountManager accountManager(app, db, delta, ledgerManager);
 
@@ -334,28 +396,5 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
     }
 
     return true;
-}
-
-bool
-CreateOfferOpFrame::isAllowedToReceive(BalanceID receivingBalance, Database &db)
-{
-    const auto result = AccountManager::isAllowedToReceive(receivingBalance, db);
-    switch (result){
-        case AccountManager::SUCCESS:
-            return true;
-        case AccountManager::BALANCE_NOT_FOUND:
-            innerResult().code(ManageOfferResultCode::BALANCE_NOT_FOUND);
-            return false;
-        case AccountManager::REQUIRED_VERIFICATION:
-            innerResult().code(ManageOfferResultCode::REQUIRES_VERIFICATION);
-            return false;
-        case AccountManager::REQUIRED_KYC:
-            innerResult().code(ManageOfferResultCode::REQUIRES_KYC);
-            return false;
-        default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Unexpected isAllowedToReceive method result from accountManager:" << result;
-            throw std::runtime_error("Unexpected isAllowedToReceive method result from accountManager");
-    }
 }
 }

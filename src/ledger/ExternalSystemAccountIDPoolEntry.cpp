@@ -1,13 +1,6 @@
-#include "crypto/SecretKey.h"
-#include "crypto/Hex.h"
-#include "database/Database.h"
-#include "LedgerDelta.h"
-#include "ledger/LedgerManager.h"
 #include "ledger/ExternalSystemAccountIDPoolEntry.h"
-#include "lib/util/format.h"
 #include "xdrpp/printer.h"
 
-using namespace soci;
 using namespace std;
 
 namespace stellar

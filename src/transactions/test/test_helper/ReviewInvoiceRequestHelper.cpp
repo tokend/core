@@ -36,7 +36,7 @@ ReviewInvoiceRequestHelper::applyReviewRequestTx(Account &source, uint64_t reque
     auto checker = InvoiceReviewChecker(mTestManager, requestID);
     requestMustBeDeletedAfterApproval = true;
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, mTestManager->getDB());
-    if (request && (request->getType() == ReviewableRequestType::INVOICE) &&
+    if (request && (request->getType() == ReviewableRequestType::CREATE_INVOICE) &&
         request->getRequestEntry().body.invoiceRequest().contractID)
         requestMustBeDeletedAfterApproval = false;
 
@@ -67,8 +67,8 @@ ReviewInvoiceRequestHelper::createReviewRequestTx(Account& source,
 }
 
 void
-ReviewInvoiceRequestHelper::initializePaymentDetails(PaymentOpV2::_destination_t& destination, uint64_t amount,
-                                                     PaymentFeeDataV2& feeData, std::string subject,
+ReviewInvoiceRequestHelper::initializePaymentDetails(PaymentOp::_destination_t& destination, uint64_t amount,
+                                                     PaymentFeeData& feeData, std::string subject,
                                                      std::string reference, BalanceID sourceBalance)
 {
     paymentDetails.amount = amount;

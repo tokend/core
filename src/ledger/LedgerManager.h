@@ -176,6 +176,11 @@ class LedgerManager
     virtual void checkDbState() = 0;
 
     virtual bool shouldUse(const LedgerVersion version) = 0;
+
+    virtual LedgerVersion getLedgerVersion() = 0;
+
+    virtual AccountID getNotExistingAccountID() = 0;
+
     virtual ~LedgerManager()
     {
     }

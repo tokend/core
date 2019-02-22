@@ -18,16 +18,13 @@ namespace stellar
 using xdr::operator<;
 
 Config::Config() : NODE_SEED(SecretKey::random()), 
-masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
-commissionID(PubKeyUtils::fromStrKey("GAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHV4")), 
-operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABVCX"))
+masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"))
 {
     // fill in defaults
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<int32_t >(
-            LedgerVersion::EXTEND_REVIEW_ATOMIC_SWAP_REQUEST_RESULT);
+    LEDGER_PROTOCOL_VERSION = static_cast<int32_t>(LedgerVersion::EMPTY_VERSION);
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
     OVERLAY_PROTOCOL_VERSION = 5;
 
@@ -39,7 +36,7 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     MANUAL_CLOSE = false;
     CATCHUP_COMPLETE = false;
     CATCHUP_RECENT = 0;
-    MAINTENANCE_ON_STARTUP = true;
+    MAINTENANCE_ON_STARTUP = false;
     ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING = false;
     ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING = false;
     ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING = 0;
@@ -711,19 +708,6 @@ AssetCode Config::getAssetCode(std::shared_ptr<cpptoml::toml_base> rawValue, con
 void
 Config::validateConfig()
 {
-	auto systemAccounts = getSystemAccounts();
-	for (int i = 0; i < systemAccounts.size(); i++)
-	{
-		for (int j = 0; j < systemAccounts.size(); j++)
-		{
-			if (i == j)
-				continue;
-
-			if (systemAccounts[i] == systemAccounts[j])
-				throw std::invalid_argument("Systems accounts can't have same accountID");
-		}
-	}
-
 	if (BASE_EXCHANGE_NAME.empty())
 	{
 		throw std::invalid_argument("BASE_EXCHANGE_NAME must not be empty");

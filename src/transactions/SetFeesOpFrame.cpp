@@ -5,7 +5,6 @@
 #include <lib/xdrpp/xdrpp/printer.h>
 #include "transactions/SetFeesOpFrame.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
@@ -15,14 +14,35 @@
 
 namespace stellar {
 
-    using namespace std;
-    using xdr::operator==;
+using namespace std;
+using xdr::operator==;
 
-    SetFeesOpFrame::SetFeesOpFrame(Operation const &op,
-                                   OperationResult &res,
-                                   TransactionFrame &parentTx)
-            : OperationFrame(op, res, parentTx), mSetFees(mOperation.body.setFeesOp()) {
-    }
+SetFeesOpFrame::SetFeesOpFrame(Operation const &op, OperationResult &res,
+                               TransactionFrame &parentTx)
+        : OperationFrame(op, res, parentTx)
+        , mSetFees(mOperation.body.setFeesOp())
+{
+}
+
+bool
+SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                std::vector<OperationCondition>& result) const
+{
+    result.emplace_back(AccountRuleResource(LedgerEntryType::FEE),
+                        AccountRuleAction::MANAGE, mSourceAccount);
+
+    return true;
+}
+
+bool
+SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                std::vector<SignerRequirement>& result) const
+{
+    result.emplace_back(SignerRuleResource(LedgerEntryType::FEE),
+                        SignerRuleAction::MANAGE);
+
+    return true;
+}
 
     bool SetFeesOpFrame::trySetFee(medida::MetricsRegistry &metrics, Database &db, LedgerDelta &delta) {
         assert(mSetFees.fee);
@@ -33,7 +53,7 @@ namespace stellar {
             return false;
 
         Hash hash = FeeFrame::calcHash(mSetFees.fee->feeType, mSetFees.fee->asset, mSetFees.fee->accountID.get(),
-                                       mSetFees.fee->accountType.get(), mSetFees.fee->subtype);
+                                       mSetFees.fee->accountRole.get(), mSetFees.fee->subtype);
 
         auto actualHashValue = mSetFees.fee.get()->hash;
         if (actualHashValue != hash) {
@@ -260,28 +280,6 @@ namespace stellar {
         return mustDefaultSubtype(fee, metrics);
     }
 
-    std::unordered_map<AccountID, CounterpartyDetails>
-    SetFeesOpFrame::getCounterpartyDetails(Database &db, LedgerDelta *delta) const {
-        if (!mSetFees.fee || !mSetFees.fee->accountID)
-            return {};
-        return {
-                {*mSetFees.fee->accountID, CounterpartyDetails(getAllAccountTypes(), true, true)}
-        };
-    }
-
-    SourceDetails
-    SetFeesOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                            int32_t ledgerVersion) const {
-        auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-        auto newSignersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-        if (ledgerVersion >= newSignersVersion) {
-            allowedSigners = static_cast<int32_t>(SignerType::FEES_MANAGER);
-        }
-
-        return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
-    }
-
     bool SetFeesOpFrame::mustEmptyFixed(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
         if (fee.fixedFee == 0)
             return true;
@@ -312,7 +310,7 @@ namespace stellar {
             return false;
         }
 
-        if (mSetFees.fee->accountID && mSetFees.fee->accountType) {
+        if (mSetFees.fee->accountID && mSetFees.fee->accountRole) {
             innerResult().code(SetFeesResultCode::MALFORMED);
             app.getMetrics().NewMeter({"op-set-fees", "invalid", "malformed-both-set"}, "operation").Mark();
             return false;

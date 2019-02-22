@@ -10,6 +10,11 @@
 
 namespace stellar {
     class ReviewSaleCreationRequestOpFrame : public ReviewRequestOpFrame {
+
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
+
     public:
 
         ReviewSaleCreationRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
@@ -20,9 +25,6 @@ namespace stellar {
         bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
                            ReviewableRequestFrame::pointer request) override;
 
-        SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                int32_t ledgerVersion) const override;
-
         ReviewRequestResultCode tryCreateSale(Application &app, Database &db, LedgerDelta &delta,
                                               LedgerManager &ledgerManager,
                                               ReviewableRequestFrame::pointer request, uint64_t saleID);
@@ -31,9 +33,6 @@ namespace stellar {
 
         void createAssetPair(SaleFrame::pointer sale, Application &app, LedgerManager &ledgerManager,
                              LedgerDelta &delta) const;
-
-        AssetFrame::pointer loadAsset(LedgerManager &ledgerManager, AssetCode code, AccountID const &requestor,
-                                      Database &db, LedgerDelta *delta);
 
         std::map<AssetCode, BalanceID>
         loadBalances(AccountManager &accountManager, ReviewableRequestFrame::pointer request,

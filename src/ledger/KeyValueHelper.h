@@ -12,16 +12,19 @@ namespace soci
 namespace stellar
 {
 
-    class StatementContext;
+class StatementContext;
 
-    class KeyValueHelper : public EntryHelper {
+class KeyValueHelper : public EntryHelper
+{
 
-    public:
+public:
 
-        virtual KeyValueEntryFrame::pointer
-        loadKeyValue(string256 valueKey) = 0;
+    virtual KeyValueEntryFrame::pointer
+    loadKeyValue(string256 valueKey) = 0;
 
-        virtual void loadKeyValues(StatementContext &prep, std::function<void(LedgerEntry const &)> keyValueProcessor) = 0;
-    };
+    virtual void
+    loadKeyValues(StatementContext &prep,
+                  std::function<void(LedgerEntry const &)> keyValueProcessor) = 0;
+};
 
 }

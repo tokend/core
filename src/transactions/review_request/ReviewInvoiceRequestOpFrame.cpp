@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
-#include <transactions/payment/PaymentOpV2Frame.h>
+#include <transactions/payment/PaymentOpFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "util/asio.h"
 #include "ReviewInvoiceRequestOpFrame.h"
@@ -20,21 +20,12 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-
-SourceDetails
-ReviewInvoiceRequestOpFrame::getSourceAccountDetails(
-        unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::INVOICE_MANAGER));
-}
-
 bool
 ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::INVOICE)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected INVOICE, but got "
                                << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
@@ -192,20 +183,20 @@ bool
 ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager)
 {
     Operation op;
-    op.body.type(OperationType::PAYMENT_V2);
-    op.body.paymentOpV2() = mReviewRequest.requestDetails.billPay().paymentDetails;
+    op.body.type(OperationType::PAYMENT);
+    op.body.paymentOp() = mReviewRequest.requestDetails.billPay().paymentDetails;
 
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
-    opRes.tr().type(OperationType::PAYMENT_V2);
-    PaymentOpV2Frame paymentOpV2Frame(op, opRes, mParentTx);
+    opRes.tr().type(OperationType::PAYMENT);
+    PaymentOpFrame paymentOpV2Frame(op, opRes, mParentTx);
 
     paymentOpV2Frame.setSourceAccountPtr(mSourceAccount);
 
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
     if (!paymentOpV2Frame.doCheckValid(app) || !paymentOpV2Frame.doApply(app, storageHelper, ledgerManager))
     {
-        auto resultCode = PaymentOpV2Frame::getInnerCode(opRes);
+        auto resultCode = PaymentOpFrame::getInnerCode(opRes);
         trySetErrorCode(resultCode);
         return false;
     }
@@ -214,7 +205,7 @@ ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &del
 }
 
 void
-ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentV2ResultCode paymentResult)
+ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentResultCode paymentResult)
 {
     try
     {
@@ -223,7 +214,7 @@ ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentV2ResultCode paymentResult)
     catch(...)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from payment v2 operation: "
-                                               << xdr::xdr_traits<PaymentV2ResultCode>::enum_name(paymentResult);
+                                               << xdr::xdr_traits<PaymentResultCode>::enum_name(paymentResult);
         throw std::runtime_error("Unexpected result code from payment v2 operation");
     }
 }
@@ -242,15 +233,12 @@ ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
                                LedgerDelta& delta, LedgerManager& ledgerManager,
                                ReviewableRequestFrame::pointer request)
 {
-    if (ledgerManager.shouldUse(LedgerVersion::ADD_DEFAULT_ISSUANCE_TASKS))
-    {
-        request->checkRequestType(ReviewableRequestType::INVOICE);
+    request->checkRequestType(ReviewableRequestType::CREATE_INVOICE);
 
-        if (request->getRequestEntry().body.invoiceRequest().isApproved)
-        {
-            innerResult().code(ReviewRequestResultCode::INVOICE_ALREADY_APPROVED);
-            return false;
-        }
+    if (request->getRequestEntry().body.invoiceRequest().isApproved)
+    {
+        innerResult().code(ReviewRequestResultCode::INVOICE_ALREADY_APPROVED);
+        return false;
     }
 
     return ReviewRequestOpFrame::handlePermanentReject(app, delta,

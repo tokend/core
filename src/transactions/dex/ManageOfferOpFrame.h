@@ -26,11 +26,6 @@ protected:
 
     ManageOfferOp const& mManageOffer;
 
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(
-        Database& db, LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
-
 public:
     static const uint64_t SECONDARY_MARKET_ORDER_BOOK_ID = 0;
     ManageOfferOpFrame(Operation const& op, OperationResult& res,

@@ -1,115 +1,116 @@
 #pragma once
 
-#include <transactions/kyc/CreateKYCReviewableRequestOpFrame.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar {
 
-    class ManageKeyValueOpFrame : public OperationFrame
+class ManageKeyValueOpFrame : public OperationFrame
+{
+    ManageKeyValueOp const& mManageKeyValue;
+
+    std::map<std::string, KeyValueEntryType> mValueTypes;
+
+    ManageKeyValueResult& innerResult()
     {
-        ManageKeyValueOp const& mManageKeyValue;
+        return mResult.tr().manageKeyValueResult();
+    }
 
-        ManageKeyValueResult& innerResult()
-        {
-            return mResult.tr().manageKeyValueResult();
-        }
+    bool
+    tryGetOperationConditions(StorageHelper& sh,
+                              std::vector<OperationCondition>& result) const override;
 
-    public:
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
-        ManageKeyValueOpFrame(Operation const& op, OperationResult& res,
-                              TransactionFrame& parentTx);
+public:
 
-        bool doApply(Application& app, LedgerDelta& delta,
-                     LedgerManager& ledgerManager) override;
+    ManageKeyValueOpFrame(Operation const& op, OperationResult& res,
+                          TransactionFrame& parentTx);
 
-        bool doCheckValid(Application& app) override;
+    bool doApply(Application& app, LedgerDelta& delta,
+                 LedgerManager& ledgerManager) override;
 
-        std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
+    bool doCheckValid(Application& app) override;
 
-        SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
+    static ManageKeyValueResultCode
+    getInnerCode(OperationResult const& res)
+    {
+        return res.tr().manageKeyValueResult().code();
+    }
 
-        static ManageKeyValueResultCode
-        getInnerCode(OperationResult const& res)
-        {
-            return res.tr().manageKeyValueResult().code();
-        }
+    std::string getInnerResultCodeAsStr() override
+    {
+        const auto result = getResult();
+        const auto code = getInnerCode(result);
+        return xdr::xdr_traits<ManageKeyValueResultCode>::enum_name(code);
+    }
 
-        std::string getInnerResultCodeAsStr() override
-        {
-            const auto result = getResult();
-            const auto code = getInnerCode(result);
-            return xdr::xdr_traits<ManageKeyValueResultCode>::enum_name(code);
-        }
+    string256 getPrefix() const {
+        string256 prefix;
+        std::istringstream from(mManageKeyValue.key);
+        std::getline(from,prefix,':');
 
-        string256 getPrefix() const {
-            string256 prefix;
-            std::istringstream from(mManageKeyValue.key);
-            std::getline(from,prefix,':');
+        return prefix;
+    }
 
-            return prefix;
-        }
+    static longstring
+    makeChangeRoleKey(std::string currentRoleID, std::string roleIDToSet);
 
-        static longstring makeKYCRuleKey(AccountType accountType, uint32 kycLevel, AccountType accountTypeToSet, uint32 kycLevelToSet);
+    static longstring makeLimitsUpdateTasksKey();
 
-        static longstring makeExternalSystemExpirationPeriodKey(int32 externalSystemType);
+    static longstring makeExternalSystemExpirationPeriodKey(int32 type);
+    static longstring makeIssuanceTasksKey(AssetCode assetCode);
+    static longstring makeWithdrawalTasksKey(AssetCode assetCode);
 
-        static longstring makeTransactionFeeAssetKey();
+    static longstring makeMaxContractDetailLengthKey();
 
-        static longstring makeIssuanceTasksKey(AssetCode assetCode);
-        static longstring makeWithdrawalTasksKey(AssetCode assetCode);
+    static longstring makeMaxContractInitialDetailLengthKey();
 
-        static longstring makeMaxContractDetailLengthKey();
+    static longstring makeMaxContractsCountKey();
 
-        static longstring makeMaxContractInitialDetailLengthKey();
+    static longstring makeMaxInvoicesCountKey();
 
-        static longstring makeMaxContractsCountKey();
+    static longstring makeMaxInvoiceDetailLengthKey();
 
-        static longstring makeMaxInvoicesCountKey();
+    static longstring makeAtomicSwapTasksKey();
+    static longstring makePreIssuanceTasksKey(AssetCode assetCode);
+    static longstring makeAssetCreateTasksKey();
 
-        static longstring makeMaxInvoiceDetailLengthKey();
+    static longstring makeWithdrawLowerBoundKey(AssetCode assetCode);
 
-        static longstring makeAtomicSwapTasksKey();
-        static longstring makePreIssuanceTasksKey(AssetCode assetCode);
-        static longstring makeAssetCreateTasksKey();
+    static longstring makeAssetUpdateTasksKey();
 
-        static longstring makeWithdrawLowerBoundKey(AssetCode assetCode);
+    static longstring makeSaleUpdateTasksKey(longstring ID);
 
-        static longstring makeAssetUpdateTasksKey();
+    static longstring makeSaleCreateTasksKey(AssetCode assetCode);
 
-        static longstring makeSaleUpdateTasksKey(longstring ID);
+    static longstring makeInvoiceCreateTasksKey();
 
-        static longstring makeSaleCreateTasksKey(AssetCode assetCode);
+    static longstring makeContractCreateTasksKey();
 
-        static longstring makeInvoiceCreateTasksKey();
-
-        static longstring makeContractCreateTasksKey();
-
-        static longstring makeAmlAlertCreateTasksKey();
+    static longstring makeAmlAlertCreateTasksKey();
 
 
-        static const char * kycRulesPrefix;
-        static const char * externalSystemPrefix;
-        static const char * transactionFeeAssetKey;
-        static const char * transactionFeeAssetPrefix;
-        static const char * issuanceTasksPrefix;
-        static const char * withdrawalTasksPrefix;
-        static const char * maxContractDetailLengthPrefix;
-        static const char * maxContractInitialDetailLengthPrefix;
-        static const char * maxContractsCountPrefix;
-        static const char * maxInvoicesCountPrefix;
-        static const char * maxInvoiceDetailLengthPrefix;
-        static const char * atomicSwapTasksPrefix;
-        static const char * withdrawLowerBoundPrefix;
-        static char const * preIssuanceTasksPrefix;
-        static char const * assetCreateTasks;
-        static char const * assetUpdateTasks;
-        static char const * saleUpdateDetailsTasksPrefix;
-        static char const * saleCreateTasksPrefix;
-        static char const * invoiceCreateTasks;
-        static char const * contractCreateTasks;
-        static char const * amlAlertCreateTasks;
-
-        static std::map<std::string, KeyValueEntryType> valueTypes;
-    };
+    static const char * changeRoleTasks;
+    static const char * externalSystemPrefix;
+    static const char * issuanceTasksPrefix;
+    static const char * withdrawalTasksPrefix;
+    static const char * maxContractDetailLengthPrefix;
+    static const char * maxContractInitialDetailLengthPrefix;
+    static const char * maxContractsCountPrefix;
+    static const char * maxInvoicesCountPrefix;
+    static const char * maxInvoiceDetailLengthPrefix;
+    static const char * atomicSwapTasksPrefix;
+    static const char * withdrawLowerBoundPrefix;
+    static char const * preIssuanceTasksPrefix;
+    static char const * assetCreateTasks;
+    static char const * assetUpdateTasks;
+    static char const * saleUpdateDetailsTasksPrefix;
+    static char const * saleCreateTasksPrefix;
+    static char const * invoiceCreateTasks;
+    static char const * contractCreateTasks;
+    static char const * amlAlertCreateTasks;
+    static char const * limitsUpdateTasks;
+};
 }

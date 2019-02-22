@@ -2,6 +2,7 @@
 
 #include "database/Database.h"
 #include "medida/meter.h"
+#include <gmock/gmock.h>
 
 namespace stellar
 {

@@ -6,8 +6,6 @@
 
 #include <memory>
 #include "transactions/AccountManager.h"
-#include "transactions/CounterpartyDetails.h"
-#include "transactions/SourceDetails.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/AccountFrame.h"
 #include "ledger/AssetFrame.h"
@@ -28,20 +26,43 @@ class LedgerManager;
 class LedgerDelta;
 class StorageHelper;
 class KeyValueHelper;
+class AccountRuleVerifier;
 
 class TransactionFrame;
 
+struct OperationCondition
+{
+    AccountRuleResource resource;
+    AccountRuleAction action;
+    AccountFrame::pointer account;
+
+    OperationCondition(AccountRuleResource res, AccountRuleAction act, AccountFrame::pointer acc)
+            : resource(res), action(act), account(acc)
+    {
+    }
+};
+
+struct SignerRequirement
+{
+    SignerRuleResource resource;
+    SignerRuleAction action;
+
+    SignerRequirement(SignerRuleResource res, SignerRuleAction act)
+            : resource(res), action(act)
+    {
+    }
+};
+
 class OperationFrame
 {
+private:
+	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
 
-  private:
-	bool checkCounterparties(Application& app, std::unordered_map<AccountID, CounterpartyDetails>& counterparties);
-	bool checkRolePermissions(Application& app);
 	bool canBeApplied(Application& app, StorageHelper& storageHelper);
-	bool checkAdminCount(Application& app, StorageHelper& storageHelper);
-	bool checkOp(Application& app, StorageHelper& storageHelper);
-  
-  protected:
+    bool checkAdminCount(Application& app, StorageHelper& storageHelper);
+    bool checkOp(Application& app, StorageHelper& storageHelper);
+
+protected:
 
     Operation const& mOperation;
     TransactionFrame& mParentTx;
@@ -49,7 +70,7 @@ class OperationFrame
     OperationResult& mResult;
 
 	// checks signature, if not valid - returns false and sets operation error code;
-    bool doCheckSignature(Application& app, Database& db, SourceDetails& sourceDetails);
+    bool doCheckSignature(Application& app, StorageHelper& storageHelper);
 
     virtual bool doCheckValid(Application& app) = 0;
     virtual bool doApply(Application& app, LedgerDelta& delta,
@@ -60,16 +81,16 @@ class OperationFrame
   public:
     virtual ~OperationFrame() = default;
 
-    virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const = 0;
-    virtual std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta,
-                                                                                      int32_t ledgerVersion) const;
-    virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                      int32_t ledgerVersion) const = 0;
-    virtual SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-        int32_t ledgerVersion, Database& db) const;
+    virtual bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const;
+
+    virtual bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const;
 
 	// returns true if operation is allowed in the system
-	virtual bool isAllowed() const;
+	virtual bool isSupported() const;
 
 	// returns fee paid for operation.
 	// default fee for all operations is 0, finantial operations must override this function
@@ -109,7 +130,7 @@ class OperationFrame
     bool loadAccount(LedgerDelta* delta, Database& db);
 
     void
-    createReferenceEntry(std::string reference, StorageHelper& storageHelper);
+    createReferenceEntry(std::string reference, AccountID sender, StorageHelper& storageHelper);
 
     OperationResult&
     getResult() const
@@ -118,7 +139,8 @@ class OperationFrame
     }
     OperationResultCode getResultCode() const;
 
-    bool checkValid(Application& app, LedgerDelta* delta = nullptr);
+    bool checkValid(Application& app, AccountRuleVerifier& accountRuleVerifier,
+                    LedgerDelta* delta = nullptr);
 
     bool apply(StorageHelper& storageHelper, Application& app);
 

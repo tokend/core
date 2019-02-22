@@ -1,4 +1,4 @@
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ReviewRequestHelper.h"
@@ -82,16 +82,11 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     reviewRequestOp.reviewDetails.tasksToRemove = 0;
     reviewRequestOp.reviewDetails.externalDetails = "{}";
 
-    if (mRequest->getRequestType() == ReviewableRequestType::UPDATE_KYC)
-    {
-        reviewRequestOp.requestDetails.updateKYC().externalDetails = "{}";
-    }
-
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::REVIEW_REQUEST);
     Database& db = mLedgerManager.getDatabase();
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
     auto reviewerFrame = accountHelper->loadAccount(reviewer, db);
     if (!reviewerFrame) {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: expected review to exist for request: "
@@ -99,7 +94,8 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
         throw std::runtime_error("Unexpected state expected reviewer to exist");
     }
 
-    auto reviewRequestOpFrame = ReviewRequestOpFrame::makeHelper(op, opRes, parentTx);
+    auto reviewRequestOpFrame = std::unique_ptr<ReviewRequestOpFrame>(
+            ReviewRequestOpFrame::makeHelper(op, opRes, parentTx));
     reviewRequestOpFrame->setSourceAccountPtr(reviewerFrame);
     bool isApplied = reviewRequestOpFrame->doCheckValid(mApp) && reviewRequestOpFrame->doApply(mApp, mDelta, mLedgerManager);
     if (reviewRequestOpFrame->getResultCode() != OperationResultCode::opINNER)

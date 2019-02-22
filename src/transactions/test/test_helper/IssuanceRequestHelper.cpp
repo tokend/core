@@ -86,6 +86,7 @@ namespace txtest
         preIssuanceRequest.asset = assetCode;
         preIssuanceRequest.reference = reference;
         preIssuanceRequest.signature = createPreIssuanceRequestSignature(preIssuedAssetSigner, assetCode, amount, reference);
+        preIssuanceRequest.creatorDetails = "{}";
         preIssuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
         return preIssuanceRequest;
     }
@@ -99,12 +100,14 @@ namespace txtest
 		return sig;
 	}
 
-	CreateIssuanceRequestResult IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode assetCode,
-                                                                                  uint64_t amount, BalanceID receiver,
-                                                                                  std::string reference,
-																				  uint32_t *allTasks,
-                                                                                  CreateIssuanceRequestResultCode expectedResult,
-                                                                                  std::string externalDetails)
+CreateIssuanceRequestResult
+IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode assetCode,
+												  uint64_t amount, BalanceID receiver,
+												  std::string reference,
+												  uint32_t *allTasks,
+												  CreateIssuanceRequestResultCode expectedResult,
+												  std::string externalDetails,
+												  OperationResultCode expectedOpCode)
 	{
 		auto &db = mTestManager->getDB();
 		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -123,6 +126,14 @@ namespace txtest
 		mTestManager->applyCheck(txFrame);
 		auto txResult = txFrame->getResult();
 		auto opResult = txResult.result.results()[0];
+
+		REQUIRE(opResult.code() == expectedOpCode);
+
+		if (opResult.code() != OperationResultCode::opINNER)
+		{
+			return CreateIssuanceRequestResult();
+		}
+
 		auto actualResultCode = CreateIssuanceRequestOpFrame::getInnerCode(opResult);
 		REQUIRE(actualResultCode == expectedResult);
 
@@ -189,18 +200,18 @@ namespace txtest
         issuanceRequest.amount = amount;
         issuanceRequest.asset = assetCode;
         issuanceRequest.receiver = receiver;
-        issuanceRequest.externalDetails = externalDetails;
+        issuanceRequest.creatorDetails = externalDetails;
         issuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
         return issuanceRequest;
     }
 
     void IssuanceRequestHelper::createAssetWithPreIssuedAmount(Account& assetOwner, AssetCode assetCode, uint64_t preIssuedAmount,
-                                                               Account& root, uint32_t trailingDigitsCount) {
+                                                               Account& root, uint32_t trailingDigitsCount, uint64_t assetType) {
 		auto manageAssetHelper = ManageAssetTestHelper(mTestManager);
 		auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
 														 ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
 														 : 0;
-		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount);
+		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount, assetType);
 		authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
 	}
 

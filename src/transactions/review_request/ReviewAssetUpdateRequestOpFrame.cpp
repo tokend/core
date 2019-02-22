@@ -21,7 +21,7 @@ using xdr::operator==;
 
 bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::ASSET_UPDATE) {
+	if (request->getRequestType() != ReviewableRequestType::UPDATE_ASSET) {
 		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected ASSET_UPDATE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
 		throw std::invalid_argument("Unexpected request type for review asset update request");
 	}
@@ -53,7 +53,7 @@ bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDel
     bool wasBase = assetFrame->isPolicySet(AssetPolicy::BASE_ASSET);
 
 	AssetEntry& assetEntry = assetFrame->getAsset();
-	assetEntry.details = assetUpdateRequest.details;
+	assetEntry.details = assetUpdateRequest.creatorDetails;
 	assetEntry.policies = assetUpdateRequest.policies;
     
 	EntryHelperProvider::storeChangeEntry(delta, db, assetFrame->mEntry);
@@ -66,20 +66,6 @@ bool ReviewAssetUpdateRequestOpFrame::handleApprove(Application & app, LedgerDel
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
 	innerResult().success().fulfilled = true;
 	return true;
-}
-
-SourceDetails ReviewAssetUpdateRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                       int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    auto newSingersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSingersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ASSET_MANAGER);
-    }
-
-	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
 }
 
 ReviewAssetUpdateRequestOpFrame::ReviewAssetUpdateRequestOpFrame(Operation const & op, OperationResult & res, TransactionFrame & parentTx) :

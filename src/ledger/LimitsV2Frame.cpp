@@ -54,7 +54,7 @@ namespace stellar
         LimitsV2Entry& entry = le.data.limitsV2();
 
         entry.id = id;
-        entry.accountType = manageLimitsOp.details.limitsCreateDetails().accountType;
+        entry.accountRole = manageLimitsOp.details.limitsCreateDetails().accountRole;
         entry.accountID = manageLimitsOp.details.limitsCreateDetails().accountID;
         entry.statsOpType = manageLimitsOp.details.limitsCreateDetails().statsOpType;
         entry.assetCode = manageLimitsOp.details.limitsCreateDetails().assetCode;

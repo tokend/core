@@ -130,13 +130,7 @@ namespace stellar {
 
         virtual Hash const &getNetworkID() const override;
 
-        virtual AccountID getMasterID() const override;
-
-        virtual AccountID getCommissionID() const override;
-
-        virtual AccountID getOperationalID() const override;
-
-        virtual std::vector<PublicKey> getSystemAccounts() const override;
+        virtual AccountID getAdminID() const override;
 
         virtual std::string getBaseExchangeName() const override;
 
@@ -159,6 +153,8 @@ namespace stellar {
         virtual uint64 getMaxContractInitialDetailLength() const override;
 
         virtual int32 getKYCSuperAdminMask() const override;
+
+        virtual size_t getSignerRuleIDsMaxCount() const override;
 
         bool isCheckingPolicies() const override;
         void stopCheckingPolicies() override;

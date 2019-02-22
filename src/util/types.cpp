@@ -78,18 +78,6 @@ bool isAlNum(std::string const& str) {
 	return true;
 }
 
-int32_t getAnySignerType()
-{
-	auto allSignerTypes = xdr::xdr_traits<SignerType>::enum_values();
-	int32_t result = 0;
-	for (auto signerType : allSignerTypes)
-	{
-		result |= signerType;
-	}
-
-	return result;
-}
-
 int32 getAnyAssetPolicy()
 {
 	auto allAssetPolicies = xdr::xdr_traits<AssetPolicy>::enum_values();
@@ -97,18 +85,6 @@ int32 getAnyAssetPolicy()
 	for (auto assetPolicy : allAssetPolicies)
 	{
 		result |= assetPolicy;
-	}
-
-	return result;
-}
-
-uint32_t getAnyBlockReason()
-{
-	auto allBlockReasons = xdr::xdr_traits<BlockReasons>::enum_values();
-	uint32_t result = 0;
-	for (auto blockReason : allBlockReasons)
-	{
-		result |= blockReason;
 	}
 
 	return result;
@@ -150,46 +126,6 @@ bool isValidManageAssetPairAction(ManageAssetPairAction action)
 	return false;
 }
 
-std::vector<AccountType> getAllAccountTypes()
-{
-	auto allAccountTypes = xdr::xdr_traits<AccountType>::enum_values();
-	std::vector<AccountType> result;
-	for (auto rawAccountType : allAccountTypes)
-	{
-		result.push_back(AccountType(rawAccountType));
-	}
-
-	return result;
-}
-
-bool isSystemAccountType(AccountType accountType)
-{
-	for (auto systemAccountType : getSystemAccountTypes())
-	{
-		if (accountType == systemAccountType)
-			return true;
-	}
-
-	return false;
-}
-
-std::vector<AccountType> getSystemAccountTypes()
-{
-	return{ AccountType::MASTER, AccountType::COMMISSION, AccountType::OPERATIONAL };
-}
-
-std::vector<SignerType> getAllSignerTypes()
-{
-	auto allSignerTypes = xdr::xdr_traits<SignerType>::enum_values();
-	std::vector<SignerType> result;
-	for (auto rawSignerType : allSignerTypes)
-	{
-		result.push_back(SignerType(rawSignerType));
-	}
-
-	return result;
-}
-
 std::vector<FeeType> getAllFeeTypes()
 {
 	auto allFeeTypes = xdr::xdr_traits<FeeType>::enum_values();
@@ -200,11 +136,6 @@ std::vector<FeeType> getAllFeeTypes()
 	}
 
 	return result;
-}
-
-bool isFeeValid(FeeData const& fee)
-{
-	return fee.fixedFee >= 0 && fee.paymentFee >= 0;
 }
 
 bool isFeeTypeValid(FeeType feeType)
@@ -218,20 +149,6 @@ bool isFeeTypeValid(FeeType feeType)
 
 	return false;
 }
-
-int32_t getManagerType(AccountType accountType)
-{
-	switch (accountType)
-	{
-	case AccountType::NOT_VERIFIED:
-		return static_cast<int32_t>(SignerType::NOT_VERIFIED_ACC_MANAGER);
-	case AccountType::GENERAL:
-		return static_cast<int32_t>(SignerType::GENERAL_ACC_MANAGER);
-	}
-
-	return 0;
-}
-
 
 // calculates A*B/C when A*B overflows 64bits, with optional rounding step
 bool

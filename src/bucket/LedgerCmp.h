@@ -46,6 +46,16 @@ struct LedgerEntryIdCmp
 
             case LedgerEntryType::ACCOUNT:
                 return a.account().accountID < b.account().accountID;
+            case LedgerEntryType::SIGNER:
+            {
+                auto const &as = a.signer();
+                auto const &bs = b.signer();
+                if (as.pubKey < bs.pubKey)
+                    return true;
+                if (bs.pubKey < as.pubKey)
+                    return false;
+                return as.accountID < bs.accountID;
+            }
             case LedgerEntryType::FEE: {
                 auto const &af = a.feeState();
                 auto const &bf = b.feeState();
@@ -71,11 +81,6 @@ struct LedgerEntryIdCmp
                 auto const &ba = b.asset();
                 return aa.code < ba.code;
             }
-            case LedgerEntryType::ACCOUNT_TYPE_LIMITS: {
-                auto const &aatl = a.accountTypeLimits();
-                auto const &batl = b.accountTypeLimits();
-                return aatl.accountType < batl.accountType;
-            }
             case LedgerEntryType::STATISTICS: {
                 auto const &as = a.stats();
                 auto const &bs = b.stats();
@@ -85,15 +90,6 @@ struct LedgerEntryIdCmp
                 auto const &ap = a.reference();
                 auto const &bp = b.reference();
                 return ap.reference < bp.reference;
-            }
-            case LedgerEntryType::TRUST: {
-                auto const &at = a.trust();
-                auto const &bt = b.trust();
-                if (at.balanceToUse < bt.balanceToUse)
-                    return true;
-                if (bt.balanceToUse < at.balanceToUse)
-                    return false;
-                return at.allowedAccount < bt.allowedAccount;
             }
             case LedgerEntryType::ACCOUNT_LIMITS: {
                 auto const &al = a.accountLimits();
@@ -192,13 +188,26 @@ struct LedgerEntryIdCmp
                 auto const& arole = a.accountRole();
                 auto const& brole = b.accountRole();
 
-                return arole.accountRoleID < brole.accountRoleID;
+                return arole.id < brole.id;
             }
-            case LedgerEntryType::ACCOUNT_ROLE_PERMISSION:
+            case LedgerEntryType::ACCOUNT_RULE:
             {
-                auto const& aarp = a.accountRolePermission();
-                auto const& barp = b.accountRolePermission();
-                return aarp.permissionID < barp.permissionID;
+                auto const& aarp = a.accountRule();
+                auto const& barp = b.accountRule();
+                return aarp.id < barp.id;
+            }
+            case LedgerEntryType::SIGNER_ROLE:
+            {
+                auto const& arole = a.signerRole();
+                auto const& brole = b.signerRole();
+
+                return arole.id < brole.id;
+            }
+            case LedgerEntryType::SIGNER_RULE:
+            {
+                auto const& aarp = a.signerRule();
+                auto const& barp = b.signerRule();
+                return aarp.id < barp.id;
             }
             default:
             {

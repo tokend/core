@@ -68,8 +68,8 @@ private:
     loadAssets(StatementContext& prep,
                std::function<void(LedgerEntry const&)> assetProcessor) override;
 
-    void
-    loadBaseAssets(std::vector<AssetFrame::pointer>& retAssets) override;
+    std::vector<AssetFrame::pointer>
+    loadBaseAssets() override;
 
     bool
     doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) override;

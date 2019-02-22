@@ -8,6 +8,12 @@
 #include "ledger/LicenseSignatureHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
+#include "AccountRuleHelperImpl.h"
+#include "AccountRoleHelperImpl.h"
+#include "AccountHelperImpl.h"
+#include "SignerHelperImpl.h"
+#include "SignerRuleHelperImpl.h"
+#include "SignerRoleHelperImpl.h"
 
 namespace stellar
 {
@@ -18,6 +24,20 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
     , mTransaction(nullptr)
     , mIsReleased(true)
 {
+    mHelpers =
+    {
+        {LedgerEntryType::ACCOUNT, &getAccountHelper()},
+        {LedgerEntryType::ACCOUNT_ROLE, &getAccountRoleHelper()},
+        {LedgerEntryType::ACCOUNT_RULE, &getAccountRuleHelper()},
+        {LedgerEntryType::SIGNER, &getSignerHelper()},
+        {LedgerEntryType::SIGNER_ROLE, &getSignerRoleHelper()},
+        {LedgerEntryType::SIGNER_RULE, &getSignerRuleHelper()},
+        {LedgerEntryType::KEY_VALUE, &getKeyValueHelper()},
+        {LedgerEntryType::BALANCE, &getBalanceHelper()},
+        {LedgerEntryType::ASSET, &getAssetHelper()},
+        {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
+        {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, &getExternalSystemAccountIDHelper()},
+    };
 }
 
 StorageHelperImpl::~StorageHelperImpl()
@@ -53,6 +73,27 @@ const LedgerDelta*
 StorageHelperImpl::getLedgerDelta() const
 {
     return mLedgerDelta;
+}
+
+LedgerDelta&
+StorageHelperImpl::mustGetLedgerDelta()
+{
+    if (mLedgerDelta != nullptr)
+    {
+        return *mLedgerDelta;
+    }
+
+    throw std::runtime_error("Expected ledger delta to exists");
+}
+const LedgerDelta&
+StorageHelperImpl::mustGetLedgerDelta() const
+{
+    if (mLedgerDelta != nullptr)
+    {
+        return *mLedgerDelta;
+    }
+
+    throw std::runtime_error("Expected ledger delta to exists");
 }
 
 void
@@ -126,6 +167,24 @@ StorageHelperImpl::startNestedTransaction()
     return std::make_unique<StorageHelperImpl>(mDatabase, mNestedDelta.get());
 }
 
+EntryHelper*
+StorageHelperImpl::getHelper(LedgerEntryType type)
+{
+    return mHelpers[type];
+}
+
+std::vector<EntryHelper*>
+StorageHelperImpl::getEntryHelpers()
+{
+    std::vector<EntryHelper*> result;
+    for (auto& helper : mHelpers)
+    {
+        result.emplace_back(helper.second);
+    }
+
+    return result;
+}
+
 KeyValueHelper&
 StorageHelperImpl::getKeyValueHelper()
 {
@@ -173,23 +232,59 @@ StorageHelperImpl::getExternalSystemAccountIDPoolEntryHelper()
     }
     return *mExternalSystemAccountIDPoolEntryHelper;
 }
+AccountHelper&
+StorageHelperImpl::getAccountHelper()
+{
+    if (!mAccountHelper)
+    {
+        mAccountHelper = std::make_unique<AccountHelperImpl>(*this);
+    }
+    return *mAccountHelper;
+}
 AccountRoleHelper&
 StorageHelperImpl::getAccountRoleHelper()
 {
     if (!mAccountRoleHelper)
     {
-        mAccountRoleHelper = std::make_unique<AccountRoleHelper>(*this);
+        mAccountRoleHelper = std::make_unique<AccountRoleHelperImpl>(*this);
     }
     return *mAccountRoleHelper;
 }
-AccountRolePermissionHelperImpl&
-StorageHelperImpl::getAccountRolePermissionHelper()
+AccountRuleHelper&
+StorageHelperImpl::getAccountRuleHelper()
 {
-    if (!mAccountRolePermissionHelper)
+    if (!mAccountRuleHelper)
     {
-        mAccountRolePermissionHelper = std::make_unique<AccountRolePermissionHelperImpl>(*this);
+        mAccountRuleHelper = std::make_unique<AccountRuleHelperImpl>(*this);
     }
-    return *mAccountRolePermissionHelper;
+    return *mAccountRuleHelper;
+}
+SignerHelper&
+StorageHelperImpl::getSignerHelper()
+{
+    if (!mSignerHelper)
+    {
+        mSignerHelper = std::make_unique<SignerHelperImpl>(*this);
+    }
+    return *mSignerHelper;
+}
+SignerRuleHelper&
+StorageHelperImpl::getSignerRuleHelper()
+{
+    if (!mSignerRuleHelper)
+    {
+        mSignerRuleHelper = std::make_unique<SignerRuleHelperImpl>(*this);
+    }
+    return *mSignerRuleHelper;
+}
+SignerRoleHelper&
+StorageHelperImpl::getSignerRoleHelper()
+{
+    if (!mSignerRoleHelper)
+    {
+        mSignerRoleHelper = std::make_unique<SignerRoleHelperImpl>(*this);
+    }
+    return *mSignerRoleHelper;
 }
 LicenseHelper&
 StorageHelperImpl::getLicenseHelper()

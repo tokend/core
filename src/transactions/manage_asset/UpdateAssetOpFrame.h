@@ -18,8 +18,13 @@ class UpdateAssetOpFrame : public ManageAssetOpFrame
 	// if fails to load request, returns nullptr
 	ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta);
 
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
+	bool
+	tryGetOperationConditions(StorageHelper& storageHelper,
+							  std::vector<OperationCondition>& result) const override;
+
+	bool
+	tryGetSignerRequirements(StorageHelper& storageHelper,
+							 std::vector<SignerRequirement>& result) const override;
 
 public:
     

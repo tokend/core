@@ -3,12 +3,8 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "LedgerTestUtils.h"
-#include "ledger/AccountFrame.h"
 #include "crypto/SecretKey.h"
-#include "crypto/SHA.h"
 #include "util/types.h"
-#include <string>
-#include <cctype>
 #include <xdrpp/autocheck.h>
 
 namespace stellar
@@ -53,7 +49,7 @@ stripControlCharacters(T& s)
     for (auto it = s.begin(); it != s.end();)
     {
         char c = static_cast<char>(*it);
-        if (c < 0 || std::iscntrl(c))
+        if (c < 0 || std::iscntrl(c, loc))
         {
             it = s.erase(it);
         }
@@ -64,27 +60,11 @@ stripControlCharacters(T& s)
     }
 }
 
-static bool
-signerEqual(Signer const& s1, Signer const& s2)
-{
-    return s1.pubKey == s2.pubKey;
-}
-
 void
 makeValid(AccountEntry& a)
 {
 	a.accountID = SecretKey::random().getPublicKey();
-    std::sort(a.signers.begin(), a.signers.end(), &AccountFrame::signerCompare);
-    a.signers.erase(
-        std::unique(a.signers.begin(), a.signers.end(), signerEqual),
-        a.signers.end());
-    for (auto& s : a.signers)
-    {
-        if (s.weight == 0)
-        {
-            s.weight = 100;
-        }
-    }
+    a.roleID = 1;
 }
 
 void
@@ -141,13 +121,6 @@ makeValid(AssetPairEntry& o)
 	}
 }
 
-
-void
-makeValid(TrustEntry& o)
-{
-	
-}
-
 void makeValid(Limits& o) {
 	if (o.dailyOut < 0)
 	{
@@ -158,13 +131,6 @@ void makeValid(Limits& o) {
 	clampLow<int64_t>(o.dailyOut, o.weeklyOut);
 	clampLow<int64_t>(o.weeklyOut, o.monthlyOut);
 	clampLow<int64_t>(o.monthlyOut, o.annualOut);
-}
-
-void
-makeValid(AccountTypeLimitsEntry& o)
-{
-	o.accountType = AccountType(rand());
-	makeValid(o.limits);
 }
 
 
@@ -215,14 +181,8 @@ LedgerEntry makeValid(LedgerEntry& le)
 	case LedgerEntryType::REFERENCE_ENTRY:
 		makeValid(led.reference());
 		break;
-	case LedgerEntryType::ACCOUNT_TYPE_LIMITS:
-		makeValid(led.accountTypeLimits());
-		break;
 	case LedgerEntryType::STATISTICS:
 		makeValid(led.stats());
-		break;
-	case LedgerEntryType::TRUST:
-		makeValid(led.trust());
 		break;
 	case LedgerEntryType::ACCOUNT_LIMITS:
 		makeValid(led.accountLimits());

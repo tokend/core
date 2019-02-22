@@ -7,11 +7,9 @@
 #include "overlay/StellarXDR.h"
 #include "crypto/SecretKey.h"
 #include "ledger/AccountFrame.h"
-#include "ledger/AccountTypeLimitsFrame.h"
 #include "util/optional.h"
 #include "ledger/FeeFrame.h"
 #include "herder/LedgerCloseData.h"
-#include "test_helper/SetOptionsTestHelper.h"
 
 namespace stellar
 {
@@ -27,7 +25,7 @@ typedef std::vector<std::pair<TransactionResultPair, LedgerEntryChanges>>
     TxSetResultMeta;
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
-    AssetCode asset, AccountID* accountID = nullptr, AccountType* accountType = nullptr,
+    AssetCode asset, AccountID* accountID = nullptr, uint64_t* accountType = nullptr,
     int64_t subtype = FeeFrame::SUBTYPE_ANY, int64_t lowerBound = 0, int64_t upperBound = INT64_MAX);
 
 PaymentFeeData getNoPaymentFee();
@@ -70,43 +68,18 @@ AccountFrame::pointer loadAccount(PublicKey const& k, Application& app,
 BalanceFrame::pointer loadBalance(BalanceID bid, Application& app,
                                   bool mustExist = true);
 
-
-// short hand to check that an account does not exist
-void requireNoAccount(SecretKey const& k, Application& app);
-
-int64_t getAccountBalance(SecretKey const& k, Application& app);
-int64_t getAccountBalance(PublicKey const& k, Application& app);
 int64_t getBalance(BalanceID const& k, Application& app);
-
-void
-checkTransactionForOpResult(TransactionFramePtr txFrame, Application& app, OperationResultCode opCode);
 
 TransactionFramePtr createCreateAccountTx(Hash const& networkID,
                                           SecretKey& from, SecretKey& to,
-                                          Salt seq, AccountType accountType,
+                                          Salt seq,
                                           AccountID* referrer = nullptr, TimeBounds* timeBounds = nullptr, int32 policies = -1);
 
 void
 applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
-                     Salt seq, AccountType accountType,
+                     Salt seq,
                      SecretKey* signer = nullptr, AccountID* referrer = nullptr,
                      CreateAccountResultCode result = CreateAccountResultCode::SUCCESS, int32 policies = -1);
-
-
-
-TransactionFramePtr createManageBalanceTx(Hash const& networkID,
-                                          SecretKey& from, SecretKey& account,
-                                          Salt seq, AssetCode asset, ManageBalanceAction action);
-
-ManageBalanceResult
-applyManageBalanceTx(Application& app, SecretKey& from, SecretKey& account, Salt seq,
-        AssetCode asset = "AETH",
-        ManageBalanceAction action  = ManageBalanceAction::CREATE, ManageBalanceResultCode result = ManageBalanceResultCode::SUCCESS);
-
-
-TransactionFramePtr createManageAssetTx(Hash const& networkID, SecretKey& source,
-										Salt seq, AssetCode code,
-										int32 policies, ManageAssetAction action);
 
 void
 applyManageAssetTx(Application& app, SecretKey& source, Salt seq,
@@ -114,66 +87,15 @@ applyManageAssetTx(Application& app, SecretKey& source, Salt seq,
 				   ManageAssetAction action  = ManageAssetAction::CREATE_ASSET_CREATION_REQUEST,
 				   ManageAssetResultCode result = ManageAssetResultCode::SUCCESS);
 
-TransactionFramePtr createDirectDebitTx(Hash const& networkID, SecretKey& source,
-                                          Salt seq, AccountID from, PaymentOp paymentOp);
-
-DirectDebitResult
-applyDirectDebitTx(Application& app, SecretKey& source, Salt seq,
-        AccountID from, PaymentOp paymentOp,
-        DirectDebitResultCode result = DirectDebitResultCode::SUCCESS);
-
-
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from,
     BalanceID fromBalanceID, BalanceID toBalanceID, Salt seq, int64_t amount,
     PaymentFeeData paymentFee, bool isSourceFee = false, std::string subject = "",
-    std::string reference="", TimeBounds* timeBounds = nullptr,
-    InvoiceReference* invoiceReference = nullptr);
+    std::string reference="", TimeBounds* timeBounds = nullptr);
 
 
 TransactionFramePtr createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
     Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee = false,
-    std::string subject = "", std::string reference="", TimeBounds* timeBounds = nullptr,
-    InvoiceReference* invoiceReference = nullptr);
-
-PaymentResult applyPaymentTx(Application& app, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID, Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee,
-    std::string subject = "", std::string reference="",
-    PaymentResultCode result = PaymentResultCode::SUCCESS, InvoiceReference* invoiceReference = nullptr);
-
-PaymentResult applyPaymentTx(Application& app, SecretKey& from, SecretKey& to,
-                    Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee,
-                    std::string subject = "", std::string reference="",
-                    PaymentResultCode result = PaymentResultCode::SUCCESS,
-                    InvoiceReference* invoiceReference = nullptr);
-
-TransactionFramePtr
-createReviewPaymentRequestTx(Hash const& networkID, SecretKey& exchange,
-                Salt seq, int64 paymentID,  bool accept = true);
-
-TransactionFramePtr createSetOptions(Hash const& networkID, SecretKey& source, Salt seq,
-                                     ThresholdSetter* thrs, Signer* signer,
-                                     TrustData* trustData = nullptr);
-
-void applySetOptions(Application& app, SecretKey& source, Salt seq, ThresholdSetter* thrs,
-                     Signer* signer, TrustData* trustData = nullptr,
-                     SetOptionsResultCode targetResult = SetOptionsResultCode::SUCCESS, SecretKey* txSiger = nullptr);
-
-/*TransactionFramePtr createUploadPreemissions(Hash const& networkID, SecretKey& source, Salt seq,
-	std::vector<PreEmission> preEmissions);
-
-void applyUploadPreemissions(Application& app, SecretKey& source, Salt seq,
-	std::vector<PreEmission> preEmissions,
-	UploadPreemissionsResultCode targetResult = UPLOAD_PREEMISSIONS_SUCCESS);*/
-
-
-TransactionFramePtr createManageAccount(Hash const& networkID,
-	SecretKey& source, SecretKey& account,
-	Salt seq, uint32 blockReasonsToAdd, uint32 blockReasonsToRemove, AccountType accountType = AccountType::GENERAL);
-
-void
-applyManageAccountTx(Application& app, SecretKey& source, SecretKey& account,
-	Salt seq, uint32 blockReasonsToAdd = 0, uint32 blockReasonsToRemove = 0,
-    AccountType accountType = AccountType::GENERAL,
-    ManageAccountResultCode result = ManageAccountResultCode::SUCCESS);
+    std::string subject = "", std::string reference="", TimeBounds* timeBounds = nullptr);
 
 TransactionFramePtr createSetFees(Hash const& networkID,
 	SecretKey& source, Salt seq, FeeEntry* fee, bool isDelete);
@@ -181,8 +103,6 @@ TransactionFramePtr createSetFees(Hash const& networkID,
 void applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry* fees, bool isDelete, SecretKey* signer = nullptr,
 				  SetFeesResultCode result = SetFeesResultCode::SUCCESS);
 
-void uploadPreemissions(Application& app, SecretKey& source, SecretKey& issuance,
-	Salt sourceSeq, int64 amount, AssetCode asset);
 void fundAccount(Application& app, SecretKey& source, SecretKey& issuance,
     Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset = "XAAU");
 
@@ -192,24 +112,6 @@ TransactionFramePtr createFundAccount(Hash const& networkID, SecretKey& source, 
 
 OperationFrame const& getFirstOperationFrame(TransactionFrame const& tx);
 OperationResult const& getFirstResult(TransactionFrame const& tx);
-OperationResultCode getFirstResultCode(TransactionFrame const& tx);
-
-// modifying the type of the operation will lead to undefined behavior
-Operation& getFirstOperation(TransactionFrame& tx);
-
-void reSignTransaction(TransactionFrame& tx, SecretKey& source);
-
-// checks that b-maxd <= a <= b
-// bias towards seller means
-//    * amount left in an offer should be higher than the exact calculation
-//    * amount received by a seller should be higher than the exact calculation
-void checkAmounts(int64_t a, int64_t b, int64_t maxd = 1);
-
-// methods to check results based off meta data
-void checkTx(int index, TxSetResultMeta& r, TransactionResultCode expected);
-
-void checkTx(int index, TxSetResultMeta& r, TransactionResultCode expected,
-             OperationResultCode code);
 
 } // end txtest namespace
 }

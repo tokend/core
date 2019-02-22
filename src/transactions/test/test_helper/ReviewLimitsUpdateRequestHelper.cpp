@@ -18,7 +18,7 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, db);
-    if (!request || request->getType() != ReviewableRequestType::LIMITS_UPDATE)
+    if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
     {
         return;
     }
@@ -35,7 +35,7 @@ LimitsUpdateReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
     auto limitsHelper = LimitsV2Helper::Instance();
     auto limitsEntry = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;
     auto limitsAfterTx = limitsHelper->loadLimits(db, limitsEntry.statsOpType, limitsEntry.assetCode,
-            limitsEntry.accountID, limitsEntry.accountType, limitsEntry.isConvertNeeded, nullptr);
+            limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded, nullptr);
     REQUIRE(!!limitsAfterTx);
     auto limitsEntryAfterTx = limitsAfterTx->getLimits();
     auto reviewRequestLimits = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;

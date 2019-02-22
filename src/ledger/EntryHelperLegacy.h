@@ -14,7 +14,7 @@
 
 /*
 Helper
-Parent of AccountHelper, AssetHelperLegacy etc.
+Parent of AccountHelperLegacy, AssetHelperLegacy etc.
 */
 
 namespace stellar
@@ -34,6 +34,7 @@ namespace stellar
 		virtual EntryFrame::pointer fromXDR(LedgerEntry const &from) = 0;
 		virtual EntryFrame::pointer storeLoad(LedgerKey const &ledgerKey, Database &db) = 0;
 		virtual uint64_t countObjects(soci::session& sess) = 0;
+		virtual uint64_t countObjects(Database& db);
 
 		void flushCachedEntry(LedgerKey const& key, Database& db);
 		bool cachedEntryExists(LedgerKey const& key, Database& db);
@@ -48,12 +49,17 @@ namespace stellar
         static EntryHelperLegacy* getHelper(LedgerEntryType type)
         {
             auto foundHelperIt = helpers.find(type);
-            return foundHelperIt == helpers.end() ? nullptr
-                                                  : foundHelperIt->second;
+            if (foundHelperIt == helpers.end())
+            {
+            	CLOG(ERROR, Logging::ENTRY_LOGGER) << "Expected helper to exists, entry type: "
+												   << xdr::xdr_traits<LedgerEntryType>::enum_name(type);
+            	throw std::runtime_error("Expected helper to exists");
+            }
+
+            return foundHelperIt->second;
         }
 
 		static void dropAll(Database &db);
-		static EntryFrame::pointer fromXDREntry(LedgerEntry const& from);
 
 		// Providers for appropriate methods of adding/deleting etc.
 		static void storeAddEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry);
@@ -61,8 +67,9 @@ namespace stellar
 		static void storeDeleteEntry(LedgerDelta& delta, Database& db, LedgerKey const& key);
 		static bool existsEntry(Database& db, LedgerKey const& key);
 		static EntryFrame::pointer storeLoadEntry(LedgerKey const& key, Database& db);
-		static uint64_t countObjectsEntry(soci::session& sess, LedgerEntryType const& type);
+		static uint64_t countObjectsEntry(Database& db, LedgerEntryType const& type);
 
+		[[deprecated]]
 		static void storeAddOrChangeEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry);
 
 		static void checkAgainstDatabase(LedgerEntry const& entry, Database& db);

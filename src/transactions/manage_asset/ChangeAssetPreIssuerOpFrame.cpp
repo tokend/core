@@ -6,8 +6,10 @@
 #include <transactions/review_request/ReviewIssuanceCreationRequestOpFrame.h>
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
+#include <crypto/SHA.h>
+#include <transactions/SignatureValidatorImpl.h>
 #include "ChangeAssetPreIssuerOpFrame.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 
 namespace stellar
@@ -24,32 +26,20 @@ ChangeAssetPreIssuerOpFrame::ChangeAssetPreIssuerOpFrame(Operation const& op,
 {
 }
 
-SourceDetails ChangeAssetPreIssuerOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+ChangeAssetPreIssuerOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                          std::vector<OperationCondition>& result) const
 {
-    throw std::
-        runtime_error("Get source details for ChangeAssetPreIssuerOpFrame is not implemented");
+    // will be handled on signer level
+    return true;
 }
 
-SourceDetails ChangeAssetPreIssuerOpFrame::getSourceAccountDetails(
-    unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    const int32_t ledgerVersion, Database& db) const
+bool
+ChangeAssetPreIssuerOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                        std::vector<SignerRequirement>& result) const
 {
-    const auto assetFrame = AssetHelperLegacy::Instance()->
-        loadAsset(mAssetChangePreissuedSigner.code, db);
-    vector<PublicKey> signers;
-    if (!!assetFrame)
-    {
-        signers.push_back(assetFrame->getPreIssuedAssetSigner());
-    }
-
-    if (ledgerVersion >= int32_t(LedgerVersion::ASSET_PREISSUER_MIGRATION) && ledgerVersion < int32_t(LedgerVersion::ASSET_PREISSUER_MIGRATED))
-    {
-        signers.push_back(assetFrame->getOwner());
-    }
-
-    return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, 1, 0, 0, signers);
+    // only asset pre issuer can change asset pre issuer
+    return true;
 }
 
 bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, LedgerDelta& delta,
@@ -60,11 +50,20 @@ bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, LedgerDelta& delta,
         loadAsset(mAssetChangePreissuedSigner.code, db, &delta);
     if (!assetFrame)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) <<
-            "Unexpected state: asset must exists for ChangeAssetPreIssuer. Code: "
-            << mAssetChangePreissuedSigner.code;
-        throw std::
-            runtime_error("Unexpected state: asset must exists for ChangeAssetPreIssuer");
+        innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);
+        return false;
+    }
+
+    if (assetFrame->getPreIssuedAssetSigner() == mAssetChangePreissuedSigner.accountID)
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_PRE_ISSUER);
+        return false;
+    }
+
+    if (!isSignatureValid(assetFrame, ledgerManager.getLedgerVersion()))
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_SIGNATURE);
+        return false;
     }
 
     auto& assetEntry = assetFrame->getAsset();
@@ -84,5 +83,26 @@ bool ChangeAssetPreIssuerOpFrame::doCheckValid(Application& app)
 string ChangeAssetPreIssuerOpFrame::getAssetCode() const
 {
     return mAssetChangePreissuedSigner.code;
+}
+
+Hash
+ChangeAssetPreIssuerOpFrame::getSignatureData(AssetCode const & assetCode,
+                                              AccountID const& newPreIssuer)
+{
+    std::string rawSignatureData = assetCode + ":" + PubKeyUtils::toStrKey(newPreIssuer);
+    return Hash(sha256(rawSignatureData));
+}
+
+bool
+ChangeAssetPreIssuerOpFrame::isSignatureValid(AssetFrame::pointer asset,
+                                              LedgerVersion version)
+{
+    auto signatureData = getSignatureData(mAssetChangePreissuedSigner.code,
+            mAssetChangePreissuedSigner.accountID);
+    auto signatureValidator = SignatureValidatorImpl(signatureData, {mAssetChangePreissuedSigner.signature});
+
+    const int VALID_SIGNATURES_REQUIRED = 1;
+    SignatureValidator::Result result = signatureValidator.check({ asset->getPreIssuedAssetSigner() }, VALID_SIGNATURES_REQUIRED, version);
+    return result == SignatureValidator::Result::SUCCESS;
 }
 }

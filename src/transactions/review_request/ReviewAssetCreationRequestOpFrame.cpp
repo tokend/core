@@ -19,7 +19,7 @@ using xdr::operator==;
 
 bool ReviewAssetCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::ASSET_CREATE) {
+	if (request->getRequestType() != ReviewableRequestType::CREATE_ASSET) {
 		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected ASSET_CREATE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
 		throw std::invalid_argument("Unexpected request type for review asset creation request");
 	}
@@ -58,20 +58,6 @@ bool ReviewAssetCreationRequestOpFrame::handleApprove(Application & app, LedgerD
 	innerResult().code(ReviewRequestResultCode::SUCCESS);
 	innerResult().success().fulfilled = true;
 	return true;
-}
-
-SourceDetails ReviewAssetCreationRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                         int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    auto newSingersVersion = static_cast<int32_t>(LedgerVersion::NEW_SIGNER_TYPES);
-    if (ledgerVersion >= newSingersVersion)
-    {
-        allowedSigners = static_cast<int32_t>(SignerType::USER_ASSET_MANAGER);
-    }
-
-	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
 }
 
 ReviewAssetCreationRequestOpFrame::ReviewAssetCreationRequestOpFrame(Operation const & op, OperationResult & res, TransactionFrame & parentTx) :
