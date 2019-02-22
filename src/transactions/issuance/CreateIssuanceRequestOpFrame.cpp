@@ -79,8 +79,8 @@ CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 
 	SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
 	resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
-	resource.reviewableRequest().details.issuance().assetCode = asset->getCode();
-	resource.reviewableRequest().details.issuance().assetType = asset->getType();
+	resource.reviewableRequest().details.createIssuance().assetCode = asset->getCode();
+	resource.reviewableRequest().details.createIssuance().assetType = asset->getType();
 	resource.reviewableRequest().tasksToRemove = 0;
 	resource.reviewableRequest().tasksToAdd = 0;
 	resource.reviewableRequest().allTasks = 0;

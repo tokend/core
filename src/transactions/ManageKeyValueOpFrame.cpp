@@ -60,8 +60,10 @@ bool
 ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                  std::vector<OperationCondition>& result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::KEY_VALUE),
-                        AccountRuleAction::MANAGE, mSourceAccount);
+    AccountRuleResource resource(LedgerEntryType::KEY_VALUE);
+    resource.keyValue().keyPrefix = getPrefix();
+
+    result.emplace_back(resource, AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }
@@ -70,8 +72,10 @@ bool
 ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                 std::vector<SignerRequirement> &result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE),
-                        SignerRuleAction::MANAGE);
+    SignerRuleResource resource(LedgerEntryType::KEY_VALUE);
+    resource.keyValue().keyPrefix = getPrefix();
+
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }

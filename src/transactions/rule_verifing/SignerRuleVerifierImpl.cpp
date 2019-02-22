@@ -117,18 +117,18 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
             switch (expectedDetails.requestType())
             {
                 case ReviewableRequestType::CREATE_SALE:
-                    return isTypeMatches(expectedDetails.sale().type,
-                                         actualDetails.sale().type);
+                    return isTypeMatches(expectedDetails.createSale().type,
+                                         actualDetails.createSale().type);
                 case ReviewableRequestType::CREATE_ISSUANCE:
-                    return isTypeMatches(expectedDetails.issuance().assetType,
-                                         actualDetails.issuance().assetType) &&
-                           isStringMatches(expectedDetails.issuance().assetCode,
-                                           actualDetails.issuance().assetCode);
+                    return isTypeMatches(expectedDetails.createIssuance().assetType,
+                                         actualDetails.createIssuance().assetType) &&
+                           isStringMatches(expectedDetails.createIssuance().assetCode,
+                                           actualDetails.createIssuance().assetCode);
                 case ReviewableRequestType::CREATE_WITHDRAW:
-                    return isTypeMatches(expectedDetails.withdraw().assetType,
-                                         actualDetails.withdraw().assetType) &&
-                           isStringMatches(expectedDetails.withdraw().assetCode,
-                                           actualDetails.withdraw().assetCode);
+                    return isTypeMatches(expectedDetails.createWithdraw().assetType,
+                                         actualDetails.createWithdraw().assetType) &&
+                           isStringMatches(expectedDetails.createWithdraw().assetCode,
+                                           actualDetails.createWithdraw().assetCode);
                 default:
                     return true;
             }
@@ -168,6 +168,9 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::SIGNER_RULE:
             return isBoolMatches(requiredResource.signerRule().isDefault,
                                  actualResource.signerRule().isDefault);
+        case LedgerEntryType::KEY_VALUE:
+            return isStringMatches(requiredResource.keyValue().keyPrefix,
+                                   actualResource.keyValue().keyPrefix);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -175,7 +178,6 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::BALANCE:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
-        case LedgerEntryType::KEY_VALUE:
         case LedgerEntryType::FEE:
         case LedgerEntryType::LIMITS_V2:
         case LedgerEntryType::ASSET_PAIR:

@@ -76,6 +76,17 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         fee.hash.fill(0);
         setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_FEE_HASH);
     }
+    SECTION("Invalid fee amount precision")
+    {
+        assetCode = "NEW0ASSET";
+        assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(assetCode,
+                master.key.getPublicKey(), "{}", UINT64_MAX - (UINT64_MAX % ONE), uint32_t(AssetPolicy::BASE_ASSET),
+                &zeroTasks,  1000000, 0);
+        manageAssetTestHelper.applyManageAssetTx(master, 0, assetCreationRequest);
+
+        auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 1, 2);
+        setFeesTestHelper.applySetFeesTx(master, &feeEntry, false, SetFeesResultCode::INVALID_AMOUNT_PRECISION);
+    }
 
     // create account for further tests
     auto account = SecretKey::random();

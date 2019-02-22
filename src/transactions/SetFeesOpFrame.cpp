@@ -4,6 +4,8 @@
 
 #include <lib/xdrpp/xdrpp/printer.h>
 #include "transactions/SetFeesOpFrame.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/AssetHelperLegacy.h"
@@ -103,6 +105,16 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         le.data.type(LedgerEntryType::FEE);
         le.data.feeState() = *mSetFees.fee;
         feeFrame = make_shared<FeeFrame>(le);
+
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        StorageHelper& storageHelper = storageHelperImpl;
+        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+                feeFrame->getFeeAsset(), feeFrame->getFixedFee()))
+        {
+            innerResult().code(SetFeesResultCode::INVALID_AMOUNT_PRECISION);
+            return false;
+        }
+
         EntryHelperProvider::storeAddEntry(delta, db, feeFrame->mEntry);
         return true;
     }

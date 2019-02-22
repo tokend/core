@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+
+* Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
+
+## Unreleased
+
 ### Added
 
 * Add change role tasks keys with `*`

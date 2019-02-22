@@ -111,8 +111,8 @@ AccountRuleVerifierImpl::isResourceMatches(
             switch (expectedDetails.requestType())
             {
                 case ReviewableRequestType::CREATE_SALE:
-                    return isTypeMatches(expectedDetails.sale().type,
-                                         actualDetails.sale().type);
+                    return isTypeMatches(expectedDetails.createSale().type,
+                                         actualDetails.createSale().type);
                 default:
                     return true;
             }
@@ -143,6 +143,9 @@ AccountRuleVerifierImpl::isResourceMatches(
                                  actualResource.sale().saleType) &&
                    isIDMatches(conditionResource.sale().saleType,
                                actualResource.sale().saleType);
+        case LedgerEntryType::KEY_VALUE:
+            return isStringMatches(conditionResource.keyValue().keyPrefix,
+                                   actualResource.keyValue().keyPrefix);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -153,7 +156,6 @@ AccountRuleVerifierImpl::isResourceMatches(
         case LedgerEntryType::BALANCE:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID:
         case LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
-        case LedgerEntryType::KEY_VALUE:
         case LedgerEntryType::FEE:
         case LedgerEntryType::LIMITS_V2:
         case LedgerEntryType::ASSET_PAIR:
