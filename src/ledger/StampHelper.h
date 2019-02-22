@@ -14,7 +14,7 @@ namespace stellar
     class StatementContext;
 
 
-    class StampHelper : EntryHelper {
+    class StampHelper : public EntryHelper {
 
     public:
         virtual void clearAll() = 0;

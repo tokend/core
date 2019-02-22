@@ -15,21 +15,26 @@ namespace stellar
 
 using namespace std;
 
-std::unordered_map<AccountID, CounterpartyDetails>
-StampOpFrame::getCounterpartyDetails(
-    Database& db, LedgerDelta* delta) const
+
+bool
+StampOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                                std::vector<OperationCondition>& result) const
 {
-    // no counterparties
-    return std::unordered_map<AccountID, CounterpartyDetails>();
+    AccountRuleResource resource(LedgerEntryType::STAMP);
+
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    return true;
 }
 
-SourceDetails
-StampOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
+bool
+StampOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
+                                               std::vector<SignerRequirement> &result) const
 {
-    return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::TX_SENDER));}
+    SignerRuleResource resource(LedgerEntryType::STAMP);
+
+    result.emplace_back(resource, SignerRuleAction::CREATE);
+    return true;
+}
 
 StampOpFrame::StampOpFrame(
     Operation const& op, OperationResult& res, TransactionFrame& parentTx)

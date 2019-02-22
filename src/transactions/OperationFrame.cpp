@@ -10,7 +10,7 @@
 #include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
 #include "ledger/LedgerDelta.h"
 #include "ledger/ReferenceFrame.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
@@ -27,7 +27,6 @@
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/ManageAssetPairOpFrame.h"
 #include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
-#include "transactions/review_request/ReviewRequestOpFrame.h"
 #include "transactions/deprecated/PayoutOpFrame.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "transactions/external_system_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
@@ -48,6 +47,9 @@
 #include "atomic_swap/CreateASwapRequestOpFrame.h"
 #include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
 #include "ManageSignerOpFrame.h"
+#include "LicenseOpFrame.h"
+#include "StampOpFrame.h"
+#include "ledger/SignerHelper.h"
 
 namespace stellar
 {
@@ -60,82 +62,82 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
 {
     switch (op.body.type())
     {
-    case OperationType::CREATE_ACCOUNT:
-        return shared_ptr<OperationFrame>(new CreateAccountOpFrame(op, res, tx));
-    case OperationType::CREATE_ISSUANCE_REQUEST:
-		return shared_ptr<OperationFrame>(new CreateIssuanceRequestOpFrame(op, res, tx));
-    case OperationType::SET_FEES:
-        return shared_ptr<OperationFrame>(new SetFeesOpFrame(op, res, tx));
-    case OperationType::CREATE_WITHDRAWAL_REQUEST:
-		return shared_ptr<OperationFrame>(new CreateWithdrawalRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_BALANCE:
-		return shared_ptr<OperationFrame>(new ManageBalanceOpFrame(op, res, tx));
-    case OperationType::MANAGE_ASSET:
-		return shared_ptr<OperationFrame>(ManageAssetOpFrame::makeHelper(op, res, tx));
-    case OperationType::CREATE_PREISSUANCE_REQUEST:
-		return shared_ptr<OperationFrame>(new CreatePreIssuanceRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_LIMITS:
-		return shared_ptr<OperationFrame>(new ManageLimitsOpFrame(op, res, tx));
-	case OperationType::MANAGE_ASSET_PAIR:
-		return shared_ptr<OperationFrame>(new ManageAssetPairOpFrame(op, res, tx));
-	case OperationType::MANAGE_OFFER:
-		return shared_ptr<OperationFrame>(ManageOfferOpFrame::make(op, res, tx));
-    case OperationType::MANAGE_INVOICE_REQUEST:
-        return shared_ptr<OperationFrame>(new ManageInvoiceRequestOpFrame(op, res, tx));
-    case OperationType::REVIEW_REQUEST:
-		return shared_ptr<OperationFrame>(ReviewRequestOpFrame::makeHelper(op, res, tx));
-    case OperationType::CREATE_SALE_REQUEST:
-        return shared_ptr<OperationFrame>(new CreateSaleCreationRequestOpFrame(op, res, tx));
-    case OperationType::CHECK_SALE_STATE:
-        return shared_ptr<OperationFrame>(new CheckSaleStateOpFrame(op, res, tx));
-    case OperationType::PAYOUT:
-        return shared_ptr<OperationFrame>(new PayoutOpFrame(op, res, tx));
-    case OperationType::MANAGE_EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
-        return shared_ptr<OperationFrame>(ManageExternalSystemAccountIdPoolEntryOpFrame::makeHelper(op, res, tx));
-    case OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID:
-        return shared_ptr<OperationFrame>(new BindExternalSystemAccountIdOpFrame(op, res, tx));
-    case OperationType::CREATE_AML_ALERT:
-        return shared_ptr<OperationFrame>(new CreateAMLAlertRequestOpFrame(op,res,tx));
-	case OperationType::CREATE_CHANGE_ROLE_REQUEST:
-		return shared_ptr<OperationFrame>(new CreateChangeRoleRequestOpFrame(op, res, tx));
-    case OperationType::PAYMENT:
-        return make_shared<PaymentOpFrame>(op, res, tx);
-    case OperationType::MANAGE_KEY_VALUE:
-        return shared_ptr<OperationFrame>(new ManageKeyValueOpFrame(op, res, tx));
-    case OperationType::MANAGE_SALE:
-        return shared_ptr<OperationFrame>(new ManageSaleOpFrame(op, res, tx));
-    case OperationType::CREATE_MANAGE_LIMITS_REQUEST:
-        return shared_ptr<OperationFrame>(new CreateManageLimitsRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_CONTRACT_REQUEST:
-        return shared_ptr<OperationFrame>(new ManageContractRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_CONTRACT:
-        return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
-    case OperationType::CANCEL_SALE_REQUEST:
-        return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
-    case OperationType::CREATE_ASWAP_BID_REQUEST:
-        return shared_ptr<OperationFrame>(new CreateASwapBidCreationRequestOpFrame(op, res, tx));
-    case OperationType::CANCEL_ASWAP_BID:
-        return shared_ptr<OperationFrame>(new CancelASwapBidOpFrame(op, res, tx));
-    case OperationType::CREATE_ASWAP_REQUEST:
-        return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_ACCOUNT_ROLE:
-        return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
-    case OperationType::MANAGE_ACCOUNT_RULE:
-        return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
-    case OperationType::MANAGE_SIGNER:
-        return make_shared<ManageSignerOpFrame>(op, res, tx);
-    case OperationType::MANAGE_SIGNER_ROLE:
-        return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
-    case OperationType::MANAGE_SIGNER_RULE:
-        return make_shared<ManageSignerRuleOpFrame>(op, res, tx);
-    case OperationType::STAMP:
-        return shared_ptr<OperationFrame>(new StampOpFrame(op, res, tx));
-    case OperationType::LICENSE:
-        return shared_ptr<OperationFrame>(new LicenseOpFrame(op, res, tx));
+        case OperationType::CREATE_ACCOUNT:
+            return shared_ptr<OperationFrame>(new CreateAccountOpFrame(op, res, tx));
+        case OperationType::CREATE_ISSUANCE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateIssuanceRequestOpFrame(op, res, tx));
+        case OperationType::SET_FEES:
+            return shared_ptr<OperationFrame>(new SetFeesOpFrame(op, res, tx));
+        case OperationType::CREATE_WITHDRAWAL_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateWithdrawalRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_BALANCE:
+            return shared_ptr<OperationFrame>(new ManageBalanceOpFrame(op, res, tx));
+        case OperationType::MANAGE_ASSET:
+            return shared_ptr<OperationFrame>(ManageAssetOpFrame::makeHelper(op, res, tx));
+        case OperationType::CREATE_PREISSUANCE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreatePreIssuanceRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_LIMITS:
+            return shared_ptr<OperationFrame>(new ManageLimitsOpFrame(op, res, tx));
+        case OperationType::MANAGE_ASSET_PAIR:
+            return shared_ptr<OperationFrame>(new ManageAssetPairOpFrame(op, res, tx));
+        case OperationType::MANAGE_OFFER:
+            return shared_ptr<OperationFrame>(ManageOfferOpFrame::make(op, res, tx));
+        case OperationType::MANAGE_INVOICE_REQUEST:
+            return shared_ptr<OperationFrame>(new ManageInvoiceRequestOpFrame(op, res, tx));
+        case OperationType::REVIEW_REQUEST:
+            return shared_ptr<OperationFrame>(ReviewRequestOpFrame::makeHelper(op, res, tx));
+        case OperationType::CREATE_SALE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateSaleCreationRequestOpFrame(op, res, tx));
+        case OperationType::CHECK_SALE_STATE:
+            return shared_ptr<OperationFrame>(new CheckSaleStateOpFrame(op, res, tx));
+        case OperationType::PAYOUT:
+            return shared_ptr<OperationFrame>(new PayoutOpFrame(op, res, tx));
+        case OperationType::MANAGE_EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
+            return shared_ptr<OperationFrame>(ManageExternalSystemAccountIdPoolEntryOpFrame::makeHelper(op, res, tx));
+        case OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID:
+            return shared_ptr<OperationFrame>(new BindExternalSystemAccountIdOpFrame(op, res, tx));
+        case OperationType::CREATE_AML_ALERT:
+            return shared_ptr<OperationFrame>(new CreateAMLAlertRequestOpFrame(op, res, tx));
+        case OperationType::CREATE_CHANGE_ROLE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::PAYMENT:
+            return make_shared<PaymentOpFrame>(op, res, tx);
+        case OperationType::MANAGE_KEY_VALUE:
+            return shared_ptr<OperationFrame>(new ManageKeyValueOpFrame(op, res, tx));
+        case OperationType::MANAGE_SALE:
+            return shared_ptr<OperationFrame>(new ManageSaleOpFrame(op, res, tx));
+        case OperationType::CREATE_MANAGE_LIMITS_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateManageLimitsRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_CONTRACT_REQUEST:
+            return shared_ptr<OperationFrame>(new ManageContractRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_CONTRACT:
+            return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
+        case OperationType::CANCEL_SALE_REQUEST:
+            return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
+        case OperationType::CREATE_ASWAP_BID_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateASwapBidCreationRequestOpFrame(op, res, tx));
+        case OperationType::CANCEL_ASWAP_BID:
+            return shared_ptr<OperationFrame>(new CancelASwapBidOpFrame(op, res, tx));
+        case OperationType::CREATE_ASWAP_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_ACCOUNT_ROLE:
+            return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
+        case OperationType::MANAGE_ACCOUNT_RULE:
+            return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
+        case OperationType::MANAGE_SIGNER:
+            return make_shared<ManageSignerOpFrame>(op, res, tx);
+        case OperationType::MANAGE_SIGNER_ROLE:
+            return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
+        case OperationType::MANAGE_SIGNER_RULE:
+            return make_shared<ManageSignerRuleOpFrame>(op, res, tx);
+        case OperationType::STAMP:
+            return shared_ptr<OperationFrame>(new StampOpFrame(op, res, tx));
+        case OperationType::LICENSE:
+            return shared_ptr<OperationFrame>(new LicenseOpFrame(op, res, tx));
         default:
-        ostringstream err;
-        err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
-        throw std::invalid_argument(err.str());
+            ostringstream err;
+            err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
+            throw std::invalid_argument(err.str());
     }
 }
 
@@ -161,75 +163,77 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
 
     bool isApplied =
         doApply(app, *storageHelper.getLedgerDelta(), app.getLedgerManager());
-	app.getMetrics().NewMeter({ "operation", isApplied ? "applied" : "rejected", getInnerResultCodeAsStr() }, "operation").Mark();
-	return isApplied;
+    app.getMetrics().NewMeter({"operation", isApplied ? "applied" : "rejected",
+                               getInnerResultCodeAsStr()}, "operation").Mark();
+    return isApplied;
 }
 
 bool
-OperationFrame::canBeApplied(Application &app, StorageHelper &storageHelper)
+OperationFrame::canBeApplied(Application& app, StorageHelper& storageHelper)
 {
     const auto source = mSourceAccount->getID().ed25519();
-    const auto master = app.getMasterID().ed25519();
-    bool notAdmin = source != master;
+    const auto admin = app.getAdminID().ed25519();
+    bool notAdmin = source != admin;
     return notAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
 }
 
 bool
-OperationFrame::checkOp(Application &app, StorageHelper &storageHelper)
+OperationFrame::checkOp(Application& app, StorageHelper& storageHelper)
 {
     auto opType = mOperation.body.type();
 
-
     bool opAllowed = (opType == OperationType::LICENSE
-            || opType == OperationType::STAMP
-            || opType == OperationType::SET_OPTIONS);
+                      || opType == OperationType::STAMP
+                      || opType == OperationType::MANAGE_SIGNER
+                      || opType == OperationType::MANAGE_SIGNER_RULE
+                      || opType == OperationType::MANAGE_SIGNER_ROLE);
 
     return opAllowed;
 }
 
 bool
-OperationFrame::checkAdminCount(Application &app, StorageHelper &storageHelper)
+OperationFrame::checkAdminCount(Application& app, StorageHelper& storageHelper)
 {
     auto& licenseHelper = storageHelper.getLicenseHelper();
     auto allowedAdmins = licenseHelper.getAllowedAdmins(app);
 
-    auto& db = storageHelper.getDatabase();
-    auto accountHelper = AccountHelper::Instance();
-    auto masterAcc = accountHelper->loadAccount(app.getMasterID(), db);
-    const auto adminCount = masterAcc->getAccount().signers.size();
+    auto& signerHelper = storageHelper.getSignerHelper();
+    const auto adminCount = signerHelper.loadSigners(app.getAdminID()).size();
 
     return adminCount <= allowedAdmins;
 }
 
-std::string OperationFrame::getInnerResultCodeAsStr() {
-	// Default implementation does nothing, make remove this implementation when all operations switched to it
-	return "not_implemented";
+std::string OperationFrame::getInnerResultCodeAsStr()
+{
+    // Default implementation does nothing, make remove this implementation when all operations switched to it
+    return "not_implemented";
 }
 
 bool OperationFrame::isSupported() const
 {
-	// by default all operations are supported
-	return true;
+    // by default all operations are supported
+    return true;
 }
 
 bool
-OperationFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                std::vector<OperationCondition> &result) const
+OperationFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                          std::vector<OperationCondition>& result) const
 {
     // method must be overridden
     return false;
 }
 
 bool
-OperationFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                 std::vector<SignerRequirement> &result) const
+OperationFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result) const
 {
     // method must be overridden
     return false;
 }
 
-int64_t OperationFrame::getPaidFee() const {
-	// default fee for all operations is 0, finantial operations must override this function
+int64_t OperationFrame::getPaidFee() const
+{
+    // default fee for all operations is 0, finantial operations must override this function
     return 0;
 }
 
@@ -244,36 +248,36 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
 
     SignerRuleVerifierImpl signerRuleVerifier;
     auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
-            signerRuleVerifier, getSourceID(), signerRequirements);
-	switch (result)
-	{
-	case SignatureValidator::Result::SUCCESS:
-		return true;
-	case SignatureValidator::Result::INVALID_ACCOUNT_TYPE:
-		app.getMetrics().NewMeter({ "transaction", "invalid", "not-allowed" }, "transaction").Mark();
-		mResult.code(OperationResultCode::opNOT_ALLOWED);
-		return false;
-	case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
-		app.getMetrics().NewMeter({ "transaction", "invalid", "bad-auth" }, "transaction").Mark();
-		mResult.code(OperationResultCode::opBAD_AUTH);
-		return false;
-	case SignatureValidator::Result::ACCOUNT_BLOCKED:
-		app.getMetrics().NewMeter({ "operation", "invalid", "account-is-blocked" }, "operation").Mark();
-		mResult.code(OperationResultCode::opACCOUNT_BLOCKED);
-		return false;
-	case SignatureValidator::Result::EXTRA:
-		app.getMetrics().NewMeter({ "operation", "invalid", "bad-auth-extra" }, "operation").Mark();
-		mResult.code(OperationResultCode::opBAD_AUTH_EXTRA);
-		return false;
-	}
+                                                           signerRuleVerifier, getSourceID(), signerRequirements);
+    switch (result)
+    {
+        case SignatureValidator::Result::SUCCESS:
+            return true;
+        case SignatureValidator::Result::INVALID_ACCOUNT_TYPE:
+            app.getMetrics().NewMeter({"transaction", "invalid", "not-allowed"}, "transaction").Mark();
+            mResult.code(OperationResultCode::opNOT_ALLOWED);
+            return false;
+        case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
+            app.getMetrics().NewMeter({"transaction", "invalid", "bad-auth"}, "transaction").Mark();
+            mResult.code(OperationResultCode::opBAD_AUTH);
+            return false;
+        case SignatureValidator::Result::ACCOUNT_BLOCKED:
+            app.getMetrics().NewMeter({"operation", "invalid", "account-is-blocked"}, "operation").Mark();
+            mResult.code(OperationResultCode::opACCOUNT_BLOCKED);
+            return false;
+        case SignatureValidator::Result::EXTRA:
+            app.getMetrics().NewMeter({"operation", "invalid", "bad-auth-extra"}, "operation").Mark();
+            mResult.code(OperationResultCode::opBAD_AUTH_EXTRA);
+            return false;
+    }
 
-	throw runtime_error("Unexpected error code from signatureValidator for operation");
+    throw runtime_error("Unexpected error code from signatureValidator for operation");
 }
 
 // TMP
 bool
 OperationFrame::doApply(Application& app, LedgerDelta& delta,
-	LedgerManager& ledgerManager)
+                        LedgerManager& ledgerManager)
 {
     StorageHelperImpl storageHelper(app.getDatabase(), &delta);
     return doApply(app, storageHelper, ledgerManager);
@@ -299,7 +303,7 @@ OperationFrame::getSourceID() const
 }
 
 bool
-OperationFrame::loadAccount(LedgerDelta* delta, Database& db)
+OperationFrame::loadAccount(LedgerDelta *delta, Database& db)
 {
     mSourceAccount = mParentTx.loadAccount(delta, db, getSourceID());
     return !!mSourceAccount;
@@ -321,7 +325,6 @@ OperationFrame::createReferenceEntry(string reference, AccountID sender, Storage
                                        referenceFrame->mEntry);
 }
 
-
 OperationResultCode
 OperationFrame::getResultCode() const
 {
@@ -335,17 +338,17 @@ OperationFrame::getResultCode() const
 bool
 OperationFrame::checkValid(Application& app,
                            AccountRuleVerifier& accountRuleVerifier,
-                           LedgerDelta* delta)
+                           LedgerDelta *delta)
 {
     if (!isSupported())
     {
-		app.getMetrics().NewMeter({ "operation", "invalid", "not-allowed" }, "operation").Mark();
-		mResult.code(OperationResultCode::opNOT_SUPPORTED);
-		return false;
+        app.getMetrics().NewMeter({"operation", "invalid", "not-allowed"}, "operation").Mark();
+        mResult.code(OperationResultCode::opNOT_SUPPORTED);
+        return false;
     }
 
     bool forApply = (delta != nullptr);
-	auto& db = app.getDatabase();
+    auto& db = app.getDatabase();
     if (!loadAccount(delta, db))
     {
         if (forApply || !mOperation.sourceAccount)
@@ -372,7 +375,7 @@ OperationFrame::checkValid(Application& app,
         return isValid;
     }
 
-	StorageHelperImpl storageHelper(db, delta);
+    StorageHelperImpl storageHelper(db, delta);
     if (!checkRolePermissions(storageHelper, accountRuleVerifier))
     {
         return false;
@@ -397,7 +400,7 @@ bool
 OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
                                      AccountRuleVerifier& accountRuleVerifier)
 {
-        std::vector<OperationCondition> operationConditions;
+    std::vector<OperationCondition> operationConditions;
     if (!tryGetOperationConditions(storageHelper, operationConditions))
     {
         return false;
@@ -421,18 +424,19 @@ OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
     return true;
 }
 
-
 bool
-OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr::pointer<uint32> tasks)
+OperationFrame::loadTasks(StorageHelper& storageHelper, uint32_t& allTasks, xdr::pointer<uint32> tasks)
 {
-    if (tasks) {
+    if (tasks)
+    {
         allTasks = *tasks;
         return true;
     }
 
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
     auto keys = makeTasksKeyVector(storageHelper);
-    for(auto& key : keys){
+    for (auto& key : keys)
+    {
         auto keyValueFrame = keyValueHelper.loadKeyValue(key);
         if (keyValueFrame)
         {
@@ -445,10 +449,9 @@ OperationFrame::loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr:
 }
 
 std::vector<longstring>
-OperationFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+OperationFrame::makeTasksKeyVector(StorageHelper& storageHelper)
 {
     return std::vector<longstring>{};
 };
-
 
 }

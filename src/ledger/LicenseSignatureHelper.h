@@ -8,7 +8,7 @@ namespace stellar
 {
     class StatementContext;
 
-    class LicenseSignatureHelper : EntryHelper {
+    class LicenseSignatureHelper : public EntryHelper {
     public:
         virtual void storeAdd(LedgerEntry const& entry) = 0;
         virtual void storeChange(LedgerEntry const& entry) = 0;

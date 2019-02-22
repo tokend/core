@@ -7,6 +7,7 @@
 #include "ledger/StampHelper.h"
 #include "ledger/StorageHelper.h"
 #include "StampFrame.h"
+#include "database/Database.h"
 
 
 namespace stellar

@@ -15,10 +15,8 @@ class StampOpFrame : public OperationFrame
     }
     StampOp const& mStamp;
 
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
-    int64_t getExpiresAt(StorageHelper& storageHelper, LedgerManager &ledgerManager, int32 externalSystemType);
+    bool tryGetOperationConditions(StorageHelper& storageHelper, std::vector<OperationCondition>& result) const override;
+    bool tryGetSignerRequirements(StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const override;
 
 public:
     StampOpFrame(Operation const& op, OperationResult& res,

@@ -5,6 +5,7 @@
 #include "ledger/StorageHelper.h"
 #include "LicenseFrame.h"
 #include "ledger/LicenseHelper.h"
+#include "database/Database.h"
 
 namespace stellar
 {

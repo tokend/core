@@ -64,7 +64,7 @@ enum databaseSchemaVersion : unsigned long {
     ADD_ASSET_CUSTOM_PRECISION = 14
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_LICENSE;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
 
 static void
 setSerializable(soci::session& sess)

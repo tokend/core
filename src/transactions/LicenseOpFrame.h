@@ -15,12 +15,10 @@ class LicenseOpFrame : public OperationFrame
     }
     LicenseOp const& mLicense;
 
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(Database& db, LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
-
-    bool isSignatureValid(Application& app, LedgerManager& lm);
+    bool tryGetOperationConditions(StorageHelper& storageHelper, std::vector<OperationCondition>& result) const override;
+    bool tryGetSignerRequirements(StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const override;
 public:
+
     LicenseOpFrame(Operation const& op, OperationResult& res,
                                        TransactionFrame& parentTx);
 

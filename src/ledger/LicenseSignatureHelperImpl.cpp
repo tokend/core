@@ -3,6 +3,7 @@
 #include "xdrpp/marshal.h"
 #include "crypto/SHA.h"
 #include "crypto/StrKey.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;

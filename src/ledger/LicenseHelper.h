@@ -8,7 +8,7 @@ namespace stellar
 {
     class StatementContext;
 
-    class LicenseHelper : EntryHelper {
+    class LicenseHelper : public EntryHelper {
 
     public:
         virtual LedgerKey getLedgerKey(LedgerEntry const &from) = 0;

@@ -14,6 +14,8 @@
 #include "SignerHelperImpl.h"
 #include "SignerRuleHelperImpl.h"
 #include "SignerRoleHelperImpl.h"
+#include "LicenseHelperImpl.h"
+#include "StampHelperImpl.h"
 
 namespace stellar
 {
@@ -37,6 +39,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::ASSET, &getAssetHelper()},
         {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
         {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, &getExternalSystemAccountIDHelper()},
+        {LedgerEntryType::STAMP, &getStampHelper()},
+        {LedgerEntryType::LICENSE, &getLicenseHelper()}
     };
 }
 

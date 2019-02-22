@@ -12,6 +12,10 @@ class AccountRuleHelper;
 class AccountRoleHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
+class StampHelper;
+class LicenseHelper;
+class LicenseSignatureHelper;
+
 enum class LedgerEntryType;
 
 class MockStorageHelper : public StorageHelper
