@@ -16,27 +16,18 @@ namespace stellar
 
     class StampHelper : EntryHelper {
 
-        StorageHelper& mStorageHelper;
-
     public:
-        StampHelper(StorageHelper& storageHelper);
-        static void clearAll(Database& db);
-        static void dropAll(Database& db);
-        uint64_t countObjects() override;
-        bool exists(LedgerKey const &key) override;
-        bool exists(Hash ledgerHash, Hash licenseHash);
-        LedgerKey getLedgerKey(LedgerEntry const &from) override;
-        EntryFrame::pointer fromXDR(LedgerEntry const &from) override;
-        Database &getDatabase() override;
-        void storeAdd(LedgerEntry const &entry) override;
-
-    private:
-        virtual void storeDelete(LedgerKey const &key);
-
-        virtual void dropAll();
-
-        virtual void storeChange(LedgerEntry const &entry);
-
-        virtual EntryFrame::pointer storeLoad(LedgerKey const &ledgerKey);
+        virtual void clearAll() = 0;
+        virtual void dropAll() = 0;
+        virtual uint64_t countObjects() = 0;
+        virtual bool exists(LedgerKey const &key) = 0;
+        virtual bool exists(Hash ledgerHash, Hash licenseHash) = 0;
+        virtual LedgerKey getLedgerKey(LedgerEntry const &from) = 0;
+        virtual EntryFrame::pointer fromXDR(LedgerEntry const &from) = 0;
+        virtual Database &getDatabase() = 0;
+        virtual void storeAdd(LedgerEntry const &entry) = 0;
+        virtual void storeChange(LedgerEntry const& entry) = 0;
+        virtual void storeLoad(LedgerEntry const& entry) = 0;
+        virtual void storeDelete(LedgerEntry const& entry) = 0;
     };
 }

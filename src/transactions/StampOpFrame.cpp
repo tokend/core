@@ -5,6 +5,7 @@
 #include "ledger/StampHelper.h"
 #include "ledger/StampFrame.h"
 #include "ledger/LicenseHelper.h"
+#include "ledger/LicenseFrame.h"
 #include "main/Application.h"
 #include "xdrpp/marshal.h"
 #include "crypto/SHA.h"
@@ -44,8 +45,8 @@ StampOpFrame::doApply(Application& app,
                                             LedgerManager& ledgerManager)
 {
     auto& db = storageHelper.getDatabase();
-    StampHelper stampHelper(storageHelper);
-    LicenseHelper licenseHelper(storageHelper);
+    auto& stampHelper = storageHelper.getStampHelper();
+    auto& licenseHelper = storageHelper.getLicenseHelper();
 
     auto ledgerHash = ledgerManager.getLastClosedLedgerHeader().hash;
     Hash oldLicenseHash;

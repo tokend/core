@@ -61,12 +61,7 @@ LicenseFrame::pointer LicenseFrame::createNew(stellar::Hash ledgerHash, stellar:
 
 bool LicenseFrame::isSignatureValid(Application &app)
 {
-    const int VALID_SIGNATURES_REQUIRED = 2;
-
-    if(mLicense.signatures.size() != VALID_SIGNATURES_REQUIRED)
-    {
-        return false;
-    }
+    const int VALID_SIGNATURES_REQUIRED = 1;
 
     auto contentsHash = getSignatureData();
     xdr::xvector<DecoratedSignature, 20> signatures;
@@ -87,7 +82,7 @@ bool LicenseFrame::isSignatureValid(Application &app)
 
 bool LicenseFrame::isExpired(Application &app)
 {
-    return app.timeNow() > mLicense.dueDate;
+    return app.getLedgerManager().getCloseTime() > mLicense.dueDate;
 }
 
 Hash LicenseFrame::getSignatureData()

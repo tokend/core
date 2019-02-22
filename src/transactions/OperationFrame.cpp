@@ -180,8 +180,9 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
 bool
 OperationFrame::canBeApplied(Application &app, StorageHelper &storageHelper)
 {
-    auto notAdmin = mSourceAccount->getAccountType() != AccountType::MASTER;
-
+    const auto source = mSourceAccount->getID().ed25519();
+    const auto master = app.getMasterID().ed25519();
+    bool notAdmin = source != master;
     return notAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
 }
 
@@ -201,7 +202,7 @@ OperationFrame::checkOp(Application &app, StorageHelper &storageHelper)
 bool
 OperationFrame::checkAdminCount(Application &app, StorageHelper &storageHelper)
 {
-    LicenseHelper licenseHelper(storageHelper);
+    auto& licenseHelper = storageHelper.getLicenseHelper();
     auto allowedAdmins = licenseHelper.getAllowedAdmins(app);
 
     auto& db = storageHelper.getDatabase();

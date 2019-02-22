@@ -3,6 +3,9 @@
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperImpl.h"
 #include "ledger/KeyValueHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
+#include "ledger/LicenseHelperImpl.h"
+#include "ledger/StampHelperImpl.h"
+#include "ledger/LicenseSignatureHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 
@@ -187,6 +190,34 @@ StorageHelperImpl::getAccountRolePermissionHelper()
         mAccountRolePermissionHelper = std::make_unique<AccountRolePermissionHelperImpl>(*this);
     }
     return *mAccountRolePermissionHelper;
+}
+LicenseHelper&
+StorageHelperImpl::getLicenseHelper()
+{
+    if (!mLicenseHelper)
+    {
+        mLicenseHelper = std::make_unique<LicenseHelperImpl>(*this);
+    }
+    return *mLicenseHelper;
+}
+LicenseSignatureHelper&
+StorageHelperImpl::getLicenseSignatureHelper()
+{
+    if (!mLicenseSignatureHelper)
+    {
+        mLicenseSignatureHelper = std::make_unique<LicenseSignatureHelperImpl>(*this);
+    }
+    return *mLicenseSignatureHelper;
+}
+
+StampHelper&
+StorageHelperImpl::getStampHelper()
+{
+    if(!mStampHelper)
+    {
+        mStampHelper = std::make_unique<StampHelperImpl>(*this);
+    }
+    return *mStampHelper;
 }
 
 } // namespace stellar

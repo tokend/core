@@ -364,8 +364,7 @@ TransactionFrameImpl::doCheckSignature(Application& app, Database& db,
 bool
 TransactionFrameImpl::isLicenseOp()
 {
-    return mOperations.size() == 1
-    && mEnvelope.tx.operations.size() == 1
+    return mEnvelope.tx.operations.size() == 1
     && mEnvelope.tx.operations[0].body.type() == OperationType::LICENSE;
 }
 

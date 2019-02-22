@@ -4,6 +4,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/LicenseHelper.h"
+#include "ledger/LicenseFrame.h"
 #include "ledger/StampHelper.h"
 #include "ledger/StampFrame.h"
 #include "main/Application.h"
@@ -45,9 +46,8 @@ LicenseOpFrame::doApply(Application& app,
                                             StorageHelper& storageHelper,
                                             LedgerManager& ledgerManager)
 {
-    StampHelper stampHelper(storageHelper);
-    LicenseHelper licenseHelper(storageHelper);
-
+    auto& stampHelper = storageHelper.getStampHelper();
+    auto& licenseHelper = storageHelper.getLicenseHelper();
     if (!stampHelper.exists(mLicense.ledgerHash, mLicense.prevLicenseHash))
     {
         innerResult().code(LicenseResultCode::INVALID_STAMP);
@@ -63,14 +63,8 @@ LicenseOpFrame::doApply(Application& app,
         return false;
     }
 
-    auto oldLicenseEntry = licenseHelper.loadCurrentLicense();
-    if (oldLicenseEntry){
-        auto prevLicenseKey = licenseHelper.getLedgerKey(oldLicenseEntry->mEntry);
-        licenseHelper.storeDelete(prevLicenseKey);
-    }
-
     licenseHelper.storeAdd(newLicense->mEntry);
-    StampHelper::clearAll(storageHelper.getDatabase());
+    stampHelper.clearAll();
     innerResult().code(LicenseResultCode::SUCCESS);
     return true;
 }
@@ -79,7 +73,7 @@ LicenseOpFrame::doApply(Application& app,
 bool
 LicenseOpFrame::doCheckValid(Application& app)
 {
-    if (app.timeNow() >= mLicense.dueDate)
+    if (app.getLedgerManager().getCloseTime() >= mLicense.dueDate)
     {
         innerResult().code(LicenseResultCode::INVALID_DUE_DATE);
         return false;

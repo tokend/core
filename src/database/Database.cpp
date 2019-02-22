@@ -19,9 +19,6 @@
 #include "ledger/AssetFrame.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/EntryHelperLegacy.h"
-#include "ledger/StampHelper.h"
-#include "ledger/LicenseHelper.h"
-#include "ledger/LicenseSignatureHelper.h"
 #include "ledger/FeeFrame.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReferenceFrame.h"
@@ -61,6 +58,8 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/ContractHelper.h>
 #include "ledger/SaleHelper.h"
+#include "ledger/StampHelperImpl.h"
+#include "ledger/LicenseHelperImpl.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
 
@@ -102,10 +101,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 19,
     ADD_ACCOUNT_ROLES_AND_POLICIES = 20,
     ADD_ATOMIC_SWAP_BID = 21,
-    ADD_ASSET_CUSTOM_PRECISION = 22
+    ADD_ASSET_CUSTOM_PRECISION = 22,
+    ADD_LICENSE = 23
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_LICENSE;
 
 static void
 setSerializable(soci::session& sess)
@@ -224,6 +224,10 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::
         REVIEWABLE_REQUEST_FIX_EXTERNAL_DETAILS:
+            break;
+        case databaseSchemaVersion::ADD_LICENSE:
+            std::unique_ptr<LicenseHelper>(new LicenseHelperImpl(storageHelper))->dropAll();
+            std::unique_ptr<StampHelper>(new StampHelperImpl(storageHelper))->dropAll();
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");
@@ -379,8 +383,6 @@ DatabaseImpl::initialize()
     TransactionFrame::dropAll(*this);
     HistoryManager::dropAll(*this);
     BucketManager::dropAll(mApp);
-    StampHelper::dropAll(*this);
-    LicenseHelper::dropAll(*this);
     putSchemaVersion(1);
 }
 
