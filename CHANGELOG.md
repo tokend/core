@@ -12,7 +12,7 @@
 
 ### Fixed
 
-* Removing key values with key which was determined type
+* Removing key values by key which is determined in mValueTypes map in manageKyValueOpFrame
 * Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
 
 ## 3.0.0-x.5
