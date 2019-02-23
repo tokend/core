@@ -24,6 +24,7 @@ class EntryHelper
     virtual uint64_t countObjects() = 0;
 
     virtual Database& getDatabase() = 0;
+    virtual LedgerDelta* getLedgerDelta() = 0;
 
     virtual void flushCachedEntry(LedgerKey const& key);
     virtual bool cachedEntryExists(LedgerKey const& key);

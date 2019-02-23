@@ -42,6 +42,9 @@ class ExternalSystemAccountIDHelperImpl : public ExternalSystemAccountIDHelper,
 
     Database& getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
   private:
     static const char* select;
 

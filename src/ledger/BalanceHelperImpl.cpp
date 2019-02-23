@@ -511,6 +511,12 @@ BalanceHelperImpl::getDatabase()
     return mStorageHelper.getDatabase();
 }
 
+LedgerDelta*
+BalanceHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
+
 string
 BalanceHelperImpl::obtainStrAccountIDs(vector<AccountID> accountIDs)
 {

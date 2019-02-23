@@ -30,6 +30,11 @@ void
 EntryHelper::putCachedEntry(LedgerKey const& key,
                             std::shared_ptr<LedgerEntry const> p)
 {
+    if (getLedgerDelta() == nullptr)
+    {
+        return;
+    }
+
     auto s = binToHex(xdr::xdr_to_opaque(key));
     getDatabase().getEntryCache().put(s, p);
 }

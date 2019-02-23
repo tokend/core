@@ -457,4 +457,10 @@ ExternalSystemAccountIDPoolEntryHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
 }
+
+LedgerDelta*
+ExternalSystemAccountIDPoolEntryHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 } // namespace stellar

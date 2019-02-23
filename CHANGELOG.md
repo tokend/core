@@ -8,7 +8,8 @@
 
 ### Fixed
 
-* Do not add to cache if load entry without delta
+* Do not add to cache if load entry without delta (add delta to putCacheEntry method)
+* Implement getLedgerDelta method for all new helpers
 
 ### Changed
 

@@ -281,4 +281,10 @@ SignerRoleHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
 }
+
+LedgerDelta*
+SignerRoleHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 }

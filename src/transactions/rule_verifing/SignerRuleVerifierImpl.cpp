@@ -104,6 +104,12 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                 return false;
             }
 
+            if (!isTasksMatch(requiredResource.reviewableRequest().allTasks,
+                              actualResource.reviewableRequest().allTasks))
+            {
+                return false;
+            }
+
             auto expectedDetails = requiredResource.reviewableRequest().details;
             auto actualDetails = actualResource.reviewableRequest().details;
             if (actualDetails.requestType() == ReviewableRequestType::ANY) {

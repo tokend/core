@@ -333,4 +333,9 @@ AccountHelperImpl::getDatabase()
     return mStorageHelper.getDatabase();
 }
 
+LedgerDelta*
+AccountHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 }

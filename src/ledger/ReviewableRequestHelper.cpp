@@ -281,7 +281,7 @@ namespace stellar {
 
         if (!retReviewableRequest)
         {
-            putCachedEntry(key, nullptr, db);
+            putCachedEntry(key, nullptr, db, delta);
             return nullptr;
         }
 
@@ -291,7 +291,7 @@ namespace stellar {
         }
 
         auto pEntry = std::make_shared<LedgerEntry>(retReviewableRequest->mEntry);
-        putCachedEntry(key, pEntry, db);
+        putCachedEntry(key, pEntry, db, delta);
         return retReviewableRequest;
     }
 
