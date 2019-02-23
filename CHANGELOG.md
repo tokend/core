@@ -2,15 +2,9 @@
 
 ## Unreleased
 
-### Changed
+### Added
 
-* Add check for zero withdraw tasks in manage key value op
-
-### Fixed
-
-* Removing system key values
-
-## Unreleased
+* Check for zero withdraw tasks in manage key value op
 
 ### Changed
 
@@ -18,6 +12,7 @@
 
 ### Fixed
 
+* Removing key values with key which was determined type
 * Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
 
 ## 3.0.0-x.5
