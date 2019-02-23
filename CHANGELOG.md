@@ -4,7 +4,7 @@
 
 ### Added
 
-* Check for zero withdraw tasks in manage key value op
+* Return error code if value of withdraw tasks is zero in manage key value op
 
 ### Changed
 
