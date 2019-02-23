@@ -122,6 +122,11 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 
     bool ManageKeyValueOpFrame::doCheckValid(Application &app)
     {
+        if (mManageKeyValue.action.action() != ManageKVAction::PUT)
+        {
+            return true;
+        }
+
         auto prefix = getPrefix();
         auto valueTypesIter = mValueTypes.find(prefix);
         if (valueTypesIter != mValueTypes.end())
