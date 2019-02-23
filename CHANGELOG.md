@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+
+* Key value resource comparing in rule verifying
+
+### Fixed
+
+* Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
+
 ## 3.0.0-x.5
 
 ### Added

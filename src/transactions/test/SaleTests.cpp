@@ -232,7 +232,7 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
 
     AccountRuleResource saleResource(LedgerEntryType::REVIEWABLE_REQUEST);
     saleResource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
-    saleResource.reviewableRequest().details.sale().type = saleTypeInt;
+    saleResource.reviewableRequest().details.createSale().type = saleTypeInt;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
             saleResource, AccountRuleAction::CREATE, false);

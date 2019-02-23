@@ -46,8 +46,8 @@ public:
         return xdr::xdr_traits<ManageKeyValueResultCode>::enum_name(code);
     }
 
-    string256 getPrefix() const {
-        string256 prefix;
+    longstring getPrefix() const {
+        longstring prefix;
         std::istringstream from(mManageKeyValue.key);
         std::getline(from,prefix,':');
 

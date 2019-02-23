@@ -41,8 +41,8 @@ ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);
-    resource.reviewableRequest().details.withdraw().assetCode = asset->getCode();
-    resource.reviewableRequest().details.withdraw().assetType = asset->getType();
+    resource.reviewableRequest().details.createWithdraw().assetCode = asset->getCode();
+    resource.reviewableRequest().details.createWithdraw().assetType = asset->getType();
     resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
     resource.reviewableRequest().allTasks = 0;
