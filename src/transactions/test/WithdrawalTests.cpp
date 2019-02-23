@@ -45,9 +45,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
     //Default tasks
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
-    manageKeyValueHelper.setKey(key)->setUi32Value(0);
-    manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
     longstring assetCreate = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
     manageKeyValueHelper.setKey(assetCreate)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
@@ -217,14 +214,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                                  nullptr,
                                                                  CreateWithdrawalRequestResultCode::LOWER_BOUND_NOT_EXCEEDED);
             }
-        }
-        SECTION("zero tasks") {
-            longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
-            manageKeyValueHelper.setKey(key)->setUi32Value(0);
-            manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
-            auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                                                                                   nullptr,
-                                                                                   CreateWithdrawalRequestResultCode::WITHDRAWAL_ZERO_TASKS_NOT_ALLOWED);
         }
         SECTION("successful application")
         {
