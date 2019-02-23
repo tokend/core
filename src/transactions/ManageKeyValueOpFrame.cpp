@@ -53,6 +53,10 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
         {withdrawLowerBoundPrefix, KeyValueEntryType::UINT64},
         {limitsUpdateTasks, KeyValueEntryType::UINT32},
+        {withdrawalTasksPrefix, KeyValueEntryType::UINT32},
+        {assetCreateTasks, KeyValueEntryType::UINT32},
+        {assetUpdateTasks, KeyValueEntryType::UINT32},
+        {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
     };
 }
 
@@ -60,8 +64,10 @@ bool
 ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                  std::vector<OperationCondition>& result) const
 {
-    result.emplace_back(AccountRuleResource(LedgerEntryType::KEY_VALUE),
-                        AccountRuleAction::MANAGE, mSourceAccount);
+    AccountRuleResource resource(LedgerEntryType::KEY_VALUE);
+    resource.keyValue().keyPrefix = getPrefix();
+
+    result.emplace_back(resource, AccountRuleAction::MANAGE, mSourceAccount);
 
     return true;
 }
@@ -70,8 +76,10 @@ bool
 ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                 std::vector<SignerRequirement> &result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::KEY_VALUE),
-                        SignerRuleAction::MANAGE);
+    SignerRuleResource resource(LedgerEntryType::KEY_VALUE);
+    resource.keyValue().keyPrefix = getPrefix();
+
+    result.emplace_back(resource, SignerRuleAction::MANAGE);
 
     return true;
 }
@@ -112,16 +120,31 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 
     }
 
-    bool ManageKeyValueOpFrame::doCheckValid(Application &app) {
-        auto prefix = getPrefix();
+    bool ManageKeyValueOpFrame::doCheckValid(Application &app)
+    {
+        if (mManageKeyValue.action.action() != ManageKVAction::PUT)
+        {
+            return true;
+        }
 
+        auto prefix = getPrefix();
         auto valueTypesIter = mValueTypes.find(prefix);
-        if (valueTypesIter != mValueTypes.end()) {
-            if (mManageKeyValue.action.value().type() != mValueTypes[prefix]) {
+        if (valueTypesIter != mValueTypes.end())
+        {
+            if (mManageKeyValue.action.value().type() != mValueTypes[prefix])
+            {
                 innerResult().code(ManageKeyValueResultCode::INVALID_TYPE);
                 return false;
             }
+
+            if ((prefix == withdrawalTasksPrefix) &&
+                (mManageKeyValue.action.value().ui32Value() == 0))
+            {
+                innerResult().code(ManageKeyValueResultCode::ZERO_VALUE_NOT_ALLOWED);
+                return false;
+            }
         }
+
         return true;
     }
 

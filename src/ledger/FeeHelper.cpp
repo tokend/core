@@ -373,19 +373,7 @@ namespace stellar {
         if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
                 frame->getFeeAsset(), frame->getFixedFee()))
         {
-            throw std::runtime_error("Invalid fixed fee amount");
-        }
-
-        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
-                frame->getFeeAsset(), frame->getFee().lowerBound))
-        {
-            throw std::runtime_error("Invalid fee lower bound amount");
-        }
-
-        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
-                frame->getFeeAsset(), frame->getFee().upperBound))
-        {
-            throw std::runtime_error("Invalid fee upper bound amount");
+            throw std::runtime_error("Fixed fee amount does not fit asset precision");
         }
     }
 

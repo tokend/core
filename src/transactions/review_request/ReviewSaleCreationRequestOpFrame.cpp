@@ -37,7 +37,7 @@ ReviewSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
-    resource.reviewableRequest().details.sale().type =
+    resource.reviewableRequest().details.createSale().type =
             request->getRequestEntry().body.saleCreationRequest().saleType;
     resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;

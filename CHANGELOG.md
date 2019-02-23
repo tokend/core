@@ -4,6 +4,21 @@
 
 ### Added
 
+* Return error code if value of withdraw tasks is zero in manage key value op
+
+### Changed
+
+* Key value resource comparing in rule verifying
+
+### Fixed
+
+* Removing key values by key which is determined in mValueTypes map in manageKyValueOpFrame
+* Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
+
+## 3.0.0-x.5
+
+### Added
+
 * Add change role tasks keys with `*`
 * EntryHelperLegacyImpl
 

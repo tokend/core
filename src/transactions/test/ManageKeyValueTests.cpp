@@ -23,6 +23,8 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
     auto testManager = TestManager::make(app);
     longstring key = SecretKey::random().getStrKeyPublic();
 
+    Account root = Account{getRoot(), 1};
+
     ManageKeyValueTestHelper testHelper(testManager);
     testHelper.setKey(key);
     testHelper.setUi32Value(30);
@@ -90,4 +92,31 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
         }
     }
 
+    SECTION("Can create withdraw tasks key value")
+    {
+        ManageKeyValueOp op;
+        op.key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("AAA");
+        op.action.action(ManageKVAction::PUT);
+        op.action.value().type(KeyValueEntryType::UINT32);
+        op.action.value().ui32Value() = 1;
+
+        testHelper.applyTx(root, op);
+
+        SECTION("Can remove withdraw tasks key value")
+        {
+            op.action.action(ManageKVAction::REMOVE);
+            testHelper.applyTx(root, op);
+        }
+    }
+
+    SECTION("not allowed create withdraw tasks key value with zero value")
+    {
+        ManageKeyValueOp op;
+        op.key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("AAA");
+        op.action.action(ManageKVAction::PUT);
+        op.action.value().type(KeyValueEntryType::UINT32);
+        op.action.value().ui32Value() = 0;
+
+        testHelper.applyTx(root, op, ManageKeyValueResultCode::ZERO_VALUE_NOT_ALLOWED);
+    }
 }
