@@ -367,6 +367,9 @@ OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
         if (!accountRuleVerifier.isAllowed(condition, storageHelper))
         {
             mResult.code(OperationResultCode::opNO_ROLE_PERMISSION);
+            auto& requirement = mResult.requirement();
+            requirement.resource = condition.resource;
+            requirement.action = condition.action;
             return false;
         }
     }
