@@ -6,6 +6,10 @@
 
 * Return error code if value of withdraw tasks is zero in manage key value op
 
+### Fixed
+
+* Do not add to cache if load entry without delta
+
 ### Changed
 
 * Key value resource comparing in rule verifying
