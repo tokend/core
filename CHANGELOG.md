@@ -5,6 +5,8 @@
 ### Added
 
 * Return error code if value of withdraw tasks is zero in manage key value op
+* Licensing
+* License, Stamp operations
 
 ### Changed
 
