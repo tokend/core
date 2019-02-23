@@ -61,9 +61,14 @@ ReviewableRequestFrame::pointer UpdateAssetOpFrame::getUpdatedOrCreateReviewable
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 	requestEntry.body.type(ReviewableRequestType::UPDATE_ASSET);
-	requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
-	requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
-	request->recalculateHashRejectReason();
+    requestEntry.body.assetUpdateRequest() = mAssetUpdateRequest;
+    if (mManageAsset.requestID == 0)
+    {
+        requestEntry.body.assetUpdateRequest().sequenceNumber = 0;
+        request->recalculateHashRejectReason();
+    }
+    const auto hash = ReviewableRequestFrame::calculateHash(requestEntry.body);
+    requestEntry.hash = hash;
 	return request;
 }
 

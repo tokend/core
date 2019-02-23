@@ -16,7 +16,6 @@
 #include "ReviewAssetRequestHelper.h"
 #include "test/test_marshaler.h"
 
-
 namespace stellar
 {
 namespace txtest
@@ -38,7 +37,7 @@ void ManageAssetTestHelper::createApproveRequest(Account& root, Account& source,
                     mTestManager->getDB());
     auto reviewHelper = ReviewAssetRequestHelper(mTestManager);
     reviewHelper.applyReviewRequestTx(root, requestCreationResult.success().
-                                                                  requestID,
+                                          requestID,
                                       requestFrame->getHash(),
                                       requestFrame->getRequestType(),
                                       ReviewRequestOpAction::APPROVE, "");
@@ -53,8 +52,8 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
         countObjects(mTestManager->getDB().getSession());
     auto requestBeforeTx = reviewableRequestHelper->loadRequest(requestID,
                                                                 mTestManager->
-                                                                getLedgerManager()
-                                                                .getDatabase(),
+                                                                        getLedgerManager()
+                                                                    .getDatabase(),
                                                                 nullptr);
     auto txFrame = createManageAssetTx(source, requestID, request);
 
@@ -62,7 +61,8 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
     REQUIRE(opResult.code() == expectedOpCode);
-    if (opResult.code() != OperationResultCode::opINNER) {
+    if (opResult.code() != OperationResultCode::opINNER)
+    {
         return ManageAssetResult();
     }
     auto actualResultCode = ManageAssetOpFrame::getInnerCode(opResult);
@@ -85,7 +85,7 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
     auto balanceHelper = BalanceHelperLegacy::Instance();
 
     if ((request.action() == ManageAssetAction::CREATE_ASSET_CREATION_REQUEST
-        || request.action() == ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST)
+         || request.action() == ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST)
         && manageAssetResult.success().fulfilled)
     {
         REQUIRE(reviewableRequestCountAfterTx == reviewableRequestCountBeforeTx);
@@ -95,7 +95,6 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
         return manageAssetResult;
     }
 
-
     const bool isUpdatingExistingRequest = requestID != 0;
     if (isUpdatingExistingRequest)
     {
@@ -103,10 +102,10 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
     }
 
     auto requestAfterTx = reviewableRequestHelper->loadRequest(manageAssetResult
-                                                               .success().
-                                                                requestID,
+                                                                   .success().
+                                                                   requestID,
                                                                mTestManager->
-                                                               getDB(),
+                                                                   getDB(),
                                                                nullptr);
     if (request.action() == ManageAssetAction::CANCEL_ASSET_REQUEST)
     {
@@ -119,23 +118,30 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
 
     switch (request.action())
     {
-    case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
-        REQUIRE(requestAfterTx->getRequestEntry().body.assetCreationRequest() ==
-            request.createAssetCreationRequest().createAsset);
-        break;
-    case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
-        REQUIRE(requestAfterTx->getRequestEntry().body.assetUpdateRequest() ==
-            request.createAssetUpdateRequest().updateAsset);
-        break;
-    default:
-        throw std::runtime_error("Unexpected action for manage asset");
+        case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
+            if (requestID == 0)
+            {
+                REQUIRE(requestAfterTx->getRequestEntry().body.assetCreationRequest() ==
+                        request.createAssetCreationRequest().createAsset);
+
+            }
+            break;
+        case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
+            if (requestID == 0)
+            {
+                REQUIRE(requestAfterTx->getRequestEntry().body.assetUpdateRequest() ==
+                        request.createAssetUpdateRequest().updateAsset);
+            }
+            break;
+        default:
+            throw std::runtime_error("Unexpected action for manage asset");
     }
 
     return manageAssetResult;
 }
 
 Operation
-ManageAssetTestHelper::createManageAssetOp(Account &source, uint64_t requestID, ManageAssetOp::_request_t request)
+ManageAssetTestHelper::createManageAssetOp(Account& source, uint64_t requestID, ManageAssetOp::_request_t request)
 {
     Operation op;
     op.body.type(OperationType::MANAGE_ASSET);
@@ -159,11 +165,11 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     std::string creatorDetails,
     uint64_t maxIssuanceAmount,
     uint32_t policies,
-    uint32_t* allTasks,
+    uint32_t *allTasks,
     uint64_t initialPreissuanceAmount,
     uint32_t trailingDigitsCount,
     uint64_t assetType
-    )
+)
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CREATE_ASSET_CREATION_REQUEST);
@@ -176,7 +182,8 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetCreationRequest(
     assetCreationRequest.initialPreissuedAmount = initialPreissuanceAmount;
     assetCreationRequest.type = assetType;
     assetCreationRequest.trailingDigitsCount = trailingDigitsCount;
-    if (allTasks){
+    if (allTasks)
+    {
         request.createAssetCreationRequest().allTasks.activate() = *allTasks;
     }
     return request;
@@ -195,7 +202,8 @@ ManageAssetOp::_request_t ManageAssetTestHelper::createAssetUpdateRequest(
     assetUpdateRequest.code = code;
     assetUpdateRequest.creatorDetails = creatorDetails;
     assetUpdateRequest.policies = policies;
-    if (allTasks){
+    if (allTasks)
+    {
         request.createAssetUpdateRequest().allTasks.activate() = *allTasks;
     }
     return request;
@@ -218,7 +226,7 @@ ManageAssetOp::_request_t ManageAssetTestHelper::updateMaxAmount(AssetCode asset
 }
 
 ManageAssetOp::_request_t ManageAssetTestHelper::createChangeSignerRequest(
-        Account& account, AssetCode code, AccountID accountID)
+    Account& account, AssetCode code, AccountID accountID)
 {
     ManageAssetOp::_request_t request;
     request.action(ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER);
@@ -238,16 +246,16 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         SecretKey& preIssuedSigner,
                                         AssetCode assetCode, Account& root,
                                         uint32_t policies,
-                                        uint32_t* allTasks,
+                                        uint32_t *allTasks,
                                         uint32_t trailingDigitsCount,
                                         uint64_t assetType
-                                        )
+)
 {
     const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
-            AssetFrame::getMinimumAmountFromTrailingDigits(trailingDigitsCount));
+                                                     AssetFrame::getMinimumAmountFromTrailingDigits(trailingDigitsCount));
     auto creationRequest = createAssetCreationRequest(assetCode,
                                                       preIssuedSigner.
-                                                      getPublicKey(),
+                                                          getPublicKey(),
                                                       "{}", maxIssuanceAmount,
                                                       policies, allTasks, 0,
                                                       trailingDigitsCount,
@@ -263,15 +271,15 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto approvingRequest = reviewableRequestHelper->loadRequest(creationResult.
-                                                                 success().
-                                                                 requestID,
+                                                                     success().
+                                                                     requestID,
                                                                  mTestManager->
-                                                                 getDB(),
+                                                                     getDB(),
                                                                  nullptr);
     REQUIRE(approvingRequest);
     auto reviewRequetHelper = ReviewAssetRequestHelper(mTestManager);
     reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
-                                            getRequestID(),
+                                                getRequestID(),
                                             approvingRequest->getHash(),
                                             approvingRequest->getType(),
                                             ReviewRequestOpAction::APPROVE, "");
@@ -290,15 +298,15 @@ void ManageAssetTestHelper::updateAsset(Account& assetOwner,
 
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto approvingRequest = reviewableRequestHelper->loadRequest(updateResult.
-                                                                 success().
-                                                                 requestID,
+                                                                     success().
+                                                                     requestID,
                                                                  mTestManager->
-                                                                 getDB(),
+                                                                     getDB(),
                                                                  nullptr);
     REQUIRE(approvingRequest);
     auto reviewRequetHelper = ReviewAssetRequestHelper(mTestManager);
     reviewRequetHelper.applyReviewRequestTx(root, approvingRequest->
-                                            getRequestID(),
+                                                getRequestID(),
                                             approvingRequest->getHash(),
                                             approvingRequest->getType(),
                                             ReviewRequestOpAction::APPROVE, "");
@@ -308,7 +316,7 @@ void ManageAssetTestHelper::changeAssetTrailingDigits(AssetCode assetCode,
                                                       uint32 trailingDigitsCount)
 {
     auto storageHelper = std::unique_ptr<StorageHelper>(
-            new StorageHelperImpl(mTestManager->getDB(), nullptr));
+        new StorageHelperImpl(mTestManager->getDB(), nullptr));
     storageHelper->release();
 
     auto asset = storageHelper->getAssetHelper().mustLoadAsset(assetCode);
@@ -323,22 +331,22 @@ void ManageAssetTestHelper::validateManageAssetEffect(
     auto assetHelper = AssetHelperLegacy::Instance();
     switch (request.action())
     {
-    case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
-        assetCode = request.createAssetCreationRequest().createAsset.code;
-        break;
-    case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
-    {
-        assetCode = request.createAssetUpdateRequest().updateAsset.code;
-        auto assetFrame = assetHelper->loadAsset(assetCode,
-                                                 mTestManager->getDB());
-        REQUIRE(assetFrame);
-        auto assetEntry = assetFrame->getAsset();
-        REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.creatorDetails);
-        REQUIRE(assetEntry.policies == request.createAssetUpdateRequest().updateAsset.policies);
-        break;
-    }
-    default:
-        throw std::
+        case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
+            assetCode = request.createAssetCreationRequest().createAsset.code;
+            break;
+        case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
+        {
+            assetCode = request.createAssetUpdateRequest().updateAsset.code;
+            auto assetFrame = assetHelper->loadAsset(assetCode,
+                                                     mTestManager->getDB());
+            REQUIRE(assetFrame);
+            auto assetEntry = assetFrame->getAsset();
+            REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.creatorDetails);
+            REQUIRE(assetEntry.policies == request.createAssetUpdateRequest().updateAsset.policies);
+            break;
+        }
+        default:
+            throw std::
             runtime_error("Unexpected manage asset action from master account");
     }
     auto assetFrame = assetHelper->loadAsset(assetCode, mTestManager->getDB());
@@ -348,11 +356,11 @@ void ManageAssetTestHelper::validateManageAssetEffect(
     {
         auto systemAccount = mTestManager->getApp().getAdminID();
 
-            auto balanceFrame = balanceHelper->loadBalance(systemAccount,
-                                                           assetCode,
-                                                           mTestManager->
+        auto balanceFrame = balanceHelper->loadBalance(systemAccount,
+                                                       assetCode,
+                                                       mTestManager->
                                                            getDB(), nullptr);
-            REQUIRE(balanceFrame);
+        REQUIRE(balanceFrame);
 
     }
 }

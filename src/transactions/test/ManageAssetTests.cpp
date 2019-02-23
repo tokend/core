@@ -429,6 +429,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             }
             SECTION("Can update asset")
             {
+
                 const auto updateRequestBody = manageAssetHelper.
                     createAssetUpdateRequest(assetCode,
                                              "{}", 0, &zeroTasks);
@@ -457,6 +458,42 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
         auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
         auto reviewAssetRequestHelper = ReviewAssetRequestHelper(testManager);
 
+        SECTION("Can update rejected request")
+        {
+            auto request = reviewableRequestHelper->
+                loadRequest(creationResult.success().requestID,
+                            testManager->getDB(), nullptr);
+            REQUIRE(request);
+            auto reviewResult = reviewAssetRequestHelper.applyReviewRequestTxWithTasks(root, request->
+                                                                                           getRequestID(),
+                                                                                       request->getHash(),
+                                                                                       request->getRequestType(),
+                                                                                       ReviewRequestOpAction::
+                                                                                       REJECT, "Because", ReviewRequestResultCode::SUCCESS,
+                                                                                       &tasksToAdd,
+                                                                                       &zeroTasks);
+            auto secondCreationRequest = manageAssetHelper.
+                createAssetCreationRequest(assetCode,
+                                           preissuedSigner.getPublicKey(),
+                                           "{}", maxIssuance*2, 0, nullptr, initialPreIssuedAmount);
+
+            auto secondCreationResult = manageAssetHelper.applyManageAssetTx(account, request->getRequestID(),
+                                                                       secondCreationRequest);
+            REQUIRE_FALSE(secondCreationResult.success().fulfilled);
+            request = reviewableRequestHelper->
+                loadRequest(creationResult.success().requestID,
+                            testManager->getDB(), nullptr);
+            REQUIRE(request);
+            auto secondReviewResult = reviewAssetRequestHelper.applyReviewRequestTxWithTasks(root, request->
+                                                                                           getRequestID(),
+                                                                                       request->getHash(),
+                                                                                       request->getRequestType(),
+                                                                                       ReviewRequestOpAction::
+                                                                                       APPROVE, "", ReviewRequestResultCode::SUCCESS,
+                                                                                       &zeroTasks,
+                                                                                       &tasksToRemove);
+
+        }
         SECTION("Valid")
         {
 
