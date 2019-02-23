@@ -53,6 +53,10 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
         {withdrawLowerBoundPrefix, KeyValueEntryType::UINT64},
         {limitsUpdateTasks, KeyValueEntryType::UINT32},
+        {withdrawalTasksPrefix, KeyValueEntryType::UINT32},
+        {assetCreateTasks, KeyValueEntryType::UINT32},
+        {assetUpdateTasks, KeyValueEntryType::UINT32},
+        {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
     };
 }
 
@@ -116,16 +120,26 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 
     }
 
-    bool ManageKeyValueOpFrame::doCheckValid(Application &app) {
+    bool ManageKeyValueOpFrame::doCheckValid(Application &app)
+    {
         auto prefix = getPrefix();
-
         auto valueTypesIter = mValueTypes.find(prefix);
-        if (valueTypesIter != mValueTypes.end()) {
-            if (mManageKeyValue.action.value().type() != mValueTypes[prefix]) {
+        if (valueTypesIter != mValueTypes.end())
+        {
+            if (mManageKeyValue.action.value().type() != mValueTypes[prefix])
+            {
                 innerResult().code(ManageKeyValueResultCode::INVALID_TYPE);
                 return false;
             }
+
+            if ((prefix == withdrawalTasksPrefix) &&
+                (mManageKeyValue.action.value().ui32Value() == 0))
+            {
+                innerResult().code(ManageKeyValueResultCode::ZERO_VALUE_NOT_ALLOWED);
+                return false;
+            }
         }
+
         return true;
     }
 

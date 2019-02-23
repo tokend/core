@@ -4,6 +4,12 @@
 
 ### Changed
 
+* Add check for zero withdraw tasks in manage key value op
+
+## Unreleased
+
+### Changed
+
 * Key value resource comparing in rule verifying
 
 ### Fixed
