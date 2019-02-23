@@ -17,7 +17,6 @@ namespace stellar
     class StampHelper : public EntryHelper {
 
     public:
-        virtual void clearAll() = 0;
         virtual void dropAll() = 0;
         virtual uint64_t countObjects() = 0;
         virtual bool exists(LedgerKey const &key) = 0;

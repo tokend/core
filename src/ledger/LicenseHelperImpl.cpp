@@ -66,7 +66,6 @@ namespace stellar
 
         auto& sigHelper = mStorageHelper.getLicenseSignatureHelper();
         auto licenseFrame = make_shared<LicenseFrame>(entry);
-        licenseFrame->touch(*delta);
 
         const auto le = licenseFrame->getLicenseEntry();
 
@@ -94,6 +93,7 @@ namespace stellar
         {
             sigHelper.storeAdd(hash, i, le.signatures[i]);
         }
+        delta->addEntry(*licenseFrame);
     }
 
     EntryFrame::pointer LicenseHelperImpl::storeLoad(LedgerKey const &ledgerKey)
@@ -126,6 +126,11 @@ namespace stellar
         st.define_and_bind();
         st.execute(true);
 
+        if (!st.got_data())
+        {
+            return nullptr;
+        }
+
         auto& sigHelper = mStorageHelper.getLicenseSignatureHelper();
 
         auto signatures = sigHelper.loadSignatures(hash);
@@ -143,12 +148,12 @@ namespace stellar
         db.getSession() << "DROP TABLE IF EXISTS license CASCADE";
         db.getSession() << "CREATE TABLE license"
                            "("
-                           "id             BIGINT NOT NULL"
+                           "id             BIGINT NOT NULL,"
                            "admin_count    BIGINT NOT NULL,"
                            "due_date       BIGINT NOT NULL,"
                            "ledger_hash    VARCHAR(64) NOT NULL,"
                            "prev_hash      VARCHAR(64) NOT NULL,"
-                           "hash           VARCHAR(64) NOT NULL UNIQUE,"
+                           "hash           VARCHAR(64) NOT NULL,"
                            "PRIMARY KEY (hash)"
                            ");";
         mStorageHelper.getLicenseSignatureHelper().dropAll();
@@ -167,7 +172,7 @@ namespace stellar
         delta->deleteEntry(key);
     }
 
-    EntryFrame::pointer LicenseHelperImpl::loadCurrentLicense()
+    LicenseFrame::pointer LicenseHelperImpl::loadCurrentLicense()
     {
         auto& db = getDatabase();
         string sql = selectorLicense;
@@ -187,6 +192,11 @@ namespace stellar
         st.exchange(into(hash));
         st.define_and_bind();
         st.execute(true);
+
+        if (!st.got_data())
+        {
+            return nullptr;
+        }
 
         auto& sigHelper = mStorageHelper.getLicenseSignatureHelper();
 

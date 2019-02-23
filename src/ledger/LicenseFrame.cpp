@@ -63,7 +63,7 @@ bool LicenseFrame::isSignatureValid(Application &app)
 {
     const int VALID_SIGNATURES_REQUIRED = 1;
 
-    auto contentsHash = getSignatureData();
+    auto contentsHash = getSignatureData(mLicense.ledgerHash, mLicense.prevLicenseHash, mLicense.adminCount, mLicense.dueDate);
     xdr::xvector<DecoratedSignature, 20> signatures;
     signatures.append(mLicense.signatures.data(), mLicense.signatures.size());
 
@@ -85,19 +85,6 @@ bool LicenseFrame::isExpired(Application &app)
     return app.getLedgerManager().getCloseTime() > mLicense.dueDate;
 }
 
-Hash LicenseFrame::getSignatureData()
-{
-    std::string ledgerHash = binToHex(mLicense.ledgerHash);
-    std::string prevLicenseHash = binToHex(mLicense.prevLicenseHash);
-
-    std::string rawSignatureData = std::to_string(mLicense.adminCount)
-            + ":" + std::to_string(mLicense.dueDate)
-            + ":" + ledgerHash
-            + ":" + prevLicenseHash;
-
-    return Hash(sha256(rawSignatureData));
-}
-
 Hash LicenseFrame::getFullHash()
 {
     std::string ledgerHash = binToHex(mLicense.ledgerHash);
@@ -113,6 +100,19 @@ Hash LicenseFrame::getFullHash()
     }
 
     return Hash(sha256(fullData));
+}
+
+Hash LicenseFrame::getSignatureData(Hash rawLedgerHash, Hash rawPrevLicenseHash, uint64_t adminCount, uint64_t dueDate)
+{
+    std::string ledgerHash = binToHex(rawLedgerHash);
+    std::string prevLicenseHash = binToHex(rawPrevLicenseHash);
+
+    std::string rawSignatureData = std::to_string(adminCount)
+            + ":" + std::to_string(dueDate)
+            + ":" + ledgerHash
+            + ":" + prevLicenseHash;
+
+    return Hash(sha256(rawSignatureData));
 }
 
 }

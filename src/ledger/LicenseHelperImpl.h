@@ -3,7 +3,6 @@
 #include "ledger/LedgerManager.h"
 #include "ledger/EntryHelper.h"
 #include "ledger/StorageHelper.h"
-#include "LicenseFrame.h"
 #include "ledger/LicenseHelper.h"
 #include "database/Database.h"
 
@@ -25,7 +24,7 @@ namespace stellar
         void storeDelete(LedgerKey const &key) override;
         void storeChange(LedgerEntry const& entry) override;
         EntryFrame::pointer storeLoad(LedgerKey const &ledgerKey) override;
-        EntryFrame::pointer loadCurrentLicense() override;
+        LicenseFrame::pointer loadCurrentLicense() override;
         uint64_t getAllowedAdmins(Application& app) override;
         uint64_t countObjects() override;
         EntryFrame::pointer loadLicense(LedgerKey const &key) override;

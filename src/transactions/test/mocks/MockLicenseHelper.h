@@ -19,7 +19,7 @@ class MockLicenseHelper : public LicenseHelper {
   MOCK_METHOD1(storeLoad,
       EntryFrame::pointer(LedgerKey const &ledgerKey));
   MOCK_METHOD0(loadCurrentLicense,
-      EntryFrame::pointer());
+      LicenseFrame::pointer());
   MOCK_METHOD1(getAllowedAdmins,
       uint64_t(Application& app));
   MOCK_METHOD0(countObjects,

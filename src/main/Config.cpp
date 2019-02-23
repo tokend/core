@@ -78,10 +78,6 @@ Config::getWiredKeys(LedgerVersion ledgerVersion) const
     std::vector<PublicKey> keys;
     switch (ledgerVersion)
     {
-        case LedgerVersion::EMPTY_VERSION:
-            keys.emplace_back(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
-            keys.emplace_back(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
-            break;
         default:
             keys.emplace_back(PubKeyUtils::fromStrKey("GBA4EX43M25UPV4WIE6RRMQOFTWXZZRIPFAI5VPY6Z2ZVVXVWZ6NEOOB"));
             keys.emplace_back(PubKeyUtils::fromStrKey("GA5NJM36NXW5UUNTBG47NUGJZ5V7UQJKAEAQH3IHSOXAGGEXSNWLSJAH"));

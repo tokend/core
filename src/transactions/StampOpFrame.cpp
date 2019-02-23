@@ -5,7 +5,6 @@
 #include "ledger/StampHelper.h"
 #include "ledger/StampFrame.h"
 #include "ledger/LicenseHelper.h"
-#include "ledger/LicenseFrame.h"
 #include "main/Application.h"
 #include "xdrpp/marshal.h"
 #include "crypto/SHA.h"
@@ -58,8 +57,7 @@ StampOpFrame::doApply(Application& app,
     auto license = licenseHelper.loadCurrentLicense();
     if (license)
     {
-        auto licenseFrame = make_shared<LicenseFrame>(license->mEntry);
-        oldLicenseHash = licenseFrame->getFullHash();
+        oldLicenseHash = license->getFullHash();
     }
     auto newStamp = StampFrame::createNew(ledgerHash, oldLicenseHash);
     auto key = stampHelper.getLedgerKey(newStamp->mEntry);

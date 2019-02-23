@@ -171,9 +171,9 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
 bool
 OperationFrame::canBeApplied(Application& app, StorageHelper& storageHelper)
 {
-    const auto source = mSourceAccount->getID().ed25519();
-    const auto admin = app.getAdminID().ed25519();
-    bool notAdmin = source != admin;
+    const auto source = mSourceAccount->getID();
+    const auto admin = app.getAdminID();
+    bool notAdmin = !(source == admin);
     return notAdmin || checkAdminCount(app, storageHelper) || checkOp(app, storageHelper);
 }
 

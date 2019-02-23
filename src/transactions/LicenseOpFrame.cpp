@@ -4,7 +4,6 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/LicenseHelper.h"
-#include "ledger/LicenseFrame.h"
 #include "ledger/StampHelper.h"
 #include "ledger/StampFrame.h"
 #include "main/Application.h"
@@ -67,7 +66,6 @@ LicenseOpFrame::doApply(Application& app,
     }
 
     licenseHelper.storeAdd(newLicense->mEntry);
-    stampHelper.clearAll();
     innerResult().code(LicenseResultCode::SUCCESS);
     return true;
 }

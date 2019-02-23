@@ -19,6 +19,10 @@ namespace stellar
         typedef std::shared_ptr<LicenseFrame> pointer;
         static pointer createNew(Hash ledgerHash, Hash licenseHash,
                 uint64_t adminCount, uint64_t dueDate, xdr::xvector<DecoratedSignature> signatures);
+        static Hash getSignatureData(Hash rawLedgerHash,
+            Hash rawPrevLicenseHash,
+            uint64_t adminCount,
+            uint64_t dueDate);
 
         LicenseFrame();
 
@@ -35,7 +39,6 @@ namespace stellar
         bool isSignatureValid(Application &app);
 
         bool isExpired(Application &app);
-        Hash getSignatureData();
         Hash getFullHash();
     };
 }

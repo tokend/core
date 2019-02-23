@@ -1,10 +1,12 @@
 #include "StampHelperImpl.h"
+#include "ledger/LedgerDelta.h"
 
 using namespace soci;
 using namespace std;
 
 namespace stellar
 {
+
 StampHelperImpl::StampHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
@@ -36,7 +38,6 @@ void StampHelperImpl::storeAdd(LedgerEntry const& entry)
     auto& db = getDatabase();
 
     auto stampFrame = make_shared<StampFrame>(entry);
-    stampFrame->touch(*delta);
 
     const auto stampEntry = stampFrame->getStampEntry();
     auto sql = "INSERT INTO stamp (ledger_hash, license_hash) VALUES (:ledger_hash, :license_hash)";
@@ -48,6 +49,7 @@ void StampHelperImpl::storeAdd(LedgerEntry const& entry)
     st.exchange(use(licenseHash, "license_hash"));
     st.define_and_bind();
     st.execute(true);
+    delta->addEntry(*stampFrame);
 }
 
 bool StampHelperImpl::exists(Hash ledgerHash, Hash licenseHash)
@@ -85,16 +87,6 @@ uint64_t StampHelperImpl::countObjects()
     return count;
 }
 
-void StampHelperImpl::clearAll()
-{
-    auto& db = getDatabase();
-    auto timer = db.getDeleteTimer("stamp");
-    auto prep = db.getPreparedStatement("DELETE FROM stamp");
-    auto& st = prep.statement();
-    st.define_and_bind();
-    st.execute(true);
-}
-
 EntryFrame::pointer StampHelperImpl::fromXDR(LedgerEntry const& from)
 {
     return std::make_shared<StampFrame>(from);
@@ -123,7 +115,17 @@ void StampHelperImpl::storeDelete(LedgerKey const& key)
 }
 EntryFrame::pointer StampHelperImpl::storeLoad(LedgerKey const& ledgerKey)
 {
-    throw runtime_error("Cannot load Stamp");
+    if(!exists(ledgerKey)){
+        return nullptr;
+    }
+
+    LedgerEntry entry;
+    entry.data.type(LedgerEntryType::STAMP);
+    auto& stamp = entry.data.stamp();
+    stamp.licenseHash = ledgerKey.stamp().licenseHash;
+    stamp.ledgerHash = ledgerKey.stamp().ledgerHash;
+    auto retStamp = make_shared<StampFrame>(entry);
+    return retStamp;
 }
 }
 

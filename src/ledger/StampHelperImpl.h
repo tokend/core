@@ -22,7 +22,6 @@ namespace stellar
     public:
         explicit StampHelperImpl(StorageHelper& storageHelper);
     private:
-        void clearAll() override;
         void dropAll() override;
         uint64_t countObjects() override;
         bool exists(LedgerKey const &key) override;
@@ -34,7 +33,7 @@ namespace stellar
         void storeChange(LedgerEntry const& entry) override;
         void storeLoad(LedgerEntry const& entry) override;
         void storeDelete(LedgerEntry const& entry) override;
-        virtual void storeDelete(LedgerKey const& key);
-        virtual EntryFrame::pointer storeLoad(LedgerKey const& ledgerKey);
+        void storeDelete(LedgerKey const& key) override;
+        EntryFrame::pointer storeLoad(LedgerKey const& ledgerKey) override;
     };
 }
