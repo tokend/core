@@ -79,11 +79,11 @@ private:
 
     virtual bool
     tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const;
+                              std::vector<OperationCondition> &result) const = 0;
 
     virtual bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const;
+                             std::vector<SignerRequirement>& result) const = 0;
 
 	// returns true if operation is allowed in the system
 	virtual bool isSupported() const;

@@ -49,7 +49,8 @@ ManageAssetOpFrame* ManageAssetOpFrame::makeHelper(Operation const & op, Operati
 ReviewableRequestFrame::pointer ManageAssetOpFrame::getOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta, const ReviewableRequestType requestType) const
 {
 	if (mManageAsset.requestID == 0) {
-	        const auto reference = xdr::pointer<string64>(new string64(getAssetCode()));
+        const auto reference = xdr::pointer<string64>(new string64(getAssetCode()));
+        ReviewableRequestEntry::_body_t body;
 		return ReviewableRequestFrame::createNew(delta, getSourceID(),
                                                  app.getAdminID(), reference,
                                                  app.getLedgerManager().getCloseTime());

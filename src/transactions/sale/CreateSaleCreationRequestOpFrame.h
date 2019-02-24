@@ -29,19 +29,12 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
     // tryLoadAssetOrRequest - tries to load base asset or request. If fails returns nullptr. If request exists - creates asset frame wrapper for it
     static AssetFrame::pointer tryLoadBaseAssetOrRequest(SaleCreationRequest const& request, Database& db, AccountID const& source);
 
-    std::string getReference(SaleCreationRequest const& request) const;
-
-    ReviewableRequestFrame::pointer createNewUpdateRequest(Application& app, LedgerManager& lm, Database& db, LedgerDelta& delta, time_t closedAt) const;
-
 
     // isBaseAssetHasSufficientIssuance - returns true, if base asset amount required for hard cap and soft cap does not exceed available amount to be issued.
     // sets corresponding result code
     bool isBaseAssetHasSufficientIssuance(AssetFrame::pointer assetFrame);
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
-
-    bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
-    void updateRequest(ReviewableRequestEntry& entry);
 public:
 
     CreateSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,
@@ -51,7 +44,7 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-    static bool ensureEnoughAvailable(Application& app, const SaleCreationRequest& saleCreationRequest,
+    static bool ensureEnoughAvailable(const SaleCreationRequest& saleCreationRequest,
             const AssetFrame::pointer baseAsset);
 
     static CreateSaleCreationRequestResultCode doCheckValid(Application& app,
@@ -68,6 +61,14 @@ public:
     std::string getInnerResultCodeAsStr() override {
         return xdr::xdr_traits<CreateSaleCreationRequestResultCode>::enum_name(innerResult().code());
     }
+
+    bool createRequest(Application& app, StorageHelper& storageHelper,
+                       LedgerManager& ledgerManager);
+    bool updateRequest(Application& app, StorageHelper& storageHelper,
+                       LedgerManager& ledgerManager);
+
+    bool isRequestValid(StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                        ReviewableRequestFrame::pointer request);
 
     std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 

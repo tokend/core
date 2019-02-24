@@ -101,9 +101,6 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
 
     if (!baseAsset->lockIssuedAmount(requiredBaseAssetForHardCap))
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-            << "Unexpected state, failed to lock issuance amount: "
-            << request->getRequestID();
         return ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP;
     }
 

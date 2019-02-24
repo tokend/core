@@ -67,9 +67,13 @@ ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewable
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 	requestEntry.body.type(ReviewableRequestType::CREATE_ASSET);
 	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
-    requestEntry.body.assetCreationRequest().sequenceNumber = 0;
-    request->recalculateHashRejectReason();
-
+    if (mManageAsset.requestID == 0)
+    {
+        requestEntry.body.assetCreationRequest().sequenceNumber = 0;
+        request->recalculateHashRejectReason();
+    }
+    const auto hash = ReviewableRequestFrame::calculateHash(requestEntry.body);
+    requestEntry.hash = hash;
 	return request;
 }
 
@@ -200,11 +204,6 @@ vector<longstring> CreateAssetOpFrame::makeTasksKeyVector(StorageHelper& storage
 
 bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
 {
-    if (request->getRejectReason().empty()) {
-        innerResult().code(ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
-        return false;
-    }
-
     if (mManageAsset.request.createAssetCreationRequest().allTasks)
     {
         innerResult().code(ManageAssetResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);

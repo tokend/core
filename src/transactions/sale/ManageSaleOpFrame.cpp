@@ -232,11 +232,6 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
             return false;
         }
 
-        if (request->getRejectReason().empty()) {
-            innerResult().code(ManageSaleResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
-            return false;
-        }
-
         return true;
     }
 }
