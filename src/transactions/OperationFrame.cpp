@@ -370,6 +370,7 @@ OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
             auto& requirement = mResult.requirement();
             requirement.resource = condition.resource;
             requirement.action = condition.action;
+            requirement.account = condition.account->getID();
             return false;
         }
     }

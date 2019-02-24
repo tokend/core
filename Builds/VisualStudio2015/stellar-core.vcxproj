@@ -214,6 +214,7 @@
     <ClCompile Include="..\..\src\ledger\EntryFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\EntryHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\EntryHelperLegacy.cpp" />
+    <ClCompile Include="..\..\src\ledger\EntryHelperLegacyImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\ExternalSystemAccountID.cpp" />
     <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\ExternalSystemAccountIDHelperLegacy.cpp" />
@@ -587,6 +588,7 @@
     <ClInclude Include="..\..\src\ledger\EntryFrame.h" />
     <ClInclude Include="..\..\src\ledger\EntryHelper.h" />
     <ClInclude Include="..\..\src\ledger\EntryHelperLegacy.h" />
+    <ClInclude Include="..\..\src\ledger\EntryHelperLegacyImpl.h" />
     <ClInclude Include="..\..\src\ledger\ExternalSystemAccountID.h" />
     <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDHelper.h" />
     <ClInclude Include="..\..\src\ledger\ExternalSystemAccountIDHelperImpl.h" />
