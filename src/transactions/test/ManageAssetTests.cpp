@@ -381,6 +381,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 requestID, account.key.getPublicKey(),
                 ReviewableRequestType::CREATE_ASSET, testManager->getDB());
             REQUIRE(requestBefore);
+            creationRequest.createAssetCreationRequest().allTasks = nullptr;
             manageAssetHelper.applyManageAssetTx(account,
                                                    requestID,
                                                    creationRequest);
