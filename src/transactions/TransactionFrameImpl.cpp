@@ -249,7 +249,6 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
     AccountRuleVerifierImpl accountRuleVerifier;
     if (!checkSendTxRule(accountRuleVerifier, storageHelper))
     {
-        getResult().result.code(TransactionResultCode::txNO_ROLE_PERMISSION);
         return false;
     }
 
@@ -261,10 +260,22 @@ bool
 TransactionFrameImpl::checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
                                       StorageHelper& storageHelper)
 {
-    OperationCondition operationCondition(AccountRuleResource(
-            LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, mSigningAccount);
+    AccountRuleResource resource(LedgerEntryType::TRANSACTION);
+    AccountRuleAction action(AccountRuleAction::SEND);
+    
+    OperationCondition operationCondition(resource, action, mSigningAccount);
 
-    return accountRuleVerifier.isAllowed(operationCondition, storageHelper);
+    if (!accountRuleVerifier.isAllowed(operationCondition, storageHelper)) 
+    {
+        getResult().result.code(TransactionResultCode::txNO_ROLE_PERMISSION);
+        auto& requirement = getResult().result.requirement();
+        requirement.resource = resource;
+        requirement.action = action;
+        requirement.account = mSigningAccount->getID();
+        return false;
+    }
+    
+    return true;
 }
 
 void
