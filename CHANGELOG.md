@@ -11,6 +11,7 @@
 
 * Do not add to cache if load entry without delta (add delta to putCacheEntry method)
 * Implement getLedgerDelta method for all new helpers
+* Issue with update of not rejected reviewable request
 
 ### Changed
 

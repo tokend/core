@@ -373,15 +373,28 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                                                  manageAssetHelper.
                                                  createCancelRequest());
         }
-        SECTION("Can't update pending request")
+        SECTION("Can update pending request")
         {
             creationRequest.createAssetCreationRequest().createAsset.code = "USDT";
+            auto requestID = creationResult.success().requestID;
+            auto requestBefore = reviewableRequestHelper->loadRequest(
+                requestID, account.key.getPublicKey(),
+                ReviewableRequestType::CREATE_ASSET, testManager->getDB());
+            REQUIRE(requestBefore);
             manageAssetHelper.applyManageAssetTx(account,
-                                                   creationResult
-                                                   .success().
                                                    requestID,
-                                                   creationRequest,
-                                                   ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+                                                   creationRequest);
+            auto requestAfter = reviewableRequestHelper->loadRequest(
+                requestID, account.key.getPublicKey(),
+                ReviewableRequestType::CREATE_ASSET, testManager->getDB());
+            REQUIRE(requestAfter);
+            auto seqBefore = requestBefore->getRequestEntry()
+                                 .body.assetCreationRequest()
+                                 .sequenceNumber;
+            auto seqAfter = requestAfter->getRequestEntry()
+                                .body.assetCreationRequest()
+                                .sequenceNumber;
+            REQUIRE(seqBefore + 1 == seqAfter);
 
         }
         SECTION("Given approved asset")

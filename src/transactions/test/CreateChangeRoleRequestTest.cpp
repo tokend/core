@@ -175,14 +175,30 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                       CreateChangeRoleRequestResultCode::REQUEST_DOES_NOT_EXIST);
 
         }
-        SECTION("update pending is not allowed for user")
+        SECTION("update pending is allowed for user")
         {
             auto createUpdateKYCRequestResult = changeRoleRequestHelper.applyCreateChangeRoleRequest(
                     account, 0, account.key.getPublicKey(), tokenOwnerRoleID, kycData);
             requestID = createUpdateKYCRequestResult.success().requestID;
+            auto requesBefore =
+                ReviewableRequestHelper::Instance()->loadRequest(
+                    requestID, account.key.getPublicKey(),
+                    ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
+            REQUIRE(requesBefore);
             changeRoleRequestHelper.applyCreateChangeRoleRequest(account, requestID,
-                  account.key.getPublicKey(), tokenOwnerRoleID, kycData, nullptr,
-                  CreateChangeRoleRequestResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
+                  account.key.getPublicKey(), tokenOwnerRoleID, kycData, nullptr);
+            auto requesAfter =
+                ReviewableRequestHelper::Instance()->loadRequest(
+                    requestID, account.key.getPublicKey(),
+                    ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
+            REQUIRE(requesAfter);
+            REQUIRE(requesBefore->getRequestEntry()
+                            .body.changeRoleRequest()
+                            .sequenceNumber +
+                        1 == requesAfter->getRequestEntry()
+                                .body.changeRoleRequest()
+                                .sequenceNumber);
+
         }
         SECTION("source master, create and update pending")
         {

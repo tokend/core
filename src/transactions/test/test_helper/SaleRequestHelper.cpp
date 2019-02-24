@@ -65,7 +65,7 @@ SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t reques
     if (expectedResult != CreateSaleCreationRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
-        return CreateSaleCreationRequestResult{};
+        return opResult.tr().createSaleCreationRequestResult();
     }
 
     return opResult.tr().createSaleCreationRequestResult();

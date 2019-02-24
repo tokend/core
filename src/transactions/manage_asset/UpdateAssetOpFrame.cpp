@@ -186,11 +186,6 @@ vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector(StorageHelper& storage
 
 bool UpdateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)
 {
-    if (request->getRejectReason().empty()) {
-        innerResult().code(ManageAssetResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
-        return false;
-    }
-
     if (mManageAsset.request.createAssetUpdateRequest().allTasks)
     {
         innerResult().code(ManageAssetResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);

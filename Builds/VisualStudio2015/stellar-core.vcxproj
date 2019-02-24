@@ -435,7 +435,9 @@
     <ClCompile Include="..\..\src\transactions\test\OfferTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\PaymentV2Tests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\PayoutTests.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\SaleRequestsTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleTests.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\SaleWithSeveralQuotesTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SetFeesTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\StatisticsV2Tests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\BindExternalSystemAccountIdTestHelper.cpp" />
@@ -490,7 +492,6 @@
     <ClCompile Include="..\..\src\transactions\test\TxTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\unit\BindExternalSystemAccountIdUnitTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\unit\ManageSignerRuleUnitTests.cpp" />
-    <ClCompile Include="..\..\src\transactions\test\unit\PayoutUnitTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\unit\SignatureValidatorUnitTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\WithdrawalTests.cpp" />
     <ClCompile Include="..\..\src\transactions\TransactionFrame.cpp" />

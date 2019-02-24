@@ -96,11 +96,6 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(Database &db, LedgerDelt
         innerResult().code(CreateChangeRoleRequestResultCode::REQUEST_DOES_NOT_EXIST);
         return false;
     }
-    if (request->getRejectReason().empty())
-    {
-        innerResult().code(CreateChangeRoleRequestResultCode::PENDING_REQUEST_UPDATE_NOT_ALLOWED);
-        return false;
-    }
 
     auto &requestEntry = request->getRequestEntry();
     if (!ensureDestinationNotChanged(requestEntry))

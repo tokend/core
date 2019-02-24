@@ -79,16 +79,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
 		return shared_ptr<OperationFrame>(new ManageAssetPairOpFrame(op, res, tx));
 	case OperationType::MANAGE_OFFER:
 		return shared_ptr<OperationFrame>(ManageOfferOpFrame::make(op, res, tx));
-    case OperationType::MANAGE_INVOICE_REQUEST:
-        return shared_ptr<OperationFrame>(new ManageInvoiceRequestOpFrame(op, res, tx));
     case OperationType::REVIEW_REQUEST:
 		return shared_ptr<OperationFrame>(ReviewRequestOpFrame::makeHelper(op, res, tx));
     case OperationType::CREATE_SALE_REQUEST:
         return shared_ptr<OperationFrame>(new CreateSaleCreationRequestOpFrame(op, res, tx));
     case OperationType::CHECK_SALE_STATE:
         return shared_ptr<OperationFrame>(new CheckSaleStateOpFrame(op, res, tx));
-    case OperationType::PAYOUT:
-        return shared_ptr<OperationFrame>(new PayoutOpFrame(op, res, tx));
     case OperationType::MANAGE_EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
         return shared_ptr<OperationFrame>(ManageExternalSystemAccountIdPoolEntryOpFrame::makeHelper(op, res, tx));
     case OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID:
@@ -105,10 +101,6 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
         return shared_ptr<OperationFrame>(new ManageSaleOpFrame(op, res, tx));
     case OperationType::CREATE_MANAGE_LIMITS_REQUEST:
         return shared_ptr<OperationFrame>(new CreateManageLimitsRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_CONTRACT_REQUEST:
-        return shared_ptr<OperationFrame>(new ManageContractRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_CONTRACT:
-        return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
     case OperationType::CANCEL_SALE_REQUEST:
         return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
     case OperationType::CREATE_ASWAP_BID_REQUEST:
@@ -163,22 +155,6 @@ bool OperationFrame::isSupported() const
 {
 	// by default all operations are supported
 	return true;
-}
-
-bool
-OperationFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                std::vector<OperationCondition> &result) const
-{
-    // method must be overridden
-    return false;
-}
-
-bool
-OperationFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                 std::vector<SignerRequirement> &result) const
-{
-    // method must be overridden
-    return false;
 }
 
 int64_t OperationFrame::getPaidFee() const {
