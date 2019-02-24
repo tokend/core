@@ -11,6 +11,8 @@
 #include "ledger/LedgerManagerImpl.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetHelperLegacy.h"
+#include "ledger/LicenseHelper.h"
+#include "StorageHelperImpl.h"
 
 #include "overlay/OverlayManager.h"
 
@@ -816,6 +818,7 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
                                  " email: enterprise@distributedlab.com");
     }
 #endif
+
     DBTimeExcluder qtExclude(mApp);
     CLOG(DEBUG, "Ledger") << "starting closeLedger() on ledgerSeq="
                           << mCurrentLedger->getHeader().ledgerSeq;

@@ -283,6 +283,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LicenseFrame.cpp" />
+    <ClCompile Include="..\..\src\ledger\LicenseHelperImpl.cpp" />
+    <ClCompile Include="..\..\src\ledger\LicenseSignatureHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\LimitsV2Frame.cpp" />
     <ClCompile Include="..\..\src\ledger\LimitsV2Helper.cpp" />
     <ClCompile Include="..\..\src\ledger\OfferFrame.cpp" />
@@ -303,6 +306,8 @@
     <ClCompile Include="..\..\src\ledger\SignerRoleRulesHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\SignerRuleFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\SignerRuleHelperImpl.cpp" />
+    <ClCompile Include="..\..\src\ledger\StampFrame.cpp" />
+    <ClCompile Include="..\..\src\ledger\StampHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\StatisticsFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\StatisticsHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\StatisticsTests.cpp" />
@@ -364,6 +369,7 @@
     <ClCompile Include="..\..\src\transactions\FeesManager.cpp" />
     <ClCompile Include="..\..\src\transactions\issuance\CreateIssuanceRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\issuance\CreatePreIssuanceRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\LicenseOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\ManageAssetPairOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\ManageBalanceOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\ManageKeyValueOpFrame.cpp" />
@@ -408,6 +414,7 @@
     <ClCompile Include="..\..\src\transactions\sale\ManageSaleOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\SetFeesOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\SignatureValidatorImpl.cpp" />
+    <ClCompile Include="..\..\src\transactions\StampOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\StatisticsV2Processor.cpp" />
     <ClCompile Include="..\..\src\transactions\test\AccountManagerTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\AccountRoleTests.cpp" />
@@ -611,6 +618,11 @@
     <ClInclude Include="..\..\src\ledger\LedgerManager.h" />
     <ClInclude Include="..\..\src\ledger\LedgerManagerImpl.h" />
     <ClInclude Include="..\..\src\ledger\LedgerTestUtils.h" />
+    <ClInclude Include="..\..\src\ledger\LicenseFrame.h" />
+    <ClInclude Include="..\..\src\ledger\LicenseHelper.h" />
+    <ClInclude Include="..\..\src\ledger\LicenseHelperImpl.h" />
+    <ClInclude Include="..\..\src\ledger\LicenseSignatureHelper.h" />
+    <ClInclude Include="..\..\src\ledger\LicenseSignatureHelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\LimitsV2Frame.h" />
     <ClInclude Include="..\..\src\ledger\LimitsV2Helper.h" />
     <ClInclude Include="..\..\src\ledger\OfferFrame.h" />
@@ -634,6 +646,9 @@
     <ClInclude Include="..\..\src\ledger\SignerRuleFrame.h" />
     <ClInclude Include="..\..\src\ledger\SignerRuleHelper.h" />
     <ClInclude Include="..\..\src\ledger\SignerRuleHelperImpl.h" />
+    <ClInclude Include="..\..\src\ledger\StampFrame.h" />
+    <ClInclude Include="..\..\src\ledger\StampHelper.h" />
+    <ClInclude Include="..\..\src\ledger\StampHelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\StatisticsFrame.h" />
     <ClInclude Include="..\..\src\ledger\StatisticsHelper.h" />
     <ClInclude Include="..\..\src\ledger\StatisticsV2Frame.h" />
@@ -727,6 +742,7 @@
     <ClInclude Include="..\..\src\transactions\FeesManager.h" />
     <ClInclude Include="..\..\src\transactions\issuance\CreateIssuanceRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\issuance\CreatePreIssuanceRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\LicenseOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\ManageAssetPairOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\ManageBalanceOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\ManageKeyValueOpFrame.h" />
@@ -774,6 +790,7 @@
     <ClInclude Include="..\..\src\transactions\SetFeesOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\SignatureValidator.h" />
     <ClInclude Include="..\..\src\transactions\SignatureValidatorImpl.h" />
+    <ClInclude Include="..\..\src\transactions\StampOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\StatisticsV2Processor.h" />
     <ClInclude Include="..\..\src\transactions\test\mocks\MockAccountHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\mocks\MockAccountRoleHelper.h" />

@@ -6,22 +6,20 @@
 
 * Return error code if value of withdraw tasks is zero in manage key value op
 * Field with payload for txNO_ROLE_PERMISSION and opNO_ROLE_PERMISSION
-
+* Licensing
+* License, Stamp operations
 ### Fixed
 
 * Do not add to cache if load entry without delta (add delta to putCacheEntry method)
 * Implement getLedgerDelta method for all new helpers
 * Issue with update of not rejected reviewable request
+* Removing key values by key which is determined in mValueTypes map in manageKyValueOpFrame
+* Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
 
 ### Changed
 
 * Key value resource comparing in rule verifying
 
-### Fixed
-
-* Removing key values by key which is determined in mValueTypes map in manageKyValueOpFrame
-* Check amount precision fitting on set fee operation level, remove checks for upper and lower bounds
-* Emptying reject reason on rejected request update
 ## 3.0.0-x.5
 
 ### Added

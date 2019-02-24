@@ -3,6 +3,9 @@
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperImpl.h"
 #include "ledger/KeyValueHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
+#include "ledger/LicenseHelperImpl.h"
+#include "ledger/StampHelperImpl.h"
+#include "ledger/LicenseSignatureHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -11,6 +14,8 @@
 #include "SignerHelperImpl.h"
 #include "SignerRuleHelperImpl.h"
 #include "SignerRoleHelperImpl.h"
+#include "LicenseHelperImpl.h"
+#include "StampHelperImpl.h"
 
 namespace stellar
 {
@@ -34,6 +39,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::ASSET, &getAssetHelper()},
         {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
         {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, &getExternalSystemAccountIDHelper()},
+        {LedgerEntryType::STAMP, &getStampHelper()},
+        {LedgerEntryType::LICENSE, &getLicenseHelper()}
     };
 }
 
@@ -282,6 +289,34 @@ StorageHelperImpl::getSignerRoleHelper()
         mSignerRoleHelper = std::make_unique<SignerRoleHelperImpl>(*this);
     }
     return *mSignerRoleHelper;
+}
+LicenseHelper&
+StorageHelperImpl::getLicenseHelper()
+{
+    if (!mLicenseHelper)
+    {
+        mLicenseHelper = std::make_unique<LicenseHelperImpl>(*this);
+    }
+    return *mLicenseHelper;
+}
+LicenseSignatureHelper&
+StorageHelperImpl::getLicenseSignatureHelper()
+{
+    if (!mLicenseSignatureHelper)
+    {
+        mLicenseSignatureHelper = std::make_unique<LicenseSignatureHelperImpl>(*this);
+    }
+    return *mLicenseSignatureHelper;
+}
+
+StampHelper&
+StorageHelperImpl::getStampHelper()
+{
+    if(!mStampHelper)
+    {
+        mStampHelper = std::make_unique<StampHelperImpl>(*this);
+    }
+    return *mStampHelper;
 }
 
 } // namespace stellar

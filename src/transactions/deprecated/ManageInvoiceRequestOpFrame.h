@@ -19,6 +19,22 @@ class ManageInvoiceRequestOpFrame : public OperationFrame
         return mResult.tr().manageInvoiceRequestResult();
     }
 
+    bool
+    tryGetOperationConditions(
+        StorageHelper& sh,
+        std::vector<OperationCondition>& result) const override
+    {
+        throw std::runtime_error("Unexecpted call. Operation is deprecated");
+    }
+
+    bool
+    tryGetSignerRequirements(
+        StorageHelper& storageHelper,
+        std::vector<SignerRequirement>& result) const override
+    {
+        throw std::runtime_error("Unexecpted call. Operation is deprecated");
+    }
+
     ManageInvoiceRequestOp const& mManageInvoiceRequest;
 
     bool createManageInvoiceRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);

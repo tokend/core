@@ -19,7 +19,9 @@ class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
 class AccountRoleHelper;
 class AccountRuleHelper;
-
+class LicenseHelper;
+class LicenseSignatureHelper;
+class StampHelper;
 class StorageHelperImpl : public StorageHelper
 {
   public:
@@ -57,6 +59,9 @@ class StorageHelperImpl : public StorageHelper
     SignerHelper& getSignerHelper() override;
     SignerRuleHelper& getSignerRuleHelper() override;
     SignerRoleHelper& getSignerRoleHelper() override;
+    LicenseHelper& getLicenseHelper() override;
+    LicenseSignatureHelper& getLicenseSignatureHelper() override;
+    StampHelper& getStampHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -79,5 +84,8 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<SignerRoleHelper> mSignerRoleHelper;
 
     std::map<LedgerEntryType, EntryHelper*> mHelpers;
+    std::unique_ptr<LicenseHelper> mLicenseHelper;
+    std::unique_ptr<LicenseSignatureHelper> mLicenseSignatureHelper;
+    std::unique_ptr<StampHelper> mStampHelper;
 };
 } // namespace stellar

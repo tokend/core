@@ -20,6 +20,22 @@ class ManageContractOpFrame : public OperationFrame
         return mResult.tr().manageContractResult();
     }
 
+    bool
+    tryGetOperationConditions(
+        StorageHelper& sh,
+        std::vector<OperationCondition>& result) const override
+    {
+        throw std::runtime_error("Unexecpted call. Operation is deprecated");
+    }
+
+    bool
+    tryGetSignerRequirements(
+        StorageHelper& storageHelper,
+        std::vector<SignerRequirement>& result) const override
+    {
+        throw std::runtime_error("Unexecpted call. Operation is deprecated");
+    }
+
     ManageContractOp const& mManageContract;
 
     bool ensureIsAllowed(std::vector<AccountID> validSources);

@@ -20,7 +20,9 @@ class SignerHelper;
 class SignerRuleHelper;
 class SignerRoleHelper;
 enum class LedgerEntryType;
-
+class LicenseHelper;
+class LicenseSignatureHelper;
+class StampHelper;
 class StorageHelper
 {
   public:
@@ -58,5 +60,8 @@ class StorageHelper
     virtual SignerHelper& getSignerHelper() = 0;
     virtual SignerRuleHelper& getSignerRuleHelper() = 0;
     virtual SignerRoleHelper& getSignerRoleHelper() = 0;
+    virtual LicenseHelper& getLicenseHelper() = 0;
+    virtual LicenseSignatureHelper& getLicenseSignatureHelper() = 0;
+    virtual StampHelper& getStampHelper() = 0;
 };
 } // namespace stellar

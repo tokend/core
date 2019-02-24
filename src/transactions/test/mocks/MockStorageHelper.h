@@ -12,6 +12,10 @@ class AccountRuleHelper;
 class AccountRoleHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
+class StampHelper;
+class LicenseHelper;
+class LicenseSignatureHelper;
+
 enum class LedgerEntryType;
 
 class MockStorageHelper : public StorageHelper
@@ -43,7 +47,12 @@ public:
     MOCK_METHOD0(getSignerRoleHelper, SignerRoleHelper&());
     MOCK_METHOD0(getEntryHelpers, std::vector<EntryHelper*>());
     MOCK_METHOD1(getHelper, EntryHelper*(LedgerEntryType type));
-
+    MOCK_METHOD0(getLicenseHelper,
+                 LicenseHelper&());
+    MOCK_METHOD0(getLicenseSignatureHelper,
+                 LicenseSignatureHelper&());
+    MOCK_METHOD0(getStampHelper,
+                 StampHelper&());
 };
 
 }  // namespace stellar

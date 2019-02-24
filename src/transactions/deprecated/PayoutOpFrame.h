@@ -17,6 +17,22 @@ class PayoutOpFrame : public OperationFrame
 
     PayoutOp const &mPayout;
 
+    bool
+    tryGetOperationConditions(
+        StorageHelper& sh,
+        std::vector<OperationCondition>& result) const override
+    {
+        throw std::runtime_error("Unexecpted call. Operation is deprecated");
+    }
+
+    bool
+    tryGetSignerRequirements(
+        StorageHelper& storageHelper,
+        std::vector<SignerRequirement>& result) const override
+    {
+        throw std::runtime_error("Unexecpted call. Operation is deprecated");
+    }
+
     Fee
     getActualFee(AssetCode const& asset, uint64_t amount, uint64_t precisionStep, Database& db);
 

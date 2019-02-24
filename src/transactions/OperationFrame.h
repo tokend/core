@@ -57,8 +57,12 @@ class OperationFrame
 {
 private:
 	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
-  
-  protected:
+
+	bool canBeApplied(Application& app, StorageHelper& storageHelper);
+    bool checkAdminCount(Application& app, StorageHelper& storageHelper);
+    bool checkOp(Application& app, StorageHelper& storageHelper);
+
+protected:
 
     Operation const& mOperation;
     TransactionFrame& mParentTx;
