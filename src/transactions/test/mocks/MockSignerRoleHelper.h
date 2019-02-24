@@ -19,6 +19,7 @@ public:
     MOCK_METHOD1(storeLoad, EntryFrame::pointer(LedgerKey const& ledgerKey));
     MOCK_METHOD0(countObjects, uint64_t());
     MOCK_METHOD0(getDatabase, Database&());
+    MOCK_METHOD0(getLedgerDelta, LedgerDelta*());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
     MOCK_METHOD1(exists, bool(uint64_t const roleID));

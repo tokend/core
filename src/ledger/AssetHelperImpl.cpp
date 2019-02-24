@@ -404,5 +404,11 @@ AssetHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
 }
+
+LedgerDelta*
+AssetHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 } // namespace stellar
 

@@ -55,6 +55,9 @@ class ExternalSystemAccountIDPoolEntryHelperImpl : public ExternalSystemAccountI
 
     Database& getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
   private:
     static const char* select;
 

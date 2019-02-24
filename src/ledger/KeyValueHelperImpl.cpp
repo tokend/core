@@ -267,4 +267,10 @@ KeyValueHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
 }
+
+LedgerDelta*
+KeyValueHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 } // namespace stellar

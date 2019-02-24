@@ -6,6 +6,11 @@
 
 * Return error code if value of withdraw tasks is zero in manage key value op
 
+### Fixed
+
+* Do not add to cache if load entry without delta (add delta to putCacheEntry method)
+* Implement getLedgerDelta method for all new helpers
+
 ### Changed
 
 * Key value resource comparing in rule verifying

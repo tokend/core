@@ -328,4 +328,10 @@ AccountRuleHelperImpl::getDatabase()
 {
     return mDb;
 }
+
+LedgerDelta*
+AccountRuleHelperImpl::getLedgerDelta()
+{
+    return mLedgerDelta;
+}
 } // namespace stellar

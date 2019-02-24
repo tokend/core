@@ -80,6 +80,9 @@ private:
     Database&
     getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
     StorageHelper& mStorageHelper;
     const char* mAssetColumnSelector;
 };

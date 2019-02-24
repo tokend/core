@@ -87,6 +87,9 @@ private:
     Database&
     getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
     std::string
     obtainStrAccountIDs(std::vector<AccountID> accountIDs);
 

@@ -68,8 +68,14 @@ namespace stellar
 	}
 
 	void EntryHelperLegacy::putCachedEntry(LedgerKey const &key,
-	std::shared_ptr<LedgerEntry const> p, Database &db)
+	std::shared_ptr<LedgerEntry const> p, Database &db, LedgerDelta* delta)
 	{
+		// do not add to cache if there is no delta, because when we get from cache we do not record to delta
+		if (delta == nullptr)
+		{
+			return;
+		}
+
 		auto s = binToHex(xdr::xdr_to_opaque(key));
 		db.getEntryCache().put(s, p);
 	}

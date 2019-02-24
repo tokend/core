@@ -360,4 +360,9 @@ SignerRuleHelperImpl::getDatabase()
     return mStorageHelper.getDatabase();
 }
 
+LedgerDelta*
+SignerRuleHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 }

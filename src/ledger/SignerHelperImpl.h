@@ -18,7 +18,10 @@ private:
     dropAll() override;
 
     Database&
-    getDatabase();
+    getDatabase() override;
+
+    LedgerDelta*
+    getLedgerDelta() override;
 
     void
     storeAdd(LedgerEntry const& entry) override;

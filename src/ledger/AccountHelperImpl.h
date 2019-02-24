@@ -44,6 +44,9 @@ private:
     Database&
     getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
     AccountFrame::pointer
     loadAccount(AccountID const& accountID) override;
 

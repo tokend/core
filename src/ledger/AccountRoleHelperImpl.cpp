@@ -257,6 +257,12 @@ AccountRoleHelperImpl::getDatabase()
     return mStorageHelper.getDatabase();
 }
 
+LedgerDelta*
+AccountRoleHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
+
 EntryFrame::pointer
 AccountRoleHelperImpl::fromXDR(LedgerEntry const& from)
 {
