@@ -5,6 +5,12 @@
 ### Added
 
 * Return error code if value of withdraw tasks is zero in manage key value op
+* Field with payload for txNO_ROLE_PERMISSION and opNO_ROLE_PERMISSION
+
+### Fixed
+
+* Do not add to cache if load entry without delta (add delta to putCacheEntry method)
+* Implement getLedgerDelta method for all new helpers
 
 ### Changed
 

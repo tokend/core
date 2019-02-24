@@ -194,7 +194,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
 
     if (!retKeyValue)
     {
-        putCachedEntry(key, nullptr, db);
+        putCachedEntry(key, nullptr, db, delta);
         return nullptr;
     }
 
@@ -204,7 +204,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
     }
 
     auto pEntry = std::make_shared<LedgerEntry>(retKeyValue->mEntry);
-    putCachedEntry(key, pEntry, db);
+    putCachedEntry(key, pEntry, db, delta);
     return retKeyValue;
 }
 

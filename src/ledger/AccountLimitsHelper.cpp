@@ -167,7 +167,7 @@ namespace stellar
 		}
 
 		if (!st.got_data()) {
-			putCachedEntry(key, nullptr, db);
+			putCachedEntry(key, nullptr, db, nullptr);
 			return nullptr;
 		}
 
@@ -177,7 +177,7 @@ namespace stellar
 		assert(res->isValid());
 		res->clearCached();
 		auto pEntry = std::make_shared<LedgerEntry>(res->mEntry);
-		putCachedEntry(key, pEntry, db);
+		putCachedEntry(key, pEntry, db, nullptr);
 		return res;
 	}
 
@@ -237,7 +237,7 @@ namespace stellar
 
 		if (!st.got_data())
 		{
-			putCachedEntry(key, nullptr, db);
+			putCachedEntry(key, nullptr, db, delta);
 			return nullptr;
 		}
 
@@ -247,7 +247,7 @@ namespace stellar
 		assert(res->isValid());
 		res->clearCached();
 		auto pEntry = std::make_shared<LedgerEntry>(res->mEntry);
-		putCachedEntry(key, pEntry, db);
+		putCachedEntry(key, pEntry, db, delta);
 		if (delta)
 		{
 			delta->recordEntry(*res);

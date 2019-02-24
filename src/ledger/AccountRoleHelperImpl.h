@@ -32,6 +32,9 @@ private:
 
     Database& getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
     AccountRoleFrame::pointer
     loadAccountRole(uint64_t const roleID) override;
 

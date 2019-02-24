@@ -303,4 +303,10 @@ ExternalSystemAccountIDHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
 }
+
+LedgerDelta*
+ExternalSystemAccountIDHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
 } // namespace stellar
