@@ -153,6 +153,9 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
         totalParticipantFee += takenOffer.bFeePaid;
     }
 
+    if (sale->getOwnerID() == mTestManager->getApp().getAdminID())
+        return;
+
     // commission balance change
     auto commissionAfter = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getAdminID(),
         saleQuoteAsset.quoteAsset, mTestManager->getDB(),

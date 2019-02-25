@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Check for exceeding of maxIssuanceAmount on pre issuance (add pendingIssuance of asset to sum in canAddAvailableForIssuance method)
+* Check for exceeding of maxIssuanceAmount on create `CREATE_SALE` request
+
 ## 3.0.0-x.7
 
 ### Fixed

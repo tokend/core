@@ -107,7 +107,7 @@ bool AssetFrame::tryUnIssue(uint64_t amount)
 bool AssetFrame::canAddAvailableForIssuance(uint64_t amount)
 {
     uint64_t availableForIssuance;
-    if (!safeSum(mAsset.availableForIssueance, amount, availableForIssuance))
+    if (!safeSum(availableForIssuance, {mAsset.availableForIssueance, mAsset.pendingIssuance, amount}))
         return false;
 
     uint64_t maxAmountCanBeIssuedAfterUpdate;

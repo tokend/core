@@ -54,7 +54,7 @@ namespace txtest
         void createAsset(Account &assetOwner, SecretKey &preIssuedSigner, AssetCode assetCode, Account &root,
                 uint32_t policies, uint32_t *allTasks = nullptr,
                 		uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
-                		uint64_t assetType = 0);
+                		uint64_t assetType = 0, uint64_t maxIssuance = UINT64_MAX);
         void updateAsset(Account& assetOwner, AssetCode assetCode, Account& root, uint32_t policies);
         void changeAssetTrailingDigits(AssetCode assetCode, uint32 trailingDigitsCount);
 	};
