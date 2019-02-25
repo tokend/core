@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 3.0.0-x.7
+
+### Fixed
+
+* Sale request changes are not saved on update
+
+## 3.0.0-x.6
 
 ### Added
 
