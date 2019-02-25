@@ -29,27 +29,10 @@ using xdr::operator<;
  * doing operator< on them, but that would be comparatively inefficient.
  */
 
-Hash getLicenseHash(LicenseEntry mLicense)
-{
-    std::string ledgerHash = binToHex(mLicense.ledgerHash);
-    std::string prevLicenseHash = binToHex(mLicense.prevLicenseHash);
-    std::string fullData = std::to_string(mLicense.adminCount) + ":" +
-                           std::to_string(mLicense.dueDate) + ":" + ledgerHash +
-                           ":" + prevLicenseHash;
-    for (DecoratedSignature s : mLicense.signatures)
-    {
-        std::string sig = binToHex(s.signature);
-        fullData += ":" + sig;
-    }
-
-    return Hash(sha256(fullData));
-}
+Hash getLicenseHash(LicenseEntry mLicense);
 
 Hash
-getLicenseHash(LedgerKey::_license_t key)
-{
-    return key.licenseHash;
-}
+getLicenseHash(LedgerKey::_license_t key);
 
 
 struct LedgerEntryIdCmp
