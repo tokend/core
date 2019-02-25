@@ -331,8 +331,9 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 
     auto& request = requestFrame->getRequestEntry();
     request.tasks.pendingTasks = request.tasks.allTasks;
-    auto& sale = request.body.saleCreationRequest();
-    sale.sequenceNumber++;
+    auto sequence = request.body.saleCreationRequest().sequenceNumber;
+    request.body.saleCreationRequest() = mCreateSaleCreationRequest.request;
+    request.body.saleCreationRequest().sequenceNumber = sequence + 1;
     requestFrame->recalculateHashRejectReason();
 
     if (!isRequestValid(storageHelper, ledgerManager, requestFrame))

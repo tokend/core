@@ -157,8 +157,16 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
         auto requestID = result.success().requestID;
         SECTION("Update sale request")
         {
-            saleRequest.endTime = saleRequest.endTime++;
+            saleRequest.endTime++;
             saleRequestHelper.applyCreateSaleRequest(syndicate, requestID, saleRequest, nullptr);
+            // sale request must endup with higher sequence
+            saleRequest.sequenceNumber++;
+            auto requestAfterUpdate =
+                ReviewableRequestHelper::Instance()->loadRequest(requestID, db,
+                                                                 nullptr);
+            REQUIRE(requestAfterUpdate);
+            REQUIRE(requestAfterUpdate->getRequestEntry()
+                        .body.saleCreationRequest() == saleRequest);
         }
         SECTION("Success cancel sale request")
         {
