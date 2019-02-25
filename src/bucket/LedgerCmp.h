@@ -209,6 +209,23 @@ struct LedgerEntryIdCmp
                 auto const& barp = b.signerRule();
                 return aarp.id < barp.id;
             }
+            case LedgerEntryType::STAMP:
+            {
+                auto const& astamp = a.stamp();
+                auto const& bstamp = b.stamp();
+                if (astamp.ledgerHash < bstamp.ledgerHash)
+                    return true;
+                if (bstamp.ledgerHash < astamp.ledgerHash)
+                    return false;
+                return astamp.licenseHash < bstamp.licenseHash;
+
+            }
+            case LedgerEntryType::LICENSE:
+            {
+                auto const& al = a.license();
+                auto const& bl = b.license();
+                return al.licenseHash < bl.licenseHash;
+            }
             default:
             {
                 throw std::runtime_error("Unexpected state. LedgerCmp cannot compare structures. Unknown ledger entry type");

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0-x.8
+
+### Fixed
+
+* Exception after sending Stamp or LicenseOp: LedgerCmp cannot compare structures
+
 ## 3.0.0-x.7
 
 ### Fixed
