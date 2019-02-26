@@ -329,22 +329,31 @@ TransactionFrameImpl::checkValid(Application& app)
         return res;
     }
 
+    bool errorEncountered = false;
+
     AccountRuleVerifierImpl accountRuleVerifier;
     for (auto& op : mOperations)
     {
+        if (errorEncountered)
+        {
+            // we don't what result can return another operation cause changes of previous not applied
+            op->getResult().code(OperationResultCode::opSKIPPED);
+            continue;
+        }
+
         if (!op->checkValid(app, accountRuleVerifier))
         {
-            // it's OK to just fast fail here and not try to call
-            // checkValid on all operations as the resulting object
-            // is only used by applications
-            app.getMetrics()
-                .NewMeter({"transaction", "invalid", "invalid-op"},
-                          "transaction")
-                .Mark();
+            errorEncountered = true;
             markResultFailed();
-            return false;
+            continue;
         }
     }
+
+    if (errorEncountered)
+    {
+        return false;
+    }
+
     res = checkAllSignaturesUsed();
     if (!res)
     {
@@ -422,6 +431,13 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
 
         for (auto& op : mOperations)
         {
+            if (errorEncountered)
+            {
+                // we don't what result can return another operation cause changes of previous not applied
+                op->getResult().code(OperationResultCode::opSKIPPED);
+                continue;
+            }
+
             auto time = opTimer.TimeScope();
             LedgerDeltaImpl opDeltaImpl(thisTxDelta);
             LedgerDelta& opDelta = opDeltaImpl;

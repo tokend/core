@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* 500 result code on tx applying cause after failing of operation next operation has invalid result
+
 ## 3.0.0-x.8
 
 ### Fixed
