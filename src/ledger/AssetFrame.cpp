@@ -234,7 +234,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
     try
     {
         uint64_t totalIssuedOrLocked;
-        if (!safeSum(totalIssuedOrLocked, { oe.issued, oe.pendingIssuance }))
+        if (!safeSum(totalIssuedOrLocked, { oe.issued, oe.pendingIssuance, oe.availableForIssueance }))
         {
             throw runtime_error("Overflow during calculation of totalIssuedOrLocked");
         }
@@ -258,7 +258,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
         {
             throw runtime_error("Too many trailing digits");
         }
-        const int precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
+        const uint64_t precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
         if (oe.availableForIssueance % precision != 0)
         {
             throw runtime_error("Invalid available for issuance amount");
