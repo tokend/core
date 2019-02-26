@@ -4,6 +4,7 @@
 
 ### Fixed
 
+* 500 result code on tx applying cause after failing of operation next operation has invalid result
 * Exception on checkSaleState with cause allowing pre issuance excess tokens after sale creation
 * Exception on check signature when there is no signers for account
 * Exception on review pre issuance when available for issuance more than max issuance
