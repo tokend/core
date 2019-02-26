@@ -32,6 +32,7 @@ set(NOT_COMMON_SOURCE_FILES
         bucket/BucketManager.h
         ledger/LedgerManager.h
         ledger/StorageHelper.h
+        ledger/BalanceHelper.h
         ledger/AccountHelper.h
         ledger/AccountRuleHelper.h
         ledger/AccountRoleHelper.h

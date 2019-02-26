@@ -86,19 +86,6 @@ CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest 
     return nullptr;
 }
 
-bool CreateSaleCreationRequestOpFrame::isBaseAssetHasSufficientIssuance(
-    const AssetFrame::pointer assetFrame)
-{
-    // TODO: fixme
-    if (!assetFrame->isAvailableForIssuanceAmountSufficient(ONE))
-    {
-        innerResult().code(CreateSaleCreationRequestResultCode::INSUFFICIENT_PREISSUED);
-        return false;
-    }
-
-    return true;    
-}
-
 bool CreateSaleCreationRequestOpFrame::areQuoteAssetsValid(Database& db, xdr::xvector<SaleCreationRequestQuoteAsset, 100> quoteAssets, AssetCode defaultQuoteAsset)
 {
     if (!AssetHelperLegacy::Instance()->exists(db, defaultQuoteAsset))
@@ -156,9 +143,6 @@ CreateSaleCreationRequestOpFrame::CreateSaleCreationRequestOpFrame(
     , mCreateSaleCreationRequest(mOperation.body.createSaleCreationRequestOp())
 {
 }
-
-
-
 
 bool
 CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
@@ -395,8 +379,9 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
             CreateSaleCreationRequestResultCode::INSUFFICIENT_PREISSUED);
         return false;
     }
-    if (!isBaseAssetHasSufficientIssuance(baseAsset))
+    if (baseAsset->willExceedMaxIssuanceAmount(sale.requiredBaseAssetForHardCap))
     {
+        innerResult().code(CreateSaleCreationRequestResultCode::INSUFFICIENT_MAX_ISSUANCE);
         return false;
     }
 

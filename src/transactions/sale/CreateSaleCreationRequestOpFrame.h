@@ -29,10 +29,6 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
     // tryLoadAssetOrRequest - tries to load base asset or request. If fails returns nullptr. If request exists - creates asset frame wrapper for it
     static AssetFrame::pointer tryLoadBaseAssetOrRequest(SaleCreationRequest const& request, Database& db, AccountID const& source);
 
-
-    // isBaseAssetHasSufficientIssuance - returns true, if base asset amount required for hard cap and soft cap does not exceed available amount to be issued.
-    // sets corresponding result code
-    bool isBaseAssetHasSufficientIssuance(AssetFrame::pointer assetFrame);
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
 public:

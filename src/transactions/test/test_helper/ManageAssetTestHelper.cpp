@@ -248,10 +248,10 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
                                         uint32_t policies,
                                         uint32_t *allTasks,
                                         uint32_t trailingDigitsCount,
-                                        uint64_t assetType
+                                        uint64_t assetType, uint64_t maxIssuance
 )
 {
-    const uint64_t maxIssuanceAmount = UINT64_MAX - (UINT64_MAX %
+    const uint64_t maxIssuanceAmount = maxIssuance - (maxIssuance %
                                                      AssetFrame::getMinimumAmountFromTrailingDigits(trailingDigitsCount));
     auto creationRequest = createAssetCreationRequest(assetCode,
                                                       preIssuedSigner.

@@ -219,7 +219,7 @@ TEST_CASE("Sale", "[tx][sale]")
             auto createSecondSaleRequestResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
             auto createThirdSaleRequestResult =
                     saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                            CreateSaleCreationRequestResultCode::INSUFFICIENT_PREISSUED);
+                            CreateSaleCreationRequestResultCode::INSUFFICIENT_MAX_ISSUANCE);
 
             sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
             REQUIRE(sales.size() == 2);
