@@ -344,13 +344,13 @@ TransactionFrameImpl::checkValid(Application& app)
         if (!op->checkValid(app, accountRuleVerifier))
         {
             errorEncountered = true;
-            markResultFailed();
             continue;
         }
     }
 
     if (errorEncountered)
     {
+        markResultFailed();
         return false;
     }
 
@@ -431,13 +431,6 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
 
         for (auto& op : mOperations)
         {
-            if (errorEncountered)
-            {
-                // we don't what result can return another operation cause changes of previous not applied
-                op->getResult().code(OperationResultCode::opSKIPPED);
-                continue;
-            }
-
             auto time = opTimer.TimeScope();
             LedgerDeltaImpl opDeltaImpl(thisTxDelta);
             LedgerDelta& opDelta = opDeltaImpl;
