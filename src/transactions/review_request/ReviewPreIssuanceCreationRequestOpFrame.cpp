@@ -49,9 +49,10 @@ ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, Ledger
 		throw std::runtime_error("Expected asset for pre issuance request to exist");
 	}
 
-	if (!asset->tryAddAvailableForIssuance(preIssuanceCreationRequest.amount)) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected to be able to add asset availvle for issuance.";
-		throw std::runtime_error("Can not add availalbe for issuance amount");
+	if (!asset->tryAddAvailableForIssuance(preIssuanceCreationRequest.amount))
+	{
+		innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
+		return false;
 	}
 
 	EntryHelperProvider::storeChangeEntry(delta, db, asset->mEntry);

@@ -107,7 +107,7 @@ bool AssetFrame::tryUnIssue(uint64_t amount)
 bool AssetFrame::canAddAvailableForIssuance(uint64_t amount)
 {
     uint64_t availableForIssuance;
-    if (!safeSum(mAsset.availableForIssueance, amount, availableForIssuance))
+    if (!safeSum(availableForIssuance, {mAsset.availableForIssueance, mAsset.pendingIssuance, amount}))
         return false;
 
     uint64_t maxAmountCanBeIssuedAfterUpdate;
@@ -234,7 +234,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
     try
     {
         uint64_t totalIssuedOrLocked;
-        if (!safeSum(totalIssuedOrLocked, { oe.issued, oe.pendingIssuance }))
+        if (!safeSum(totalIssuedOrLocked, { oe.issued, oe.pendingIssuance, oe.availableForIssueance }))
         {
             throw runtime_error("Overflow during calculation of totalIssuedOrLocked");
         }
@@ -258,7 +258,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
         {
             throw runtime_error("Too many trailing digits");
         }
-        const int precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
+        const uint64_t precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
         if (oe.availableForIssueance % precision != 0)
         {
             throw runtime_error("Invalid available for issuance amount");

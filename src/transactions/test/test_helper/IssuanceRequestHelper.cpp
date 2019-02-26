@@ -206,12 +206,12 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode as
     }
 
     void IssuanceRequestHelper::createAssetWithPreIssuedAmount(Account& assetOwner, AssetCode assetCode, uint64_t preIssuedAmount,
-                                                               Account& root, uint32_t trailingDigitsCount, uint64_t assetType) {
+                                                               Account& root, uint32_t trailingDigitsCount, uint64_t assetType, uint64_t maxIssuance) {
 		auto manageAssetHelper = ManageAssetTestHelper(mTestManager);
 		auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
 														 ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
 														 : 0;
-		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount, assetType);
+		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount, assetType, maxIssuance);
 		authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
 	}
 

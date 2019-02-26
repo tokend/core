@@ -282,7 +282,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
     SECTION("Create sale with predefined required base asset amount for hard cap") {
         auto basicSaleType = SaleType::BASIC_SALE;
-        SECTION("Insufficient preissued") {
+        SECTION("Insufficient max issaunce") {
             auto requiredBaseAssetForHardCap = maxIssuanceAmount + (5 * ONE);
             hardCap = static_cast<const uint64_t>(bigDivide(requiredBaseAssetForHardCap, price, ONE, ROUND_DOWN));
             softCap = hardCap / 2;
@@ -291,11 +291,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
                                                               { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
                                                               requiredBaseAssetForHardCap);
             auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr, 
-                CreateSaleCreationRequestResultCode::AUTO_REVIEW_FAILED);
-            REQUIRE(
-                requestCreationResult.autoReviewFailed()
-                    .reviewRequestRequest.code() ==
-                ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP);
+                CreateSaleCreationRequestResultCode::INSUFFICIENT_MAX_ISSUANCE);
         }
         SECTION("Success") {
             auto requiredBaseAssetForHardCap = maxIssuanceAmount - (5 * ONE);
@@ -392,7 +388,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
             // Create sale creation request with hardCap 1000 * ONE
             saleRequest = saleRequestHelper.createSaleRequest(asset, quoteAsset, currentTime, currentTime + 1000, softCap, hardCap, "{}",
-            { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)}, preIssuedAmount*2);
+            { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)}, 900*ONE);
             auto saleRequestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest,
                 &zeroTasks, CreateSaleCreationRequestResultCode::AUTO_REVIEW_FAILED);
             REQUIRE(
