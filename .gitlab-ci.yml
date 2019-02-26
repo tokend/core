@@ -8,7 +8,6 @@ variables:
   BUILD_BASE_DOCKERFILE: buildbase.dockerfile
   BUILD_IMAGE: corebuild
   BUILD_DOCKERFILE: build.dockerfile
-  DE_DOCKERFILE: developeredition.dockerfile
   LEGACY_IMAGE: $IMAGE_NAME:$CI_COMMIT_SHA
   LEGACY_DOCKERFILE: legacy.dockerfile
   PG_IMAGE: $IMAGE_NAME:pg-$CI_COMMIT_SHA
@@ -60,7 +59,5 @@ publish dockerhub:
     - RELEASE=$CI_COMMIT_REF_NAME
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
-    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $BUILD_IMAGE -f $DE_DOCKERFILE .
-    - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
-    - docker build -t $DH_IMAGE:$RELEASE -f $PG_DOCKERFILE .
-    - docker push $DH_IMAGE:$RELEASE
+    - docker pull $PG_IMAGE
+    - docker tag $PG_IMAGE $DH_IMAGE:$RELEASE

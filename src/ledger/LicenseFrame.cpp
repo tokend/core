@@ -87,19 +87,7 @@ bool LicenseFrame::isExpired(Application &app)
 
 Hash LicenseFrame::getFullHash()
 {
-    std::string ledgerHash = binToHex(mLicense.ledgerHash);
-    std::string prevLicenseHash = binToHex(mLicense.prevLicenseHash);
-    std::string fullData = std::to_string(mLicense.adminCount)
-                                   + ":" + std::to_string(mLicense.dueDate)
-                                   + ":" + ledgerHash
-                                   + ":" + prevLicenseHash;
-    for(DecoratedSignature s : mLicense.signatures)
-    {
-        std::string sig = binToHex(s.signature);
-        fullData += ":" + sig;
-    }
-
-    return Hash(sha256(fullData));
+    return getLicenseHash(mLicense);
 }
 
 Hash LicenseFrame::getSignatureData(Hash rawLedgerHash, Hash rawPrevLicenseHash, uint64_t adminCount, uint64_t dueDate)

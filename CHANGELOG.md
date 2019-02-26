@@ -9,6 +9,12 @@
 * Remove checking for not empty signers on signature validation
 * Return error code on review pre issuance if max issuance amount exceeded
 
+## 3.0.0-x.8
+
+### Fixed
+
+* Exception after sending Stamp or LicenseOp: LedgerCmp cannot compare structures
+
 ## 3.0.0-x.7
 
 ### Fixed
