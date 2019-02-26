@@ -4,9 +4,9 @@
 
 ### Fixed
 
-* Exception on checkSaleState with cause incorrect check on pre issuance
-* Exception on check signature
-* Exception on review pre issuance
+* Exception on checkSaleState with cause allowing pre issuance excess tokens after sale creation
+* Exception on check signature when there is no signers for account
+* Exception on review pre issuance when available for issuance more than max issuance
 
 ## 3.0.0-x.8
 
