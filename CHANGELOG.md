@@ -4,11 +4,9 @@
 
 ### Fixed
 
-* Check for exceeding of maxIssuanceAmount on pre issuance (add pendingIssuance of asset to sum in canAddAvailableForIssuance method)
-* Check for exceeding of maxIssuanceAmount on create `CREATE_SALE` request
-* Remove checking for not empty signers on signature validation
-* Return error code on review pre issuance if max issuance amount exceeded
-* ensureValid method of asset frame, (add availableForIssuance to sum which will be compared with maxIssuance)
+* Exception on checkSaleState with cause incorrect check on pre issuance
+* Exception on check signature
+* Exception on review pre issuance
 
 ## 3.0.0-x.8
 

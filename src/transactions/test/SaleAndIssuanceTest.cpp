@@ -13,6 +13,7 @@
 using namespace stellar;
 using namespace stellar::txtest;
 
+// This test case check exceeding of max issuance amount of asset
 TEST_CASE("Sale and issuance", "[tx][sale][issuance]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
