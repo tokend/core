@@ -6,6 +6,7 @@
 
 * Check for exceeding of maxIssuanceAmount on pre issuance (add pendingIssuance of asset to sum in canAddAvailableForIssuance method)
 * Check for exceeding of maxIssuanceAmount on create `CREATE_SALE` request
+* Remove checking for not empty signers on signature validation
 
 ## 3.0.0-x.7
 
@@ -21,6 +22,7 @@
 * Field with payload for txNO_ROLE_PERMISSION and opNO_ROLE_PERMISSION
 * Licensing
 * License, Stamp operations
+
 ### Fixed
 
 * Do not add to cache if load entry without delta (add delta to putCacheEntry method)

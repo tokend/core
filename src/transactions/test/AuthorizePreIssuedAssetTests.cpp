@@ -40,7 +40,7 @@ void testAuthPreissuedAssetHappyPath(TestManager::pointer testManager, Account& 
                                                                 ReviewRequestOpAction::APPROVE, "");
 	}
 	asset = assetHelper->loadAsset(assetCode, testManager->getDB());
-	REQUIRE(asset->getAvailableForIssuance() == amountToIssue * issueTimes);	
+	REQUIRE(asset->getAvailableForIssuance() == amountToIssue * issueTimes);
 }
 
 TEST_CASE("Authorize pre issued asset", "[tx][auth_preissued_asset]")
@@ -52,6 +52,9 @@ TEST_CASE("Authorize pre issued asset", "[tx][auth_preissued_asset]")
 	app.start();
 	auto testManager = TestManager::make(app);
 
+	ManageAssetTestHelper manageAssetHelper(testManager);
+	IssuanceRequestHelper issuanceRequestHelper(testManager);
+	ReviewPreIssuanceRequestHelper reviewPreIssuanceRequestHelper(testManager);
 	ManageKeyValueTestHelper manageKeyValueHelper(testManager);
 	longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
 	manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
@@ -69,5 +72,28 @@ TEST_CASE("Authorize pre issued asset", "[tx][auth_preissued_asset]")
 	{
 		testAuthPreissuedAssetHappyPath(testManager, root, root);
 	}
+	SECTION("Create two pre issuance requests with max issuance amount, try approve them")
+	{
+		preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+		manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(1);
+		manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
+		AssetCode assetCode("PLN");
+		uint64_t maxIssuance(10*ONE);
+		manageAssetHelper.createAsset(root, root.key, assetCode, root, 0,
+									  nullptr, 6, 1, maxIssuance);
+
+		auto firstRequestID = issuanceRequestHelper.applyCreatePreIssuanceRequest(
+				root, root.key, assetCode, maxIssuance,
+				SecretKey::random().getStrKeyPublic()).success().requestID;
+
+		auto secondRequestID = issuanceRequestHelper.applyCreatePreIssuanceRequest(
+				root, root.key, assetCode, maxIssuance,
+				SecretKey::random().getStrKeyPublic()).success().requestID;
+
+		reviewPreIssuanceRequestHelper.applyReviewRequestTxWithTasks(root, firstRequestID,
+													ReviewRequestOpAction::APPROVE, "", 1);
+		reviewPreIssuanceRequestHelper.applyReviewRequestTxWithTasks(root, secondRequestID,
+													ReviewRequestOpAction::APPROVE, "", 1);
+	}
 }
