@@ -51,14 +51,7 @@ SignatureValidatorImpl::getSigners(StorageHelper& storageHelper,
 {
     auto& signerHelper = storageHelper.getSignerHelper();
 
-    auto result = signerHelper.loadSigners(accountID);
-    if (result.empty())
-    {
-        CLOG(WARNING, Logging::OPERATION_LOGGER) << "Expected signers to exist for account: "
-                                               << PubKeyUtils::toStrKey(accountID);
-    }
-
-    return result;
+    return signerHelper.loadSigners(accountID);
 }
 
 SignatureValidatorImpl::Result SignatureValidatorImpl::check(

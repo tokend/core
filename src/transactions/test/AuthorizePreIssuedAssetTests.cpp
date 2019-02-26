@@ -94,6 +94,7 @@ TEST_CASE("Authorize pre issued asset", "[tx][auth_preissued_asset]")
 		reviewPreIssuanceRequestHelper.applyReviewRequestTxWithTasks(root, firstRequestID,
 													ReviewRequestOpAction::APPROVE, "", 1);
 		reviewPreIssuanceRequestHelper.applyReviewRequestTxWithTasks(root, secondRequestID,
-													ReviewRequestOpAction::APPROVE, "", 1);
+													ReviewRequestOpAction::APPROVE, "", 1,
+												 ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
 	}
 }
