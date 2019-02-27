@@ -61,3 +61,4 @@ publish dockerhub:
     - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
     - docker pull $PG_IMAGE
     - docker tag $PG_IMAGE $DH_IMAGE:$RELEASE
+    - docker push $DH_IMAGE:$RELEASE
