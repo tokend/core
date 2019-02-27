@@ -294,7 +294,7 @@ bool SaleFrame::tryLockBaseAsset(uint64_t amount)
 void SaleFrame::unlockBaseAsset(uint64_t amount)
 {
     // for crowd funding no need to unlock base asset, as we are not locking it
-    if (getSaleType() == SaleType::CROWD_FUNDING)
+    if (getSaleType() == SaleType::CROWD_FUNDING || getSaleType() == SaleType::FIXED_PRICE)
     {
         return;
     }
