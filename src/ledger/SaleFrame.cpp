@@ -278,7 +278,8 @@ uint64_t SaleFrame::getBaseAmountForCurrentCap(uint64_t basePrecisionStep)
 
 bool SaleFrame::tryLockBaseAsset(uint64_t amount)
 {
-    if (getSaleType() == SaleType::CROWD_FUNDING)
+    if (getSaleType() == SaleType::CROWD_FUNDING ||
+        getSaleType() == SaleType::FIXED_PRICE)
     {
         return true;
     }

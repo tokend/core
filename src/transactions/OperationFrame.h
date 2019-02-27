@@ -59,7 +59,6 @@ private:
 	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
 
 	bool canBeApplied(Application& app, StorageHelper& storageHelper);
-    bool checkAdminCount(Application& app, StorageHelper& storageHelper);
     bool checkOp(Application& app, StorageHelper& storageHelper);
 
 protected:
@@ -71,6 +70,7 @@ protected:
 
 	// checks signature, if not valid - returns false and sets operation error code;
     bool doCheckSignature(Application& app, StorageHelper& storageHelper);
+    bool checkAdminCount(Application& app, StorageHelper& storageHelper);
 
     virtual bool doCheckValid(Application& app) = 0;
     virtual bool doApply(Application& app, LedgerDelta& delta,

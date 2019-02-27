@@ -210,10 +210,12 @@ namespace stellar
 
     uint64_t LicenseHelperImpl::getAllowedAdmins(Application& app)
     {
-        const uint32 allowedMaxLedgerSequence = 600000;
         auto lastLedgerSeq = app.getLedgerManager().getLastClosedLedgerHeader().header.ledgerSeq;
 
-        uint64_t DEFAULT_ADMIN_COUNT = lastLedgerSeq < allowedMaxLedgerSequence ? 2 : 0;
+        uint64_t DEFAULT_ADMIN_COUNT =
+            lastLedgerSeq < app.getConfig().LICENSE_FREE_PERIOD_NUM_BLOCKS
+                ? app.getConfig().LICENSE_FREE_NUM_ADMINS
+                : 0;
 
         auto licenseEntry = loadCurrentLicense();
         if(!licenseEntry){

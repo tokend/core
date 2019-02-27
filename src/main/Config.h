@@ -148,6 +148,9 @@ class Config : public std::enable_shared_from_this<Config>
     uint64 MAX_CONTRACT_DETAIL_LENGTH = 256;
     uint64 MAX_CONTRACT_INITIAL_DETAIL_LENGTH = 1000;
 
+    uint64 LICENSE_FREE_PERIOD_NUM_BLOCKS = 600000;
+    uint64 LICENSE_FREE_NUM_ADMINS = 2;
+
 
 
     int32 KYC_SUPER_ADMIN_MASK = 1;

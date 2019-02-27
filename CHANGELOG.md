@@ -1,25 +1,10 @@
 # Changelog
 
-## Unreleased
+## 3.0.0-x.9
+## Fixed
+* unexpected sale paricipation exceeds hard cap for fixed price sales
+* adding signer to admin results in failure of other admins operations due to license violation 
 
-### Fixed
-
-* 500 result code on tx applying cause after failing of operation next operation has invalid result
-* Exception on checkSaleState with cause allowing pre issuance excess tokens after sale creation
-* Exception on check signature when there is no signers for account
-* Exception on review pre issuance when available for issuance more than max issuance
-
-## 3.0.0-x.8
-
-### Fixed
-
-* Exception after sending Stamp or LicenseOp: LedgerCmp cannot compare structures
-
-## 3.0.0-x.7
-
-### Fixed
-
-* Sale request changes are not saved on update
 
 ## 3.0.0-x.6
 
@@ -29,7 +14,6 @@
 * Field with payload for txNO_ROLE_PERMISSION and opNO_ROLE_PERMISSION
 * Licensing
 * License, Stamp operations
-
 ### Fixed
 
 * Do not add to cache if load entry without delta (add delta to putCacheEntry method)

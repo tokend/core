@@ -1,18 +1,22 @@
+#include "crypto/SHA.h"
+#include "ledger/SignerHelper.h"
+#include "ledger/LicenseHelper.h"
 #include "ledger/SignerRuleFrame.h"
+#include "ledger/StorageHelper.h"
+#include "main/test.h"
+#include "test/test_marshaler.h"
 #include "transactions/test/test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRoleTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRuleTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerTestHelper.h"
-#include "crypto/SHA.h"
-#include "main/test.h"
-#include "test/test_marshaler.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
 
 TEST_CASE("Signer tests", "[tx][manage_signer]")
 {
-    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
+    Config cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
+    cfg.LICENSE_FREE_NUM_ADMINS += 2;
 
     VirtualClock clock;
     Application::pointer appPtr = Application::create(clock, cfg);
@@ -36,16 +40,17 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         std::vector<uint64> ruleIDs{ownerSignerRoleID};
 
         auto createSignerRoleOp = manageSignerRoleTestHelper.buildCreateRoleOp(
-                R"({"from": "manage signer test"})", ruleIDs, false);
+            R"({"from": "manage signer test"})", ruleIDs, false);
 
-        auto result = manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp);
+        auto result =
+            manageSignerRoleTestHelper.applyTx(master, createSignerRoleOp);
         auto roleID = result.success().roleID;
 
         // create signer
         auto signerKey = SecretKey::random();
         auto signer = Account{signerKey, Salt(3)};
         auto createSignerOp = manageSignerTestHelper.buildCreateOp(
-                signerKey.getPublicKey(), SignerRuleFrame::threshold, 300, roleID);
+            signerKey.getPublicKey(), SignerRuleFrame::threshold, 300, roleID);
         manageSignerTestHelper.applyTx(master, createSignerOp);
 
         SECTION("operational try manage default rules")
@@ -53,47 +58,51 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             SECTION("create")
             {
                 auto op = manageSignerRuleTestHelper.buildCreateRuleOp(
-                        SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, true, true, true);
-                manageSignerRuleTestHelper.applyTx(master, op,
-                                                   ManageSignerRuleResultCode::SUCCESS,
-                                                   OperationResultCode::opBAD_AUTH,
-                                                   TransactionResultCode::txFAILED, &signer);
+                    SignerRuleResource(LedgerEntryType::FEE),
+                    SignerRuleAction::MANAGE, true, true, true);
+                manageSignerRuleTestHelper.applyTx(
+                    master, op, ManageSignerRuleResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
 
             SECTION("update")
             {
-                auto op = manageSignerRuleTestHelper.buildUpdateRuleOp(2,
-                        SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, false, false);
-                manageSignerRuleTestHelper.applyTx(master, op,
-                                                   ManageSignerRuleResultCode::SUCCESS,
-                                                   OperationResultCode::opBAD_AUTH,
-                                                   TransactionResultCode::txFAILED, &signer);
+                auto op = manageSignerRuleTestHelper.buildUpdateRuleOp(
+                    2, SignerRuleResource(LedgerEntryType::FEE),
+                    SignerRuleAction::MANAGE, false, false);
+                manageSignerRuleTestHelper.applyTx(
+                    master, op, ManageSignerRuleResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
 
             SECTION("remove")
             {
                 auto op = manageSignerRuleTestHelper.buildRemoveRuleOp(2);
-                manageSignerRuleTestHelper.applyTx(master, op,
-                                                   ManageSignerRuleResultCode::SUCCESS,
-                                                   OperationResultCode::opBAD_AUTH,
-                                                   TransactionResultCode::txFAILED, &signer);
+                manageSignerRuleTestHelper.applyTx(
+                    master, op, ManageSignerRuleResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
         }
 
         SECTION("operational try manage readonly rule")
         {
-            auto op = manageSignerRuleTestHelper.buildRemoveRuleOp(ownerSignerRoleID);
-            manageSignerRuleTestHelper.applyTx(master, op,
-                                               ManageSignerRuleResultCode::NOT_FOUND,
-                                               OperationResultCode::opINNER,
-                                               TransactionResultCode::txFAILED, &signer);
+            auto op =
+                manageSignerRuleTestHelper.buildRemoveRuleOp(ownerSignerRoleID);
+            manageSignerRuleTestHelper.applyTx(
+                master, op, ManageSignerRuleResultCode::NOT_FOUND,
+                OperationResultCode::opINNER, TransactionResultCode::txFAILED,
+                &signer);
 
-            op = manageSignerRuleTestHelper.buildUpdateRuleOp(ownerSignerRoleID,
-                    SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE, false, false);
-            manageSignerRuleTestHelper.applyTx(master, op,
-                                               ManageSignerRuleResultCode::NOT_FOUND,
-                                               OperationResultCode::opINNER,
-                                               TransactionResultCode::txFAILED, &signer);
+            op = manageSignerRuleTestHelper.buildUpdateRuleOp(
+                ownerSignerRoleID, SignerRuleResource(LedgerEntryType::FEE),
+                SignerRuleAction::MANAGE, false, false);
+            manageSignerRuleTestHelper.applyTx(
+                master, op, ManageSignerRuleResultCode::NOT_FOUND,
+                OperationResultCode::opINNER, TransactionResultCode::txFAILED,
+                &signer);
         }
 
         SECTION("operational tries to manage owner signer role")
@@ -103,20 +112,20 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             SECTION("update")
             {
                 auto op = manageSignerRoleTestHelper.buildUpdateRoleOp(
-                        ownerSignerRoleID, validDetails, {1});
-                manageSignerRoleTestHelper.applyTx(master, op,
-                                                   ManageSignerRoleResultCode::SUCCESS,
-                                                   OperationResultCode::opBAD_AUTH,
-                                                   TransactionResultCode::txFAILED, &signer);
+                    ownerSignerRoleID, validDetails, {1});
+                manageSignerRoleTestHelper.applyTx(
+                    master, op, ManageSignerRoleResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
 
             SECTION("remove")
             {
                 auto op = manageSignerRoleTestHelper.buildRemoveRoleOp(1);
-                manageSignerRoleTestHelper.applyTx(master, op,
-                                                   ManageSignerRoleResultCode::SUCCESS,
-                                                   OperationResultCode::opBAD_AUTH,
-                                                   TransactionResultCode::txFAILED, &signer);
+                manageSignerRoleTestHelper.applyTx(
+                    master, op, ManageSignerRoleResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
         }
 
@@ -125,41 +134,42 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             SECTION("create")
             {
                 auto op = manageSignerTestHelper.buildCreateOp(
-                        SecretKey::random().getPublicKey(), 1, 0, ownerSignerRoleID);
-                manageSignerTestHelper.applyTx(master, op,
-                                               ManageSignerResultCode::SUCCESS,
-                                               OperationResultCode::opBAD_AUTH,
-                                               TransactionResultCode::txFAILED, &signer);
+                    SecretKey::random().getPublicKey(), 1, 0,
+                    ownerSignerRoleID);
+                manageSignerTestHelper.applyTx(
+                    master, op, ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
 
             SECTION("update owner")
             {
                 auto op = manageSignerTestHelper.buildUpdateOp(
-                        master.key.getPublicKey(), 1, 0, roleID);
-                manageSignerTestHelper.applyTx(master, op,
-                                               ManageSignerResultCode::SUCCESS,
-                                               OperationResultCode::opBAD_AUTH,
-                                               TransactionResultCode::txFAILED, &signer);
+                    master.key.getPublicKey(), 1, 0, roleID);
+                manageSignerTestHelper.applyTx(
+                    master, op, ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
 
             SECTION("change own role to owner roleID")
             {
                 auto op = manageSignerTestHelper.buildUpdateOp(
-                        signer.key.getPublicKey(), 1, 0, ownerSignerRoleID);
-                manageSignerTestHelper.applyTx(master, op,
-                                               ManageSignerResultCode::SUCCESS,
-                                               OperationResultCode::opBAD_AUTH,
-                                               TransactionResultCode::txFAILED,
-                                               &signer);
+                    signer.key.getPublicKey(), 1, 0, ownerSignerRoleID);
+                manageSignerTestHelper.applyTx(
+                    master, op, ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
 
             SECTION("remove")
             {
-                auto op = manageSignerTestHelper.buildRemoveOp(master.key.getPublicKey());
-                manageSignerTestHelper.applyTx(master, op,
-                                               ManageSignerResultCode::SUCCESS,
-                                               OperationResultCode::opBAD_AUTH,
-                                               TransactionResultCode::txFAILED, &signer);
+                auto op = manageSignerTestHelper.buildRemoveOp(
+                    master.key.getPublicKey());
+                manageSignerTestHelper.applyTx(
+                    master, op, ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opBAD_AUTH,
+                    TransactionResultCode::txFAILED, &signer);
             }
         }
 
@@ -169,11 +179,11 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             auto anotherSigner = Account{anotherSignerKey, Salt(4)};
 
             auto op = manageSignerTestHelper.buildCreateOp(
-                    anotherSigner.key.getPublicKey(), 1, 0, roleID);
-            manageSignerTestHelper.applyTx(master, op,
-                                           ManageSignerResultCode::SUCCESS,
-                                           OperationResultCode::opINNER,
-                                           TransactionResultCode::txSUCCESS, &signer);
+                anotherSigner.key.getPublicKey(), 1, 0, roleID);
+            manageSignerTestHelper.applyTx(
+                master, op, ManageSignerResultCode::SUCCESS,
+                OperationResultCode::opINNER, TransactionResultCode::txSUCCESS,
+                &signer);
         }
 
         SECTION("Use public key of existing signer for other account")
@@ -189,12 +199,13 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             signerData.roleID = data.roleID;
             signerData.details = data.details;
 
-            createAccountTestHelper.applyTx(CreateAccountTestBuilder()
-                                                    .setSource(master)
-                                                    .setToPublicKey(accountKey.getPublicKey())
-                                                    .setRoleID(1)
-                                                    .addBasicSigner()
-                                                    .addSignerData(signerData));
+            createAccountTestHelper.applyTx(
+                CreateAccountTestBuilder()
+                    .setSource(master)
+                    .setToPublicKey(accountKey.getPublicKey())
+                    .setRoleID(1)
+                    .addBasicSigner()
+                    .addSignerData(signerData));
         }
     }
 
@@ -204,17 +215,17 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         auto signerKey = SecretKey::random();
         auto signer = Account{signerKey, Salt(4)};
         auto createSignerOp = manageSignerTestHelper.buildCreateOp(
-                signerKey.getPublicKey(), SignerRuleFrame::threshold, 200, 1);
+            signerKey.getPublicKey(), SignerRuleFrame::threshold, 200, 1);
         manageSignerTestHelper.applyTx(master, createSignerOp);
 
-        SECTION("Remove previous owner") {
-            auto op = manageSignerTestHelper.buildRemoveOp(
-                    master.key.getPublicKey());
-            manageSignerTestHelper.applyTx(master, op,
-                                           ManageSignerResultCode::SUCCESS,
-                                           OperationResultCode::opINNER,
-                                           TransactionResultCode::txSUCCESS,
-                                           &signer);
+        SECTION("Remove previous owner")
+        {
+            auto op =
+                manageSignerTestHelper.buildRemoveOp(master.key.getPublicKey());
+            manageSignerTestHelper.applyTx(
+                master, op, ManageSignerResultCode::SUCCESS,
+                OperationResultCode::opINNER, TransactionResultCode::txSUCCESS,
+                &signer);
         }
     }
 
@@ -224,15 +235,47 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         auto signerKey = SecretKey::random();
         auto signer = Account{signerKey, Salt(4)};
         auto createSignerOp = manageSignerTestHelper.buildCreateOp(
-                signerKey.getPublicKey(), SignerRuleFrame::threshold, 200, ownerSignerRoleID);
+            signerKey.getPublicKey(), SignerRuleFrame::threshold, 200,
+            ownerSignerRoleID);
 
-
-        auto op = manageSignerTestHelper.buildRemoveOp(
-                master.key.getPublicKey());
+        auto op =
+            manageSignerTestHelper.buildRemoveOp(master.key.getPublicKey());
         std::vector<ManageSignerOp> ops = {createSignerOp, op};
-        manageSignerTestHelper.applyTx(master, ops,
-                                       ManageSignerResultCode::SUCCESS,
-                                       OperationResultCode::opINNER,
-                                       TransactionResultCode::txSUCCESS);
+        manageSignerTestHelper.applyTx(
+            master, ops, ManageSignerResultCode::SUCCESS,
+            OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
+    }
+    SECTION("Should not allow to add new signers abowe license limits")
+    {
+        auto& storageHelper = testManager->getStorageHelper();
+        auto currentNumberOfAdmins =
+            storageHelper.getSignerHelper().loadSigners(testManager->getApp().getAdminID()).size();
+        auto allowedNumberOfAdmins =
+                storageHelper.getLicenseHelper().getAllowedAdmins(
+                    testManager->getApp());
+        for (; currentNumberOfAdmins < allowedNumberOfAdmins;
+             currentNumberOfAdmins++)
+        {
+            auto signer = Account{SecretKey::random(), Salt(4)};
+            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+                ownerSignerRoleID);
+            manageSignerTestHelper.applyTx(
+                master, {createSignerOp},
+                ManageSignerResultCode::SUCCESS,
+                OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
+        }
+        
+        auto signer = Account
+        {
+            SecretKey::random(), Salt(4)
+        };
+        auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+            signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+            ownerSignerRoleID);
+        manageSignerTestHelper.applyTx(
+            master, {createSignerOp},
+            ManageSignerResultCode::NUMBER_OF_ADMINS_EXCEEDS_LICENSE,
+            OperationResultCode::opINNER, TransactionResultCode::txFAILED);
     }
 }

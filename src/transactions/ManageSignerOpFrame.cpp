@@ -3,6 +3,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/SignerHelper.h"
 #include "ledger/SignerRoleHelper.h"
+#include "main/Application.h"
 
 namespace stellar
 {
@@ -157,6 +158,16 @@ ManageSignerOpFrame::createSigner(Application &app, StorageHelper &storageHelper
     signerEntry.details = data.details;
 
     signerHelper.storeAdd(le);
+
+    if (getSourceID() == app.getAdminID())
+    {
+        if (!checkAdminCount(app, storageHelper))
+        {
+            innerResult().code(
+                ManageSignerResultCode::NUMBER_OF_ADMINS_EXCEEDS_LICENSE);
+            return false;
+        }
+    }
 
     innerResult().code(ManageSignerResultCode::SUCCESS);
 
