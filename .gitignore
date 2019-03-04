@@ -30,7 +30,6 @@
 
 /INSTALL
 
-/src/xdr/*.h
 /Makefile
 /Makefile.in
 /aclocal.m4
