@@ -9,7 +9,6 @@
 
 * script for xdr generation
 
-
 ## 3.0.0-x.10
 ## Fixed
 * Fixed unexpected error (`Unexpected state: tring to unlock more then we have in current cap in base asset`) on cancel of sale participation for fixed price sale
