@@ -27,6 +27,7 @@
 
 #include <regex>
 #include <ledger/AssetHelperLegacy.h>
+#include "xdr/Revision.h"
 #include "transactions/test/TxTests.h"
 using namespace stellar::txtest;
 

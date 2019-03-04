@@ -13,11 +13,6 @@ if(DEFINED DEVELOPER_EDITION)
     add_definitions(-DDEVELOPER_EDITION=1)
 endif(DEFINED DEVELOPER_EDITION)
 
-# add revision of xdr submodule, use in core info
-execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/xdr && git rev-parse HEAD)" OUTPUT_VARIABLE XDR_REVISION)
-string(STRIP ${XDR_REVISION} XDR_REVISION)
-add_definitions(-DXDR_REVISION="${XDR_REVISION}")
-
 # add revision of core itself, using it in /info EP
 execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/ && git rev-parse HEAD)" OUTPUT_VARIABLE CORE_REVISION)
 string(STRIP ${CORE_REVISION} CORE_REVISION)
