@@ -133,11 +133,18 @@ AccountRoleHelperImpl::storeDelete(LedgerKey const& key)
 bool
 AccountRoleHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
+    // if (cached entry == nullptr) entry does not exists
+    if (cachedEntryExists(key) && getCachedEntry(key))
     {
         return true;
     }
 
+    return exists(key.accountRole().id);
+}
+
+bool
+AccountRoleHelperImpl::exists(uint64 const roleID)
+{
     Database& db = mStorageHelper.getDatabase();
 
     int exists = 0;
@@ -146,7 +153,7 @@ AccountRoleHelperImpl::exists(LedgerKey const& key)
         "SELECT EXISTS (SELECT NULL FROM account_roles WHERE "
         "id = :id)");
     auto& st = prep.statement();
-    uint64 accountRoleID = key.accountRole().id;
+    uint64 accountRoleID = roleID;
     st.exchange(use(accountRoleID, "id"));
     st.exchange(into(exists));
     st.define_and_bind();
