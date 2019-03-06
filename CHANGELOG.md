@@ -4,7 +4,7 @@
 
 ### Fixed
 
-* Managing fee for not existing account
+* Managing fee for not existing account (horizon panics)
 * get exists Entry from cache
 
 ## 3.0.0-x.10

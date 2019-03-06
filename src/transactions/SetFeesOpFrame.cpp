@@ -121,8 +121,9 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         return true;
     }
 
-bool SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
-                                              LedgerManager &ledgerManager)
+bool 
+SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,                                          
+                                         LedgerManager &ledgerManager)
 {
     if (!ledgerManager.shouldUse(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING))
     {
