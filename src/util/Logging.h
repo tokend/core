@@ -10,7 +10,6 @@
 
 // NOTE: Nothing else should include easylogging directly
 //  include this file instead
-#include <thread>
 #include "util/asio.h"
 #include "util/crow.h"
 #include "lib/util/easylogging++.h"
