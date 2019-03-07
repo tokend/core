@@ -233,11 +233,7 @@ Logging::getLLfromString(std::string const& levelName)
 
 void
 SentryClient::send(const std::string &msg) {
-    std::async(std::launch::async, [this, msg]()
-    {
-        mCrowClient->capture_message(msg);
-        sleep(1); // sleeping for client to have time to send message to sentry FIXME rm this & make a new flow
-    });
+    mCrowClient->capture_message(msg);
 }
 
 void
