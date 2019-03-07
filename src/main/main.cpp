@@ -535,7 +535,8 @@ main(int argc, char* const* argv)
             Logging::setLoggingToFile(cfg.LOG_FILE_PATH);
         Logging::setLogLevel(logLevel, nullptr);
 
-        Logging::setLoggingToSentry("https://8b42633ad83e48b29b4961d53c378d87:0c89341c14964074b2f15abfd06cf590@sentry.io/1380662", el::Level::Warning);
+        if (not(cfg.SENTRY_DSN.empty() && cfg.MIN_LEVEL_FOR_SENTRY.empty()))
+            Logging::setLoggingToSentry(cfg.SENTRY_DSN, Logging::getLLfromString(cfg.MIN_LEVEL_FOR_SENTRY));
 
         cfg.REPORT_METRICS = metrics;
 
