@@ -10,11 +10,15 @@
 
 // NOTE: Nothing else should include easylogging directly
 //  include this file instead
+#include <thread>
 #include "util/asio.h"
+#include "util/crow.h"
 #include "lib/util/easylogging++.h"
 
 namespace stellar
 {
+using nlohmann::crow;
+
 class Logging
 {
     static el::Configurations gDefaultConf;
@@ -27,11 +31,36 @@ class Logging
     static void init();
     static void setFmt(std::string const& peerID, bool timestamps = true);
     static void setLoggingToFile(std::string const& filename);
+    static void setLoggingToSentry(std::string const& dsn, el::Level logLevel = el::Level::Warning);
     static void setLogLevel(el::Level level, const char* partition);
     static el::Level getLLfromString(std::string const& levelName);
     static el::Level getLogLevel(std::string const& partition);
     static std::string getStringFromLL(el::Level);
     static bool logDebug(std::string const& partition);
     static bool logTrace(std::string const& partition);
+};
+
+class SentryClient {
+public:
+    SentryClient(const std::string &dsn) {
+        mCrowClient = new crow(dsn);
+    }
+
+    void send(const std::string &msg);
+private:
+    crow* mCrowClient;
+};
+
+class SentryLogCallback : public el::LogDispatchCallback {
+public:
+    void setClient(std::string sentryDSN, el::Level minLevel);
+    void handle(const el::LogDispatchData* data) noexcept override;
+
+private:
+    std::unique_ptr<SentryClient> mClient;
+    const el::LogDispatchData* mData;
+    el::Level mMinimalLevelToSend;
+
+    void dispatch(el::base::type::string_t&& logLine);
 };
 }
