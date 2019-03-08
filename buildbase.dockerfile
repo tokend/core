@@ -13,7 +13,8 @@ RUN true \
       libtool \
       libstdc++6 \
       libpq-dev \
-      libssl1.0-dev \
+      zlib1g-dev \
+      libcurl4-openssl-dev \
       pkg-config \
       cmake \
       make
