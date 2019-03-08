@@ -11,6 +11,7 @@ RUN true \
       gcc \
       g++ \
       libtool \
+      zlib1g-dev \
       libstdc++6 \
       libpq-dev \
       libssl1.0-dev \

@@ -233,6 +233,12 @@ Logging::getLLfromString(std::string const& levelName)
 
 void
 SentryClient::send(const std::string &msg) {
+    json attributes = {
+#ifdef CORE_REVISION
+            {"revision", CORE_REVISION},
+#endif
+    };
+    mCrowClient->add_tags_context(attributes);
     mCrowClient->capture_message(msg);
 }
 
