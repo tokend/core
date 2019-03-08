@@ -221,7 +221,6 @@ enum class CreateChangeRoleRequestResultCode : std::int32_t {
   SUCCESS = 0,
   ACC_TO_UPDATE_DOES_NOT_EXIST = -1,
   REQUEST_ALREADY_EXISTS = -2,
-  SAME_ACC_TYPE_TO_SET = -3,
   REQUEST_DOES_NOT_EXIST = -4,
   NOT_ALLOWED_TO_UPDATE_REQUEST = -6,
   INVALID_CHANGE_ROLE_REQUEST_DATA = -7,
@@ -242,8 +241,6 @@ template<> struct xdr_traits<::stellar::CreateChangeRoleRequestResultCode>
       return "ACC_TO_UPDATE_DOES_NOT_EXIST";
     case ::stellar::CreateChangeRoleRequestResultCode::REQUEST_ALREADY_EXISTS:
       return "REQUEST_ALREADY_EXISTS";
-    case ::stellar::CreateChangeRoleRequestResultCode::SAME_ACC_TYPE_TO_SET:
-      return "SAME_ACC_TYPE_TO_SET";
     case ::stellar::CreateChangeRoleRequestResultCode::REQUEST_DOES_NOT_EXIST:
       return "REQUEST_DOES_NOT_EXIST";
     case ::stellar::CreateChangeRoleRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST:
@@ -263,7 +260,6 @@ template<> struct xdr_traits<::stellar::CreateChangeRoleRequestResultCode>
       (int32_t)::stellar::CreateChangeRoleRequestResultCode::SUCCESS,
       (int32_t)::stellar::CreateChangeRoleRequestResultCode::ACC_TO_UPDATE_DOES_NOT_EXIST,
       (int32_t)::stellar::CreateChangeRoleRequestResultCode::REQUEST_ALREADY_EXISTS,
-      (int32_t)::stellar::CreateChangeRoleRequestResultCode::SAME_ACC_TYPE_TO_SET,
       (int32_t)::stellar::CreateChangeRoleRequestResultCode::REQUEST_DOES_NOT_EXIST,
       (int32_t)::stellar::CreateChangeRoleRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST,
       (int32_t)::stellar::CreateChangeRoleRequestResultCode::INVALID_CHANGE_ROLE_REQUEST_DATA,

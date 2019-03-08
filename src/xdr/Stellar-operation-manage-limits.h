@@ -614,9 +614,9 @@ template<> struct xdr_traits<::stellar::ManageLimitsOp>
 
 enum class ManageLimitsResultCode : std::int32_t {
   SUCCESS = 0,
-  MALFORMED = -1,
+  ACCOUNT_NOT_FOUND = -1,
   NOT_FOUND = -2,
-  ALREADY_EXISTS = -3,
+  ROLE_NOT_FOUND = -3,
   CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE = -4,
   INVALID_LIMITS = -5,
 };
@@ -630,12 +630,12 @@ template<> struct xdr_traits<::stellar::ManageLimitsResultCode>
     switch (val) {
     case ::stellar::ManageLimitsResultCode::SUCCESS:
       return "SUCCESS";
-    case ::stellar::ManageLimitsResultCode::MALFORMED:
-      return "MALFORMED";
+    case ::stellar::ManageLimitsResultCode::ACCOUNT_NOT_FOUND:
+      return "ACCOUNT_NOT_FOUND";
     case ::stellar::ManageLimitsResultCode::NOT_FOUND:
       return "NOT_FOUND";
-    case ::stellar::ManageLimitsResultCode::ALREADY_EXISTS:
-      return "ALREADY_EXISTS";
+    case ::stellar::ManageLimitsResultCode::ROLE_NOT_FOUND:
+      return "ROLE_NOT_FOUND";
     case ::stellar::ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE:
       return "CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE";
     case ::stellar::ManageLimitsResultCode::INVALID_LIMITS:
@@ -647,9 +647,9 @@ template<> struct xdr_traits<::stellar::ManageLimitsResultCode>
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::ManageLimitsResultCode::SUCCESS,
-      (int32_t)::stellar::ManageLimitsResultCode::MALFORMED,
+      (int32_t)::stellar::ManageLimitsResultCode::ACCOUNT_NOT_FOUND,
       (int32_t)::stellar::ManageLimitsResultCode::NOT_FOUND,
-      (int32_t)::stellar::ManageLimitsResultCode::ALREADY_EXISTS,
+      (int32_t)::stellar::ManageLimitsResultCode::ROLE_NOT_FOUND,
       (int32_t)::stellar::ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE,
       (int32_t)::stellar::ManageLimitsResultCode::INVALID_LIMITS
     };

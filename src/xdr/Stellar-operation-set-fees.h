@@ -208,6 +208,8 @@ enum class SetFeesResultCode : std::int32_t {
   INVALID_ASSET_PAIR_PRICE = -16,
   INVALID_FEE_HASH = -17,
   INVALID_AMOUNT_PRECISION = -18,
+  ACCOUNT_NOT_FOUND = -19,
+  ROLE_NOT_FOUND = -20,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SetFeesResultCode>
@@ -255,6 +257,10 @@ template<> struct xdr_traits<::stellar::SetFeesResultCode>
       return "INVALID_FEE_HASH";
     case ::stellar::SetFeesResultCode::INVALID_AMOUNT_PRECISION:
       return "INVALID_AMOUNT_PRECISION";
+    case ::stellar::SetFeesResultCode::ACCOUNT_NOT_FOUND:
+      return "ACCOUNT_NOT_FOUND";
+    case ::stellar::SetFeesResultCode::ROLE_NOT_FOUND:
+      return "ROLE_NOT_FOUND";
     default:
       return nullptr;
     }
@@ -279,7 +285,9 @@ template<> struct xdr_traits<::stellar::SetFeesResultCode>
       (int32_t)::stellar::SetFeesResultCode::ASSET_PAIR_NOT_FOUND,
       (int32_t)::stellar::SetFeesResultCode::INVALID_ASSET_PAIR_PRICE,
       (int32_t)::stellar::SetFeesResultCode::INVALID_FEE_HASH,
-      (int32_t)::stellar::SetFeesResultCode::INVALID_AMOUNT_PRECISION
+      (int32_t)::stellar::SetFeesResultCode::INVALID_AMOUNT_PRECISION,
+      (int32_t)::stellar::SetFeesResultCode::ACCOUNT_NOT_FOUND,
+      (int32_t)::stellar::SetFeesResultCode::ROLE_NOT_FOUND
     };
     return _xdr_enum_vec;
   }

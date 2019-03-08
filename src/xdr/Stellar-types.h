@@ -11,6 +11,7 @@ namespace stellar {
 
 enum class LedgerVersion : std::int32_t {
   EMPTY_VERSION = 0,
+  CHECK_SET_FEE_ACCOUNT_EXISTING = 1,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerVersion>
@@ -22,13 +23,16 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
     switch (val) {
     case ::stellar::LedgerVersion::EMPTY_VERSION:
       return "EMPTY_VERSION";
+    case ::stellar::LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING:
+      return "CHECK_SET_FEE_ACCOUNT_EXISTING";
     default:
       return nullptr;
     }
   }
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::LedgerVersion::EMPTY_VERSION
+      (int32_t)::stellar::LedgerVersion::EMPTY_VERSION,
+      (int32_t)::stellar::LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING
     };
     return _xdr_enum_vec;
   }

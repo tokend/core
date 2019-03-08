@@ -2484,6 +2484,8 @@ enum class ReviewRequestResultCode : std::int32_t {
   DESTINATION_ACCOUNT_NOT_FOUND = -1260,
   CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE = 1300,
   INVALID_LIMITS = 1310,
+  ACCOUNT_NOT_FOUND = -1311,
+  ROLE_NOT_FOUND = -1312,
   CONTRACT_DETAILS_TOO_LONG = -1400,
   BASE_ASSET_CANNOT_BE_SWAPPED = -1500,
   QUOTE_ASSET_CANNOT_BE_SWAPPED = -1501,
@@ -2603,6 +2605,10 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       return "CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE";
     case ::stellar::ReviewRequestResultCode::INVALID_LIMITS:
       return "INVALID_LIMITS";
+    case ::stellar::ReviewRequestResultCode::ACCOUNT_NOT_FOUND:
+      return "ACCOUNT_NOT_FOUND";
+    case ::stellar::ReviewRequestResultCode::ROLE_NOT_FOUND:
+      return "ROLE_NOT_FOUND";
     case ::stellar::ReviewRequestResultCode::CONTRACT_DETAILS_TOO_LONG:
       return "CONTRACT_DETAILS_TOO_LONG";
     case ::stellar::ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED:
@@ -2673,6 +2679,8 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       (int32_t)::stellar::ReviewRequestResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
       (int32_t)::stellar::ReviewRequestResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE,
       (int32_t)::stellar::ReviewRequestResultCode::INVALID_LIMITS,
+      (int32_t)::stellar::ReviewRequestResultCode::ACCOUNT_NOT_FOUND,
+      (int32_t)::stellar::ReviewRequestResultCode::ROLE_NOT_FOUND,
       (int32_t)::stellar::ReviewRequestResultCode::CONTRACT_DETAILS_TOO_LONG,
       (int32_t)::stellar::ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED,
       (int32_t)::stellar::ReviewRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED,
