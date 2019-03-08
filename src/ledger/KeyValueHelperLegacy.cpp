@@ -62,7 +62,7 @@ KeyValueHelperLegacy::storeDelete(LedgerDelta& delta, Database& db,
 bool
 KeyValueHelperLegacy::exists(Database& db, LedgerKey const& key)
 {
-    if (cachedEntryExists(key, db))
+    if (cachedEntryExists(key, db) && getCachedEntry(key, db))
     {
         return true;
     }

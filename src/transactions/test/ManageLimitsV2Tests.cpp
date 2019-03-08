@@ -43,8 +43,11 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
     auto a1 = Account { getAccount("A"), Salt(0) };
 
     CreateAccountTestHelper createAccountTestHelper(testManager);
-    auto txFrame = createAccountTestHelper.createCreateAccountTx(root, a1.key.getPublicKey(), 1);
-    testManager->applyCheck(txFrame);
+    createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                            .setSource(root)
+                                            .setToPublicKey(a1.key.getPublicKey())
+                                            .setRoleID(1)
+                                            .addBasicSigner());
 
     ManageLimitsOp manageLimitsOp;
     manageLimitsOp.details.action(ManageLimitsAction::CREATE);
@@ -72,6 +75,23 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
         manageLimitsOp.details.limitsCreateDetails().accountRole = nullptr;
         manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp, ManageLimitsResultCode::INVALID_LIMITS);
     }
+    SECTION("Account does not exits")
+    {
+        manageLimitsOp.details.limitsCreateDetails().accountID.activate() =
+                SecretKey::random().getPublicKey();
+        manageLimitsOp.details.limitsCreateDetails().accountRole = nullptr;
+        manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp,
+                                                   ManageLimitsResultCode::ACCOUNT_NOT_FOUND);
+    }
+
+    SECTION("Role does not exits")
+    {
+        manageLimitsOp.details.limitsCreateDetails().accountID = nullptr;
+        manageLimitsOp.details.limitsCreateDetails().accountRole.activate() = 1408;
+        manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp,
+                                                   ManageLimitsResultCode::ROLE_NOT_FOUND);
+    }
+
     SECTION("success accountID limits setting")
     {
         manageLimitsOp.details.limitsCreateDetails().accountRole = nullptr;

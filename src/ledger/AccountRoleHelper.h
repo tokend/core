@@ -14,6 +14,11 @@ namespace stellar
 class AccountRoleHelper : public EntryHelper
 {
 public:
+    using EntryHelper::exists;
+
+    virtual bool
+    exists(uint64 roleID) = 0;
+
     virtual AccountRoleFrame::pointer
     loadAccountRole(uint64_t const roleID) = 0;
 
