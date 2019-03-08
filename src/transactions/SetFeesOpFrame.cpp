@@ -2,14 +2,14 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <lib/xdrpp/xdrpp/printer.h>
 #include "transactions/SetFeesOpFrame.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/AssetPairHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AccountRoleHelper.h"
 #include "medida/meter.h"
 #include "main/Application.h"
 #include "medida/metrics_registry.h"
@@ -46,13 +46,19 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return true;
 }
 
-    bool SetFeesOpFrame::trySetFee(medida::MetricsRegistry &metrics, Database &db, LedgerDelta &delta) {
+    bool SetFeesOpFrame::trySetFee(LedgerManager &ledgerManager, Database &db, LedgerDelta &delta) {
         assert(mSetFees.fee);
-        if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(metrics, db, delta))
+        if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(db, delta))
             return false;
 
         if (mSetFees.fee->feeType == FeeType::PAYMENT_FEE && !doCheckPaymentFee(db, delta))
             return false;
+
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        if (!checkAccountRoleExisting(storageHelperImpl, ledgerManager))
+        {
+            return false;
+        }
 
         Hash hash = FeeFrame::calcHash(mSetFees.fee->feeType, mSetFees.fee->asset, mSetFees.fee->accountID.get(),
                                        mSetFees.fee->accountRole.get(), mSetFees.fee->subtype);
@@ -70,7 +76,6 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         if (mSetFees.isDelete) {
             if (!feeFrame) {
                 innerResult().code(SetFeesResultCode::NOT_FOUND);
-                metrics.NewMeter({"op-set-fees", "invalid", "fee-not-found"}, "operation").Mark();
                 return false;
             }
 
@@ -91,13 +96,11 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         auto assetHelper = AssetHelperLegacy::Instance();
         if (!assetHelper->exists(db, mSetFees.fee->asset)) {
             innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
-            metrics.NewMeter({"op-set-fees", "invalid", "asset-not-found"}, "operation").Mark();
             return false;
         }
 
         if (feeHelper->isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db)) {
             innerResult().code(SetFeesResultCode::RANGE_OVERLAP);
-            metrics.NewMeter({"op-set-fees", "invalid", "boundaries-overlap"}, "operation").Mark();
             return false;
         }
 
@@ -106,7 +109,6 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         le.data.feeState() = *mSetFees.fee;
         feeFrame = make_shared<FeeFrame>(le);
 
-        StorageHelperImpl storageHelperImpl(db, &delta);
         StorageHelper& storageHelper = storageHelperImpl;
         if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
                 feeFrame->getFeeAsset(), feeFrame->getFixedFee()))
@@ -119,11 +121,47 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         return true;
     }
 
-    bool SetFeesOpFrame::doCheckForfeitFee(medida::MetricsRegistry &metrics, Database &db, LedgerDelta &delta) {
+bool 
+SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,                                          
+                                         LedgerManager &ledgerManager)
+{
+    if (!ledgerManager.shouldUse(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING))
+    {
+        return true;
+    }
+
+    if (!mSetFees.fee)
+    {
+        throw std::runtime_error("Expected fee to exists");
+    }
+
+    auto fee = *mSetFees.fee;
+
+    if (fee.accountID)
+    {
+        if (!storageHelper.getAccountHelper().exists(*fee.accountID))
+        {
+            innerResult().code(SetFeesResultCode::ACCOUNT_NOT_FOUND);
+            return false;
+        }
+    }
+
+    if (fee.accountRole)
+    {
+        if (!storageHelper.getAccountRoleHelper().exists(*fee.accountRole))
+        {
+            innerResult().code(SetFeesResultCode::ROLE_NOT_FOUND);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+    bool SetFeesOpFrame::doCheckForfeitFee(Database &db, LedgerDelta &delta) {
         auto asset = AssetHelperLegacy::Instance()->loadAsset(mSetFees.fee->asset, db);
         if (!asset) {
             innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
-            metrics.NewMeter({"op-set-fees", "invalid", "asset-not-exist"}, "operation").Mark();
             return false;
         }
 
@@ -149,7 +187,7 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         LedgerHeader &ledgerHeader = setFeesDelta.getHeader();
 
         if (mSetFees.fee) {
-            if (!trySetFee(app.getMetrics(), db, setFeesDelta))
+            if (!trySetFee(ledgerManager, db, setFeesDelta))
                 return false;
         }
 

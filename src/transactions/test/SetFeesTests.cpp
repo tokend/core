@@ -58,6 +58,8 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
                                                                                  &zeroTasks,
                                                                                  1000000);
     manageAssetTestHelper.applyManageAssetTx(master, 0, assetCreationRequest);
+    auto account = SecretKey::random();
+    AccountID accountID = account.getPublicKey();
 
     SECTION("Invalid asset") {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, "", 0, 0);
@@ -87,9 +89,20 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 1, 2);
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false, SetFeesResultCode::INVALID_AMOUNT_PRECISION);
     }
+    SECTION("Account not found")
+    {
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0, &accountID);
+        setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::ACCOUNT_NOT_FOUND);
+    }
+    SECTION("Account not found")
+    {
+        uint64_t roleID = 1408;
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0,
+                                                    nullptr, &roleID);
+        setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::ROLE_NOT_FOUND);
+    }
 
     // create account for further tests
-    auto account = SecretKey::random();
     createAccountTestHelper.applyCreateAccountTx(master, account.getPublicKey(), 1);
     auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(account.getPublicKey(), db);
 
