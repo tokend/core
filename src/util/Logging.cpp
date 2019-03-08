@@ -76,12 +76,12 @@ Logging::setLoggingToFile(std::string const& filename)
     el::Loggers::reconfigureAllLoggers(gDefaultConf);
 }
 
-void Logging::setLoggingToSentry(std::string const& dsn, el::Level minLogLoevelToSend) {
+void Logging::setLoggingToSentry(std::string const& dsn, el::Level minLogLevelToSend) {
     el::Helpers::installLogDispatchCallback<SentryLogCallback>("sentry-cb");
 
     auto sentryCallback = el::Helpers::logDispatchCallback<SentryLogCallback>("sentry-cb");
     sentryCallback->setEnabled(true);
-    sentryCallback->setClient(dsn, minLogLoevelToSend);
+    sentryCallback->setClient(dsn, minLogLevelToSend);
 }
 
 el::Level
@@ -233,12 +233,6 @@ Logging::getLLfromString(std::string const& levelName)
 
 void
 SentryClient::send(const std::string &msg) {
-    json attributes = {
-#ifdef CORE_REVISION
-            {"revision", CORE_REVISION},
-#endif
-    };
-    mCrowClient->add_tags_context(attributes);
     mCrowClient->capture_message(msg);
 }
 

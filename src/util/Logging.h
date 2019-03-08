@@ -43,6 +43,12 @@ class SentryClient {
 public:
     SentryClient(const std::string &dsn) {
         mCrowClient = new crow(dsn);
+        json attributes = {
+#ifdef CORE_REVISION
+            {"revision", CORE_REVISION},
+#endif
+        };
+        mCrowClient->add_tags_context(attributes);
     }
 
     void send(const std::string &msg);
