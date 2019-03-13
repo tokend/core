@@ -24,9 +24,9 @@ private:
                              std::vector<SignerRequirement>& result) const override;
 
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
-        return false;
+        return lm.shouldUse(LedgerVersion::ATOMIC_SWAP_RETURNING);
     }
 
 public:

@@ -59,6 +59,7 @@ CancelASwapBidOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
                                     LedgerManager &ledgerManager)
 {
+    innerResult().code(CancelASwapBidResultCode::SUCCESS);
     Database& db = app.getDatabase();
 
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
@@ -75,11 +76,11 @@ bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
         return false;
     }
 
+    innerResult().success().lockedAmount = bidFrame->getLockedAmount();
     if (bidFrame->getLockedAmount() != 0)
     {
         bidFrame->setIsCancelled(true);
         EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
-        innerResult().code(CancelASwapBidResultCode::SUCCESS);
         return true;
     }
 
@@ -98,7 +99,6 @@ bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
     EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
     EntryHelperProvider::storeDeleteEntry(delta, db, bidFrame->getKey());
 
-    innerResult().code(CancelASwapBidResultCode::SUCCESS);
     return true;
 }
 

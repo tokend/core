@@ -23,6 +23,8 @@ public:
 
 class ReviewASwapBidCreationRequestHelper : public ReviewRequestHelper
 {
+    uint32_t mTasksToRemove = 0;
+
 public:
     explicit ReviewASwapBidCreationRequestHelper(TestManager::pointer testManager);
 
@@ -44,6 +46,12 @@ public:
             Account & source, uint64_t requestID, ReviewRequestOpAction action,
             std::string rejectReason,
             ReviewRequestResultCode expectedResult = ReviewRequestResultCode::SUCCESS);
+
+    ReviewRequestResult
+    applyReviewRequestTxWithTasks(Account &source, uint64_t requestID,
+                                  ReviewRequestOpAction action, std::string rejectReason,
+                                  uint32_t tasksToRemove, ReviewRequestResultCode expectedResult =
+                                          ReviewRequestResultCode::SUCCESS);
 };
 
 

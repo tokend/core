@@ -19,7 +19,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
+TEST_CASE("atomic swap", "[tx][atomic_swap]")
 {
     Config const &cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
@@ -122,6 +122,9 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     manageKeyValueHelper.assetOpWithoutReview();
+    longstring key = ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey();
+    manageKeyValueHelper.setKey(key)->setUi32Value(1);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     // create base asset
     issuanceTestHelper.createAssetWithPreIssuedAmount(seller, baseAsset,
@@ -201,6 +204,8 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
         thirdASwapQuoteAsset.quoteAsset = "BTC";
         thirdASwapQuoteAsset.price = INT64_MAX;
         quoteAssets.emplace_back(thirdASwapQuoteAsset);
+        manageAssetTestHelper.createAsset(root, root.key, thirdASwapQuoteAsset.quoteAsset, root,
+                                          static_cast<uint32_t>(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP));
         auto request = aSwapBidCreationRequestHelper.
                 createASwapBidCreationRequest(sellerBalanceID, baseAssetAmount,
                                               details, quoteAssets);
@@ -302,21 +307,6 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
                 CreateASwapBidCreationRequestResultCode::INVALID_QUOTE_ASSET);
     }
 
-    /*SECTION("Not allowed by asset policy")
-    {
-        manageBalanceTestHelper.createBalance(firstBuyer, firstBuyerPubKey,
-                                              baseAsset);
-        auto firstBuyerBalance = balanceHelper->loadBalance(firstBuyerPubKey,
-                                                            baseAsset, db, nullptr);
-        REQUIRE(firstBuyerBalance);
-        auto request = aSwapBidCreationRequestHelper.createASwapBidCreationRequest(
-                firstBuyerBalance->getBalanceID(), ONE, details, quoteAssets);
-        aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
-                firstBuyer, request,
-                CreateASwapBidCreationRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
-                OperationResultCode::opNO_ROLE_PERMISSION);
-    }*/
-
     SECTION("Atomic swap bid creation request created")
     {
         auto request = aSwapBidCreationRequestHelper.createASwapBidCreationRequest(
@@ -327,12 +317,11 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
 
         SECTION("Try review atomic swap bid creation request")
         {
-            /*
             SECTION("Base asset can not be swapped anymore")
             {
                 manageAssetTestHelper.updateAsset(seller, baseAsset, root, 0);
-                reviewASwapBidCreationRequestHelper.applyReviewRequestTx(
-                        root, requestID, ReviewRequestOpAction::APPROVE, "",
+                reviewASwapBidCreationRequestHelper.applyReviewRequestTxWithTasks(
+                        root, requestID, ReviewRequestOpAction::APPROVE, "", 1,
                         ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
             }
 
@@ -342,14 +331,13 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
                         root, requestID, ReviewRequestOpAction::PERMANENT_REJECT,
                         R"({"reason":"bad BTC address"})");
             }
-            */
 
             SECTION("Atomic swap bid created (by autoapprove)")
             {
-//                auto result = reviewASwapBidCreationRequestHelper.applyReviewRequestTx(
-//                        root, requestID, ReviewRequestOpAction::APPROVE, "");
-//
-                auto bidID = 1; // result.success().ext.extendedResult().typeExt.aSwapBidExtended().bidID;
+                auto result = reviewASwapBidCreationRequestHelper.applyReviewRequestTxWithTasks(
+                        root, requestID, ReviewRequestOpAction::APPROVE, "", 1);
+
+                auto bidID = result.success().typeExt.aSwapBidExtended().bidID;
 
                 SECTION("Try to cancel foreign atomic swap bid")
                 {
@@ -359,7 +347,8 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
 
                 SECTION("Cancel bid without any atomic swap requests")
                 {
-                    cancelASwapBidHelper.applyCancelASwapBid(seller, bidID);
+                    auto cancelResult = cancelASwapBidHelper.applyCancelASwapBid(seller, bidID);
+                    REQUIRE(cancelResult.success().lockedAmount == 0);
                 }
 
                 SECTION("Try create swap request for buyers")
@@ -456,7 +445,8 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
 
                         SECTION("Try to cancel atomic swap bid with aswap requests")
                         {
-                            cancelASwapBidHelper.applyCancelASwapBid(seller, bidID);
+                            auto cancelResult = cancelASwapBidHelper.applyCancelASwapBid(seller, bidID);
+                            REQUIRE(cancelResult.success().lockedAmount == amountToBuy*2);
 
                             SECTION("Reject all aswap requests")
                             {
@@ -468,6 +458,14 @@ TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
                                         root, secondBuyerASwapRequestID,
                                         ReviewRequestOpAction::PERMANENT_REJECT,
                                         R"({"reason":"invalid aswap request"})");
+
+                                SECTION("Bid is removed, cannot create atomic swap request")
+                                {
+                                    createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
+                                            secondBuyer, secondBuyerASwapRequest,
+                                            CreateASwapRequestResultCode::BID_NOT_FOUND,
+                                            OperationResultCode::opNO_ENTRY);
+                                }
                             }
 
                             SECTION("Approve all aswap requests")

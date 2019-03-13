@@ -28,7 +28,8 @@ CancelASwapBidHelper::createCancelASwapBidTx(Account &source, uint64_t bidID)
 
 CancelASwapBidResult
 CancelASwapBidHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
-                                          CancelASwapBidResultCode expectedResult)
+                                          CancelASwapBidResultCode expectedResult,
+                                          OperationResultCode expectedOpCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto aSwapBidHelper = AtomicSwapBidHelper::Instance();
@@ -48,6 +49,13 @@ CancelASwapBidHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(opResult.code() == expectedOpCode);
+    if (expectedOpCode != OperationResultCode::opINNER)
+    {
+        return CancelASwapBidResult();
+    }
+
     auto actualResultCode = CancelASwapBidOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResult);
@@ -80,6 +88,8 @@ CancelASwapBidHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
 
     REQUIRE(baseBalanceBeforeTx->getLocked() - bidBeforeTx->getAmount() ==
             baseBalanceAfterTx->getLocked());
+
+    return cancelASwapBidResult;
 }
 
 

@@ -17,7 +17,9 @@ TransactionFramePtr createCancelASwapBidTx(Account& source, uint64_t bidID);
 
 CancelASwapBidResult applyCancelASwapBid(Account& source, uint64_t bidID,
                                          CancelASwapBidResultCode expectedResult =
-                                         CancelASwapBidResultCode::SUCCESS);
+                                         CancelASwapBidResultCode::SUCCESS,
+                                         OperationResultCode expectedOpCode =
+                                         OperationResultCode::opINNER);
 };
 
 }

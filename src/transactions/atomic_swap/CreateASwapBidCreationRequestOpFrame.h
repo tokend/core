@@ -25,10 +25,17 @@ private:
                              std::vector<SignerRequirement>& result) const override;
 
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
-        return false;
+        return lm.shouldUse(LedgerVersion::ATOMIC_SWAP_RETURNING);
     }
+
+    void
+    fillRequest(ReviewableRequestEntry &requestEntry,
+                ASwapBidCreationRequest body, uint32_t allTasks);
+
+    std::vector<longstring>
+    makeTasksKeyVector(StorageHelper& storageHelper) override;
 
 public:
     CreateASwapBidCreationRequestOpFrame(Operation const &op, OperationResult &opRes,
@@ -38,14 +45,14 @@ public:
     isBaseAssetValid(Database& db, AssetCode baseAssetCode);
 
     static CreateASwapBidCreationRequestResultCode
-    isQuoteAssetValid(Database& db, AssetCode baseAssetCode, AssetCode quoteAssetCode);
+    isQuoteAssetValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode, ASwapBidQuoteAsset quoteAsset);
 
     static CreateASwapBidCreationRequestResultCode
-    areQuoteAssetsValid(Database& db, AssetCode baseAssetCode,
+    areQuoteAssetsValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode,
                         xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
 
     static CreateASwapBidCreationRequestResultCode
-    areAllAssetsValid(Database& db, AssetCode baseAssetCode,
+    areAllAssetsValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode,
                       xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
 
     void tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,

@@ -27,12 +27,10 @@ namespace stellar
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
     char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
-    char const* ManageKeyValueOpFrame::limitsUpdateTasks =
-        "limits_update_tasks";
-    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix =
-        "atomic_swap_tasks";
-    char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix =
-        "withdraw_lower_bound";
+    char const* ManageKeyValueOpFrame::limitsUpdateTasks = "limits_update_tasks";
+    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_tasks";
+    char const* ManageKeyValueOpFrame::atomicSwapBidTasks = "atomic_swap_bid_tasks";
+    char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -57,6 +55,8 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {assetCreateTasks, KeyValueEntryType::UINT32},
         {assetUpdateTasks, KeyValueEntryType::UINT32},
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
+        {atomicSwapBidTasks, KeyValueEntryType::UINT32},
+        {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
     };
 }
 
@@ -268,5 +268,8 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         return amlAlertCreateTasks;
     }
 
-
+    longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey()
+    {
+        return atomicSwapBidTasks;
+    }
 }

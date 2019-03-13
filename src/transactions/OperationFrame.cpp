@@ -209,7 +209,8 @@ std::string OperationFrame::getInnerResultCodeAsStr()
     return "not_implemented";
 }
 
-bool OperationFrame::isSupported() const
+bool
+OperationFrame::isSupported(LedgerManager& lm) const
 {
     // by default all operations are supported
     return true;
@@ -340,7 +341,7 @@ OperationFrame::checkValid(Application& app,
                            AccountRuleVerifier& accountRuleVerifier,
                            LedgerDelta *delta)
 {
-    if (!isSupported())
+    if (!isSupported(app.getLedgerManager()))
     {
         app.getMetrics().NewMeter({"operation", "invalid", "not-allowed"}, "operation").Mark();
         mResult.code(OperationResultCode::opNOT_SUPPORTED);
@@ -455,7 +456,7 @@ OperationFrame::loadTasks(StorageHelper& storageHelper, uint32_t& allTasks, xdr:
 std::vector<longstring>
 OperationFrame::makeTasksKeyVector(StorageHelper& storageHelper)
 {
-    return std::vector<longstring>{};
+    throw std::runtime_error("Unexpected call, method must be overridden");
 };
 
 }

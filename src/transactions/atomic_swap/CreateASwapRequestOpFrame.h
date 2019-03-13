@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transactions/OperationFrame.h"
+#include "ledger/AtomicSwapBidFrame.h"
 
 namespace stellar
 {
@@ -24,10 +25,16 @@ class CreateASwapRequestOpFrame : public OperationFrame
                              std::vector<SignerRequirement>& result) const override;
 
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
-        return false;
+        return lm.shouldUse(LedgerVersion::ATOMIC_SWAP_RETURNING);
     }
+
+    AtomicSwapBidFrame::pointer
+    loadAtomicSwapBid(ASwapRequest aSwapRequest, Database& db, LedgerDelta& delta);
+
+    bool
+    tryFillRequest(ReviewableRequestEntry& requestEntry, Database& db);
 
 public:
     CreateASwapRequestOpFrame(Operation const& op, OperationResult& res,

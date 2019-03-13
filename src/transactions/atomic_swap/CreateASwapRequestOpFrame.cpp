@@ -1,13 +1,13 @@
 #include "main/Application.h"
 #include <ledger/AtomicSwapBidHelper.h>
 #include <ledger/AssetHelperLegacy.h>
-#include <ledger/KeyValueHelper.h>
 #include "ledger/StorageHelper.h"
 #include <ledger/ReviewableRequestFrame.h>
-#include <transactions/FeesManager.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/AssetHelper.h>
+#include <ledger/ReviewableRequestHelper.h>
+#include <transactions/dex/OfferManager.h>
 #include "CreateASwapRequestOpFrame.h"
 
 using namespace std;
@@ -94,61 +94,9 @@ CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTask
 }
 
 bool
-CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
-                                   LedgerManager& ledgerManager)
+CreateASwapRequestOpFrame::tryFillRequest(ReviewableRequestEntry& requestEntry,
+                                          Database& db)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto aSwapRequest = mCreateASwapRequest.request;
-
-    auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(aSwapRequest.bidID,
-                                                                       db, &delta);
-    if (bidFrame == nullptr)
-    {
-        innerResult().code(CreateASwapRequestResultCode::BID_NOT_FOUND);
-        return false;
-    }
-
-    if (bidFrame->getOwnerID() == getSourceID())
-    {
-        innerResult().code(
-                CreateASwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
-        return false;
-    }
-
-    if (bidFrame->isCancelled())
-    {
-        innerResult().code(CreateASwapRequestResultCode::BID_IS_CANCELLED);
-        return false;
-    }
-
-    if (!bidFrame->hasQuoteAsset(aSwapRequest.quoteAsset))
-    {
-        innerResult().code(CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
-        return false;
-    }
-
-    // TODO: move asset requirements check to separate method
-    auto baseAssetFrame = AssetHelperLegacy::Instance()->loadAsset(bidFrame->getBaseAsset(),
-                                                             db);
-    if (baseAssetFrame == nullptr)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: expected base asset to exist, asset code: "
-                   << bidFrame->getBaseAsset();
-        throw runtime_error("Unexpected state: expected base asset to exist");
-    }
-
-    if (!bidFrame->tryLockAmount(aSwapRequest.baseAmount))
-    {
-        innerResult().code(CreateASwapRequestResultCode::BID_UNDERFUNDED);
-        return false;
-    }
-
-    auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-                                                          app.getAdminID(), nullptr,
-                                                          ledgerManager.getCloseTime());
-
-    auto& requestEntry = requestFrame->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP);
     requestEntry.body.aSwapRequest() = mCreateASwapRequest.request;
 
@@ -157,17 +105,102 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     {
         return false;
     }
+
+    if (allTasks == 0)
+    {
+        innerResult().code(CreateASwapRequestResultCode::ATOMIC_SWAP_ZERO_TASKS_NOT_ALLOWED);
+        return false;
+    }
+
     requestEntry.tasks.allTasks = allTasks;
     requestEntry.tasks.pendingTasks = allTasks;
 
+    return true;
+}
+
+AtomicSwapBidFrame::pointer
+CreateASwapRequestOpFrame::loadAtomicSwapBid(ASwapRequest aSwapRequest,
+                                             Database& db, LedgerDelta& delta)
+{
+    auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
+            aSwapRequest.bidID, db, &delta);
+    if (!bidFrame)
+    {
+        innerResult().code(CreateASwapRequestResultCode::BID_NOT_FOUND);
+        return nullptr;
+    }
+
+    if (bidFrame->getOwnerID() == getSourceID())
+    {
+        innerResult().code(
+                CreateASwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
+        return nullptr;
+    }
+
+    if (bidFrame->isCancelled())
+    {
+        innerResult().code(CreateASwapRequestResultCode::BID_IS_CANCELLED);
+        return nullptr;
+    }
+
+    uint64_t price = bidFrame->getQuoteAssetPrice(aSwapRequest.quoteAsset);
+    if (price == 0)
+    {
+        innerResult().code(CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
+        return nullptr;
+    }
+
+    auto quoteAsset = AssetHelperLegacy::Instance()->mustLoadAsset(aSwapRequest.quoteAsset, db);
+    auto quoteAmount = OfferManager::calculateQuoteAmount(
+            aSwapRequest.baseAmount, price, quoteAsset->getMinimumAmount());
+    innerResult().success().quoteAmount = static_cast<uint64_t>(quoteAmount);
+
+    return bidFrame;
+}
+
+bool
+CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+                                   LedgerManager& ledgerManager)
+{
+    innerResult().code(CreateASwapRequestResultCode::SUCCESS);
+
+    Database& db = ledgerManager.getDatabase();
+    auto aSwapRequest = mCreateASwapRequest.request;
+
+    auto bid = loadAtomicSwapBid(aSwapRequest, db, delta);
+    if (!bid)
+    {
+        return false; // error codes are handled above
+    }
+
+    auto baseAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(bid->getBaseAsset(), db);
+    if (!baseAssetFrame->isAmountAppropriate(aSwapRequest.baseAmount))
+    {
+        innerResult().code(CreateASwapRequestResultCode::INCORRECT_PRECISION);
+        return false;
+    }
+
+    if (!bid->tryLockAmount(aSwapRequest.baseAmount))
+    {
+        innerResult().code(CreateASwapRequestResultCode::BID_UNDERFUNDED);
+        return false;
+    }
+
+    auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
+            app.getAdminID(), nullptr, ledgerManager.getCloseTime());
+
+    if (!tryFillRequest(requestFrame->getRequestEntry(), db))
+    {
+        return false;
+    }
+
     requestFrame->recalculateHashRejectReason();
 
-    EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
-    EntryHelperProvider::storeAddEntry(delta, db, requestFrame->mEntry);
+    AtomicSwapBidHelper::Instance()->storeChange(delta, db, bid->mEntry);
+    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
 
-    innerResult().code(CreateASwapRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
-    innerResult().success().bidOwnerID = bidFrame->getOwnerID();
+    innerResult().success().bidOwnerID = bid->getOwnerID();
 
     return true;
 }

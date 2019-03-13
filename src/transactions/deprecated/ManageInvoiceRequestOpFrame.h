@@ -8,7 +8,7 @@ namespace stellar
 class ManageInvoiceRequestOpFrame : public OperationFrame
 {
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
         return false;
     }

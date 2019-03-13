@@ -99,12 +99,20 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
 {
     request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
 
-    auto aSwapCreationRequest = request->getRequestEntry().body.aSwapBidCreationRequest();
+    auto requestBody = request->getRequestEntry().body.aSwapBidCreationRequest();
 
     Database& db = app.getDatabase();
+    handleTasks(db, delta, request);
+
+    if (!request->canBeFulfilled(ledgerManager))
+    {
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
 
     auto baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
-            aSwapCreationRequest.baseBalance, db);
+            requestBody.baseBalance, db);
 
     if (baseBalanceFrame == nullptr)
     {
@@ -114,9 +122,8 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
         throw runtime_error("Unexpected state: expected base balance to exist");
     }
 
-    CreateASwapBidCreationRequestResultCode validationResultCode =
-            CreateASwapBidCreationRequestOpFrame::areAllAssetsValid(
-                    db, baseBalanceFrame->getAsset(), aSwapCreationRequest.quoteAssets);
+    auto validationResultCode = CreateASwapBidCreationRequestOpFrame::areAllAssetsValid(
+            db, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
     if (validationResultCode != CreateASwapBidCreationRequestResultCode::SUCCESS)
     {
         return handleAllAssetsValidationResultCode(validationResultCode);
@@ -126,7 +133,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
                                                                 db);
 
     auto bidFrame = buildNewBid(requestor->getID(), baseBalanceFrame->getAsset(),
-                                ledgerManager.getCloseTime(), aSwapCreationRequest,
+                                ledgerManager.getCloseTime(), requestBody,
                                 delta);
 
     EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());

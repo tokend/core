@@ -74,6 +74,7 @@ ReviewASwapBidCreationRequestHelper::createReviewRequestTx(
     reviewRequestOp.requestHash = requestHash;
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
+    reviewRequestOp.reviewDetails.tasksToRemove = mTasksToRemove;
     reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 
     return txFromOperation(source, op, nullptr);
@@ -107,6 +108,14 @@ ReviewASwapBidCreationRequestHelper::applyReviewRequestTx(
                                 expectedResult);
 }
 
+ReviewRequestResult
+ReviewASwapBidCreationRequestHelper::applyReviewRequestTxWithTasks(Account &source,
+       uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason,
+       uint32_t tasksToRemove, ReviewRequestResultCode expectedResult)
+{
+    mTasksToRemove = tasksToRemove;
+    return applyReviewRequestTx(source, requestID, action, rejectReason, expectedResult);
+}
 
 }
 
