@@ -158,9 +158,9 @@ namespace stellar {
         auto prep =
                 db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM reference WHERE reference=:r AND sender=:se)");
         auto& st = prep.statement();
-        st.exchange(use(reference));
+        st.exchange(use(reference, "r"));
         auto sender = PubKeyUtils::toStrKey(rawSender);
-        st.exchange(use(sender));
+        st.exchange(use(sender, "se"));
         st.exchange(into(exists));
         st.define_and_bind();
         st.execute(true);

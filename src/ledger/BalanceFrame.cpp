@@ -4,17 +4,7 @@
 
 #include "BalanceFrame.h"
 #include "AssetFrame.h"
-#include "LedgerDelta.h"
-#include "crypto/Hex.h"
-#include "crypto/SecretKey.h"
-#include "database/Database.h"
-#include "ledger/LedgerManager.h"
-#include "lib/util/format.h"
-#include "util/basen.h"
-#include "util/types.h"
-#include <algorithm>
 
-using namespace soci;
 using namespace std;
 
 namespace stellar

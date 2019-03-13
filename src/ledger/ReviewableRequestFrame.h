@@ -32,7 +32,7 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureWithdrawalValid(WithdrawalRequest const& request);
 	static void ensureSaleCreationValid(SaleCreationRequest const& request);
 	static void ensureAMLAlertValid(AMLAlertRequest const& request);
-	static void ensureUpdateKYCValid(UpdateKYCRequest const &request);
+	static void ensureChangeRoleValid(ChangeRoleRequest const &request);
 	static void ensureUpdateSaleDetailsValid(UpdateSaleDetailsRequest const &request);
 	static void ensureInvoiceValid(InvoiceRequest const& request);
 	static void ensureASwapBidCreationValid(ASwapBidCreationRequest const& request);

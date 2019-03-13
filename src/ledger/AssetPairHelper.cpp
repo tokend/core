@@ -202,11 +202,11 @@ namespace stellar
 		});
 
 		if (!retAssetPair) {
-			putCachedEntry(key, nullptr, db);
+			putCachedEntry(key, nullptr, db, nullptr);
 			return nullptr;
 		}
 		auto pEntry = std::make_shared<LedgerEntry const>(retAssetPair->mEntry);
-		putCachedEntry(key, pEntry, db);
+		putCachedEntry(key, pEntry, db, nullptr);
 		return retAssetPair;
 	}
 
@@ -257,7 +257,7 @@ namespace stellar
 
 		if (!retAssetPair)
 		{
-			putCachedEntry(key, nullptr, db);
+			putCachedEntry(key, nullptr, db, delta);
 			return nullptr;
 		}
 
@@ -266,7 +266,7 @@ namespace stellar
 			delta->recordEntry(*retAssetPair);
 		}
 		auto pEntry = std::make_shared<LedgerEntry const>(retAssetPair->mEntry);
-		putCachedEntry(key, pEntry, db);
+		putCachedEntry(key, pEntry, db, delta);
 		return retAssetPair;
 	}
 

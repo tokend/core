@@ -34,7 +34,8 @@ namespace txtest
 				uint32_t policies,
                 uint32_t *allTasks = nullptr,
                 uint64_t initialPreissuanceAmount = 0,
-                uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
+                uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
+				uint64_t assetType = 0);
 
 		ManageAssetOp::_request_t createAssetUpdateRequest(
 				AssetCode code,
@@ -46,12 +47,14 @@ namespace txtest
 
                 ManageAssetOp::_request_t updateMaxAmount(AssetCode asset, uint64 amount);
 
-                ManageAssetOp::_request_t createChangeSignerRequest(
-                    AssetCode code,
-                    AccountID accountID);
+		ManageAssetOp::_request_t createChangeSignerRequest(Account& account,
+															AssetCode code,
+															AccountID accountID);
 
         void createAsset(Account &assetOwner, SecretKey &preIssuedSigner, AssetCode assetCode, Account &root,
-                uint32_t policies, uint32_t *allTasks = nullptr, uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits);
+                uint32_t policies, uint32_t *allTasks = nullptr,
+                		uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
+                		uint64_t assetType = 0, uint64_t maxIssuance = UINT64_MAX);
         void updateAsset(Account& assetOwner, AssetCode assetCode, Account& root, uint32_t policies);
         void changeAssetTrailingDigits(AssetCode assetCode, uint32 trailingDigitsCount);
 	};

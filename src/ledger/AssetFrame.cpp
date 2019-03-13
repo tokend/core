@@ -3,16 +3,9 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "AssetFrame.h"
-#include "database/Database.h"
-#include "LedgerDelta.h"
-#include "ledger/LedgerManager.h"
 #include "util/types.h"
-#include <util/basen.h>
-#include "util/format.h"
 #include "xdrpp/printer.h"
-#include <locale>
 
-using namespace soci;
 using namespace std;
 
 namespace stellar
@@ -55,11 +48,12 @@ AssetFrame::pointer AssetFrame::create(AssetCreationRequest const& request,
     AssetEntry& asset = le.data.asset();
     asset.availableForIssueance = request.initialPreissuedAmount;
     asset.code = request.code;
-    asset.details = request.details;
+    asset.details = request.creatorDetails;
     asset.issued = 0;
     asset.maxIssuanceAmount = request.maxIssuanceAmount;
     asset.owner = owner;
     asset.policies = request.policies;
+    asset.type = request.type;
     asset.preissuedAssetSigner = request.preissuedAssetSigner;
     asset.pendingIssuance = 0;
     asset.trailingDigitsCount = request.trailingDigitsCount;
@@ -113,7 +107,7 @@ bool AssetFrame::tryUnIssue(uint64_t amount)
 bool AssetFrame::canAddAvailableForIssuance(uint64_t amount)
 {
     uint64_t availableForIssuance;
-    if (!safeSum(mAsset.availableForIssueance, amount, availableForIssuance))
+    if (!safeSum(availableForIssuance, {mAsset.availableForIssueance, mAsset.pendingIssuance, amount}))
         return false;
 
     uint64_t maxAmountCanBeIssuedAfterUpdate;
@@ -240,7 +234,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
     try
     {
         uint64_t totalIssuedOrLocked;
-        if (!safeSum(totalIssuedOrLocked, { oe.issued, oe.pendingIssuance }))
+        if (!safeSum(totalIssuedOrLocked, { oe.issued, oe.pendingIssuance, oe.availableForIssueance }))
         {
             throw runtime_error("Overflow during calculation of totalIssuedOrLocked");
         }
@@ -264,7 +258,7 @@ void AssetFrame::ensureValid(AssetEntry const& oe)
         {
             throw runtime_error("Too many trailing digits");
         }
-        const int precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
+        const uint64_t precision = getMinimumAmountFromTrailingDigits(oe.trailingDigitsCount);
         if (oe.availableForIssueance % precision != 0)
         {
             throw runtime_error("Invalid available for issuance amount");

@@ -25,7 +25,7 @@ public:
 class ReviewInvoiceRequestHelper : public ReviewRequestHelper
 {
 public:
-    PaymentOpV2 paymentDetails;
+    PaymentOp paymentDetails;
 
     explicit ReviewInvoiceRequestHelper(TestManager::pointer testManager);
 
@@ -42,8 +42,8 @@ public:
                                               ReviewRequestOpAction action,
                                               std::string rejectReason) override;
 
-    void initializePaymentDetails(PaymentOpV2::_destination_t& destination, uint64_t amount,
-                                  PaymentFeeDataV2& feeData, std::string subject,
+    void initializePaymentDetails(PaymentOp::_destination_t& destination, uint64_t amount,
+                                  PaymentFeeData& feeData, std::string subject,
                                   std::string reference, BalanceID sourceBalance);
 };
 

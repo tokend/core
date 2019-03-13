@@ -12,6 +12,7 @@ class session;
 namespace stellar
 {
 class StorageHelper;
+class StatementContext;
 
 class ExternalSystemAccountIDHelperImpl : public ExternalSystemAccountIDHelper,
                                           NonCopyable
@@ -40,6 +41,9 @@ class ExternalSystemAccountIDHelperImpl : public ExternalSystemAccountIDHelper,
     load(const AccountID accountID, const int32 externalSystemType) override;
 
     Database& getDatabase() override;
+
+    LedgerDelta*
+    getLedgerDelta() override;
 
   private:
     static const char* select;

@@ -48,6 +48,9 @@ class KeyValueHelperImpl : public KeyValueHelper, NonCopyable
 
     Database& getDatabase() override;
 
+    LedgerDelta*
+    getLedgerDelta() override;
+
     StorageHelper& mStorageHelper;
 };
 

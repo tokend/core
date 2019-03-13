@@ -26,6 +26,8 @@ class TransactionFrameImpl : public TransactionFrame
   private:
 	SignatureValidator::pointer mSignatureValidator;
 
+	bool isLicenseOp();
+
   protected:
     TransactionEnvelope mEnvelope;
     TransactionResult mResult;
@@ -40,6 +42,8 @@ class TransactionFrameImpl : public TransactionFrame
 
     bool loadAccount(LedgerDelta* delta, Database& app);
     bool commonValid(Application& app, LedgerDelta* delta);
+    bool checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
+                         StorageHelper& storageHelper);
 
 	bool checkAllSignaturesUsed();
 	void resetSignatureTracker();
@@ -138,7 +142,8 @@ class TransactionFrameImpl : public TransactionFrame
     void addSignature(SecretKey const& secretKey);
 
 	// Checks signature, if not valid - returns false and sets valid error code
-    bool doCheckSignature(Application& app, Database& db, AccountFrame& account);
+    bool doCheckSignature(Application& app, StorageHelper& storageHelper,
+                          AccountID const& accountID);
 
     bool checkValid(Application& app);
 
@@ -169,11 +174,6 @@ class TransactionFrameImpl : public TransactionFrame
 
     void storeTransactionTiming(LedgerManager& ledgerManager,
                                       uint64 maxTime) const;
-
-    bool tryGetTxFeeAsset(Database& db, AssetCode& txFeeAssetCode) override;
-
-    void storeFeeForOpType(OperationType opType, std::map<OperationType, uint64_t>& feesForOpTypes,
-                                   AccountFrame::pointer source, AssetCode txFeeAssetCode, Database& db) override;
 
 	void clearCached();
 };

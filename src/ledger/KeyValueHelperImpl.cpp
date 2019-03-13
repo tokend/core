@@ -1,7 +1,7 @@
 #include "ledger/KeyValueHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include <memory>
+#include "database/Database.h"
 #include <xdrpp/marshal.h>
 #include "util/basen.h"
 
@@ -72,7 +72,8 @@ KeyValueHelperImpl::storeDelete(LedgerKey const& key)
 bool
 KeyValueHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
+    // if (cached entry == nullptr) entry does not exists
+    if (cachedEntryExists(key) && getCachedEntry(key))
     {
         return true;
     }
@@ -266,5 +267,11 @@ Database&
 KeyValueHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
+}
+
+LedgerDelta*
+KeyValueHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
 }
 } // namespace stellar

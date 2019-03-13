@@ -12,13 +12,41 @@
 #include "main/Application.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "xdrpp/printer.h"
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <transactions/ManageAssetPairOpFrame.h>
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
+
+bool
+ReviewSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result) const
+{
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
+    resource.reviewableRequest().details.createSale().type =
+            request->getRequestEntry().body.saleCreationRequest().saleType;
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
 
 SaleCreationRequest&
 ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(
@@ -27,7 +55,7 @@ ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(
     auto requestType = request->getType();
     switch (requestType)
     {
-    case ReviewableRequestType::SALE:
+    case ReviewableRequestType::CREATE_SALE:
     {
         return request->getRequestEntry().body.saleCreationRequest();
     }
@@ -61,8 +89,8 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
         throw runtime_error("Quote asset does not exist");
     }
 
-    auto baseAsset = loadAsset(ledgerManager, saleCreationRequest.baseAsset,
-                               request->getRequestor(), db, &delta);
+    auto baseAsset = AssetHelperLegacy::Instance()->loadAsset(
+            saleCreationRequest.baseAsset, request->getRequestor(), db, &delta);
     if (!baseAsset)
     {
         return ReviewRequestResultCode::BASE_ASSET_DOES_NOT_EXISTS;
@@ -73,9 +101,6 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
 
     if (!baseAsset->lockIssuedAmount(requiredBaseAssetForHardCap))
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-            << "Unexpected state, failed to lock issuance amount: "
-            << request->getRequestID();
         return ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP;
     }
 
@@ -92,33 +117,12 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     return ReviewRequestResultCode::SUCCESS;
 }
 
-AssetFrame::pointer
-ReviewSaleCreationRequestOpFrame::loadAsset(LedgerManager& ledgerManager,
-                                            AssetCode code,
-                                            AccountID const& requestor,
-                                            Database& db, LedgerDelta* delta)
-{
-    AssetFrame::pointer retAsset;
-
-    auto requestorFrame =
-        AccountHelper::Instance()->mustLoadAccount(requestor, db);
-
-    if (requestorFrame->getAccountType() == AccountType::MASTER)
-    {
-        retAsset = AssetHelperLegacy::Instance()->loadAsset(code, db, delta);
-        return retAsset;
-    }
-
-    retAsset = AssetHelperLegacy::Instance()->loadAsset(code, requestor, db, delta);
-    return retAsset;
-}
-
 bool
 ReviewSaleCreationRequestOpFrame::handleApprove(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::SALE)
+    if (request->getRequestType() != ReviewableRequestType::CREATE_SALE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected request type. Expected SALE, but got "
@@ -154,20 +158,9 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
     }
 
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(ReviewableRequestType::SALE);
+    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_SALE);
     innerResult().success().typeExt.saleExtended().saleID = newSaleID;
     return true;
-}
-
-SourceDetails
-ReviewSaleCreationRequestOpFrame::getSourceAccountDetails(
-    std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-    int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-    return SourceDetails({AccountType::MASTER},
-                         mSourceAccount->getHighThreshold(), allowedSigners);
 }
 
 uint64

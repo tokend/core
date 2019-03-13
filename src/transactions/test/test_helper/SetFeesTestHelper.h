@@ -14,7 +14,7 @@ namespace stellar {
                                 SetFeesResultCode expectedResult = SetFeesResultCode::SUCCESS);
 
             FeeEntry createFeeEntry(FeeType type, AssetCode asset, int64_t fixed, int64_t percent,
-                                    AccountID *accountID = nullptr, AccountType *accountType = nullptr,
+                                    AccountID *accountID = nullptr, uint64_t* accountType = nullptr,
                                     int64_t subtype = FeeFrame::SUBTYPE_ANY, int64_t lowerBound = 0,
                                     int64_t upperBound = INT64_MAX);
         };

@@ -1,22 +1,11 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include <transactions/review_request/ReviewRequestHelper.h>
-#include "util/asio.h"
 #include "CreatePreIssuanceRequestOpFrame.h"
 #include "transactions/SignatureValidatorImpl.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
-#include "util/Logging.h"
-#include "util/types.h"
-#include "database/Database.h"
-#include "ledger/LedgerDelta.h"
-#include "main/Application.h"
 #include "crypto/SHA.h"
 
 namespace stellar
@@ -75,9 +64,10 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 
 	auto reference = xdr::pointer<stellar::string64>(new stellar::string64(mCreatePreIssuanceRequest.request.reference));
 	ReviewableRequestEntry::_body_t requestBody;
-	requestBody.type(ReviewableRequestType::PRE_ISSUANCE_CREATE);
+	requestBody.type(ReviewableRequestType::CREATE_PRE_ISSUANCE);
 	requestBody.preIssuanceRequest() = mCreatePreIssuanceRequest.request;
-	auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), app.getMasterID(), reference,
+	auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
+                                                             app.getAdminID(), reference,
                                                              requestBody, ledgerManager.getCloseTime());
 	EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 
@@ -123,6 +113,12 @@ CreatePreIssuanceRequestOpFrame::doCheckValid(Application& app)
 		innerResult().code(CreatePreIssuanceRequestResultCode::INVALID_REFERENCE);
 		return false;
 	}
+
+	if (!isValidJson(mCreatePreIssuanceRequest.request.creatorDetails))
+	{
+		innerResult().code(CreatePreIssuanceRequestResultCode::INVALID_CREATOR_DETAILS);
+		return false;
+	}
 	
     return true;
 }
@@ -133,23 +129,26 @@ Hash CreatePreIssuanceRequestOpFrame::getSignatureData(stellar::string64 const &
 	return Hash(sha256(rawSignatureData));
 }
 
-std::unordered_map<AccountID, CounterpartyDetails> CreatePreIssuanceRequestOpFrame::getCounterpartyDetails(Database & db, LedgerDelta * delta) const
+bool
+CreatePreIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+							  			std::vector<OperationCondition>& result) const
 {
-	// no counterparties
-	return{};
+	// only asset pre issuer can do pre issuance;
+	return true;
 }
 
-SourceDetails CreatePreIssuanceRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                       int32_t ledgerVersion) const
+bool
+CreatePreIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+							 				std::vector<SignerRequirement>& result) const
 {
-	return SourceDetails({AccountType::MASTER, AccountType::SYNDICATE}, mSourceAccount->getHighThreshold(),
-						 static_cast<int32_t>(SignerType::ISSUANCE_MANAGER));
+	// only asset owner signer which is specified in asset can do pre issuance
+	return true;
 }
 
 bool CreatePreIssuanceRequestOpFrame::isSignatureValid(AssetFrame::pointer asset, LedgerVersion version)
 {
 	auto& request = mCreatePreIssuanceRequest.request;
-	auto signatureData = getSignatureData(mCreatePreIssuanceRequest.request.reference, request.amount, request.asset);
+	auto signatureData = getSignatureData(request.reference, request.amount, request.asset);
 	auto signatureValidator = SignatureValidatorImpl(signatureData, { request.signature });
 
 	const int VALID_SIGNATURES_REQUIRED = 1;

@@ -6,9 +6,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include "ledger/AssetHelperLegacy.h"
 #include "StatisticsV2Processor.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-
 
 namespace stellar
 {
@@ -43,8 +41,7 @@ namespace stellar
         xdr::pointer<AccountID> accountID = nullptr;
         accountID.activate() = account->getID();
 
-        xdr::pointer<AccountType> accountType = nullptr;
-        accountType.activate() = account->getAccountType();
+        uint64_t accountRole = account->getAccountRole();
 
         AssetCode assetCode = balance->getAsset();
 
@@ -69,7 +66,7 @@ namespace stellar
         }
 
         auto limitsV2Helper = LimitsV2Helper::Instance();
-        auto limitsV2Frames = limitsV2Helper->loadLimits(mDb, statsOpTypes, assetCode, accountID, accountType);
+        auto limitsV2Frames = limitsV2Helper->loadLimits(mDb, statsOpTypes, assetCode, accountID, &accountRole);
 
         for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
         {

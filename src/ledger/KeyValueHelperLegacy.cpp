@@ -62,7 +62,7 @@ KeyValueHelperLegacy::storeDelete(LedgerDelta& delta, Database& db,
 bool
 KeyValueHelperLegacy::exists(Database& db, LedgerKey const& key)
 {
-    if (cachedEntryExists(key, db))
+    if (cachedEntryExists(key, db) && getCachedEntry(key, db))
     {
         return true;
     }
@@ -194,7 +194,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
 
     if (!retKeyValue)
     {
-        putCachedEntry(key, nullptr, db);
+        putCachedEntry(key, nullptr, db, delta);
         return nullptr;
     }
 
@@ -204,7 +204,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
     }
 
     auto pEntry = std::make_shared<LedgerEntry>(retKeyValue->mEntry);
-    putCachedEntry(key, pEntry, db);
+    putCachedEntry(key, pEntry, db, delta);
     return retKeyValue;
 }
 

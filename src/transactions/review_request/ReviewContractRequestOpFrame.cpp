@@ -3,8 +3,8 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
-#include <transactions/payment/PaymentOpV2Frame.h>
-#include <transactions/ManageContractOpFrame.h>
+#include <transactions/payment/PaymentOpFrame.h>
+#include <transactions/deprecated/ManageContractOpFrame.h>
 #include "util/asio.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "database/Database.h"
@@ -21,21 +21,12 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-
-SourceDetails
-ReviewContractRequestOpFrame::getSourceAccountDetails(
-        unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails, int32_t ledgerVersion) const
-{
-    return SourceDetails(getAllAccountTypes(), mSourceAccount->getHighThreshold(),
-                         static_cast<int32_t>(SignerType::CONTRACT_MANAGER));
-}
-
 bool
 ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() != ReviewableRequestType::CONTRACT)
+    if (request->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CONTRACT, but got "
                          << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
@@ -65,7 +56,7 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
     contractEntry.escrow = contractRequest.escrow;
     contractEntry.startTime = contractRequest.startTime;
     contractEntry.endTime = contractRequest.endTime;
-    contractEntry.initialDetails = contractRequest.details;
+    contractEntry.initialDetails = contractRequest.creatorDetails;
     contractEntry.state = static_cast<uint32_t>(ContractState::NO_CONFIRMATIONS);
 
     if (!checkCustomerDetailsLength(app, db, delta))

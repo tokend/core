@@ -20,7 +20,7 @@ ReviewPreIssuanceChecker::ReviewPreIssuanceChecker(
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::PRE_ISSUANCE_CREATE) {
+    if (!request || request->getType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
         return;
     }
     preIssuanceRequest = std::make_shared<PreIssuanceRequest>(request->getRequestEntry().body.preIssuanceRequest());
@@ -64,6 +64,37 @@ ReviewRequestResult ReviewPreIssuanceRequestHelper::applyReviewRequestTx(Account
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);
 }
 
+ReviewRequestResult
+ReviewPreIssuanceRequestHelper::applyReviewRequestTxWithTasks(Account & source, uint64_t requestID,
+                                                              ReviewRequestOpAction action,
+                                                              std::string rejectReason,
+                                                              uint32_t tasksToRemove,
+                                                              ReviewRequestResultCode expectedResult)
+{
+    mTasksToRemove = tasksToRemove;
+    return applyReviewRequestTx(source, requestID, action, rejectReason, expectedResult);
+}
+
+TransactionFramePtr
+ReviewPreIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t requestID, Hash requestHash,
+                                                   ReviewableRequestType requestType, ReviewRequestOpAction action,
+                                                   std::string rejectReason)
+{
+    Operation op;
+    op.body.type(OperationType::REVIEW_REQUEST);
+    ReviewRequestOp& reviewRequestOp = op.body.reviewRequestOp();
+    reviewRequestOp.action = action;
+    reviewRequestOp.reason = rejectReason;
+    reviewRequestOp.requestHash = requestHash;
+    reviewRequestOp.requestID = requestID;
+    reviewRequestOp.requestDetails.requestType(requestType);
+    reviewRequestOp.reviewDetails.tasksToAdd = 0;
+    reviewRequestOp.reviewDetails.tasksToRemove = mTasksToRemove;
+    reviewRequestOp.reviewDetails.externalDetails = "{}";
+    reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+
+    return txFromOperation(source, op, nullptr);
+}
 
 }
 

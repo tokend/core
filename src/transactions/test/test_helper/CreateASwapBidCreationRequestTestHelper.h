@@ -23,7 +23,8 @@ createCreateASwapBidCreationRequestTx(Account& source, ASwapBidCreationRequest r
 CreateASwapBidCreationRequestResult applyCreateASwapBidCreationRequest(
         Account& source, ASwapBidCreationRequest request,
         CreateASwapBidCreationRequestResultCode expectedResult =
-        CreateASwapBidCreationRequestResultCode::SUCCESS);
+        CreateASwapBidCreationRequestResultCode::SUCCESS,
+        OperationResultCode expectedOpResCode = OperationResultCode::opINNER);
 };
 
 }

@@ -59,7 +59,7 @@ namespace stellar {
     }
 
     bool ReviewableRequestHelper::exists(Database &db, LedgerKey const &key) {
-        if (cachedEntryExists(key, db)) {
+        if (cachedEntryExists(key, db) && getCachedEntry(key, db)) {
             return true;
         }
 
@@ -281,7 +281,7 @@ namespace stellar {
 
         if (!retReviewableRequest)
         {
-            putCachedEntry(key, nullptr, db);
+            putCachedEntry(key, nullptr, db, delta);
             return nullptr;
         }
 
@@ -291,7 +291,7 @@ namespace stellar {
         }
 
         auto pEntry = std::make_shared<LedgerEntry>(retReviewableRequest->mEntry);
-        putCachedEntry(key, pEntry, db);
+        putCachedEntry(key, pEntry, db, delta);
         return retReviewableRequest;
     }
 

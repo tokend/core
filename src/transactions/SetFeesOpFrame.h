@@ -16,11 +16,13 @@ namespace stellar {
 
         SetFeesOp const &mSetFees;
 
-        std::unordered_map<AccountID, CounterpartyDetails>
-        getCounterpartyDetails(Database &db, LedgerDelta *delta) const override;
+        bool
+        tryGetOperationConditions(StorageHelper& storageHelper,
+                                  std::vector<OperationCondition>& result) const override;
 
-        SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
+        bool
+        tryGetSignerRequirements(StorageHelper& storageHelper,
+                                 std::vector<SignerRequirement>& result) const override;
 
         bool mustEmptyFixed(FeeEntry const &fee, medida::MetricsRegistry &metrics);
 
@@ -50,11 +52,14 @@ namespace stellar {
 
         bool isPayoutFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics);
 
-        bool trySetFee(medida::MetricsRegistry &media, Database &db, LedgerDelta &delta);
+        bool trySetFee(LedgerManager &ledgerManager, Database &db, LedgerDelta &delta);
 
-        bool doCheckForfeitFee(medida::MetricsRegistry &media, Database &db, LedgerDelta &delta);
+        bool doCheckForfeitFee(Database &db, LedgerDelta &delta);
 
         bool doCheckPaymentFee(Database &db, LedgerDelta &delta);
+
+        bool checkAccountRoleExisting(StorageHelper &storageHelper,
+                                      LedgerManager &ledgerManager);
 
     public:
 

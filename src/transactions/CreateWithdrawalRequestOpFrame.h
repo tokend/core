@@ -20,11 +20,6 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
 
     CreateWithdrawalRequestOp const& mCreateWithdrawalRequest;
 
-    std::unordered_map<AccountID, CounterpartyDetails> getCounterpartyDetails(
-        Database& db, LedgerDelta* delta) const override;
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                              int32_t ledgerVersion) const override;
-
     BalanceFrame::pointer tryLoadBalance(StorageHelper& storageHelper) const;
 
     bool isFeeMatches(AccountManager& accountManager, BalanceFrame::pointer balance) const;
@@ -36,16 +31,10 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
                       LedgerManager& ledgerManager, BalanceFrame::pointer balanceFrame,
                       const uint64_t amountToAdd, uint64_t& universalAmount, const uint64_t requestID);
 
-    bool tryAddStats(AccountManager& accountManager, BalanceFrame::pointer balance, uint64_t amountToAdd,
-                         uint64_t& universalAmount);
     bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor, const BalanceFrame::pointer balance,
                        const uint64_t amountToAdd, uint64_t& universalAmount, uint64_t requestID);
 
     bool exceedsLowerBound(Database &db, AssetCode& code);
-
-    ReviewableRequestFrame::pointer
-    createRequest(LedgerDelta& delta, LedgerManager& ledgerManager, Database& db,
-                  const AssetFrame::pointer assetFrame, const uint64_t universalAmount);
 
     ReviewableRequestFrame::pointer
     tryCreateWithdrawalRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager,
@@ -56,9 +45,13 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
     storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
                        Database& db, const uint64_t universalAmount);
 
-    ReviewableRequestFrame::pointer
-    approveRequest(AccountManager& accountManager, LedgerDelta& delta, LedgerManager& ledgerManager,
-                   Database& db, const AssetFrame::pointer assetFrame, const BalanceFrame::pointer balanceFrame);
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
 

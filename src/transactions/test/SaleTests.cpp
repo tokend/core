@@ -1,19 +1,15 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 #include <ledger/OfferHelper.h>
 #include <ledger/AssetPairHelper.h>
 #include <transactions/FeesManager.h>
 #include <ledger/FeeHelper.h>
-#include "main/Application.h"
+#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
+#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "main/test.h"
 #include "TxTests.h"
 #include "crypto/SHA.h"
-#include "test_helper/TestManager.h"
-#include "test_helper/Account.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "test_helper/CreateAccountTestHelper.h"
@@ -30,7 +26,6 @@
 #include "test_helper/ReviewUpdateSaleDetailsRequestHelper.h"
 #include "test_helper/SetFeesTestHelper.h"
 #include "test/test_marshaler.h"
-#include "ledger/OfferHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
@@ -40,249 +35,6 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-
-TEST_CASE("Sale in several quote assets", "[tx][sale_several_quote]")
-{
-    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    VirtualClock clock;
-    Application::pointer appPtr = Application::create(clock, cfg);
-    Application& app = *appPtr;
-    app.start();
-    auto testManager = TestManager::make(app);
-    TestManager::upgradeToCurrentLedgerVersion(app);
-
-    Database& db = testManager->getDB();
-
-    auto root = Account{ getRoot(), Salt(0) };
-
-    uint32_t zeroTasks = 0;
-
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
-    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
-    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
-    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-
-    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
-    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
-    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-
-    AssetCode defaultQuoteAsset = "USD";
-    uint64_t quoteMaxIssuance = INT64_MAX;
-    auto assetTestHelper = ManageAssetTestHelper(testManager);
-    auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(defaultQuoteAsset, root.key.getPublicKey(), "{}", 0,
-        uint32_t(AssetPolicy::BASE_ASSET));
-    assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
-
-    AssetCode quoteAssetBTC = "BTC";
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAssetBTC, root.key.getPublicKey(), "{}", quoteMaxIssuance,
-        uint32_t(AssetPolicy::BASE_ASSET));
-    assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
-
-    AssetCode quoteAssetETH = "ETH";
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAssetETH, root.key.getPublicKey(), "{}", quoteMaxIssuance,
-        uint32_t(AssetPolicy::BASE_ASSET));
-    assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
-    auto assetPairHelper = ManageAssetPairTestHelper(testManager);
-    uint64_t btcUSDPrice = 10000 * ONE;
-    assetPairHelper.applyManageAssetPairTx(root, quoteAssetBTC, defaultQuoteAsset, btcUSDPrice, 0, 0);
-    uint64_t ethUSDPrice = 500 * ONE;
-    assetPairHelper.applyManageAssetPairTx(root, quoteAssetETH, defaultQuoteAsset, ethUSDPrice, 0, 0);
-
-    CreateAccountTestHelper createAccountTestHelper(testManager);
-    SaleRequestHelper saleRequestHelper(testManager);
-    IssuanceRequestHelper issuanceHelper(testManager);
-    CheckSaleStateHelper checkStateHelper(testManager);
-    ParticipateInSaleTestHelper participationHelper(testManager);
-
-    auto syndicate = Account{ SecretKey::random(), 0 };
-    auto syndicatePubKey = syndicate.key.getPublicKey();
-
-    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
-    const AssetCode baseAsset = "XAAU";
-    const uint64_t maxIssuanceAmount = 2000 * ONE;
-    const uint64_t preIssuedAmount = maxIssuanceAmount;
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount, 0,
-                                                                      nullptr,
-                                                                      preIssuedAmount);
-    assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
-
-    uint64_t hardCap = 100000000 * ONE;
-    uint64 softCap = 50000000 * ONE;
-
-    const auto currentTime = testManager->getLedgerManager().getCloseTime();
-    const auto endTime = currentTime + 1000;
-    uint64_t xaauUSDPrice = (hardCap / maxIssuanceAmount) * ONE;
-    uint64_t xaauBTCPrice = (xaauUSDPrice / btcUSDPrice) * ONE;
-    uint64_t xaauETHPrice = (xaauUSDPrice / ethUSDPrice) * ONE;
-    auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-                                                            endTime, softCap, hardCap, "{}",
-                                                            {saleRequestHelper.createSaleQuoteAsset(quoteAssetBTC,
-                                                                                                        xaauBTCPrice),
-                                                                 saleRequestHelper.createSaleQuoteAsset(quoteAssetETH,
-                                                                                                        xaauETHPrice)},
-                                                            maxIssuanceAmount);
-
-    auto saleCreateResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-    REQUIRE(saleCreateResult.success().fulfilled);
-    const uint64_t saleID = saleCreateResult.success().saleID;
-
-    SECTION("Happy path")
-    {
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
-        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
-    }
-    SECTION("Happy path with different precisions")
-    {
-        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(baseAsset, 2);
-        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
-        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 0);
-
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
-
-        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
-    }
-}
-
-TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
-{
-    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    VirtualClock clock;
-    Application::pointer appPtr = Application::create(clock, cfg);
-    Application& app = *appPtr;
-    app.start();
-    auto testManager = TestManager::make(app);
-    TestManager::upgradeToCurrentLedgerVersion(app);
-
-    Database& db = testManager->getDB();
-    CreateAccountTestHelper createAccountTestHelper(testManager);
-    SaleRequestHelper saleRequestHelper(testManager);
-    IssuanceRequestHelper issuanceHelper(testManager);
-    CheckSaleStateHelper checkStateHelper(testManager);
-    ParticipateInSaleTestHelper participationHelper(testManager);
-    ManageAssetTestHelper assetTestHelper(testManager);
-    ManageSaleTestHelper manageSaleHelper(testManager);
-    ReviewSaleRequestHelper saleReviewer(testManager);
-    ReviewAssetRequestHelper assetReviewer(testManager);
-
-    auto root = Account{ getRoot(), Salt(0) };
-    AssetCode defaultQuoteAsset = "USD";
-    uint64_t quoteMaxIssuance = INT64_MAX;
-
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
-    manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
-    manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
-    manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-
-    longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
-    manageKeyValueHelper.setKey(saleCreateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-    longstring saleUpdateKey = ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*");
-    manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-
-    auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(defaultQuoteAsset, root.key.getPublicKey(), "{}", 0,
-                                                                           uint32_t(AssetPolicy::BASE_ASSET), nullptr);
-    assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
-
-    AssetCode quoteAssetBTC = "BTC";
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAssetBTC, root.key.getPublicKey(), "{}", quoteMaxIssuance,
-                                                                      uint32_t(AssetPolicy::BASE_ASSET), nullptr);
-    assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
-
-    AssetCode quoteAssetETH = "ETH";
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAssetETH, root.key.getPublicKey(), "{}", quoteMaxIssuance,
-                                                                      uint32_t(AssetPolicy::BASE_ASSET), nullptr);
-    assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
-    auto assetPairHelper = ManageAssetPairTestHelper(testManager);
-    uint64_t btcUSDPrice = 10 * ONE;
-    assetPairHelper.applyManageAssetPairTx(root, quoteAssetBTC, defaultQuoteAsset, btcUSDPrice, 0, 0);
-    uint64_t ethUSDPrice = 5 * ONE;
-    assetPairHelper.applyManageAssetPairTx(root, quoteAssetETH, defaultQuoteAsset, ethUSDPrice, 0, 0);
-
-    AssetCode baseAsset = "UAH";
-
-    auto syndicate = Account{ SecretKey::random(), 0 };
-    auto syndicatePubKey = syndicate.key.getPublicKey();
-    createAccountTestHelper.applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
-    const uint64_t maxIssuanceAmount = 2000 * ONE;
-    const uint64_t preIssuedAmount = maxIssuanceAmount;
-    uint64_t hardCap = 20000 * ONE;
-    uint64 softCap = 10000 * ONE;
-
-    const auto currentTime = testManager->getLedgerManager().getCloseTime();
-    const auto endTime = currentTime + 1000;
-    uint64_t xaauUSDPrice;
-    uint64_t xaauBTCPrice;
-    uint64_t xaauETHPrice;
-    bigDivide(xaauUSDPrice, hardCap, ONE, maxIssuanceAmount, ROUND_UP);
-    bigDivide(xaauBTCPrice, xaauUSDPrice, ONE, btcUSDPrice, ROUND_UP);
-    bigDivide(xaauETHPrice, xaauUSDPrice, ONE, ethUSDPrice, ROUND_UP);
-
-    uint32_t assetTasks = 1, zeroTasks = 0;
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount, 0, &assetTasks, preIssuedAmount);
-    auto assetResult = assetTestHelper.applyManageAssetTx(syndicate, 0, assetCreationRequest);
-    auto saleType = SaleType::FIXED_PRICE;
-    auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, defaultQuoteAsset, currentTime,
-                                                            endTime, softCap, hardCap, "{}", { saleRequestHelper.createSaleQuoteAsset(quoteAssetBTC, xaauBTCPrice),
-                                                                                               saleRequestHelper.createSaleQuoteAsset(quoteAssetETH, xaauETHPrice) },
-                                                                                               maxIssuanceAmount, saleType);
-    auto saleCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-    auto request = ReviewableRequestHelper::Instance()->
-            loadRequest(assetResult.success().requestID,
-                        testManager->getDB(), nullptr);
-    REQUIRE(request);
-    auto reviewResult = assetReviewer.applyReviewRequestTxWithTasks(root, request->
-                                                                                       getRequestID(),
-                                                                               request->getHash(),
-                                                                               request->getRequestType(),
-                                                                               ReviewRequestOpAction::
-                                                                               APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                                                                               &zeroTasks,
-                                                                               &assetTasks);
-
-    auto requestID = saleCreationResult.success().requestID;
-    auto saleReviewResult = saleReviewer.applyReviewRequestTx(root, requestID,
-                                                 ReviewRequestOpAction::APPROVE, "");
-    const auto saleID = saleReviewResult.success().typeExt.saleExtended().saleID;
-
-    SECTION("Happy path")
-    {
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
-
-        checkStateHelper.applyCheckSaleStateTx(root, saleID);
-    }
-    SECTION("Happy path with different precisions")
-    {
-        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(baseAsset, 0);
-        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetBTC, 1);
-        ManageAssetTestHelper(testManager).changeAssetTrailingDigits(quoteAssetETH, 2);
-
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetBTC, bigDivide(maxIssuanceAmount/2, xaauBTCPrice, ONE, ROUND_UP), xaauBTCPrice, 0);
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAssetETH, bigDivide(maxIssuanceAmount/2, xaauETHPrice, ONE, ROUND_UP), xaauETHPrice, 0);
-
-        checkStateHelper.applyCheckSaleStateTx(root, saleID);
-    }
-}
 
 TEST_CASE("Sale", "[tx][sale]")
 {
@@ -309,13 +61,29 @@ TEST_CASE("Sale", "[tx][sale]")
     auto root = Account{ getRoot(), Salt(0) };
 
     const AssetCode& baseAsset = testSet.baseAsset;
+    uint64_t  baseType = 1;
     const AssetCode& quoteAsset = testSet.quoteAsset;
+    uint64_t quoteType = 2;
     const uint64_t precision = AssetFrame::getMinimumAmountFromTrailingDigits(testSet.trailingDigitsCount);
     const uint64_t maxNonDividedAmount = INT64_MAX - (INT64_MAX % precision);
 
     uint32_t zeroTasks = 0;
 
+    CreateAccountTestHelper createAccountTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+    SaleRequestHelper saleRequestHelper(testManager);
+    IssuanceRequestHelper issuanceHelper(testManager);
+    CheckSaleStateHelper checkStateHelper(testManager);
+    ManageSaleTestHelper manageSaleTestHelper(testManager);
+    ReviewUpdateSaleDetailsRequestTestHelper reviewUpdateSaleDetailsRequestTestHelper(testManager);
+    CreateAccountTestHelper accountTestHelper(testManager);
+    SetFeesTestHelper setFeesTestHelper(testManager);
+    auto saleReviewer = ReviewSaleRequestHelper(testManager);
+    auto assetTestHelper = ManageAssetTestHelper(testManager);
+    ParticipateInSaleTestHelper participationHelper(testManager);
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+
     longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
     manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
@@ -333,31 +101,41 @@ TEST_CASE("Sale", "[tx][sale]")
     manageKeyValueHelper.setKey(saleUpdateKey)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
-    auto assetTestHelper = ManageAssetTestHelper(testManager);
     auto assetCreationRequest = assetTestHelper.createAssetCreationRequest(quoteAsset, root.key.getPublicKey(), "{}", maxNonDividedAmount,
                                                                            uint32_t(AssetPolicy::BASE_ASSET), nullptr, 0, testSet.trailingDigitsCount);
     assetTestHelper.applyManageAssetTx(root, 0, assetCreationRequest);
 
-    CreateAccountTestHelper createAccountTestHelper(testManager);
-    SaleRequestHelper saleRequestHelper(testManager);
-    IssuanceRequestHelper issuanceHelper(testManager);
-    CheckSaleStateHelper checkStateHelper(testManager);
-    ManageSaleTestHelper manageSaleTestHelper(testManager);
-    ReviewUpdateSaleDetailsRequestTestHelper reviewUpdateSaleDetailsRequestTestHelper(testManager);
-    CreateAccountTestHelper accountTestHelper(testManager);
-    SetFeesTestHelper setFeesTestHelper(testManager);
-    auto saleReviewer = ReviewSaleRequestHelper(testManager);
-    ParticipateInSaleTestHelper participationHelper(testManager);
+    // create syndicate role
+    AccountRuleResource baseAssetResource(LedgerEntryType::ASSET);
+    baseAssetResource.asset().assetType = baseType;
+    baseAssetResource.asset().assetCode = baseAsset;
+
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+            baseAssetResource, AccountRuleAction::ANY, false);
+    auto baseAssetOwnerRuleID = manageAccountRuleTestHelper.applyTx(root,
+            ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            "{}", {baseAssetOwnerRuleID});
+    auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root,
+            createSyndicateRoleOp).success().roleID;
+
+    // basic account builder
+    auto createAccountBuilder = CreateAccountTestBuilder()
+            .setSource(root);
 
     auto syndicate = Account{ SecretKey::random(), 0 };
     auto syndicatePubKey = syndicate.key.getPublicKey();
-
-    CreateAccountTestHelper(testManager).applyCreateAccountTx(root, syndicatePubKey, AccountType::SYNDICATE);
+    createAccountTestHelper.applyTx(createAccountBuilder
+                                            .setToPublicKey(syndicatePubKey)
+                                            .addBasicSigner()
+                                            .setRoleID(1));
     // TODO: for now we need to keep maxIssuance = preIssuance to allow sale creation
     const uint64_t maxIssuanceAmount = 6000 * ONE;
     const uint64_t preIssuedAmount = maxIssuanceAmount;
-    assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset, syndicate.key.getPublicKey(), "{}",
-                                                                      maxIssuanceAmount, 0, nullptr, preIssuedAmount, testSet.trailingDigitsCount);
+    assetCreationRequest = assetTestHelper.createAssetCreationRequest(baseAsset,
+            syndicate.key.getPublicKey(), "{}", maxIssuanceAmount, 0, nullptr,
+            preIssuedAmount, testSet.trailingDigitsCount);
     assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
     const uint64_t price = 2 * ONE;
     auto hardCap = static_cast<const uint64_t>(bigDivide(preIssuedAmount / 2, price, ONE, ROUND_DOWN));
@@ -371,124 +149,6 @@ TEST_CASE("Sale", "[tx][sale]")
                                                             requiredBaseAssetForHardCap);
 
     uint32_t issuanceTasks = 0;
-    SECTION("Create sale request with tasks and cancel")
-    {
-        uint32_t allTasks = 1;
-        auto result = saleRequestHelper.applyCreateSaleRequest(syndicate, 0,
-                                                               saleRequest, &allTasks);
-        auto requestID = result.success().requestID;
-
-        SECTION("Success cancel sale request")
-        {
-            saleRequestHelper.applyCancelSaleRequest(syndicate, requestID);
-
-            SECTION("Already canceled")
-            {
-                saleRequestHelper.applyCancelSaleRequest(syndicate, requestID,
-                      CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
-            }
-        }
-
-        auto newSyndicate = Account{ SecretKey::random(), 0 };
-        auto newSyndicatePubKey = newSyndicate.key.getPublicKey();
-
-        auto createAccountTestBuilder = CreateAccountTestBuilder()
-                .setSource(root)
-                .setToPublicKey(newSyndicatePubKey)
-                .setType(AccountType::SYNDICATE)
-                .setRecovery(SecretKey::random().getPublicKey());
-
-        auto createAccountHelper = CreateAccountTestHelper(testManager);
-        createAccountHelper.applyTx(createAccountTestBuilder);
-
-        SECTION("Other user cannot cancel request")
-        {
-            saleRequestHelper.applyCancelSaleRequest(newSyndicate, requestID,
-                CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
-        }
-
-        SECTION("Request id cannot be zero")
-        {
-            saleRequestHelper.applyCancelSaleRequest(newSyndicate, 0,
-                CancelSaleCreationRequestResultCode::REQUEST_ID_INVALID);
-        }
-    }
-
-    SECTION("Non zero balance on sale close"){
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
-        LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
-        EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
-
-        uint64_t quotePreIssued(0);
-        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
-        quotePreIssued += hardCap + ONE;
-        IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
-
-        saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
-        REQUIRE(sales.size() == 1);
-        const auto saleID = sales[0]->getID();
-
-
-        auto ownBalance = BalanceHelperLegacy::Instance()->loadBalance(syndicatePubKey, baseAsset, testManager->getDB(),
-                                                                 nullptr);
-        IssuanceRequestHelper(testManager).applyCreateIssuanceRequest(syndicate, baseAsset, 10*ONE, ownBalance->getBalanceID(),
-                                                                      syndicate.key.getStrKeyPublic(), &issuanceTasks,
-                                                                      CreateIssuanceRequestResultCode::SUCCESS);
-
-        const int numberOfParticipants = 10;
-        const uint64_t quoteAmount = softCap / numberOfParticipants;
-        uint64_t feeToPay(0);
-        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
-        const int64_t timeStep = (endTime - currentTime) / numberOfParticipants;
-        for (int i = 0; i < numberOfParticipants - 1; i++)
-        {
-            participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAmount, price, feeToPay);
-            testManager->advanceToTime(testManager->getLedgerManager().getCloseTime() + timeStep);
-            checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-        }
-
-        participantsFeeFrame->calculatePercentFee(quoteAmount, feeToPay, ROUND_UP, 1);
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, quoteAmount, price, feeToPay);
-        testManager->advanceToTime(endTime + 1);
-        checkStateHelper.applyCheckSaleStateTx(root, saleID);
-    }
-
-    SECTION("Simple happy path for test fee")
-    {
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
-                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
-        setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE,
-                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
-        setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
-                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
-        setFeesTestHelper.applySetFeesTx(root, &fee, false);
-
-        saleRequest.hardCap = 200 * ONE;
-        saleRequest.softCap = 100 * ONE;
-
-        auto syndicateAccountFrame = std::make_shared<AccountFrame>(syndicatePubKey);
-        auto syndicateFee = FeeHelper::Instance()->loadForAccount(FeeType::CAPITAL_DEPLOYMENT_FEE,
-                quoteAsset, FeeFrame::SUBTYPE_ANY, syndicateAccountFrame, saleRequest.hardCap, db);
-        uint64_t feeToPayBySyndicate = 0;
-        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP, 1));
-
-        uint64_t feeToPay(2 * ONE);
-        auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-        auto saleID = result.success().typeExt.saleExtended().saleID;
-        participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay);
-
-        checkStateHelper.applyCheckSaleStateTx(root, saleID);
-
-        auto commissionBalance = BalanceHelperLegacy::Instance()->loadBalance(app.getCommissionID(),  quoteAsset, db, nullptr);
-        REQUIRE(!!commissionBalance);
-        REQUIRE(commissionBalance->getAmount() == feeToPay + feeToPayBySyndicate);
-    }
 
     SECTION("Happy path")
     {
@@ -559,7 +219,7 @@ TEST_CASE("Sale", "[tx][sale]")
             auto createSecondSaleRequestResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
             auto createThirdSaleRequestResult =
                     saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                            CreateSaleCreationRequestResultCode::INSUFFICIENT_PREISSUED);
+                            CreateSaleCreationRequestResultCode::INSUFFICIENT_MAX_ISSUANCE);
 
             sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
             REQUIRE(sales.size() == 2);
@@ -571,7 +231,7 @@ TEST_CASE("Sale", "[tx][sale]")
         SECTION("Try to cancel sale offer as regular one")
         {
             auto account = Account{ SecretKey::random(), 0 };
-            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), AccountType::NOT_VERIFIED);
+            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), 1);
             uint64_t quoteAssetAmount = hardCap / 2;
             uint64_t feeToPay(0);
             participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
@@ -660,7 +320,8 @@ TEST_CASE("Sale", "[tx][sale]")
 
                 SECTION("Sale not found") {
                     manageSaleTestHelper.applyManageSaleTx(syndicate, 42, manageSaleData,
-                                                           ManageSaleResultCode::SALE_NOT_FOUND);
+                                                           ManageSaleResultCode::SALE_NOT_FOUND,
+                                                           OperationResultCode::opNO_ENTRY);
                 }
 
                 SECTION("Request to update not found") {
@@ -680,7 +341,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                                            ReviewRequestOpAction::REJECT, "because",
                                                                                            ReviewRequestResultCode::SUCCESS);
                     manageSaleData.updateSaleDetailsData().requestID = requestID;
-                    manageSaleData.updateSaleDetailsData().newDetails = "{\n \"a\": \"updated string\" \n}";
+                    manageSaleData.updateSaleDetailsData().creatorDetails = "{\n \"a\": \"updated string\" \n}";
                     manageSaleData.updateSaleDetailsData().allTasks = nullptr;
                     manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
                 }
@@ -698,229 +359,19 @@ TEST_CASE("Sale", "[tx][sale]")
         }
     }
 
-    SECTION("Create sale with predefined required base asset amount for hard cap") {
-        auto basicSaleType = SaleType::BASIC_SALE;
-        SECTION("Insufficient preissued") {
-            auto requiredBaseAssetForHardCap = maxIssuanceAmount + (5 * ONE);
-            hardCap = static_cast<const uint64_t>(bigDivide(requiredBaseAssetForHardCap, price, ONE, ROUND_DOWN));
-            softCap = hardCap / 2;
-            saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, currentTime,
-                                                              endTime, softCap, hardCap, "{}",
-                                                              { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
-                                                              requiredBaseAssetForHardCap);
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-            saleReviewer.applyReviewRequestTx(root, requestCreationResult.success().requestID,
-                                              ReviewRequestOpAction::APPROVE, "",
-                                              ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP);
-        }
-        SECTION("Success") {
-            auto requiredBaseAssetForHardCap = maxIssuanceAmount - (5 * ONE);
-            hardCap = static_cast<const uint64_t>(bigDivide(requiredBaseAssetForHardCap, price, ONE, ROUND_DOWN));
-            softCap = hardCap / 2;
-            saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, currentTime,
-                                                              endTime, softCap, hardCap, "{}",
-                                                              { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
-                                                              requiredBaseAssetForHardCap);
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-            REQUIRE(requestCreationResult.success().fulfilled);
-        }
-    }
-
-    SECTION("Create SaleCreationRequest")
-    {
-        SECTION("Try to create sale with zero price")
-        {
-            saleRequest.quoteAssets[0].price = 0;
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                                                                                  CreateSaleCreationRequestResultCode::INVALID_PRICE);
-        }
-        SECTION("Try to create sale that's ends before begins")
-        {
-            saleRequest.endTime = saleRequest.startTime;
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                                                                                  CreateSaleCreationRequestResultCode::START_END_INVALID);
-        }
-        SECTION("Try to create sale with hardCap less than softCap")
-        {
-            saleRequest.hardCap = saleRequest.softCap - 1;
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                                                                                  CreateSaleCreationRequestResultCode::INVALID_CAP);
-        }
-        SECTION("Try to update not existent request")
-        {
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 42, saleRequest, nullptr,
-                                                                                  CreateSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
-        }
-        SECTION("Base asset not found")
-        {
-            saleRequest.baseAsset = "GSC";
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                                                                                  CreateSaleCreationRequestResultCode::BASE_ASSET_OR_ASSET_REQUEST_NOT_FOUND);
-        }
-        SECTION("Quote asset not found")
-        {
-            saleRequest.quoteAssets[0].quoteAsset = "GSC";
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                                                                                  CreateSaleCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND);
-        }
-        SECTION("Try to create request that's already exists")
-        {
-            auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-            requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-        }
-        SECTION("Trying to create sale with boundary start time and end time")
-        {
-            saleRequest.startTime = 0;
-            saleRequest.endTime = INT64_MAX;
-            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-        }
-    }
-
-    SECTION("Review SaleCreationRequest with tasks")
-    {
-        uint32_t allTasks = 1;
-        auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, &allTasks);
-        auto requestID = requestCreationResult.success().requestID;
-
-        SECTION("Check new review sale request result")
-        {
-            uint32_t toAdd = 0, toRemove = 1;
-            auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTxWithTasks(root, requestID,
-                                                                             ReviewRequestOpAction::APPROVE, "",
-                                                                             ReviewRequestResultCode::SUCCESS,
-                                                                             &toAdd, &toRemove);
-            REQUIRE(reviewSaleRequestResult.success().fulfilled);
-            REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
-                    ReviewableRequestType::SALE);
-            REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
-        }
-        SECTION("Max issuance or preissued amount is less then hard cap")
-        {
-            const AssetCode asset = "GSC";
-
-            // Create asset creation request with max issuance 2000 * ONE
-            assetCreationRequest = assetTestHelper.createAssetCreationRequest(asset, syndicatePubKey, "{}",
-                                                                              900*ONE, 0,
-                                                                              nullptr,
-                                                                              500*ONE);
-            auto assetRequestCreationResult = assetTestHelper.applyManageAssetTx(syndicate, 0, assetCreationRequest);
-            auto assetRequestID = assetRequestCreationResult.success().requestID;
-
-            // Create sale creation request with hardCap 1000 * ONE
-            saleRequest = saleRequestHelper.createSaleRequest(asset, quoteAsset, currentTime, currentTime + 1000, softCap, hardCap, "{}",
-            { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)}, preIssuedAmount*2);
-            auto saleRequestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-            auto saleRequestID = saleRequestCreationResult.success().requestID;
-
-            SECTION("Hard cap will exceed max issuance")
-            {
-                //Try to approve sale creation request
-                saleReviewer.applyReviewRequestTx(root, saleRequestID, ReviewRequestOpAction::APPROVE, "",
-                                                  ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP);
-            }
-            SECTION("Preissued amount of base asset is not enough for hard cap")
-            {
-                //Try to approve sale creation request
-                saleReviewer.applyReviewRequestTx(root, saleRequestID, ReviewRequestOpAction::APPROVE, "",
-                                                  ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP);
-            }
-        }
-    }
-    SECTION("Try to steal token by creating sale for stranger asset")
-    {
-        uint32_t tasks = 1, zeroTasks = 0;
-        auto ownerSyndicate = Account{ SecretKey::random(), 0 };
-        auto ownerSyndicatePubKey = ownerSyndicate.key.getPublicKey();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, ownerSyndicatePubKey, AccountType::SYNDICATE);
-
-        auto thiefSyndicate = Account{ SecretKey::random(), 0 };
-        auto thiefSyndicatePubKey = thiefSyndicate.key.getPublicKey();
-        CreateAccountTestHelper(testManager).applyCreateAccountTx(root, thiefSyndicatePubKey, AccountType::SYNDICATE);
-
-        const AssetCode asset = "GSC";
-        const uint64_t assetMaxIssuanceAmount = 2000 * ONE;
-        const uint64_t assetPreIssuedAmount = 1000 * ONE;
-
-        // Owner creates asset creation request
-        assetCreationRequest = assetTestHelper.createAssetCreationRequest(asset, ownerSyndicatePubKey, "{}",
-                                                                          assetMaxIssuanceAmount,0,
-                                                                          &tasks,
-                                                                          assetPreIssuedAmount);
-        auto ownerRequestCreationResult = assetTestHelper.applyManageAssetTx(ownerSyndicate, 0, assetCreationRequest);
-        auto ownerAssetRequestID = ownerRequestCreationResult.success().requestID;
-
-        // Thief creates asset creation request
-        assetCreationRequest = assetTestHelper.createAssetCreationRequest(asset, thiefSyndicatePubKey, "{}",
-                                                                          assetMaxIssuanceAmount,0,
-                                                                          &tasks,
-                                                                          assetPreIssuedAmount);
-        auto thiefRequestCreationResult = assetTestHelper.applyManageAssetTx(thiefSyndicate, 0, assetCreationRequest);
-        auto thiefAssetRequestID = thiefRequestCreationResult.success().requestID;
-
-        // Thief creates sale creation request
-        auto thiefSaleRequest = SaleRequestHelper::
-                createSaleRequest(asset, quoteAsset, currentTime, currentTime + 1000,
-                                         softCap, hardCap, "{}",
-                                         {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
-                                         assetMaxIssuanceAmount);
-
-        auto thiefSaleRequestCreationResult = saleRequestHelper.applyCreateSaleRequest(thiefSyndicate, 0, thiefSaleRequest,
-                                                                                        &tasks);
-        auto thiefSaleRequestID = thiefSaleRequestCreationResult.success().requestID;
-
-        auto assetReviewer = ReviewAssetRequestHelper(testManager);
-
-        // Reviewer approves owner's asset creation request
-        auto request = ReviewableRequestHelper::Instance()->
-                loadRequest(ownerAssetRequestID,
-                            testManager->getDB(), nullptr);
-        REQUIRE(request);
-        auto reviewResult = assetReviewer.applyReviewRequestTxWithTasks(root, request->
-                                                                                           getRequestID(),
-                                                                                   request->getHash(),
-                                                                                   request->getRequestType(),
-                                                                                   ReviewRequestOpAction::
-                                                                                   APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                                                                                   &zeroTasks,
-                                                                                   &tasks);
-
-        // Reviewer approves thief's sale creation request
-        auto reviewSaleRequestResult = saleReviewer.applyReviewRequestTxWithTasks(root, thiefSaleRequestID,
-                                                                                  ReviewRequestOpAction::APPROVE, "",
-                                                                                  ReviewRequestResultCode::BASE_ASSET_DOES_NOT_EXISTS,
-                                                                                  &zeroTasks, &tasks);
-    }
-    SECTION("Try to create sale, which is already started")
-    {
-        uint32_t allTasks = 1, toAdd = 0, toRemove = 1;
-        testManager->advanceToTime(2000);
-        saleRequest.endTime = testManager->getLedgerManager().getCloseTime() + 1000;
-        auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, &allTasks);
-        auto requestID = requestCreationResult.success().requestID;
-        saleReviewer.applyReviewRequestTxWithTasks(root, requestID, ReviewRequestOpAction::APPROVE, "",
-                ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
-    }
-    SECTION("Try to create sale, which is already ended")
-    {
-        testManager->advanceToTime(2000);
-        auto requestCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
-                                                                              CreateSaleCreationRequestResultCode::INVALID_END);
-    }
-
     SECTION("Participation")
     {
         ParticipateInSaleTestHelper participateHelper(testManager);
 
         // create sale owner
         Account owner = Account{ SecretKey::random(), Salt(0) };
-        createAccountTestHelper.applyCreateAccountTx(root, owner.key.getPublicKey(), AccountType::SYNDICATE);
+        createAccountTestHelper.applyCreateAccountTx(root, owner.key.getPublicKey(), 1);
 
         // create base asset
         const AssetCode baseAsset = "ETH";
         uint64_t maxIssuanceAmount = 10 * ONE;
-        uint32 requiresKYCPolicy = static_cast<uint32>(AssetPolicy::REQUIRES_KYC);
         auto baseAssetRequest = assetTestHelper.createAssetCreationRequest(baseAsset, owner.key.getPublicKey(), "{}",
-                                                                           maxIssuanceAmount, requiresKYCPolicy,
+                                                                           maxIssuanceAmount, 0,
                                                                            nullptr,
                                                                            maxIssuanceAmount);
         assetTestHelper.createApproveRequest(root, owner, baseAssetRequest);
@@ -928,7 +379,7 @@ TEST_CASE("Sale", "[tx][sale]")
         // create participant
         Account participant = Account{ SecretKey::random(), Salt(0) };
         AccountID participantID = participant.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, participantID, AccountType::GENERAL);
+        createAccountTestHelper.applyCreateAccountTx(root, participantID, 1);
 
         // create base balance for participant:
         auto manageBalanceRes = ManageBalanceTestHelper(testManager).applyManageBalanceTx(participant, participantID, baseAsset);
@@ -1016,13 +467,17 @@ TEST_CASE("Sale", "[tx][sale]")
             {
                 BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
                 manageOffer.baseBalance = nonExistingBalance;
-                participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::BALANCE_NOT_FOUND);
+                participateHelper.applyManageOffer(participant, manageOffer,
+                                                   ManageOfferResultCode::BALANCE_NOT_FOUND,
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("quote balance doesn't exist")
             {
                 BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
                 manageOffer.quoteBalance = nonExistingBalance;
-                participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::BALANCE_NOT_FOUND);
+                participateHelper.applyManageOffer(participant, manageOffer,
+                                                   ManageOfferResultCode::BALANCE_NOT_FOUND,
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("base and quote balances mixed up")
             {
@@ -1034,7 +489,9 @@ TEST_CASE("Sale", "[tx][sale]")
             {
                 uint64_t nonExistingSaleID = saleID + 1;
                 manageOffer.orderBookID = nonExistingSaleID;
-                participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS);
+                participateHelper.applyManageOffer(participant, manageOffer,
+                                                   ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS,
+                                                   OperationResultCode::opNO_ENTRY);
             }
             SECTION("base and quote balances are in the same asset")
             {
@@ -1076,7 +533,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                        ManageOfferResultCode::ORDER_VIOLATES_HARD_CAP);
                 }
             }
-            SECTION("try to buy asset which requires KYC being NOT_VERIFIED")
+            /*SECTION("try to buy asset which requires KYC being NOT_VERIFIED")
             {
                 Account notVerified = Account{SecretKey::random(), Salt(0)};
                 AccountID notVerifiedID = notVerified.key.getPublicKey();
@@ -1095,7 +552,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 manageOffer.quoteBalance = quoteBalanceID;
 
                 participateHelper.applyManageOffer(notVerified, manageOffer, ManageOfferResultCode::REQUIRES_KYC);
-            }
+            }*/
             SECTION("delete participation")
             {
                 // create sale participation:
@@ -1113,7 +570,8 @@ TEST_CASE("Sale", "[tx][sale]")
                 {
                     //switch to non-existing offerID
                     manageOffer.offerID++;
-                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::NOT_FOUND);
+                    participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::NOT_FOUND,
+                                                       OperationResultCode::opNO_ENTRY);
                 }
                 SECTION("try to delete from non-existing orderBook")
                 {
@@ -1165,7 +623,7 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                                           &toAdd, &toRemove);
                 REQUIRE(reviewSaleRequestResult.success().fulfilled);
                 REQUIRE(reviewSaleRequestResult.success().typeExt.requestType() ==
-                        ReviewableRequestType::SALE);
+                        ReviewableRequestType::CREATE_SALE);
                 REQUIRE(reviewSaleRequestResult.success().typeExt.saleExtended().saleID != 0);
             }
 
@@ -1179,3 +637,4 @@ TEST_CASE("Sale", "[tx][sale]")
         }
     }
 }
+

@@ -14,7 +14,8 @@ namespace stellar {
             TransactionFramePtr createManageSaleTx(Account &source, uint64_t saleID, ManageSaleOp::_data_t data);
 
             ManageSaleResult applyManageSaleTx(Account &source, uint64_t saleID, ManageSaleOp::_data_t data,
-                                               ManageSaleResultCode expectedResultCode = ManageSaleResultCode::SUCCESS);
+                                               ManageSaleResultCode expectedResultCode = ManageSaleResultCode::SUCCESS,
+                                               OperationResultCode opExpectedCode = OperationResultCode::opINNER);
         };
     }
 }

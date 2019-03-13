@@ -47,7 +47,7 @@ CreateASwapReviewableRequestTestHelper::createASwapRequestTx(
 CreateASwapRequestResult
 CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
         txtest::Account &source, CreateASwapRequestOp &createASwapRequestOp,
-        CreateASwapRequestResultCode expectedResult)
+        CreateASwapRequestResultCode expectedResult, OperationResultCode expectedOpRes)
 {
     Database& db = mTestManager->getDB();
 
@@ -63,6 +63,13 @@ CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(expectedOpRes == opResult.code());
+
+    if (expectedOpRes != OperationResultCode::opINNER)
+    {
+        return CreateASwapRequestResult();
+    }
 
     auto actualResult = CreateASwapRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResult == expectedResult);

@@ -1,5 +1,5 @@
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/ManageInvoiceRequestOpFrame.h>
+#include <transactions/deprecated/ManageInvoiceRequestOpFrame.h>
 #include <lib/catch.hpp>
 #include "ManageInvoiceRequestTestHelper.h"
 

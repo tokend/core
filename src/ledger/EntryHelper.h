@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-#include "ledger/EntryHelperLegacy.h"
+#include "EntryFrame.h"
 
 namespace stellar
 {
@@ -25,6 +24,7 @@ class EntryHelper
     virtual uint64_t countObjects() = 0;
 
     virtual Database& getDatabase() = 0;
+    virtual LedgerDelta* getLedgerDelta() = 0;
 
     virtual void flushCachedEntry(LedgerKey const& key);
     virtual bool cachedEntryExists(LedgerKey const& key);
@@ -32,7 +32,9 @@ class EntryHelper
   protected:
     virtual std::shared_ptr<LedgerEntry const> getCachedEntry(LedgerKey const& key);
     virtual void putCachedEntry(LedgerKey const& key,
-                        std::shared_ptr<LedgerEntry const> p);
+                                std::shared_ptr<LedgerEntry const> p);
+
+    virtual std::string obtainSqlIDsString(std::vector<uint64_t> ids);
 };
 
 } // namespace stellar

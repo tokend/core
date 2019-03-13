@@ -1,9 +1,8 @@
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAssetPairTestHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/test/test_helper/ManageAccountTestHelper.h>
 #include "main/test.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
@@ -36,7 +35,6 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
     auto reviewWithdrawHelper = ReviewWithdrawRequestHelper(testManager);
     auto withdrawRequestHelper = WithdrawRequestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
-    auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     auto manageKVHelper = ManageKeyValueTestHelper(testManager);
 
     manageKVHelper.assetOpWithoutReview();
@@ -64,7 +62,7 @@ TEST_CASE("KV limits", "[tx][withdraw][limits][manage_key_value]")
 
     // create account which will withdraw
     auto withdrawerKP = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), 1);
     auto withdrawer = Account{ withdrawerKP, Salt(0) };
     auto withdrawerBalance = BalanceHelperLegacy::Instance()->
             loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);

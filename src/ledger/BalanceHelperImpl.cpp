@@ -1,8 +1,8 @@
 #include "BalanceHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AssetHelper.h"
-#include <memory>
+#include "database/Database.h"
+#include "AssetHelper.h"
 
 using namespace soci;
 using namespace std;
@@ -75,7 +75,8 @@ BalanceHelperImpl::storeDelete(LedgerKey const& key)
 bool
 BalanceHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
+    // if (cached entry == nullptr) entry does not exists
+    if (cachedEntryExists(key) && getCachedEntry(key))
     {
         return true;
     }
@@ -221,6 +222,20 @@ BalanceHelperImpl::countObjects()
     uint64_t count = 0;
     getDatabase().getSession() << "SELECT COUNT(*) FROM balance;", into(count);
     return count;
+}
+
+BalanceFrame::pointer
+BalanceHelperImpl::mustLoadBalance(BalanceID balanceID)
+{
+    auto result = loadBalance(balanceID);
+    if (result)
+    {
+        return result;
+    }
+
+    CLOG(ERROR, Logging::ENTRY_LOGGER) << "Expected balance to exist: "
+                                       << BalanceKeyUtils::toStrKey(balanceID);
+    throw std::runtime_error("Expected balance to exist");
 }
 
 BalanceFrame::pointer
@@ -495,6 +510,12 @@ Database&
 BalanceHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
+}
+
+LedgerDelta*
+BalanceHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
 }
 
 string

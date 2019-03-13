@@ -69,9 +69,9 @@ TEST_CASE("standalone", "[herder]")
         {
             // create accounts
             TransactionFramePtr txFrameA1 = createCreateAccountTx(
-                networkID, root, a1, rootSeq++, AccountType::GENERAL);
+                networkID, root, a1, rootSeq++);
             TransactionFramePtr txFrameA2 = createCreateAccountTx(
-                networkID, root, b1, rootSeq++, AccountType::GENERAL);
+                networkID, root, b1, rootSeq++);
 
             REQUIRE(app->getHerder().recvTransaction(txFrameA1) ==
                     Herder::TX_STATUS_PENDING);
@@ -198,7 +198,7 @@ TEST_CASE("txset", "[herder]")
             {
                 transactions[i].emplace_back(
                     createCreateAccountTx(networkID, sourceAccount, accounts[i],
-                                          sourceSeq++, AccountType::GENERAL));
+                                          sourceSeq++));
             }
             else
             {
@@ -337,15 +337,15 @@ TEST_CASE("surge", "[herder]")
 
     Salt rootSeq = 1;
 
-    applyCreateAccountTx(*app, root, destAccount, rootSeq++, AccountType::GENERAL);
+    applyCreateAccountTx(*app, root, destAccount, rootSeq++);
 
     SecretKey accountB = getAccount("accountB");
-    applyCreateAccountTx(*app, root, accountB, rootSeq++, AccountType::GENERAL);
+    applyCreateAccountTx(*app, root, accountB, rootSeq++);
     Salt accountBSeq = 1;
 
 
     SecretKey accountC = getAccount("accountC");
-    applyCreateAccountTx(*app, root, accountC, rootSeq++, AccountType::GENERAL);
+    applyCreateAccountTx(*app, root, accountC, rootSeq++);
     Salt accountCSeq = 1;
 
     TxSetFramePtr txSet = std::make_shared<TxSetFrame>(
@@ -461,7 +461,7 @@ TEST_CASE("SCP Driver", "[herder]")
             for (int i = 0; i < n; i++)
             {
                 txSet->mTransactions.emplace_back(createCreateAccountTx(
-                    networkID, root, a1, rootSeq++, AccountType::GENERAL));
+                    networkID, root, a1, rootSeq++));
             }
         };
 

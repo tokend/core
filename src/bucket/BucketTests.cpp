@@ -17,7 +17,7 @@
 #include "main/Application.h"
 #include "main/test.h"
 #include "ledger/LedgerTestUtils.h"
-#include "ledger/AccountHelper.h"
+#include "ledger/AccountHelperLegacy.h"
 #include "util/Fs.h"
 #include "util/TmpDir.h"
 #include "xdrpp/autocheck.h"
@@ -875,7 +875,7 @@ TEST_CASE("bucket apply", "[bucket]")
                          << " live entries";
     birth->apply(db);
 
-	auto accountHelper = AccountHelper::Instance();
+	auto accountHelper = AccountHelperLegacy::Instance();
 
     auto count = accountHelper->countObjects(sess);
     REQUIRE(count == live.size() + 4 /* system accounts account */);

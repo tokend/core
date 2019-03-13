@@ -5,18 +5,10 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "ledger/EntryFrame.h"
-#include "ledger/LedgerManager.h"
-#include <functional>
-#include <unordered_map>
-
-namespace soci
-{
-class session;
-}
+#include <util/types.h>
 
 namespace stellar
 {
-class StatementContext;
 
 class AssetFrame : public EntryFrame
 {
@@ -60,6 +52,12 @@ public:
     AssetCode getCode()
     {
         return mAsset.code;
+    }
+
+    uint64_t const
+    getType() const
+    {
+        return mAsset.type;
     }
 
     AccountID const& getOwner() const
@@ -134,16 +132,6 @@ public:
     bool isPolicySet(const AssetPolicy policy) const
     {
         return isSetFlag(mAsset.policies, policy);
-    }
-
-    bool isRequireKYC() const
-    {
-        return isPolicySet(AssetPolicy::REQUIRES_KYC);
-    }
-
-    bool isRequireVerification() const
-    {
-        return isPolicySet(AssetPolicy::REQUIRES_VERIFICATION);
     }
 
     uint64 getMinimumAmount() const;

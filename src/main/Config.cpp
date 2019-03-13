@@ -18,16 +18,13 @@ namespace stellar
 using xdr::operator<;
 
 Config::Config() : NODE_SEED(SecretKey::random()), 
-masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
-commissionID(PubKeyUtils::fromStrKey("GAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHV4")), 
-operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABVCX"))
+masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"))
 {
     // fill in defaults
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<int32_t >(
-            LedgerVersion::EMPTY_VERSION);
+    LEDGER_PROTOCOL_VERSION = static_cast<int32_t>(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING);
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
     OVERLAY_PROTOCOL_VERSION = 5;
 
@@ -73,6 +70,21 @@ operationalID(PubKeyUtils::fromStrKey("GABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     NTP_SERVER = "pool.ntp.org";
     INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE = true;
 
+}
+
+std::vector<PublicKey>
+Config::getWiredKeys(LedgerVersion ledgerVersion) const
+{
+    std::vector<PublicKey> keys;
+    switch (ledgerVersion)
+    {
+        default:
+            keys.emplace_back(PubKeyUtils::fromStrKey("GBA4EX43M25UPV4WIE6RRMQOFTWXZZRIPFAI5VPY6Z2ZVVXVWZ6NEOOB"));
+            keys.emplace_back(PubKeyUtils::fromStrKey("GA5NJM36NXW5UUNTBG47NUGJZ5V7UQJKAEAQH3IHSOXAGGEXSNWLSJAH"));
+            break;
+    }
+
+    return keys;
 }
 
 void
@@ -692,19 +704,6 @@ AssetCode Config::getAssetCode(std::shared_ptr<cpptoml::toml_base> rawValue, con
 void
 Config::validateConfig()
 {
-	auto systemAccounts = getSystemAccounts();
-	for (int i = 0; i < systemAccounts.size(); i++)
-	{
-		for (int j = 0; j < systemAccounts.size(); j++)
-		{
-			if (i == j)
-				continue;
-
-			if (systemAccounts[i] == systemAccounts[j])
-				throw std::invalid_argument("Systems accounts can't have same accountID");
-		}
-	}
-
 	if (BASE_EXCHANGE_NAME.empty())
 	{
 		throw std::invalid_argument("BASE_EXCHANGE_NAME must not be empty");

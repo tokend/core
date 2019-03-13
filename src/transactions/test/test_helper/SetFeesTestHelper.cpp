@@ -37,7 +37,7 @@ namespace stellar {
 
             if (fee) {
                 auto storedFee = FeeHelper::Instance()->loadFee(fee->feeType, fee->asset,
-                                                                fee->accountID.get(), fee->accountType.get(),
+                                                                fee->accountID.get(), fee->accountRole.get(),
                                                                 fee->subtype, fee->lowerBound, fee->upperBound,
                                                                 mTestManager->getDB());
                 if (isDelete)
@@ -51,7 +51,7 @@ namespace stellar {
 
         FeeEntry
         SetFeesTestHelper::createFeeEntry(FeeType type, AssetCode asset, int64_t fixed, int64_t percent,
-                                          AccountID *accountID, AccountType *accountType, int64_t subtype,
+                                          AccountID *accountID, uint64_t* accountType, int64_t subtype,
                                           int64_t lowerBound, int64_t upperBound) {
             FeeEntry fee;
             fee.feeType = type;
@@ -64,7 +64,7 @@ namespace stellar {
                 fee.accountID.activate() = *accountID;
             }
             if (accountType) {
-                fee.accountType.activate() = *accountType;
+                fee.accountRole.activate() = *accountType;
             }
 
             fee.lowerBound = lowerBound;

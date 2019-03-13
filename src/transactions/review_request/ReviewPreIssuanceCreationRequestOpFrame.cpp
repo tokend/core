@@ -19,10 +19,13 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-bool ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
+bool
+ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta,
+													   LedgerManager & ledgerManager,
+													   ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::PRE_ISSUANCE_CREATE) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected PRE_ISSUANCE_CREATE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+	if (request->getRequestType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
+		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CREATE_PRE_ISSUANCE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
 		throw std::invalid_argument("Unexpected request type for review preIssuance creation request");
 	}
 
@@ -46,9 +49,10 @@ bool ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, L
 		throw std::runtime_error("Expected asset for pre issuance request to exist");
 	}
 
-	if (!asset->tryAddAvailableForIssuance(preIssuanceCreationRequest.amount)) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected to be able to add asset availvle for issuance.";
-		throw std::runtime_error("Can not add availalbe for issuance amount");
+	if (!asset->tryAddAvailableForIssuance(preIssuanceCreationRequest.amount))
+	{
+		innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
+		return false;
 	}
 
 	EntryHelperProvider::storeChangeEntry(delta, db, asset->mEntry);
@@ -64,16 +68,9 @@ bool ReviewPreIssuanceCreationRequestOpFrame::handleReject(Application & app, Le
 	return false;
 }
 
-SourceDetails ReviewPreIssuanceCreationRequestOpFrame::getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                                                               int32_t ledgerVersion) const
-{
-    auto allowedSigners = static_cast<int32_t>(SignerType::ASSET_MANAGER);
-
-	return SourceDetails({AccountType::MASTER}, mSourceAccount->getHighThreshold(), allowedSigners);
-}
-
-ReviewPreIssuanceCreationRequestOpFrame::ReviewPreIssuanceCreationRequestOpFrame(Operation const & op, OperationResult & res, TransactionFrame & parentTx) :
-	ReviewRequestOpFrame(op, res, parentTx)
+ReviewPreIssuanceCreationRequestOpFrame::ReviewPreIssuanceCreationRequestOpFrame(
+		Operation const & op, OperationResult & res, TransactionFrame & parentTx)
+		: ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 

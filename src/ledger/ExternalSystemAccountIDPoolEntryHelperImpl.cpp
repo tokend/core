@@ -1,11 +1,8 @@
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperImpl.h"
 #include "LedgerDelta.h"
-#include "crypto/Hex.h"
-#include "crypto/SecretKey.h"
-#include "database/Database.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/StorageHelper.h"
-#include "lib/util/format.h"
+#include "database/Database.h"
 #include "xdrpp/printer.h"
 
 using namespace soci;
@@ -459,5 +456,11 @@ Database&
 ExternalSystemAccountIDPoolEntryHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
+}
+
+LedgerDelta*
+ExternalSystemAccountIDPoolEntryHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
 }
 } // namespace stellar

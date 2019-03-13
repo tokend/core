@@ -4,10 +4,9 @@
 
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAssetPairTestHelper.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/test/test_helper/ManageAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "main/test.h"
@@ -42,14 +41,10 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     auto reviewWithdrawHelper = ReviewWithdrawRequestHelper(testManager);
     auto withdrawRequestHelper = WithdrawRequestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
-    auto manageAccountTestHelper = ManageAccountTestHelper(testManager);
     ManageLimitsTestHelper manageLimitsTestHelper(testManager);
 
     //Default tasks
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
-    manageKeyValueHelper.setKey(key)->setUi32Value(0);
-    manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
     longstring assetCreate = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
     manageKeyValueHelper.setKey(assetCreate)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
@@ -78,7 +73,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
     // create account which will withdraw
     auto withdrawerKP = SecretKey::random();
-    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), AccountType::GENERAL);
+    createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), 1);
     auto withdrawer = Account{ withdrawerKP, Salt(0) };
     auto withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
     REQUIRE(!!withdrawerBalance);
@@ -220,28 +215,11 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
                                                                  CreateWithdrawalRequestResultCode::LOWER_BOUND_NOT_EXCEEDED);
             }
         }
-        SECTION("zero tasks") {
-            longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
-            manageKeyValueHelper.setKey(key)->setUi32Value(0);
-            manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
-            auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                                                                                   nullptr,
-                                                                                   CreateWithdrawalRequestResultCode::WITHDRAWAL_ZERO_TASKS_NOT_ALLOWED);
-        }
         SECTION("successful application")
         {
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
         }
 
-        SECTION("Account with block reason 'WITHDRAWAL' not allowed")
-        {
-            manageAccountTestHelper.applyManageAccount(root, withdrawer.key.getPublicKey(), AccountType::GENERAL,
-                                                       {BlockReasons::WITHDRAWAL}, {});
-            auto createWithdrawRequestTx = withdrawRequestHelper.createWithdrawalRequestTx(withdrawer, withdrawRequest, nullptr);
-            REQUIRE(!testManager->applyCheck(createWithdrawRequestTx));
-            auto opResult = getFirstResultCode(*createWithdrawRequestTx);
-            REQUIRE(opResult == OperationResultCode::opACCOUNT_BLOCKED);
-        }
         SECTION("Try to withdraw zero amount")
         {
             withdrawRequest.amount = 0;
@@ -252,18 +230,18 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             uint64 maxLength = testManager->getApp().getWithdrawalDetailsMaxLength();
             std::string longExternalDetails(maxLength + 1, 'x');
-            withdrawRequest.externalDetails = longExternalDetails;
+            withdrawRequest.creatorDetails = longExternalDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
+                                                             CreateWithdrawalRequestResultCode::INVALID_CREATOR_DETAILS);
         }
 
         SECTION("invalid external details json")
         {
             //missed colon
             std::string invalidExternalDetails = "{ \"key\" \"value\" }";
-            withdrawRequest.externalDetails = invalidExternalDetails;
+            withdrawRequest.creatorDetails = invalidExternalDetails;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::INVALID_EXTERNAL_DETAILS);
+                                                             CreateWithdrawalRequestResultCode::INVALID_CREATOR_DETAILS);
         }
 
         SECTION("try to review with invalid external details")
@@ -285,7 +263,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             reviewWithdraw.action = ReviewRequestOpAction::APPROVE;
             reviewWithdraw.reason = "";
             reviewWithdraw.requestHash = requestFrame->getHash();
-            reviewWithdraw.requestDetails.requestType(ReviewableRequestType::WITHDRAW);
+            reviewWithdraw.requestDetails.requestType(ReviewableRequestType::CREATE_WITHDRAW);
             reviewWithdraw.requestDetails.withdrawal().externalDetails = "{\"key\"}";
 
             TxHelper txHelper(testManager);
@@ -308,14 +286,15 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             BalanceID nonExistingBalance = SecretKey::random().getPublicKey();
             withdrawRequest.balance = nonExistingBalance;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
-                                                             CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND);
+                                                             CreateWithdrawalRequestResultCode::BALANCE_NOT_FOUND,
+                                                             OperationResultCode::opNO_ENTRY);
         }
 
         SECTION("try to withdraw from not my balance")
         {
             //create another account
             auto newAccountKP = SecretKey::random();
-            createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), AccountType::GENERAL);
+            createAccountTestHelper.applyCreateAccountTx(root, newAccountKP.getPublicKey(), 1);
             Account newAccount = Account{newAccountKP, Salt(0)};
 
             withdrawRequestHelper.applyCreateWithdrawRequest(newAccount, withdrawRequest, nullptr,
@@ -352,38 +331,6 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             withdrawRequest.amount = enoughToOverflow;
             withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr,
                                                              CreateWithdrawalRequestResultCode::STATS_OVERFLOW);
-        }
-
-        SECTION("try to review withdrawal request of blocked user") {
-            // successfully create withdraw request
-            auto withdrawResult = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest,
-                                                                              nullptr);
-            auto requestID = withdrawResult.success().requestID;
-
-            // block withdrawer
-            manageAccountTestHelper.applyManageAccount(root, withdrawerKP.getPublicKey(), AccountType::GENERAL,
-                                                       {BlockReasons::SUSPICIOUS_BEHAVIOR}, {});
-
-            // try to review withdrawal request
-            reviewWithdrawHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "",
-                                                      ReviewRequestResultCode::REQUESTOR_IS_BLOCKED);
-
-            // unlock withdrawer
-            manageAccountTestHelper.applyManageAccount(root, withdrawerKP.getPublicKey(), AccountType::GENERAL, {},
-                                                       {BlockReasons::SUSPICIOUS_BEHAVIOR});
-
-            uint32_t toAdd = 0;
-            uint32_t toRemove = 1;
-            auto reviewResult = reviewWithdrawHelper.applyReviewRequestTxWithTasks(root,
-                                                                                   withdrawResult.success().requestID,
-                                                                                   ReviewRequestOpAction::APPROVE,
-                                                                                   "",
-                                                                                   ReviewRequestResultCode::SUCCESS,
-                                                                                   &toAdd,
-                                                                                   &toRemove
-            );
-
-            REQUIRE(reviewResult.success().fulfilled);
         }
 
         SECTION("exceed limits")

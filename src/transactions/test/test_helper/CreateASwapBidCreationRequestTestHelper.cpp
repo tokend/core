@@ -19,13 +19,13 @@ CreateASwapBidCreationRequestHelper::CreateASwapBidCreationRequestHelper(
 
 ASwapBidCreationRequest
 CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
-        BalanceID baseBalance, uint64_t amount, std::string details,
+        BalanceID baseBalance, uint64_t amount, std::string creatorDetails,
         std::vector<ASwapBidQuoteAsset> quoteAssets)
 {
     ASwapBidCreationRequest request;
     request.baseBalance = baseBalance;
     request.amount = amount;
-    request.details = details;
+    request.creatorDetails = creatorDetails;
     request.quoteAssets.clear();
     request.quoteAssets.append(&quoteAssets[0], quoteAssets.size());
 
@@ -47,7 +47,8 @@ CreateASwapBidCreationRequestHelper::createCreateASwapBidCreationRequestTx(
 CreateASwapBidCreationRequestResult
 CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
         Account &source, ASwapBidCreationRequest request,
-        CreateASwapBidCreationRequestResultCode expectedResult)
+        CreateASwapBidCreationRequestResultCode expectedResult,
+        OperationResultCode expectedOpResCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
@@ -63,6 +64,14 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+
+    REQUIRE(expectedOpResCode == opResult.code());
+
+    if (expectedOpResCode != OperationResultCode::opINNER)
+    {
+        return CreateASwapBidCreationRequestResult();
+    }
+
     auto actualResultCode = CreateASwapBidCreationRequestOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResult);

@@ -1,9 +1,8 @@
 #include "AssetHelperImpl.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include <memory>
 #include <xdrpp/marshal.h>
-#include "util/basen.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;
@@ -19,7 +18,7 @@ AssetHelperImpl::AssetHelperImpl(StorageHelper& storageHelper)
     mAssetColumnSelector = "SELECT code, owner, preissued_asset_signer, "
                            "details, max_issuance_amount, "
                            "available_for_issueance, issued, pending_issuance, "
-                           "policies, trailing_digits, lastmodified, version "
+                           "policies, type, trailing_digits, lastmodified, version "
                            "FROM asset";
 }
 
@@ -40,6 +39,7 @@ AssetHelperImpl::dropAll()
            "issued                  NUMERIC(23,0) NOT NULL CHECK (issued >= 0),"
            "pending_issuance        NUMERIC(23,0) NOT NULL CHECK (issued >= 0),"
            "policies                INT           NOT NULL, "
+           "type                    BIGINT        NOT NULL, "
            "lastmodified            INT           NOT NULL, "
            "version                 INT           NOT NULL, "
            "PRIMARY KEY (code)"
@@ -145,10 +145,10 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     {
         sql = "INSERT INTO asset (code, owner, preissued_asset_signer, details,"
               "                   max_issuance_amount, available_for_issueance,"
-              "                   issued, pending_issuance, policies,"
+              "                   issued, pending_issuance, policies, type, "
               "                   trailing_digits, lastmodified, version) "
               "VALUES (:code, :owner, :signer, :details, :max, :available, "
-              "        :issued, :pending, :policies, :td, :lm, :v)";
+              "        :issued, :pending, :policies, :t, :td, :lm, :v)";
     }
     else
     {
@@ -156,7 +156,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
               "preissued_asset_signer = :signer, details = :details, "
               "max_issuance_amount = :max, "
               "available_for_issueance = :available, issued = :issued, "
-              "pending_issuance = :pending, policies = :policies, "
+              "pending_issuance = :pending, policies = :policies, type = :t, "
               "trailing_digits = :td, lastmodified = :lm, version = :v "
               "WHERE code = :code";
     }
@@ -174,6 +174,7 @@ AssetHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
     st.exchange(use(assetEntry.issued, "issued"));
     st.exchange(use(assetEntry.pendingIssuance, "pending"));
     st.exchange(use(assetEntry.policies, "policies"));
+    st.exchange(use(assetEntry.type, "t"));
     st.exchange(use(assetFrame->mEntry.lastModifiedLedgerSeq, "lm"));
     st.exchange(use(trailingDigits, "td"));
     st.exchange(use(version, "v"));
@@ -352,6 +353,7 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
     st.exchange(into(oe.issued));
     st.exchange(into(oe.pendingIssuance));
     st.exchange(into(oe.policies));
+    st.exchange(into(oe.type));
     st.exchange(into(trailingDigits));
     st.exchange(into(le.lastModifiedLedgerSeq));
     st.exchange(into(version));
@@ -377,8 +379,8 @@ AssetHelperImpl::doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_
     return amount % precision == 0;
 }
 
-void
-AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
+std::vector<AssetFrame::pointer>
+AssetHelperImpl::loadBaseAssets()
 {
     std::string sql = mAssetColumnSelector;
     sql += " WHERE policies & :bp = :bp "
@@ -388,16 +390,25 @@ AssetHelperImpl::loadBaseAssets(std::vector<AssetFrame::pointer> &retAssets)
     prep.statement().exchange(use(baseAssetPolicy, "bp"));
 
     auto timer = getDatabase().getSelectTimer("asset");
+    std::vector<AssetFrame::pointer> retAssets;
     loadAssets(prep, [&retAssets](LedgerEntry const& asset)
     {
         retAssets.push_back(make_shared<AssetFrame>(asset));
     });
+
+    return retAssets;
 }
 
 Database&
 AssetHelperImpl::getDatabase()
 {
     return mStorageHelper.getDatabase();
+}
+
+LedgerDelta*
+AssetHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
 }
 } // namespace stellar
 

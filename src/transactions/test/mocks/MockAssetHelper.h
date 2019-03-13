@@ -22,6 +22,7 @@ public:
     MOCK_METHOD1(storeLoad, EntryFrame::pointer(LedgerKey const& ledgerKey));
     MOCK_METHOD0(countObjects, uint64_t());
     MOCK_METHOD0(getDatabase, Database&());
+    MOCK_METHOD0(getLedgerDelta, LedgerDelta*());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
     MOCK_METHOD1(loadAsset,
@@ -33,7 +34,7 @@ public:
     MOCK_METHOD2(loadAssets, void(StatementContext& prep,
             std::function<void(LedgerEntry const&)> assetProcessor));
     MOCK_METHOD0(loadStatsAsset, AssetFrame::pointer());
-    MOCK_METHOD1(loadBaseAssets, void(std::vector<AssetFrame::pointer>&));
+    MOCK_METHOD0(loadBaseAssets, std::vector<AssetFrame::pointer>());
     MOCK_METHOD0(addTrailingDigits, void());
     MOCK_METHOD2(doesAmountFitAssetPrecision, bool(const AssetCode& assetCode, uint64_t amount));
 };

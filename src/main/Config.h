@@ -32,7 +32,8 @@ class Config : public std::enable_shared_from_this<Config>
   public:
     typedef std::shared_ptr<Config> pointer;
 
-	void validateConfig();
+    std::vector<PublicKey> getWiredKeys(LedgerVersion ledgerVersion) const;
+    void validateConfig();
 
     enum TestDbMode
     {
@@ -135,8 +136,7 @@ class Config : public std::enable_shared_from_this<Config>
     std::string NETWORK_PASSPHRASE; // identifier for the network
 
 	PublicKey masterID; // account id of master account
-	PublicKey commissionID; // account id of commission account
-	PublicKey operationalID; // account id of operational account
+    uint64_t adminRoleID;
 
     std::string BASE_EXCHANGE_NAME;
     int64 TX_EXPIRATION_PERIOD;
@@ -148,7 +148,14 @@ class Config : public std::enable_shared_from_this<Config>
     uint64 MAX_CONTRACT_DETAIL_LENGTH = 256;
     uint64 MAX_CONTRACT_INITIAL_DETAIL_LENGTH = 1000;
 
+    uint64 LICENSE_FREE_PERIOD_NUM_BLOCKS = 600000;
+    uint64 LICENSE_FREE_NUM_ADMINS = 2;
+
+
+
     int32 KYC_SUPER_ADMIN_MASK = 1;
+
+    size_t mSignerRuleIDsMaxCount = 128;
 
     // overlay config
     unsigned short PEER_PORT;
@@ -216,8 +223,14 @@ class Config : public std::enable_shared_from_this<Config>
     bool resolveNodeID(std::string const& s, PublicKey& retKey) const;
 
 	std::vector<PublicKey> getSystemAccounts() const {
-		return{ masterID, commissionID, operationalID };
+		return{ masterID };
 	}
+
+	uint64_t const
+    getAdminRoleID() const
+    {
+        return adminRoleID;
+    }
 
     static std::vector<std::string> readStrVector(std::string name, std::shared_ptr<cpptoml::toml_base> values);
 };

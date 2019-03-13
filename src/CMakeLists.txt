@@ -31,20 +31,32 @@ set(NOT_COMMON_SOURCE_FILES
         bucket/LedgerCmp.h
         bucket/BucketManager.h
         ledger/LedgerManager.h
+        ledger/StorageHelper.h
+        ledger/BalanceHelper.h
+        ledger/AccountHelper.h
+        ledger/AccountRuleHelper.h
+        ledger/AccountRoleHelper.h
+        ledger/SignerHelper.h
+        ledger/SignerRuleHelper.h
+        ledger/SignerRoleHelper.h
         history/HistoryManager.h
         overlay/BanManager.h
         overlay/StellarXDR.h
         overlay/OverlayManager.h
         process/ProcessManager.h
-        transactions/SourceDetails.h
-        transactions/CounterpartyDetails.h
-        transactions/test/test_helper/Account.h)
+        transactions/SignatureValidator.h
+        transactions/test/test_helper/Account.h
+        transactions/rule_verifing/AccountRuleVerifier.h
+        transactions/rule_verifing/SignerRuleVerifier.h)
+
+# mocks
+set(MOCKS_FILES transactions/test/mocks/)
 
 #find source files
 file(GLOB STELLAR_CORE_SOURCE_FILES **/*.cpp **/**/*.cpp **/**/**/*.cpp)
 
 #create executeble file "core"
-add_executable(core ${STELLAR_CORE_SOURCE_FILES} ../config.h ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES})
+add_executable(core ${STELLAR_CORE_SOURCE_FILES} ../config.h ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES} ${MOCKS_FILES})
 
 #link libs
 include(platform_libs.cmake)

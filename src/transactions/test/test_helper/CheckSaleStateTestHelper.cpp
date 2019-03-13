@@ -1,7 +1,7 @@
 #include "CheckSaleStateTestHelper.h"
 #include <transactions/FeesManager.h>
 #include <ledger/AssetHelperLegacy.h>
-#include <ledger/AccountHelper.h>
+#include <ledger/AccountHelperLegacy.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/OfferHelper.h>
 #include "test/test_marshaler.h"
@@ -120,7 +120,7 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
     auto ownerQuoteBalanceBefore = stateBeforeTx.getBalance(saleQuoteAsset.quoteBalance);
     REQUIRE(ownerQuoteBalanceBefore);
     auto ownerQuoteBalanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(saleQuoteAsset.quoteBalance, mTestManager->getDB());
-    auto ownerFrame = AccountHelper::Instance()->mustLoadAccount(sale->getOwnerID(), mTestManager->getDB());
+    auto ownerFrame = AccountHelperLegacy::Instance()->mustLoadAccount(sale->getOwnerID(), mTestManager->getDB());
     auto totalSellerFee = FeeManager::calculateCapitalDeploymentFeeForAccount(ownerFrame, saleQuoteAsset.quoteAsset, saleQuoteAsset.currentCap, mTestManager->getDB())
         .calculatedPercentFee;
     // TODO: currently it's possible to go a bit below currentCap
@@ -153,8 +153,11 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
         totalParticipantFee += takenOffer.bFeePaid;
     }
 
+    if (sale->getOwnerID() == mTestManager->getApp().getAdminID())
+        return;
+
     // commission balance change
-    auto commissionAfter = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getCommissionID(),
+    auto commissionAfter = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getAdminID(),
         saleQuoteAsset.quoteAsset, mTestManager->getDB(),
         nullptr);
     REQUIRE(commissionAfter);

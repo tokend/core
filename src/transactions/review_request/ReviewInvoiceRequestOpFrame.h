@@ -11,22 +11,22 @@ namespace stellar
 class ReviewInvoiceRequestOpFrame : public ReviewRequestOpFrame
 {
 
-    std::map<PaymentV2ResultCode, ReviewRequestResultCode> paymentCodeToReviewRequestCode =
+    std::map<PaymentResultCode, ReviewRequestResultCode> paymentCodeToReviewRequestCode =
     {
-        {PaymentV2ResultCode::MALFORMED, ReviewRequestResultCode::PAYMENT_V2_MALFORMED},
-        {PaymentV2ResultCode::UNDERFUNDED, ReviewRequestResultCode::UNDERFUNDED},
-        {PaymentV2ResultCode::LINE_FULL, ReviewRequestResultCode::LINE_FULL},
-        {PaymentV2ResultCode::DESTINATION_BALANCE_NOT_FOUND, ReviewRequestResultCode::DESTINATION_BALANCE_NOT_FOUND},
-        {PaymentV2ResultCode::INVALID_DESTINATION_FEE, ReviewRequestResultCode::INVALID_DESTINATION_FEE},
-        {PaymentV2ResultCode::BALANCE_ASSETS_MISMATCHED, ReviewRequestResultCode::BALANCE_ASSETS_MISMATCHED},
-        {PaymentV2ResultCode::SRC_BALANCE_NOT_FOUND, ReviewRequestResultCode::SRC_BALANCE_NOT_FOUND},
-        {PaymentV2ResultCode::REFERENCE_DUPLICATION, ReviewRequestResultCode::REFERENCE_DUPLICATION},
-        {PaymentV2ResultCode::STATS_OVERFLOW, ReviewRequestResultCode::STATS_OVERFLOW},
-        {PaymentV2ResultCode::LIMITS_EXCEEDED, ReviewRequestResultCode::LIMITS_EXCEEDED},
-        {PaymentV2ResultCode::NOT_ALLOWED_BY_ASSET_POLICY, ReviewRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY},
-        {PaymentV2ResultCode::INSUFFICIENT_FEE_AMOUNT, ReviewRequestResultCode::INSUFFICIENT_FEE_AMOUNT},
-        {PaymentV2ResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE, ReviewRequestResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE},
-        {PaymentV2ResultCode::DESTINATION_ACCOUNT_NOT_FOUND, ReviewRequestResultCode::DESTINATION_ACCOUNT_NOT_FOUND},
+        {PaymentResultCode::MALFORMED, ReviewRequestResultCode::PAYMENT_V2_MALFORMED},
+        {PaymentResultCode::UNDERFUNDED, ReviewRequestResultCode::UNDERFUNDED},
+        {PaymentResultCode::LINE_FULL, ReviewRequestResultCode::LINE_FULL},
+        {PaymentResultCode::DESTINATION_BALANCE_NOT_FOUND, ReviewRequestResultCode::DESTINATION_BALANCE_NOT_FOUND},
+        {PaymentResultCode::INVALID_DESTINATION_FEE, ReviewRequestResultCode::INVALID_DESTINATION_FEE},
+        {PaymentResultCode::BALANCE_ASSETS_MISMATCHED, ReviewRequestResultCode::BALANCE_ASSETS_MISMATCHED},
+        {PaymentResultCode::SRC_BALANCE_NOT_FOUND, ReviewRequestResultCode::SRC_BALANCE_NOT_FOUND},
+        {PaymentResultCode::REFERENCE_DUPLICATION, ReviewRequestResultCode::REFERENCE_DUPLICATION},
+        {PaymentResultCode::STATS_OVERFLOW, ReviewRequestResultCode::STATS_OVERFLOW},
+        {PaymentResultCode::LIMITS_EXCEEDED, ReviewRequestResultCode::LIMITS_EXCEEDED},
+        {PaymentResultCode::NOT_ALLOWED_BY_ASSET_POLICY, ReviewRequestResultCode::NOT_ALLOWED_BY_ASSET_POLICY},
+        {PaymentResultCode::INSUFFICIENT_FEE_AMOUNT, ReviewRequestResultCode::INSUFFICIENT_FEE_AMOUNT},
+        {PaymentResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE, ReviewRequestResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE},
+        {PaymentResultCode::DESTINATION_ACCOUNT_NOT_FOUND, ReviewRequestResultCode::DESTINATION_ACCOUNT_NOT_FOUND},
     };
 
     bool checkPaymentDetails(ReviewableRequestEntry& requestEntry,
@@ -36,7 +36,7 @@ class ReviewInvoiceRequestOpFrame : public ReviewRequestOpFrame
 
     bool tryLockAmount(BalanceFrame::pointer balance, uint64_t amount);
 
-    void trySetErrorCode(PaymentV2ResultCode paymentResult);
+    void trySetErrorCode(PaymentResultCode paymentResult);
 
 protected:
     bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
@@ -47,9 +47,6 @@ protected:
 
     bool handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                                ReviewableRequestFrame::pointer request) override;
-
-    SourceDetails getSourceAccountDetails(std::unordered_map<AccountID, CounterpartyDetails> counterpartiesDetails,
-                                          int32_t ledgerVersion) const override;
 
 public:
     ReviewInvoiceRequestOpFrame(Operation const& op, OperationResult& res,

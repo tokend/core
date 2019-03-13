@@ -552,7 +552,7 @@ void HistoryTests::createAccounts(TxSetFramePtr txSet)
 {
     for (auto randAccount : mRandomAccounts)
     {
-        txSet->add(mAccountHelper.createCreateAccountTx(mRoot, randAccount, AccountType::GENERAL));
+        txSet->add(mAccountHelper.createCreateAccountTx(mRoot, randAccount));
     }
 }
 
