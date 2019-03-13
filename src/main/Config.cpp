@@ -79,8 +79,8 @@ Config::getWiredKeys(LedgerVersion ledgerVersion) const
     switch (ledgerVersion)
     {
         default:
-            keys.emplace_back(PubKeyUtils::fromStrKey("GBA4EX43M25UPV4WIE6RRMQOFTWXZZRIPFAI5VPY6Z2ZVVXVWZ6NEOOB"));
-            keys.emplace_back(PubKeyUtils::fromStrKey("GA5NJM36NXW5UUNTBG47NUGJZ5V7UQJKAEAQH3IHSOXAGGEXSNWLSJAH"));
+            keys.emplace_back(PubKeyUtils::fromStrKey("GBUI4A77GUWKJ2I7QARHKR2BPLSKGAJLZUJWHQVIZODDEJCO2AVPMV7G"));
+            keys.emplace_back(PubKeyUtils::fromStrKey("GA5IEUWR2FJ4KSJDMVS5DY4ORWHMI54NNNPNWN2NN5HWDUUWVGUJ4ML7"));
             break;
     }
 
