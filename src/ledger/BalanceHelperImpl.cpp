@@ -75,7 +75,8 @@ BalanceHelperImpl::storeDelete(LedgerKey const& key)
 bool
 BalanceHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key))
+    // if (cached entry == nullptr) entry does not exists
+    if (cachedEntryExists(key) && getCachedEntry(key))
     {
         return true;
     }

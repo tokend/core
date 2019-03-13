@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Managing fee for not existing account (horizon panics)
+* get exists Entry from cache
+
 ## 3.0.1
 
 ### Fixed

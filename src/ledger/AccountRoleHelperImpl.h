@@ -30,6 +30,9 @@ private:
     EntryFrame::pointer storeLoad(LedgerKey const& ledgerKey) override;
     uint64_t countObjects() override;
 
+    bool
+    exists(uint64 roleID) override;
+
     Database& getDatabase() override;
 
     LedgerDelta*

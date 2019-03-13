@@ -25,6 +25,9 @@ class ManageLimitsOpFrame : public OperationFrame
     }
     ManageLimitsOp const& mManageLimits;
 
+    bool
+    checkAccountRoleExisting(StorageHelper &storageHelper, LedgerManager &ledgerManager);
+
   public:
     ManageLimitsOpFrame(Operation const& op, OperationResult& res,
                       TransactionFrame& parentTx);
