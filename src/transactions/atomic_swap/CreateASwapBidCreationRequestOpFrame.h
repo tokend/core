@@ -27,7 +27,7 @@ private:
     bool
     isSupported(LedgerManager& lm) const override
     {
-        return lm.shouldUse(LedgerVersion::ATOMIC_SWAP_RETURNING);
+        return lm.shouldUse(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING);
     }
 
     void
