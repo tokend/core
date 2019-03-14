@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.0.2-x.0
 
 ### Fixed
 
@@ -22,7 +22,7 @@
 ### Fixed
 
 * Fixed unexpected error (`Unexpected state: tring to unlock more then we have in current cap in base asset`) on cancel of sale participation for fixed price sale
-* unexpected sale paricipation exceeds hard cap for fixed price sales
+* unexpected sale participation exceeds hard cap for fixed price sales
 * adding signer to admin results in failure of other admins operations due to license violation 
 * Do not add to cache if load entry without delta (add delta to putCacheEntry method)
 * Implement getLedgerDelta method for all new helpers
