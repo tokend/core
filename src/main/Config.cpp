@@ -70,21 +70,19 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     NTP_SERVER = "pool.ntp.org";
     INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE = true;
 
+    WIRED_KEYS = {PubKeyUtils::fromStrKey("GBUI4A77GUWKJ2I7QARHKR2BPLSKGAJLZUJWHQVIZODDEJCO2AVPMV7G"),
+                  PubKeyUtils::fromStrKey("GA5IEUWR2FJ4KSJDMVS5DY4ORWHMI54NNNPNWN2NN5HWDUUWVGUJ4ML7")};
+
 }
 
 std::vector<PublicKey>
 Config::getWiredKeys(LedgerVersion ledgerVersion) const
 {
-    std::vector<PublicKey> keys;
     switch (ledgerVersion)
     {
         default:
-            keys.emplace_back(PubKeyUtils::fromStrKey("GBA4EX43M25UPV4WIE6RRMQOFTWXZZRIPFAI5VPY6Z2ZVVXVWZ6NEOOB"));
-            keys.emplace_back(PubKeyUtils::fromStrKey("GA5NJM36NXW5UUNTBG47NUGJZ5V7UQJKAEAQH3IHSOXAGGEXSNWLSJAH"));
-            break;
+            return WIRED_KEYS;
     }
-
-    return keys;
 }
 
 void
