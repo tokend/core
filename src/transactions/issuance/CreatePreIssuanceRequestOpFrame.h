@@ -50,6 +50,6 @@ public:
 
 	static Hash getSignatureData(stellar::string64 const& reference, uint64_t const& amount, AssetCode const& assetCode);
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector();
 };
 }

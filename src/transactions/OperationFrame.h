@@ -96,10 +96,6 @@ protected:
 	// default fee for all operations is 0, finantial operations must override this function
     virtual int64_t getPaidFee() const;
 
-    virtual bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr::pointer<uint32> tasks);
-
-    virtual std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper);
-
     static std::shared_ptr<OperationFrame>
     makeHelper(Operation const& op, OperationResult& res,
                TransactionFrame& parentTx);

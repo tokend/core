@@ -1,13 +1,9 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include "CreateSaleCreationRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/StorageHelper.h"
@@ -240,9 +236,9 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
                                                 StorageHelper& storageHelper,
                                                 LedgerManager& ledgerManager)
 {
-    LedgerDelta* delta = storageHelper.getLedgerDelta();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto request = ReviewableRequestFrame::createNew(
-        delta->getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST),
+        delta.getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST),
         getSourceID(), app.getAdminID(), nullptr, ledgerManager.getCloseTime());
 
     auto& requestEntry = request->getRequestEntry();
@@ -251,9 +247,10 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     requestEntry.body.saleCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();
 
+    KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks,
-                   mCreateSaleCreationRequest.allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, makeTasksKeyVector(),
+                                  mCreateSaleCreationRequest.allTasks.get()))
     {
         innerResult().code(
             CreateSaleCreationRequestResultCode::SALE_CREATE_TASKS_NOT_FOUND);
@@ -261,7 +258,6 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     }
 
     request->setTasks(allTasks);
-    
 
     if (!isRequestValid(storageHelper, ledgerManager, request))
     {
@@ -270,7 +266,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     }
 
     auto& db = storageHelper.getDatabase();
-    ReviewableRequestHelper::Instance()->storeAdd(*delta, db, request->mEntry);
+    ReviewableRequestHelper::Instance()->storeAdd(delta, db, request->mEntry);
 
     bool fulfilled = false;
     uint64 saleID = 0;
@@ -278,7 +274,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     {
         // It's possible for sale creation request to fail on review due to various reasons
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(
-            mParentTx, app, ledgerManager, *delta, request);
+            mParentTx, app, ledgerManager, delta, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS)
         {
             innerResult().code(CreateSaleCreationRequestResultCode::AUTO_REVIEW_FAILED);
@@ -356,7 +352,6 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
     }
 
     auto& db = ledgerManager.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
     if (!areQuoteAssetsValid(
             db, sale.quoteAssets,
             sale.defaultQuoteAsset))
@@ -388,11 +383,11 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
    return true;
 }
 
-std::vector<longstring>
-CreateSaleCreationRequestOpFrame::makeTasksKeyVector(
-    StorageHelper& storageHelper)
+std::vector<std::string>
+CreateSaleCreationRequestOpFrame::makeTasksKeyVector()
 {
-    return std::vector<longstring>{
+    return
+    {
         ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset),
         ManageKeyValueOpFrame::makeSaleCreateTasksKey("*")
     };

@@ -5,12 +5,11 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
-#include <ledger/BalanceHelperLegacy.h>
+#include "ledger/KeyValueHelper.h"
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/ReviewableRequestFrame.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
-#include <ledger/StorageHelperImpl.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include "CreateASwapBidCreationRequestOpFrame.h"
 
@@ -196,16 +195,14 @@ void CreateASwapBidCreationRequestOpFrame::tryAutoApprove(
 }
 
 bool
-CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta &delta,
+CreateASwapBidCreationRequestOpFrame::doApply(Application &app, StorageHelper& storageHelper,
                                               LedgerManager &ledgerManager)
 {
-    Database& db = app.getDatabase();
-
+    Database& db = storageHelper.getDatabase();
     auto& requestBody = mCreateASwapBidCreationRequest.request;
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto baseBalance = balanceHelper->loadBalance(
-            getSourceID(), requestBody.baseBalance, db);
+    auto baseBalance = storageHelper.getBalanceHelper().loadBalance(
+            requestBody.baseBalance, getSourceID());
     if (!baseBalance)
     {
         innerResult().code(CreateASwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND);
@@ -227,16 +224,17 @@ CreateASwapBidCreationRequestOpFrame::doApply(Application &app, LedgerDelta &del
         return false;
     }
 
-    balanceHelper->storeChange(delta, db, baseBalance->mEntry);
+    storageHelper.getBalanceHelper().storeChange(baseBalance->mEntry);
 
-    StorageHelperImpl storageHelper(db, &delta);
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks;
-    if (!loadTasks(storageHelper, allTasks, mCreateASwapBidCreationRequest.allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, makeTasksKeyVector(), mCreateASwapBidCreationRequest.allTasks.get()))
     {
         innerResult().code(CreateASwapBidCreationRequestResultCode::ATOMIC_SWAP_BID_TASKS_NOT_FOUND);
         return false;
     }
 
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
             app.getAdminID(), nullptr, ledgerManager.getCloseTime());
     fillRequest(requestFrame->getRequestEntry(), requestBody, allTasks);
@@ -312,8 +310,8 @@ CreateASwapBidCreationRequestOpFrame::fillRequest(ReviewableRequestEntry &reques
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
 }
 
-std::vector<longstring>
-CreateASwapBidCreationRequestOpFrame::makeTasksKeyVector(StorageHelper& storageHelper)
+std::vector<std::string>
+CreateASwapBidCreationRequestOpFrame::makeTasksKeyVector()
 {
     return {ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey()};
 }

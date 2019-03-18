@@ -4,7 +4,7 @@
 #include "ledger/StorageHelper.h"
 #include <ledger/ReviewableRequestFrame.h>
 #include <transactions/ManageKeyValueOpFrame.h>
-#include <ledger/KeyValueHelperLegacy.h>
+#include "ledger/KeyValueHelper.h"
 #include <ledger/AssetHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/dex/OfferManager.h>
@@ -72,37 +72,17 @@ CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
 }
 
 bool
-CreateASwapRequestOpFrame::tryGetAtomicSwapTasks(Database& db, uint32_t &allTasks)
-{
-    auto aSwapKV = KeyValueHelperLegacy::Instance()->loadKeyValue(
-            ManageKeyValueOpFrame::atomicSwapTasksPrefix, db);
-
-    if (aSwapKV == nullptr)
-    {
-        innerResult().code(CreateASwapRequestResultCode::ATOMIC_SWAP_TASKS_NOT_FOUND);
-        return false;
-    }
-
-    if (aSwapKV->getKeyValue().value.type() != KeyValueEntryType::UINT32)
-    {
-        throw std::runtime_error(
-                "Unexpected database state, expected atomic swap tasks to be UINT32");
-    }
-
-    allTasks = aSwapKV->getKeyValue().value.ui32Value();
-    return true;
-}
-
-bool
 CreateASwapRequestOpFrame::tryFillRequest(ReviewableRequestEntry& requestEntry,
-                                          Database& db)
+                                          StorageHelper& storageHelper)
 {
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP);
     requestEntry.body.aSwapRequest() = mCreateASwapRequest.request;
 
     uint32_t allTasks = 0;
-    if (!tryGetAtomicSwapTasks(db, allTasks))
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAtomicSwapTasksKey()}))
     {
+        innerResult().code(CreateASwapRequestResultCode::ATOMIC_SWAP_TASKS_NOT_FOUND);
         return false;
     }
 
@@ -159,12 +139,13 @@ CreateASwapRequestOpFrame::loadAtomicSwapBid(ASwapRequest aSwapRequest,
 }
 
 bool
-CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+CreateASwapRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                    LedgerManager& ledgerManager)
 {
     innerResult().code(CreateASwapRequestResultCode::SUCCESS);
 
-    Database& db = ledgerManager.getDatabase();
+    Database& db = storageHelper.getDatabase();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto aSwapRequest = mCreateASwapRequest.request;
 
     auto bid = loadAtomicSwapBid(aSwapRequest, db, delta);
@@ -173,7 +154,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
         return false; // error codes are handled above
     }
 
-    auto baseAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(bid->getBaseAsset(), db);
+    auto baseAssetFrame = storageHelper.getAssetHelper().mustLoadAsset(bid->getBaseAsset());
     if (!baseAssetFrame->isAmountAppropriate(aSwapRequest.baseAmount))
     {
         innerResult().code(CreateASwapRequestResultCode::INCORRECT_PRECISION);
@@ -189,7 +170,7 @@ CreateASwapRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
             app.getAdminID(), nullptr, ledgerManager.getCloseTime());
 
-    if (!tryFillRequest(requestFrame->getRequestEntry(), db))
+    if (!tryFillRequest(requestFrame->getRequestEntry(), storageHelper))
     {
         return false;
     }

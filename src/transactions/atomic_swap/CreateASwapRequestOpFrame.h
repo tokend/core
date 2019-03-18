@@ -34,15 +34,13 @@ class CreateASwapRequestOpFrame : public OperationFrame
     loadAtomicSwapBid(ASwapRequest aSwapRequest, Database& db, LedgerDelta& delta);
 
     bool
-    tryFillRequest(ReviewableRequestEntry& requestEntry, Database& db);
+    tryFillRequest(ReviewableRequestEntry& requestEntry, StorageHelper& storageHelper);
 
 public:
     CreateASwapRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
 
-    bool tryGetAtomicSwapTasks(Database& db, uint32_t& allTasks);
-
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 

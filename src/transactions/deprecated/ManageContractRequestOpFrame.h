@@ -56,7 +56,5 @@ public:
     {
         return res.tr().manageContractRequestResult().code();
     }
-
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 };
 }

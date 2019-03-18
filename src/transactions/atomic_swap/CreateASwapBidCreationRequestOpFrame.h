@@ -34,8 +34,8 @@ private:
     fillRequest(ReviewableRequestEntry &requestEntry,
                 ASwapBidCreationRequest body, uint32_t allTasks);
 
-    std::vector<longstring>
-    makeTasksKeyVector(StorageHelper& storageHelper) override;
+    std::vector<std::string>
+    makeTasksKeyVector();
 
 public:
     CreateASwapBidCreationRequestOpFrame(Operation const &op, OperationResult &opRes,
@@ -58,7 +58,7 @@ public:
     void tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
                         ReviewableRequestFrame::pointer request);
 
-    bool doApply(Application &app, LedgerDelta &delta,
+    bool doApply(Application &app, StorageHelper& storageHelper,
                  LedgerManager &ledgerManager) override;
 
     bool doCheckValid(Application &app) override;

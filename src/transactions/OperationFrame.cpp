@@ -12,7 +12,6 @@
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/LicenseHelper.h"
 #include "transactions/TransactionFrame.h"
@@ -428,35 +427,5 @@ OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
 
     return true;
 }
-
-bool
-OperationFrame::loadTasks(StorageHelper& storageHelper, uint32_t& allTasks, xdr::pointer<uint32> tasks)
-{
-    if (tasks)
-    {
-        allTasks = *tasks;
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto keys = makeTasksKeyVector(storageHelper);
-    for (auto& key : keys)
-    {
-        auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-        if (keyValueFrame)
-        {
-            allTasks = keyValueFrame->mustGetUint32Value();
-            return true;
-        }
-    }
-
-    return false;
-}
-
-std::vector<longstring>
-OperationFrame::makeTasksKeyVector(StorageHelper& storageHelper)
-{
-    throw std::runtime_error("Unexpected call, method must be overridden");
-};
 
 }
