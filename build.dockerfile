@@ -1,7 +1,5 @@
 FROM registry.gitlab.com/tokend/core/buildbase:2
 
-COPY --from=healthcheck_builder /healthcheck /healthcheck
-
 ARG RSA_KEY
 WORKDIR /build
 COPY . $PWD

@@ -6,7 +6,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /usr/local/bin/healthcheck ./healthchec
 
 #
 #
-#
 
 FROM ubuntu:18.04
 

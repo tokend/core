@@ -26,6 +26,7 @@ build-base-image:
   only:
     refs:
       - master
+      - feature/docker-healthcheck
     changes:
       - buildbase.dockerfile
   tags:
