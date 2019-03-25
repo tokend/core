@@ -1,11 +1,4 @@
-FROM golang:1.11-stretch as healthcheck_builder
-ADD healthcheck.go .
-RUN true \
-    && go get gopkg.in/ini.v1 \
-    && go build -o /healthcheck ./healthcheck.go \
-    && true
-
-FROM registry.gitlab.com/tokend/core/buildbase:latest
+FROM registry.gitlab.com/tokend/core/buildbase:2
 
 COPY --from=healthcheck_builder /healthcheck /healthcheck
 

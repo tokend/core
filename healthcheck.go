@@ -17,10 +17,10 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-const(
+const (
 	defaultConfigPath = "/config.ini"
-	healthyState = "Synced!"
-	defaultCorePort = 8080
+	healthyState      = "Synced!"
+	defaultCorePort   = 8080
 
 	stateEndpoint = "http://localhost:%d/info"
 )
@@ -54,12 +54,12 @@ func coreState(coreUrl string) (string, error) {
 	return stateFromResponse(response.Body)
 }
 
-func getCorePort(configPath string) (int) {
-	cfg, err := ini.LoadSources( ini.LoadOptions{
-			SkipUnrecognizableLines: true,
-		}, configPath)
+func getCorePort(configPath string) int {
+	cfg, err := ini.LoadSources(ini.LoadOptions{
+		SkipUnrecognizableLines: true,
+	}, configPath)
 
-    if err != nil {
+	if err != nil {
 		return defaultCorePort
 	}
 
@@ -79,4 +79,3 @@ func stateFromResponse(r io.Reader) (string, error) {
 
 	return coreResponse.Info.State, nil
 }
-
