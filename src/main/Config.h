@@ -213,6 +213,9 @@ class Config : public std::enable_shared_from_this<Config>
 
     std::string NTP_SERVER; // ntp server used to check if time is valid on host
 
+    std::string SENTRY_DSN;
+    std::string MIN_LEVEL_FOR_SENTRY = "warning";
+
     std::vector<PublicKey> WIRED_KEYS;
 
     Config();

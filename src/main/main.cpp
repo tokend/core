@@ -535,6 +535,10 @@ main(int argc, char* const* argv)
             Logging::setLoggingToFile(cfg.LOG_FILE_PATH);
         Logging::setLogLevel(logLevel, nullptr);
 
+        // don't log to sentry if creds of level are not provided
+        if (!(cfg.SENTRY_DSN.empty() && cfg.MIN_LEVEL_FOR_SENTRY.empty()))
+            Logging::setLoggingToSentry(cfg.SENTRY_DSN, Logging::getLLfromString(cfg.MIN_LEVEL_FOR_SENTRY));
+
         cfg.REPORT_METRICS = metrics;
 
         if (forceSCP || newDB || getOfflineInfo || !loadXdrBucket.empty()

@@ -5,6 +5,7 @@
 ### Added
 
 * Docker healthcheck
+* Logging to Sentry besides of the regular logging with configurable DSN and minimal level of messages to send
 
 ## 3.0.2-x.0
 

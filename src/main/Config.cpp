@@ -633,6 +633,20 @@ Config::load(std::string const& filename)
                 INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE =
                         item.second->as<bool>()->value();
             }
+            else if (item.first == "SENTRY_DSN") {
+                if (!item.second->as<std::string>()) {
+                    throw std::invalid_argument("invalid SENTRY_DSN");
+                }
+
+                SENTRY_DSN = item.second->as<std::string>()->value();
+            }
+            else if (item.first == "MIN_LEVEL_FOR_SENTRY") {
+                if (!item.second->as<std::string>()) {
+                    throw std::invalid_argument("invalid MIN_LEVEL_FOR_SENTRY");
+                }
+
+                MIN_LEVEL_FOR_SENTRY = item.second->as<std::string>()->value();
+            }
             else
             {
                 std::string err("Unknown configuration entry: '");
