@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-CONFIG=${CONFIG:-/config.ini}
+export CONFIG=${CONFIG:-/config.ini}
 BIN=/usr/local/bin/core
 
 # will make init if core thinks history does not exist.

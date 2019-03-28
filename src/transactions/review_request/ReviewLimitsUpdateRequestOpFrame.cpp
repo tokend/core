@@ -36,6 +36,14 @@ namespace stellar {
                 innerResult().code(ReviewRequestResultCode::INVALID_LIMITS);
                 return false;
             }
+            case ManageLimitsResultCode::ACCOUNT_NOT_FOUND: {
+                innerResult().code(ReviewRequestResultCode::ACCOUNT_NOT_FOUND);
+                return false;
+            }
+            case ManageLimitsResultCode::ROLE_NOT_FOUND: {
+                innerResult().code(ReviewRequestResultCode::ROLE_NOT_FOUND);
+                return false;
+            }
             default: {
                 CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from manage limits: "
                                                        << xdr::xdr_traits<ManageLimitsResultCode>::enum_name(manageLimitsResultCode);

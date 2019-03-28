@@ -188,6 +188,13 @@ ManageSignerOpFrame::updateSigner(Application &app, StorageHelper &storageHelper
         return false;
     }
 
+    auto& signerRoleHelper = storageHelper.getSignerRoleHelper();
+    if (!signerRoleHelper.exists(data.roleID))
+    {
+        innerResult().code(ManageSignerResultCode::NO_SUCH_ROLE);
+        return false;
+    }
+
     auto& signerEntry = signerFrame->getEntry();
     signerEntry.roleID = data.roleID;
     signerEntry.weight = data.weight;

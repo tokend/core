@@ -216,6 +216,8 @@ class Config : public std::enable_shared_from_this<Config>
     std::string SENTRY_DSN;
     std::string MIN_LEVEL_FOR_SENTRY = "warning";
 
+    std::vector<PublicKey> WIRED_KEYS;
+
     Config();
 
     void load(std::string const& filename);

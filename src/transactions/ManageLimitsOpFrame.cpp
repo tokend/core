@@ -3,6 +3,9 @@
 #include "main/Application.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AccountRoleHelper.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
@@ -56,6 +59,12 @@ ManageLimitsOpFrame::doApply(Application& app, LedgerDelta& delta,
     {
     case ManageLimitsAction::CREATE:
     {
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        if (!checkAccountRoleExisting(storageHelperImpl, ledgerManager))
+        {
+            return false;
+        }
+
         auto limitsV2Frame = limitsV2Helper->loadLimits(db, mManageLimits.details.limitsCreateDetails().statsOpType,
                                                         mManageLimits.details.limitsCreateDetails().assetCode,
                                                         mManageLimits.details.limitsCreateDetails().accountID,
@@ -91,6 +100,43 @@ ManageLimitsOpFrame::doApply(Application& app, LedgerDelta& delta,
     default:
         throw std::runtime_error("Unexpected manage limits action in doApply. "
                                  "Expected UPDATE or REMOVE");
+    }
+
+    return true;
+}
+
+bool
+ManageLimitsOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
+                                              LedgerManager &ledgerManager)
+{
+    if (!ledgerManager.shouldUse(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING))
+    {
+        return true;
+    }
+
+    if (mManageLimits.details.action() != ManageLimitsAction::CREATE)
+    {
+        throw std::runtime_error("Expected action to be CREATE");
+    }
+
+    auto& details = mManageLimits.details.limitsCreateDetails();
+
+    if (details.accountID)
+    {
+        if (!storageHelper.getAccountHelper().exists(*details.accountID))
+        {
+            innerResult().code(ManageLimitsResultCode::ACCOUNT_NOT_FOUND);
+            return false;
+        }
+    }
+
+    if (details.accountRole)
+    {
+        if (!storageHelper.getAccountRoleHelper().exists(*details.accountRole))
+        {
+            innerResult().code(ManageLimitsResultCode::ROLE_NOT_FOUND);
+            return false;
+        }
     }
 
     return true;
