@@ -49,6 +49,9 @@
 #include "ManageSignerOpFrame.h"
 #include "LicenseOpFrame.h"
 #include "StampOpFrame.h"
+#include "voting/manage_poll/ManagePollOpFrame.h"
+#include "voting/manage_create_poll_request/ManageCreatePollRequestOpFrame.h"
+#include "voting/manage_vote/ManageVoteOpFrame.h"
 #include "ledger/SignerHelper.h"
 
 namespace stellar
@@ -134,6 +137,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return shared_ptr<OperationFrame>(new StampOpFrame(op, res, tx));
         case OperationType::LICENSE:
             return shared_ptr<OperationFrame>(new LicenseOpFrame(op, res, tx));
+        case OperationType::MANAGE_CREATE_POLL_REQUEST:
+            return ManageCreatePollRequestOpFrame::makeHelper(op, res, tx);
+        case OperationType::MANAGE_POLL:
+            return ManagePollOpFrame::makeHelper(op, res, tx);
+        case OperationType::MANAGE_VOTE:
+            return shared_ptr<OperationFrame>(ManageVoteOpFrame::make(op, res, tx));
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
@@ -246,32 +255,51 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
         return false;
     }
 
-    SignerRuleVerifierImpl signerRuleVerifier;
-    auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
-                                                           signerRuleVerifier, getSourceID(), signerRequirements);
-    switch (result)
+    std::unordered_map<AccountID, std::vector<SignerRequirement>> involvedAccounts;
+    auto source = getSourceID();
+    involvedAccounts.emplace(source, std::vector<SignerRequirement>{});
+    for(auto& sr : signerRequirements)
     {
-        case SignatureValidator::Result::SUCCESS:
-            return true;
-        case SignatureValidator::Result::INVALID_ACCOUNT_TYPE:
-            app.getMetrics().NewMeter({"transaction", "invalid", "not-allowed"}, "transaction").Mark();
-            mResult.code(OperationResultCode::opNOT_ALLOWED);
-            return false;
-        case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
-            app.getMetrics().NewMeter({"transaction", "invalid", "bad-auth"}, "transaction").Mark();
-            mResult.code(OperationResultCode::opBAD_AUTH);
-            return false;
-        case SignatureValidator::Result::ACCOUNT_BLOCKED:
-            app.getMetrics().NewMeter({"operation", "invalid", "account-is-blocked"}, "operation").Mark();
-            mResult.code(OperationResultCode::opACCOUNT_BLOCKED);
-            return false;
-        case SignatureValidator::Result::EXTRA:
-            app.getMetrics().NewMeter({"operation", "invalid", "bad-auth-extra"}, "operation").Mark();
-            mResult.code(OperationResultCode::opBAD_AUTH_EXTRA);
-            return false;
+        if (!sr.source)
+        {
+            involvedAccounts[source].push_back(sr);
+            continue;
+        }
+
+        involvedAccounts[*sr.source].push_back(sr);
     }
 
-    throw runtime_error("Unexpected error code from signatureValidator for operation");
+    SignerRuleVerifierImpl signerRuleVerifier;
+    for (auto const& it : involvedAccounts)
+    {
+        auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,
+                                                               signerRuleVerifier, it.first, it.second);
+
+        switch (result)
+        {
+            case SignatureValidator::Result::SUCCESS:
+                continue;
+            case SignatureValidator::Result::INVALID_ACCOUNT_TYPE:
+                app.getMetrics().NewMeter({"transaction", "invalid", "not-allowed"}, "transaction").Mark();
+                mResult.code(OperationResultCode::opNOT_ALLOWED);
+                return false;
+            case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
+                app.getMetrics().NewMeter({"transaction", "invalid", "bad-auth"}, "transaction").Mark();
+                mResult.code(OperationResultCode::opBAD_AUTH);
+                return false;
+            case SignatureValidator::Result::ACCOUNT_BLOCKED:
+                app.getMetrics().NewMeter({"operation", "invalid", "account-is-blocked"}, "operation").Mark();
+                mResult.code(OperationResultCode::opACCOUNT_BLOCKED);
+                return false;
+            case SignatureValidator::Result::EXTRA:
+                app.getMetrics().NewMeter({"operation", "invalid", "bad-auth-extra"}, "operation").Mark();
+                mResult.code(OperationResultCode::opBAD_AUTH_EXTRA);
+                return false;
+        }
+        throw runtime_error("Unexpected error code from signatureValidator for operation");
+    }
+
+    return true;
 }
 
 // TMP

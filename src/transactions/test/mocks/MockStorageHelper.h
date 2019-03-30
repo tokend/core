@@ -15,6 +15,8 @@ class ExternalSystemAccountIDPoolEntryHelper;
 class StampHelper;
 class LicenseHelper;
 class LicenseSignatureHelper;
+class PollHelper;
+class VoteHelper;
 
 enum class LedgerEntryType;
 
@@ -53,6 +55,10 @@ public:
                  LicenseSignatureHelper&());
     MOCK_METHOD0(getStampHelper,
                  StampHelper&());
+    MOCK_METHOD0(getVoteHelper,
+                 VoteHelper&());
+    MOCK_METHOD0(getPollHelper,
+                 PollHelper&());
 };
 
 }  // namespace stellar

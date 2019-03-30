@@ -39,6 +39,8 @@ set(NOT_COMMON_SOURCE_FILES
         ledger/SignerHelper.h
         ledger/SignerRuleHelper.h
         ledger/SignerRoleHelper.h
+        ledger/KeyValueHelper.h
+        ledger/PollHelper.h
         history/HistoryManager.h
         overlay/BanManager.h
         overlay/StellarXDR.h

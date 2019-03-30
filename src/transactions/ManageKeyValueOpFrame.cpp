@@ -33,6 +33,7 @@ namespace stellar
         "atomic_swap_tasks";
     char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix =
         "withdraw_lower_bound";
+    char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -57,6 +58,7 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {assetCreateTasks, KeyValueEntryType::UINT32},
         {assetUpdateTasks, KeyValueEntryType::UINT32},
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
+        {createPollTasks, KeyValueEntryType::UINT32},
     };
 }
 
@@ -268,5 +270,9 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         return amlAlertCreateTasks;
     }
 
-
+    longstring
+    ManageKeyValueOpFrame::makeCreatePollKey(std::string type)
+    {
+        return string(createPollTasks) + ":" + type;
+    }
 }

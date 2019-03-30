@@ -4,6 +4,9 @@
 
 ### Added
 
+* Manage create poll request op frame
+* Manage poll op frame
+* Manage vote op frame
 * Docker healthcheck
 * Logging to Sentry besides of the regular logging with configurable DSN and minimal level of messages to send
 
