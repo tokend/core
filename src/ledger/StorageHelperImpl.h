@@ -22,6 +22,8 @@ class AccountRuleHelper;
 class LicenseHelper;
 class LicenseSignatureHelper;
 class StampHelper;
+class VoteHelper;
+class PollHelper;
 class StorageHelperImpl : public StorageHelper
 {
   public:
@@ -62,6 +64,8 @@ class StorageHelperImpl : public StorageHelper
     LicenseHelper& getLicenseHelper() override;
     LicenseSignatureHelper& getLicenseSignatureHelper() override;
     StampHelper& getStampHelper() override;
+    VoteHelper& getVoteHelper() override;
+    PollHelper& getPollHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -87,5 +91,7 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<LicenseHelper> mLicenseHelper;
     std::unique_ptr<LicenseSignatureHelper> mLicenseSignatureHelper;
     std::unique_ptr<StampHelper> mStampHelper;
+    std::unique_ptr<VoteHelper> mVoteHelper;
+    std::unique_ptr<PollHelper> mPollHelper;
 };
 } // namespace stellar

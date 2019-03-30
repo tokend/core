@@ -125,6 +125,9 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                 case ReviewableRequestType::CREATE_SALE:
                     return isTypeMatches(expectedDetails.createSale().type,
                                          actualDetails.createSale().type);
+                case ReviewableRequestType::CREATE_POLL:
+                    return isTypeMatches(expectedDetails.createPoll().permissionType,
+                                         actualDetails.createPoll().permissionType);
                 case ReviewableRequestType::CREATE_ISSUANCE:
                     return isTypeMatches(expectedDetails.createIssuance().assetType,
                                          actualDetails.createIssuance().assetType) &&
@@ -163,8 +166,8 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::SALE:
             return isTypeMatches(requiredResource.sale().saleType,
                                  actualResource.sale().saleType) &&
-                   isIDMatches(requiredResource.sale().saleType,
-                               actualResource.sale().saleType);
+                   isIDMatches(requiredResource.sale().saleID,
+                               actualResource.sale().saleID);
         case LedgerEntryType::SIGNER:
             return isIDMatches(requiredResource.signer().roleID,
                                actualResource.signer().roleID);
@@ -177,6 +180,16 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::KEY_VALUE:
             return isStringMatches(requiredResource.keyValue().keyPrefix,
                                    actualResource.keyValue().keyPrefix);
+        case LedgerEntryType::POLL:
+            return isTypeMatches(requiredResource.poll().permissionType,
+                                 actualResource.poll().permissionType) &&
+                   isIDMatches(requiredResource.poll().pollID,
+                               actualResource.poll().pollID);
+        case LedgerEntryType::VOTE:
+            return isTypeMatches(requiredResource.vote().permissionType,
+                                 actualResource.vote().permissionType) &&
+                   isIDMatches(requiredResource.vote().pollID,
+                               actualResource.vote().pollID);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -188,6 +201,8 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::LIMITS_V2:
         case LedgerEntryType::ASSET_PAIR:
         case LedgerEntryType::TRANSACTION:
+        case LedgerEntryType::LICENSE:
+        case LedgerEntryType::STAMP:
             return true;
         default:
             return false;

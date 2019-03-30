@@ -248,6 +248,22 @@ struct LedgerEntryIdCmp
             auto const& bl = b.license();
             return getLicenseHash(al) < getLicenseHash(bl);
         }
+        case LedgerEntryType::POLL:
+        {
+            auto const& ap = a.poll();
+            auto const& bp = b.poll();
+            return ap.id < bp.id;
+        }
+        case LedgerEntryType::VOTE:
+        {
+            auto const& ap = a.vote();
+            auto const& bp = b.vote();
+            if (ap.pollID < bp.pollID)
+                return true;
+            if (bp.pollID < ap.pollID)
+                return false;
+            return ap.voterID < bp.voterID;
+        }
         default:
         {
             throw std::runtime_error(

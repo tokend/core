@@ -22,6 +22,8 @@
 #include "transactions/test/mocks/MockLicenseHelper.h"
 #include "transactions/test/mocks/MockLicenseSignatureHelper.h"
 #include "transactions/test/mocks/MockStampHelper.h"
+#include "transactions/test/mocks/MockVoteHelper.h"
+#include "transactions/test/mocks/MockPollHelper.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"

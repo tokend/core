@@ -219,6 +219,15 @@ void ReviewableRequestFrame::ensureASwapValid(const ASwapRequest &request)
     }
 }
 
+void ReviewableRequestFrame::ensurePollCreationValid(CreatePollRequest const& request)
+{
+    if (request.numberOfChoices == 0)
+    {
+        throw runtime_error("number of choices cannot be zero");
+    }
+}
+
+
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
 	return sha256(xdr::xdr_to_opaque(body));
@@ -270,6 +279,8 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureASwapBidCreationValid(oe.body.aSwapBidCreationRequest());
         case ReviewableRequestType::CREATE_ATOMIC_SWAP:
             return ensureASwapValid(oe.body.aSwapRequest());
+        case ReviewableRequestType::CREATE_POLL:
+            return ensurePollCreationValid(oe.body.createPollRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }
