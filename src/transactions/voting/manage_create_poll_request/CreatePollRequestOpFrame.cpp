@@ -91,6 +91,7 @@ CreatePollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
     innerResult().success().details.action(ManageCreatePollRequestAction::CREATE);
     innerResult().success().details.response().fulfilled = false;
     innerResult().success().details.response().requestID = requestFrame->getRequestID();
+    innerResult().success().details.response().pollID = nullptr;
 
     if (requestFrame->canBeFulfilled(ledgerManager))
     {
@@ -127,19 +128,21 @@ CreatePollRequestOpFrame::tryAutoApprove(Application& app, StorageHelper& storag
         ReviewableRequestFrame::pointer request)
 {
     auto& ledgerManager = app.getLedgerManager();
-    auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app,
+    auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app,
             ledgerManager, storageHelper.mustGetLedgerDelta(), request);
-    if (result != ReviewRequestResultCode::SUCCESS)
+    if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state on create poll request: "
                 << "tryApproveRequest expected to be success, but was: "
-                << xdr::xdr_to_string(result);
+                << xdr::xdr_to_string(result.code());
         throw std::runtime_error("Unexpected state: "
                                  "tryApproveRequest expected to be success");
     }
 
     innerResult().success().details.response().fulfilled = true;
+    innerResult().success().details.response().pollID.activate() =
+            result.success().typeExt.createPoll().pollID;
 }
 
 bool
