@@ -1,21 +1,25 @@
-#include "util/XDRStream.h"
-#include "util/Fs.h"
 #include "main/dumpxdr.h"
 #include "crypto/SecretKey.h"
-#include <xdrpp/printer.h>
-#include <regex>
+#include "transactions/SignatureUtils.h"
+#include "util/Decoder.h"
+#include "util/Fs.h"
+#include "util/XDROperators.h"
+#include "util/XDRStream.h"
+#include "util/format.h"
 #include <iostream>
+#include <regex>
+#include <xdrpp/printer.h>
 
 #if !defined(USE_TERMIOS) && !MSVC
-# define HAVE_TERMIOS 1
+#define HAVE_TERMIOS 1
 #endif
 #if HAVE_TERMIOS
 extern "C" {
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 }
 #endif // HAVE_TERMIOS
 
@@ -24,11 +28,13 @@ extern "C" {
 #define isatty _isatty
 #endif // MSVC
 
+using namespace std::placeholders;
+
 namespace stellar
 {
 
 std::string
-xdr_printer(const PublicKey &pk)
+xdr_printer(const PublicKey& pk)
 {
     return PubKeyUtils::toStrKey(pk);
 }
@@ -45,9 +51,10 @@ dumpstream(XDRInputFileStream& in)
 }
 
 void
-dumpxdr(std::string const& filename)
+dumpXdrStream(std::string const& filename)
 {
-    std::regex rx(".*(ledger|bucket|transactions|results|scp)-[[:xdigit:]]+\\.xdr");
+    std::regex rx(
+            ".*(ledger|bucket|transactions|results|scp)-[[:xdigit:]]+\\.xdr");
     std::smatch sm;
     if (std::regex_match(filename, sm, rx))
     {
@@ -82,41 +89,109 @@ dumpxdr(std::string const& filename)
     }
 }
 
-#define throw_perror(msg)                                               \
-do {                                                                    \
-    throw std::runtime_error(std::string(msg) + ": " + xdr_strerror(errno)); \
-} while(0)
+#define throw_perror(msg) \
+do \
+{ \
+    throw std::runtime_error(std::string(msg) + ": " + \
+                             xdr_strerror(errno)); \
+} while (0)
 
-static std::string
-readFile(const std::string &filename)
+static xdr::opaque_vec<>
+readFile(const std::string& filename, bool base64 = false)
 {
     using namespace std;
     ostringstream input;
     if (filename == "-" || filename.empty())
         input << cin.rdbuf();
-    else {
+    else
+    {
         ifstream file(filename.c_str());
         if (!file)
             throw_perror(filename);
         input << file.rdbuf();
     }
-    return input.str();
+    string ret;
+    if (base64)
+        decoder::decode_b64(input.str(), ret);
+    else
+        ret = input.str();
+    return {ret.begin(), ret.end()};
+}
+
+template <typename T>
+void
+printOneXdr(xdr::opaque_vec<> const& o, std::string const& desc)
+{
+    T tmp;
+    xdr::xdr_from_opaque(o, tmp);
+    std::cout << xdr::xdr_to_string(tmp, desc.c_str()) << std::endl;
 }
 
 void
-printtxn(const std::string &filename)
+printXdr(std::string const& filename, std::string const& filetype, bool base64)
 {
-    using xdr::operator<<;
+// need to use this pattern as there is no good way to get a human readable
+// type name from a type
+#define PRINTONEXDR(T) std::bind(printOneXdr<T>, _1, #T)
+    auto dumpMap =
+            std::map<std::string, std::function<void(xdr::opaque_vec<> const&)>>{
+                    {"ledgerheader", PRINTONEXDR(LedgerHeader)},
+                    {"meta", PRINTONEXDR(TransactionMeta)},
+                    {"result", PRINTONEXDR(TransactionResult)},
+                    {"resultpair", PRINTONEXDR(TransactionResultPair)},
+                    {"tx", PRINTONEXDR(TransactionEnvelope)},
+                    {"txfee", PRINTONEXDR(LedgerEntryChanges)}};
+#undef PRINTONEXDR
 
-    TransactionEnvelope txenv;
-    xdr::xdr_from_opaque(readFile(filename), txenv);
-    std::cout << txenv;
+    try
+    {
+        auto d = readFile(filename, base64);
+
+        if (filetype == "auto")
+        {
+            bool processed = false;
+            for (auto const& it : dumpMap)
+            {
+                try
+                {
+                    it.second(d);
+                    processed = true;
+                    break;
+                }
+                catch (xdr::xdr_runtime_error)
+                {
+                }
+            }
+            if (!processed)
+            {
+                throw std::invalid_argument("Could not detect type");
+            }
+        }
+        else
+        {
+            auto it = dumpMap.find(filetype);
+            if (it != dumpMap.end())
+            {
+                it->second(d);
+            }
+            else
+            {
+                throw std::invalid_argument(
+                        fmt::format("unknown filetype {}", filetype));
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Could not decode with type '" << filetype
+                  << "' : " << e.what() << std::endl;
+    }
 }
 
+#if HAVE_TERMIOS
 static int
 set_echo_flag(int fd, bool flag)
 {
-#if HAVE_TERMIOS
     struct termios tios;
     if (tcgetattr(fd, &tios))
         return -1;
@@ -126,14 +201,8 @@ set_echo_flag(int fd, bool flag)
     else
         tios.c_lflag &= ~ECHO;
     return tcsetattr(fd, TCSAFLUSH, &tios) == 0 ? old : -1;
-#else // !HAVE_TERMIOS
-    // Sorry, Windows.  Might need to use something like this:
-    // https://msdn.microsoft.com/en-us/library/ms683167(VS.85).aspx
-    // http://stackoverflow.com/questions/1413445/read-a-password-from-stdcin/1455007#1455007
-    errno = ENOSYS;
-    return -1;
-#endif // !HAVE_TERMIOS
 }
+#endif
 
 #if __GNUC__ >= 4 && __GLIBC__ >= 2
 // Realistically, if a write fails in one of these utility functions,
@@ -142,39 +211,49 @@ set_echo_flag(int fd, bool flag)
 // aggressive with warn_unused_result, to the point that a cast to
 // void won't do anything.  To work around the problem, we define an
 // equivalent function without the warn_unused_result attribute.
-constexpr ssize_t (&mywrite)(int, const void *, size_t) = ::write;
+constexpr ssize_t (&mywrite)(int, const void*, size_t) = ::write;
 #else // not (gcc 4+ and glibc)
 #define mywrite write
 #endif // not (gcc 4+ and glibc)
 
 std::string
-readSecret(const std::string &prompt, bool force_tty)
+readSecret(const std::string& prompt, bool force_tty)
 {
-#if HAVE_TERMIOS
     std::string ret;
 
-    if (!isatty(0) && !force_tty) {
+    if (!isatty(0) && !force_tty)
+    {
         std::getline(std::cin, ret);
         return ret;
     }
-
-    struct cleanup {
+#if !HAVE_TERMIOS
+    // Sorry, Windows.  Might need to use something like this:
+// https://msdn.microsoft.com/en-us/library/ms683167(VS.85).aspx
+// http://stackoverflow.com/questions/1413445/read-a-password-from-stdcin/1455007#1455007
+throw std::invalid_argument("reading secrets from terminal not supported");
+#else
+    struct cleanup
+    {
         std::function<void()> action_;
-        ~cleanup() { if (action_) action_(); }
+        ~cleanup()
+        {
+            if (action_)
+                action_();
+        }
     };
 
     int fd = open("/dev/tty", O_RDWR);
     if (fd == -1)
         throw_perror("/dev/tty");
     cleanup clean_fd;
-    clean_fd.action_ = [fd]{ close(fd); };
+    clean_fd.action_ = [fd] { close(fd); };
 
     cleanup clean_echo;
     int oldecho = set_echo_flag(fd, false);
     if (oldecho == -1)
         throw_perror("cannot disable terminal echo");
     else if (oldecho)
-        clean_echo.action_ = [fd]{ set_echo_flag(fd, true); };
+        clean_echo.action_ = [fd] { set_echo_flag(fd, true); };
 
     mywrite(fd, prompt.c_str(), prompt.size());
 
@@ -183,49 +262,75 @@ readSecret(const std::string &prompt, bool force_tty)
     if (n < 0)
         throw_perror("read secret key");
     mywrite(fd, "\n", 1);
-    char *p = static_cast<char *>(std::memchr(buf, '\n', sizeof(buf)));
+    char* p = static_cast<char*>(std::memchr(buf, '\n', sizeof(buf)));
     if (!p)
         throw std::runtime_error("line too long");
     ret.assign(buf, p - buf);
     memset(buf, 0, sizeof(buf));
     return ret;
-#else // !HAVE_TERMIOS
-	// Sorry, Windows.  Might need to use something like this:
-	// https://msdn.microsoft.com/en-us/library/ms683167(VS.85).aspx
-	// http://stackoverflow.com/questions/1413445/read-a-password-from-stdcin/1455007#1455007
-	throw std::runtime_error("Not supported for windows");
-#endif // !HAVE_TERMIOS
+#endif
 }
 
 void
-signtxn(std::string const& filename)
+signtxn(std::string const& filename, std::string netId, bool base64)
 {
     using namespace std;
 
-    try {
+    try
+    {
+        if (netId.empty())
+            netId = getenv("STELLAR_NETWORK_ID");
+        if (netId.empty())
+            throw std::runtime_error("missing --netid argument or "
+                                     "STELLAR_NETWORK_ID environment variable");
+
         const bool txn_stdin = filename == "-" || filename.empty();
 
-        if (isatty(1))
+        if (!base64 && isatty(1))
             throw std::runtime_error(
-                "Refusing to write binary transaction to terminal");
+                    "Refusing to write binary transaction to terminal");
 
         TransactionEnvelope txenv;
-        xdr::xdr_from_opaque(readFile(filename), txenv);
+        xdr::xdr_from_opaque(readFile(filename, base64), txenv);
         if (txenv.signatures.size() == txenv.signatures.max_size())
             throw std::runtime_error(
-                "Evelope already contains maximum number of signatures");
+                    "Evelope already contains maximum number of signatures");
 
         SecretKey sk(SecretKey::fromStrKeySeed(
-                         readSecret("Secret key seed: ", txn_stdin)));
-        txenv.signatures.emplace_back(PubKeyUtils::getHint(sk.getPublicKey()),
-                                      sk.sign(xdr::xdr_to_opaque(txenv.tx)));
+                readSecret("Secret key seed: ", txn_stdin)));
+        TransactionSignaturePayload payload;
+        payload.networkId = sha256(netId);
+        payload.taggedTransaction.type(ENVELOPE_TYPE_TX);
+        payload.taggedTransaction.tx() = txenv.tx;
+        txenv.signatures.emplace_back(
+                SignatureUtils::getHint(sk.getPublicKey().ed25519()),
+                sk.sign(sha256(xdr::xdr_to_opaque(payload))));
 
         auto out = xdr::xdr_to_opaque(txenv);
-        cout.write(reinterpret_cast<char *>(out.data()), out.size());
+        if (base64)
+            cout << decoder::encode_b64(out) << std::endl;
+        else
+            cout.write(reinterpret_cast<char*>(out.data()), out.size());
     }
-    catch (const std::exception &e) {
+    catch (const std::exception& e)
+    {
         cerr << e.what() << endl;
     }
 }
 
+void
+priv2pub()
+{
+    using namespace std;
+    try
+    {
+        SecretKey sk(
+                SecretKey::fromStrKeySeed(readSecret("Secret key seed: ", false)));
+        cout << sk.getStrKeyPublic() << endl;
+    }
+    catch (const std::exception& e)
+    {
+        cerr << e.what() << endl;
+    }
+}
 }

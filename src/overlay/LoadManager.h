@@ -6,13 +6,13 @@
 
 #include "crypto/SecretKey.h"
 #include "overlay/Peer.h"
+#include "util/HashOfHash.h"
 #include "util/lrucache.hpp"
 #include "xdr/Stellar-types.h"
-#include "util/HashOfHash.h"
 
+#include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "medida/timer.h"
-#include "medida/meter.h"
 
 #include "util/Timer.h"
 
@@ -38,7 +38,8 @@ class LoadManager
   public:
     LoadManager();
     ~LoadManager();
-    void reportLoads(std::vector<Peer::pointer> const& peers, Application& app);
+    void reportLoads(std::map<NodeID, Peer::pointer> const& peers,
+                     Application& app);
 
     // We track the costs incurred by each peer in a PeerCosts structure,
     // and keep these in an LRU cache to avoid overfilling the LoadManager

@@ -4,12 +4,12 @@
 
 #include "ExternalQueue.h"
 
-#include "database/Database.h"
 #include "Application.h"
+#include "database/Database.h"
 #include "ledger/LedgerManager.h"
 #include "util/Logging.h"
-#include <regex>
 #include <limits>
+#include <regex>
 
 namespace stellar
 {
@@ -24,7 +24,6 @@ string ExternalQueue::kSQLCreateStatement =
 
 ExternalQueue::ExternalQueue(Application& app) : mApp(app)
 {
-    mApp.getDatabase().getSession() << kSQLCreateStatement;
 }
 
 void
@@ -41,6 +40,24 @@ ExternalQueue::validateResourceID(std::string const& resid)
 {
     static std::regex re("^[A-Z][A-Z0-9]{0,31}$");
     return std::regex_match(resid, re);
+}
+
+void
+ExternalQueue::setInitialCursors(std::vector<std::string> const& initialResids)
+{
+    for (auto const& resid : initialResids)
+    {
+        addCursorForResource(resid, 1);
+    }
+}
+
+void
+ExternalQueue::addCursorForResource(std::string const& resid, uint32 cursor)
+{
+    if (getCursor(resid).empty())
+    {
+        setCursorForResource(resid, cursor);
+    }
 }
 
 void
@@ -81,6 +98,46 @@ ExternalQueue::setCursorForResource(std::string const& resid, uint32 cursor)
 }
 
 void
+ExternalQueue::getCursorForResource(std::string const& resid,
+                                    std::map<std::string, uint32>& curMap)
+{
+    // no resid set, get all cursors
+    if (resid.empty())
+    {
+        std::string n;
+        uint32_t v;
+
+        auto& db = mApp.getDatabase();
+        auto prep =
+            db.getPreparedStatement("SELECT resid, lastread FROM pubsub;");
+        auto& st = prep.statement();
+        st.exchange(soci::into(n));
+        st.exchange(soci::into(v));
+        st.define_and_bind();
+        {
+            auto timer = db.getSelectTimer("pubsub");
+            st.execute(true);
+        }
+
+        while (st.got_data())
+        {
+            curMap[n] = v;
+            st.fetch();
+        }
+    }
+    else
+    {
+        // if resid is set attempt to look up the cursor
+        // and add it to the map if anything is found
+        std::string cursor = getCursor(resid);
+        if (!cursor.empty())
+        {
+            curMap[resid] = strtoul(cursor.c_str(), NULL, 0);
+        }
+    }
+}
+
+void
 ExternalQueue::deleteCursor(std::string const& resid)
 {
     checkID(resid);
@@ -95,7 +152,7 @@ ExternalQueue::deleteCursor(std::string const& resid)
 }
 
 void
-ExternalQueue::process()
+ExternalQueue::deleteOldEntries(uint32 count)
 {
     auto& db = mApp.getDatabase();
     int m;
@@ -138,7 +195,7 @@ ExternalQueue::process()
                           << " (rmin=" << rmin << ", qmin=" << qmin
                           << ", lmin=" << lmin << ")";
 
-    mApp.getLedgerManager().deleteOldEntries(mApp.getDatabase(), cmin, mApp.getLedgerManager().getCloseTime());
+    mApp.getLedgerManager().deleteOldEntries(mApp.getDatabase(), cmin, count);
 }
 
 void

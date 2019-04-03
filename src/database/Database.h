@@ -7,9 +7,9 @@
 #include "database/Marshaler.h"
 #include "medida/timer_context.h"
 #include "overlay/StellarXDR.h"
+#include "database/DatabaseTypeSpecificOperation.h"
 #include "util/NonCopyable.h"
 #include "util/Timer.h"
-#include "util/lrucache.hpp"
 #include <set>
 #include <soci.h>
 #include <string>
@@ -17,7 +17,6 @@
 namespace medida
 {
 class Meter;
-class Timer;
 class Counter;
 }
 
@@ -132,6 +131,8 @@ class Database
     getDeleteTimer(std::string const& entityName) = 0;
     virtual medida::TimerContext
     getUpdateTimer(std::string const& entityName) = 0;
+    virtual medida::TimerContext
+    getUpsertTimer(std::string const& entityName) = 0;
 
     // If possible (i.e. "on postgres") issue an SQL pragma that marks
     // the current transaction as read-only. The effects of this last
@@ -140,6 +141,11 @@ class Database
 
     // Return true if the Database target is SQLite, otherwise false.
     virtual bool isSqlite() const = 0;
+
+    // Call `op` back with the specific database backend subtype in use.
+    virtual template <typename T>
+    T
+    doDatabaseTypeSpecificOperation(DatabaseTypeSpecificOperation<T>& op) = 0;
 
     // Return true if a connection pool is available for worker threads
     // to read from the database through, otherwise false.
@@ -168,13 +174,6 @@ class Database
     // threads. Throws an error if !canUsePool().
     virtual soci::connection_pool& getPool() = 0;
 
-    // Access the LedgerEntry cache. Note: clients are responsible for
-    // invalidating entries in this cache as they perform statements
-    // against the database. It's kept here only for ease of access.
-    typedef cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>
-        EntryCache;
-    virtual EntryCache& getEntryCache() = 0;
-
     virtual ~Database()
     {
     }
@@ -189,9 +188,6 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
 
     std::map<std::string, std::shared_ptr<soci::statement>> mStatements;
     medida::Counter& mStatementsSize;
-
-    cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>
-        mEntryCache;
 
     // Helpers for maintaining the total query time and calculating
     // idle percentage.
@@ -251,9 +247,29 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
     virtual soci::session& getSession();
 
     virtual soci::connection_pool& getPool();
-
-    virtual EntryCache& getEntryCache();
 };
+
+template <typename T>
+T
+Database::doDatabaseTypeSpecificOperation(DatabaseTypeSpecificOperation<T>& op)
+{
+    auto b = mSession.get_backend();
+    if (auto sq = dynamic_cast<soci::sqlite3_session_backend*>(b))
+    {
+        return op.doSqliteSpecificOperation(sq);
+#ifdef USE_POSTGRES
+    }
+    else if (auto pg = dynamic_cast<soci::postgresql_session_backend*>(b))
+    {
+        return op.doPostgresSpecificOperation(pg);
+#endif
+    }
+    else
+    {
+        // Extend this with other cases if we support more databases.
+        abort();
+    }
+}
 
 class DBTimeExcluder : NonCopyable
 {

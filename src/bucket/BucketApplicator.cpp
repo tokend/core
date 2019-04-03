@@ -5,59 +5,61 @@
 #include "bucket/Bucket.h"
 #include "bucket/BucketApplicator.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/EntryHelperLegacy.h"
-#include "util/Logging.h"
+#include "ledger/LedgerTxn.h"
+#include "ledger/LedgerTxnEntry.h"
+#include "main/Application.h"
 
 namespace stellar
 {
 
-BucketApplicator::BucketApplicator(Database& db,
+BucketApplicator::BucketApplicator(Application& app,
                                    std::shared_ptr<const Bucket> bucket)
-    : mDb(db), mBucket(bucket)
+    : mApp(app), mBucketIter(bucket)
 {
-    if (!bucket->getFilename().empty())
-    {
-        mIn.open(bucket->getFilename());
-    }
 }
 
 BucketApplicator::operator bool() const
 {
-    return (bool)mIn;
+    return (bool)mBucketIter;
 }
 
-void
+size_t
+BucketApplicator::pos()
+{
+    return mBucketIter.pos();
+}
+
+size_t
+BucketApplicator::size() const
+{
+    return mBucketIter.size();
+}
+
+size_t
 BucketApplicator::advance()
 {
-    soci::transaction sqlTx(mDb.getSession());
-    BucketEntry entry;
-    while (mIn && mIn.readOne(entry))
+    size_t count = 0;
+    LedgerTxn ltx(mApp.getLedgerTxnRoot(), false);
+    for (; mBucketIter; ++mBucketIter)
     {
-        LedgerHeader lh;
-        LedgerDeltaImpl delta(lh, mDb, false);
-        if (entry.type() == BucketEntryType::LIVEENTRY)
+        BucketEntry const& e = *mBucketIter;
+        if (e.type() == LIVEENTRY)
         {
-            LedgerEntry le = entry.liveEntry();
-            EntryHelperProvider::storeAddOrChangeEntry(delta, mDb, le);
+            ltx.createOrUpdateWithoutLoading(e.liveEntry());
         }
         else
         {
-			EntryHelperProvider::storeDeleteEntry(delta, mDb, entry.deadEntry());
+            ltx.eraseWithoutLoading(e.deadEntry());
         }
-        // No-op, just to avoid needless rollback.
-        static_cast<LedgerDelta&>(delta).commit();
-        if ((++mSize & 0xff) == 0xff)
+
+        if ((++count > LEDGER_ENTRY_BATCH_COMMIT_SIZE))
         {
             break;
         }
     }
-    sqlTx.commit();
-    mDb.clearPreparedStatementCache();
+    ltx.commit();
 
-    if (!mIn || (mSize & 0xfff) == 0xfff)
-    {
-        CLOG(INFO, "Bucket") << "Bucket-apply: committed " << mSize
-                             << " entries";
-    }
+    mCount += count;
+    return count;
 }
 }

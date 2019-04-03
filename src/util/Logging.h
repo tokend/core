@@ -7,9 +7,17 @@
 #define ELPP_THREAD_SAFE
 #define ELPP_DISABLE_DEFAULT_CRASH_HANDLING
 #define ELPP_NO_DEFAULT_LOG_FILE
+#define ELPP_NO_CHECK_MACROS
+#define ELPP_NO_DEBUG_MACROS
+#define ELPP_DISABLE_PERFORMANCE_TRACKING
+#define ELPP_WINSOCK2
+#define ELPP_DEBUG_ERRORS
 
-// NOTE: Nothing else should include easylogging directly
-//  include this file instead
+// NOTE: Nothing else should include easylogging directly include this file
+// instead Please think carefully modifying this file, and potentially using
+// synchronization primitives. It is easy to introduce data races and deadlocks,
+// so it is recommended to use valgrind --tool=helgrind to detect potential
+// problems.
 #include "util/asio.h"
 #include "lib/util/easylogging++.h"
 
@@ -33,5 +41,6 @@ class Logging
     static std::string getStringFromLL(el::Level);
     static bool logDebug(std::string const& partition);
     static bool logTrace(std::string const& partition);
+    static void rotate();
 };
 }

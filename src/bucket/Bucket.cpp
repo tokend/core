@@ -2,53 +2,27 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+// ASIO is somewhat particular about when it gets included -- it wants to be the
+// first to include <windows.h> -- so we try to include it before everything
+// else.
+#include "util/asio.h"
 #include "bucket/Bucket.h"
 #include "bucket/BucketApplicator.h"
 #include "bucket/BucketManager.h"
 #include "bucket/BucketList.h"
+#include "bucket/BucketOutputIterator.h"
 #include "bucket/LedgerCmp.h"
 #include "crypto/Random.h"
 #include "main/Application.h"
 #include "util/Fs.h"
-#include "ledger/EntryHelperLegacy.h"
-#include "ledger/AccountHelperLegacy.h"
-#include "ledger/BalanceFrame.h"
-#include "ledger/BalanceHelperLegacy.h"
-#include "ledger/AssetPairFrame.h"
-#include "ledger/AssetPairHelper.h"
+#include "util/LogSlowExecution.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/FeeHelper.h"
-#include "ledger/OfferFrame.h"
-#include "ledger/OfferHelper.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/ReferenceFrame.h"
-#include "ledger/ReferenceHelper.h"
-#include "ledger/AccountLimitsFrame.h"
-#include "ledger/AccountLimitsHelper.h"
-#include "ledger/StatisticsFrame.h"
-#include "ledger/StatisticsHelper.h"
-#include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ExternalSystemAccountID.h"
+#include "medida/timer.h"
 #include "medida/medida.h"
 #include "lib/util/format.h"
 
 namespace stellar
 {
-
-static std::string
-randomBucketName(std::string const& tmpDir)
-{
-    for (;;)
-    {
-        std::string name =
-            tmpDir + "/tmp-bucket-" + binToHex(randomBytes(8)) + ".xdr";
-        std::ifstream ifile(name);
-        if (!ifile)
-        {
-            return name;
-        }
-    }
-}
 
 Bucket::Bucket(std::string const& filename, Hash const& hash)
     : mFilename(filename), mHash(hash)
@@ -58,15 +32,7 @@ Bucket::Bucket(std::string const& filename, Hash const& hash)
     {
         CLOG(TRACE, "Bucket")
             << "Bucket::Bucket() created, file exists : " << mFilename;
-    }
-}
-
-Bucket::~Bucket()
-{
-    if (!mFilename.empty() && !mRetain)
-    {
-        CLOG(TRACE, "Bucket") << "Bucket::~Bucket removing file: " << mFilename;
-        std::remove(mFilename.c_str());
+        mSize = fs::size(filename);
     }
 }
 
@@ -86,171 +52,17 @@ Bucket::getFilename() const
     return mFilename;
 }
 
-void
-Bucket::setRetain(bool r)
+size_t
+Bucket::getSize() const
 {
-    mRetain = r;
+    return mSize;
 }
-
-/**
- * Helper class that reads from the file underlying a bucket, keeping the bucket
- * alive for the duration of its existence.
- */
-class Bucket::InputIterator
-{
-    std::shared_ptr<Bucket const> mBucket;
-
-    // Validity and current-value of the iterator is funneled into a pointer. If
-    // non-null, it points to mEntry.
-    BucketEntry const* mEntryPtr;
-    XDRInputFileStream mIn;
-    BucketEntry mEntry;
-
-    void
-    loadEntry()
-    {
-        if (mIn.readOne(mEntry))
-        {
-            mEntryPtr = &mEntry;
-        }
-        else
-        {
-            mEntryPtr = nullptr;
-        }
-    }
-
-  public:
-    operator bool() const
-    {
-        return mEntryPtr != nullptr;
-    }
-
-    BucketEntry const& operator*()
-    {
-        return *mEntryPtr;
-    }
-
-    InputIterator(std::shared_ptr<Bucket const> bucket)
-        : mBucket(bucket), mEntryPtr(nullptr)
-    {
-        if (!mBucket->mFilename.empty())
-        {
-            CLOG(TRACE, "Bucket")
-                << "Bucket::InputIterator opening file to read: "
-                << mBucket->mFilename;
-            mIn.open(mBucket->mFilename);
-            loadEntry();
-        }
-    }
-
-    ~InputIterator()
-    {
-        mIn.close();
-    }
-
-    InputIterator& operator++()
-    {
-        if (mIn)
-        {
-            loadEntry();
-        }
-        else
-        {
-            mEntryPtr = nullptr;
-        }
-        return *this;
-    }
-};
-
-/**
- * Helper class that points to an output tempfile. Absorbs BucketEntries and
- * hashes them while writing to either destination. Produces a Bucket when done.
- */
-class Bucket::OutputIterator
-{
-    std::string mFilename;
-    XDROutputFileStream mOut;
-    BucketEntryIdCmp mCmp;
-    std::unique_ptr<BucketEntry> mBuf;
-    std::unique_ptr<SHA256> mHasher;
-    size_t mBytesPut{0};
-    size_t mObjectsPut{0};
-    bool mKeepDeadEntries{true};
-
-  public:
-    OutputIterator(std::string const& tmpDir, bool keepDeadEntries)
-        : mFilename(randomBucketName(tmpDir))
-        , mBuf(nullptr)
-        , mHasher(SHA256::create())
-        , mKeepDeadEntries(keepDeadEntries)
-    {
-        CLOG(TRACE, "Bucket")
-            << "Bucket::OutputIterator opening file to write: " << mFilename;
-        mOut.open(mFilename);
-    }
-
-    void
-    put(BucketEntry const& e)
-    {
-        if (!mKeepDeadEntries && e.type() == BucketEntryType::DEADENTRY)
-        {
-            return;
-        }
-
-        // Check to see if there's an existing buffered entry.
-        if (mBuf)
-        {
-            // mCmp(e, *mBuf) means e < *mBuf; this should never be true since
-            // it would mean that we're getting entries out of order.
-            assert(!mCmp(e, *mBuf));
-
-            // Check to see if the new entry should flush (greater identity), or
-            // merely replace (same identity), the buffered entry.
-            if (mCmp(*mBuf, e))
-            {
-                mOut.writeOne(*mBuf, mHasher.get(), &mBytesPut);
-                mObjectsPut++;
-            }
-        }
-        else
-        {
-            mBuf = std::make_unique<BucketEntry>();
-        }
-
-        // In any case, replace *mBuf with e.
-        *mBuf = e;
-    }
-
-    std::shared_ptr<Bucket>
-    getBucket(BucketManager& bucketManager)
-    {
-        assert(mOut);
-        if (mBuf)
-        {
-            mOut.writeOne(*mBuf, mHasher.get(), &mBytesPut);
-            mObjectsPut++;
-            mBuf.reset();
-        }
-
-        mOut.close();
-        if (mObjectsPut == 0 || mBytesPut == 0)
-        {
-            assert(mObjectsPut == 0);
-            assert(mBytesPut == 0);
-            CLOG(DEBUG, "Bucket") << "Deleting empty bucket file " << mFilename;
-            std::remove(mFilename.c_str());
-            return std::make_shared<Bucket>();
-        }
-        return bucketManager.adoptFileAsBucket(mFilename, mHasher->finish(),
-                                               mObjectsPut, mBytesPut);
-    }
-};
 
 bool
 Bucket::containsBucketIdentity(BucketEntry const& id) const
 {
     BucketEntryIdCmp cmp;
-    Bucket::InputIterator iter(shared_from_this());
+    BucketInputIterator iter(shared_from_this());
     while (iter)
     {
         if (!(cmp(*iter, id) || cmp(id, *iter)))
@@ -266,7 +78,7 @@ std::pair<size_t, size_t>
 Bucket::countLiveAndDeadEntries() const
 {
     size_t live = 0, dead = 0;
-    Bucket::InputIterator iter(shared_from_this());
+    BucketInputIterator iter(shared_from_this());
     while (iter)
     {
         if ((*iter).type() == BucketEntryType::LIVEENTRY)
@@ -283,24 +95,21 @@ Bucket::countLiveAndDeadEntries() const
 }
 
 void
-Bucket::apply(Database& db) const
+Bucket::apply(Application& app) const
 {
-    BucketApplicator applicator(db, shared_from_this());
+    BucketApplicator applicator(app, shared_from_this());
+    BucketApplicator::Counters counters(std::chrono::system_clock::now());
     while (applicator)
     {
-        applicator.advance();
+        applicator.advance(counters);
     }
 }
 
-std::shared_ptr<Bucket>
-Bucket::fresh(BucketManager& bucketManager,
-              std::vector<LedgerEntry> const& liveEntries,
-              std::vector<LedgerKey> const& deadEntries)
+std::vector<BucketEntry>
+Bucket::convertToBucketEntry(std::vector<LedgerEntry> const& liveEntries)
 {
-    std::vector<BucketEntry> live, dead, combined;
+    std::vector<BucketEntry> live;
     live.reserve(liveEntries.size());
-    dead.reserve(deadEntries.size());
-
     for (auto const& e : liveEntries)
     {
         BucketEntry ce;
@@ -308,7 +117,15 @@ Bucket::fresh(BucketManager& bucketManager,
         ce.liveEntry() = e;
         live.push_back(ce);
     }
+    std::sort(live.begin(), live.end(), BucketEntryIdCmp());
+    return live;
+}
 
+std::vector<BucketEntry>
+Bucket::convertToBucketEntry(std::vector<LedgerKey> const& deadEntries)
+{
+    std::vector<BucketEntry> dead;
+    dead.reserve(deadEntries.size());
     for (auto const& e : deadEntries)
     {
         BucketEntry ce;
@@ -316,13 +133,20 @@ Bucket::fresh(BucketManager& bucketManager,
         ce.deadEntry() = e;
         dead.push_back(ce);
     }
-
-    std::sort(live.begin(), live.end(), BucketEntryIdCmp());
-
     std::sort(dead.begin(), dead.end(), BucketEntryIdCmp());
+    return dead;
+}
 
-    OutputIterator liveOut(bucketManager.getTmpDir(), true);
-    OutputIterator deadOut(bucketManager.getTmpDir(), true);
+std::shared_ptr<Bucket>
+Bucket::fresh(BucketManager& bucketManager,
+              std::vector<LedgerEntry> const& liveEntries,
+              std::vector<LedgerKey> const& deadEntries)
+{
+    auto live = convertToBucketEntry(liveEntries);
+    auto dead = convertToBucketEntry(deadEntries);
+
+    BucketOutputIterator liveOut(bucketManager.getTmpDir(), true);
+    BucketOutputIterator deadOut(bucketManager.getTmpDir(), true);
     for (auto const& e : live)
     {
         liveOut.put(e);
@@ -334,37 +158,41 @@ Bucket::fresh(BucketManager& bucketManager,
 
     auto liveBucket = liveOut.getBucket(bucketManager);
     auto deadBucket = deadOut.getBucket(bucketManager);
-    return Bucket::merge(bucketManager, liveBucket, deadBucket);
+
+    std::shared_ptr<Bucket> bucket;
+    {
+        auto timer = LogSlowExecution("Bucket merge");
+        bucket = Bucket::merge(bucketManager, liveBucket, deadBucket);
+    }
+    return bucket;
 }
 
 inline void
-maybe_put(BucketEntryIdCmp const& cmp, Bucket::OutputIterator& out,
-          Bucket::InputIterator& in,
-          std::vector<Bucket::InputIterator>& shadowIterators)
+maybePut(BucketOutputIterator& out, BucketEntry const& entry,
+         std::vector<BucketInputIterator>& shadowIterators)
 {
+    BucketEntryIdCmp cmp;
     for (auto& si : shadowIterators)
     {
         // Advance the shadowIterator while it's less than the candidate
-        while (si && cmp(*si, *in))
+        while (si && cmp(*si, entry))
         {
             ++si;
         }
         // We have stepped si forward to the point that either si is exhausted,
-        // or else *si >= *in; we now check the opposite direction to see if we
-        // have equality.
-        if (si && !cmp(*in, *si))
+        // or else *si >= entry; we now check the opposite direction to see if
+        // we have equality.
+        if (si && !cmp(entry, *si))
         {
-            // If so, then *in is shadowed in at least one level and we will
+            // If so, then entry is shadowed in at least one level and we will
             // not be doing a 'put'; we return early. There is no need to
-            // advance
-            // the other iterators, they will advance as and if necessary in
-            // future
-            // calls to maybe_put.
+            // advance the other iterators, they will advance as and if
+            // necessary in future calls to maybePut.
             return;
         }
     }
     // Nothing shadowed.
-    out.put(*in);
+    out.put(entry);
 }
 
 std::shared_ptr<Bucket>
@@ -381,14 +209,14 @@ Bucket::merge(BucketManager& bucketManager,
     assert(oldBucket);
     assert(newBucket);
 
-    Bucket::InputIterator oi(oldBucket);
-    Bucket::InputIterator ni(newBucket);
+    BucketInputIterator oi(oldBucket);
+    BucketInputIterator ni(newBucket);
 
-    std::vector<Bucket::InputIterator> shadowIterators(shadows.begin(),
-                                                       shadows.end());
+    std::vector<BucketInputIterator> shadowIterators(shadows.begin(),
+                                                     shadows.end());
 
     auto timer = bucketManager.getMergeTimer().TimeScope();
-    Bucket::OutputIterator out(bucketManager.getTmpDir(), keepDeadEntries);
+    BucketOutputIterator out(bucketManager.getTmpDir(), keepDeadEntries);
 
     BucketEntryIdCmp cmp;
     while (oi || ni)
@@ -396,143 +224,35 @@ Bucket::merge(BucketManager& bucketManager,
         if (!ni)
         {
             // Out of new entries, take old entries.
-            maybe_put(cmp, out, oi, shadowIterators);
+            maybePut(out, *oi, shadowIterators);
             ++oi;
         }
         else if (!oi)
         {
             // Out of old entries, take new entries.
-            maybe_put(cmp, out, ni, shadowIterators);
+            maybePut(out, *ni, shadowIterators);
             ++ni;
         }
         else if (cmp(*oi, *ni))
         {
             // Next old-entry has smaller key, take it.
-            maybe_put(cmp, out, oi, shadowIterators);
+            maybePut(out, *oi, shadowIterators);
             ++oi;
         }
         else if (cmp(*ni, *oi))
         {
             // Next new-entry has smaller key, take it.
-            maybe_put(cmp, out, ni, shadowIterators);
+            maybePut(out, *ni, shadowIterators);
             ++ni;
         }
         else
         {
             // Old and new are for the same key, take new.
-            maybe_put(cmp, out, ni, shadowIterators);
+            maybePut(out, *ni, shadowIterators);
             ++oi;
             ++ni;
         }
     }
     return out.getBucket(bucketManager);
-}
-
-static void
-compareSizes(std::string const& objType, uint64_t inDatabase,
-             uint64_t inBucketlist)
-{
-    if (inDatabase != inBucketlist)
-    {
-        throw std::runtime_error(fmt::format(
-            "{} object count mismatch: DB has {}, BucketList has {}", objType,
-            inDatabase, inBucketlist));
-    }
-}
-
-// FIXME issue NNN: this should be refactored to run in a read-transaction on a
-// background thread and take a soci::session& rather than Database&. For now we
-// code it to run on main thread because there's a bunch of code to move around
-// in the ledger frames and db layer to make that work.
-
-void
-checkDBAgainstBuckets(medida::MetricsRegistry& metrics,
-                      BucketManager& bucketManager, Database& db,
-                      BucketList& bl)
-{
-    CLOG(INFO, "Bucket") << "CheckDB starting";
-    auto execTimer =
-        metrics.NewTimer({"bucket", "checkdb", "execute"}).TimeScope();
-
-    // Step 1: Collect all buckets to merge.
-    std::vector<std::shared_ptr<Bucket>> buckets;
-    for (size_t i = 0; i < BucketList::kNumLevels; ++i)
-    {
-        CLOG(INFO, "Bucket") << "CheckDB collecting buckets from level " << i;
-        auto& level = bl.getLevel(i);
-        auto& next = level.getNext();
-        if (next.isLive())
-        {
-            CLOG(INFO, "Bucket") << "CheckDB resolving future bucket on level "
-                                 << i;
-            buckets.push_back(next.resolve());
-        }
-        buckets.push_back(level.getCurr());
-        buckets.push_back(level.getSnap());
-    }
-
-    if (buckets.empty())
-    {
-        CLOG(INFO, "Bucket") << "CheckDB found no buckets, returning";
-        return;
-    }
-
-    // Step 2: merge all buckets into a single super-bucket.
-    auto i = buckets.begin();
-    assert(i != buckets.end());
-    std::shared_ptr<Bucket> superBucket = *i;
-    while (++i != buckets.end())
-    {
-        auto mergeTimer =
-            metrics.NewTimer({"bucket", "checkdb", "merge"}).TimeScope();
-        assert(superBucket);
-        assert(*i);
-        superBucket = Bucket::merge(bucketManager, *i, superBucket);
-        assert(superBucket);
-    }
-
-    CLOG(INFO, "Bucket") << "CheckDB starting object comparison";
-
-    // Step 3: scan the superbucket, checking each object against the DB and
-    // counting objects along the way.
-
-	std::map<LedgerEntryType, uint64_t> counters;
-	{
-		auto& meter = metrics.NewMeter({ "bucket", "checkdb", "object-compare" },
-			"comparison");
-		auto compareTimer =
-			metrics.NewTimer({ "bucket", "checkdb", "compare" }).TimeScope();
-		for (Bucket::InputIterator iter(superBucket); iter; ++iter)
-		{
-			meter.Mark();
-			auto& e = *iter;
-			if (e.type() == BucketEntryType::LIVEENTRY)
-			{
-				auto entryType = e.liveEntry().data.type();
-				auto counter = counters.find(entryType);
-				if (counter == counters.end())
-				{
-					counters.insert(std::pair<LedgerEntryType, uint64_t>(entryType, (uint64_t)1));
-				}
-				else
-				{
-					counter->second++;
-				}
-
-				EntryHelperProvider::checkAgainstDatabase(e.liveEntry(), db);
-				if (meter.count() % 100 == 0)
-				{
-					CLOG(INFO, "Bucket") << "CheckDB compared " << meter.count()
-						<< " objects";
-				}
-			}
-		}
-	}
-
-    // Step 4: confirm size of datasets matches size of datasets in DB.
-	for (auto& counter : counters)
-	{
-		compareSizes(xdr::xdr_traits<LedgerEntryType>::enum_name(counter.first), EntryHelperProvider::countObjectsEntry(db, counter.first), counter.second);
-	}
 }
 }

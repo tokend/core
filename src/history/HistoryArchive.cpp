@@ -7,26 +7,27 @@
 // else.
 #include "util/asio.h"
 #include "history/HistoryArchive.h"
+#include "bucket/Bucket.h"
 #include "bucket/BucketList.h"
 #include "crypto/Hex.h"
 #include "crypto/SHA.h"
 #include "history/HistoryManager.h"
-#include "history/FileTransferInfo.h"
-#include "process/ProcessManager.h"
-#include "main/Application.h"
-#include "util/Fs.h"
-#include "util/make_unique.h"
-#include "util/Logging.h"
-#include "StellarCoreVersion.h"
-#include <cereal/cereal.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/types/vector.hpp>
 #include "lib/util/format.h"
+#include "main/Application.h"
+#include "main/StellarCoreVersion.h"
+#include "process/ProcessManager.h"
+#include "util/Fs.h"
+#include "util/Logging.h"
 
+#include <cereal/archives/json.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/vector.hpp>
 #include <chrono>
 #include <fstream>
 #include <future>
 #include <iostream>
+#include <medida/meter.h>
+#include <medida/metrics_registry.h>
 #include <set>
 #include <sstream>
 
@@ -34,6 +35,22 @@ namespace stellar
 {
 
 unsigned const HistoryArchiveState::HISTORY_ARCHIVE_STATE_VERSION = 1;
+
+template <typename... Tokens>
+std::string
+formatString(std::string const& templateString, Tokens const&... tokens)
+{
+    try
+    {
+        return fmt::format(templateString, tokens...);
+    }
+    catch (fmt::FormatError const& ex)
+    {
+        CLOG(ERROR, "History") << "failed to format string \"" << templateString
+                               << "\":" << ex.what();
+        throw std::runtime_error("failed to format command string");
+    }
+}
 
 bool
 HistoryArchiveState::futuresAllReady() const
@@ -264,10 +281,10 @@ HistoryArchiveState::HistoryArchiveState() : server(STELLAR_CORE_VERSION)
 }
 
 HistoryArchiveState::HistoryArchiveState(uint32_t ledgerSeq,
-                                         BucketList& buckets)
+                                         BucketList const& buckets)
     : server(STELLAR_CORE_VERSION), currentLedger(ledgerSeq)
 {
-    for (size_t i = 0; i < BucketList::kNumLevels; ++i)
+    for (uint32_t i = 0; i < BucketList::kNumLevels; ++i)
     {
         HistoryStateBucket b;
         auto& level = buckets.getLevel(i);
@@ -278,11 +295,13 @@ HistoryArchiveState::HistoryArchiveState(uint32_t ledgerSeq,
     }
 }
 
-HistoryArchive::HistoryArchive(std::string const& name,
-                               std::string const& getCmd,
-                               std::string const& putCmd,
-                               std::string const& mkdirCmd)
-    : mName(name), mGetCmd(getCmd), mPutCmd(putCmd), mMkdirCmd(mkdirCmd)
+HistoryArchive::HistoryArchive(Application& app,
+                               HistoryArchiveConfiguration const& config)
+    : mConfig(config)
+    , mSuccessMeter(app.getMetrics().NewMeter(
+          {"history-archive", config.mName, "success"}, "event"))
+    , mFailureMeter(app.getMetrics().NewMeter(
+          {"history-archive", config.mName, "failure"}, "event"))
 {
 }
 
@@ -293,50 +312,74 @@ HistoryArchive::~HistoryArchive()
 bool
 HistoryArchive::hasGetCmd() const
 {
-    return !mGetCmd.empty();
+    return !mConfig.mGetCmd.empty();
 }
 
 bool
 HistoryArchive::hasPutCmd() const
 {
-    return !mPutCmd.empty();
+    return !mConfig.mPutCmd.empty();
 }
 
 bool
 HistoryArchive::hasMkdirCmd() const
 {
-    return !mMkdirCmd.empty();
+    return !mConfig.mMkdirCmd.empty();
 }
 
 std::string const&
 HistoryArchive::getName() const
 {
-    return mName;
+    return mConfig.mName;
 }
 
 std::string
 HistoryArchive::getFileCmd(std::string const& remote,
                            std::string const& local) const
 {
-    if (mGetCmd.empty())
+    if (mConfig.mGetCmd.empty())
         return "";
-    return fmt::format(mGetCmd, remote, local);
+    return formatString(mConfig.mGetCmd, remote, local);
 }
 
 std::string
 HistoryArchive::putFileCmd(std::string const& local,
                            std::string const& remote) const
 {
-    if (mPutCmd.empty())
+    if (mConfig.mPutCmd.empty())
         return "";
-    return fmt::format(mPutCmd, local, remote);
+    return formatString(mConfig.mPutCmd, local, remote);
 }
 
 std::string
 HistoryArchive::mkdirCmd(std::string const& remoteDir) const
 {
-    if (mMkdirCmd.empty())
+    if (mConfig.mMkdirCmd.empty())
         return "";
-    return fmt::format(mMkdirCmd, remoteDir);
+    return formatString(mConfig.mMkdirCmd, remoteDir);
+}
+
+void
+HistoryArchive::markSuccess()
+{
+    mSuccessMeter.Mark();
+}
+
+void
+HistoryArchive::markFailure()
+{
+    mFailureMeter.Mark();
+}
+
+uint64_t
+HistoryArchive::getSuccessCount() const
+{
+    return mSuccessMeter.count();
+}
+
+uint64_t
+HistoryArchive::getFailureCount() const
+{
+    return mFailureMeter.count();
 }
 }

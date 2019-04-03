@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <string>
 
 // Copyright 2015 Stellar Development Foundation and contributors. Licensed
@@ -35,15 +36,19 @@ class BucketManagerImpl : public BucketManager
 
     Application& mApp;
     BucketList mBucketList;
+    std::unique_ptr<TmpDirManager> mTmpDirManager;
     std::unique_ptr<TmpDir> mWorkDir;
     std::map<Hash, std::shared_ptr<Bucket>> mSharedBuckets;
     mutable std::recursive_mutex mBucketMutex;
     std::unique_ptr<std::string> mLockedBucketDir;
-    medida::Meter& mBucketObjectInsert;
-    medida::Meter& mBucketByteInsert;
+    medida::Meter& mBucketObjectInsertBatch;
     medida::Timer& mBucketAddBatch;
     medida::Timer& mBucketSnapMerge;
     medida::Counter& mSharedBucketsSize;
+
+    std::set<Hash> getReferencedBuckets() const;
+    void cleanupStaleFiles();
+    void cleanDir();
 
   protected:
     void calculateSkipValues(LedgerHeader& currentHeader);
@@ -53,10 +58,13 @@ class BucketManagerImpl : public BucketManager
   public:
     BucketManagerImpl(Application& app);
     ~BucketManagerImpl() override;
+    void initialize() override;
+    void dropAll() override;
     std::string const& getTmpDir() override;
     std::string const& getBucketDir() override;
     BucketList& getBucketList() override;
     medida::Timer& getMergeTimer() override;
+    TmpDirManager& getTmpDirManager() override;
     std::shared_ptr<Bucket> adoptFileAsBucket(std::string const& filename,
                                               uint256 const& hash,
                                               size_t nObjects,
@@ -72,6 +80,7 @@ class BucketManagerImpl : public BucketManager
     std::vector<std::string>
     checkForMissingBucketsFiles(HistoryArchiveState const& has) override;
     void assumeState(HistoryArchiveState const& has) override;
+    void shutdown() override;
 };
 
 #define SKIP_1 50

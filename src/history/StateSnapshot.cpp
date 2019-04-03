@@ -2,28 +2,22 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include "history/StateSnapshot.h"
 #include "bucket/Bucket.h"
 #include "bucket/BucketList.h"
 #include "bucket/BucketManager.h"
 #include "crypto/Hex.h"
-#include "herder/Herder.h"
+#include "database/Database.h"
+#include "herder/HerderPersistence.h"
+#include "history/FileTransferInfo.h"
 #include "history/HistoryArchive.h"
 #include "history/HistoryManager.h"
-#include "history/FileTransferInfo.h"
-#include "history/StateSnapshot.h"
+#include "ledger/LedgerHeaderUtils.h"
 #include "main/Application.h"
 #include "main/Config.h"
-#include "database/Database.h"
-#include "ledger/LedgerHeaderFrame.h"
 #include "transactions/TransactionFrame.h"
 #include "util/Logging.h"
-#include "util/make_unique.h"
 #include "util/XDRStream.h"
-
-#include "medida/metrics_registry.h"
-#include "medida/counter.h"
-
-#include <soci.h>
 
 namespace stellar
 {
@@ -51,11 +45,13 @@ StateSnapshot::StateSnapshot(Application& app, HistoryArchiveState const& state)
 void
 StateSnapshot::makeLive()
 {
-    for (auto& hb : mLocalState.currentBuckets)
+    for (uint32_t i = 0;
+         i < static_cast<uint32>(mLocalState.currentBuckets.size()); i++)
     {
+        auto& hb = mLocalState.currentBuckets[i];
         if (hb.next.hasHashes() && !hb.next.isLive())
         {
-            hb.next.makeLive(mApp);
+            hb.next.makeLive(mApp, BucketList::keepDeadEntries(i));
         }
     }
 }
@@ -65,7 +61,7 @@ StateSnapshot::writeHistoryBlocks() const
 {
     std::unique_ptr<soci::session> snapSess(
         mApp.getDatabase().canUsePool()
-            ? make_unique<soci::session>(mApp.getDatabase().getPool())
+            ? std::make_unique<soci::session>(mApp.getDatabase().getPool())
             : nullptr);
     soci::session& sess(snapSess ? *snapSess : mApp.getDatabase().getSession());
     soci::transaction tx(sess);
@@ -97,24 +93,24 @@ StateSnapshot::writeHistoryBlocks() const
         CLOG(DEBUG, "History") << "Streaming " << count
                                << " ledgers worth of history, from " << begin;
 
-        nHeaders = LedgerHeaderFrame::copyLedgerHeadersToStream(
-            mApp.getDatabase(), sess, begin, count, ledgerOut);
+        nHeaders = LedgerHeaderUtils::copyToStream(mApp.getDatabase(), sess,
+                                                   begin, count, ledgerOut);
         size_t nTxs = TransactionFrame::copyTransactionsToStream(
             mApp.getNetworkID(), mApp.getDatabase(), sess, begin, count, txOut,
             txResultOut);
         CLOG(DEBUG, "History") << "Wrote " << nHeaders << " ledger headers to "
                                << mLedgerSnapFile->localPath_nogz();
-        CLOG(DEBUG, "History") << "Wrote " << nTxs << " transactions to "
-                               << mTransactionSnapFile->localPath_nogz()
-                               << " and "
-                               << mTransactionResultSnapFile->localPath_nogz();
+        CLOG(DEBUG, "History")
+            << "Wrote " << nTxs << " transactions to "
+            << mTransactionSnapFile->localPath_nogz() << " and "
+            << mTransactionResultSnapFile->localPath_nogz();
 
-        nbSCPMessages = Herder::copySCPHistoryToStream(
+        nbSCPMessages = HerderPersistence::copySCPHistoryToStream(
             mApp.getDatabase(), sess, begin, count, scpHistory);
 
-        CLOG(DEBUG, "History") << "Wrote " << nbSCPMessages
-                               << " SCP messages to "
-                               << mSCPHistorySnapFile->localPath_nogz();
+        CLOG(DEBUG, "History")
+            << "Wrote " << nbSCPMessages << " SCP messages to "
+            << mSCPHistorySnapFile->localPath_nogz();
     }
 
     if (nbSCPMessages == 0)

@@ -1,0 +1,55 @@
+diff --git a/.gitignore b/.gitignore
+index b14bcc9..cd30452 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -23,6 +23,7 @@
+ # text editors
+ *~
+ *.swp
++**/.vscode/*
+
+ .libs
+ .deps
+@@ -30,7 +31,8 @@
+
+ /INSTALL
+
+-/src/StellarCoreVersion.h
++/src/main/StellarCoreVersion.cpp
++/src/testdata
+ /src/xdr/*.h
+ /Makefile
+ /Makefile.in
+@@ -57,6 +59,8 @@
+ /test-driver
+ /stamp-h1
+ /ylwrap
++/docs/stellar-core.1
++/docs/stellar-core.1.in
+ /src/Makefile
+ /src/Makefile.in
+ /lib/Makefile
+@@ -74,6 +78,7 @@
+ **/Build/*
+ **/generated/*
+ **/x64/*
+-*.vcxproj.user
+ *.opendb
++*.vcxproj.user
++**/.vs/*
+
+diff --git a/.gitmodules b/.gitmodules
+index cd67726..8831b85 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -7,3 +7,9 @@
+ [submodule "lib/libmedida"]
+ 	path = lib/libmedida
+ 	url = https://github.com/stellar/medida.git
++[submodule "lib/cereal"]
++	path = lib/cereal
++	url = https://github.com/USCiLab/cereal
++[submodule "lib/asio"]
++	path = lib/asio
++	url = https://github.com/chriskohlhoff/asio.git
+

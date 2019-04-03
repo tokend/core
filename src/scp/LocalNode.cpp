@@ -4,33 +4,29 @@
 
 #include "LocalNode.h"
 
-#include "util/types.h"
-#include "xdrpp/marshal.h"
-#include "util/Logging.h"
 #include "crypto/Hex.h"
+#include "crypto/KeyUtils.h"
 #include "crypto/SHA.h"
-#include <algorithm>
 #include "lib/json/json.h"
+#include "scp/QuorumSetUtils.h"
+#include "util/Logging.h"
+#include "util/XDROperators.h"
+#include "util/numeric.h"
+#include "xdrpp/marshal.h"
+#include <algorithm>
 #include <unordered_set>
 
 namespace stellar
 {
-using xdr::operator==;
-using xdr::operator<;
-
-LocalNode::LocalNode(SecretKey const& secretKey, bool isValidator,
+LocalNode::LocalNode(NodeID const& nodeID, bool isValidator,
                      SCPQuorumSet const& qSet, SCP* scp)
-    : mNodeID(secretKey.getPublicKey())
-    , mSecretKey(secretKey)
-    , mIsValidator(isValidator)
-    , mQSet(qSet)
-    , mSCP(scp)
+    : mNodeID(nodeID), mIsValidator(isValidator), mQSet(qSet), mSCP(scp)
 {
     normalizeQSet(mQSet);
     mQSetHash = sha256(xdr::xdr_to_opaque(mQSet));
 
     CLOG(INFO, "SCP") << "LocalNode::LocalNode"
-                      << "@" << PubKeyUtils::toShortString(mNodeID)
+                      << "@" << KeyUtils::toShortString(mNodeID)
                       << " qSet: " << hexAbbrev(mQSetHash);
 
     mSingleQSet = std::make_shared<SCPQuorumSet>(buildSingletonQSet(mNodeID));
@@ -44,94 +40,6 @@ LocalNode::buildSingletonQSet(NodeID const& nodeID)
     qSet.threshold = 1;
     qSet.validators.emplace_back(nodeID);
     return qSet;
-}
-
-bool
-LocalNode::isQuorumSetSaneInternal(SCPQuorumSet const& qSet,
-                                   std::set<NodeID>& knownNodes,
-                                   bool extraChecks)
-{
-    auto& v = qSet.validators;
-    auto& i = qSet.innerSets;
-
-    size_t totEntries = v.size() + i.size();
-
-    size_t vBlockingSize = totEntries - qSet.threshold + 1;
-
-    // threshold is within the proper range
-    if (qSet.threshold >= 1 && qSet.threshold <= totEntries &&
-        (!extraChecks || qSet.threshold >= vBlockingSize))
-    {
-        for (auto const& n : v)
-        {
-            auto r = knownNodes.insert(n);
-            if (!r.second)
-            {
-                // n was already present
-                return false;
-            }
-        }
-
-        for (auto const& iSet : i)
-        {
-            if (!isQuorumSetSaneInternal(iSet, knownNodes, extraChecks))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-// helper function that:
-//  * simplifies singleton inner set into outerset
-//      { t: n, v: { ... }, { t: 1, X }, ... }
-//        into
-//      { t: n, v: { ..., X }, .... }
-//  * simplifies singleton innersets
-//      { t:1, { innerSet } } into innerSet
-
-void
-LocalNode::normalizeQSet(SCPQuorumSet& qSet)
-{
-    auto& v = qSet.validators;
-    auto& i = qSet.innerSets;
-    auto it = i.begin();
-    while (it != i.end())
-    {
-        normalizeQSet(*it);
-        // merge singleton inner sets into validator list
-        if (it->threshold == 1 && it->validators.size() == 1 &&
-            it->innerSets.size() == 0)
-        {
-            v.emplace_back(it->validators.front());
-            it = i.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
-
-    // simplify quorum set if needed
-    if (qSet.threshold == 1 && v.size() == 0 && i.size() == 1)
-    {
-        auto t = qSet.innerSets.back();
-        qSet = t;
-    }
-}
-
-bool
-LocalNode::isQuorumSetSane(SCPQuorumSet const& qSet, bool extraChecks)
-{
-    std::set<NodeID> allValidators;
-    bool wellFormed = isQuorumSetSaneInternal(qSet, allValidators, extraChecks);
-    return wellFormed;
 }
 
 void
@@ -153,20 +61,15 @@ LocalNode::getQuorumSetHash()
     return mQSetHash;
 }
 
-SecretKey const&
-LocalNode::getSecretKey()
-{
-    return mSecretKey;
-}
-
 SCPQuorumSetPtr
 LocalNode::getSingletonQSet(NodeID const& nodeID)
 {
     return std::make_shared<SCPQuorumSet>(buildSingletonQSet(nodeID));
 }
+
 void
-LocalNode::forAllNodesInternal(SCPQuorumSet const& qset,
-                               std::function<void(NodeID const&)> proc)
+LocalNode::forAllNodes(SCPQuorumSet const& qset,
+                       std::function<void(NodeID const&)> proc)
 {
     for (auto const& n : qset.validators)
     {
@@ -174,24 +77,17 @@ LocalNode::forAllNodesInternal(SCPQuorumSet const& qset,
     }
     for (auto const& q : qset.innerSets)
     {
-        forAllNodesInternal(q, proc);
+        forAllNodes(q, proc);
     }
 }
 
-// runs proc over all nodes contained in qset
-void
-LocalNode::forAllNodes(SCPQuorumSet const& qset,
-                       std::function<void(NodeID const&)> proc)
+uint64
+LocalNode::computeWeight(uint64 m, uint64 total, uint64 threshold)
 {
-    std::set<NodeID> done;
-    forAllNodesInternal(qset, [&](NodeID const& n)
-                        {
-                            auto ins = done.insert(n);
-                            if (ins.second)
-                            {
-                                proc(n);
-                            }
-                        });
+    uint64 res;
+    assert(threshold <= total);
+    bigDivide(res, m, threshold, total, ROUND_UP);
+    return res;
 }
 
 // if a validator is repeated multiple times its weight is only the
@@ -207,7 +103,7 @@ LocalNode::getNodeWeight(NodeID const& nodeID, SCPQuorumSet const& qset)
     {
         if (qsetNode == nodeID)
         {
-            bigDivide(res, UINT64_MAX, n, d, ROUND_DOWN);
+            res = computeWeight(UINT64_MAX, d, n);
             return res;
         }
     }
@@ -217,7 +113,7 @@ LocalNode::getNodeWeight(NodeID const& nodeID, SCPQuorumSet const& qset)
         uint64 leafW = getNodeWeight(nodeID, q);
         if (leafW)
         {
-            bigDivide(res, leafW, n, d, ROUND_DOWN);
+            res = computeWeight(leafW, d, n);
             return res;
         }
     }
@@ -356,10 +252,16 @@ LocalNode::isQuorum(
     {
         count = pNodes.size();
         std::vector<NodeID> fNodes(pNodes.size());
-        auto quorumFilter = [&](NodeID nodeID) -> bool
-        {
-            return isQuorumSlice(*qfun(map.find(nodeID)->second.statement),
-                                 pNodes);
+        auto quorumFilter = [&](NodeID nodeID) -> bool {
+            auto qSetPtr = qfun(map.find(nodeID)->second.statement);
+            if (qSetPtr)
+            {
+                return isQuorumSlice(*qSetPtr, pNodes);
+            }
+            else
+            {
+                return false;
+            }
         };
         auto it = std::copy_if(pNodes.begin(), pNodes.end(), fNodes.begin(),
                                quorumFilter);
@@ -422,8 +324,8 @@ LocalNode::findClosestVBlocking(SCPQuorumSet const& qset,
 
     struct orderBySize
     {
-        bool operator()(std::vector<NodeID> const& v1,
-                        std::vector<NodeID> const& v2)
+        bool
+        operator()(std::vector<NodeID> const& v1, std::vector<NodeID> const& v2)
         {
             return v1.size() < v2.size();
         }
@@ -468,30 +370,28 @@ LocalNode::findClosestVBlocking(SCPQuorumSet const& qset,
     return res;
 }
 
-void
-LocalNode::toJson(SCPQuorumSet const& qSet, Json::Value& value) const
+Json::Value
+LocalNode::toJson(SCPQuorumSet const& qSet) const
 {
-    value["t"] = qSet.threshold;
-    auto& entries = value["v"];
+    Json::Value ret;
+    ret["t"] = qSet.threshold;
+    auto& entries = ret["v"];
     for (auto const& v : qSet.validators)
     {
         entries.append(mSCP->getDriver().toShortString(v));
     }
     for (auto const& s : qSet.innerSets)
     {
-        Json::Value iV;
-        toJson(s, iV);
-        entries.append(iV);
+        entries.append(toJson(s));
     }
+    return ret;
 }
 
 std::string
 LocalNode::to_string(SCPQuorumSet const& qSet) const
 {
-    Json::Value v;
-    toJson(qSet, v);
     Json::FastWriter fw;
-    return fw.write(v);
+    return fw.write(toJson(qSet));
 }
 
 NodeID const&
@@ -548,13 +448,12 @@ LocalNode::isNodeInQuorum(
                 continue;
             }
             // see if we need to explore further
-            forAllNodes(*qset, [&](NodeID const& n)
-                        {
-                            if (visited.find(n) == visited.end())
-                            {
-                                backlog.insert(n);
-                            }
-                        });
+            forAllNodes(*qset, [&](NodeID const& n) {
+                if (visited.find(n) == visited.end())
+                {
+                    backlog.insert(n);
+                }
+            });
         }
     }
     return res;

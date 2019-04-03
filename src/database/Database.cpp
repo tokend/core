@@ -18,6 +18,12 @@
 #include "transactions/TransactionFrame.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
+#include "bucket/BucketManager.h"
+#include "herder/HerderPersistence.h"
+#include "herder/Upgrades.h"
+#include "history/HistoryManager.h"
+#include "ledger/LedgerHeaderUtils.h"
+#include "ledger/LedgerTxn.h"
 #include "medida/metrics_registry.h"
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AssetHelperImpl.h>
@@ -30,6 +36,7 @@
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
+#include "DatabaseConnectionString.h"
 
 extern "C" void register_factory_sqlite3();
 
@@ -92,15 +99,16 @@ DatabaseImpl::DatabaseImpl(Application& app)
           app.getMetrics().NewMeter({"database", "query", "exec"}, "query"))
     , mStatementsSize(
           app.getMetrics().NewCounter({"database", "memory", "statements"}))
-    , mEntryCache(4096)
     , mExcludedQueryTime(0)
     , mExcludedTotalTime(0)
     , mLastIdleQueryTime(0)
     , mLastIdleTotalTime(app.getClock().now())
 {
     registerDrivers();
-    CLOG(INFO, "Database") << "Connecting to: " << app.getConfig().DATABASE;
-    mSession.open(app.getConfig().DATABASE);
+    CLOG(INFO, "Database") << "Connecting to: "
+          << removePasswordFromConnectionString(app.getConfig().DATABASE.value);
+    mSession.open(app.getConfig().DATABASE.value);
+
     if (isSqlite())
     {
         mSession << "PRAGMA journal_mode = WAL";
@@ -181,8 +189,8 @@ DatabaseImpl::upgradeToCurrentSchema()
     while (vers < SCHEMA_VERSION)
     {
         ++vers;
-        CLOG(INFO, "Database") << "Applying DB schema upgrade to version "
-                               << vers;
+        CLOG(INFO, "Database")
+            << "Applying DB schema upgrade to version " << vers;
         applySchemaUpgrade(vers);
         putSchemaVersion(vers);
     }
@@ -262,6 +270,16 @@ DatabaseImpl::getUpdateTimer(std::string const& entityName)
         .TimeScope();
 }
 
+medida::TimerContext
+DatabaseImpl::getUpsertTimer(std::string const& entityName)
+{
+    mEntityTypes.insert(entityName);
+    mQueryMeter.Mark();
+    return mApp.getMetrics()
+            .NewTimer({"database", "upsert", entityName})
+            .TimeScope();
+}
+
 void
 DatabaseImpl::setCurrentTransactionReadOnly()
 {
@@ -277,13 +295,14 @@ DatabaseImpl::setCurrentTransactionReadOnly()
 bool
 DatabaseImpl::isSqlite() const
 {
-    return mApp.getConfig().DATABASE.find("sqlite3:") != std::string::npos;
+    return mApp.getConfig().DATABASE.value.find("sqlite3:") !=
+           std::string::npos;
 }
 
 bool
 DatabaseImpl::canUsePool() const
 {
-    return !(mApp.getConfig().DATABASE == ("sqlite3://:memory:"));
+    return !(mApp.getConfig().DATABASE.value == ("sqlite3://:memory:"));
 }
 
 void
@@ -320,10 +339,12 @@ DatabaseImpl::initialize()
     OverlayManager::dropAll(*this);
     PersistentState::dropAll(*this);
     ExternalQueue::dropAll(*this);
-    LedgerHeaderFrame::dropAll(*this);
+    LedgerHeaderUtils::dropAll(*this);
     TransactionFrame::dropAll(*this);
     HistoryManager::dropAll(*this);
-    BucketManager::dropAll(mApp);
+    mApp.getBucketManager().dropAll();
+    HerderPersistence::dropAll(*this);
+    BanManager::dropAll(*this);
     putSchemaVersion(1);
 }
 
@@ -340,16 +361,17 @@ DatabaseImpl::getPool()
 {
     if (!mPool)
     {
-        std::string const& c = mApp.getConfig().DATABASE;
+        auto const& c = mApp.getConfig().DATABASE;
         if (!canUsePool())
         {
             std::string s("Can't create connection pool to ");
-            s += c;
+            s += removePasswordFromConnectionString(c.value);
             throw std::runtime_error(s);
         }
         size_t n = std::thread::hardware_concurrency();
-        LOG(INFO) << "Establishing " << n << "-entry connection pool to: " << c;
-        mPool = make_unique<soci::connection_pool>(n);
+        LOG(INFO) << "Establishing " << n << "-entry connection pool to: "
+                  << removePasswordFromConnectionString(c.value);
+        mPool = std::make_unique<soci::connection_pool>(n);
         for (size_t i = 0; i < n; ++i)
         {
             LOG(DEBUG) << "Opening pool entry " << i;
@@ -363,12 +385,6 @@ DatabaseImpl::getPool()
     }
     assert(mPool);
     return *mPool;
-}
-
-cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>&
-DatabaseImpl::getEntryCache()
-{
-    return mEntryCache;
 }
 
 class SQLLogContext : NonCopyable
@@ -476,6 +492,11 @@ DatabaseImpl::recentIdleDbPercent()
 
     std::chrono::nanoseconds total = mApp.getClock().now() - mLastIdleTotalTime;
     total -= mExcludedTotalTime;
+
+    if (total == std::chrono::nanoseconds::zero())
+    {
+        return 100;
+    }
 
     uint32_t queryPercent =
         static_cast<uint32_t>((100 * query.count()) / total.count());

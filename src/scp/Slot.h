@@ -4,16 +4,16 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <memory>
-#include <functional>
-#include <string>
-#include <set>
-#include <utility>
-#include "scp/SCP.h"
-#include "LocalNode.h"
-#include "lib/json/json-forwards.h"
 #include "BallotProtocol.h"
+#include "LocalNode.h"
 #include "NominationProtocol.h"
+#include "lib/json/json-forwards.h"
+#include "scp/SCP.h"
+#include <functional>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
 
 namespace stellar
 {
@@ -33,8 +33,14 @@ class Slot : public std::enable_shared_from_this<Slot>
 
     // keeps track of all statements seen so far for this slot.
     // it is used for debugging purpose
-    // second: if the slot was fully validated at the time
-    std::vector<std::pair<SCPStatement, bool>> mStatementsHistory;
+    struct HistoricalStatement
+    {
+        time_t mWhen;
+        SCPStatement mStatement;
+        bool mValidated;
+    };
+
+    std::vector<HistoricalStatement> mStatementsHistory;
 
     // true if the Slot was fully validated
     bool mFullyValidated;
@@ -111,6 +117,9 @@ class Slot : public std::enable_shared_from_this<Slot>
 
     void stopNomination();
 
+    // returns the current nomination leaders
+    std::set<NodeID> getNominationLeaders() const;
+
     bool isFullyValidated() const;
     void setFullyValidated(bool fullyValidated);
 
@@ -127,10 +136,10 @@ class Slot : public std::enable_shared_from_this<Slot>
 
     // returns information about the local state in JSON format
     // including historical statements if available
-    void dumpInfo(Json::Value& ret);
+    Json::Value getJsonInfo();
 
     // returns information about the quorum for a given node
-    void dumpQuorumInfo(Json::Value& ret, NodeID const& id, bool summary);
+    Json::Value getJsonQuorumInfo(NodeID const& id, bool summary);
 
     // returns the hash of the QuorumSet that should be downloaded
     // with the statement.

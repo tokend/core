@@ -4,14 +4,13 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <map>
-#include <set>
-#include <memory>
-#include <functional>
 #include <chrono>
+#include <functional>
+#include <map>
+#include <memory>
+#include <set>
 
 #include "crypto/SecretKey.h"
-#include "xdr/Stellar-SCP.h"
 #include "lib/json/json-forwards.h"
 #include "scp/SCPDriver.h"
 
@@ -27,7 +26,7 @@ class SCP
     SCPDriver& mDriver;
 
   public:
-    SCP(SCPDriver& driver, SecretKey const& secretKey, bool isValidator,
+    SCP(SCPDriver& driver, NodeID const& nodeID, bool isValidator,
         SCPQuorumSet const& qSetLocal);
 
     SCPDriver&
@@ -59,10 +58,6 @@ class SCP
     // invokes the appropriate methods
     EnvelopeState receiveEnvelope(SCPEnvelope const& envelope);
 
-    // request to trigger a 'bumpState'
-    // returns the value returned by 'bumpState'
-    bool abandonBallot(uint64 slotIndex);
-
     // Submit a value to consider for slotIndex
     // previousValue is the value from slotIndex-1
     bool nominate(uint64 slotIndex, Value const& value,
@@ -81,22 +76,22 @@ class SCP
     // returns the local node descriptor
     std::shared_ptr<LocalNode> getLocalNode();
 
-    void dumpInfo(Json::Value& ret, size_t limit);
+    Json::Value getJsonInfo(size_t limit);
 
     // summary: only return object counts
     // index = 0 for returning information for all slots
-    void dumpQuorumInfo(Json::Value& ret, NodeID const& id, bool summary,
-                        uint64 index = 0);
+    Json::Value getJsonQuorumInfo(NodeID const& id, bool summary,
+                                  uint64 index = 0);
 
     // Purges all data relative to all the slots whose slotIndex is smaller
     // than the specified `maxSlotIndex`.
     void purgeSlots(uint64 maxSlotIndex);
 
-    // Retrieves the local secret key as specified at construction
-    SecretKey const& getSecretKey();
-
     // Returns whether the local node is a validator.
     bool isValidator();
+
+    // returns the validation state of the given slot
+    bool isSlotFullyValidated(uint64 slotIndex);
 
     // Helpers for monitoring and reporting the internal memory-usage of the SCP
     // protocol to system metric reporters.
@@ -109,6 +104,13 @@ class SCP
     // forces the state to match the one in the envelope
     // this is used when rebuilding the state after a crash for example
     void setStateFromEnvelope(uint64 slotIndex, SCPEnvelope const& e);
+
+    // check if we are holding some slots
+    bool empty() const;
+    // return lowest slot index value
+    uint64 getLowSlotIndex() const;
+    // return highest slot index value
+    uint64 getHighSlotIndex() const;
 
     // returns all messages for the slot
     std::vector<SCPEnvelope> getCurrentState(uint64 slotIndex);

@@ -4,21 +4,19 @@
 
 #include "Slot.h"
 
-#include <functional>
-#include "util/types.h"
-#include "xdrpp/marshal.h"
 #include "crypto/Hex.h"
 #include "crypto/SHA.h"
-#include "util/Logging.h"
-#include "scp/LocalNode.h"
 #include "lib/json/json.h"
-#include "util/make_unique.h"
+#include "scp/LocalNode.h"
 #include "util/GlobalChecks.h"
+#include "util/Logging.h"
+#include "util/XDROperators.h"
+#include "xdrpp/marshal.h"
+#include <ctime>
+#include <functional>
 
 namespace stellar
 {
-using xdr::operator==;
-using xdr::operator<;
 using namespace std::placeholders;
 
 Slot::Slot(uint64 slotIndex, SCP& scp)
@@ -75,9 +73,9 @@ Slot::setStateFromEnvelope(SCPEnvelope const& e)
     else
     {
         if (Logging::logDebug("SCP"))
-            CLOG(DEBUG, "SCP") << "Slot::setStateFromEnvelope invalid envelope"
-                               << " i: " << getSlotIndex() << " "
-                               << mSCP.envToStr(e);
+            CLOG(DEBUG, "SCP")
+                << "Slot::setStateFromEnvelope invalid envelope"
+                << " i: " << getSlotIndex() << " " << mSCP.envToStr(e);
     }
 }
 
@@ -100,7 +98,8 @@ Slot::getExternalizingState() const
 void
 Slot::recordStatement(SCPStatement const& st)
 {
-    mStatementsHistory.emplace_back(std::make_pair(st, mFullyValidated));
+    mStatementsHistory.emplace_back(
+        HistoricalStatement{std::time(nullptr), st, mFullyValidated});
 }
 
 SCP::EnvelopeState
@@ -130,10 +129,7 @@ Slot::processEnvelope(SCPEnvelope const& envelope, bool self)
     }
 	catch (const std::runtime_error& re)
 	{
-
-		Json::Value info;
-
-		dumpInfo(info);
+        auto info = getJsonInfo();
 
 		CLOG(ERROR, "SCP") << "Exception in processEnvelope "
 			<< "state: " << info.toStyledString()
@@ -201,6 +197,12 @@ Slot::stopNomination()
     mNominationProtocol.stopNomination();
 }
 
+std::set<NodeID>
+Slot::getNominationLeaders() const
+{
+    return mNominationProtocol.getLeaders();
+}
+
 bool
 Slot::isFullyValidated() const
 {
@@ -222,13 +224,12 @@ Slot::isNodeInQuorum(NodeID const& node)
     // statements for each protocol
     for (auto const& e : mStatementsHistory)
     {
-        auto& n = m[e.first.nodeID];
-        n.emplace_back(&e.first);
+        auto& n = m[e.mStatement.nodeID];
+        n.emplace_back(&e.mStatement);
     }
     return mSCP.getLocalNode()->isNodeInQuorum(
         node,
-        [this](SCPStatement const& st)
-        {
+        [this](SCPStatement const& st) {
             // uses the companion set here as we want to consider
             // nodes that were used up to EXTERNALIZE
             Hash h = getCompanionQuorumSetHashFromStatement(st);
@@ -325,45 +326,51 @@ Slot::getQuorumSetFromStatement(SCPStatement const& st)
     return res;
 }
 
-void
-Slot::dumpInfo(Json::Value& ret)
+Json::Value
+Slot::getJsonInfo()
 {
-    auto& slots = ret["slots"];
-
-    Json::Value& slotValue = slots[std::to_string(mSlotIndex)];
-
+    Json::Value ret;
     std::map<Hash, SCPQuorumSetPtr> qSetsUsed;
 
     int count = 0;
     for (auto const& item : mStatementsHistory)
     {
-        Json::Value& v = slotValue["statements"][count++];
-        v.append(mSCP.envToStr(item.first));
-        v.append(item.second);
+        Json::Value& v = ret["statements"][count++];
+        v.append((Json::UInt64)item.mWhen);
+        v.append(mSCP.envToStr(item.mStatement));
+        v.append(item.mValidated);
 
         Hash const& qSetHash =
-            getCompanionQuorumSetHashFromStatement(item.first);
+            getCompanionQuorumSetHashFromStatement(item.mStatement);
         auto qSet = getSCPDriver().getQSet(qSetHash);
-        qSetsUsed.insert(std::make_pair(qSetHash, qSet));
+        if (qSet)
+        {
+            qSetsUsed.insert(std::make_pair(qSetHash, qSet));
+        }
     }
 
-    auto& qSets = slotValue["quorum_sets"];
+    auto& qSets = ret["quorum_sets"];
     for (auto const& q : qSetsUsed)
     {
-        auto& qs = qSets[hexAbbrev(q.first)];
-        getLocalNode()->toJson(*q.second, qs);
+        qSets[hexAbbrev(q.first)] = getLocalNode()->toJson(*q.second);
     }
 
-    slotValue["validated"] = mFullyValidated;
-    mNominationProtocol.dumpInfo(slotValue);
-    mBallotProtocol.dumpInfo(slotValue);
+    ret["validated"] = mFullyValidated;
+    ret["nomination"] = mNominationProtocol.getJsonInfo();
+    ret["ballotProtocol"] = mBallotProtocol.getJsonInfo();
+
+    return ret;
 }
 
-void
-Slot::dumpQuorumInfo(Json::Value& ret, NodeID const& id, bool summary)
+Json::Value
+Slot::getJsonQuorumInfo(NodeID const& id, bool summary)
 {
-    std::string i = std::to_string(static_cast<uint32>(mSlotIndex));
-    mBallotProtocol.dumpQuorumInfo(ret[i], id, summary);
+    Json::Value ret = mBallotProtocol.getJsonQuorumInfo(id, summary);
+    if (getLocalNode()->isValidator())
+    {
+        ret["validated"] = isFullyValidated();
+    }
+    return ret;
 }
 
 bool
@@ -379,8 +386,7 @@ Slot::federatedAccept(StatementPredicate voted, StatementPredicate accepted,
 
     // Checks if the set of nodes that accepted or voted for it form a quorum
 
-    auto ratifyFilter = [this, &voted, &accepted](SCPStatement const& st)
-    {
+    auto ratifyFilter = [&](SCPStatement const& st) {
         bool res;
         res = accepted(st) || voted(st);
         return res;

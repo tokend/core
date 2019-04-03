@@ -2,20 +2,20 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include "overlay/LoadManager.h"
 #include "database/Database.h"
+#include "lib/util/format.h"
 #include "main/Application.h"
 #include "main/Config.h"
-#include "overlay/LoadManager.h"
 #include "overlay/OverlayManager.h"
 #include "util/Logging.h"
+#include "util/XDROperators.h"
 #include "util/types.h"
-#include "lib/util/format.h"
 
 #include <chrono>
 
 namespace stellar
 {
-
 LoadManager::LoadManager() : mPeerCosts(128)
 {
 }
@@ -53,7 +53,7 @@ timeMag(uint64_t nanos)
 }
 
 void
-LoadManager::reportLoads(std::vector<Peer::pointer> const& peers,
+LoadManager::reportLoads(std::map<NodeID, Peer::pointer> const& peers,
                          Application& app)
 {
     CLOG(INFO, "Overlay") << "";
@@ -65,10 +65,10 @@ LoadManager::reportLoads(std::vector<Peer::pointer> const& peers,
         "recv", "query");
     for (auto const& peer : peers)
     {
-        auto cost = getPeerCosts(peer->getPeerID());
+        auto cost = getPeerCosts(peer.first);
         CLOG(INFO, "Overlay") << fmt::format(
             "{:>10s} {:>10s} {:>10s} {:>10s} {:>10d}",
-            app.getConfig().toShortString(peer->getPeerID()),
+            app.getConfig().toShortString(peer.first),
             timeMag(static_cast<uint64_t>(cost->mTimeSpent.one_minute_rate())),
             byteMag(static_cast<uint64_t>(cost->mBytesSend.one_minute_rate())),
             byteMag(static_cast<uint64_t>(cost->mBytesRecv.one_minute_rate())),
@@ -97,7 +97,7 @@ LoadManager::maybeShedExcessLoad(Application& app)
                                  << "DB " << idleDb << "%";
         CLOG(WARNING, "Overlay") << "";
 
-        auto peers = app.getOverlayManager().getPeers();
+        auto peers = app.getOverlayManager().getAuthenticatedPeers();
         reportLoads(peers, app);
 
         // Look for the worst-behaved of the current peers and kick them out.
@@ -105,10 +105,10 @@ LoadManager::maybeShedExcessLoad(Application& app)
         std::shared_ptr<LoadManager::PeerCosts> victimCost;
         for (auto peer : peers)
         {
-            auto peerCost = getPeerCosts(peer->getPeerID());
+            auto peerCost = getPeerCosts(peer.first);
             if (!victim || victimCost->isLessThan(peerCost))
             {
-                victim = peer;
+                victim = peer.second;
                 victimCost = peerCost;
             }
         }
@@ -123,7 +123,9 @@ LoadManager::maybeShedExcessLoad(Application& app)
                 .NewMeter({"overlay", "drop", "load-shed"}, "drop")
                 .Mark();
 
-            victim->drop();
+            victim->drop(Peer::DropMode::IGNORE_WRITE_QUEUE);
+
+            app.getClock().resetIdleCrankPercent();
         }
     }
 }
@@ -142,11 +144,11 @@ LoadManager::PeerCosts::isLessThan(
 {
     double ownRates[4] = {
         mTimeSpent.one_minute_rate(), mBytesSend.one_minute_rate(),
-        mBytesRecv.one_minute_rate(), mSQLQueries.one_minute_rate()};
+        mBytesRecv.one_minute_rate(), static_cast<double>(mSQLQueries.count())};
     double otherRates[4] = {other->mTimeSpent.one_minute_rate(),
                             other->mBytesSend.one_minute_rate(),
                             other->mBytesRecv.one_minute_rate(),
-                            other->mSQLQueries.one_minute_rate()};
+                            static_cast<double>(other->mSQLQueries.count())};
     return std::lexicographical_compare(ownRates, ownRates + 4, otherRates,
                                         otherRates + 4);
 }
@@ -187,8 +189,9 @@ LoadManager::PeerContext::~PeerContext()
         if (Logging::logTrace("Overlay"))
             CLOG(TRACE, "Overlay")
                 << "Debiting peer " << mApp.getConfig().toShortString(mNode)
-                << " time:" << timeMag(time.count()) << " send:" << byteMag(send)
-                << " recv:" << byteMag(recv) << " query:" << query;
+                << " time:" << timeMag(time.count())
+                << " send:" << byteMag(send) << " recv:" << byteMag(recv)
+                << " query:" << query;
         pc->mTimeSpent.Mark(time.count());
         pc->mBytesSend.Mark(send);
         pc->mBytesRecv.Mark(recv);

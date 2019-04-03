@@ -20,7 +20,6 @@ include_directories(${XDRS_PATH})
 #include headers files without .cpp
 set(NOT_COMMON_SOURCE_FILES
         util/asio.h
-        util/make_unique.h
         util/must_use.h
         util/NonCopyable.h
         util/optional.h

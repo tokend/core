@@ -4,32 +4,39 @@
 
 #include "herder/HerderImpl.h"
 #include "crypto/Hex.h"
+#include "crypto/KeyUtils.h"
 #include "crypto/SHA.h"
-#include "herder/TxSetFrame.h"
+#include "herder/HerderPersistence.h"
+#include "herder/HerderUtils.h"
 #include "herder/LedgerCloseData.h"
+#include "herder/TxSetFrame.h"
 #include "ledger/LedgerManager.h"
+#include "ledger/LedgerTxn.h"
+#include "ledger/LedgerTxnEntry.h"
+#include "ledger/LedgerTxnHeader.h"
+#include "lib/json/json.h"
 #include "main/Application.h"
 #include "main/Config.h"
-#include "overlay/OverlayManager.h"
-#include "scp/Slot.h"
-#include "util/Logging.h"
-#include "util/Timer.h"
-#include "util/make_unique.h"
-#include "lib/json/json.h"
-#include "scp/LocalNode.h"
 #include "main/PersistentState.h"
+#include "overlay/OverlayManager.h"
+#include "scp/LocalNode.h"
+#include "scp/Slot.h"
+#include "transactions/TransactionUtils.h"
+#include "util/Logging.h"
+#include "util/StatusManager.h"
+#include "util/Timer.h"
 
-#include "medida/meter.h"
 #include "medida/counter.h"
+#include "medida/meter.h"
 #include "medida/metrics_registry.h"
-#include "xdrpp/marshal.h"
-#include "util/basen.h"
+#include "util/Decoder.h"
 #include "util/XDRStream.h"
+#include "xdrpp/marshal.h"
 
 #include <ctime>
+#include <lib/util/format.h>
 
 using namespace std;
-using namespace soci;
 
 namespace stellar
 {
@@ -37,55 +44,17 @@ namespace stellar
 std::unique_ptr<Herder>
 Herder::create(Application& app)
 {
-    return make_unique<HerderImpl>(app);
+    return std::make_unique<HerderImpl>(app);
 }
 
 HerderImpl::SCPMetrics::SCPMetrics(Application& app)
-    : mValueValid(app.getMetrics().NewMeter({"scp", "value", "valid"}, "value"))
-    , mValueInvalid(
-          app.getMetrics().NewMeter({"scp", "value", "invalid"}, "value"))
-    , mNominatingValue(
-          app.getMetrics().NewMeter({"scp", "value", "nominating"}, "value"))
-    , mValueExternalize(
-          app.getMetrics().NewMeter({"scp", "value", "externalize"}, "value"))
-    , mUpdatedCandidate(
-          app.getMetrics().NewMeter({"scp", "value", "candidate"}, "value"))
-    , mStartBallotProtocol(
-          app.getMetrics().NewMeter({"scp", "ballot", "started"}, "ballot"))
-    , mAcceptedBallotPrepared(app.getMetrics().NewMeter(
-          {"scp", "ballot", "accepted-prepared"}, "ballot"))
-    , mConfirmedBallotPrepared(app.getMetrics().NewMeter(
-          {"scp", "ballot", "confirmed-prepared"}, "ballot"))
-    , mAcceptedCommit(app.getMetrics().NewMeter(
-          {"scp", "ballot", "accepted-commit"}, "ballot"))
-    , mBallotExpire(
-          app.getMetrics().NewMeter({"scp", "ballot", "expire"}, "ballot"))
-
-    , mQuorumHeard(
-          app.getMetrics().NewMeter({"scp", "quorum", "heard"}, "quorum"))
-
-    , mLostSync(app.getMetrics().NewMeter({"scp", "sync", "lost"}, "sync"))
-
+    : mLostSync(app.getMetrics().NewMeter({"scp", "sync", "lost"}, "sync"))
     , mEnvelopeEmit(
           app.getMetrics().NewMeter({"scp", "envelope", "emit"}, "envelope"))
     , mEnvelopeReceive(
           app.getMetrics().NewMeter({"scp", "envelope", "receive"}, "envelope"))
-    , mEnvelopeSign(
-          app.getMetrics().NewMeter({"scp", "envelope", "sign"}, "envelope"))
-    , mEnvelopeValidSig(app.getMetrics().NewMeter(
-          {"scp", "envelope", "validsig"}, "envelope"))
-    , mEnvelopeInvalidSig(app.getMetrics().NewMeter(
-          {"scp", "envelope", "invalidsig"}, "envelope"))
-
-    , mKnownSlotsSize(
-          app.getMetrics().NewCounter({"scp", "memory", "known-slots"}))
     , mCumulativeStatements(app.getMetrics().NewCounter(
           {"scp", "memory", "cumulative-statements"}))
-
-    , mHerderStateCurrent(
-          app.getMetrics().NewCounter({"herder", "state", "current"}))
-    , mHerderStateChanges(
-          app.getMetrics().NewTimer({"herder", "state", "changes"}))
 
     , mHerderPendingTxs0(
           app.getMetrics().NewCounter({"herder", "pending-txs", "age0"}))
@@ -99,23 +68,20 @@ HerderImpl::SCPMetrics::SCPMetrics(Application& app)
 }
 
 HerderImpl::HerderImpl(Application& app)
-    : mSCP(*this, app.getConfig().NODE_SEED, app.getConfig().NODE_IS_VALIDATOR,
-           app.getConfig().QUORUM_SET)
-    , mPendingTransactions(4)
+    : mPendingTransactions(4)
     , mPendingEnvelopes(app, *this)
+    , mHerderSCPDriver(app, *this, mUpgrades, mPendingEnvelopes)
     , mLastSlotSaved(0)
-    , mLastStateChange(app.getClock().now())
     , mTrackingTimer(app)
-    , mLastTrigger(app.getClock().now())
     , mTriggerTimer(app)
     , mRebroadcastTimer(app)
     , mApp(app)
     , mLedgerManager(app.getLedgerManager())
     , mSCPMetrics(app)
 {
-    Hash hash = mSCP.getLocalNode()->getQuorumSetHash();
-    mPendingEnvelopes.recvSCPQuorumSet(hash,
-                                       mSCP.getLocalNode()->getQuorumSet());
+    Hash hash = getSCP().getLocalNode()->getQuorumSetHash();
+    mPendingEnvelopes.addSCPQuorumSet(hash,
+                                      getSCP().getLocalNode()->getQuorumSet());
 }
 
 HerderImpl::~HerderImpl()
@@ -125,19 +91,20 @@ HerderImpl::~HerderImpl()
 Herder::State
 HerderImpl::getState() const
 {
-    return (mTrackingSCP && mLastTrackingSCP) ? HERDER_TRACKING_STATE
-                                              : HERDER_SYNCING_STATE;
+    return mHerderSCPDriver.getState();
+}
+
+SCP&
+HerderImpl::getSCP()
+{
+    return mHerderSCPDriver.getSCP();
 }
 
 void
 HerderImpl::syncMetrics()
 {
-    int64_t c = mSCPMetrics.mHerderStateCurrent.count();
-    int64_t n = static_cast<int64_t>(getState());
-    if (c != n)
-    {
-        mSCPMetrics.mHerderStateCurrent.set_count(n);
-    }
+    mSCPMetrics.mCumulativeStatements.set_count(
+        getSCP().getCumulativeStatemtCount());
 }
 
 std::string
@@ -149,338 +116,16 @@ HerderImpl::getStateHuman() const
 }
 
 void
-HerderImpl::stateChanged()
-{
-    mSCPMetrics.mHerderStateCurrent.set_count(static_cast<int64_t>(getState()));
-    auto now = mApp.getClock().now();
-    mSCPMetrics.mHerderStateChanges.Update(now - mLastStateChange);
-    mLastStateChange = now;
-    mApp.syncOwnMetrics();
-}
-
-void
 HerderImpl::bootstrap()
 {
     CLOG(INFO, "Herder") << "Force joining SCP with local state";
-    assert(mSCP.isValidator());
+    assert(getSCP().isValidator());
     assert(mApp.getConfig().FORCE_SCP);
 
-    mLedgerManager.setState(LedgerManager::LM_SYNCED_STATE);
-    stateChanged();
+    mLedgerManager.bootstrap();
+    mHerderSCPDriver.bootstrap();
 
-    mLastTrigger = mApp.getClock().now() - Herder::EXP_LEDGER_TIMESPAN_SECONDS;
     ledgerClosed();
-}
-
-bool
-HerderImpl::isSlotCompatibleWithCurrentState(uint64 slotIndex)
-{
-    bool res = false;
-    if (mLedgerManager.isSynced())
-    {
-        auto const& lcl = mLedgerManager.getLastClosedLedgerHeader();
-        res = (slotIndex == (lcl.header.ledgerSeq + 1));
-    }
-
-    return res;
-}
-
-SCPDriver::ValidationLevel
-HerderImpl::validateValueHelper(uint64 slotIndex, StellarValue const& b)
-{
-    uint64 lastCloseTime;
-
-    bool compat = isSlotCompatibleWithCurrentState(slotIndex);
-
-    if (compat)
-    {
-        lastCloseTime = mLedgerManager.getLastClosedLedgerHeader()
-                            .header.scpValue.closeTime;
-    }
-    else
-    {
-        if (!mTrackingSCP)
-        {
-            // if we're not tracking, there is not much more we can do to
-            // validate
-            return SCPDriver::kMaybeValidValue;
-        }
-
-        // Check slotIndex.
-        if (nextConsensusLedgerIndex() > slotIndex)
-        {
-            // we already moved on from this slot
-            // still send it through for emitting the final messages
-            return SCPDriver::kMaybeValidValue;
-        }
-        if (nextConsensusLedgerIndex() < slotIndex)
-        {
-            // this is probably a bug as "tracking" means we're processing
-            // messages only for smaller slots
-            CLOG(ERROR, "Herder")
-                << "HerderImpl::validateValue"
-                << " i: " << slotIndex
-                << " processing a future message while tracking";
-
-            return SCPDriver::kInvalidValue;
-        }
-        lastCloseTime = mTrackingSCP->mConsensusValue.closeTime;
-    }
-
-    // Check closeTime (not too old)
-    if (b.closeTime <= lastCloseTime)
-    {
-        return SCPDriver::kInvalidValue;
-    }
-
-    // Check closeTime (not too far in future)
-    uint64_t timeNow = mApp.timeNow();
-    if (b.closeTime > timeNow + MAX_TIME_SLIP_SECONDS.count())
-    {
-        return SCPDriver::kInvalidValue;
-    }
-
-    if (!compat)
-    {
-        // this is as far as we can go if we don't have the state
-        return SCPDriver::kMaybeValidValue;
-    }
-
-    Hash const& txSetHash = b.txSetHash;
-
-    // we are fully synced up
-
-    TxSetFramePtr txSet = mPendingEnvelopes.getTxSet(txSetHash);
-
-    SCPDriver::ValidationLevel res;
-
-    if (!txSet)
-    {
-        CLOG(ERROR, "Herder") << "HerderImpl::validateValue"
-                              << " i: " << slotIndex << " txSet not found?";
-
-        res = SCPDriver::kInvalidValue;
-    }
-    else if (!txSet->checkValid(mApp))
-    {
-        if (Logging::logDebug("Herder"))
-            CLOG(DEBUG, "Herder") << "HerderImpl::validateValue"
-                                  << " i: " << slotIndex << " Invalid txSet:"
-                                  << " " << hexAbbrev(txSet->getContentsHash());
-        res = SCPDriver::kInvalidValue;
-    }
-    else
-    {
-        if (Logging::logDebug("Herder"))
-            CLOG(DEBUG, "Herder")
-                << "HerderImpl::validateValue"
-                << " i: " << slotIndex
-                << " txSet: " << hexAbbrev(txSet->getContentsHash()) << " OK";
-        res = SCPDriver::kFullyValidatedValue;
-    }
-    return res;
-}
-
-bool
-HerderImpl::validateUpgradeStep(uint64 slotIndex, UpgradeType const& upgrade,
-                                LedgerUpgradeType& upgradeType)
-{
-    LedgerUpgrade lupgrade;
-
-    try
-    {
-        xdr::xdr_from_opaque(upgrade, lupgrade);
-    }
-    catch (xdr::xdr_runtime_error&)
-    {
-        return false;
-    }
-
-    bool res;
-    switch (lupgrade.type())
-    {
-    case LedgerUpgradeType::VERSION:
-    {
-        uint32 newVersion = lupgrade.newLedgerVersion();
-        res = (newVersion == mApp.getConfig().LEDGER_PROTOCOL_VERSION);
-        break;
-    }
-    case LedgerUpgradeType::MAX_TX_SET_SIZE:
-    {
-        // allow max to be within 30% of the config value
-        uint32 newMax = lupgrade.newMaxTxSetSize();
-        res = (newMax >= mApp.getConfig().DESIRED_MAX_TX_PER_LEDGER * 7 / 10) &&
-              (newMax <= mApp.getConfig().DESIRED_MAX_TX_PER_LEDGER * 13 / 10);
-        break;
-    }
-    case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
-    {
-        auto newPeriod = lupgrade.newTxExpirationPeriod();
-        res = (newPeriod == mApp.getConfig().TX_EXPIRATION_PERIOD);
-        break;
-    }
-    default:
-        res = false;
-    }
-    if (res)
-    {
-        upgradeType = lupgrade.type();
-    }
-    return res;
-}
-
-void
-HerderImpl::signEnvelope(SCPEnvelope& envelope)
-{
-    mSCPMetrics.mEnvelopeSign.Mark();
-    envelope.signature = mSCP.getSecretKey().sign(xdr::xdr_to_opaque(
-        mApp.getNetworkID(), EnvelopeType::SCP, envelope.statement));
-}
-
-bool
-HerderImpl::verifyEnvelope(SCPEnvelope const& envelope)
-{
-    bool b = PubKeyUtils::verifySig(
-        envelope.statement.nodeID, envelope.signature,
-        xdr::xdr_to_opaque(mApp.getNetworkID(), EnvelopeType::SCP,
-                           envelope.statement));
-    if (b)
-    {
-        mSCPMetrics.mEnvelopeValidSig.Mark();
-    }
-    else
-    {
-        mSCPMetrics.mEnvelopeInvalidSig.Mark();
-    }
-
-    return b;
-}
-
-SCPDriver::ValidationLevel
-HerderImpl::validateValue(uint64 slotIndex, Value const& value)
-{
-    StellarValue b;
-    try
-    {
-        xdr::xdr_from_opaque(value, b);
-    }
-    catch (...)
-    {
-        mSCPMetrics.mValueInvalid.Mark();
-        return SCPDriver::kInvalidValue;
-    }
-
-    SCPDriver::ValidationLevel res = validateValueHelper(slotIndex, b);
-    if (res != SCPDriver::kInvalidValue)
-    {
-        LedgerUpgradeType lastUpgradeType = LedgerUpgradeType::VERSION;
-        // check upgrades
-        for (size_t i = 0; i < b.upgrades.size(); i++)
-        {
-            LedgerUpgradeType thisUpgradeType;
-            if (!validateUpgradeStep(slotIndex, b.upgrades[i], thisUpgradeType))
-            {
-                CLOG(TRACE, "Herder")
-                    << "HerderImpl::validateValue invalid step at index " << i;
-                res = SCPDriver::kInvalidValue;
-            }
-            if (i != 0 && (lastUpgradeType >= thisUpgradeType))
-            {
-                CLOG(TRACE, "Herder") << "HerderImpl::validateValue out of "
-                                         "order upgrade step at index " << i;
-                res = SCPDriver::kInvalidValue;
-            }
-
-            lastUpgradeType = thisUpgradeType;
-        }
-    }
-
-    if (res)
-    {
-        mSCPMetrics.mValueValid.Mark();
-    }
-    else
-    {
-        mSCPMetrics.mValueInvalid.Mark();
-    }
-    return res;
-}
-
-Value
-HerderImpl::extractValidValue(uint64 slotIndex, Value const& value)
-{
-    StellarValue b;
-    try
-    {
-        xdr::xdr_from_opaque(value, b);
-    }
-    catch (...)
-    {
-        return Value();
-    }
-    Value res;
-    if (validateValueHelper(slotIndex, b) == SCPDriver::kFullyValidatedValue)
-    {
-        // remove the upgrade steps we don't like
-        LedgerUpgradeType thisUpgradeType;
-        for (auto it = b.upgrades.begin(); it != b.upgrades.end();)
-        {
-
-            if (!validateUpgradeStep(slotIndex, *it, thisUpgradeType))
-            {
-                it = b.upgrades.erase(it);
-            }
-            else
-            {
-                it++;
-            }
-        }
-
-        res = xdr::xdr_to_opaque(b);
-    }
-
-    return res;
-}
-
-std::string
-HerderImpl::toShortString(PublicKey const& pk) const
-{
-    return mApp.getConfig().toShortString(pk);
-}
-
-std::string
-HerderImpl::getValueString(Value const& v) const
-{
-    StellarValue b;
-    if (v.empty())
-    {
-        return "[:empty:]";
-    }
-
-    try
-    {
-        xdr::xdr_from_opaque(v, b);
-
-        return stellarValueToString(b);
-    }
-    catch (...)
-    {
-        return "[:invalid:]";
-    }
-}
-
-void
-HerderImpl::ballotDidHearFromQuorum(uint64 slotIndex, SCPBallot const& ballot)
-{
-    mSCPMetrics.mQuorumHeard.Mark();
-}
-
-void
-HerderImpl::updateSCPCounters()
-{
-    mSCPMetrics.mKnownSlotsSize.set_count(mSCP.getKnownSlotsCount());
-    mSCPMetrics.mCumulativeStatements.set_count(
-        mSCP.getCumulativeStatemtCount());
 }
 
 static uint64_t
@@ -512,103 +157,30 @@ findOrAdd(HerderImpl::AccountTxMap& acc, AccountID const& aid)
 }
 
 void
-HerderImpl::logQuorumInformation(uint64 index)
+HerderImpl::valueExternalized(uint64 slotIndex, StellarValue const& value)
 {
-    std::string res;
-    Json::Value v;
-    dumpQuorumInfo(v, mSCP.getLocalNodeID(), true, index);
-    auto slots = v.get("slots", "");
-    if (!slots.empty())
-    {
-        std::string indexs = std::to_string(static_cast<uint32>(index));
-        auto i = slots.get(indexs, "");
-        if (!i.empty())
-        {
-            Json::FastWriter fw;
-            CLOG(INFO, "Herder") << "Quorum information for " << index << " : "
-                                 << fw.write(i);
-        }
-    }
-}
+    // record metrics
+    getHerderSCPDriver().recordSCPExecutionMetrics(slotIndex);
 
-void
-HerderImpl::valueExternalized(uint64 slotIndex, Value const& value)
-{
-    updateSCPCounters();
-    mSCPMetrics.mValueExternalize.Mark();
-
-    auto it = mSCPTimers.begin(); // cancel all timers below this slot
-    while (it != mSCPTimers.end() && it->first <= slotIndex)
-    {
-        it = mSCPTimers.erase(it);
-    }
-
-    if (slotIndex <= getCurrentLedgerSeq())
-    {
-        // externalize may trigger on older slots:
-        //  * when the current instance starts up
-        //  * when getting back in sync (a gap potentially opened)
-        // in both cases it's safe to just ignore those as we're already
-        // tracking a more recent state
-        CLOG(DEBUG, "Herder") << "Ignoring old ledger externalize "
-                              << slotIndex;
-        return;
-    }
-
-    StellarValue b;
-    try
-    {
-        xdr::xdr_from_opaque(value, b);
-    }
-    catch (...)
-    {
-        // This may not be possible as all messages are validated and should
-        // therefore contain a valid StellarValue.
-        CLOG(ERROR, "Herder") << "HerderImpl::valueExternalized"
-                              << " Externalized StellarValue malformed";
-        // no point in continuing as 'b' contains garbage at this point
-        abort();
-    }
-
-    Hash const& txSetHash = b.txSetHash;
-
-    if (Logging::logDebug("Herder"))
-        CLOG(DEBUG, "Herder") << "HerderImpl::valueExternalized"
-                              << " txSet: " << hexAbbrev(txSetHash);
-
-    // log information from older ledger to increase the chances that
-    // all messages made it
-    if (slotIndex > 2)
-    {
-        logQuorumInformation(slotIndex - 2);
-    }
-
-    if (!mCurrentValue.empty())
-    {
-        // stop nomination
-        // this may or may not be the ledger that is currently externalizing
-        // in both cases, we want to stop nomination as:
-        // either we're closing the current ledger (typical case)
-        // or we're going to trigger catchup from history
-        mSCP.stopNomination(mLedgerSeqNominating);
-        mCurrentValue.clear();
-    }
-
-    if (!mTrackingSCP)
-    {
-        stateChanged();
-    }
-
-    mTrackingSCP = make_unique<ConsensusData>(slotIndex, b);
-
-    if (!mLastTrackingSCP)
-    {
-        mLastTrackingSCP = make_unique<ConsensusData>(*mTrackingSCP);
-    }
-
+    // called both here and at the end (this one is in case of an exception)
     trackingHeartBeat();
 
-    TxSetFramePtr externalizedSet = mPendingEnvelopes.getTxSet(txSetHash);
+    bool validated = getSCP().isSlotFullyValidated(slotIndex);
+
+    if (Logging::logDebug("Herder"))
+        CLOG(DEBUG, "Herder") << fmt::format(
+            "HerderSCPDriver::valueExternalized index: {} txSet: {}", slotIndex,
+            hexAbbrev(value.txSetHash));
+
+    if (getSCP().isValidator() && !validated)
+    {
+        CLOG(WARNING, "Herder")
+            << fmt::format("Ledger {} ({}) closed and could NOT be fully "
+                           "validated by validator",
+                           slotIndex, hexAbbrev(value.txSetHash));
+    }
+
+    TxSetFramePtr externalizedSet = mPendingEnvelopes.getTxSet(value.txSetHash);
 
     // trigger will be recreated when the ledger is closed
     // we do not want it to trigger while downloading the current set
@@ -616,13 +188,27 @@ HerderImpl::valueExternalized(uint64 slotIndex, Value const& value)
     mTriggerTimer.cancel();
 
     // save the SCP messages in the database
-    saveSCPHistory(slotIndex);
+    mApp.getHerderPersistence().saveSCPHistory(
+            static_cast<uint32>(slotIndex),
+            getSCP().getExternalizingState(slotIndex));
+
+    // reflect upgrades with the ones included in this SCP round
+    {
+        bool updated;
+        auto newUpgrades = mUpgrades.removeUpgrades(
+                value.upgrades.begin(), value.upgrades.end(), updated);
+        if (updated)
+        {
+            setUpgrades(newUpgrades);
+        }
+    }
 
     // tell the LedgerManager that this value got externalized
     // LedgerManager will perform the proper action based on its internal
     // state: apply, trigger catchup, etc
-    LedgerCloseData ledgerData(lastConsensusLedgerIndex(), externalizedSet, b);
-    mLedgerManager.externalizeValue(ledgerData);
+    LedgerCloseData ledgerData(mHerderSCPDriver.lastConsensusLedgerIndex(),
+                               externalizedSet, value);
+    mLedgerManager.valueExternalized(ledgerData);
 
     // perform cleanups
     updatePendingTransactions(externalizedSet->mTransactions);
@@ -630,192 +216,21 @@ HerderImpl::valueExternalized(uint64 slotIndex, Value const& value)
     // Evict slots that are outside of our ledger validity bracket
     if (slotIndex > MAX_SLOTS_TO_REMEMBER)
     {
-        mSCP.purgeSlots(slotIndex - MAX_SLOTS_TO_REMEMBER);
+        getSCP().purgeSlots(slotIndex - MAX_SLOTS_TO_REMEMBER);
     }
 
     ledgerClosed();
-}
 
-void
-HerderImpl::nominatingValue(uint64 slotIndex, Value const& value)
-{
-    if (Logging::logDebug("Herder"))
-        CLOG(DEBUG, "Herder") << "nominatingValue i:" << slotIndex
-                              << " v: " << getValueString(value);
-
-    if (!value.empty())
-    {
-        mSCPMetrics.mNominatingValue.Mark();
-    }
-}
-
-Value
-HerderImpl::combineCandidates(uint64 slotIndex,
-                              std::set<Value> const& candidates)
-{
-    Hash h;
-
-    StellarValue comp(h, 0, emptyUpgradeSteps, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
-
-    std::map<LedgerUpgradeType, LedgerUpgrade> upgrades;
-
-    std::set<TransactionFramePtr> aggSet;
-
-    auto const& lcl = mLedgerManager.getLastClosedLedgerHeader();
-
-    Hash candidatesHash;
-
-    std::vector<StellarValue> candidateValues;
-
-    for (auto const& c : candidates)
-    {
-        candidateValues.emplace_back();
-        StellarValue& sv = candidateValues.back();
-
-        xdr::xdr_from_opaque(c, sv);
-        candidatesHash ^= sha256(c);
-
-        // max closeTime
-        if (comp.closeTime < sv.closeTime)
-        {
-            comp.closeTime = sv.closeTime;
-        }
-        for (auto const& upgrade : sv.upgrades)
-        {
-            LedgerUpgrade lupgrade;
-            xdr::xdr_from_opaque(upgrade, lupgrade);
-            auto it = upgrades.find(lupgrade.type());
-            if (it == upgrades.end())
-            {
-                upgrades.emplace(std::make_pair(lupgrade.type(), lupgrade));
-            }
-            else
-            {
-                LedgerUpgrade& clUpgrade = it->second;
-                switch (lupgrade.type())
-                {
-                case LedgerUpgradeType::VERSION:
-                    // pick the highest version
-                    if (clUpgrade.newLedgerVersion() <
-                        lupgrade.newLedgerVersion())
-                    {
-                        clUpgrade.newLedgerVersion() =
-                            lupgrade.newLedgerVersion();
-                    }
-                    break;
-                case LedgerUpgradeType::MAX_TX_SET_SIZE:
-                    // take the max tx set size
-                    if (clUpgrade.newMaxTxSetSize() <
-                        lupgrade.newMaxTxSetSize())
-                    {
-                        clUpgrade.newMaxTxSetSize() =
-                            lupgrade.newMaxTxSetSize();
-                    }
-                    break;
-                case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
-                    // take the max tx set size
-                    if (!(clUpgrade.newTxExpirationPeriod() ==
-                        lupgrade.newTxExpirationPeriod()))
-                    {
-                        clUpgrade.newTxExpirationPeriod() =
-                            lupgrade.newTxExpirationPeriod();
-                    }
-                    break;
-                default:
-                    // should never get there with values that are not valid
-                    throw std::runtime_error("invalid upgrade step");
-                }
-            }
-        }
-    }
-
-    // take the txSet with the highest number of transactions,
-    // highest xored hash that we have
-    TxSetFramePtr bestTxSet;
-    {
-        Hash highest;
-        TxSetFramePtr highestTxSet;
-        for (auto const& sv : candidateValues)
-        {
-            TxSetFramePtr cTxSet = getTxSet(sv.txSetHash);
-
-            if (cTxSet && cTxSet->previousLedgerHash() == lcl.hash)
-            {
-                if (!highestTxSet || (cTxSet->mTransactions.size() >
-                                      highestTxSet->mTransactions.size()) ||
-                    ((cTxSet->mTransactions.size() ==
-                      highestTxSet->mTransactions.size()) &&
-                     lessThanXored(highest, sv.txSetHash, candidatesHash)))
-                {
-                    highestTxSet = cTxSet;
-                    highest = sv.txSetHash;
-                }
-            }
-        }
-        // make a copy as we're about to modify it and we don't want to mess
-        // with the txSet cache
-        bestTxSet = std::make_shared<TxSetFrame>(*highestTxSet);
-    }
-
-    for (auto const& upgrade : upgrades)
-    {
-        Value v(xdr::xdr_to_opaque(upgrade.second));
-        comp.upgrades.emplace_back(v.begin(), v.end());
-    }
-
-    std::vector<TransactionFramePtr> removed;
-
-    // just to be sure
-    bestTxSet->trimInvalid(mApp, removed);
-    comp.txSetHash = bestTxSet->getContentsHash();
-
-    if (removed.size() != 0)
-    {
-        CLOG(WARNING, "Herder") << "Candidate set had " << removed.size()
-                                << " invalid transactions";
-
-        // post to avoid triggering SCP handling code recursively
-        mApp.getClock().getIOService().post(
-            [this, bestTxSet]()
-            {
-                mPendingEnvelopes.recvTxSet(bestTxSet->getContentsHash(),
-                                            bestTxSet);
-            });
-    }
-
-    return xdr::xdr_to_opaque(comp);
-}
-
-void
-HerderImpl::setupTimer(uint64 slotIndex, int timerID,
-                       std::chrono::milliseconds timeout,
-                       std::function<void()> cb)
-{
-    // don't setup timers for old slots
-    if (slotIndex <= getCurrentLedgerSeq())
-    {
-        mSCPTimers.erase(slotIndex);
-        return;
-    }
-
-    auto& slotTimers = mSCPTimers[slotIndex];
-
-    auto it = slotTimers.find(timerID);
-    if (it == slotTimers.end())
-    {
-        it = slotTimers.emplace(timerID, make_unique<VirtualTimer>(mApp)).first;
-    }
-    auto& timer = *it->second;
-    timer.cancel();
-    timer.expires_from_now(timeout);
-    timer.async_wait(cb, &VirtualTimer::onFailureNoop);
+    // heart beat *after* doing all the work (ensures that we do not include
+    // the overhead of externalization in the way we track SCP)
+    trackingHeartBeat();
 }
 
 void
 HerderImpl::rebroadcast()
 {
-    for (auto const& e :
-         mSCP.getLatestMessagesSend(mLedgerManager.getLedgerNum()))
+    auto const& lcl = mLedgerManager.getLastClosedLedgerHeader().header;
+    for (auto const& e : getSCP().getLatestMessagesSend(lcl.ledgerSeq + 1))
     {
         broadcast(e);
     }
@@ -856,7 +271,7 @@ HerderImpl::emitEnvelope(SCPEnvelope const& envelope)
 
     if (Logging::logDebug("Herder"))
         CLOG(DEBUG, "Herder") << "emitEnvelope"
-                              << " s:" << static_cast<int32_t >(envelope.statement.pledges.type())
+                              << " s:" << static_cast<int32_t>(envelope.statement.pledges.type())
                               << " i:" << slotIndex
                               << " a:" << mApp.getStateHuman();
 
@@ -866,23 +281,6 @@ HerderImpl::emitEnvelope(SCPEnvelope const& envelope)
 
     // this resets the re-broadcast timer
     startRebroadcastTimer();
-}
-
-bool
-HerderImpl::recvTransactions(TxSetFramePtr txSet)
-{
-    soci::transaction sqltx(mApp.getDatabase().getSession());
-    mApp.getDatabase().setCurrentTransactionReadOnly();
-
-    bool allGood = true;
-    for (auto tx : txSet->sortForApply())
-    {
-        if (recvTransaction(tx) != TX_STATUS_PENDING)
-        {
-            allGood = false;
-        }
-    }
-    return allGood;
 }
 
 void
@@ -910,9 +308,6 @@ HerderImpl::TxMap::recalculate()
 Herder::TransactionSubmitStatus
 HerderImpl::recvTransaction(TransactionFramePtr tx)
 {
-    soci::transaction sqltx(mApp.getDatabase().getSession());
-    mApp.getDatabase().setCurrentTransactionReadOnly();
-
     auto const& acc = tx->getSourceID();
     auto const& txID = tx->getFullHash();
 
@@ -941,8 +336,8 @@ HerderImpl::recvTransaction(TransactionFramePtr tx)
     }
 
     if (Logging::logTrace("Herder"))
-        CLOG(TRACE, "Herder") << "recv transaction " << hexAbbrev(txID) << " for "
-                              << PubKeyUtils::toShortString(acc);
+        CLOG(TRACE, "Herder") << "recv transaction " << hexAbbrev(txID)
+                              << " for " << PubKeyUtils::toShortString(acc);
 
     auto txmap = findOrAdd(mPendingTransactions[0], acc);
     txmap->addTx(tx);
@@ -950,28 +345,21 @@ HerderImpl::recvTransaction(TransactionFramePtr tx)
     return TX_STATUS_PENDING;
 }
 
-void
+Herder::EnvelopeStatus
 HerderImpl::recvSCPEnvelope(SCPEnvelope const& envelope)
 {
     if (mApp.getConfig().MANUAL_CLOSE)
     {
-        return;
+        return Herder::ENVELOPE_STATUS_DISCARDED;
     }
 
     if (Logging::logDebug("Herder"))
         CLOG(DEBUG, "Herder") << "recvSCPEnvelope"
                               << " from: "
-                              << mApp.getConfig().toShortString(
-                                  envelope.statement.nodeID)
-                              << " s:" << static_cast<int32_t >(envelope.statement.pledges.type())
+                              << mApp.getConfig().toShortString(envelope.statement.nodeID)
+                              << " s:" << static_cast<int32_t>(envelope.statement.pledges.type())
                               << " i:" << envelope.statement.slotIndex
                               << " a:" << mApp.getStateHuman();
-
-    if (envelope.statement.nodeID == mSCP.getLocalNode()->getNodeID())
-    {
-        CLOG(DEBUG, "Herder") << "recvSCPEnvelope: skipping own message";
-        return;
-    }
 
     mSCPMetrics.mEnvelopeReceive.Mark();
 
@@ -983,7 +371,7 @@ HerderImpl::recvSCPEnvelope(SCPEnvelope const& envelope)
 
     uint32_t maxLedgerSeq = std::numeric_limits<uint32>::max();
 
-    if (mTrackingSCP)
+    if (mHerderSCPDriver.trackingSCP())
     {
         // when tracking, we can filter messages based on the information we got
         // from consensus for the max ledger
@@ -992,7 +380,8 @@ HerderImpl::recvSCPEnvelope(SCPEnvelope const& envelope)
         // to potentially drop messages outside of the bracket
         // causing it to discard CONSENSUS_STUCK_TIMEOUT_SECONDS worth of
         // ledger closing
-        maxLedgerSeq = nextConsensusLedgerIndex() + LEDGER_VALIDITY_BRACKET;
+        maxLedgerSeq = mHerderSCPDriver.nextConsensusLedgerIndex() +
+                       LEDGER_VALIDITY_BRACKET;
     }
 
     // If envelopes are out of our validity brackets, we just ignore them.
@@ -1002,47 +391,60 @@ HerderImpl::recvSCPEnvelope(SCPEnvelope const& envelope)
         CLOG(DEBUG, "Herder") << "Ignoring SCPEnvelope outside of range: "
                               << envelope.statement.slotIndex << "( "
                               << minLedgerSeq << "," << maxLedgerSeq << ")";
-        return;
+        return Herder::ENVELOPE_STATUS_DISCARDED;
     }
 
-    mPendingEnvelopes.recvSCPEnvelope(envelope);
+    if (envelope.statement.nodeID == getSCP().getLocalNode()->getNodeID())
+    {
+        CLOG(DEBUG, "Herder") << "recvSCPEnvelope: skipping own message";
+        return Herder::ENVELOPE_STATUS_SKIPPED_SELF;
+    }
+
+    auto status = mPendingEnvelopes.recvSCPEnvelope(envelope);
+    if (status == Herder::ENVELOPE_STATUS_READY)
+    {
+        processSCPQueue();
+    }
+    return status;
+}
+
+Herder::EnvelopeStatus
+HerderImpl::recvSCPEnvelope(SCPEnvelope const& envelope,
+                            const SCPQuorumSet& qset, TxSetFrame txset)
+{
+    mPendingEnvelopes.addTxSet(txset.getContentsHash(),
+                               envelope.statement.slotIndex,
+                               std::make_shared<TxSetFrame>(txset));
+    mPendingEnvelopes.addSCPQuorumSet(sha256(xdr::xdr_to_opaque(qset)), qset);
+    return recvSCPEnvelope(envelope);
 }
 
 void
-HerderImpl::sendSCPStateToPeer(uint32 ledgerSeq, PeerPtr peer)
+HerderImpl::sendSCPStateToPeer(uint32 ledgerSeq, Peer::pointer peer)
 {
-    uint32 minSeq, maxSeq;
-
-    if (ledgerSeq == 0)
+    if (getSCP().empty())
     {
-        const uint32 nbLedgers = 3;
-        const uint32 minLedger = 2;
-
-        // include the most recent slot
-        maxSeq = getCurrentLedgerSeq() + 1;
-
-        if (maxSeq >= minLedger + nbLedgers)
-        {
-            minSeq = maxSeq - nbLedgers;
-        }
-        else
-        {
-            minSeq = minLedger;
-        }
-    }
-    else
-    {
-        minSeq = maxSeq = ledgerSeq;
+        return;
     }
 
-    for (uint32 seq = minSeq; seq <= maxSeq; seq++)
+    if (getSCP().getLowSlotIndex() > std::numeric_limits<uint32_t>::max() ||
+        getSCP().getHighSlotIndex() >= std::numeric_limits<uint32_t>::max())
     {
-        auto const& envelopes = mSCP.getCurrentState(seq);
+        return;
+    }
+
+    auto minSeq =
+        std::max(ledgerSeq, static_cast<uint32_t>(getSCP().getLowSlotIndex()));
+    auto maxSeq = static_cast<uint32_t>(getSCP().getHighSlotIndex());
+
+    for (uint32_t seq = minSeq; seq <= maxSeq; seq++)
+    {
+        auto const& envelopes = getSCP().getCurrentState(seq);
 
         if (envelopes.size() != 0)
         {
-            CLOG(DEBUG, "Herder") << "Send state " << envelopes.size()
-                                  << " for ledger " << seq;
+            CLOG(DEBUG, "Herder")
+                << "Send state " << envelopes.size() << " for ledger " << seq;
 
             for (auto const& e : envelopes)
             {
@@ -1058,16 +460,17 @@ HerderImpl::sendSCPStateToPeer(uint32 ledgerSeq, PeerPtr peer)
 void
 HerderImpl::processSCPQueue()
 {
-    if (mTrackingSCP)
+    if (mHerderSCPDriver.trackingSCP())
     {
         // drop obsolete slots
-        if (nextConsensusLedgerIndex() > MAX_SLOTS_TO_REMEMBER)
+        if (mHerderSCPDriver.nextConsensusLedgerIndex() > MAX_SLOTS_TO_REMEMBER)
         {
-            mPendingEnvelopes.eraseBelow(nextConsensusLedgerIndex() -
-                                         MAX_SLOTS_TO_REMEMBER);
+            mPendingEnvelopes.eraseBelow(
+                mHerderSCPDriver.nextConsensusLedgerIndex() -
+                MAX_SLOTS_TO_REMEMBER);
         }
 
-        processSCPQueueUpToIndex(nextConsensusLedgerIndex());
+        processSCPQueueUpToIndex(mHerderSCPDriver.nextConsensusLedgerIndex());
     }
     else
     {
@@ -1077,7 +480,7 @@ HerderImpl::processSCPQueue()
         for (auto& slot : mPendingEnvelopes.readySlots())
         {
             processSCPQueueUpToIndex(slot);
-            if (mTrackingSCP)
+            if (mHerderSCPDriver.trackingSCP())
             {
                 // one of the slots externalized
                 // we go back to regular flow
@@ -1090,17 +493,28 @@ HerderImpl::processSCPQueue()
 void
 HerderImpl::processSCPQueueUpToIndex(uint64 slotIndex)
 {
-    while (true)
+    try
     {
-        SCPEnvelope env;
-        if (mPendingEnvelopes.pop(slotIndex, env))
+        while (true)
         {
-            mSCP.receiveEnvelope(env);
+            SCPEnvelope env;
+            if (mPendingEnvelopes.pop(slotIndex, env))
+            {
+                getSCP().receiveEnvelope(env);
+            }
+            else
+            {
+                return;
+            }
         }
-        else
-        {
-            return;
-        }
+    }
+    catch (...)
+    {
+        auto s = getJsonInfo(20).toStyledString();
+        CLOG(FATAL, "Herder") << "Exception processing SCP messages at "
+                              << slotIndex << ", SCP context: " << s;
+
+        throw;
     }
 }
 
@@ -1109,28 +523,29 @@ HerderImpl::ledgerClosed()
 {
     mTriggerTimer.cancel();
 
-    updateSCPCounters();
     CLOG(TRACE, "Herder") << "HerderImpl::ledgerClosed";
 
-    mPendingEnvelopes.slotClosed(lastConsensusLedgerIndex());
+    auto lastIndex = mHerderSCPDriver.lastConsensusLedgerIndex();
 
-    mApp.getOverlayManager().ledgerClosed(lastConsensusLedgerIndex());
+    mPendingEnvelopes.slotClosed(lastIndex);
 
-    uint64_t nextIndex = nextConsensusLedgerIndex();
+    mApp.getOverlayManager().ledgerClosed(lastIndex);
+
+    uint64_t nextIndex = mHerderSCPDriver.nextConsensusLedgerIndex();
 
     // process any statements up to this slot (this may trigger externalize)
     processSCPQueueUpToIndex(nextIndex);
 
     // if externalize got called for a future slot, we don't
     // need to trigger (the now obsolete) next round
-    if (nextIndex != nextConsensusLedgerIndex())
+    if (nextIndex != mHerderSCPDriver.nextConsensusLedgerIndex())
     {
         return;
     }
 
     // If we are not a validating node and just watching SCP we don't call
     // triggerNextLedger. Likewise if we are not in synced state.
-    if (!mSCP.isValidator())
+    if (!getSCP().isValidator())
     {
         CLOG(DEBUG, "Herder")
             << "Non-validating node, not triggering ledger-close.";
@@ -1144,27 +559,20 @@ HerderImpl::ledgerClosed()
         return;
     }
 
-    auto seconds = Herder::EXP_LEDGER_TIMESPAN_SECONDS;
-    if (mApp.getConfig().ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING)
-    {
-        seconds = std::chrono::seconds(1);
-    }
-    if (mApp.getConfig().ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING)
-    {
-        seconds = std::chrono::seconds(
-            mApp.getConfig().ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING);
-    }
+    auto seconds = mApp.getConfig().getExpectedLedgerCloseTime();
 
-    auto now = mApp.getClock().now();
-    if ((now - mLastTrigger) < seconds)
+    // bootstrap with a pessimistic estimate of when
+    // the ballot protocol started last
+    auto lastBallotStart = mApp.getClock().now() - seconds;
+    auto lastStart = mHerderSCPDriver.getPrepareStart(lastIndex);
+    if (lastStart)
     {
-        auto timeout = seconds - (now - mLastTrigger);
-        mTriggerTimer.expires_from_now(timeout);
+        lastBallotStart = *lastStart;
     }
-    else
-    {
-        mTriggerTimer.expires_from_now(std::chrono::nanoseconds(0));
-    }
+    // even if ballot protocol started before triggering, we just use that time
+    // as reference point for triggering again (this may trigger right away if
+    // externalizing took a long time)
+    mTriggerTimer.expires_at(lastBallotStart + seconds);
 
     if (!mApp.getConfig().MANUAL_CLOSE)
         mTriggerTimer.async_wait(std::bind(&HerderImpl::triggerNextLedger, this,
@@ -1215,22 +623,22 @@ HerderImpl::removeReceivedTxs(std::vector<TransactionFramePtr> const& dropTxs)
     }
 }
 
-void
+bool
 HerderImpl::recvSCPQuorumSet(Hash const& hash, const SCPQuorumSet& qset)
 {
-    mPendingEnvelopes.recvSCPQuorumSet(hash, qset);
+    return mPendingEnvelopes.recvSCPQuorumSet(hash, qset);
 }
 
-void
+bool
 HerderImpl::recvTxSet(Hash const& hash, const TxSetFrame& t)
 {
-    TxSetFramePtr txset(new TxSetFrame(t));
-    mPendingEnvelopes.recvTxSet(hash, txset);
+    auto txset = std::make_shared<TxSetFrame>(t);
+    return mPendingEnvelopes.recvTxSet(hash, txset);
 }
 
 void
 HerderImpl::peerDoesntHave(MessageType type, uint256 const& itemID,
-                           PeerPtr peer)
+                           Peer::pointer peer)
 {
     mPendingEnvelopes.peerDoesntHave(type, itemID, peer);
 }
@@ -1244,7 +652,7 @@ HerderImpl::getTxSet(Hash const& hash)
 SCPQuorumSetPtr
 HerderImpl::getQSet(Hash const& qSetHash)
 {
-    return mPendingEnvelopes.getQSet(qSetHash);
+    return mHerderSCPDriver.getQSet(qSetHash);
 }
 
 uint32_t
@@ -1252,13 +660,17 @@ HerderImpl::getCurrentLedgerSeq() const
 {
     uint32_t res = mLedgerManager.getLastClosedLedgerNum();
 
-    if (mTrackingSCP && res < mTrackingSCP->mConsensusIndex)
+    if (mHerderSCPDriver.trackingSCP() &&
+        res < mHerderSCPDriver.trackingSCP()->mConsensusIndex)
     {
-        res = static_cast<uint32_t>(mTrackingSCP->mConsensusIndex);
+        res = static_cast<uint32_t>(
+            mHerderSCPDriver.trackingSCP()->mConsensusIndex);
     }
-    if (mLastTrackingSCP && res < mLastTrackingSCP->mConsensusIndex)
+    if (mHerderSCPDriver.lastTrackingSCP() &&
+        res < mHerderSCPDriver.lastTrackingSCP()->mConsensusIndex)
     {
-        res = static_cast<uint32_t>(mLastTrackingSCP->mConsensusIndex);
+        res = static_cast<uint32_t>(
+            mHerderSCPDriver.lastTrackingSCP()->mConsensusIndex);
     }
     return res;
 }
@@ -1268,18 +680,17 @@ HerderImpl::getCurrentLedgerSeq() const
 void
 HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
 {
-    if (!mTrackingSCP || !mLedgerManager.isSynced())
+    if (!mHerderSCPDriver.trackingSCP() || !mLedgerManager.isSynced())
     {
         CLOG(DEBUG, "Herder") << "triggerNextLedger: skipping (out of sync) : "
                               << mApp.getStateHuman();
         return;
     }
-    updateSCPCounters();
 
     // our first choice for this round's set is all the tx we have collected
     // during last ledger close
     auto const& lcl = mLedgerManager.getLastClosedLedgerHeader();
-    TxSetFramePtr proposedSet = std::make_shared<TxSetFrame>(lcl.hash);
+    auto proposedSet = std::make_shared<TxSetFrame>(lcl.hash);
 
     for (auto const& m : mPendingTransactions)
     {
@@ -1296,7 +707,7 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
     proposedSet->trimInvalid(mApp, removed);
     removeReceivedTxs(removed);
 
-    proposedSet->surgePricingFilter(mLedgerManager);
+    proposedSet->surgePricingFilter(mApp);
 
     if (!proposedSet->checkValid(mApp))
     {
@@ -1305,14 +716,14 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
 
     auto txSetHash = proposedSet->getContentsHash();
 
-    // Inform the item fetcher so queries from other peers about his txSet
-    // can be answered. Note this can trigger SCP callbacks, externalize, etc
-    // if we happen to build a txset that we were trying to download.
-    mPendingEnvelopes.recvTxSet(txSetHash, proposedSet);
-
     // use the slot index from ledger manager here as our vote is based off
     // the last closed ledger stored in ledger manager
     uint32_t slotIndex = lcl.header.ledgerSeq + 1;
+
+    // Inform the item fetcher so queries from other peers about his txSet
+    // can be answered. Note this can trigger SCP callbacks, externalize, etc
+    // if we happen to build a txset that we were trying to download.
+    mPendingEnvelopes.addTxSet(txSetHash, slotIndex, proposedSet);
 
     // no point in sending out a prepare:
     // externalize was triggered on a more recent ledger
@@ -1321,13 +732,10 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
         return;
     }
 
-    // We store at which time we triggered consensus
-    mLastTrigger = mApp.getClock().now();
-
     // We pick as next close time the current time unless it's before the last
     // close time. We don't know how much time it will take to reach consensus
     // so this is the most appropriate value to use as closeTime.
-    uint64_t nextCloseTime = VirtualClock::to_time_t(mLastTrigger);
+    uint64_t nextCloseTime = VirtualClock::to_time_t(mApp.getClock().now());
     if (nextCloseTime <= lcl.header.scpValue.closeTime)
     {
         nextCloseTime = lcl.header.scpValue.closeTime + 1;
@@ -1336,29 +744,7 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
     StellarValue newProposedValue(txSetHash, nextCloseTime, emptyUpgradeSteps,
 		StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
 
-    std::vector<LedgerUpgrade> upgrades;
-
-    // see if we need to include some upgrades
-    if (lcl.header.txExpirationPeriod != mApp.getConfig().TX_EXPIRATION_PERIOD)
-    {
-        upgrades.emplace_back(LedgerUpgradeType::TX_EXPIRATION_PERIOD);
-        upgrades.back().newTxExpirationPeriod() =
-            mApp.getConfig().TX_EXPIRATION_PERIOD;
-    }
-
-    if (lcl.header.ledgerVersion != mApp.getConfig().LEDGER_PROTOCOL_VERSION)
-    {
-        upgrades.emplace_back(LedgerUpgradeType::VERSION);
-        upgrades.back().newLedgerVersion() =
-            mApp.getConfig().LEDGER_PROTOCOL_VERSION;
-    }
-    if (lcl.header.maxTxSetSize != mApp.getConfig().DESIRED_MAX_TX_PER_LEDGER)
-    {
-        upgrades.emplace_back(LedgerUpgradeType::MAX_TX_SET_SIZE);
-        upgrades.back().newMaxTxSetSize() =
-            mApp.getConfig().DESIRED_MAX_TX_PER_LEDGER;
-    }
-
+    auto upgrades = mUpgrades.createUpgradesFor(lcl.header);
     for (auto const& upgrade : upgrades)
     {
         Value v(xdr::xdr_to_opaque(upgrade));
@@ -1375,27 +761,43 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
         }
     }
 
-    mCurrentValue = xdr::xdr_to_opaque(newProposedValue);
-    mLedgerSeqNominating = slotIndex;
-
-    uint256 valueHash = sha256(xdr::xdr_to_opaque(mCurrentValue));
-    CLOG(DEBUG, "Herder") << "HerderImpl::triggerNextLedger"
-                          << " txSet.size: "
-                          << proposedSet->mTransactions.size()
-                          << " previousLedgerHash: "
-                          << hexAbbrev(proposedSet->previousLedgerHash())
-                          << " value: " << hexAbbrev(valueHash)
-                          << " slot: " << slotIndex;
-
-    Value prevValue = xdr::xdr_to_opaque(lcl.header.scpValue);
-
-    mSCP.nominate(slotIndex, mCurrentValue, prevValue);
+    getHerderSCPDriver().recordSCPEvent(slotIndex, true);
+    mHerderSCPDriver.nominate(slotIndex, newProposedValue, proposedSet,
+                              lcl.header.scpValue);
 }
 
-bool
-HerderImpl::isQuorumSetSane(SCPQuorumSet const& qSet, bool extraChecks)
+void
+HerderImpl::setUpgrades(Upgrades::UpgradeParameters const& upgrades)
 {
-    return LocalNode::isQuorumSetSane(qSet, extraChecks);
+    mUpgrades.setParameters(upgrades, mApp.getConfig());
+    persistUpgrades();
+
+    auto desc = mUpgrades.toString();
+
+    if (!desc.empty())
+    {
+        auto message = fmt::format("Armed with network upgrades: {}", desc);
+        auto prev = mApp.getStatusManager().getStatusMessage(
+            StatusCategory::REQUIRES_UPGRADES);
+        if (prev != message)
+        {
+            CLOG(INFO, "Herder") << message;
+            mApp.getStatusManager().setStatusMessage(
+                StatusCategory::REQUIRES_UPGRADES, message);
+        }
+    }
+    else
+    {
+        CLOG(INFO, "Herder") << "Network upgrades cleared";
+        mApp.getStatusManager().removeStatusMessage(
+            StatusCategory::REQUIRES_UPGRADES);
+    }
+}
+
+std::string
+HerderImpl::getUpgradesJson()
+{
+    return mUpgrades.getParameters().toJson();
 }
 
 bool
@@ -1414,10 +816,10 @@ HerderImpl::resolveNodeID(std::string const& s, PublicKey& retKey)
             {
                 seq--;
             }
-            auto const& envelopes = mSCP.getCurrentState(seq);
+            auto const& envelopes = getSCP().getCurrentState(seq);
             for (auto const& e : envelopes)
             {
-                std::string curK = PubKeyUtils::toStrKey(e.statement.nodeID);
+                std::string curK = KeyUtils::toStrKey(e.statement.nodeID);
                 if (curK.compare(0, arg.size(), arg) == 0)
                 {
                     retKey = e.statement.nodeID;
@@ -1430,53 +832,25 @@ HerderImpl::resolveNodeID(std::string const& s, PublicKey& retKey)
     return r;
 }
 
-// Extra SCP methods overridden solely to increment metrics.
-void
-HerderImpl::updatedCandidateValue(uint64 slotIndex, Value const& value)
+Json::Value
+HerderImpl::getJsonInfo(size_t limit)
 {
-    mSCPMetrics.mUpdatedCandidate.Mark();
+    Json::Value ret;
+    ret["you"] =
+        mApp.getConfig().toStrKey(mApp.getConfig().NODE_SEED.getPublicKey());
+
+    ret["scp"] = getSCP().getJsonInfo(limit);
+    ret["queue"] = mPendingEnvelopes.getJsonInfo(limit);
+    return ret;
 }
 
-void
-HerderImpl::startedBallotProtocol(uint64 slotIndex, SCPBallot const& ballot)
+Json::Value
+HerderImpl::getJsonQuorumInfo(NodeID const& id, bool summary, uint64 index)
 {
-    mSCPMetrics.mStartBallotProtocol.Mark();
-}
-void
-HerderImpl::acceptedBallotPrepared(uint64 slotIndex, SCPBallot const& ballot)
-{
-    mSCPMetrics.mAcceptedBallotPrepared.Mark();
-}
-
-void
-HerderImpl::confirmedBallotPrepared(uint64 slotIndex, SCPBallot const& ballot)
-{
-    mSCPMetrics.mConfirmedBallotPrepared.Mark();
-}
-
-void
-HerderImpl::acceptedCommit(uint64 slotIndex, SCPBallot const& ballot)
-{
-    mSCPMetrics.mAcceptedCommit.Mark();
-}
-
-void
-HerderImpl::dumpInfo(Json::Value& ret, size_t limit)
-{
-    ret["you"] = mApp.getConfig().toStrKey(mSCP.getSecretKey().getPublicKey());
-
-    mSCP.dumpInfo(ret, limit);
-
-    mPendingEnvelopes.dumpInfo(ret, limit);
-}
-
-void
-HerderImpl::dumpQuorumInfo(Json::Value& ret, NodeID const& id, bool summary,
-                           uint64 index)
-{
+    Json::Value ret;
     ret["node"] = mApp.getConfig().toStrKey(id);
-
-    mSCP.dumpQuorumInfo(ret["slots"], id, summary, index);
+    ret["slots"] = getSCP().getJsonQuorumInfo(id, summary, index);
+    return ret;
 }
 
 void
@@ -1494,22 +868,25 @@ HerderImpl::persistSCPState(uint64 slot)
     std::map<Hash, TxSetFramePtr> txSets;
     std::map<Hash, SCPQuorumSetPtr> quorumSets;
 
-    for (auto const& e : mSCP.getLatestMessagesSend(slot))
+    for (auto const& e : getSCP().getLatestMessagesSend(slot))
     {
         latestEnvs.emplace_back(e);
 
         // saves transaction sets referred by the statement
-        std::vector<Value> vals = Slot::getStatementValues(e.statement);
-        for (auto const& v : vals)
+        for (auto const& h : getTxSetHashes(e))
         {
-            StellarValue wb;
-            xdr::xdr_from_opaque(v, wb);
-            TxSetFramePtr txSet = mPendingEnvelopes.getTxSet(wb.txSetHash);
-            txSets.insert(std::make_pair(wb.txSetHash, txSet));
+            auto txSet = mPendingEnvelopes.getTxSet(h);
+            if (txSet)
+            {
+                txSets.insert(std::make_pair(h, txSet));
+            }
         }
         Hash qsHash = Slot::getCompanionQuorumSetHashFromStatement(e.statement);
         SCPQuorumSetPtr qSet = mPendingEnvelopes.getQSet(qsHash);
-        quorumSets.insert(std::make_pair(qsHash, qSet));
+        if (qSet)
+        {
+            quorumSets.insert(std::make_pair(qsHash, qSet));
+        }
     }
 
     xdr::xvector<TransactionSet> latestTxSets;
@@ -1528,7 +905,7 @@ HerderImpl::persistSCPState(uint64 slot)
     auto latestSCPData =
         xdr::xdr_to_opaque(latestEnvs, latestTxSets, latestQSets);
     std::string scpState;
-    scpState = bn::encode_b64(latestSCPData);
+    scpState = decoder::encode_b64(latestSCPData);
 
     mApp.getPersistentState().setState(PersistentState::kLastSCPData, scpState);
 }
@@ -1538,8 +915,7 @@ HerderImpl::restoreSCPState()
 {
     // setup a sufficient state that we can participate in consensus
     auto const& lcl = mLedgerManager.getLastClosedLedgerHeader();
-    mTrackingSCP =
-        make_unique<ConsensusData>(lcl.header.ledgerSeq, lcl.header.scpValue);
+    mHerderSCPDriver.restoreSCPState(lcl.header.ledgerSeq, lcl.header.scpValue);
 
     trackingHeartBeat();
 
@@ -1553,7 +929,7 @@ HerderImpl::restoreSCPState()
     }
 
     std::vector<uint8_t> buffer;
-    bn::decode_b64(latest64, buffer);
+    decoder::decode_b64(latest64, buffer);
 
     xdr::xvector<SCPEnvelope> latestEnvs;
     xdr::xvector<TransactionSet> latestTxSets;
@@ -1568,16 +944,16 @@ HerderImpl::restoreSCPState()
             TxSetFramePtr cur =
                 make_shared<TxSetFrame>(mApp.getNetworkID(), txset);
             Hash h = cur->getContentsHash();
-            mPendingEnvelopes.recvTxSet(h, cur);
+            mPendingEnvelopes.addTxSet(h, 0, cur);
         }
         for (auto const& qset : latestQSets)
         {
             Hash hash = sha256(xdr::xdr_to_opaque(qset));
-            mPendingEnvelopes.recvSCPQuorumSet(hash, qset);
+            mPendingEnvelopes.addSCPQuorumSet(hash, qset);
         }
         for (auto const& e : latestEnvs)
         {
-            mSCP.setStateFromEnvelope(e.statement.slotIndex, e);
+            getSCP().setStateFromEnvelope(e.statement.slotIndex, e);
         }
 
         if (latestEnvs.size() != 0)
@@ -1591,8 +967,45 @@ HerderImpl::restoreSCPState()
         // we may have exceptions when upgrading the protocol
         // this should be the only time we get exceptions decoding old messages.
         CLOG(INFO, "Herder") << "Error while restoring old scp messages, "
-                                "proceeding without them : " << e.what();
+                                "proceeding without them : "
+                             << e.what();
     }
+}
+
+void
+HerderImpl::persistUpgrades()
+{
+    auto s = mUpgrades.getParameters().toJson();
+    mApp.getPersistentState().setState(PersistentState::kLedgerUpgrades, s);
+}
+
+void
+HerderImpl::restoreUpgrades()
+{
+    std::string s =
+        mApp.getPersistentState().getState(PersistentState::kLedgerUpgrades);
+    if (!s.empty())
+    {
+        Upgrades::UpgradeParameters p;
+        p.fromJson(s);
+        try
+        {
+            // use common code to set status
+            setUpgrades(p);
+        }
+        catch (std::exception e)
+        {
+            CLOG(INFO, "Herder") << "Error restoring upgrades '" << e.what()
+                                 << "' with upgrades '" << s << "'";
+        }
+    }
+}
+
+void
+HerderImpl::restoreState()
+{
+    restoreSCPState();
+    restoreUpgrades();
 }
 
 void
@@ -1603,7 +1016,7 @@ HerderImpl::trackingHeartBeat()
         return;
     }
 
-    assert(mTrackingSCP);
+    assert(mHerderSCPDriver.trackingSCP());
     mTrackingTimer.expires_from_now(
         std::chrono::seconds(CONSENSUS_STUCK_TIMEOUT_SECONDS));
     mTrackingTimer.async_wait(std::bind(&HerderImpl::herderOutOfSync, this),
@@ -1654,262 +1067,14 @@ HerderImpl::updatePendingTransactions(
 void
 HerderImpl::herderOutOfSync()
 {
-    CLOG(INFO, "Herder") << "Lost track of consensus";
+    CLOG(WARNING, "Herder") << "Lost track of consensus";
 
-    Json::Value v;
-    dumpInfo(v, 20);
-    std::string s = v.toStyledString();
-    CLOG(INFO, "Herder") << "Out of sync context: " << s;
+    auto s = getJsonInfo(20).toStyledString();
+    CLOG(WARNING, "Herder") << "Out of sync context: " << s;
 
     mSCPMetrics.mLostSync.Mark();
-    stateChanged();
-
-    // transfer ownership to mLastTrackingSCP
-    mLastTrackingSCP.reset(mTrackingSCP.release());
+    mHerderSCPDriver.lostSync();
 
     processSCPQueue();
-}
-
-void
-HerderImpl::saveSCPHistory(uint64 index)
-{
-    uint32 seq = static_cast<uint32>(index);
-
-    auto envs = mSCP.getExternalizingState(seq);
-    if (!envs.empty())
-    {
-        std::unordered_map<Hash, SCPQuorumSetPtr> usedQSets;
-
-        auto& db = mApp.getDatabase();
-
-        soci::transaction txscope(db.getSession());
-
-        {
-            auto prepClean = db.getPreparedStatement(
-                "DELETE FROM scphistory WHERE ledgerseq =:l");
-
-            auto& st = prepClean.statement();
-            st.exchange(use(seq));
-            st.define_and_bind();
-            {
-                auto timer = db.getDeleteTimer("scphistory");
-                st.execute(true);
-            }
-        }
-        for (auto const& e : envs)
-        {
-            auto const& qHash =
-                Slot::getCompanionQuorumSetHashFromStatement(e.statement);
-            usedQSets.insert(std::make_pair(qHash, getQSet(qHash)));
-
-            std::string nodeIDStrKey =
-                PubKeyUtils::toStrKey(e.statement.nodeID);
-
-            auto envelopeBytes(xdr::xdr_to_opaque(e));
-
-            std::string envelopeEncoded;
-            envelopeEncoded = bn::encode_b64(envelopeBytes);
-
-            auto prepEnv =
-                db.getPreparedStatement("INSERT INTO scphistory "
-                                        "(nodeid, ledgerseq, envelope) VALUES "
-                                        "(:n, :l, :e)");
-
-            auto& st = prepEnv.statement();
-            st.exchange(use(nodeIDStrKey));
-            st.exchange(use(seq));
-            st.exchange(use(envelopeEncoded));
-            st.define_and_bind();
-            {
-                auto timer = db.getInsertTimer("scphistory");
-                st.execute(true);
-            }
-            if (st.get_affected_rows() != 1)
-            {
-                throw std::runtime_error("Could not update data in SQL");
-            }
-        }
-
-        for (auto const& p : usedQSets)
-        {
-            std::string qSetH = binToHex(p.first);
-
-            auto prepUpQSet = db.getPreparedStatement(
-                "UPDATE scpquorums SET "
-                "lastledgerseq = :l WHERE qsethash = :h");
-
-            auto& stUp = prepUpQSet.statement();
-            stUp.exchange(use(seq));
-            stUp.exchange(use(qSetH));
-            stUp.define_and_bind();
-            {
-                auto timer = db.getInsertTimer("scpquorums");
-                stUp.execute(true);
-            }
-            if (stUp.get_affected_rows() != 1)
-            {
-                auto qSetBytes(xdr::xdr_to_opaque(*p.second));
-
-                std::string qSetEncoded;
-                qSetEncoded = bn::encode_b64(qSetBytes);
-
-                auto prepInsQSet = db.getPreparedStatement(
-                    "INSERT INTO scpquorums "
-                    "(qsethash, lastledgerseq, qset) VALUES "
-                    "(:h, :l, :v);");
-
-                auto& stIns = prepInsQSet.statement();
-                stIns.exchange(use(qSetH));
-                stIns.exchange(use(seq));
-                stIns.exchange(use(qSetEncoded));
-                stIns.define_and_bind();
-                {
-                    auto timer = db.getInsertTimer("scpquorums");
-                    stIns.execute(true);
-                }
-                if (stIns.get_affected_rows() != 1)
-                {
-                    throw std::runtime_error("Could not update data in SQL");
-                }
-            }
-        }
-
-        txscope.commit();
-    }
-}
-
-size_t
-Herder::copySCPHistoryToStream(Database& db, soci::session& sess,
-                               uint32_t ledgerSeq, uint32_t ledgerCount,
-                               XDROutputFileStream& scpHistory)
-{
-    uint32_t begin = ledgerSeq, end = ledgerSeq + ledgerCount;
-    size_t n = 0;
-
-    // all known quorum sets
-    std::unordered_map<Hash, SCPQuorumSet> qSets;
-
-    for (uint32_t curLedgerSeq = begin; curLedgerSeq < end; curLedgerSeq++)
-    {
-        // SCP envelopes for this ledger
-        // quorum sets missing in this batch of envelopes
-        std::set<Hash> missingQSets;
-
-        SCPHistoryEntry hEntryV;
-        hEntryV.v(LedgerVersion::EMPTY_VERSION);
-        auto& hEntry = hEntryV.v0();
-        auto& lm = hEntry.ledgerMessages;
-        lm.ledgerSeq = curLedgerSeq;
-
-        auto& curEnvs = lm.messages;
-
-        // fetch SCP messages from history
-        {
-            std::string envB64;
-
-            auto timer = db.getSelectTimer("scphistory");
-
-            soci::statement st =
-                (sess.prepare << "SELECT envelope FROM scphistory "
-                                 "WHERE ledgerseq = :cur ORDER BY nodeid",
-                 into(envB64), use(curLedgerSeq));
-
-            st.execute(true);
-
-            while (st.got_data())
-            {
-                curEnvs.emplace_back();
-                auto& env = curEnvs.back();
-
-                std::vector<uint8_t> envBytes;
-                bn::decode_b64(envB64, envBytes);
-
-                xdr::xdr_get g1(&envBytes.front(), &envBytes.back() + 1);
-                xdr_argpack_archive(g1, env);
-
-                // record new quorum sets encountered
-                Hash const& qSetHash =
-                    Slot::getCompanionQuorumSetHashFromStatement(env.statement);
-                if (qSets.find(qSetHash) == qSets.end())
-                {
-                    missingQSets.insert(qSetHash);
-                }
-
-                n++;
-
-                st.fetch();
-            }
-        }
-
-        // fetch the quorum sets from the db
-        for (auto const& q : missingQSets)
-        {
-            std::string qset64, qSetHashHex;
-
-            hEntry.quorumSets.emplace_back();
-            auto& qset = hEntry.quorumSets.back();
-
-            qSetHashHex = binToHex(q);
-
-            auto timer = db.getSelectTimer("scpquorums");
-
-            soci::statement st = (sess.prepare << "SELECT qset FROM scpquorums "
-                                                  "WHERE qsethash = :h",
-                                  into(qset64), use(qSetHashHex));
-
-            st.execute(true);
-
-            if (!st.got_data())
-            {
-                throw std::runtime_error(
-                    "corrupt database state: missing quorum set");
-            }
-
-            std::vector<uint8_t> qSetBytes;
-            bn::decode_b64(qset64, qSetBytes);
-
-            xdr::xdr_get g1(&qSetBytes.front(), &qSetBytes.back() + 1);
-            xdr_argpack_archive(g1, qset);
-        }
-
-        if (curEnvs.size() != 0)
-        {
-            scpHistory.writeOne(hEntryV);
-        }
-    }
-
-    return n;
-}
-
-void
-Herder::dropAll(Database& db)
-{
-    db.getSession() << "DROP TABLE IF EXISTS scphistory";
-
-    db.getSession() << "DROP TABLE IF EXISTS scpquorums";
-
-    db.getSession() << "CREATE TABLE scphistory ("
-                       "nodeid      CHARACTER(56) NOT NULL,"
-                       "ledgerseq   INT NOT NULL CHECK (ledgerseq >= 0),"
-                       "envelope    TEXT NOT NULL"
-                       ")";
-
-    db.getSession() << "CREATE INDEX scpenvsbyseq ON scphistory(ledgerseq)";
-
-    db.getSession() << "CREATE TABLE scpquorums ("
-                       "qsethash      CHARACTER(64) NOT NULL,"
-                       "lastledgerseq INT NOT NULL CHECK (lastledgerseq >= 0),"
-                       "qset          TEXT NOT NULL,"
-                       "PRIMARY KEY (qsethash)"
-                       ")";
-}
-
-void
-Herder::deleteOldEntries(Database& db, uint32_t ledgerSeq)
-{
-    db.getSession() << "DELETE FROM scphistory WHERE ledgerseq <= "
-                    << ledgerSeq;
-    db.getSession() << "DELETE FROM scpquorums WHERE lastledgerseq <= "
-                    << ledgerSeq;
 }
 }

@@ -25,7 +25,7 @@ properly registered by updating its cursor so that stellar-core can safely
 garbage collect data no longer needed.
 By default stellar-core only keeps track of its internal state and will
  therefore delete data it does not need anymore.
-See `setcursor` in [`learn/commands.md#http-commands`](learn/commands.md#http-commands)
+See `setcursor` in [`software/commands.md#http-commands`](software/commands.md#http-commands)
 
 Advantages of consuming SQL tables for a dependent service:
  * data is available as soon as the network closes a ledger.
@@ -50,4 +50,4 @@ See [`history.md`](history.md) for more detail.
   stellar-core exposes a simple HTTP based API for performing various
   types of operations on stellar-core itself or on entities in the network
   (such as submitting transactions).
-  See [`learn/commands.md`](learn/commands.md) for more information.
+  See [`software/commands.md`](software/commands.md) for more information.
