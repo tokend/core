@@ -39,6 +39,8 @@ public:
     EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
     uint64_t countObjects(soci::session& sess) override;
 
+    std::string const
+    getTableName() const override;
 
     std::vector<LimitsV2Frame::pointer> loadLimits(Database &db, std::vector<StatsOpType> statsOpTypes,
                                       AssetCode assetCode, xdr::pointer<AccountID> accountID = nullptr,

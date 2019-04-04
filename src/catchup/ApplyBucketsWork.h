@@ -43,11 +43,13 @@ class ApplyBucketsWork : public Work
     medida::Meter& mBucketApplyStart;
     medida::Meter& mBucketApplySuccess;
     medida::Meter& mBucketApplyFailure;
-    BucketApplicator::Counters mCounters;
 
     std::shared_ptr<Bucket const> getBucket(std::string const& bucketHash);
     BucketLevel& getBucketLevel(uint32_t level);
     void advance(std::string const& name, BucketApplicator& applicator);
+
+    void
+    deleteObjectsModifiedOnOrAfterLedger(uint32_t ledger) const;
 
   public:
     ApplyBucketsWork(

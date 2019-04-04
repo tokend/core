@@ -3,7 +3,6 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "crypto/Hex.h"
-#include "crypto/KeyUtils.h"
 #include "crypto/Random.h"
 #include "crypto/SHA.h"
 #include "crypto/SecretKey.h"
@@ -136,7 +135,7 @@ TEST_CASE("sign tests", "[crypto]")
     auto pk = sk.getPublicKey();
     LOG(DEBUG) << "generated random secret key seed: "
                << sk.getStrKeySeed().value;
-    LOG(DEBUG) << "corresponding public key: " << KeyUtils::toStrKey(pk);
+    LOG(DEBUG) << "corresponding public key: " << PubKeyUtils::toStrKey(pk);
 
     CHECK(SecretKey::fromStrKeySeed(sk.getStrKeySeed().value) == sk);
 

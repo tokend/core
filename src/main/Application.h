@@ -207,7 +207,6 @@ class Application
     virtual Herder& getHerder() = 0;
     virtual HerderPersistence& getHerderPersistence() = 0;
     virtual InvariantManager& getInvariantManager() = 0;
-    virtual Invariants& getInvariants() = 0;
     virtual OverlayManager& getOverlayManager() = 0;
     virtual Database& getDatabase() const = 0;
     virtual PersistentState& getPersistentState() = 0;

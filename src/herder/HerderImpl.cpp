@@ -4,14 +4,12 @@
 
 #include "herder/HerderImpl.h"
 #include "crypto/Hex.h"
-#include "crypto/KeyUtils.h"
 #include "crypto/SHA.h"
 #include "herder/HerderPersistence.h"
 #include "herder/HerderUtils.h"
 #include "herder/LedgerCloseData.h"
 #include "herder/TxSetFrame.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxn.h"
 #include "ledger/LedgerTxnEntry.h"
 #include "ledger/LedgerTxnHeader.h"
 #include "lib/json/json.h"
@@ -21,7 +19,6 @@
 #include "overlay/OverlayManager.h"
 #include "scp/LocalNode.h"
 #include "scp/Slot.h"
-#include "transactions/TransactionUtils.h"
 #include "util/Logging.h"
 #include "util/StatusManager.h"
 #include "util/Timer.h"
@@ -707,7 +704,7 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
     proposedSet->trimInvalid(mApp, removed);
     removeReceivedTxs(removed);
 
-    proposedSet->surgePricingFilter(mApp);
+    proposedSet->surgePricingFilter(mApp.getLedgerManager());
 
     if (!proposedSet->checkValid(mApp))
     {
@@ -819,7 +816,7 @@ HerderImpl::resolveNodeID(std::string const& s, PublicKey& retKey)
             auto const& envelopes = getSCP().getCurrentState(seq);
             for (auto const& e : envelopes)
             {
-                std::string curK = KeyUtils::toStrKey(e.statement.nodeID);
+                std::string curK = PubKeyUtils::toStrKey(e.statement.nodeID);
                 if (curK.compare(0, arg.size(), arg) == 0)
                 {
                     retKey = e.statement.nodeID;

@@ -24,6 +24,8 @@
 
 namespace stellar
 {
+const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION = static_cast<uint32_t>(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING;
+
 // Options that must only be used for testing
 static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {
         "RUN_STANDALONE", "MANUAL_CLOSE", "ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING",

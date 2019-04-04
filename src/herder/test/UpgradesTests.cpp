@@ -7,16 +7,12 @@
 #include "herder/Upgrades.h"
 #include "history/HistoryArchiveManager.h"
 #include "history/test/HistoryTestsUtils.h"
-#include "ledger/LedgerTxn.h"
 #include "ledger/LedgerTxnEntry.h"
 #include "ledger/LedgerTxnHeader.h"
-#include "ledger/TrustLineWrapper.h"
 #include "lib/catch.hpp"
 #include "simulation/Simulation.h"
-#include "test/TestMarket.h"
 #include "test/TestUtils.h"
 #include "test/test.h"
-#include "transactions/TransactionUtils.h"
 #include "util/StatusManager.h"
 #include "util/Timer.h"
 #include "util/optional.h"
@@ -30,13 +26,13 @@ struct LedgerUpgradeableData
     {
     }
     LedgerUpgradeableData(uint32_t v, uint32_t f, uint32_t txs, uint32_t r)
-        : ledgerVersion(v), baseFee(f), maxTxSetSize(txs), baseReserve(r)
+        : ledgerVersion(v), baseFee(f), maxTxSetSize(txs), txExpirationPeriod(r)
     {
     }
     uint32_t ledgerVersion{0};
     uint32_t baseFee{0};
     uint32_t maxTxSetSize{0};
-    uint32_t baseReserve{0};
+    uint32_t txExpirationPeriod{0};
 };
 
 struct LedgerUpgradeNode
@@ -100,8 +96,7 @@ simulateUpgrade(std::vector<LedgerUpgradeNode> const& nodes,
         {
             auto& du = nodes[i].desiredUpgrades;
             Upgrades::UpgradeParameters upgrades;
-            setUpgrade(upgrades.mBaseFee, du.baseFee);
-            setUpgrade(upgrades.mBaseReserve, du.baseReserve);
+            setUpgrade(upgrades.mTxExpirationPeriod, du.txExpirationPeriod);
             setUpgrade(upgrades.mMaxTxSize, du.maxTxSetSize);
             setUpgrade(upgrades.mProtocolVersion, du.ledgerVersion);
             upgrades.mUpgradeTime = upgradeTime;
@@ -135,8 +130,8 @@ simulateUpgrade(std::vector<LedgerUpgradeNode> const& nodes,
                     state[i].baseFee);
             REQUIRE(node->getLedgerManager().getLastMaxTxSetSize() ==
                     state[i].maxTxSetSize);
-            REQUIRE(node->getLedgerManager().getLastReserve() ==
-                    state[i].baseReserve);
+            REQUIRE(node->getLedgerManager().getTxExpirationPeriod() ==
+                    state[i].txExpirationPeriod);
         }
     };
 
@@ -175,32 +170,24 @@ simulateUpgrade(std::vector<LedgerUpgradeNode> const& nodes,
 LedgerUpgrade
 makeProtocolVersionUpgrade(int version)
 {
-    auto result = LedgerUpgrade{LEDGER_UPGRADE_VERSION};
+    auto result = LedgerUpgrade{LedgerUpgradeType::VERSION};
     result.newLedgerVersion() = version;
-    return result;
-}
-
-LedgerUpgrade
-makeBaseFeeUpgrade(int baseFee)
-{
-    auto result = LedgerUpgrade{LEDGER_UPGRADE_BASE_FEE};
-    result.newBaseFee() = baseFee;
     return result;
 }
 
 LedgerUpgrade
 makeTxCountUpgrade(int txCount)
 {
-    auto result = LedgerUpgrade{LEDGER_UPGRADE_MAX_TX_SET_SIZE};
+    auto result = LedgerUpgrade{LedgerUpgradeType::MAX_TX_SET_SIZE};
     result.newMaxTxSetSize() = txCount;
     return result;
 }
 
 LedgerUpgrade
-makeBaseReserveUpgrade(int baseReserve)
+makeTxExpirationPeriodUpgrade(int baseReserve)
 {
-    auto result = LedgerUpgrade{LEDGER_UPGRADE_BASE_RESERVE};
-    result.newBaseReserve() = baseReserve;
+    auto result = LedgerUpgrade{LedgerUpgradeType::TX_EXPIRATION_PERIOD};
+    result.newTxExpirationPeriod() = baseReserve;
     return result;
 }
 
@@ -232,11 +219,10 @@ testListUpgrades(VirtualClock::time_point preferredUpgradeDatetime,
 
     auto protocolVersionUpgrade =
         makeProtocolVersionUpgrade(cfg.LEDGER_PROTOCOL_VERSION);
-    auto baseFeeUpgrade = makeBaseFeeUpgrade(cfg.TESTING_UPGRADE_DESIRED_FEE);
     auto txCountUpgrade =
         makeTxCountUpgrade(cfg.TESTING_UPGRADE_MAX_TX_PER_LEDGER);
     auto baseReserveUpgrade =
-        makeBaseReserveUpgrade(cfg.TESTING_UPGRADE_RESERVE);
+            makeTxExpirationPeriodUpgrade(cfg.TESTING_UPGRADE_RESERVE);
 
     SECTION("protocol version upgrade needed")
     {
@@ -244,16 +230,6 @@ testListUpgrades(VirtualClock::time_point preferredUpgradeDatetime,
         auto upgrades = Upgrades{cfg}.createUpgradesFor(header);
         auto expected = shouldListAny
                             ? std::vector<LedgerUpgrade>{protocolVersionUpgrade}
-                            : std::vector<LedgerUpgrade>{};
-        REQUIRE(upgrades == expected);
-    }
-
-    SECTION("base fee upgrade needed")
-    {
-        header.baseFee /= 2;
-        auto upgrades = Upgrades{cfg}.createUpgradesFor(header);
-        auto expected = shouldListAny
-                            ? std::vector<LedgerUpgrade>{baseFeeUpgrade}
                             : std::vector<LedgerUpgrade>{};
         REQUIRE(upgrades == expected);
     }
@@ -443,29 +419,30 @@ testValidateUpgrades(VirtualClock::time_point preferredUpgradeDatetime,
             {
                 REQUIRE(canBeValid ==
                         Upgrades{cfg}.isValid(
-                            toUpgradeType(makeBaseReserveUpgrade(100000000)),
+                            toUpgradeType(
+                                    makeTxExpirationPeriodUpgrade(100000000)),
                             ledgerUpgradeType, nomination, cfg, baseLH));
                 REQUIRE(!Upgrades{cfg}.isValid(
-                    toUpgradeType(makeBaseReserveUpgrade(99999999)),
+                    toUpgradeType(makeTxExpirationPeriodUpgrade(99999999)),
                     ledgerUpgradeType, nomination, cfg, baseLH));
                 REQUIRE(!Upgrades{cfg}.isValid(
-                    toUpgradeType(makeBaseReserveUpgrade(100000001)),
+                    toUpgradeType(makeTxExpirationPeriodUpgrade(100000001)),
                     ledgerUpgradeType, nomination, cfg, baseLH));
             }
             else
             {
                 REQUIRE(Upgrades{cfg}.isValid(
-                    toUpgradeType(makeBaseReserveUpgrade(100000000)),
+                    toUpgradeType(makeTxExpirationPeriodUpgrade(100000000)),
                     ledgerUpgradeType, nomination, cfg, baseLH));
                 REQUIRE(Upgrades{cfg}.isValid(
-                    toUpgradeType(makeBaseReserveUpgrade(99999999)),
+                    toUpgradeType(makeTxExpirationPeriodUpgrade(99999999)),
                     ledgerUpgradeType, nomination, cfg, baseLH));
                 REQUIRE(Upgrades{cfg}.isValid(
-                    toUpgradeType(makeBaseReserveUpgrade(100000001)),
+                    toUpgradeType(makeTxExpirationPeriodUpgrade(100000001)),
                     ledgerUpgradeType, nomination, cfg, baseLH));
             }
             REQUIRE(!Upgrades{cfg}.isValid(
-                toUpgradeType(makeBaseReserveUpgrade(0)), ledgerUpgradeType,
+                toUpgradeType(makeTxExpirationPeriodUpgrade(0)), ledgerUpgradeType,
                 nomination, cfg, baseLH));
         }
     };
@@ -541,7 +518,7 @@ TEST_CASE("Ledger Manager applies upgrades properly", "[upgrades]")
     SECTION("base reserve")
     {
         REQUIRE(
-            executeUpgrade(makeBaseReserveUpgrade(1000)).header.baseReserve ==
+            executeUpgrade(makeTxExpirationPeriodUpgrade(1000)).header.baseReserve ==
             1000);
     }
 
@@ -552,7 +529,7 @@ TEST_CASE("Ledger Manager applies upgrades properly", "[upgrades]")
                                  cfg.LEDGER_PROTOCOL_VERSION)),
                              toUpgradeType(makeBaseFeeUpgrade(1000)),
                              toUpgradeType(makeTxCountUpgrade(1300)),
-                             toUpgradeType(makeBaseReserveUpgrade(1000))})
+                             toUpgradeType(makeTxExpirationPeriodUpgrade(1000))})
                 .header;
         REQUIRE(header.ledgerVersion == cfg.LEDGER_PROTOCOL_VERSION);
         REQUIRE(header.baseFee == 1000);
@@ -1429,7 +1406,8 @@ TEST_CASE("upgrade base reserve", "[upgrades]")
 
     auto executeUpgrade = [&](uint32_t newReserve) {
         auto upgrades = xdr::xvector<UpgradeType, 6>{};
-        upgrades.push_back(toUpgradeType(makeBaseReserveUpgrade(newReserve)));
+        upgrades.push_back(toUpgradeType(
+                makeTxExpirationPeriodUpgrade(newReserve)));
 
         StellarValue sv{txSet->getContentsHash(), 2, upgrades, 0};
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);

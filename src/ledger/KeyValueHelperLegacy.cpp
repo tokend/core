@@ -244,4 +244,12 @@ KeyValueHelperLegacy::loadKeyValues(
         st.fetch();
     }
 }
+
+std::string const
+KeyValueHelperLegacy::getTableName() const
+{
+    MockDatabase db;
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
+    return storageHelper->getKeyValueHelper().getTableName();
+}
 } // namespace stellar

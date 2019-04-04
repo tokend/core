@@ -65,6 +65,9 @@ class ExternalSystemAccountIDPoolEntryHelperLegacy : public EntryHelperLegacy
     std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer>
     loadPool(Database& db);
 
+    std::string const
+    getTableName() const override;
+
   private:
     static const char* select;
 

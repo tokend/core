@@ -8,7 +8,6 @@
 #include "crypto/SHA.h"
 #include "crypto/StrKey.h"
 #include "main/Config.h"
-#include "transactions/SignatureUtils.h"
 #include "util/HashOfHash.h"
 #include "util/lrucache.hpp"
 #include <memory>
@@ -209,7 +208,7 @@ bool
 PubKeyUtils::verifySig(PublicKey const& key, Signature const& signature,
                        ByteSlice const& bin)
 {
-    assert(key.type() == PUBLIC_KEY_TYPE_ED25519);
+    assert(key.type() == CryptoKeyType::KEY_TYPE_ED25519);
     if (signature.size() != 64)
     {
         return false;
@@ -247,7 +246,7 @@ PubKeyUtils::toShortString(PublicKey const& pk)
 std::string
 PubKeyUtils::toStrKey(PublicKey const& pk)
 {
-    return strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, pk.ed25519());
+    return strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, pk.ed25519()).value;
 }
 
 PublicKey
@@ -284,7 +283,7 @@ PubKeyUtils::random()
 std::string
 BalanceKeyUtils::toStrKey(PublicKey const& pk)
 {
-    return strKey::toStrKey(strKey::STRKEY_BALANCE_ED25519, pk.ed25519());
+    return strKey::toStrKey(strKey::STRKEY_BALANCE_ED25519, pk.ed25519()).value;
 }
 
 PublicKey

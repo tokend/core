@@ -38,6 +38,7 @@ class Database;
 class LedgerManager
 {
   public:
+    static const uint32_t GENESIS_LEDGER_SEQ;
 
     enum State
     {

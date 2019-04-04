@@ -51,6 +51,9 @@ class KeyValueHelperImpl : public KeyValueHelper, NonCopyable
     LedgerDelta*
     getLedgerDelta() override;
 
+    std::string const
+    getTableName() const override;
+
     StorageHelper& mStorageHelper;
 };
 

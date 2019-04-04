@@ -208,7 +208,6 @@ ApplicationImpl::reportCfgMetrics() {
     }
 }
 
-
 Json::Value
 ApplicationImpl::getJsonInfo()
 {
@@ -228,7 +227,7 @@ ApplicationImpl::getJsonInfo()
     info["protocol_version"] = getConfig().LEDGER_PROTOCOL_VERSION;
     info["ledger_version"] = lm.getLastClosedLedgerHeader().header.ledgerVersion;
     info["tx_expiration_period"] = Json::UInt64(lm.getTxExpirationPeriod() - getConfig().TX_EXPIRATION_PERIOD_WINDOW);
-    info["withdrawal_details_max_length"] = Json::Int64(mApp.getWithdrawalDetailsMaxLength());
+    info["withdrawal_details_max_length"] = Json::Int64(getWithdrawalDetailsMaxLength());
     info["state"] = getStateHuman();
     info["startedOn"] = VirtualClock::pointToISOString(mStartedOn);
     auto const& lcl = lm.getLastClosedLedgerHeader();

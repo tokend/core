@@ -197,4 +197,10 @@ void ReferenceHelper::addVersion(Database& db)
 {
     db.getSession() << "ALTER TABLE reference ADD COLUMN version INT NOT NULL DEFAULT 0";
 }
+
+std::string const
+ReferenceHelper::getTableName() const
+{
+    return "reference";
+}
 }

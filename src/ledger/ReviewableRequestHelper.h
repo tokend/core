@@ -38,6 +38,8 @@ namespace stellar
         EntryFrame::pointer storeLoad(LedgerKey const& key, Database& db) override;
         EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
         uint64_t countObjects(soci::session& sess) override;
+        std::string const
+        getTableName() const override;
 
         void loadRequests(StatementContext & prep, std::function<void(LedgerEntry const&)> requestsProcessor);
 

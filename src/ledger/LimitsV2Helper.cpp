@@ -390,4 +390,9 @@ namespace  stellar
         }
     }
 
+std::string const
+LimitsV2Helper::getTableName() const
+{
+    return "limits_v2";
+}
 }

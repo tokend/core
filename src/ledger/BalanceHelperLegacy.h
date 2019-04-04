@@ -35,6 +35,9 @@ public:
     EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
     uint64_t countObjects(soci::session& sess) override;
 
+    std::string const
+    getTableName() const override;
+
     void loadBalances(AccountID const& accountID,
                       std::vector<BalanceFrame::pointer>& retBalances,
                       Database& db);

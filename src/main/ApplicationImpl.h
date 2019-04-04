@@ -79,7 +79,6 @@ public:
     virtual Herder &getHerder() override;
     virtual HerderPersistence& getHerderPersistence() override;
     virtual InvariantManager& getInvariantManager() override;
-    virtual Invariants& getInvariants() override;
 
     virtual OverlayManager &getOverlayManager() override;
 
@@ -120,10 +119,12 @@ public:
 
     virtual bool manualClose() override;
 
+#ifdef BUILD_TESTS
     virtual void generateLoad(uint32_t nAccounts, uint32_t nTxs,
                               uint32_t txRate, bool autoRate) override;
 
     virtual LoadGenerator &getLoadGenerator() override;
+#endif
 
     virtual void checkDB() override;
 
@@ -134,6 +135,8 @@ public:
     virtual void applyCfgCommands() override;
 
     virtual void reportCfgMetrics() override;
+
+    virtual Json::Value getJsonInfo() override;
 
     virtual void reportInfo() override;
 
@@ -206,7 +209,6 @@ private:
     std::unique_ptr<PersistentState> mPersistentState;
     std::unique_ptr<BanManager> mBanManager;
     std::unique_ptr<StatusManager> mStatusManager;
-    std::unique_ptr<Invariants> mInvariants;
 
 #ifdef BUILD_TESTS
         std::unique_ptr<LoadGenerator> mLoadGenerator;

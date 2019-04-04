@@ -142,11 +142,6 @@ class Database
     // Return true if the Database target is SQLite, otherwise false.
     virtual bool isSqlite() const = 0;
 
-    // Call `op` back with the specific database backend subtype in use.
-    virtual template <typename T>
-    T
-    doDatabaseTypeSpecificOperation(DatabaseTypeSpecificOperation<T>& op) = 0;
-
     // Return true if a connection pool is available for worker threads
     // to read from the database through, otherwise false.
     virtual bool canUsePool() const = 0;
@@ -227,6 +222,7 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
     virtual medida::TimerContext getSelectTimer(std::string const& entityName);
     virtual medida::TimerContext getDeleteTimer(std::string const& entityName);
     virtual medida::TimerContext getUpdateTimer(std::string const& entityName);
+    virtual medida::TimerContext getUpsertTimer(std::string const& entityName);
 
     virtual void setCurrentTransactionReadOnly();
 
@@ -248,28 +244,6 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
 
     virtual soci::connection_pool& getPool();
 };
-
-template <typename T>
-T
-Database::doDatabaseTypeSpecificOperation(DatabaseTypeSpecificOperation<T>& op)
-{
-    auto b = mSession.get_backend();
-    if (auto sq = dynamic_cast<soci::sqlite3_session_backend*>(b))
-    {
-        return op.doSqliteSpecificOperation(sq);
-#ifdef USE_POSTGRES
-    }
-    else if (auto pg = dynamic_cast<soci::postgresql_session_backend*>(b))
-    {
-        return op.doPostgresSpecificOperation(pg);
-#endif
-    }
-    else
-    {
-        // Extend this with other cases if we support more databases.
-        abort();
-    }
-}
 
 class DBTimeExcluder : NonCopyable
 {

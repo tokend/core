@@ -43,6 +43,8 @@ public:
 
     LedgerKey getLedgerKey(LedgerEntry const& from) override;
 
+    std::string const getTableName() const override;
+
     AccountKYCFrame::pointer loadAccountKYC(const AccountID &accountID, Database &db, LedgerDelta *delta = nullptr);
 };
 

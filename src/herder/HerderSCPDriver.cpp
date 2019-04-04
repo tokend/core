@@ -103,7 +103,7 @@ HerderSCPDriver::signEnvelope(SCPEnvelope& envelope)
 {
     mSCPMetrics.mEnvelopeSign.Mark();
     envelope.signature = mApp.getConfig().NODE_SEED.sign(xdr::xdr_to_opaque(
-        mApp.getNetworkID(), ENVELOPE_TYPE_SCP, envelope.statement));
+        mApp.getNetworkID(), EnvelopeType::SCP, envelope.statement));
 }
 
 bool
@@ -111,7 +111,7 @@ HerderSCPDriver::verifyEnvelope(SCPEnvelope const& envelope)
 {
     auto b = PubKeyUtils::verifySig(
         envelope.statement.nodeID, envelope.signature,
-        xdr::xdr_to_opaque(mApp.getNetworkID(), ENVELOPE_TYPE_SCP,
+        xdr::xdr_to_opaque(mApp.getNetworkID(), EnvelopeType::SCP,
                            envelope.statement));
     if (b)
     {
@@ -332,7 +332,7 @@ HerderSCPDriver::validateValue(uint64_t slotIndex, Value const& value,
     {
         auto const& lcl = mLedgerManager.getLastClosedLedgerHeader();
 
-        LedgerUpgradeType lastUpgradeType = LEDGER_UPGRADE_VERSION;
+        LedgerUpgradeType lastUpgradeType = LedgerUpgradeType::VERSION;
         // check upgrades
         for (size_t i = 0;
              i < b.upgrades.size() && res != SCPDriver::kInvalidValue; i++)
@@ -500,7 +500,7 @@ HerderSCPDriver::combineCandidates(uint64_t slotIndex,
 
     Hash h;
 
-    StellarValue comp(h, 0, emptyUpgradeSteps, 0);
+    StellarValue comp(h, 0, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
 
     std::map<LedgerUpgradeType, LedgerUpgrade> upgrades;
 
@@ -539,27 +539,23 @@ HerderSCPDriver::combineCandidates(uint64_t slotIndex,
                 LedgerUpgrade& clUpgrade = it->second;
                 switch (lupgrade.type())
                 {
-                case LEDGER_UPGRADE_VERSION:
+                case LedgerUpgradeType::VERSION:
                     // pick the highest version
                     clUpgrade.newLedgerVersion() =
                         std::max(clUpgrade.newLedgerVersion(),
                                  lupgrade.newLedgerVersion());
                     break;
-                case LEDGER_UPGRADE_BASE_FEE:
-                    // take the max fee
-                    clUpgrade.newBaseFee() =
-                        std::max(clUpgrade.newBaseFee(), lupgrade.newBaseFee());
-                    break;
-                case LEDGER_UPGRADE_MAX_TX_SET_SIZE:
+                case LedgerUpgradeType::MAX_TX_SET_SIZE:
                     // take the max tx set size
                     clUpgrade.newMaxTxSetSize() =
                         std::max(clUpgrade.newMaxTxSetSize(),
                                  lupgrade.newMaxTxSetSize());
                     break;
-                case LEDGER_UPGRADE_BASE_RESERVE:
+                case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
                     // take the max base reserve
-                    clUpgrade.newBaseReserve() = std::max(
-                        clUpgrade.newBaseReserve(), lupgrade.newBaseReserve());
+                    clUpgrade.newTxExpirationPeriod() = std::max(
+                            clUpgrade.newTxExpirationPeriod(),
+                            lupgrade.newTxExpirationPeriod());
                     break;
                 default:
                     // should never get there with values that are not valid

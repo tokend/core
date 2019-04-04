@@ -20,6 +20,7 @@ ExternalSystemAccountIDPoolEntryHelperImpl::
     ExternalSystemAccountIDPoolEntryHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
+    mTableName = "external_system_account_id_pool";
 }
 
 void
@@ -462,5 +463,11 @@ LedgerDelta*
 ExternalSystemAccountIDPoolEntryHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
+}
+
+std::string const
+ExternalSystemAccountIDPoolEntryHelperImpl::getTableName() const
+{
+    return mTableName;
 }
 } // namespace stellar

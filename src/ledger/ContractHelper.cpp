@@ -262,4 +262,10 @@ ContractHelper::countContracts(AccountID const& contractor, Database &db)
             use(contractorStr, "contractor"), into(count);
     return count;
 }
+
+std::string const
+ContractHelper::getTableName() const
+{
+    return "contracts";
+}
 }

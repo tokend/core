@@ -13,11 +13,11 @@
 #include "history/HistoryArchive.h"
 #include "historywork/Progress.h"
 #include "invariant/InvariantManager.h"
-#include "ledger/LedgerTxn.h"
 #include "main/Application.h"
 #include "util/format.h"
 #include <medida/meter.h>
 #include <medida/metrics_registry.h>
+#include "ledger/EntryHelperLegacy.h"
 
 namespace stellar
 {
@@ -38,7 +38,6 @@ ApplyBucketsWork::ApplyBucketsWork(
           {"history", "bucket-apply", "success"}, "event"))
     , mBucketApplyFailure(app.getMetrics().NewMeter(
           {"history", "bucket-apply", "failure"}, "event"))
-    , mCounters(app.getClock().now())
 {
 }
 
@@ -112,8 +111,8 @@ ApplyBucketsWork::onStart()
                                           mApplyState.currentLedger, mLevel)
                                     : BucketList::oldestLedgerInCurr(
                                           mApplyState.currentLedger, mLevel);
-        auto& lsRoot = mApp.getLedgerTxnRoot();
-        lsRoot.deleteObjectsModifiedOnOrAfterLedger(oldestLedger);
+
+        deleteObjectsModifiedOnOrAfterLedger(oldestLedger);
     }
 
     if (mApplying || applySnap)
@@ -133,6 +132,24 @@ ApplyBucketsWork::onStart()
                                << "].curr = " << i.curr;
         mApplying = true;
         mBucketApplyStart.Mark();
+    }
+}
+
+void
+ApplyBucketsWork::deleteObjectsModifiedOnOrAfterLedger(uint32_t ledger) const
+{
+    using namespace soci;
+    Database& db = mApp.getDatabase();
+    db.clearPreparedStatementCache();
+    // TODO clear chache
+
+    auto helpers = EntryHelperProvider::getHelpers();
+
+    for (auto const& iter : helpers)
+    {
+        std::string query = "DELETE FROM " + iter.second->getTableName() +
+                            " WHERE lastmodified >= :v1";
+        db.getSession() << query, use(ledger);
     }
 }
 
@@ -166,9 +183,8 @@ ApplyBucketsWork::advance(std::string const& bucketName,
     }
 
     assert(mTotalSize != 0);
-    auto sz = applicator.advance(mCounters);
+    auto sz = applicator.advance();
     mAppliedEntries += sz;
-    mCounters.logDebug(bucketName, mLevel, mApp.getClock().now());
 
     auto log = false;
     if (applicator)
@@ -182,8 +198,6 @@ ApplyBucketsWork::advance(std::string const& bucketName,
         mAppliedBuckets++;
         mLastPos = 0;
         log = true;
-        mCounters.logInfo(bucketName, mLevel, mApp.getClock().now());
-        mCounters.reset(mApp.getClock().now());
     }
 
     auto appliedSizeMb = mAppliedSize / 1024 / 1024;

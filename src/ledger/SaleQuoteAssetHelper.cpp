@@ -24,6 +24,15 @@ void SaleQuoteAssetHelper::dropAll(Database& db)
         ");";
 }
 
+void
+SaleQuoteAssetHelper::addAtomicSwapBidForeignKey(Database &db)
+{
+    db.getSession() << "ALTER TABLE sale_quote_asset "
+                    << "ADD CONSTRAINT sale_quote_asset_sale_id_fkey "
+                    << "FOREIGN KEY (sale_id) REFERENCES sale(id) "
+                    << "on delete cascade on update cascade;";
+}
+
 void SaleQuoteAssetHelper::deleteAllForSale(Database& db, uint64_t saleID)
 {
     auto prep = db.getPreparedStatement("DELETE FROM sale_quote_asset WHERE sale_id=:id");

@@ -24,10 +24,7 @@ class TxSetFrame
 
     bool
     checkOrTrim(Application& app,
-                std::function<bool(TransactionFramePtr, SequenceNumber)>
-                    processInvalidTxLambda,
-                std::function<bool(std::vector<TransactionFramePtr> const&)>
-                    processLastInvalidTxLambda);
+                std::function<bool(TransactionFramePtr)> processInvalidTxLambda);
 
   public:
     std::vector<TransactionFramePtr> mTransactions;
@@ -52,7 +49,7 @@ class TxSetFrame
     bool checkValid(Application& app);
     void trimInvalid(Application& app,
                      std::vector<TransactionFramePtr>& trimmed);
-    void surgePricingFilter(Application& app);
+    void surgePricingFilter(LedgerManager const& lm);
 
     void removeTx(TransactionFramePtr tx);
 

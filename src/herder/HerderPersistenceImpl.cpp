@@ -65,7 +65,7 @@ HerderPersistenceImpl::saveSCPHistory(uint32_t seq,
         usedQSets.insert(
             std::make_pair(qHash, mApp.getHerder().getQSet(qHash)));
 
-        std::string nodeIDStrKey = KeyUtils::toStrKey(e.statement.nodeID);
+        std::string nodeIDStrKey = PubKeyUtils::toStrKey(e.statement.nodeID);
 
         auto envelopeBytes(xdr::xdr_to_opaque(e));
 
@@ -158,7 +158,7 @@ HerderPersistence::copySCPHistoryToStream(Database& db, soci::session& sess,
         std::set<Hash> missingQSets;
 
         SCPHistoryEntry hEntryV;
-        hEntryV.v(0);
+        hEntryV.v(LedgerVersion::EMPTY_VERSION);
         auto& hEntry = hEntryV.v0();
         auto& lm = hEntry.ledgerMessages;
         lm.ledgerSeq = curLedgerSeq;

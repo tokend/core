@@ -36,6 +36,9 @@ namespace stellar
 		EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
 		uint64_t countObjects(soci::session& sess) override;
 
+		std::string const
+		getTableName() const override;
+
 		bool exists(Database& db, AssetCode base, AssetCode quote);
 
 		AssetPairFrame::pointer loadAssetPair(AssetCode base, AssetCode quote,

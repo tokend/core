@@ -364,7 +364,7 @@ PendingEnvelopes::stopFetch(SCPEnvelope const& envelope)
     }
 
     CLOG(TRACE, "Herder") << "StopFetch i:" << envelope.statement.slotIndex
-                          << " t:" << envelope.statement.pledges.type();
+                          << " t:" << static_cast<int32_t>(envelope.statement.pledges.type());
 }
 
 void

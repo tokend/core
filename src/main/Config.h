@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <set>
 
 #define DEFAULT_PEER_PORT 11625
 
@@ -38,6 +39,8 @@ class Config : public std::enable_shared_from_this<Config>
     std::string expandNodeID(std::string const& s) const;
 
   public:
+    static const uint32_t CURRENT_LEDGER_PROTOCOL_VERSION;
+    
     typedef std::shared_ptr<Config> pointer;
 
     std::vector<PublicKey> getWiredKeys(LedgerVersion ledgerVersion) const;

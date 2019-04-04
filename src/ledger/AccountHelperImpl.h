@@ -65,8 +65,12 @@ private:
     bool
     isRoleIDUsed(uint64_t roleID);
 
+    std::string const
+    getTableName() const override;
+
     StorageHelper& mStorageHelper;
     const char* mAccountColumnSelector;
+    const char* mTableName;
 };
 
 }

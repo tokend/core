@@ -12,7 +12,6 @@
 #include "overlay/LoopbackPeer.h"
 #include "overlay/StellarXDR.h"
 #include "simulation/LoadGenerator.h"
-#include "test/TxTests.h"
 #include "util/Timer.h"
 #include "util/XDROperators.h"
 #include "xdr/Stellar-types.h"

@@ -83,8 +83,12 @@ private:
     LedgerDelta*
     getLedgerDelta() override;
 
+    std::string const
+    getTableName() const override;
+
     StorageHelper& mStorageHelper;
     const char* mAssetColumnSelector;
+    const char* mTableName;
 };
 
 } // namespace stellar

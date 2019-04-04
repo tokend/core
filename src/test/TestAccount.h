@@ -27,7 +27,7 @@ class TestAccount
     explicit TestAccount(Application& app, SecretKey sk, SequenceNumber sn = 0)
         : mApp(app), mSk{std::move(sk)}, mSn{sn}
     {
-        mAccountID = KeyUtils::toStrKey(mSk.getPublicKey());
+        mAccountID = PubKeyUtils::toStrKey(mSk.getPublicKey());
     }
 
     TransactionFramePtr tx(std::vector<Operation> const& ops,
@@ -39,36 +39,13 @@ class TestAccount
     void merge(PublicKey const& into);
     void inflation();
 
-    Asset asset(std::string const& name);
-    void changeTrust(Asset const& asset, int64_t limit);
-    void allowTrust(Asset const& asset, PublicKey const& trustor);
-    void denyTrust(Asset const& asset, PublicKey const& trustor);
-
-    TrustLineEntry loadTrustLine(Asset const& asset) const;
-    bool hasTrustLine(Asset const& asset) const;
-
     void setOptions(txtest::SetOptionsArguments const& arguments);
 
     void manageData(std::string const& name, DataValue* value);
 
     void bumpSequence(SequenceNumber to);
 
-    uint64_t
-    manageOffer(uint64_t offerID, Asset const& selling, Asset const& buying,
-                Price const& price, int64_t amount,
-                ManageOfferEffect expectedEffect = MANAGE_OFFER_CREATED);
-
-    uint64_t
-    createPassiveOffer(Asset const& selling, Asset const& buying,
-                       Price const& price, int64_t amount,
-                       ManageOfferEffect expectedEffect = MANAGE_OFFER_CREATED);
-
     void pay(PublicKey const& destination, int64_t amount);
-    void pay(PublicKey const& destination, Asset const& asset, int64_t amount);
-    PathPaymentResult pay(PublicKey const& destination, Asset const& sendCur,
-                          int64_t sendMax, Asset const& destCur,
-                          int64_t destAmount, std::vector<Asset> const& path,
-                          Asset* noIssuer = nullptr);
 
     operator SecretKey() const
     {

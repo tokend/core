@@ -1,3 +1,4 @@
+/*
 #pragma once
 
 // Copyright 2018 Stellar Development Foundation and contributors. Licensed
@@ -71,3 +72,4 @@ template <> class hash<stellar::LedgerKey>
     }
 };
 }
+*/

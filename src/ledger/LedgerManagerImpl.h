@@ -11,6 +11,7 @@
 #include "main/PersistentState.h"
 #include "transactions/TransactionFrame.h"
 #include "xdr/Stellar-ledger.h"
+#include "LedgerHeaderFrame.h"
 #include <string>
 
 /*
@@ -36,6 +37,7 @@ class LedgerTxnHeader;
 class LedgerManagerImpl : public LedgerManager
 {
     LedgerHeaderHistoryEntry mLastClosedLedger;
+    LedgerHeaderFrame::pointer mCurrentLedger;
 
     Application& mApp;
     medida::Timer& mTransactionApply;

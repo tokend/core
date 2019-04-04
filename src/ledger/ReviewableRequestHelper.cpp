@@ -382,4 +382,10 @@ ReviewableRequestFrame::pointer
     EntryFrame::pointer ReviewableRequestHelper::storeLoad(LedgerKey const &key, Database &db) {
         return loadRequest(key.reviewableRequest().requestID, db);
     }
+
+std::string const
+ReviewableRequestHelper::getTableName() const
+{
+    return "reviewable_request";
+}
 }

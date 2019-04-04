@@ -48,7 +48,7 @@ BucketOutputIterator::BucketOutputIterator(std::string const& tmpDir,
 void
 BucketOutputIterator::put(BucketEntry const& e)
 {
-    if (!mKeepDeadEntries && e.type() == DEADENTRY)
+    if (!mKeepDeadEntries && e.type() == BucketEntryType::DEADENTRY)
     {
         return;
     }

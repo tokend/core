@@ -14,7 +14,7 @@
 
 namespace stellar
 {
-class AbstractLedgerTxn;
+class LedgerDelta;
 class Config;
 class Database;
 struct LedgerHeader;
@@ -31,18 +31,14 @@ class Upgrades
         UpgradeParameters(Config const& cfg)
         {
             mUpgradeTime = cfg.TESTING_UPGRADE_DATETIME;
-            mProtocolVersion =
-                make_optional<uint32>(cfg.LEDGER_PROTOCOL_VERSION);
-            mBaseFee = make_optional<uint32>(cfg.TESTING_UPGRADE_DESIRED_FEE);
-            mMaxTxSize =
-                make_optional<uint32>(cfg.TESTING_UPGRADE_MAX_TX_PER_LEDGER);
-            mBaseReserve = make_optional<uint32>(cfg.TESTING_UPGRADE_RESERVE);
+            mProtocolVersion =make_optional<uint32>(cfg.LEDGER_PROTOCOL_VERSION);
+            mTxExpirationPeriod = make_optional<uint32>(cfg.TX_EXPIRATION_PERIOD);
+            mMaxTxSize =make_optional<uint32>(cfg.TESTING_UPGRADE_MAX_TX_PER_LEDGER);
         }
         VirtualClock::time_point mUpgradeTime;
         optional<uint32> mProtocolVersion;
-        optional<uint32> mBaseFee;
         optional<uint32> mMaxTxSize;
-        optional<uint32> mBaseReserve;
+        optional<uint32> mTxExpirationPeriod;
 
         std::string toJson() const;
         void fromJson(std::string const& s);
@@ -62,7 +58,7 @@ class Upgrades
     createUpgradesFor(LedgerHeader const& header) const;
 
     // apply upgrade to ledger header
-    static void applyTo(LedgerUpgrade const& upgrade, AbstractLedgerTxn& ltx);
+    static void applyTo(LedgerUpgrade const& upgrade, LedgerDelta& ltx);
 
     // convert upgrade value to string
     static std::string toString(LedgerUpgrade const& upgrade);
@@ -96,11 +92,5 @@ class Upgrades
     UpgradeParameters mParams;
 
     bool timeForUpgrade(uint64_t time) const;
-
-    static void applyVersionUpgrade(AbstractLedgerTxn& ltx,
-                                    uint32_t newVersion);
-
-    static void applyReserveUpgrade(AbstractLedgerTxn& ltx,
-                                    uint32_t newReserve);
 };
 }

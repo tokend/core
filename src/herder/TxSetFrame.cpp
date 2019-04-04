@@ -8,12 +8,10 @@
 #include "crypto/SHA.h"
 #include "database/Database.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxn.h"
 #include "ledger/LedgerTxnEntry.h"
 #include "ledger/LedgerTxnHeader.h"
 #include "main/Application.h"
 #include "main/Config.h"
-#include "transactions/TransactionUtils.h"
 #include "util/Logging.h"
 #include "util/XDROperators.h"
 #include "xdrpp/marshal.h"
@@ -157,11 +155,9 @@ struct SurgeSorter
 };
 
 void
-TxSetFrame::surgePricingFilter(Application& app)
+TxSetFrame::surgePricingFilter(LedgerManager const& lm)
 {
-    LedgerTxn ltx(app.getLedgerTxnRoot());
-    auto header = ltx.loadHeader();
-    size_t max = header.current().maxTxSetSize;
+    size_t max = lm.getLastMaxTxSetSize();
     if (mTransactions.size() > max)
     { // surge pricing in effect!
         CLOG(WARNING, "Herder") << "surge pricing in effect! "
@@ -193,10 +189,8 @@ TxSetFrame::surgePricingFilter(Application& app)
 
 bool
 TxSetFrame::checkOrTrim(Application& app,
-    std::function<bool(TransactionFramePtr, Salt)> processInvalidTxLambda)
+    std::function<bool(TransactionFramePtr)> processInvalidTxLambda)
 {
-    LedgerTxn ltx(app.getLedgerTxnRoot());
-
     Hash lastHash;
     for (auto& tx : mTransactions)
     {
@@ -208,7 +202,7 @@ TxSetFrame::checkOrTrim(Application& app,
             return false;
         }
 
-        if (!tx->checkValid(app, ltx, lastSeq))
+        if (!tx->checkValid(app))
         {
             if (processInvalidTxLambda(tx))
                 continue;

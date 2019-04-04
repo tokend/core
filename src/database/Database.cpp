@@ -23,7 +23,6 @@
 #include "herder/Upgrades.h"
 #include "history/HistoryManager.h"
 #include "ledger/LedgerHeaderUtils.h"
-#include "ledger/LedgerTxn.h"
 #include "medida/metrics_registry.h"
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AssetHelperImpl.h>
@@ -38,11 +37,6 @@
 #include "ledger/AtomicSwapBidHelper.h"
 #include "DatabaseConnectionString.h"
 
-extern "C" void register_factory_sqlite3();
-
-#ifdef USE_POSTGRES
-extern "C" void register_factory_postgresql();
-#endif
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -130,7 +124,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
     StorageHelperImpl storageHelper(*this, nullptr);
     switch (vers) {
         case databaseSchemaVersion::DROP_SCP:
-            Herder::dropAll(*this);
+            HerderPersistence::dropAll(*this);
             break;
         case databaseSchemaVersion::DROP_BAN:
             BanManager::dropAll(*this);
@@ -376,7 +370,7 @@ DatabaseImpl::getPool()
         {
             LOG(DEBUG) << "Opening pool entry " << i;
             soci::session& sess = mPool->at(i);
-            sess.open(c);
+            sess.open(c.value);
             if (!isSqlite())
             {
                 setSerializable(sess);

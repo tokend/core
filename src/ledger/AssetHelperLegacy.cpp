@@ -146,4 +146,9 @@ AssetHelperLegacy::loadIssuedForAssets(Database &db)
     return result;
 }
 
+    std::string const
+    ExternalSystemAccountIDPoolEntryHelperImpl::getTableName() const
+    {
+        return mTableName;
+    }
 }

@@ -347,4 +347,9 @@ bool AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair, co
     return bigDivide(result, amount, ONE, currentPrice, rounding, destAssetMinimumAmount);
 }
 
+std::string const
+ExternalSystemAccountIDPoolEntryHelperImpl::getTableName() const
+{
+	return "asset_pair";
+}
 }

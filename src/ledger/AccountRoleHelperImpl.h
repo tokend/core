@@ -21,6 +21,7 @@ public:
 
 private:
     void dropAll() override;
+
     void storeAdd(LedgerEntry const& entry) override;
     void storeChange(LedgerEntry const& entry) override;
     void storeDelete(LedgerKey const& key) override;
@@ -38,6 +39,9 @@ private:
     LedgerDelta*
     getLedgerDelta() override;
 
+    std::string const
+    getTableName() const override;
+
     AccountRoleFrame::pointer
     loadAccountRole(uint64_t const roleID) override;
 
@@ -52,5 +56,6 @@ private:
     AccountRoleRulesHelper mAccountRoleRulesHelper;
 
     const char* mAccountRoleSelector;
+    const char* mTableName;
 };
 } // namespace stellar

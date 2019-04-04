@@ -954,24 +954,28 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
             CLOG(FATAL, "Ledger") << "Unknown upgrade step at index " << i;
             throw;
         }
-        switch (lupgrade.type())
+
+        try
         {
-        case LedgerUpgradeType::VERSION:
-            ledgerDelta.getHeader().ledgerVersion = lupgrade.newLedgerVersion();
-            break;
-        case LedgerUpgradeType::MAX_TX_SET_SIZE:
-            ledgerDelta.getHeader().maxTxSetSize = lupgrade.newMaxTxSetSize();
-            break;
-        case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
-            ledgerDelta.getHeader().txExpirationPeriod = lupgrade.newTxExpirationPeriod();
-            break;
-        default:
-        {
-            string s;
-            s = "Unknown upgrade type: ";
-            s += std::to_string(static_cast<int32_t >(lupgrade.type()));
-            throw std::runtime_error(s);
+            LedgerDeltaImpl deltaImpl(ledgerDelta);
+            LedgerDelta& delta = deltaImpl;
+            Upgrades::applyTo(lupgrade, delta);
+
+            auto ledgerSeq = delta.getHeader().ledgerSeq;
+            // Note: Index from 1 rather than 0 to match the behavior of
+            // storeTransaction and storeTransactionFee.
+            Upgrades::storeUpgradeHistory(getDatabase(), ledgerSeq, lupgrade,
+                                          delta.getChanges(),
+                                          static_cast<int>(i + 1));
+            delta.commit();
         }
+        catch (std::runtime_error& e)
+        {
+            CLOG(ERROR, "Ledger") << "Exception during upgrade: " << e.what();
+        }
+        catch (...)
+        {
+            CLOG(ERROR, "Ledger") << "Unknown exception during upgrade";
         }
     }
 

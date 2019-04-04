@@ -5,7 +5,6 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "lib/util/uint128_t.h"
-#include "numeric.h"
 #include "overlay/StellarXDR.h"
 #include "xdrpp/message.h"
 #include <type_traits>

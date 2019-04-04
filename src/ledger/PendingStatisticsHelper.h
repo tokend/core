@@ -32,6 +32,9 @@ public:
     EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
     uint64_t countObjects(soci::session& sess) override;
 
+    std::string const
+    getTableName() const override;
+
     std::vector<PendingStatisticsFrame::pointer> loadPendingStatistics(uint64_t& requestID, Database& db,
                                                                        LedgerDelta& delta);
 

@@ -26,6 +26,8 @@ class EntryHelper
     virtual Database& getDatabase() = 0;
     virtual LedgerDelta* getLedgerDelta() = 0;
 
+    virtual std::string const getTableName() const = 0;
+
     virtual void flushCachedEntry(LedgerKey const& key);
     virtual bool cachedEntryExists(LedgerKey const& key);
 

@@ -36,6 +36,8 @@ namespace stellar
 		virtual uint64_t countObjects(soci::session& sess) = 0;
 		virtual uint64_t countObjects(Database& db);
 
+		virtual std::string const getTableName() const = 0;
+
 		void flushCachedEntry(LedgerKey const& key, Database& db);
 		bool cachedEntryExists(LedgerKey const& key, Database& db);
 
@@ -45,6 +47,9 @@ namespace stellar
 	};
 
 	class EntryHelperProvider {
+	private:
+		typedef std::map<LedgerEntryType, EntryHelperLegacy*> helperMap;
+		static helperMap helpers;
 	public:
         static EntryHelperLegacy* getHelper(LedgerEntryType type)
         {
@@ -59,6 +64,11 @@ namespace stellar
             return foundHelperIt->second;
         }
 
+        static helperMap getHelpers()
+        {
+        	return helpers;
+        }
+
 		static void dropAll(Database &db);
 
 		// Providers for appropriate methods of adding/deleting etc.
@@ -69,14 +79,9 @@ namespace stellar
 		static EntryFrame::pointer storeLoadEntry(LedgerKey const& key, Database& db);
 		static uint64_t countObjectsEntry(Database& db, LedgerEntryType const& type);
 
-		[[deprecated]]
 		static void storeAddOrChangeEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry);
 
 		static void checkAgainstDatabase(LedgerEntry const& entry, Database& db);
-
-	private:
-		typedef std::map<LedgerEntryType, EntryHelperLegacy*> helperMap;
-		static helperMap helpers;
 	};
 
 }

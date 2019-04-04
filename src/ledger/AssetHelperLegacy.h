@@ -42,6 +42,8 @@ public:
     EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
     uint64_t countObjects(soci::session& sess) override;
 
+    std::string const
+    getTableName() const override;
 
     AssetFrame::pointer loadAsset(AssetCode code,
                                   Database& db, LedgerDelta* delta = nullptr);

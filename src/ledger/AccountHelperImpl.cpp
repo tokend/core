@@ -14,6 +14,7 @@ AccountHelperImpl::AccountHelperImpl(StorageHelper& storageHelper)
     mAccountColumnSelector = "SELECT account_id, referrer, sequential_id, "
                              "       role_id, version, lastmodified "
                              " FROM  accounts";
+    mTableName = "accounts";
 }
 
 void

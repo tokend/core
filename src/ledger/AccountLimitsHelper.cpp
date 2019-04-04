@@ -255,4 +255,9 @@ namespace stellar
 		return res;
 	}
 
+std::string const
+AccountLimitsHelper::getTableName() const
+{
+	return "account_limits";
+}
 }

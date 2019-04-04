@@ -282,4 +282,9 @@ namespace stellar {
         return result;
     }
 
+std::string const
+StatisticsV2Helper::getTableName() const
+{
+    return "statistics_v2";
+}
 }
