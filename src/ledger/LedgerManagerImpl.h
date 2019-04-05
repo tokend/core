@@ -68,7 +68,7 @@ class LedgerManagerImpl : public LedgerManager
                            AbstractLedgerTxn& ltx,
                            TransactionResultSet& txResultSet);
 
-    void ledgerClosed(AbstractLedgerTxn& ltx);
+    void ledgerClosed(LedgerDelta const& ltx);
 
     void storeCurrentLedger(LedgerHeader const& header);
 
@@ -123,6 +123,7 @@ protected:
     uint32_t getLastClosedLedgerNum() const override;
     uint64 getTxExpirationPeriod() const override;
 
+    uint64_t getCloseTime() const override;
     tm getTmCloseTime() const override;
 
     uint64_t secondsSinceLastLedgerClose() const override;

@@ -8,7 +8,7 @@
 #include "crypto/SHA.h"
 #include "database/Database.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxnEntry.h"
+//#include "ledger/LedgerTxnEntry.h"
 #include "ledger/LedgerTxnHeader.h"
 #include "main/Application.h"
 #include "main/Config.h"
@@ -262,7 +262,7 @@ TxSetFrame::checkValid(Application& app)
             << "bad txSet: " << hexAbbrev(mPreviousLedgerHash) << " tx invalid"
             << " salt:" << tx->getSalt()
             << " tx: " << xdr::xdr_to_string(tx->getEnvelope())
-            << " result: " << tx->getResultCode();
+            << " result: " << static_cast<int32_t>(tx->getResultCode());
 
         return false;
     };

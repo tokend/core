@@ -5,6 +5,7 @@
 #include "LedgerDelta.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ExternalSystemAccountIDPoolEntryHelper.h"
 #include "lib/util/format.h"
 #include "xdrpp/printer.h"
 #include "StorageHelper.h"

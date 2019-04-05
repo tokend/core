@@ -8,6 +8,7 @@
 #include "medida/timer_context.h"
 #include "overlay/StellarXDR.h"
 #include "database/DatabaseTypeSpecificOperation.h"
+#include "util/lrucache.hpp"
 #include "util/NonCopyable.h"
 #include "util/Timer.h"
 #include <set>
@@ -169,6 +170,13 @@ class Database
     // threads. Throws an error if !canUsePool().
     virtual soci::connection_pool& getPool() = 0;
 
+    // Access the LedgerEntry cache. Note: clients are responsible for
+    // invalidating entries in this cache as they perform statements
+    // against the database. It's kept here only for ease of access.
+    typedef cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>
+            EntryCache;
+    virtual EntryCache& getEntryCache() = 0;
+
     virtual ~Database()
     {
     }
@@ -183,6 +191,8 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
 
     std::map<std::string, std::shared_ptr<soci::statement>> mStatements;
     medida::Counter& mStatementsSize;
+
+    EntryCache mEntryCache;
 
     // Helpers for maintaining the total query time and calculating
     // idle percentage.
@@ -243,6 +253,8 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
     virtual soci::session& getSession();
 
     virtual soci::connection_pool& getPool();
+
+    virtual EntryCache& getEntryCache() = 0;
 };
 
 class DBTimeExcluder : NonCopyable

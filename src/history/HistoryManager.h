@@ -196,8 +196,6 @@ class HistoryManager
         VERIFY_STATUS_ERR_MISSING_ENTRIES
     };
 
-    static bool isHistoryArchiveExists(Application& app, std::string arch);
-
     // Check that config settings are at least somewhat reasonable.
     static bool checkSensibleConfig(Config const& cfg);
 

@@ -348,7 +348,7 @@ bool AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair, co
 }
 
 std::string const
-ExternalSystemAccountIDPoolEntryHelperImpl::getTableName() const
+AssetPairHelper::getTableName() const
 {
 	return "asset_pair";
 }

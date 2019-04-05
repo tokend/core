@@ -230,8 +230,9 @@ historyExists(Config& cfg, std::vector<std::string> histories)
     VirtualClock clock;
     Application::pointer app = Application::create(clock, cfg, false);
 
-    for (auto const &arch : histories) {
-        if (!HistoryManager::isHistoryArchiveExists(*app, arch))
+    for (auto const &arch : histories)
+    {
+        if (!app->getHistoryArchiveManager().isHistoryArchiveExists(arch))
             return 42;
     }
     return 0;

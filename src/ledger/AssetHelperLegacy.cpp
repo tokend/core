@@ -1,3 +1,4 @@
+#include <transactions/test/mocks/MockDatabase.h>
 #include "AssetHelperLegacy.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
@@ -146,9 +147,11 @@ AssetHelperLegacy::loadIssuedForAssets(Database &db)
     return result;
 }
 
-    std::string const
-    ExternalSystemAccountIDPoolEntryHelperImpl::getTableName() const
-    {
-        return mTableName;
-    }
+std::string const
+AssetHelperLegacy::getTableName() const
+{
+    MockDatabase db;
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
+    return storageHelper->getAssetHelper().getTableName();
+}
 }

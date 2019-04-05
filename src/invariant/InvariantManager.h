@@ -14,7 +14,8 @@ namespace stellar
 class Application;
 class Bucket;
 class Invariant;
-struct LedgerTxnDelta;
+//struct LedgerTxnDelta;
+class LedgerDelta;
 struct Operation;
 
 /**
@@ -42,7 +43,7 @@ class InvariantManager
 
     virtual void checkOnOperationApply(Operation const& operation,
                                        OperationResult const& opres,
-                                       LedgerTxnDelta const& ltxDelta) = 0;
+                                       LedgerDelta const& ltxDelta) = 0;
 
     virtual void registerInvariant(std::shared_ptr<Invariant> invariant) = 0;
 

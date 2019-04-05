@@ -29,6 +29,8 @@ class HistoryArchiveManager
     // .well-known/stellar-history.json to it.
     bool initializeHistoryArchive(std::string const& arch) const;
 
+    bool isHistoryArchiveExists(std::string const& arch) const;
+
     // Returns whether or not the HistoryManager has any writable history
     // archives (those configured with both a `get` and `put` command).
     bool hasAnyWritableHistoryArchive() const;

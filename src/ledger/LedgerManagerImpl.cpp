@@ -19,8 +19,8 @@
 #include "invariant/InvariantManager.h"
 #include "ledger/LedgerHeaderUtils.h"
 #include "ledger/LedgerRange.h"
-#include "ledger/LedgerTxn.h"
-#include "ledger/LedgerTxnEntry.h"
+//#include "ledger/LedgerTxn.h"
+//#include "ledger/LedgerTxnEntry.h"
 #include "ledger/LedgerTxnHeader.h"
 #include "main/Application.h"
 #include "main/Config.h"
@@ -68,11 +68,6 @@ namespace stellar
 {
 
 const uint32_t LedgerManager::GENESIS_LEDGER_SEQ = 1;
-const uint32_t LedgerManager::GENESIS_LEDGER_VERSION = 0;
-const uint32_t LedgerManager::GENESIS_LEDGER_BASE_FEE = 100;
-const uint32_t LedgerManager::GENESIS_LEDGER_BASE_RESERVE = 100000000;
-const uint32_t LedgerManager::GENESIS_LEDGER_MAX_TX_SIZE = 100;
-const int64_t LedgerManager::GENESIS_LEDGER_TOTAL_COINS = 1000000000000000000;
 
 std::unique_ptr<LedgerManager>
 LedgerManager::create(Application& app)
@@ -353,7 +348,7 @@ LedgerManagerImpl::startNewLedger()
 	
 	CLOG(INFO, "Ledger") << "Established genesis ledger, ";
     CLOG(INFO, "Ledger") << "Admin account id: " << PubKeyUtils::toStrKey(mApp.getAdminID());
-    closeLedgerHelper(delta);
+    ledgerClosed(delta);
 }
 
 void
@@ -480,6 +475,12 @@ LedgerManagerImpl::getTxExpirationPeriod() const
 {
 	assert(mLastClosedLedger.header.txExpirationPeriod >= 0);
     return mLastClosedLedger.header.txExpirationPeriod;
+}
+
+uint64_t
+LedgerManagerImpl::getCloseTime() const
+{
+    return mCurrentLedger->getHeader().scpValue.closeTime;
 }
 
 tm
@@ -979,10 +980,8 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
         }
     }
 
-    ledgerDelta.checkAgainstDatabase(mApp);
-
     ledgerDelta.commit();
-    closeLedgerHelper(ledgerDelta);
+    ledgerClosed(ledgerDelta);
 
     // The next 4 steps happen in a relatively non-obvious, subtle order.
     // This is unfortunate and it would be nice if we could make it not

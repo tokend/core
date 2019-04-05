@@ -256,6 +256,11 @@ void encode(Iter1 start, Iter1 end, Iter2 out)
 
 using namespace bn::impl;
 
+inline size_t encoded_size64(size_t rawsize)
+{
+    return ((rawsize + 2) / 3 * 4);
+}
+
 template<class Iter1, class Iter2>
 void encode_b16(Iter1 start, Iter1 end, Iter2 out)
 {
@@ -274,6 +279,15 @@ void encode_b64(Iter1 start, Iter1 end, Iter2 out)
     encode<b64_conversion_traits>(start, end, out);
 }
 
+template<class T> inline
+std::string encode_b64(T const& v)
+{
+    std::string res;
+    res.reserve(encoded_size64(v.size()*sizeof(typename T::value_type)) + 1);
+    encode_b64(v.begin(), v.end(), std::back_inserter(res));
+    return res;
+}
+
 template<class Iter1, class Iter2>
 void decode_b16(Iter1 start, Iter1 end, Iter2 out)
 {
@@ -290,6 +304,14 @@ template<class Iter1, class Iter2>
 void decode_b64(Iter1 start, Iter1 end, Iter2 out)
 {
     decode<b64_conversion_traits>(start, end, out);
+}
+
+template<class V, class T> inline
+void decode_b64(V const& v, T& out)
+{
+    out.clear();
+    out.reserve(v.size()*sizeof(typename T::value_type));
+    decode_b64(v.begin(), v.end(), std::back_inserter(out));
 }
 
 } // bn

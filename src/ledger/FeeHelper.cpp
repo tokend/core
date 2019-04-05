@@ -377,4 +377,9 @@ namespace stellar {
         }
     }
 
+std::string const
+FeeHelper::getTableName() const
+{
+    return "fee_state";
+}
 }

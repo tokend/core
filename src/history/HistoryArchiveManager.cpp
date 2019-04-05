@@ -203,6 +203,33 @@ HistoryArchiveManager::initializeHistoryArchive(std::string const& arch) const
 }
 
 bool
+HistoryArchiveManager::isHistoryArchiveExists(std::string const& arch) const
+{
+    auto archive = getHistoryArchive(arch);
+    if (!archive)
+    {
+        CLOG(FATAL, "History") << "There is no such history archive '"
+                               << arch << "' in config";
+        return false;
+    }
+
+    auto& wm = mApp.getWorkManager();
+
+    HistoryArchiveState existing;
+    CLOG(INFO, "History") << "Probing history archive '" << arch << "' for existing state";
+    auto getHas = wm.executeWork<GetHistoryArchiveStateWork>(
+            "get-history-archive-state", existing, 0, archive, 0);
+
+    if (getHas->getState() == Work::WORK_SUCCESS)
+    {
+        CLOG(ERROR, "History") << "History archive '" << arch << "' found!";
+        return true;
+    }
+
+    return false;
+}
+
+bool
 HistoryArchiveManager::hasAnyWritableHistoryArchive() const
 {
     return std::any_of(std::begin(mArchives), std::end(mArchives),

@@ -112,7 +112,7 @@ class LedgerManager
     virtual int64_t getLastMinBalance(uint32_t ownerCount) const = 0;
 
     virtual uint32_t getLastReserve() const = 0;
-
+    virtual uint64_t getCloseTime() const = 0;
     virtual tm getTmCloseTime() const = 0;
 
     // Return the fee required to apply a transaction to the current ledger.
@@ -130,6 +130,10 @@ class LedgerManager
     // Ensure any metrics that are "current state" gauge-like counters reflect
     // the current reality as best as possible.
     virtual void syncMetrics() = 0;
+
+    // Return a mutable reference to the current ledger header; this is used
+    // solely by LedgerDelta to _modify_ the current ledger-in-progress.
+    virtual LedgerHeader& getCurrentLedgerHeader() = 0;
 
     virtual Database& getDatabase() = 0;
 

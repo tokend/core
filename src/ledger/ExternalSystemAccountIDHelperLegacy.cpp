@@ -3,6 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"
+#include "ExternalSystemAccountIDHelper.h"
 #include "LedgerDelta.h"
 #include "crypto/Hex.h"
 #include "crypto/SecretKey.h"
@@ -12,7 +13,10 @@
 #include "util/basen.h"
 #include "util/types.h"
 #include "xdrpp/printer.h"
+#include "StorageHelper.h"
+#include "StorageHelperImpl.h"
 #include <algorithm>
+#include <transactions/test/mocks/MockDatabase.h>
 
 using namespace soci;
 using namespace std;
@@ -295,5 +299,13 @@ ExternalSystemAccountIDHelperLegacy::loadAll(Database& db)
             make_shared<ExternalSystemAccountIDFrame>(of));
     });
     return retExternalSystemAccountIDs;
+}
+
+std::string const
+ExternalSystemAccountIDHelperLegacy::getTableName() const
+{
+    MockDatabase db;
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
+    return storageHelper->getExternalSystemAccountIDHelper().getTableName();
 }
 } // namespace stellar

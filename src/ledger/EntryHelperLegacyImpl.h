@@ -29,5 +29,8 @@ public:
     EntryFrame::pointer storeLoad(LedgerKey const &ledgerKey, Database &db) override;
     uint64_t countObjects(soci::session& sess) override;
     uint64_t countObjects(Database& db) override;
+
+    std::string const
+    getTableName() const override;
 };
 }

@@ -5,7 +5,7 @@
 #include "herder/Upgrades.h"
 #include "database/Database.h"
 #include "database/DatabaseUtils.h"
-#include "ledger/LedgerTxnEntry.h"
+//#include "ledger/LedgerTxnEntry.h"
 #include "ledger/LedgerTxnHeader.h"
 #include "main/Config.h"
 #include "util/Decoder.h"
@@ -134,7 +134,7 @@ Upgrades::applyTo(LedgerUpgrade const& upgrade, LedgerDelta& delta)
         break;
     default:
     {
-        auto s = fmt::format("Unknown upgrade type: {0}", upgrade.type());
+        auto s = fmt::format("Unknown upgrade type: {0}", static_cast<int32_t>(upgrade.type()));
         throw std::runtime_error(s);
     }
     }

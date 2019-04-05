@@ -20,7 +20,7 @@ void showOfflineInfo(Config cfg);
 int reportLastHistoryCheckpoint(Config cfg, std::string const& outputFile);
 void genSeed();
 int initializeHistories(Config cfg,
-                        std::vector<std::string> const& newHistories);
+                        std::vector<std::string> const& newHistories);;
 void writeCatchupInfo(Json::Value const& catchupInfo,
                       std::string const& outputFile);
 int catchup(Application::pointer app, CatchupConfiguration cc,

@@ -9,7 +9,7 @@
 #include "invariant/Invariant.h"
 #include "invariant/InvariantDoesNotHold.h"
 #include "invariant/InvariantManagerImpl.h"
-#include "ledger/LedgerTxn.h"
+//#include "ledger/LedgerTxn.h"
 #include "lib/util/format.h"
 #include "main/Application.h"
 #include "util/Logging.h"
@@ -98,13 +98,8 @@ InvariantManagerImpl::checkOnBucketApply(std::shared_ptr<Bucket const> bucket,
 void
 InvariantManagerImpl::checkOnOperationApply(Operation const& operation,
                                             OperationResult const& opres,
-                                            LedgerTxnDelta const& ltxDelta)
+                                            LedgerDelta const& ltxDelta)
 {
-    if (ltxDelta.header.current.ledgerVersion < 8)
-    {
-        return;
-    }
-
     for (auto invariant : mEnabled)
     {
         auto result =
@@ -118,7 +113,7 @@ InvariantManagerImpl::checkOnOperationApply(Operation const& operation,
             R"(Invariant "{}" does not hold on operation: {}{}{})",
             invariant->getName(), result, "\n", xdr::xdr_to_string(operation));
         onInvariantFailure(invariant, message,
-                           ltxDelta.header.current.ledgerSeq);
+                           ltxDelta.getHeader().ledgerSeq);
     }
 }
 
