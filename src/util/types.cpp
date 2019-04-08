@@ -8,6 +8,8 @@
 #include <algorithm>
 #include "util/XDROperators.h"
 #include <locale>
+#include "lib/json/json.h"
+#include "lib/util/format.h"
 
 namespace stellar
 {
@@ -59,7 +61,7 @@ isString32Valid(std::string const& str)
 
 bool isAlNum(std::string const& str) {
 	for (auto c : str) {
-		if (c < 0 || !std::isalnum(c, cLocale))
+		if (c < 0 || !std::isalnum(c, std::locale::classic()))
 			return false;
 	}
 

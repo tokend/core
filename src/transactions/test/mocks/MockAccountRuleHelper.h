@@ -23,6 +23,7 @@ public:
 
     MOCK_METHOD1(loadAccountRules,
             std::vector<AccountRuleFrame::pointer>(std::vector<uint64_t> const ruleIDs));
+    MOCK_CONST_METHOD0(getTableName, const std::string());
 };
 
 }  // namespace stellar

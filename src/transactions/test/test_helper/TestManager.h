@@ -61,6 +61,8 @@ namespace stellar {
 
             bool applyCheck(TransactionFramePtr tx, std::vector<LedgerDelta::KeyEntryMap> &stateBeforeOp);
 
+            void checkDbState();
+
             // closes an empty ledger on given time
             void advanceToTime(uint64_t closeTime);
         };

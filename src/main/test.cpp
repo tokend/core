@@ -96,7 +96,7 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
 
         thisConfig.NETWORK_PASSPHRASE = "(V) (;,,;) (V)";
         thisConfig.BASE_EXCHANGE_NAME = "Base exchange";
-        thisConfig.TX_EXPIRATION_PERIOD = INT64_MAX / 2;
+        thisConfig.TX_EXPIRATION_PERIOD = INT32_MAX / 2;
         thisConfig.MAX_INVOICES_FOR_RECEIVER_ACCOUNT = 100;
 
 
