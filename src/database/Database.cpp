@@ -382,6 +382,12 @@ DatabaseImpl::getPool()
     return *mPool;
 }
 
+cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>&
+DatabaseImpl::getEntryCache()
+{
+    return mEntryCache;
+}
+
 class SQLLogContext : NonCopyable
 {
     std::string mName;

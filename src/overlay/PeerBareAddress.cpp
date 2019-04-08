@@ -33,7 +33,7 @@ PeerBareAddress::PeerBareAddress(std::string ip, unsigned short port)
 
 PeerBareAddress::PeerBareAddress(PeerAddress const& pa) : mType{Type::IPv4}
 {
-    assert(pa.ip.type() == IPv4);
+    assert(pa.ip.type() == IPAddrType::IPv4);
 
     std::stringstream ip;
     ip << (int)pa.ip.ipv4()[0] << "." << (int)pa.ip.ipv4()[1] << "."

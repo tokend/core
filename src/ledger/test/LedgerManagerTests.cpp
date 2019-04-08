@@ -37,7 +37,7 @@ class LedgerManagerForTests : public LedgerManagerImpl
     {
         LedgerHeader next;
         next.ledgerSeq = lcd.getLedgerSeq();
-        advanceLedgerPointers(next);
+        advanceLedgerPointers();
     }
 };
 
@@ -76,7 +76,7 @@ TEST_CASE("new ledger comes from network after last applyBufferedLedgers is "
 
     auto ledgerCloseData = [](uint32_t ledger) {
         auto txSet = std::make_shared<TxSetFrame>(Hash{});
-        StellarValue sv{txSet->getContentsHash(), 2, emptyUpgradeSteps, 0};
+        StellarValue sv{txSet->getContentsHash(), 2, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION};
         return LedgerCloseData{ledger, txSet, sv};
     };
 

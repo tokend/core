@@ -1,3 +1,4 @@
+/*
 // Copyright 2014 Stellar Development Foundation and contributors. Licensed
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
@@ -139,7 +140,11 @@ TEST_CASE("ledger performance test", "[performance][hide]")
 {
     int nAccounts = 10000000;
     int nLedgers =
-        9 /* weeks */ * 7 * 24 * 60 * 60 / 5 /* seconds between ledgers */;
+        9 */
+/* weeks *//*
+ * 7 * 24 * 60 * 60 / 5 */
+/* seconds between ledgers *//*
+;
     int nTransactionsPerLedger = 3;
 
     auto cfg = getTestConfig(1);
@@ -210,3 +215,4 @@ TEST_CASE("ledger performance test", "[performance][hide]")
         LOG(INFO) << "done";
     }
 }
+*/

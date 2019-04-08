@@ -5,13 +5,14 @@
 #include "simulation/LoadGenerator.h"
 #include "herder/Herder.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxn.h"
-#include "ledger/LedgerTxnEntry.h"
+//#include "ledger/LedgerTxn.h"
+//#include "ledger/LedgerTxnEntry.h"
 #include "main/Config.h"
 #include "overlay/OverlayManager.h"
 #include "test/TestAccount.h"
-#include "test/TxTests.h"
-#include "transactions/TransactionUtils.h"
+//#include "test/TxTests.h"
+//#include "transactions/TransactionUtils.h"
+#include "transactions/test/test_helper/TxHelper.h"
 #include "util/Logging.h"
 #include "util/Math.h"
 #include "util/Timer.h"
@@ -28,6 +29,7 @@
 #include <cmath>
 #include <iomanip>
 #include <set>
+#include <transactions/test/TxTests.h>
 
 namespace stellar
 {
@@ -456,8 +458,8 @@ LoadGenerator::createAccounts(uint64_t start, uint64_t count,
     {
         auto name = "TestAccount-" + to_string(i);
         auto account = TestAccount{mApp, txtest::getAccount(name.c_str()), sn};
-        ops.push_back(
-                txtest::createAccount(account.getPublicKey(), mMinBalance * 100));
+        /*ops.push_back(
+                txtest::createAccount(account.getPublicKey(), mMinBalance * 100));*/
 
         // Cache newly created account
         mAccounts.insert(std::pair<uint64_t, TestAccountPtr>(
@@ -469,13 +471,13 @@ LoadGenerator::createAccounts(uint64_t start, uint64_t count,
 bool
 LoadGenerator::loadAccount(TestAccount& account, Application& app)
 {
-    LedgerTxn ltx(app.getLedgerTxnRoot());
+    /*LedgerTxn ltx(app.getLedgerTxnRoot());
     auto entry = stellar::loadAccount(ltx, account.getPublicKey());
     if (!entry)
     {
         return false;
     }
-    account.setSequenceNumber(entry.current().data.account().seqNum);
+    account.setSequenceNumber(entry.current().data.account().seqNum);*/
     return true;
 }
 
@@ -548,7 +550,7 @@ LoadGenerator::paymentTransaction(uint32_t numAccounts, uint32_t offset,
     std::tie(from, to) =
             pickAccountPair(numAccounts, offset, ledgerNum, sourceAccount);
     vector<Operation> paymentOps = {
-            txtest::payment(to->getPublicKey(), amount)};
+            /*txtest::payment(to->getPublicKey(), amount)*/};
     TxInfo tx = TxInfo{from, paymentOps};
 
     return tx;
@@ -559,16 +561,16 @@ LoadGenerator::handleFailedSubmission(TestAccountPtr sourceAccount,
                                       Herder::TransactionSubmitStatus status,
                                       TransactionResultCode code)
 {
-    // Note that if transaction is a DUPLICATE, its sequence number is
+   /* // Note that if transaction is a DUPLICATE, its sequence number is
     // incremented on the next call to execute.
-    if (status == Herder::TX_STATUS_ERROR && code == txBAD_SEQ)
+    if (status == Herder::TX_STATUS_ERROR && code == TransactionResultCode::txBAD_SEQ)
     {
         if (!loadAccount(sourceAccount, mApp))
         {
             CLOG(ERROR, "LoadGen")
                     << "Unable to reload account " << sourceAccount->getAccountId();
         }
-    }
+    }*/
 }
 
 std::vector<LoadGenerator::TestAccountPtr>
@@ -658,8 +660,8 @@ LoadGenerator::TxInfo::execute(Application& app, bool isCreate,
     auto seqNum = mFrom->getLastSequenceNumber();
     mFrom->setSequenceNumber(seqNum + 1);
 
-    TransactionFramePtr txf =
-            transactionFromOperations(app, mFrom->getSecretKey(), seqNum + 1, mOps);
+    TransactionFramePtr txf = nullptr;
+//            transactionFromOperations(app, mFrom->getSecretKey(), seqNum + 1, mOps);
     TxMetrics txm(app.getMetrics());
 
     // Record tx metrics.
@@ -677,7 +679,7 @@ LoadGenerator::TxInfo::execute(Application& app, bool isCreate,
     txm.mTxnAttempted.Mark();
 
     StellarMessage msg;
-    msg.type(TRANSACTION);
+    msg.type(MessageType::TRANSACTION);
     msg.transaction() = txf->getEnvelope();
     txm.mTxnBytes.Mark(xdr::xdr_argpack_size(msg));
 

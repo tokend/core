@@ -135,5 +135,10 @@ uint64_t LicenseSignatureHelperImpl::countObjects()
     throw runtime_error("Cannot count signatures");
 }
 
+std::string const
+LicenseSignatureHelperImpl::getTableName() const
+{
+    return "license_signatures";
+}
 }
 

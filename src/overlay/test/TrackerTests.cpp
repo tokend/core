@@ -21,7 +21,7 @@ makeEnvelope(int slotIndex)
 {
     auto result = SCPEnvelope{};
     result.statement.slotIndex = slotIndex;
-    result.statement.pledges.type(SCP_ST_CONFIRM);
+    result.statement.pledges.type(SCPStatementType::CONFIRM);
     result.statement.pledges.confirm().nPrepared = slotIndex;
     return result;
 }

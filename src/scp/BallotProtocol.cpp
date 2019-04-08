@@ -2036,8 +2036,8 @@ BallotProtocol::getJsonQuorumInfo(NodeID const& id, bool summary)
             {
                 agree++;
                 auto t = st.pledges.type();
-                if (!(t == SCPStatementType::SCP_ST_EXTERNALIZE ||
-                      (t == SCPStatementType::SCP_ST_CONFIRM &&
+                if (!(t == SCPStatementType::EXTERNALIZE ||
+                      (t == SCPStatementType::CONFIRM &&
                        st.pledges.confirm().ballot.counter == UINT32_MAX)))
                 {
                     if (!summary)
@@ -2138,7 +2138,7 @@ if (mCurrentBallot)
             std::bind(&Slot::getQuorumSetFromStatement, &mSlot, _1),
             [&](SCPStatement const& st) {
                 bool res;
-                if (st.pledges.type() == SCP_ST_PREPARE)
+                if (st.pledges.type() == SCPStatementType::PREPARE)
                 {
                     res = mCurrentBallot->counter <=
                           st.pledges.prepare().ballot.counter;

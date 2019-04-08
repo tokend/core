@@ -777,11 +777,11 @@ Peer::recvSCPMessage(StellarMessage const& msg)
                 << mApp.getConfig().toShortString(msg.envelope().statement.nodeID);
 
     auto type = msg.envelope().statement.pledges.type();
-    auto t = (type == SCPStatementType::SCP_ST_PREPARE
+    auto t = (type == SCPStatementType::PREPARE
               ? mRecvSCPPrepareTimer.TimeScope()
-              : (type == SCPStatementType::SCP_ST_CONFIRM
+              : (type == SCPStatementType::CONFIRM
                  ? mRecvSCPConfirmTimer.TimeScope()
-                 : (type == SCPStatementType::SCP_ST_EXTERNALIZE
+                 : (type == SCPStatementType::EXTERNALIZE
                     ? mRecvSCPExternalizeTimer.TimeScope()
                     : (mRecvSCPNominateTimer.TimeScope()))));
 

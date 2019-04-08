@@ -20,14 +20,13 @@
 #include "herder/HerderPersistence.h"
 #include "history/HistoryArchiveManager.h"
 #include "history/HistoryManager.h"
-#include "invariant/AccountSubEntriesCountIsValid.h"
+//#include "invariant/AccountSubEntriesCountIsValid.h"
 #include "invariant/BucketListIsConsistentWithDatabase.h"
-#include "invariant/ConservationOfLumens.h"
 #include "invariant/InvariantManager.h"
-#include "invariant/LedgerEntryIsValid.h"
-#include "invariant/LiabilitiesMatchOffers.h"
+//#include "invariant/LedgerEntryIsValid.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxn.h"
+#include "ledger/AssetHelperLegacy.h"
+//#include "ledger/LedgerTxn.h"
 #include "main/CommandHandler.h"
 #include "main/ExternalQueue.h"
 #include "main/Maintainer.h"
@@ -76,7 +75,7 @@ ApplicationImpl::ApplicationImpl(VirtualClock &clock, Config cfg)
         , mStopping(false)
         , mStoppingTimer(*this)
         , mMetrics(std::make_unique<medida::MetricsRegistry>())
-        , mAppStateCurrent(mMetrics->NewCounter({"app", "state", "current"})),
+        , mAppStateCurrent(mMetrics->NewCounter({"app", "state", "current"}))
         , mPostOnMainThreadDelay(
                 mMetrics->NewTimer({"app", "post-on-main-thread", "delay"}))
         , mPostOnMainThreadWithDelayDelay(mMetrics->NewTimer(
@@ -116,7 +115,7 @@ ApplicationImpl::ApplicationImpl(VirtualClock &clock, Config cfg)
 void
 ApplicationImpl::initialize()
 {
-    mDatabase = std::make_unique<Database>(*this);
+    mDatabase = std::make_unique<DatabaseImpl>(*this);
     mPersistentState = std::make_unique<PersistentState>(*this);
     mOverlayManager = createOverlayManager();
     mLedgerManager = createLedgerManager();
@@ -133,14 +132,10 @@ ApplicationImpl::initialize()
     mWorkManager = WorkManager::create(*this);
     mBanManager = BanManager::create(*this);
     mStatusManager = std::make_unique<StatusManager>();
-    mLedgerTxnRoot = std::make_unique<LedgerTxnRoot>(
-            *mDatabase, mConfig.ENTRY_CACHE_SIZE, mConfig.BEST_OFFERS_CACHE_SIZE);
+    /*mLedgerTxnRoot = std::make_unique<LedgerTxnRoot>(
+            *mDatabase, mConfig.ENTRY_CACHE_SIZE, mConfig.BEST_OFFERS_CACHE_SIZE);*/
 
     BucketListIsConsistentWithDatabase::registerInvariant(*this);
-    AccountSubEntriesCountIsValid::registerInvariant(*this);
-    ConservationOfLumens::registerInvariant(*this);
-    LedgerEntryIsValid::registerInvariant(*this);
-    LiabilitiesMatchOffers::registerInvariant(*this);
     enableInvariantsFromConfig();
     LOG(DEBUG) << "Application constructed";
 }
@@ -353,21 +348,6 @@ int32 ApplicationImpl::getKYCSuperAdminMask() const {
 
 size_t ApplicationImpl::getSignerRuleIDsMaxCount() const {
     return mConfig.mSignerRuleIDsMaxCount;
-}
-
-bool ApplicationImpl::isCheckingPolicies() const
-{
-    return mIsCheckingPolicies;
-}
-
-void ApplicationImpl::stopCheckingPolicies()
-{
-    mIsCheckingPolicies = false;
-}
-
-void ApplicationImpl::resumeCheckingPolicies()
-{
-    mIsCheckingPolicies = true;
 }
 
 ApplicationImpl::~ApplicationImpl() {
@@ -844,9 +824,5 @@ std::unique_ptr<LedgerManager>
 ApplicationImpl::createLedgerManager()
 {
     return LedgerManager::create(*this);
-}
-
-Invariants &ApplicationImpl::getInvariants() {
-    return *mInvariants;
 }
 }

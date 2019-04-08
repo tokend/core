@@ -35,5 +35,8 @@ namespace stellar
         {
             return mStorageHelper.getLedgerDelta();
         }
+
+        std::string const
+        getTableName() const override;
     };
 }

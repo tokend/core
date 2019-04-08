@@ -5,7 +5,7 @@
 
 #include "main/Config.h"
 #include "crypto/Hex.h"
-#include "crypto/KeyUtils.h"
+//#include "crypto/KeyUtils.h"
 #include "herder/Herder.h"
 #include "history/HistoryArchive.h"
 #include "ledger/LedgerManager.h"
@@ -24,7 +24,8 @@
 
 namespace stellar
 {
-const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION = static_cast<uint32_t>(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING;
+const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION =
+        static_cast<uint32_t>(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING);
 
 // Options that must only be used for testing
 static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {
@@ -43,12 +44,11 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<uint32_t>(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING);
+    LEDGER_PROTOCOL_VERSION = CURRENT_LEDGER_PROTOCOL_VERSION;
     OVERLAY_PROTOCOL_MIN_VERSION = 7;
     OVERLAY_PROTOCOL_VERSION = 8;
 
     VERSION_STR = STELLAR_CORE_VERSION;
-    DESIRED_BASE_RESERVE = 0;
 
     // configurable
     RUN_STANDALONE = false;
@@ -70,8 +70,6 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     LOG_FILE_PATH = "stellar-core.%datetime{%Y.%M.%d-%H:%m:%s}.log";
     BUCKET_DIR_PATH = "buckets";
 
-    TESTING_UPGRADE_DESIRED_FEE = LedgerManager::GENESIS_LEDGER_BASE_FEE;
-    TESTING_UPGRADE_RESERVE = LedgerManager::GENESIS_LEDGER_BASE_RESERVE;
     TESTING_UPGRADE_MAX_TX_PER_LEDGER = 50;
 
     HTTP_PORT = DEFAULT_PEER_PORT + 1;
@@ -590,7 +588,7 @@ Config::load(std::string const& filename)
                 {
                     PublicKey nodeID;
                     parseNodeID(v, nodeID);
-                    PREFERRED_PEER_KEYS.push_back(KeyUtils::toStrKey(nodeID));
+                    PREFERRED_PEER_KEYS.push_back(PubKeyUtils::toStrKey(nodeID));
                 }
             }
         }
@@ -849,7 +847,7 @@ Config::parseNodeID(std::string configStr, PublicKey& retKey, SecretKey& sKey,
         }
         else
         {
-            retKey = KeyUtils::fromStrKey<PublicKey>(nodestr);
+            retKey = PubKeyUtils::fromStrKey(nodestr);
         }
 
         if (iss)
@@ -881,7 +879,7 @@ Config::parseNodeID(std::string configStr, PublicKey& retKey, SecretKey& sKey,
 std::string
 Config::toShortString(PublicKey const& pk) const
 {
-    std::string ret = KeyUtils::toStrKey(pk);
+    std::string ret = PubKeyUtils::toStrKey(pk);
     auto it = VALIDATOR_NAMES.find(ret);
     if (it == VALIDATOR_NAMES.end())
         return ret.substr(0, 5);
@@ -892,7 +890,7 @@ Config::toShortString(PublicKey const& pk) const
 std::string
 Config::toStrKey(PublicKey const& pk, bool& isAlias) const
 {
-    std::string ret = KeyUtils::toStrKey(pk);
+    std::string ret = PubKeyUtils::toStrKey(pk);
     auto it = VALIDATOR_NAMES.find(ret);
     if (it == VALIDATOR_NAMES.end())
     {
@@ -924,7 +922,7 @@ Config::resolveNodeID(std::string const& s, PublicKey& retKey) const
 
     try
     {
-        retKey = KeyUtils::fromStrKey<PublicKey>(expanded);
+        retKey = PubKeyUtils::fromStrKey(expanded);
     }
     catch (std::invalid_argument&)
     {

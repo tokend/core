@@ -4,7 +4,6 @@
 
 #include "main/Application.h"
 #include "overlay/LoopbackPeer.h"
-#include "util/make_unique.h"
 #include "main/test.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/BalanceHelperLegacy.h"

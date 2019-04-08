@@ -287,4 +287,10 @@ SignerRoleHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+
+std::string const
+SignerRoleHelperImpl::getTableName() const
+{
+    return "signer_roles";
+}
 }

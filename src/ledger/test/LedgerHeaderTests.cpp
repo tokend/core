@@ -6,13 +6,13 @@
 #include "crypto/Hex.h"
 #include "herder/LedgerCloseData.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxn.h"
+//#include "ledger/LedgerTxn.h"
 #include "ledger/LedgerTxnHeader.h"
 #include "lib/catch.hpp"
 #include "main/Application.h"
 #include "test/TestUtils.h"
 #include "test/test.h"
-#include "transactions/TransactionUtils.h"
+//#include "transactions/TransactionUtils.h"
 #include "util/Logging.h"
 #include "util/Timer.h"
 #include "xdrpp/marshal.h"
@@ -41,10 +41,6 @@ TEST_CASE("genesisledger", "[ledger]")
     REQUIRE(binToHex(header.bucketListHash) ==
             "4e6a8404d33b17eee7031af0b3606b6af8e36fe5a3bff59e4e5e420bd0ad3bf4");
     REQUIRE(header.ledgerSeq == 1);
-    REQUIRE(header.totalCoins == 1000000000000000000);
-    REQUIRE(header.feePool == 0);
-    REQUIRE(header.inflationSeq == 0);
-    REQUIRE(header.idPool == 0);
     REQUIRE(header.baseFee == 100);
     REQUIRE(header.baseReserve == 100000000);
     REQUIRE(header.maxTxSetSize == 100);
@@ -72,7 +68,7 @@ TEST_CASE("ledgerheader", "[ledger]")
         TxSetFramePtr txSet = make_shared<TxSetFrame>(lastHash);
 
         // close this ledger
-        StellarValue sv(txSet->getContentsHash(), 1, emptyUpgradeSteps, 0);
+        StellarValue sv(txSet->getContentsHash(), 1, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
         app->getLedgerManager().closeLedger(ledgerData);
 
@@ -105,13 +101,4 @@ TEST_CASE("base reserve", "[ledger]")
     REQUIRE(lcl.header.baseReserve == 100000000);
     const uint32 n = 20000;
     int64 expectedReserve = 2000200000000ll;
-
-    for_versions_to(8, *app, [&]() {
-        LedgerTxn ltx(app->getLedgerTxnRoot());
-        REQUIRE(getMinBalance(ltx.loadHeader(), n) < expectedReserve);
-    });
-    for_versions_from(9, *app, [&]() {
-        LedgerTxn ltx(app->getLedgerTxnRoot());
-        REQUIRE(getMinBalance(ltx.loadHeader(), n) == expectedReserve);
-    });
 }

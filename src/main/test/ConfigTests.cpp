@@ -15,7 +15,7 @@ namespace
 bool
 keyMatches(PublicKey& key, const std::vector<std::string>& keys)
 {
-    auto keyStr = KeyUtils::toStrKey<PublicKey>(key);
+    auto keyStr = PubKeyUtils::toStrKey(key);
     return std::any_of(std::begin(keys), std::end(keys),
                        [&](const std::string& x) { return keyStr == x; });
 }

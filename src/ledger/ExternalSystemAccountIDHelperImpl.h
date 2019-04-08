@@ -45,6 +45,9 @@ class ExternalSystemAccountIDHelperImpl : public ExternalSystemAccountIDHelper,
     LedgerDelta*
     getLedgerDelta() override;
 
+    const std::string
+    getTableName() const override;
+
   private:
     static const char* select;
 

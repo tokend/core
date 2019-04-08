@@ -40,7 +40,7 @@ main(int argc, char* const* argv)
     }
     shortHash::initialize();
 
-    xdr::marshaling_stack_limit = 1000;
+    //xdr::marshaling_stack_limit = 1000;
 
     auto result = handleCommandLine(argc, argv);
     if (result)

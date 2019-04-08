@@ -365,4 +365,10 @@ SignerRuleHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+
+std::string
+const SignerRuleHelperImpl::getTableName() const
+{
+    return "signer_rules";
+}
 }

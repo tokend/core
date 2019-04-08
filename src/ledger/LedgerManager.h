@@ -6,6 +6,7 @@
 
 #include "catchup/CatchupManager.h"
 #include "history/HistoryManager.h"
+#include "LedgerHeaderFrame.h"
 #include <memory>
 
 namespace stellar
@@ -82,6 +83,7 @@ class LedgerManager
     static std::string ledgerAbbrev(LedgerHeader const& header,
                                     uint256 const& hash);
     static std::string ledgerAbbrev(LedgerHeaderHistoryEntry he);
+    static std::string ledgerAbbrev(LedgerHeaderFrame::pointer p);
 
     // Factory
     static std::unique_ptr<LedgerManager> create(Application& app);

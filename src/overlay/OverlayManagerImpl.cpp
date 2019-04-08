@@ -3,7 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "overlay/OverlayManagerImpl.h"
-#include "crypto/KeyUtils.h"
+//#include "crypto/KeyUtils.h"
 #include "crypto/SecretKey.h"
 #include "database/Database.h"
 #include "main/Application.h"
@@ -172,7 +172,7 @@ OverlayManagerImpl::PeersList::acceptAuthenticatedPeer(Peer::pointer peer)
                     << "Evicting non-preferred peer "
                     << victim.second->toString() << " for preferred peer "
                     << peer->toString();
-                victim.second->drop(ERR_LOAD, "preferred peer selected instead",
+                victim.second->drop(ErrorCode::LOAD, "preferred peer selected instead",
                                     Peer::DropMode::IGNORE_WRITE_QUEUE);
                 return moveToAuthenticated(peer);
             }
@@ -198,12 +198,12 @@ OverlayManagerImpl::PeersList::shutdown()
     auto pendingPeersToStop = mPending;
     for (auto& p : pendingPeersToStop)
     {
-        p->drop(ErrorCode::ERR_MISC, "peer shutdown", Peer::DropMode::IGNORE_WRITE_QUEUE);
+        p->drop(ErrorCode::MISC, "peer shutdown", Peer::DropMode::IGNORE_WRITE_QUEUE);
     }
     auto authenticatedPeersToStop = mAuthenticated;
     for (auto& p : authenticatedPeersToStop)
     {
-        p.second->drop(ErrorCode::ERR_MISC, "peer shutdown",
+        p.second->drop(ErrorCode::MISC, "peer shutdown",
                        Peer::DropMode::IGNORE_WRITE_QUEUE);
     }
 }
@@ -731,7 +731,7 @@ OverlayManagerImpl::isPreferred(Peer* peer) const
 
     if (peer->isAuthenticated())
     {
-        std::string kstr = KeyUtils::toStrKey(peer->getPeerID());
+        std::string kstr = PubKeyUtils::toStrKey(peer->getPeerID());
         std::vector<std::string> const& pk =
             mApp.getConfig().PREFERRED_PEER_KEYS;
         if (std::find(pk.begin(), pk.end(), kstr) != pk.end())

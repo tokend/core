@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "crypto/KeyUtils.h"
+//#include "crypto/KeyUtils.h"
 #include "crypto/SecretKey.h"
 #include "lib/catch.hpp"
 #include "main/Application.h"
@@ -131,7 +131,7 @@ TEST_CASE("accept preferred peer even when strict", "[overlay][connections]")
 
     cfg2.PREFERRED_PEERS_ONLY = true;
     cfg2.PREFERRED_PEER_KEYS.push_back(
-        KeyUtils::toStrKey(cfg1.NODE_SEED.getPublicKey()));
+        PubKeyUtils::toStrKey(cfg1.NODE_SEED.getPublicKey()));
 
     auto app1 = createTestApplication(clock, cfg1);
     auto app2 = createTestApplication(clock, cfg2);
@@ -218,7 +218,7 @@ TEST_CASE("reject peers beyond max - preferred peer wins",
             cfg2.MAX_ADDITIONAL_PEER_CONNECTIONS = 1;
             cfg2.TARGET_PEER_CONNECTIONS = 0;
             cfg2.PREFERRED_PEER_KEYS.push_back(
-                KeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
+                PubKeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
 
             auto app1 = createTestApplication(clock, cfg1);
             auto app2 = createTestApplication(clock, cfg2);
@@ -240,7 +240,7 @@ TEST_CASE("reject peers beyond max - preferred peer wins",
             cfg2.MAX_ADDITIONAL_PEER_CONNECTIONS = 0;
             cfg2.TARGET_PEER_CONNECTIONS = 1;
             cfg2.PREFERRED_PEER_KEYS.push_back(
-                KeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
+                PubKeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
 
             auto app1 = createTestApplication(clock, cfg1);
             auto app2 = createTestApplication(clock, cfg2);
@@ -265,7 +265,7 @@ TEST_CASE("reject peers beyond max - preferred peer wins",
             cfg2.MAX_ADDITIONAL_PEER_CONNECTIONS = 1;
             cfg2.TARGET_PEER_CONNECTIONS = 0;
             cfg2.PREFERRED_PEER_KEYS.push_back(
-                KeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
+                PubKeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
 
             auto app1 = createTestApplication(clock, cfg1);
             auto app2 = createTestApplication(clock, cfg2);
@@ -288,7 +288,7 @@ TEST_CASE("reject peers beyond max - preferred peer wins",
             cfg2.MAX_ADDITIONAL_PEER_CONNECTIONS = 0;
             cfg2.TARGET_PEER_CONNECTIONS = 1;
             cfg2.PREFERRED_PEER_KEYS.push_back(
-                KeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
+                PubKeyUtils::toStrKey(cfg3.NODE_SEED.getPublicKey()));
 
             auto app1 = createTestApplication(clock, cfg1);
             auto app2 = createTestApplication(clock, cfg2);

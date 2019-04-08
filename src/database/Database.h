@@ -254,7 +254,7 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
 
     virtual soci::connection_pool& getPool();
 
-    virtual EntryCache& getEntryCache() = 0;
+    EntryCache& getEntryCache() override;
 };
 
 class DBTimeExcluder : NonCopyable

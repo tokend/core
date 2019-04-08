@@ -252,7 +252,9 @@ Simulation::startAllNodes()
     {
         auto app = it.second.mApp;
         app->start();
+#ifdef BUILD_TESTS
         app->getLoadGenerator().updateMinBalance();
+#endif
     }
 
     for (auto const& pair : mPendingConnections)
@@ -588,6 +590,7 @@ Simulation::accountsOutOfSyncWithDb(Application& mainApp)
         iApp++;
         vector<LoadGenerator::TestAccountPtr> res;
         auto app = p.second.mApp;
+#ifdef BUILD_TESTS
         res = mainApp.getLoadGenerator().checkAccountSynced(*app);
         if (!res.empty())
         {
@@ -598,6 +601,7 @@ Simulation::accountsOutOfSyncWithDb(Application& mainApp)
         {
             result.insert(result.end(), res.begin(), res.end());
         }
+#endif
     }
     LOG(INFO) << "Ledger has not yet caught up to the simulation.";
     return result;

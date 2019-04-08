@@ -235,5 +235,11 @@ void LicenseHelperImpl::storeChange(LedgerEntry const& entry)
 {
     throw runtime_error("Cannot change license");
 }
+
+std::string const
+LicenseHelperImpl::getTableName() const
+{
+    return "license";
+}
 }
 

@@ -62,15 +62,15 @@ class LedgerManagerImpl : public LedgerManager
                          LedgerHeaderHistoryEntry const& lastClosed);
 
     void processFeesSeqNums(std::vector<TransactionFramePtr>& txs,
-                            AbstractLedgerTxn& ltxOuter);
+                            LedgerDelta& ltxOuter);
 
     void applyTransactions(std::vector<TransactionFramePtr>& txs,
-                           AbstractLedgerTxn& ltx,
+                           LedgerDelta& ltx,
                            TransactionResultSet& txResultSet);
 
     void ledgerClosed(LedgerDelta const& ltx);
 
-    void storeCurrentLedger(LedgerHeader const& header);
+    void storeCurrentLedger();
 
     enum class CloseLedgerIfResult
     {
@@ -99,7 +99,7 @@ protected:
 
     void applyBufferedLedgers();
     void setCatchupState(CatchupState s);
-    void advanceLedgerPointers(LedgerHeader const& header);
+    void advanceLedgerPointers();
 
     void initializeCatchup(LedgerCloseData const& ledgerData);
     void continueCatchup(LedgerCloseData const& ledgerData);
@@ -134,6 +134,7 @@ protected:
         std::function<void(asio::error_code const& ec)> handler) override;
 
     LedgerHeaderHistoryEntry const& getLastClosedLedgerHeader() const override;
+    LedgerHeader& getCurrentLedgerHeader() override;
 
     HistoryArchiveState getLastClosedLedgerHAS() override;
 

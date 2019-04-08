@@ -4,18 +4,18 @@
 
 #include "test/TestPrinter.h"
 #include "lib/util/format.h"
-#include "test/TestMarket.h"
+//#include "test/TestMarket.h"
 
 namespace Catch
 {
 std::string
 StringMaker<stellar::OfferState>::convert(stellar::OfferState const& os)
 {
-    return fmt::format(
+    return {}/*fmt::format(
         "selling: {}, buying: {}, price: {}, amount: {}, type: {}",
         xdr::xdr_to_string(os.selling), xdr::xdr_to_string(os.buying),
         xdr::xdr_to_string(os.price), os.amount,
-        os.type == stellar::OfferType::PASSIVE ? "passive" : "active");
+        os.type == stellar::OfferType::PASSIVE ? "passive" : "active")*/;
 }
 
 std::string

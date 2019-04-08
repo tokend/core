@@ -337,6 +337,7 @@ TEST_CASE("cycle4 topology", "[simulation]")
     REQUIRE(simulation->haveAllExternalized(nLedgers, 4));
 }
 
+#ifdef BUILD_TESTS
 TEST_CASE(
         "Stress test on 2 nodes 3 accounts 10 random transactions 10tx per sec",
         "[stress100][simulation][stress][long][!hide]")
@@ -668,3 +669,4 @@ TEST_CASE("Bucket list entries vs write throughput", "[scalability][!hide]")
         }
     }
 }
+#endif

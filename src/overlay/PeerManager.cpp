@@ -69,7 +69,7 @@ toXdr(PeerBareAddress const& address)
     PeerAddress result;
 
     result.port = address.getPort();
-    result.ip.type(IPv4);
+    result.ip.type(IPAddrType::IPv4);
     ipToXdr(address.getIP(), result.ip.ipv4());
 
     result.numFailures = 0;

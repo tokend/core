@@ -127,5 +127,11 @@ EntryFrame::pointer StampHelperImpl::storeLoad(LedgerKey const& ledgerKey)
     auto retStamp = make_shared<StampFrame>(entry);
     return retStamp;
 }
+
+std::string const
+StampHelperImpl::getTableName() const
+{
+    return "stamp";
+}
 }
 

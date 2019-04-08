@@ -4,11 +4,11 @@
 
 #include "main/CommandHandler.h"
 #include "crypto/Hex.h"
-#include "crypto/KeyUtils.h"
+//#include "crypto/KeyUtils.h"
 #include "herder/Herder.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/LedgerTxn.h"
-#include "ledger/LedgerTxnEntry.h"
+//#include "ledger/LedgerTxn.h"
+//#include "ledger/LedgerTxnEntry.h"
 #include "lib/http/server.hpp"
 #include "lib/json/json.h"
 #include "lib/util/format.h"
@@ -17,7 +17,7 @@
 #include "main/Maintainer.h"
 #include "overlay/BanManager.h"
 #include "overlay/OverlayManager.h"
-#include "transactions/TransactionUtils.h"
+//#include "transactions/TransactionUtils.h"
 #include "util/Logging.h"
 #include "util/StatusManager.h"
 
@@ -352,72 +352,6 @@ CommandHandler::info(std::string const&, std::string& retStr)
 }
 
 void
-CommandHandler::info(std::string const& params, std::string& retStr)
-{
-    Json::Value root;
-
-    auto& lm = mApp.getLedgerManager();
-
-    auto& info = root["info"];
-
-    if (mApp.getConfig().UNSAFE_QUORUM)
-        info["UNSAFE_QUORUM"] = "UNSAFE QUORUM ALLOWED";
-    info["build"] = STELLAR_CORE_VERSION;
-#ifdef XDR_REVISION
-    info["xdr_revision"] = XDR_REVISION;
-#endif
-#ifdef CORE_REVISION
-    info["core_revision"] = CORE_REVISION;
-#endif
-    info["protocol_version"] = mApp.getConfig().LEDGER_PROTOCOL_VERSION;
-    info["ledger_version"] = lm.getLastClosedLedgerHeader().header.ledgerVersion;
-    info["tx_expiration_period"] = Json::UInt64(lm.getTxExpirationPeriod()
-        - mApp.getConfig().TX_EXPIRATION_PERIOD_WINDOW);
-    info["withdrawal_details_max_length"] = Json::Int64(mApp.getWithdrawalDetailsMaxLength());
-
-    info["state"] = mApp.getStateHuman();
-    info["ledger"]["num"] = (int)lm.getLedgerNum();
-    info["ledger"]["hash"] = binToHex(lm.getLastClosedLedgerHeader().hash);
-    info["ledger"]["closeTime"] =
-        (int)lm.getLastClosedLedgerHeader().header.scpValue.closeTime;
-    info["ledger"]["age"] = (int)lm.secondsSinceLastLedgerClose();
-    info["numPeers"] = (int)mApp.getOverlayManager().getPeers().size();
-    info["network"] = mApp.getConfig().NETWORK_PASSPHRASE;
-	info["admin_account_id"] = PubKeyUtils::toStrKey(mApp.getAdminID());
-    info["base_exchange_name"] = mApp.getConfig().BASE_EXCHANGE_NAME;
-
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto statsAssetFrame = assetHelper->loadStatsAsset(mApp.getDatabase());
-    if (statsAssetFrame)
-        info["statistics_quote_asset"] = statsAssetFrame->getCode();
-
-    std::vector<AssetFrame::pointer> baseAssets;
-    assetHelper->loadBaseAssets(baseAssets, mApp.getDatabase());
-    for (auto asset: baseAssets)
-    {
-        info["base_assets"].append(asset->getCode());
-    }
-
-    auto& statusMessages = mApp.getStatusManager();
-    auto counter = 0;
-    for (auto statusMessage : statusMessages)
-    {
-        info["status"][counter++] = statusMessage.second;
-    }
-
-    auto& herder = mApp.getHerder();
-    Json::Value q;
-    herder.dumpQuorumInfo(q, mApp.getConfig().NODE_SEED.getPublicKey(), true,
-                          herder.getCurrentLedgerSeq());
-    if (q["slots"].size() != 0)
-    {
-        info["quorum"] = q["slots"];
-    }
-
-    retStr = root.toStyledString();
-}
-
-void
 CommandHandler::metrics(std::string const& params, std::string& retStr)
 {
     mApp.syncAllMetrics();
@@ -526,7 +460,7 @@ CommandHandler::dropPeer(std::string const& params, std::string& retStr)
             auto peer = peers.find(n);
             if (peer != peers.end())
             {
-                peer->second->drop(ERR_MISC, "dropped by user",
+                peer->second->drop(ErrorCode::MISC, "dropped by user",
                                    Peer::DropMode::IGNORE_WRITE_QUEUE);
                 if (ban != retMap.end() && ban->second == "1")
                 {
@@ -638,8 +572,6 @@ CommandHandler::upgrades(std::string const& params, std::string& retStr)
         uint32 maxTxSize;
         uint32 protocolVersion;
 
-        p.mBaseFee = maybeParseParam(retMap, "basefee", baseFee);
-        p.mBaseReserve = maybeParseParam(retMap, "basereserve", baseReserve);
         p.mMaxTxSize = maybeParseParam(retMap, "maxtxsize", maxTxSize);
         p.mProtocolVersion =
             maybeParseParam(retMap, "protocolversion", protocolVersion);

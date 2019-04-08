@@ -127,41 +127,9 @@ Slot::processEnvelope(SCPEnvelope const& envelope, bool self)
             res = mBallotProtocol.processEnvelope(envelope, self);
         }
     }
-	catch (const std::runtime_error& re)
-	{
-        auto info = getJsonInfo();
-
-		CLOG(ERROR, "SCP") << "Exception in processEnvelope "
-			<< "state: " << info.toStyledString()
-			<< " processing envelope: "
-			<< mSCP.envToStr(envelope);
-
-		// speciffic handling for runtime_error
-		std::cerr << "Runtime error: " << re.what() << std::endl;
-		throw re;
-	}
-	catch (const std::exception& ex)
-	{
-		Json::Value info;
-
-		dumpInfo(info);
-
-		CLOG(ERROR, "SCP") << "Exception in processEnvelope "
-			<< "state: " << info.toStyledString()
-			<< " processing envelope: "
-			<< mSCP.envToStr(envelope);
-
-		// speciffic handling for all exceptions extending std::exception, except
-		// std::runtime_error which is handled explicitly
-		std::cerr << "Error occurred: " << ex.what() << std::endl;
-		throw ex;
-	}
     catch (...)
     {
-        Json::Value info;
-
-        dumpInfo(info);
-
+        auto info = getJsonInfo();
         CLOG(ERROR, "SCP") << "Exception in processEnvelope "
                            << "state: " << info.toStyledString()
                            << " processing envelope: "

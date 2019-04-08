@@ -6,7 +6,6 @@
 #include "test.h"
 #include "StellarCoreVersion.h"
 #include "main/Config.h"
-#include "util/make_unique.h"
 #include <time.h>
 #include "util/Logging.h"
 #include "util/TmpDir.h"
@@ -59,7 +58,7 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         std::string rootDir = gTestRoots.back().getName();
         rootDir += "/";
 
-        cfgs[instanceNumber] = stellar::make_unique<Config>();
+        cfgs[instanceNumber] = std::make_unique<Config>();
         Config& thisConfig = *cfgs[instanceNumber];
 
         std::ostringstream sstream;
@@ -67,11 +66,8 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         sstream << "stellar" << instanceNumber << ".log";
         thisConfig.LOG_FILE_PATH = sstream.str();
         thisConfig.BUCKET_DIR_PATH = rootDir + "bucket";
-        thisConfig.TMP_DIR_PATH = rootDir + "tmp";
 
-        thisConfig.PARANOID_MODE = true;
         thisConfig.ALLOW_LOCALHOST_FOR_TESTING = true;
-		thisConfig.DESIRED_MAX_TX_PER_LEDGER = 2000;
 
         // Tests are run in standalone by default, meaning that no external
         // listening interfaces are opened (all sockets must be manually created
@@ -103,9 +99,6 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         thisConfig.TX_EXPIRATION_PERIOD = INT64_MAX / 2;
         thisConfig.MAX_INVOICES_FOR_RECEIVER_ACCOUNT = 100;
 
-        // disable NTP - travis-ci does not allow network access:
-        // The container-based, OSX, and GCE (both Precise and Trusty) builds do not currently have IPv6 connectivity.
-        thisConfig.NTP_SERVER.clear();
 
         std::ostringstream dbname;
         switch (mode)
@@ -133,7 +126,7 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         default:
             abort();
         }
-        thisConfig.DATABASE = dbname.str();
+        thisConfig.DATABASE.value = dbname.str();
         thisConfig.REPORT_METRICS = gTestMetrics;
 
 		thisConfig.validateConfig();

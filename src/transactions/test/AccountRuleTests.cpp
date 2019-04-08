@@ -9,7 +9,6 @@
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
-#include "util/make_unique.h"
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 

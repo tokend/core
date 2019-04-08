@@ -10,7 +10,6 @@
 #include "transactions/manage_role_rule/ManageAccountRuleOpFrame.h"
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
-#include "util/make_unique.h"
 
 using namespace stellar;
 using namespace stellar::txtest;

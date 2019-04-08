@@ -309,7 +309,7 @@ CommandLine::ConfigOption::getConfig(bool logToFile) const
     Logging::setLogLevel(mLogLevel, nullptr);
     config.load(configFile);
 
-    Logging::setFmt(KeyUtils::toShortString(config.NODE_SEED.getPublicKey()));
+    Logging::setFmt(PubKeyUtils::toShortString(config.NODE_SEED.getPublicKey()));
     Logging::setLogLevel(mLogLevel, nullptr);
 
     if (logToFile)

@@ -309,4 +309,9 @@ ExternalSystemAccountIDHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+const std::string
+ExternalSystemAccountIDHelperImpl::getTableName() const
+{
+    return "external_system_account_id";
+}
 } // namespace stellar

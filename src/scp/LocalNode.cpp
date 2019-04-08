@@ -5,13 +5,13 @@
 #include "LocalNode.h"
 
 #include "crypto/Hex.h"
-#include "crypto/KeyUtils.h"
+//#include "crypto/KeyUtils.h"
 #include "crypto/SHA.h"
 #include "lib/json/json.h"
 #include "scp/QuorumSetUtils.h"
 #include "util/Logging.h"
 #include "util/XDROperators.h"
-#include "util/numeric.h"
+#include <util/types.h>
 #include "xdrpp/marshal.h"
 #include <algorithm>
 #include <unordered_set>
@@ -26,7 +26,7 @@ LocalNode::LocalNode(NodeID const& nodeID, bool isValidator,
     mQSetHash = sha256(xdr::xdr_to_opaque(mQSet));
 
     CLOG(INFO, "SCP") << "LocalNode::LocalNode"
-                      << "@" << KeyUtils::toShortString(mNodeID)
+                      << "@" << PubKeyUtils::toShortString(mNodeID)
                       << " qSet: " << hexAbbrev(mQSetHash);
 
     mSingleQSet = std::make_shared<SCPQuorumSet>(buildSingletonQSet(mNodeID));

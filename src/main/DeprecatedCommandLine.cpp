@@ -405,7 +405,7 @@ handleDeprecatedCommandLine(int argc, char* const* argv)
         Logging::setLogLevel(logLevel, nullptr);
         cfg.load(cfgFile);
 
-        Logging::setFmt(KeyUtils::toShortString(cfg.NODE_SEED.getPublicKey()));
+        Logging::setFmt(PubKeyUtils::toShortString(cfg.NODE_SEED.getPublicKey()));
         Logging::setLogLevel(logLevel, nullptr);
 
         if (command.size())

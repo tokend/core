@@ -5,7 +5,6 @@
 #include "main/Config.h"
 #include "util/Timer.h"
 #include "overlay/LoopbackPeer.h"
-#include "util/make_unique.h"
 #include "main/test.h"
 #include "TxTests.h"
 #include "test/test_marshaler.h"

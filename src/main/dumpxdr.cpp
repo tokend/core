@@ -1,6 +1,6 @@
 #include "main/dumpxdr.h"
 #include "crypto/SecretKey.h"
-#include "transactions/SignatureUtils.h"
+//#include "transactions/SignatureUtils.h"
 #include "util/Decoder.h"
 #include "util/Fs.h"
 #include "util/XDROperators.h"
@@ -298,13 +298,8 @@ signtxn(std::string const& filename, std::string netId, bool base64)
 
         SecretKey sk(SecretKey::fromStrKeySeed(
                 readSecret("Secret key seed: ", txn_stdin)));
-        TransactionSignaturePayload payload;
-        payload.networkId = sha256(netId);
-        payload.taggedTransaction.type(ENVELOPE_TYPE_TX);
-        payload.taggedTransaction.tx() = txenv.tx;
-        txenv.signatures.emplace_back(
-                SignatureUtils::getHint(sk.getPublicKey().ed25519()),
-                sk.sign(sha256(xdr::xdr_to_opaque(payload))));
+        txenv.signatures.emplace_back(PubKeyUtils::getHint(sk.getPublicKey()),
+                                      sk.sign(xdr::xdr_to_opaque(txenv.tx)));
 
         auto out = xdr::xdr_to_opaque(txenv);
         if (base64)

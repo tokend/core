@@ -28,6 +28,7 @@
 
 #include "overlay/OverlayManager.h"
 #include "util/XDROperators.h"
+#include "util/format.h"
 
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
@@ -99,6 +100,16 @@ std::string
 LedgerManager::ledgerAbbrev(LedgerHeaderHistoryEntry he)
 {
     return ledgerAbbrev(he.header, he.hash);
+}
+
+std::string
+LedgerManager::ledgerAbbrev(LedgerHeaderFrame::pointer p)
+{
+    if (!p)
+    {
+        return "[empty]";
+    }
+    return ledgerAbbrev(p->getHeader(), p->getHash());
 }
 
 LedgerManagerImpl::LedgerManagerImpl(Application& app)
@@ -377,11 +388,7 @@ LedgerManagerImpl::loadLastKnownLedger(
             throw std::runtime_error("Could not load ledger from database");
         }
 
-        {
-            LedgerTxn ltx(mApp.getLedgerTxnRoot());
-            ltx.loadHeader().current() = *currentLedger;
-            ltx.commit();
-        }
+        mCurrentLedger->getHeader() = *currentLedger;
 
         if (handler)
         {
@@ -397,11 +404,9 @@ LedgerManagerImpl::loadLastKnownLedger(
                 {
                     mApp.getBucketManager().assumeState(has);
                     {
-                        LedgerTxn ltx(mApp.getLedgerTxnRoot());
-                        auto header = ltx.loadHeader();
                         CLOG(INFO, "Ledger") << "Loaded last known ledger: "
-                                             << ledgerAbbrev(header.current());
-                        advanceLedgerPointers(header.current());
+                                             << ledgerAbbrev(mCurrentLedger->getHeader());
+                        advanceLedgerPointers();
                     }
                     handler(ec);
                 }
@@ -429,8 +434,7 @@ LedgerManagerImpl::loadLastKnownLedger(
         }
         else
         {
-            LedgerTxn ltx(mApp.getLedgerTxnRoot());
-            advanceLedgerPointers(ltx.loadHeader().current());
+            advanceLedgerPointers();
         }
     }
 }
@@ -493,6 +497,12 @@ LedgerHeaderHistoryEntry const&
 LedgerManagerImpl::getLastClosedLedgerHeader() const
 {
     return mLastClosedLedger;
+}
+
+LedgerHeader&
+LedgerManagerImpl::getCurrentLedgerHeader()
+{
+    return mCurrentLedger->getHeader();
 }
 
 HistoryArchiveState
@@ -787,13 +797,9 @@ LedgerManagerImpl::historyCaughtup(asio::error_code const& ec,
         {
             case CatchupWork::ProgressState::APPLIED_BUCKETS:
             {
-                LedgerTxn ltx(mApp.getLedgerTxnRoot());
-                auto header = ltx.loadHeader();
-                header.current() = lastClosed.header;
-                storeCurrentLedger(header.current());
-                ltx.commit();
-
                 mLastClosedLedger = lastClosed;
+                mCurrentLedger = make_shared<LedgerHeaderFrameImpl>(lastClosed);
+                storeCurrentLedger();
                 return;
             }
             case CatchupWork::ProgressState::APPLIED_TRANSACTIONS:
@@ -893,7 +899,7 @@ LedgerManagerImpl::closeLedger(LedgerCloseData const& ledgerData)
     mLastClose = now;
     mLedgerAge.set_count(0);
 
-    if (ledgerData.mTxSet->previousLedgerHash() !=
+    if (ledgerData.getTxSet()->previousLedgerHash() !=
         getLastClosedLedgerHeader().hash)
     {
         CLOG(ERROR, "Ledger")
@@ -1022,14 +1028,14 @@ LedgerManagerImpl::deleteOldEntries(Database& db, uint32_t ledgerSeq, uint32_t c
     soci::transaction txscope(db.getSession());
     db.clearPreparedStatementCache();
     LedgerHeaderFrame::deleteOldEntries(db, ledgerSeq);
-    TransactionFrame::deleteOldEntries(db, ledgerSeq, ledgerCloseTime);
+    TransactionFrame::deleteOldEntries(db, ledgerSeq, count);
     HerderPersistence::deleteOldEntries(db, ledgerSeq, count);
-    Herder::deleteOldEntries(db, ledgerSeq);
     db.clearPreparedStatementCache();
     txscope.commit();
 }
 
-void
+// move to invariants
+/*void
 LedgerManagerImpl::checkDbState()
 {
     Database& db = getDatabase();
@@ -1047,7 +1053,7 @@ LedgerManagerImpl::checkDbState()
                                      "total issued amount of asset");
         }
     }
-}
+}*/
 
 void
 LedgerManagerImpl::advanceLedgerPointers()
@@ -1137,8 +1143,7 @@ LedgerManagerImpl::applyTransactions(std::vector<TransactionFramePtr>& txs,
             CLOG(DEBUG, "Tx")
                     << " tx#" << index << " = " << hexAbbrev(tx->getFullHash())
                     << " txsalt=" << tx->getSalt()
-                    << " ops=" << tx->getOperations().size()
-                    << " txseq=" << tx->getSeqNum() << " (@ "
+                    << " ops=" << tx->getOperations().size() << " (@ "
                     << mApp.getConfig().toShortString(tx->getSourceID()) << ")";
             vector<LedgerDelta::KeyEntryMap> stateBeforeOp;
             if (tx->apply(delta, tm, mApp, stateBeforeOp))
@@ -1183,7 +1188,7 @@ LedgerManagerImpl::applyTransactions(std::vector<TransactionFramePtr>& txs,
 }
 
 void
-LedgerManagerImpl::storeCurrentLedger(LedgerDelta const& delta)
+LedgerManagerImpl::storeCurrentLedger()
 {
     LedgerHeaderUtils::storeInDatabase(mApp.getDatabase(), mCurrentLedger->getHeader());
 
@@ -1219,7 +1224,7 @@ LedgerManagerImpl::ledgerClosed(LedgerDelta const& delta)
                                      delta.getDeadEntries());
 
     mApp.getBucketManager().snapshotLedger(mCurrentLedger->getHeader());
-    storeCurrentLedger(delta);
+    storeCurrentLedger();
     advanceLedgerPointers();
 }
 
