@@ -1,4 +1,3 @@
-/*
 // Copyright 2017 Stellar Development Foundation and contributors. Licensed
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
@@ -418,37 +417,10 @@ CatchupSimulation::generateRandomLedger()
     uint64_t small = 100 + ledgerSeq;
     uint64_t closeTime = 60 * 5 * ledgerSeq;
 
-    auto root = TestAccount{mApp, getRoot(mApp.getNetworkID())};
-    auto alice = TestAccount{mApp, getAccount("alice")};
-    auto bob = TestAccount{mApp, getAccount("bob")};
-    auto carol = TestAccount{mApp, getAccount("carol")};
-
-    // Root sends to alice every tx, bob every other tx, carol every 4rd tx.
-    txSet->add(root.tx({createAccount(alice, big)}));
-    txSet->add(root.tx({createAccount(bob, big)}));
-    txSet->add(root.tx({createAccount(carol, big)}));
-    txSet->add(root.tx({payment(alice, big)}));
-    txSet->add(root.tx({payment(bob, big)}));
-    txSet->add(root.tx({payment(carol, big)}));
-
-    // They all randomly send a little to one another every ledger after #4
-    if (ledgerSeq > 4)
-    {
-        if (flip())
-            txSet->add(alice.tx({payment(bob, small)}));
-        if (flip())
-            txSet->add(alice.tx({payment(carol, small)}));
-
-        if (flip())
-            txSet->add(bob.tx({payment(alice, small)}));
-        if (flip())
-            txSet->add(bob.tx({payment(carol, small)}));
-
-        if (flip())
-            txSet->add(carol.tx({payment(alice, small)}));
-        if (flip())
-            txSet->add(carol.tx({payment(bob, small)}));
-    }
+    auto root = TestAccount{mApp, SecretKey::random()};
+    auto alice = TestAccount{mApp, SecretKey::random()};
+    auto bob = TestAccount{mApp, SecretKey::random()};
+    auto carol = TestAccount{mApp, SecretKey::random()};
 
     // Provoke sortForHash and hash-caching:
     txSet->getContentsHash();
@@ -457,7 +429,7 @@ CatchupSimulation::generateRandomLedger()
                            << " with " << txSet->size() << " txs (txhash:"
                            << hexAbbrev(txSet->getContentsHash()) << ")";
 
-    StellarValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, 0);
+    StellarValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
     mLedgerCloseDatas.emplace_back(ledgerSeq, txSet, sv);
     lm.closeLedger(mLedgerCloseDatas.back());
 
@@ -475,16 +447,6 @@ CatchupSimulation::generateRandomLedger()
                                  .getLevel(2)
                                  .getCurr()
                                  ->getHash());
-
-    rootBalances.push_back(root.getBalance());
-    aliceBalances.push_back(alice.getBalance());
-    bobBalances.push_back(bob.getBalance());
-    carolBalances.push_back(carol.getBalance());
-
-    rootSeqs.push_back(root.loadSequenceNumber());
-    aliceSeqs.push_back(alice.loadSequenceNumber());
-    bobSeqs.push_back(bob.loadSequenceNumber());
-    carolSeqs.push_back(carol.loadSequenceNumber());
 }
 
 void
@@ -583,10 +545,10 @@ CatchupSimulation::catchupApplication(uint32_t initLedger, uint32_t count,
 {
     auto startCatchupMetrics = getCatchupMetrics(app2);
 
-    auto root = TestAccount{*app2, getRoot(mApp.getNetworkID())};
-    auto alice = TestAccount{*app2, getAccount("alice")};
-    auto bob = TestAccount{*app2, getAccount("bob")};
-    auto carol = TestAccount{*app2, getAccount("carol")};
+    auto root = TestAccount{*app2, SecretKey::random()};
+    auto alice = TestAccount{*app2, SecretKey::random()};
+    auto bob = TestAccount{*app2, SecretKey::random()};
+    auto carol = TestAccount{*app2, SecretKey::random()};
 
     auto& lm = app2->getLedgerManager();
     auto catchupConfiguration = CatchupConfiguration(initLedger, count);
@@ -795,26 +757,6 @@ CatchupSimulation::catchupApplication(uint32_t initLedger, uint32_t count,
         auto haveAliceSeq = aliceSeqs.at(i);
         auto haveBobSeq = bobSeqs.at(i);
         auto haveCarolSeq = carolSeqs.at(i);
-
-        auto wantRootBalance = root.getBalance();
-        auto wantAliceBalance = alice.getBalance();
-        auto wantBobBalance = bob.getBalance();
-        auto wantCarolBalance = carol.getBalance();
-
-        auto wantRootSeq = root.loadSequenceNumber();
-        auto wantAliceSeq = alice.loadSequenceNumber();
-        auto wantBobSeq = bob.loadSequenceNumber();
-        auto wantCarolSeq = carol.loadSequenceNumber();
-
-        CHECK(haveRootBalance == wantRootBalance);
-        CHECK(haveAliceBalance == wantAliceBalance);
-        CHECK(haveBobBalance == wantBobBalance);
-        CHECK(haveCarolBalance == wantCarolBalance);
-
-        CHECK(haveRootSeq == wantRootSeq);
-        CHECK(haveAliceSeq == wantAliceSeq);
-        CHECK(haveBobSeq == wantBobSeq);
-        CHECK(haveCarolSeq == wantCarolSeq);
     }
     return true;
 }
@@ -902,4 +844,3 @@ CatchupSimulation::computeCatchupPerformedWork(
 }
 }
 }
-*/

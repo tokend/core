@@ -126,12 +126,6 @@ public:
     virtual LoadGenerator &getLoadGenerator() override;
 #endif
 
-    virtual void checkDB() override;
-
-    virtual void checkDBSync() override;
-
-    virtual void maintenance() override;
-
     virtual void applyCfgCommands() override;
 
     virtual void reportCfgMetrics() override;
@@ -167,10 +161,6 @@ public:
     virtual int32 getKYCSuperAdminMask() const override;
 
     virtual size_t getSignerRuleIDsMaxCount() const override;
-
-    bool isCheckingPolicies() const override;
-    void stopCheckingPolicies() override;
-    void resumeCheckingPolicies() override;
 
 protected:
     std::unique_ptr<LedgerManager> mLedgerManager; // allow to change that for tests

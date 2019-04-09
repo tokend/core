@@ -4,7 +4,7 @@
 
 #include <catch.hpp>
 #include <src/main/Config.h>
-#include <src/main/test.h>
+#include <src/test/test.h>
 #include <util/Timer.h>
 #include <main/Application.h>
 #include "ledger/LedgerDeltaImpl.h"

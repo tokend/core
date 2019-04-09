@@ -76,7 +76,7 @@ class TestAccount
     SequenceNumber
     getLastSequenceNumber()
     {
-        updateSequenceNumber();
+        //updateSequenceNumber();
         return mSn;
     }
 

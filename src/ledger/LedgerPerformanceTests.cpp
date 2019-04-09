@@ -5,7 +5,7 @@
 
 #include "main/Application.h"
 #include "util/Timer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "transactions/test/TxTests.h"

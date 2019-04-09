@@ -7,7 +7,7 @@
 #include "main/Config.h"
 #include "util/Timer.h"
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"

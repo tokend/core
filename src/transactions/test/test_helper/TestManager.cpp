@@ -17,12 +17,10 @@ namespace stellar {
         TestManager::TestManager(Application &app, Database &db, LedgerManager &lm) :
                 mApp(app), mDB(db), mLm(lm), mSh(*(new StorageHelperImpl(db, nullptr)))
         {
-            mApp.stopCheckingPolicies();
         }
 
         TestManager::~TestManager()
         {
-            mApp.resumeCheckingPolicies();
         }
 
         TestManager::pointer TestManager::make(Application &app) {

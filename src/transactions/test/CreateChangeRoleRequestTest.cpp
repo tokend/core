@@ -4,7 +4,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include "transactions/test/test_helper/CreateChangeRoleRequestTestHelper.h"
 #include "test/test_marshaler.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountKYCHelper.h"
 #include "ledger/LedgerDeltaImpl.h"

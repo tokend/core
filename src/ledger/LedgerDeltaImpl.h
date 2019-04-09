@@ -101,9 +101,6 @@ class LedgerDeltaImpl : public LedgerDelta
     LedgerEntryChanges getChanges() const override;
     const LedgerEntryChanges& getAllChanges() const override;
 
-    // performs sanity checks against the local state
-    void checkAgainstDatabase(Application& app) const override;
-
     KeyEntryMap
     getState() const override
     {

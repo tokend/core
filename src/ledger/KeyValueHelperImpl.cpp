@@ -274,4 +274,10 @@ KeyValueHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+
+std::string const
+KeyValueHelperImpl::getTableName() const
+{
+    return "key_value_entry";
+}
 } // namespace stellar

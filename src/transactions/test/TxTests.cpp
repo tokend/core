@@ -6,7 +6,7 @@
 #include "main/Application.h"
 #include "invariant/Invariants.h"
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "test/test_marshaler.h"
 #include "TxTests.h"
 #include "ledger/LedgerDeltaImpl.h"

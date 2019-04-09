@@ -339,4 +339,10 @@ AccountHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+
+std::string const
+AccountHelperImpl::getTableName() const
+{
+    return mTableName;
+}
 }

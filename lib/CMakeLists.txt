@@ -190,7 +190,7 @@ set(SOURCE_LIBSOCI
 
 if(${CMAKE_COMPILER_IS_GNUCXX})
     set(COMMON_FLAGS_WARNINGS "-Wall -Wno-unused-command-line-argument -Wno-unused-local-typedef -Wno-unknown-warning-option")
-    set(COMMON_FLAGS_CXX_CONF "-std=c++14  -pthread -Wall -Wno-unused-command-line-argument -Wno-unused-local-typedef -Wno-unknown-warning-option -Werror=unused-result")
+    set(COMMON_FLAGS_CXX_CONF "-std=c++11  -pthread -Wall -Wno-unused-command-line-argument -Wno-unused-local-typedef -Wno-unknown-warning-option -Werror=unused-result")
 endif()
 
 

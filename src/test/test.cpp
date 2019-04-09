@@ -19,6 +19,7 @@
 #include <lib/util/format.h>
 #include <numeric>
 #include <time.h>
+#include "test/test_marshaler.h"
 
 #ifdef _WIN32
 #include <process.h>
@@ -52,17 +53,60 @@ static int gBaseInstance{0};
 
 bool force_sqlite = (std::getenv("STELLAR_FORCE_SQLITE") != nullptr);
 
+const char* db_conn_str = std::getenv("STELLAR_TX_TEST_DB");
+
+SecretKey getMasterKP()
+{
+    return getAccountSecret("master");
+}
+SecretKey getIssuanceKP()
+{
+    return getAccountSecret("issuance");
+}
+
+SecretKey getCommissionKP()
+{
+    return getAccountSecret("commission");
+}
+
+SecretKey getAccountSecret(const char* n)
+{
+    // stretch seed to 32 bytes
+    std::string seed(n);
+    while (seed.size() < 32)
+        seed += '.';
+    return SecretKey::fromSeed(seed);
+}
+
+int
+test(int argc, char* argv[], el::Level ll,
+     std::vector<std::string> const& metrics)
+{
+    gTestMetrics = metrics;
+    Config const& cfg = getTestConfig();
+    Logging::setFmt("<test>");
+    Logging::setLoggingToFile(cfg.LOG_FILE_PATH);
+    Logging::setLogLevel(ll, nullptr);
+    LOG(INFO) << "Testing stellar-core " << STELLAR_CORE_VERSION;
+    LOG(INFO) << "Logging to " << cfg.LOG_FILE_PATH;
+
+    ::testing::GTEST_FLAG(throw_on_failure) = true;
+    ::testing::InitGoogleMock(&argc, argv);
+
+    return Catch::Session().run(argc, argv);
+}
+
 Config const&
 getTestConfig(int instanceNumber, Config::TestDbMode mode)
 {
     instanceNumber += gBaseInstance;
     if (mode == Config::TESTDB_DEFAULT)
     {
-        // by default, tests should be run with in memory SQLITE as it's faster
+        // we don't maintain sqlite anymore, but if we will,
         // you can change this by enabling the appropriate line below
-        mode = Config::TESTDB_IN_MEMORY_SQLITE;
+        // mode = Config::TESTDB_IN_MEMORY_SQLITE;
         // mode = Config::TESTDB_ON_DISK_SQLITE;
-        // mode = Config::TESTDB_POSTGRESQL;
+        mode = Config::TESTDB_POSTGRESQL;
     }
     auto& cfgs = gTestCfg[mode];
     if (cfgs.size() <= static_cast<size_t>(instanceNumber))
@@ -101,6 +145,8 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         thisConfig.RUN_STANDALONE = true;
         thisConfig.FORCE_SCP = true;
 
+        thisConfig.masterID = getMasterKP().getPublicKey();
+
         thisConfig.PEER_PORT =
             static_cast<unsigned short>(DEFAULT_PEER_PORT + instanceNumber * 2);
         thisConfig.HTTP_PORT = static_cast<unsigned short>(
@@ -118,6 +164,10 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
         thisConfig.UNSAFE_QUORUM = true;
 
         thisConfig.NETWORK_PASSPHRASE = "(V) (;,,;) (V)";
+        thisConfig.BASE_EXCHANGE_NAME = "Base exchange";
+        thisConfig.TX_EXPIRATION_PERIOD = INT32_MAX / 2;
+        thisConfig.MAX_INVOICES_FOR_RECEIVER_ACCOUNT = 100;
+
 
         std::ostringstream dbname;
         switch (mode)
@@ -130,17 +180,27 @@ getTestConfig(int instanceNumber, Config::TestDbMode mode)
                    << ".db";
             break;
 #ifdef USE_POSTGRES
-        case Config::TESTDB_POSTGRESQL:
-            dbname << "postgresql://dbname=test" << instanceNumber;
-            break;
+            case Config::TESTDB_POSTGRESQL:
+                if (db_conn_str != nullptr)
+                {
+                    dbname << db_conn_str;
+                } else {
+                    std::string dbNumber = "";
+                    if (instanceNumber != 0)
+                        dbNumber = std::to_string(instanceNumber);
+                    dbname << "postgresql://dbname=stellar_test10" << dbNumber << " user=postgres password=password host=localhost";
+                }
+                break;
 #endif
-        default:
-            abort();
+            default:
+                abort();
         }
         thisConfig.DATABASE = SecretValue{dbname.str()};
         thisConfig.REPORT_METRICS = gTestMetrics;
         // disable maintenance
         thisConfig.AUTOMATIC_MAINTENANCE_COUNT = 0;
+
+        thisConfig.validateConfig();
     }
     return *cfgs[instanceNumber];
 }

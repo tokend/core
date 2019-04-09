@@ -58,8 +58,8 @@ LoadGenerator::createRootAccount()
 {
     if (!mRoot)
     {
-        auto rootTestAccount = TestAccount::createRoot(mApp);
-        mRoot = make_shared<TestAccount>(rootTestAccount);
+        /*auto rootTestAccount = TestAccount::createRoot(mApp);
+        mRoot = make_shared<TestAccount>(rootTestAccount);*/
         if (!loadAccount(mRoot, mApp))
         {
             CLOG(ERROR, "LoadGen") << "Could not retrieve root account!";

@@ -7,7 +7,7 @@
 #include "main/Application.h"
 #include "simulation/Simulation.h"
 
-#include "main/test.h"
+#include "test/test.h"
 #include "main/CommandHandler.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "overlay/OverlayManager.h"

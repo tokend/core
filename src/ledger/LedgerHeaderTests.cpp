@@ -4,7 +4,7 @@
 
 #include "main/Application.h"
 #include "util/Timer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/LedgerManager.h"
 #include "herder/LedgerCloseData.h"
 #include "xdrpp/marshal.h"

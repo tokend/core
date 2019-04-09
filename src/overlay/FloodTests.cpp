@@ -6,7 +6,7 @@
 #include "util/Timer.h"
 #include "TCPPeer.h"
 #include "main/Application.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "overlay/PeerDoor.h"
 #include "simulation/Simulation.h"
 #include "overlay/OverlayManager.h"

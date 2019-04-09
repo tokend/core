@@ -32,9 +32,6 @@ std::vector<LedgerEntry> generateValidLedgerEntries(size_t n);
 AccountEntry generateValidAccountEntry(size_t b = 3);
 std::vector<AccountEntry> generateValidAccountEntries(size_t n);
 
-OfferEntry generateValidOfferEntry(size_t b = 3);
-std::vector<OfferEntry> generateValidOfferEntries(size_t n);
-
 std::vector<LedgerHeaderHistoryEntry> generateLedgerHeadersForCheckpoint(
     LedgerHeaderHistoryEntry firstLedger, uint32_t freq,
     HistoryManager::LedgerVerificationStatus state =

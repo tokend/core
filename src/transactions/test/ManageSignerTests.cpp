@@ -3,7 +3,7 @@
 #include "ledger/LicenseHelper.h"
 #include "ledger/SignerRuleFrame.h"
 #include "ledger/StorageHelper.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "test/test_marshaler.h"
 #include "transactions/test/test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRoleTestHelper.h"

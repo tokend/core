@@ -258,14 +258,6 @@ class Application
     virtual LoadGenerator& getLoadGenerator() = 0;
 #endif
 
-    // Run a consistency check between the database and the bucketlist.
-    virtual void checkDB() = 0;
-	virtual void checkDBSync() = 0;
-
-
-    // perform maintenance tasks
-    virtual void maintenance() = 0;
-
     // Execute any administrative commands written in the Config.COMMANDS
     // variable of the config file. This permits scripting certain actions to
     // occur automatically at startup.
@@ -301,12 +293,6 @@ class Application
     virtual int64 getMaxInvoicesForReceiverAccount() const = 0;
     virtual int32 getKYCSuperAdminMask() const = 0;
     virtual size_t getSignerRuleIDsMaxCount() const = 0;
-
-    // Returns false if policies should not be checked,
-    // for sake of testing or otherwise.
-    virtual bool isCheckingPolicies() const = 0;
-    virtual void stopCheckingPolicies() = 0;
-    virtual void resumeCheckingPolicies() = 0;
 
     // Factory: create a new Application object bound to `clock`, with a local
     // copy made of `cfg`.

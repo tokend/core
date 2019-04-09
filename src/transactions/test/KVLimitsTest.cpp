@@ -3,7 +3,7 @@
 #include <ledger/AccountHelperLegacy.h>
 #include <ledger/FeeHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include "main/test.h"
+#include "test/test.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"

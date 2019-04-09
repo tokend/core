@@ -4,7 +4,7 @@
 
 #include "main/Application.h"
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "TxTests.h"

@@ -7,7 +7,7 @@
 #include "main/Application.h"
 #include "util/Timer.h"
 #include "main/Config.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "ledger/LedgerDelta.h"
 #include "test/test_marshaler.h"

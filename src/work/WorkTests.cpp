@@ -4,7 +4,7 @@
 
 #include "main/Application.h"
 #include "work/WorkManager.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "process/ProcessManager.h"
 
 #include <xdrpp/autocheck.h>

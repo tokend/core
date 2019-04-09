@@ -16,14 +16,23 @@ class Application;
 class Config;
 struct CommandLineArgs;
 
+int test(int argc, char* argv[], el::Level logLevel,
+         std::vector<std::string> const& metrics);
+
+SecretKey getAccountSecret(const char* n);
+
+SecretKey getMasterKP();
+SecretKey getIssuanceKP();
+SecretKey getCommissionKP();
+
+extern bool force_sqlite;
+
 Config const& getTestConfig(int instanceNumber = 0,
                             Config::TestDbMode mode = Config::TESTDB_DEFAULT);
 
 int test(int argc, char* const* argv, el::Level logLevel,
          std::vector<std::string> const& metrics);
 int runTest(CommandLineArgs const& args);
-
-extern bool force_sqlite;
 
 void for_versions_to(uint32 to, Application& app,
                      std::function<void(void)> const& f);

@@ -43,9 +43,6 @@ class LedgerDelta
     virtual LedgerEntryChanges getChanges() const = 0;
     virtual const LedgerEntryChanges& getAllChanges() const = 0;
 
-    // performs sanity checks against the local state
-    virtual void checkAgainstDatabase(Application& app) const = 0;
-
     virtual KeyEntryMap getState() const = 0;
 
     virtual bool isStateActive() const = 0;
