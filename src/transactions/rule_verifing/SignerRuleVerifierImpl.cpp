@@ -126,7 +126,7 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                     return isTypeMatches(expectedDetails.createSale().type,
                                          actualDetails.createSale().type);
                 case ReviewableRequestType::CREATE_POLL:
-                    return isTypeMatches(expectedDetails.createPoll().permissionType,
+                    return isType32Matches(expectedDetails.createPoll().permissionType,
                                          actualDetails.createPoll().permissionType);
                 case ReviewableRequestType::CREATE_ISSUANCE:
                     return isTypeMatches(expectedDetails.createIssuance().assetType,
@@ -181,12 +181,12 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
             return isStringMatches(requiredResource.keyValue().keyPrefix,
                                    actualResource.keyValue().keyPrefix);
         case LedgerEntryType::POLL:
-            return isTypeMatches(requiredResource.poll().permissionType,
+            return isType32Matches(requiredResource.poll().permissionType,
                                  actualResource.poll().permissionType) &&
                    isIDMatches(requiredResource.poll().pollID,
                                actualResource.poll().pollID);
         case LedgerEntryType::VOTE:
-            return isTypeMatches(requiredResource.vote().permissionType,
+            return isType32Matches(requiredResource.vote().permissionType,
                                  actualResource.vote().permissionType) &&
                    isIDMatches(requiredResource.vote().pollID,
                                actualResource.vote().pollID);

@@ -48,7 +48,7 @@ TEST_CASE("Poll", "[tx][voting]")
     // to create poll
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_POLL);
-    resource.reviewableRequest().details.createPoll().permissionType = pollPermissionType;
+    resource.reviewableRequest().details.createPoll().permissionType = UINT32_MAX;
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
             0, resource, AccountRuleAction::CREATE, false);
     auto createPollRuleID = manageAccountRuleTestHelper.applyTx(
@@ -60,7 +60,7 @@ TEST_CASE("Poll", "[tx][voting]")
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
     //to  create poll
     resource.type(LedgerEntryType::VOTE);
-    resource.vote().permissionType = pollPermissionType;
+    resource.vote().permissionType = UINT32_MAX;
     resource.vote().pollID = UINT64_MAX;
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
             0, resource, AccountRuleAction::CREATE, false);
@@ -72,7 +72,7 @@ TEST_CASE("Poll", "[tx][voting]")
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
     //to  close poll
     resource.type(LedgerEntryType::POLL);
-    resource.poll().permissionType = pollPermissionType;
+    resource.poll().permissionType = UINT32_MAX;
     resource.poll().pollID = UINT64_MAX;
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
             0, resource, AccountRuleAction::CLOSE, false);
