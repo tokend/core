@@ -19,5 +19,8 @@ public:
 
     virtual bool
     exists(uint64_t id) = 0;
+
+    virtual void
+    permissionTypeMigration() = 0;
 };
 }

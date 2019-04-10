@@ -30,6 +30,7 @@
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
+#include "ledger/PollHelper.h"
 
 extern "C" void register_factory_sqlite3();
 
@@ -61,10 +62,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CONTRACTS = 11,
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 12,
     ADD_ATOMIC_SWAP_BID = 13,
-    ADD_ASSET_CUSTOM_PRECISION = 14
+    ADD_ASSET_CUSTOM_PRECISION = 14,
+    POLL_PERMISSION_TYPE_MIGRATION = 15
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::POLL_PERMISSION_TYPE_MIGRATION;
 
 static void
 setSerializable(soci::session& sess)
@@ -120,6 +122,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
     clearPreparedStatementCache();
 
     StorageHelperImpl storageHelper(*this, nullptr);
+    StorageHelper& sh = storageHelper;
     switch (vers) {
         case databaseSchemaVersion::DROP_SCP:
             Herder::dropAll(*this);
@@ -161,6 +164,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
+            break;
+        case databaseSchemaVersion::POLL_PERMISSION_TYPE_MIGRATION:
+            sh.getPollHelper().permissionTypeMigration();
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");

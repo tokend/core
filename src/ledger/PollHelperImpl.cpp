@@ -47,6 +47,15 @@ PollHelperImpl::dropAll()
 }
 
 void
+PollHelperImpl::permissionTypeMigration()
+{
+    Database& db = getDatabase();
+
+    db.getSession() << "ALTER TABLE polls ALTER permission_type TYPE NUMERIC(10,0);";
+    db.getSession() << "ALTER TABLE polls ALTER number_of_choices TYPE NUMERIC(10,0);";
+}
+
+void
 PollHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
 {
     auto pollFrame = std::make_shared<PollFrame>(entry);
@@ -62,6 +71,8 @@ PollHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     int voteConfirmationRequired = pollEntry.voteConfirmationRequired ? 1 : 0;
     auto version = static_cast<int32_t>(pollEntry.ext.v());
     auto type = static_cast<int32_t>(pollEntry.data.type());
+    auto permissionType = static_cast<int64_t>(pollEntry.permissionType);
+    auto numberOfChoices = static_cast<int64_t>(pollEntry.numberOfChoices);
     auto specBytes = xdr::xdr_to_opaque(pollEntry.data);
     std::string specStr = bn::encode_b64(specBytes);
 
@@ -88,8 +99,8 @@ PollHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     auto& st = prep.statement();
 
     st.exchange(use(pollEntry.id, "id"));
-    st.exchange(use(pollEntry.permissionType, "p_t"));
-    st.exchange(use(pollEntry.numberOfChoices, "n_c"));
+    st.exchange(use(permissionType, "p_t"));
+    st.exchange(use(numberOfChoices, "n_c"));
     st.exchange(use(type, "t"));
     st.exchange(use(specStr, "data"));
     st.exchange(use(pollEntry.startTime, "s_t"));
@@ -286,12 +297,14 @@ PollHelperImpl::load(StatementContext& prep,
         std::string specStr;
         int32_t version;
         int32_t type;
+        int64_t permissionType;
+        int64_t numberOfChoices;
         int32_t voteConfirmationRequired;
 
         auto& st = prep.statement();
         st.exchange(into(pollEntry.id));
-        st.exchange(into(pollEntry.permissionType));
-        st.exchange(into(pollEntry.numberOfChoices));
+        st.exchange(into(permissionType));
+        st.exchange(into(numberOfChoices));
         st.exchange(into(type));
         st.exchange(into(specStr));
         st.exchange(into(pollEntry.startTime));
@@ -315,6 +328,8 @@ PollHelperImpl::load(StatementContext& prep,
             unmarshaler.done();
 
             pollEntry.ownerID = PubKeyUtils::fromStrKey(ownerIDStr);
+            pollEntry.permissionType = static_cast<uint32_t>(permissionType);
+            pollEntry.numberOfChoices = static_cast<uint32_t>(numberOfChoices);
             pollEntry.resultProviderID = PubKeyUtils::fromStrKey(resultProviderIDStr);
             pollEntry.voteConfirmationRequired = voteConfirmationRequired > 0;
             pollEntry.ext.v(static_cast<LedgerVersion>(version));
