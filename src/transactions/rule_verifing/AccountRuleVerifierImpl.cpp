@@ -114,7 +114,7 @@ AccountRuleVerifierImpl::isResourceMatches(
                     return isTypeMatches(expectedDetails.createSale().type,
                                          actualDetails.createSale().type);
                 case ReviewableRequestType::CREATE_POLL:
-                    return isTypeMatches(expectedDetails.createPoll().permissionType,
+                    return isType32Matches(expectedDetails.createPoll().permissionType,
                                          actualDetails.createPoll().permissionType);
                 default:
                     return true;
@@ -150,12 +150,12 @@ AccountRuleVerifierImpl::isResourceMatches(
             return isStringMatches(conditionResource.keyValue().keyPrefix,
                                    actualResource.keyValue().keyPrefix);
         case LedgerEntryType::POLL:
-            return isTypeMatches(conditionResource.poll().permissionType,
+            return isType32Matches(conditionResource.poll().permissionType,
                                  actualResource.poll().permissionType) &&
                    isIDMatches(conditionResource.poll().pollID,
                                actualResource.poll().pollID);
         case LedgerEntryType::VOTE:
-            return isTypeMatches(conditionResource.vote().permissionType,
+            return isType32Matches(conditionResource.vote().permissionType,
                                  actualResource.vote().permissionType) &&
                    isIDMatches(conditionResource.vote().pollID,
                                actualResource.vote().pollID);

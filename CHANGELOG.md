@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Rule checking for voting (by permissionType equaled UINT32)
+
 ## 3.1.0-rc.0
 
 ### Added
