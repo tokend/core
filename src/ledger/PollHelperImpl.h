@@ -16,6 +16,9 @@ private:
     void
     dropAll() override;
 
+    void
+    permissionTypeMigration() override;
+
     Database&
     getDatabase() override;
 
