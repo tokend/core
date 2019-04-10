@@ -106,7 +106,7 @@ Logging::init()
     // el::Loggers::addFlag(el::LoggingFlag::HierarchicalLogging);
     el::Loggers::addFlag(el::LoggingFlag::DisableApplicationAbortOnFatalLog);
 
-    for (auto const& logger : kLoggers)
+    for (auto logger : kLoggers)
     {
         el::Loggers::getLogger(logger);
     }

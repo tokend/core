@@ -27,7 +27,6 @@ set(SOURCE_LIB3RDPARTY
         util/cpptoml.h
         util/crc16.cpp
         util/crc16.h
-        util/easylogging++.cc
         util/easylogging++.h
         util/format.cc
         util/format.h

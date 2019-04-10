@@ -33,7 +33,7 @@ class Upgrades
             mUpgradeTime = cfg.TESTING_UPGRADE_DATETIME;
             mProtocolVersion =make_optional<uint32>(cfg.LEDGER_PROTOCOL_VERSION);
             mTxExpirationPeriod = make_optional<uint32>(cfg.TX_EXPIRATION_PERIOD);
-            mMaxTxSize =make_optional<uint32>(cfg.TESTING_UPGRADE_MAX_TX_PER_LEDGER);
+            mMaxTxSize =make_optional<uint32>(cfg.DESIRED_MAX_TX_PER_LEDGER);
         }
         VirtualClock::time_point mUpgradeTime;
         optional<uint32> mProtocolVersion;

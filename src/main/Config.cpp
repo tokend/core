@@ -70,7 +70,7 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     LOG_FILE_PATH = "stellar-core.%datetime{%Y.%M.%d-%H:%m:%s}.log";
     BUCKET_DIR_PATH = "buckets";
 
-    TESTING_UPGRADE_MAX_TX_PER_LEDGER = 50;
+    DESIRED_MAX_TX_PER_LEDGER = 50;
 
     HTTP_PORT = DEFAULT_PEER_PORT + 1;
     PUBLIC_HTTP_PORT = false;
@@ -313,6 +313,10 @@ Config::load(std::string const& filename)
             {
                 PUBLIC_HTTP_PORT = readBool(item);
             }
+            else if (item.first == "DESIRED_MAX_TX_PER_LEDGER")
+            {
+                DESIRED_MAX_TX_PER_LEDGER = readInt<uint32_t>(item, 1, UINT32_MAX);
+            }
             else if (item.first == "FAILURE_SAFETY")
             {
                 FAILURE_SAFETY = readInt<int32_t>(item, -1, INT32_MAX - 1);
@@ -542,7 +546,7 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "TX_EXPIRATION_PERIOD")
             {
-                TX_EXPIRATION_PERIOD = readInt<uint32_t>(item, 0, 100);
+                TX_EXPIRATION_PERIOD = readInt<uint32_t>(item, 0);
             }
             else if (item.first == "MAX_INVOICES_FOR_RECEIVER_ACCOUNT")
             {
@@ -552,7 +556,7 @@ Config::load(std::string const& filename)
                 }
                 MAX_INVOICES_FOR_RECEIVER_ACCOUNT = item.second->as<int64_t>()->value();
             }
-            else if (item.first == "ADMIN_ACCOUNT_ID")
+            else if (item.first == "MASTER_ACCOUNT_ID")
 			{
                 masterID = PubKeyUtils::fromStrKey(readString(item));
 			}

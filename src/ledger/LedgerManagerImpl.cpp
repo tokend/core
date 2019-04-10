@@ -389,7 +389,7 @@ LedgerManagerImpl::loadLastKnownLedger(
             throw std::runtime_error("Could not load ledger from database");
         }
 
-        mCurrentLedger->getHeader() = *currentLedger;
+        mCurrentLedger = std::make_shared<LedgerHeaderFrameImpl>(*currentLedger);
 
         if (handler)
         {
