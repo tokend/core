@@ -2,12 +2,17 @@
 
 ## Unreleased
 
+## 3.1.2
+
+### Fixed
+
+* Writing poll permission type to db which more then int32_max
+
 ## 3.1.1
 
 ### Fixed
 
 * Rule checking for voting (by permissionType equaled UINT32)
-* Writing poll permission type to db which more then int32_max
 
 ## 3.1.0
 
