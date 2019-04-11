@@ -546,7 +546,7 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "TX_EXPIRATION_PERIOD")
             {
-                TX_EXPIRATION_PERIOD = readInt<uint32_t>(item, 0);
+                TX_EXPIRATION_PERIOD = readInt<int64_t>(item, UINT32_MAX);
             }
             else if (item.first == "MAX_INVOICES_FOR_RECEIVER_ACCOUNT")
             {

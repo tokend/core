@@ -31,7 +31,7 @@
 
 #ifdef BUILD_TESTS
 #include "test/TestAccount.h"
-#include "test/TxTests.h"
+#include "transactions/test/TxTests.h"
 #endif
 #include <regex>
 
@@ -925,14 +925,14 @@ CommandHandler::testAcc(std::string const& params, std::string& retStr)
         SecretKey key;
         if (accName->second == "root")
         {
-            key = getRoot(mApp.getNetworkID());
+            //key = getRoot(mApp.getNetworkID());
         }
         else
         {
             key = getAccount(accName->second.c_str());
         }
 
-        LedgerTxn ltx(mApp.getLedgerTxnRoot());
+       /* LedgerTxn ltx(mApp.getLedgerTxnRoot());
         auto acc = stellar::loadAccount(ltx, key.getPublicKey());
         if (acc)
         {
@@ -941,7 +941,7 @@ CommandHandler::testAcc(std::string const& params, std::string& retStr)
             root["id"] = KeyUtils::toStrKey(ae.accountID);
             root["balance"] = (Json::Int64)ae.balance;
             root["seqnum"] = (Json::UInt64)ae.seqNum;
-        }
+        }*/
     }
     retStr = root.toStyledString();
 }
@@ -966,13 +966,13 @@ CommandHandler::testTx(std::string const& params, std::string& retStr)
         Hash const& networkID = mApp.getNetworkID();
 
         auto toAccount =
-            to->second == "root"
+            /*to->second == "root"
                 ? TestAccount{mApp, getRoot(networkID)}
-                : TestAccount{mApp, getAccount(to->second.c_str())};
+                :*/ TestAccount{mApp, getAccount(to->second.c_str())};
         auto fromAccount =
-            from->second == "root"
+            /*from->second == "root"
                 ? TestAccount{mApp, getRoot(networkID)}
-                : TestAccount{mApp, getAccount(from->second.c_str())};
+                :*/ TestAccount{mApp, getAccount(from->second.c_str())};
 
         uint64_t paymentAmount = 0;
         std::istringstream iss(amount->second);
@@ -980,18 +980,18 @@ CommandHandler::testTx(std::string const& params, std::string& retStr)
 
         root["from_name"] = from->second;
         root["to_name"] = to->second;
-        root["from_id"] = KeyUtils::toStrKey(fromAccount.getPublicKey());
-        root["to_id"] = KeyUtils::toStrKey(toAccount.getPublicKey());
+//        root["from_id"] = KeyUtils::toStrKey(fromAccount.getPublicKey());
+//        root["to_id"] = KeyUtils::toStrKey(toAccount.getPublicKey());
         root["amount"] = (Json::UInt64)paymentAmount;
 
         TransactionFramePtr txFrame;
         if (create != retMap.end() && create->second == "true")
         {
-            txFrame = fromAccount.tx({createAccount(toAccount, paymentAmount)});
+            //txFrame = fromAccount.tx({/*createAccount(toAccount, paymentAmount)*/});
         }
         else
         {
-            txFrame = fromAccount.tx({payment(toAccount, paymentAmount)});
+            //txFrame = fromAccount.tx({/*payment(toAccount, paymentAmount)*/});
         }
 
         switch (mApp.getHerder().recvTransaction(txFrame))

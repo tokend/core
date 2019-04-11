@@ -818,7 +818,7 @@ handleCommandLine(int argc, char* const* argv)
 #ifdef BUILD_TESTS
          {"fuzz", "run a single fuzz input and exit", runFuzz},
          {"gen-fuzz", "generate a random fuzzer input file", runGenFuzz},
-         {"test", "execute test suite", runTest},
+         //{"test", "execute test suite", runTest},
 #endif
          {"write-quorum", "print a quorum set graph from history",
           runWriteQuorum},

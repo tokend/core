@@ -120,8 +120,9 @@ public:
     virtual bool manualClose() override;
 
 #ifdef BUILD_TESTS
-    virtual void generateLoad(uint32_t nAccounts, uint32_t nTxs,
-                              uint32_t txRate, bool autoRate) override;
+    virtual void generateLoad(bool isCreate, uint32_t nAccounts,
+                              uint32_t offset, uint32_t nTxs, uint32_t txRate,
+                              uint32_t batchSize, bool autoRate) override;
 
     virtual LoadGenerator &getLoadGenerator() override;
 #endif

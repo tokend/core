@@ -340,6 +340,7 @@ DatabaseImpl::initialize()
     mApp.getBucketManager().dropAll();
     HerderPersistence::dropAll(*this);
     BanManager::dropAll(*this);
+    Upgrades::dropAll(*this);
     putSchemaVersion(1);
 }
 
