@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* Calculating statistics for payment
+
 ## 3.1.2
 
 ### Fixed
