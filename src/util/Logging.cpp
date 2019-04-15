@@ -125,6 +125,14 @@ Logging::setLoggingToFile(std::string const& filename)
     el::Loggers::reconfigureAllLoggers(gDefaultConf);
 }
 
+void Logging::setLoggingToSentry(std::string const& dsn, el::Level minLogLevelToSend) {
+    el::Helpers::installLogDispatchCallback<SentryLogCallback>("sentry-cb");
+
+    auto sentryCallback = el::Helpers::logDispatchCallback<SentryLogCallback>("sentry-cb");
+    sentryCallback->setEnabled(true);
+    sentryCallback->setClient(dsn, minLogLevelToSend);
+}
+
 el::Level
 Logging::getLogLevel(std::string const& partition)
 {
@@ -311,5 +319,31 @@ Logging::rotate()
                                        el::ConfigurationType::MaxLogFileSize,
                                        std::to_string(prevMaxFileSize));
     }
+}
+
+SentryClient::send(const std::string &msg) {
+    mCrowClient->capture_message(msg);
+}
+
+void
+SentryLogCallback::setClient(std::string sentryDSN, el::Level minLevel) {
+    mClient = std::make_unique<SentryClient>(sentryDSN);
+    mMinimalLevelToSend = minLevel;
+}
+
+void SentryLogCallback::handle(const el::LogDispatchData *data) noexcept {
+    mData = data;
+
+    if (data->logMessage()->level() > mMinimalLevelToSend) {
+        return;
+    }
+
+    dispatch(mData->logMessage()->logger()->logBuilder()->build(
+            mData->logMessage(),
+            mData->dispatchAction() == el::base::DispatchAction::NormalLog));
+}
+
+void SentryLogCallback::dispatch(el::base::type::string_t&& logLine) {
+    mClient->send(logLine);
 }
 }

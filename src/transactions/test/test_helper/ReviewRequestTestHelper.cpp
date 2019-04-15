@@ -184,7 +184,19 @@ ReviewRequestResult ReviewRequestHelper::applyReviewRequestTxWithTasks(txtest::A
 
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, mTestManager->getDB());
     REQUIRE(!!request);
-    return applyReviewRequestTxWithTasks(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult, tasksToAdd, tasksToRemove);
+    auto checker = ReviewChecker(mTestManager);
+    return applyReviewRequestTxWithTasks(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult, checker, tasksToAdd, tasksToRemove);
+}
+
+ReviewRequestResult
+ReviewRequestHelper::applyReviewRequestTx(Account& source, uint64_t requestID, Hash requestHash,
+                                          ReviewableRequestType requestType,
+                                          ReviewRequestOpAction action, std::string rejectReason,
+                                          ReviewRequestResultCode expectedResult)
+{
+    auto checker = ReviewChecker(mTestManager);
+    return applyReviewRequestTx(source, requestID, requestHash, requestType, action, rejectReason, expectedResult,
+                                                     checker);
 }
 
 ReviewRequestResult ReviewRequestHelper::applyReviewRequestTxWithTasks(txtest::Account &source, uint64_t requestID,

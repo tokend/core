@@ -91,6 +91,7 @@ public:
 
     static longstring makeAmlAlertCreateTasksKey();
 
+    static longstring makeCreatePollKey(std::string type);
 
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
@@ -112,5 +113,6 @@ public:
     static char const * contractCreateTasks;
     static char const * amlAlertCreateTasks;
     static char const * limitsUpdateTasks;
+    static char const * createPollTasks;
 };
 }

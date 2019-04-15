@@ -27,6 +27,8 @@ class MockKeyValueHelper : public KeyValueHelper
         loadKeyValues,
         void(StatementContext& prep,
              std::function<void(LedgerEntry const&)> keyValueProcessor));
+    MOCK_METHOD3(loadTasks,
+                 bool(uint32_t &allTasks, std::vector<std::string> keys, uint32_t *passedTasks));
 };
 
 } // namespace stellar

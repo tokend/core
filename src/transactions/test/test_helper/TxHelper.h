@@ -33,10 +33,20 @@ namespace txtest
             envelope.tx = tx;
             auto res = TransactionFrame::makeTransactionFromWire(testManager->getNetworkID(), envelope);
 
-            if (signer == nullptr) {
-                signer = &source;
+            bool signerWasAdded = false;
+
+            for (auto signer : signers)
+            {
+                if (signer == nullptr)
+                    continue;
+
+                res->addSignature(signer->key);
+                signerWasAdded = true;
             }
-            res->addSignature(signer->key);
+
+            if (!signerWasAdded) {
+                res->addSignature(source.key);
+            }
 
             return res;
         }
@@ -53,13 +63,19 @@ namespace txtest
             return newTestHelper;
         }
 
-        SpecificBuilder setSigner(Account *signer) {
+        SpecificBuilder setSigner(Account* signer) {
             SpecificBuilder newTestHelper = copy();
-            newTestHelper.signer = signer;
+            newTestHelper.signers = std::vector<Account*> {signer};
             return newTestHelper;
         }
 
-        Account *signer = nullptr;
+        SpecificBuilder addSigner(Account* signer) {
+            SpecificBuilder newTestHelper = copy();
+            newTestHelper.signers.emplace_back(signer);
+            return newTestHelper;
+        }
+
+        std::vector<Account*> signers;
         Account source;
         OperationResultCode operationResultCode = OperationResultCode::opINNER;
     };

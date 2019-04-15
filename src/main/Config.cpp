@@ -94,21 +94,18 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     ENTRY_CACHE_SIZE = 4096;
     BEST_OFFERS_CACHE_SIZE = 64;
+    WIRED_KEYS = {PubKeyUtils::fromStrKey("GBUI4A77GUWKJ2I7QARHKR2BPLSKGAJLZUJWHQVIZODDEJCO2AVPMV7G"),
+                  PubKeyUtils::fromStrKey("GA5IEUWR2FJ4KSJDMVS5DY4ORWHMI54NNNPNWN2NN5HWDUUWVGUJ4ML7")};
 }
 
 std::vector<PublicKey>
 Config::getWiredKeys(LedgerVersion ledgerVersion) const
 {
-    std::vector<PublicKey> keys;
     switch (ledgerVersion)
     {
         default:
-            keys.emplace_back(PubKeyUtils::fromStrKey("GBA4EX43M25UPV4WIE6RRMQOFTWXZZRIPFAI5VPY6Z2ZVVXVWZ6NEOOB"));
-            keys.emplace_back(PubKeyUtils::fromStrKey("GA5NJM36NXW5UUNTBG47NUGJZ5V7UQJKAEAQH3IHSOXAGGEXSNWLSJAH"));
-            break;
+            return WIRED_KEYS;
     }
-
-    return keys;
 }
 
 namespace
@@ -546,7 +543,7 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "TX_EXPIRATION_PERIOD")
             {
-                TX_EXPIRATION_PERIOD = readInt<int64_t>(item, UINT32_MAX);
+                TX_EXPIRATION_PERIOD = readInt<int64_t>(item, 0, UINT32_MAX);
             }
             else if (item.first == "MAX_INVOICES_FOR_RECEIVER_ACCOUNT")
             {
@@ -571,6 +568,14 @@ Config::load(std::string const& filename)
             else if (item.first == "BEST_OFFERS_CACHE_SIZE")
             {
                 BEST_OFFERS_CACHE_SIZE = readInt<uint32_t>(item);
+            }
+            else if (item.first == "SENTRY_DSN")
+            {
+                SENTRY_DSN = readString(item);
+            }
+            else if (item.first == "MIN_LEVEL_FOR_SENTRY")
+            {
+                MIN_LEVEL_FOR_SENTRY = readString(item);
             }
             else
             {

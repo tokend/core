@@ -61,10 +61,9 @@ SignerHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     }
     else
     {
-        sql = "UPDATE signers SET account_id = :acc, public_key = :pub, "
-              " weight = :w, role_id = :r, identity = :ide, details = :det, "
-              " version = :v, lastmodified = :lm "
-              "WHERE public_key = :pub";
+        sql = "UPDATE signers SET weight = :w, role_id = :r, identity = :ide, "
+              " details = :det, version = :v, lastmodified = :lm "
+              "WHERE account_id = :acc AND public_key = :pub";
     }
 
     Database& db = getDatabase();

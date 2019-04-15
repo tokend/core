@@ -209,6 +209,43 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         }
     }
 
+    SECTION("Use one signer for two accounts")
+    {
+        // create new account
+        auto accountKey = SecretKey::random();
+        auto account = Account{accountKey, Salt(5)};
+        createAccountTestHelper.applyTx(CreateAccountTestBuilder()
+                                                .setSource(master)
+                                                .setToPublicKey(accountKey.getPublicKey())
+                                                .setRoleID(1)
+                                                .addBasicSigner());
+
+        // create signer
+        auto signerKey = SecretKey::random();
+        auto signer = Account{signerKey, Salt(6)};
+        auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                signerKey.getPublicKey(), SignerRuleFrame::threshold, 200, 1);
+        manageSignerTestHelper.applyTx(master, createSignerOp);
+        manageSignerTestHelper.applyTx(account, createSignerOp);
+
+        SECTION("Update signer")
+        {
+            auto updateSignerOp = manageSignerTestHelper.buildUpdateOp(
+                    signerKey.getPublicKey(), SignerRuleFrame::threshold, 210, 1);
+
+            manageSignerTestHelper.applyTx(master, updateSignerOp);
+            manageSignerTestHelper.applyTx(account, updateSignerOp);
+
+            updateSignerOp = manageSignerTestHelper.buildUpdateOp(
+                    signerKey.getPublicKey(), SignerRuleFrame::threshold, 210, 210);
+
+            manageSignerTestHelper.applyTx(account, updateSignerOp,
+                                           ManageSignerResultCode::NO_SUCH_ROLE,
+                                           OperationResultCode::opINNER,
+                                           TransactionResultCode::txFAILED);
+        }
+    }
+
     SECTION("Create owner")
     {
         // create signer

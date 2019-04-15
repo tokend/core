@@ -53,10 +53,7 @@ public:
 class ReviewRequestHelper : public TxHelper
 {
 protected:
-
     bool requestMustBeDeletedAfterApproval;
-    ReviewRequestHelper(TestManager::pointer testManager);
-
 
     ReviewRequestResult applyReviewRequestTx(Account& source,
                                              uint64_t requestID,
@@ -80,6 +77,7 @@ protected:
                                              uint32_t *tasksToRemove= nullptr);
 
 public:
+    ReviewRequestHelper(TestManager::pointer testManager);
 
     virtual ReviewRequestResult applyReviewRequestTx(Account& source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason,
         ReviewRequestResultCode expectedResult = ReviewRequestResultCode::SUCCESS);
@@ -91,7 +89,7 @@ public:
         ReviewableRequestType requestType,
         ReviewRequestOpAction action, std::string rejectReason,
         ReviewRequestResultCode expectedResult = ReviewRequestResultCode::
-            SUCCESS) = 0;
+            SUCCESS);
 
     virtual ReviewRequestResult applyReviewRequestTxWithTasks(
         Account& source, uint64_t requestID, Hash requestHash,

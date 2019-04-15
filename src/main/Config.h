@@ -245,6 +245,11 @@ class Config : public std::enable_shared_from_this<Config>
     size_t ENTRY_CACHE_SIZE;
     size_t BEST_OFFERS_CACHE_SIZE;
 
+    std::string SENTRY_DSN;
+    std::string MIN_LEVEL_FOR_SENTRY = "warning";
+
+    std::vector<PublicKey> WIRED_KEYS;
+
     Config();
 
     void load(std::string const& filename);

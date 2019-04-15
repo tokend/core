@@ -25,10 +25,16 @@ protected:
     isTypeMatches(uint64_t const expectedType, uint64_t const actualType) const;
 
     bool
+    isType32Matches(uint32_t const expectedType, uint32_t const actualType) const;
+
+    bool
     isIDMatches(uint64_t const expectedID, uint64_t const actualID) const;
 
     bool
     isNumberMatches(uint64_t const expectedNum, uint64_t const actualNum) const;
+
+    bool
+    isNumber32Matches(uint32_t const expectedNum, uint32_t const actualNum) const;
 
     bool
     isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const;

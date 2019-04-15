@@ -113,6 +113,9 @@ AccountRuleVerifierImpl::isResourceMatches(
                 case ReviewableRequestType::CREATE_SALE:
                     return isTypeMatches(expectedDetails.createSale().type,
                                          actualDetails.createSale().type);
+                case ReviewableRequestType::CREATE_POLL:
+                    return isType32Matches(expectedDetails.createPoll().permissionType,
+                                         actualDetails.createPoll().permissionType);
                 default:
                     return true;
             }
@@ -141,11 +144,21 @@ AccountRuleVerifierImpl::isResourceMatches(
         case LedgerEntryType::SALE:
             return isTypeMatches(conditionResource.sale().saleType,
                                  actualResource.sale().saleType) &&
-                   isIDMatches(conditionResource.sale().saleType,
-                               actualResource.sale().saleType);
+                   isIDMatches(conditionResource.sale().saleID,
+                               actualResource.sale().saleID);
         case LedgerEntryType::KEY_VALUE:
             return isStringMatches(conditionResource.keyValue().keyPrefix,
                                    actualResource.keyValue().keyPrefix);
+        case LedgerEntryType::POLL:
+            return isType32Matches(conditionResource.poll().permissionType,
+                                 actualResource.poll().permissionType) &&
+                   isIDMatches(conditionResource.poll().pollID,
+                               actualResource.poll().pollID);
+        case LedgerEntryType::VOTE:
+            return isType32Matches(conditionResource.vote().permissionType,
+                                 actualResource.vote().permissionType) &&
+                   isIDMatches(conditionResource.vote().pollID,
+                               actualResource.vote().pollID);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -160,6 +173,8 @@ AccountRuleVerifierImpl::isResourceMatches(
         case LedgerEntryType::LIMITS_V2:
         case LedgerEntryType::ASSET_PAIR:
         case LedgerEntryType::TRANSACTION:
+        case LedgerEntryType::LICENSE:
+        case LedgerEntryType::STAMP:
             return true;
         default:
             return false;

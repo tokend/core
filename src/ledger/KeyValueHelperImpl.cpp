@@ -280,4 +280,27 @@ KeyValueHelperImpl::getTableName() const
 {
     return "key_value_entry";
 }
+
+bool
+KeyValueHelperImpl::loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
+                              uint32_t* passedTasks)
+{
+    if (passedTasks != nullptr)
+    {
+        allTasks = *passedTasks;
+        return true;
+    }
+
+    for (auto& key : keys)
+    {
+        auto keyValueFrame = loadKeyValue(key);
+        if (keyValueFrame)
+        {
+            allTasks = keyValueFrame->mustGetUint32Value();
+            return true;
+        }
+    }
+
+    return false;
+}
 } // namespace stellar

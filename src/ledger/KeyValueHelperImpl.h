@@ -42,7 +42,10 @@ class KeyValueHelperImpl : public KeyValueHelper, NonCopyable
         StatementContext& prep,
         std::function<void(LedgerEntry const&)> keyValueProcessor) override;
 
-  private:
+    bool
+    loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
+              uint32_t* passedTasks = nullptr) override;
+
     void storeUpdateHelper(LedgerDelta* delta, Database& db, bool insert,
                            LedgerEntry const& entry);
 

@@ -194,6 +194,8 @@ namespace stellar
         { LedgerEntryType::SIGNER_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_RULE) },
         { LedgerEntryType::SIGNER_ROLE, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_ROLE) },
         { LedgerEntryType::STAMP, EntryHelperLegacyImpl::Instance(LedgerEntryType::STAMP) },
-        { LedgerEntryType::LICENSE, EntryHelperLegacyImpl::Instance(LedgerEntryType::LICENSE) }
+        { LedgerEntryType::LICENSE, EntryHelperLegacyImpl::Instance(LedgerEntryType::LICENSE) },
+        { LedgerEntryType::VOTE, EntryHelperLegacyImpl::Instance(LedgerEntryType::VOTE) },
+        { LedgerEntryType::POLL, EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL) }
 	};
 }

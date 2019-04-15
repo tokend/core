@@ -19,7 +19,10 @@ typedef std::unique_ptr<Application> appPtr;
 
 TEST_CASE("license", "[tx][license]")
 {
-    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
+    auto wiredKey = SecretKey::random();
+
+    Config cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
+    cfg.WIRED_KEYS.emplace_back(wiredKey.getPublicKey());
     VirtualClock clock;
     auto const appPtr = Application::create(clock, cfg);
     auto& app = *appPtr;
@@ -32,8 +35,6 @@ TEST_CASE("license", "[tx][license]")
     StampTestHelper stampTestHelper(testManager);
     LicenseTestHelper licenseTestHelper(testManager);
     auto root = Account{getRoot(), Salt(0)};
-
-    auto wiredKey = SecretKey::fromStrKeySeed("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4");
 
     SECTION("Success")
     {
