@@ -49,6 +49,9 @@ private:
     uint64_t
     countObjects() override;
 
+    const std::string
+    getTableName() const override;
+
     PollFrame::pointer
     loadPoll(uint64_t id) override;
 

@@ -365,4 +365,10 @@ PollHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+
+std::string const
+PollHelperImpl::getTableName() const
+{
+    return "polls";
+}
 }

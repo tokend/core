@@ -46,13 +46,14 @@ storeInDatabase(Database& db, LedgerHeader const& header)
 
     std::string headerEncoded;
     headerEncoded = decoder::encode_b64(headerBytes);
+    int32_t headerVersion = static_cast<int32_t>(header.ext.v());
 
     // note: columns other than "data" are there to faciliate lookup/processing
     auto prep = db.getPreparedStatement(
         "INSERT INTO ledgerheaders "
-        "(ledgerhash, prevhash, bucketlisthash, ledgerseq, closetime, data) "
+        "(ledgerhash, prevhash, bucketlisthash, ledgerseq, closetime, data, version) "
         "VALUES "
-        "(:h,        :ph,      :blh,            :seq,     :ct,       :data)");
+        "(:h,        :ph,      :blh,            :seq,     :ct,       :data, :v)");
     auto& st = prep.statement();
     st.exchange(soci::use(hash));
     st.exchange(soci::use(prevHash));
@@ -60,6 +61,7 @@ storeInDatabase(Database& db, LedgerHeader const& header)
     st.exchange(soci::use(header.ledgerSeq));
     st.exchange(soci::use(header.scpValue.closeTime));
     st.exchange(soci::use(headerEncoded));
+    st.exchange(soci::use(headerVersion));
     st.define_and_bind();
     {
         auto timer = db.getInsertTimer("ledger-header");
@@ -200,12 +202,23 @@ dropAll(Database& db)
                        "ledgerhash      CHARACTER(64) PRIMARY KEY,"
                        "prevhash        CHARACTER(64) NOT NULL,"
                        "bucketlisthash  CHARACTER(64) NOT NULL,"
-                       "ledgerseq       INT UNIQUE CHECK (ledgerseq >= 0),"
-                       "closetime       BIGINT NOT NULL CHECK (closetime >= 0),"
-                       "data            TEXT NOT NULL"
+                       "ledgerseq       INT           UNIQUE    CHECK (ledgerseq >= 0),"
+                       "closetime       BIGINT        NOT NULL  CHECK (closetime >= 0),"
+                       "data            TEXT          NOT NULL,"
+                       "version         INT           NOT NULL  DEFAULT 0"
                        ");";
     db.getSession()
-        << "CREATE INDEX ledgersbyseq ON ledgerheaders ( ledgerseq );";
+            << "CREATE INDEX ledgersbyseq ON ledgerheaders ( ledgerseq );";
+
+    db.getSession()
+            << "CREATE OR REPLACE FUNCTION new_ledgers_seq_notify() RETURNS "
+               "trigger AS $$ DECLARE payload varchar; mid uuid; "
+               "BEGIN payload = CAST(NEW.ledgerseq AS text); PERFORM "
+               "pg_notify('new_ledgers_seq', payload); RETURN NEW; END; $$ "
+               "LANGUAGE plpgsql;";
+    db.getSession()
+            << "CREATE TRIGGER ledgers_insert AFTER INSERT ON ledgerheaders FOR "
+               "EACH ROW EXECUTE PROCEDURE new_ledgers_seq_notify();";
 }
 }
 }

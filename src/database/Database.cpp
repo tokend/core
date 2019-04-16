@@ -64,10 +64,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 12,
     ADD_ATOMIC_SWAP_BID = 13,
     ADD_ASSET_CUSTOM_PRECISION = 14,
-    POLL_PERMISSION_TYPE_MIGRATION = 15
+    POLL_PERMISSION_TYPE_MIGRATION = 15,
+    ADD_PEER_TYPE = 16
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::POLL_PERMISSION_TYPE_MIGRATION;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_PEER_TYPE;
 
 static void
 setSerializable(soci::session& sess)
@@ -170,6 +171,10 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::POLL_PERMISSION_TYPE_MIGRATION:
             sh.getPollHelper().permissionTypeMigration();
+            break;
+        case ADD_PEER_TYPE:
+            mSession << "ALTER TABLE peers ADD type INT NOT NULL DEFAULT 0";
+            mSession << "CREATE INDEX scpquorumsbyseq ON scpquorums(lastledgerseq)";
             break;
         default:
             throw std::runtime_error("Unknown DB schema version");

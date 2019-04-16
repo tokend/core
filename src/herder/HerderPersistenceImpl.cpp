@@ -264,9 +264,6 @@ HerderPersistence::dropAll(Database& db)
                        "qset          TEXT NOT NULL,"
                        "PRIMARY KEY (qsethash)"
                        ")";
-
-    db.getSession()
-        << "CREATE INDEX scpquorumsbyseq ON scpquorums(lastledgerseq)";
 }
 
 void

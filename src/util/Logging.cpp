@@ -321,6 +321,7 @@ Logging::rotate()
     }
 }
 
+void
 SentryClient::send(const std::string &msg) {
     mCrowClient->capture_message(msg);
 }
