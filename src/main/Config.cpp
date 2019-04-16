@@ -83,6 +83,7 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     MAX_INBOUND_PENDING_CONNECTIONS = 0;
     PEER_AUTHENTICATION_TIMEOUT = 2;
     PEER_TIMEOUT = 30;
+    PEER_STRAGGLER_TIMEOUT = 120;
     PREFERRED_PEERS_ONLY = false;
 
     MINIMUM_IDLE_PERCENT = 0;
@@ -435,6 +436,11 @@ Config::load(std::string const& filename)
             else if (item.first == "PREFERRED_PEERS")
             {
                 PREFERRED_PEERS = readStringArray(item);
+            }
+            else if (item.first == "PEER_STRAGGLER_TIMEOUT")
+            {
+                PEER_STRAGGLER_TIMEOUT = readInt<unsigned short>(
+                        item, 1, std::numeric_limits<unsigned short>::max());
             }
             else if (item.first == "PREFERRED_PEER_KEYS")
             {
