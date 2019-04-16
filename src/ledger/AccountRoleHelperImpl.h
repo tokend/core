@@ -53,6 +53,5 @@ private:
     AccountRoleRulesHelper mAccountRoleRulesHelper;
 
     const char* mAccountRoleSelector;
-    const char* mTableName;
 };
 } // namespace stellar

@@ -1,4 +1,3 @@
-#include <transactions/test/mocks/MockDatabase.h>
 #include "AssetHelperLegacy.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
@@ -146,4 +145,5 @@ AssetHelperLegacy::loadIssuedForAssets(Database &db)
 
     return result;
 }
+
 }

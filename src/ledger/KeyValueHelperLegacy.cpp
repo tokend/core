@@ -1,10 +1,8 @@
 #include "ledger/KeyValueHelperLegacy.h"
-#include "ledger/KeyValueHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "util/basen.h"
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
-#include "StorageHelperImpl.h"
 
 using namespace soci;
 using namespace std;

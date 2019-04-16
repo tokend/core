@@ -67,7 +67,6 @@ private:
 
     StorageHelper& mStorageHelper;
     const char* mAccountColumnSelector;
-    const char* mTableName;
 };
 
 }

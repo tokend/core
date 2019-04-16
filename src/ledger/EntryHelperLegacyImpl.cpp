@@ -83,4 +83,5 @@ EntryHelperLegacyImpl::countObjects(Database& db)
     std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(db, nullptr);
     return storageHelper->getHelper(mEntryType)->countObjects();
 }
+
 }

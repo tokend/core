@@ -60,7 +60,6 @@ class ExternalSystemAccountIDPoolEntryHelperImpl : public ExternalSystemAccountI
 
   private:
     static const char* select;
-    const char* mTableName;
 
     void storeUpdateHelper(bool insert, LedgerEntry const& entry);
     void load(StatementContext& prep,

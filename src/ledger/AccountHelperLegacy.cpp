@@ -116,4 +116,5 @@ bool AccountHelperLegacy::exists(AccountID const &rawAccountID, Database &db)
     auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
     return storageHelper->getAccountHelper().exists(rawAccountID);
 }
+
 }

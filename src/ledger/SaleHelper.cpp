@@ -381,4 +381,6 @@ EntryFrame::pointer SaleHelper::storeLoad(LedgerKey const& key, Database& db)
 {
     return loadSale(key.sale().saleID, db);
 }
+
+
 }

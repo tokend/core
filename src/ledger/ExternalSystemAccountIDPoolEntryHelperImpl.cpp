@@ -20,7 +20,6 @@ ExternalSystemAccountIDPoolEntryHelperImpl::
     ExternalSystemAccountIDPoolEntryHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
-    mTableName = "external_system_account_id_pool";
 }
 
 void

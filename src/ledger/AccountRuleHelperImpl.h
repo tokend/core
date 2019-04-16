@@ -43,7 +43,6 @@ class AccountRuleHelperImpl : public AccountRuleHelper, NonCopyable
     LedgerDelta* mLedgerDelta{nullptr};
 
     const char* mAccountRuleSelector;
-    const char* mTableName;
 };
 
 } // namespace stellar
