@@ -48,9 +48,6 @@ namespace stellar
 
         uint64_t countObjects(soci::session& sess) override;
 
-        std::string const
-        getTableName() const override;
-
         AtomicSwapBidFrame::pointer
         loadAtomicSwapBid(AccountID const& ownerID, uint64_t bidID,
                           Database& db, LedgerDelta* delta = nullptr);

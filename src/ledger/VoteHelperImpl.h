@@ -44,9 +44,6 @@ private:
     uint64_t
     countObjects() override;
 
-    const std::string
-    getTableName() const override;
-
     VoteFrame::pointer
     loadVote(uint64_t pollID, AccountID voterID) override;
 

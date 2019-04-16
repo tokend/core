@@ -146,12 +146,4 @@ AssetHelperLegacy::loadIssuedForAssets(Database &db)
 
     return result;
 }
-
-std::string const
-AssetHelperLegacy::getTableName() const
-{
-    MockDatabase db;
-    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    return storageHelper->getAssetHelper().getTableName();
-}
 }

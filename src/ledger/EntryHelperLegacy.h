@@ -36,8 +36,6 @@ namespace stellar
 		virtual uint64_t countObjects(soci::session& sess) = 0;
 		virtual uint64_t countObjects(Database& db);
 
-		virtual std::string const getTableName() const = 0;
-
 		void flushCachedEntry(LedgerKey const& key, Database& db);
 		bool cachedEntryExists(LedgerKey const& key, Database& db);
 

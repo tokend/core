@@ -1,4 +1,3 @@
-#include <transactions/test/mocks/MockDatabase.h>
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/BalanceHelper.h"
@@ -169,13 +168,5 @@ uint64_t BalanceHelperLegacy::loadTotalAssetAmount(Database &db, AssetCode asset
     st.execute(true);
 
     return assetTotalAmount;
-}
-
-std::string const
-BalanceHelperLegacy::getTableName() const
-{
-    MockDatabase db;
-    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    return storageHelper->getBalanceHelper().getTableName();
 }
 }

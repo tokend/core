@@ -192,10 +192,4 @@ EntryFrame::pointer AccountKYCHelper::fromXDR(LedgerEntry const &from)
 {
     return std::make_shared<AccountKYCFrame>(from);
 }
-
-std::string const
-AccountKYCHelper::getTableName() const
-{
-    return "account_kyc";
-}
 }

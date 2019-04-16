@@ -16,7 +16,6 @@
 #include "StorageHelper.h"
 #include "StorageHelperImpl.h"
 #include <algorithm>
-#include <transactions/test/mocks/MockDatabase.h>
 
 using namespace soci;
 using namespace std;
@@ -299,13 +298,5 @@ ExternalSystemAccountIDHelperLegacy::loadAll(Database& db)
             make_shared<ExternalSystemAccountIDFrame>(of));
     });
     return retExternalSystemAccountIDs;
-}
-
-std::string const
-ExternalSystemAccountIDHelperLegacy::getTableName() const
-{
-    MockDatabase db;
-    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    return storageHelper->getExternalSystemAccountIDHelper().getTableName();
 }
 } // namespace stellar

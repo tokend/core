@@ -19,7 +19,6 @@ namespace stellar
     class SaleQuoteAssetHelper {
     public:
         static void dropAll(Database& db);
-        static void addAtomicSwapBidForeignKey(Database &db);
         static void deleteAllForSale(Database& db, uint64_t saleID);
         static void storeUpdate(Database & db, uint64_t const saleID, xdr::xvector<SaleQuoteAsset, 100> quoteAssets, bool insert);
         static void storeUpdate(Database & db, uint64_t const saleID, SaleQuoteAsset const& quoteAsset, bool insert);

@@ -40,9 +40,6 @@ namespace stellar
         EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
         uint64_t countObjects(soci::session& sess) override;
 
-        std::string const
-        getTableName() const override;
-
         OfferFrame::pointer loadOffer(AccountID const& accountID, uint64_t offerID,
                           Database& db, LedgerDelta* delta = nullptr);
 

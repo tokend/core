@@ -20,7 +20,6 @@ AssetHelperImpl::AssetHelperImpl(StorageHelper& storageHelper)
                            "available_for_issueance, issued, pending_issuance, "
                            "policies, type, trailing_digits, lastmodified, version "
                            "FROM asset";
-    mTableName = "asset";
 }
 
 void
@@ -410,12 +409,6 @@ LedgerDelta*
 AssetHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
-}
-
-std::string const
-AssetHelperImpl::getTableName() const
-{
-    return mTableName;
 }
 } // namespace stellar
 

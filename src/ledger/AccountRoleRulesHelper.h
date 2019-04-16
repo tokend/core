@@ -25,9 +25,6 @@ public:
     dropAll();
 
     void
-    addAccountRoleForeignKey();
-
-    void
     storeUpdate(uint64_t const roleID, std::vector<uint64_t> const ruleIDs,
                 const bool insert);
 

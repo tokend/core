@@ -14,7 +14,6 @@ AccountHelperImpl::AccountHelperImpl(StorageHelper& storageHelper)
     mAccountColumnSelector = "SELECT account_id, referrer, sequential_id, "
                              "       role_id, version, lastmodified "
                              " FROM  accounts";
-    mTableName = "accounts";
 }
 
 void
@@ -338,11 +337,5 @@ LedgerDelta*
 AccountHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
-}
-
-std::string const
-AccountHelperImpl::getTableName() const
-{
-    return mTableName;
 }
 }

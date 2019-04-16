@@ -38,8 +38,6 @@ namespace stellar
 		AccountLimitsFrame::pointer loadLimits(AccountID accountID,
 			Database& db, LedgerDelta* delta = nullptr);
 
-		std::string const getTableName() const override;
-
 	private:
 		AccountLimitsHelper() { ; }
 		~AccountLimitsHelper() { ; }

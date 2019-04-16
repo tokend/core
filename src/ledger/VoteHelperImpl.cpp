@@ -316,10 +316,4 @@ VoteHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
-
-std::string const
-VoteHelperImpl::getTableName() const
-{
-    return "votes";
-}
 }

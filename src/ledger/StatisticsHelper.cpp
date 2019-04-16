@@ -208,10 +208,4 @@ namespace stellar {
         }
         return result;
     }
-
-std::string const
-StatisticsHelper::getTableName() const
-{
-    return "statistics";
-}
 }

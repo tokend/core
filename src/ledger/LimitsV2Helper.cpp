@@ -389,10 +389,4 @@ namespace  stellar
             throw_with_nested(runtime_error("Failed to load limits v2"));
         }
     }
-
-std::string const
-LimitsV2Helper::getTableName() const
-{
-    return "limits_v2";
-}
 }

@@ -111,8 +111,8 @@ ApplyBucketsWork::onStart()
                                           mApplyState.currentLedger, mLevel)
                                     : BucketList::oldestLedgerInCurr(
                                           mApplyState.currentLedger, mLevel);
-
-        deleteObjectsModifiedOnOrAfterLedger(oldestLedger);
+        // TODO implement removing
+        //deleteObjectsModifiedOnOrAfterLedger(oldestLedger);
     }
 
     if (mApplying || applySnap)
@@ -132,24 +132,6 @@ ApplyBucketsWork::onStart()
                                << "].curr = " << i.curr;
         mApplying = true;
         mBucketApplyStart.Mark();
-    }
-}
-
-void
-ApplyBucketsWork::deleteObjectsModifiedOnOrAfterLedger(uint32_t ledger) const
-{
-    using namespace soci;
-    Database& db = mApp.getDatabase();
-    db.clearPreparedStatementCache();
-    // TODO clear chache
-
-    auto helpers = EntryHelperProvider::getHelpers();
-
-    for (auto const& iter : helpers)
-    {
-        std::string query = "DELETE FROM " + iter.second->getTableName() +
-                            " WHERE lastmodified >= :v1";
-        db.getSession() << query, use(ledger);
     }
 }
 

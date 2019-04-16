@@ -38,9 +38,6 @@ namespace stellar {
 
         uint64_t countObjects(soci::session &sess) override;
 
-        std::string const
-        getTableName() const override;
-
         LedgerKey getLedgerKey(LedgerEntry const &from) override;
 
         EntryFrame::pointer storeLoad(LedgerKey const &key, Database &db) override;

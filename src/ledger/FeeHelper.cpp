@@ -376,10 +376,4 @@ namespace stellar {
             throw std::runtime_error("Fixed fee amount does not fit asset precision");
         }
     }
-
-std::string const
-FeeHelper::getTableName() const
-{
-    return "fee_state";
-}
 }

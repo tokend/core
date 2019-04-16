@@ -31,9 +31,6 @@ class AccountRuleHelperImpl : public AccountRuleHelper, NonCopyable
     LedgerDelta*
     getLedgerDelta() override;
 
-    std::string const
-    getTableName() const override;
-
     std::vector<AccountRuleFrame::pointer>
     loadAccountRules(std::vector<uint64_t> const ruleIDs) override;
 

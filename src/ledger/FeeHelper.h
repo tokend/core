@@ -51,9 +51,6 @@ namespace stellar {
 
         EntryFrame::pointer storeLoad(LedgerKey const &key, Database &db) override;
 
-        std::string const
-        getTableName() const override;
-
         FeeFrame::pointer loadFee(FeeType feeType, AssetCode asset, AccountID *accountID,
                                   uint64_t* accountType, int64_t subtype, int64_t lowerBound,
                                   int64_t upperBound, Database &db, LedgerDelta *delta = nullptr);

@@ -464,10 +464,4 @@ ExternalSystemAccountIDPoolEntryHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
-
-std::string const
-ExternalSystemAccountIDPoolEntryHelperImpl::getTableName() const
-{
-    return mTableName;
-}
 } // namespace stellar

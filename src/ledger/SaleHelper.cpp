@@ -381,10 +381,4 @@ EntryFrame::pointer SaleHelper::storeLoad(LedgerKey const& key, Database& db)
 {
     return loadSale(key.sale().saleID, db);
 }
-
-std::string const
-SaleHelper::getTableName() const
-{
-    return "sale";
-}
 }

@@ -240,10 +240,4 @@ namespace stellar
             throw_with_nested(runtime_error("Failed to load pending statistics"));
         }
     }
-
-std::string const
-PendingStatisticsHelper::getTableName() const
-{
-    return "pending_statistics";
-}
 }

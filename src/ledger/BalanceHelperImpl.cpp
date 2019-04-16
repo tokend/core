@@ -21,7 +21,6 @@ static const char* balanceColumnSelector =
 BalanceHelperImpl::BalanceHelperImpl(StorageHelper& storageHelper)
         : mStorageHelper(storageHelper)
 {
-    mTableName = "balance";
 }
 
 void
@@ -531,12 +530,6 @@ BalanceHelperImpl::obtainStrAccountIDs(vector<AccountID> accountIDs)
     }
 
     return result.substr(0, result.size() - 3);
-}
-
-std::string const
-BalanceHelperImpl::getTableName() const
-{
-    return mTableName;
 }
 } // namespace stellar
 

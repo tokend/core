@@ -26,15 +26,6 @@ AccountRoleRulesHelper::dropAll()
 }
 
 void
-AccountRoleRulesHelper::addAccountRoleForeignKey()
-{
-    mDatabase.getSession() << "ALTER TABLE account_role_rules "
-                           << "ADD CONSTRAINT account_role_rules_role_id_fkey "
-                           << "FOREIGN KEY (role_id) REFERENCES account_roles(id) "
-                           << "on delete cascade on update cascade;";
-}
-
-void
 AccountRoleRulesHelper::storeDelete(const uint64_t roleID)
 {
     auto prep = mDatabase.getPreparedStatement(

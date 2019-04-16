@@ -35,9 +35,6 @@ namespace stellar
 		EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
 		uint64_t countObjects(soci::session& sess) override;
 
-		std::string const
-		getTableName() const override;
-
 		bool exists(Database& db, AccountID accountID, int32 externalSystemType);
 
         std::vector<ExternalSystemAccountIDFrame::pointer> loadAll(Database& db);

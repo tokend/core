@@ -32,7 +32,6 @@ AccountRoleHelperImpl::AccountRoleHelperImpl(StorageHelper& storageHelper)
 {
     mAccountRoleSelector = "SELECT id, details, lastmodified, version "
                            "FROM   account_roles ";
-    mTableName = "account_roles";
 }
 
 void
@@ -291,11 +290,5 @@ std::vector<uint64_t>
 AccountRoleHelperImpl::loadRoleIDsByRule(uint64_t const ruleID)
 {
     return  mAccountRoleRulesHelper.loadRolesByRule(ruleID);
-}
-
-std::string const
-AccountRoleHelperImpl::getTableName() const
-{
-    return mTableName;
 }
 } // namespace stellar

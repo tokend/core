@@ -23,9 +23,6 @@ private:
     LedgerDelta*
     getLedgerDelta() override;
 
-    std::string const
-    getTableName() const override;
-
     void
     storeAdd(LedgerEntry const& entry) override;
 

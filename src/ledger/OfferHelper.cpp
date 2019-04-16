@@ -412,9 +412,4 @@ void OfferHelper::checkAmounts(const OfferFrame::pointer& frame, Database& db, L
         throw std::runtime_error("Invalid quote amount");
     }
 }
-std::string const
-OfferHelper::getTableName() const
-{
-    return "offer";
-}
 }

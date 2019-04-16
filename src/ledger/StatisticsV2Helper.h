@@ -34,9 +34,6 @@ namespace stellar
         EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
         uint64_t countObjects(soci::session& sess) override;
 
-        std::string const
-        getTableName() const override;
-
         StatisticsV2Frame::pointer loadStatistics(uint64_t id, Database& db, LedgerDelta* delta = nullptr);
         StatisticsV2Frame::pointer loadStatistics(AccountID& accountID, StatsOpType statsOpType,
                                                   AssetCode const& assetCode, bool isConvertNeeded,

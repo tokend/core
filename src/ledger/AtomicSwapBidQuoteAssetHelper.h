@@ -17,9 +17,6 @@ class ASwapBidQuoteAssetHelper
 public:
     static void dropAll(Database& db);
 
-    static void
-    addAtomicSwapBidForeignKey(Database &db);
-
     static void deleteAllForBid(Database& db, uint64_t bidID);
 
     static void storeUpdate(Database& db, uint64_t bidID,

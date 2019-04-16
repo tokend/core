@@ -37,7 +37,6 @@ AccountRuleHelperImpl::AccountRuleHelperImpl(
     mAccountRuleSelector = "SELECT id, resource, action, forbids, details, "
                            "       lastmodified, version "
                            "FROM   account_rules ";
-    mTableName = "account_rules";
 }
 
 void
@@ -334,11 +333,5 @@ LedgerDelta*
 AccountRuleHelperImpl::getLedgerDelta()
 {
     return mLedgerDelta;
-}
-
-std::string const
-AccountRuleHelperImpl::getTableName() const
-{
-    return mTableName;
 }
 } // namespace stellar

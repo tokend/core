@@ -1,4 +1,3 @@
-#include <transactions/test/mocks/MockDatabase.h>
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/LedgerDelta.h"
@@ -246,13 +245,5 @@ KeyValueHelperLegacy::loadKeyValues(
         keyValueProcessor(le);
         st.fetch();
     }
-}
-
-std::string const
-KeyValueHelperLegacy::getTableName() const
-{
-    MockDatabase db;
-    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    return storageHelper->getKeyValueHelper().getTableName();
 }
 } // namespace stellar

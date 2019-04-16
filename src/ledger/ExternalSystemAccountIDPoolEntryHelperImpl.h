@@ -58,9 +58,6 @@ class ExternalSystemAccountIDPoolEntryHelperImpl : public ExternalSystemAccountI
     LedgerDelta*
     getLedgerDelta() override;
 
-    std::string const
-    getTableName() const override;
-
   private:
     static const char* select;
     const char* mTableName;

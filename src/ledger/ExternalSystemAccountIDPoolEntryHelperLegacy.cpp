@@ -1,4 +1,3 @@
-#include <transactions/test/mocks/MockDatabase.h>
 #include "crypto/SecretKey.h"
 #include "crypto/Hex.h"
 #include "database/Database.h"
@@ -407,12 +406,4 @@ using xdr::operator<;
         });
         return retPool;
     }
-
-std::string const
-ExternalSystemAccountIDPoolEntryHelperLegacy::getTableName() const
-{
-    MockDatabase db;
-    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
-    return storageHelper->getExternalSystemAccountIDPoolEntryHelper().getTableName();
-}
 }

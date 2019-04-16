@@ -308,10 +308,4 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
         st.fetch();
     }
 }
-
-std::string const
-AtomicSwapBidHelper::getTableName() const
-{
-    return "atomic_swap_bid";
-}
 }

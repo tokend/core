@@ -39,9 +39,6 @@ private:
     LedgerDelta*
     getLedgerDelta() override;
 
-    std::string const
-    getTableName() const override;
-
     AccountRoleFrame::pointer
     loadAccountRole(uint64_t const roleID) override;
 

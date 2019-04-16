@@ -275,12 +275,6 @@ KeyValueHelperImpl::getLedgerDelta()
     return mStorageHelper.getLedgerDelta();
 }
 
-std::string const
-KeyValueHelperImpl::getTableName() const
-{
-    return "key_value_entry";
-}
-
 bool
 KeyValueHelperImpl::loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
                               uint32_t* passedTasks)

@@ -90,14 +90,10 @@ private:
     LedgerDelta*
     getLedgerDelta() override;
 
-    std::string const
-    getTableName() const override;
-
     std::string
     obtainStrAccountIDs(std::vector<AccountID> accountIDs);
 
     StorageHelper& mStorageHelper;
-    const char* mTableName;
 };
 
 } // namespace stellar

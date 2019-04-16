@@ -23,15 +23,6 @@ ASwapBidQuoteAssetHelper::dropAll(Database &db)
 }
 
 void
-ASwapBidQuoteAssetHelper::addAtomicSwapBidForeignKey(Database &db)
-{
-    db.getSession() << "ALTER TABLE atomic_swap_quote_asset "
-                    << "ADD CONSTRAINT atomic_swap_quote_asset_bid_id_fkey "
-                    << "FOREIGN KEY (role_id) REFERENCES atomic_swap_bid(bid_id) "
-                    << "on delete cascade on update cascade;";
-}
-
-void
 ASwapBidQuoteAssetHelper::deleteAllForBid(Database &db, uint64_t bidID)
 {
     auto prep = db.getPreparedStatement("DELETE FROM atomic_swap_quote_asset "
