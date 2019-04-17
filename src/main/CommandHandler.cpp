@@ -2,33 +2,38 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include "main/CommandHandler.h"
 #include "crypto/Hex.h"
+//#include "crypto/KeyUtils.h"
 #include "herder/Herder.h"
 #include "ledger/LedgerManager.h"
+//#include "ledger/LedgerTxn.h"
+//#include "ledger/LedgerTxnEntry.h"
 #include "lib/http/server.hpp"
 #include "lib/json/json.h"
 #include "lib/util/format.h"
 #include "main/Application.h"
-#include "main/CommandHandler.h"
 #include "main/Config.h"
+#include "main/Maintainer.h"
 #include "overlay/BanManager.h"
 #include "overlay/OverlayManager.h"
+//#include "transactions/TransactionUtils.h"
 #include "util/Logging.h"
-#include "util/make_unique.h"
 #include "util/StatusManager.h"
-#include "StellarCoreVersion.h"
 
-#include "util/basen.h"
 #include "medida/reporting/json_reporter.h"
+#include "util/Decoder.h"
+#include "util/XDROperators.h"
 #include "xdrpp/marshal.h"
 #include "xdrpp/printer.h"
 
 #include "ExternalQueue.h"
 
-#include <regex>
-#include <ledger/AssetHelperLegacy.h>
+#ifdef BUILD_TESTS
+#include "test/TestAccount.h"
 #include "transactions/test/TxTests.h"
-using namespace stellar::txtest;
+#endif
+#include <regex>
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -54,56 +59,70 @@ CommandHandler::CommandHandler(Application& app) : mApp(app)
 
         int httpMaxClient = mApp.getConfig().HTTP_MAX_CLIENT;
 
-        mServer = stellar::make_unique<http::server::server>(
-            app.getClock().getIOService(), ipStr, mApp.getConfig().HTTP_PORT, httpMaxClient);
+        mServer = std::make_unique<http::server::server>(
+                app.getClock().getIOService(), ipStr, mApp.getConfig().HTTP_PORT,
+                httpMaxClient);
     }
     else
     {
-        mServer = stellar::make_unique<http::server::server>(
-            app.getClock().getIOService());
+        mServer = std::make_unique<http::server::server>(
+                app.getClock().getIOService());
     }
 
     mServer->add404(std::bind(&CommandHandler::fileNotFound, this, _1, _2));
 
-    mServer->addRoute("bans",
-                      std::bind(&CommandHandler::bans, this, _1, _2));
-    mServer->addRoute("catchup",
-                      std::bind(&CommandHandler::catchup, this, _1, _2));
-    mServer->addRoute("checkdb",
-                      std::bind(&CommandHandler::checkdb, this, _1, _2));
-    mServer->addRoute("checkpoint",
-                      std::bind(&CommandHandler::checkpoint, this, _1, _2));
-    mServer->addRoute("connect",
-                      std::bind(&CommandHandler::connect, this, _1, _2));
-    mServer->addRoute("dropcursor",
-                      std::bind(&CommandHandler::dropcursor, this, _1, _2));
-    mServer->addRoute("droppeer",
-                      std::bind(&CommandHandler::dropPeer, this, _1, _2));
-    mServer->addRoute("generateload",
-                      std::bind(&CommandHandler::generateLoad, this, _1, _2));
-    mServer->addRoute("info", std::bind(&CommandHandler::info, this, _1, _2));
-    mServer->addRoute("ll", std::bind(&CommandHandler::ll, this, _1, _2));
-    mServer->addRoute("logrotate",
-                      std::bind(&CommandHandler::logRotate, this, _1, _2));
-    mServer->addRoute("maintenance",
-                      std::bind(&CommandHandler::maintenance, this, _1, _2));
-    mServer->addRoute("manualclose",
-                      std::bind(&CommandHandler::manualClose, this, _1, _2));
-    mServer->addRoute("metrics",
-                      std::bind(&CommandHandler::metrics, this, _1, _2));
-    mServer->addRoute("peers", std::bind(&CommandHandler::peers, this, _1, _2));
-    mServer->addRoute("quorum",
-                      std::bind(&CommandHandler::quorum, this, _1, _2));
-    mServer->addRoute("setcursor",
-                      std::bind(&CommandHandler::setcursor, this, _1, _2));
-    mServer->addRoute("scp", std::bind(&CommandHandler::scpInfo, this, _1, _2));
-    mServer->addRoute("testacc",
-                      std::bind(&CommandHandler::testAcc, this, _1, _2));
-    mServer->addRoute("testtx",
-                      std::bind(&CommandHandler::testTx, this, _1, _2));
-    mServer->addRoute("tx", std::bind(&CommandHandler::tx, this, _1, _2));
-    mServer->addRoute("unban",
-                      std::bind(&CommandHandler::unban, this, _1, _2));
+    addRoute("bans", &CommandHandler::bans);
+    addRoute("catchup", &CommandHandler::catchup);
+    addRoute("connect", &CommandHandler::connect);
+    addRoute("dropcursor", &CommandHandler::dropcursor);
+    addRoute("droppeer", &CommandHandler::dropPeer);
+    addRoute("getcursor", &CommandHandler::getcursor);
+    addRoute("info", &CommandHandler::info);
+    addRoute("ll", &CommandHandler::ll);
+    addRoute("logrotate", &CommandHandler::logRotate);
+    addRoute("maintenance", &CommandHandler::maintenance);
+    addRoute("manualclose", &CommandHandler::manualClose);
+    addRoute("metrics", &CommandHandler::metrics);
+    addRoute("clearmetrics", &CommandHandler::clearMetrics);
+    addRoute("peers", &CommandHandler::peers);
+    addRoute("quorum", &CommandHandler::quorum);
+    addRoute("setcursor", &CommandHandler::setcursor);
+    addRoute("scp", &CommandHandler::scpInfo);
+    addRoute("tx", &CommandHandler::tx);
+    addRoute("upgrades", &CommandHandler::upgrades);
+    addRoute("unban", &CommandHandler::unban);
+
+#ifdef BUILD_TESTS
+    addRoute("generateload", &CommandHandler::generateLoad);
+    addRoute("testacc", &CommandHandler::testAcc);
+    addRoute("testtx", &CommandHandler::testTx);
+#endif
+}
+
+void
+CommandHandler::addRoute(std::string const& name, HandlerRoute route)
+{
+    mServer->addRoute(
+            name, std::bind(&CommandHandler::safeRouter, this, route, _1, _2));
+}
+
+void
+CommandHandler::safeRouter(CommandHandler::HandlerRoute route,
+                           std::string const& params, std::string& retStr)
+{
+    try
+    {
+        route(this, params, retStr);
+    }
+    catch (std::exception& e)
+    {
+        retStr = (fmt::MemoryWriter() << "{\"exception\": \"" << e.what() << "\"}")
+                        .str();
+    }
+    catch (...)
+    {
+        retStr = "{\"exception\": \"generic\"}";
+    }
 }
 
 void
@@ -114,124 +133,6 @@ CommandHandler::manualCmd(std::string const& cmd)
     request.uri = cmd;
     mServer->handle_request(request, reply);
     LOG(INFO) << cmd << " -> " << reply.content;
-}
-
-void
-CommandHandler::testAcc(std::string const& params, std::string& retStr)
-{
-    std::map<std::string, std::string> retMap;
-    http::server::server::parseParams(params, retMap);
-    Json::Value root;
-    auto accName = retMap.find("name");
-    if (accName == retMap.end())
-    {
-        root["status"] = "error";
-        root["detail"] = "Bad HTTP GET: try something like: testacc?name=bob";
-    }
-    else
-    {
-        SecretKey key;
-        if (accName->second == "root")
-        {
-            key = getRoot();
-        }
-        else
-        {
-            key = getAccount(accName->second.c_str());
-        }
-        auto acc = loadAccount(key, mApp, false);
-        if (acc)
-        {
-            root["name"] = accName->second;
-            root["id"] = PubKeyUtils::toStrKey(acc->getID());
-        }
-    }
-    retStr = root.toStyledString();
-}
-
-void
-CommandHandler::testTx(std::string const& params, std::string& retStr)
-{
-    std::map<std::string, std::string> retMap;
-    http::server::server::parseParams(params, retMap);
-
-    auto to = retMap.find("to");
-    auto from = retMap.find("from");
-    auto amount = retMap.find("amount");
-    auto create = retMap.find("create");
-
-    Json::Value root;
-
-    if (to != retMap.end() && from != retMap.end() && amount != retMap.end())
-    {
-        Hash const& networkID = mApp.getNetworkID();
-
-        SecretKey toKey, fromKey;
-        if (to->second == "root")
-        {
-            toKey = getRoot();
-        }
-        else
-        {
-            toKey = getAccount(to->second.c_str());
-        }
-
-        if (from->second == "root")
-        {
-            fromKey = getRoot();
-        }
-        else
-        {
-            fromKey = getAccount(from->second.c_str());
-        }
-
-        uint64_t paymentAmount = 0;
-        std::istringstream iss(amount->second);
-        iss >> paymentAmount;
-
-        root["from_name"] = from->second;
-        root["to_name"] = to->second;
-        root["from_id"] = PubKeyUtils::toStrKey(fromKey.getPublicKey());
-        root["to_id"] = PubKeyUtils::toStrKey(toKey.getPublicKey());
-        ;
-        root["amount"] = (Json::UInt64)paymentAmount;
-
-        Salt fromSeq = 1;
-        TransactionFramePtr txFrame;
-        if (create != retMap.end() && create->second == "true")
-        {
-            txFrame = createCreateAccountTx(networkID, fromKey, toKey, fromSeq);
-        }
-        else
-        {
-            txFrame = createPaymentTx(networkID, fromKey, toKey, fromSeq,
-                                      paymentAmount, getNoPaymentFee());
-        }
-
-        switch (mApp.getHerder().recvTransaction(txFrame))
-        {
-        case Herder::TX_STATUS_PENDING:
-            root["status"] = "pending";
-            break;
-        case Herder::TX_STATUS_DUPLICATE:
-            root["status"] = "duplicate";
-            break;
-        case Herder::TX_STATUS_ERROR:
-            root["status"] = "error";
-            root["detail"] =
-                xdr::xdr_to_string(txFrame->getResult().result.code());
-            break;
-        default:
-            assert(false);
-        }
-    }
-    else
-    {
-        root["status"] = "error";
-        root["detail"] = "Bad HTTP GET: try something like: "
-                         "testtx?from=root&to=bob&amount=1000000000";
-    }
-    retStr = root.toStyledString();
 }
 
 void
@@ -246,19 +147,22 @@ CommandHandler::fileNotFound(std::string const& params, std::string& retStr)
         "</p><p><h1> /catchup?ledger=NNN[&mode=MODE]</h1>"
         "triggers the instance to catch up to ledger NNN from history; "
         "mode is either 'minimal' (the default, if omitted) or 'complete'."
-        "</p><p><h1> /checkdb</h1>"
-        "triggers the instance to perform an integrity check of the database."
-        "</p><p><h1> /checkpoint</h1>"
-        "triggers the instance to write an immediate history checkpoint."
         "</p><p><h1> /connect?peer=NAME&port=NNN</h1>"
         "triggers the instance to connect to peer NAME at port NNN."
         "</p><p><h1> "
         "/droppeer?node=NODE_ID[&ban=D]</h1>"
         "drops peer identified by PEER_ID, when D is 1 the peer is also banned"
         "</p><p><h1> "
-        "/generateload[?accounts=N&txs=M&txrate=(R|auto)]</h1>"
+        "/generateload[?mode=(create|pay)&accounts=N&offset=K&txs=M&txrate=(R|"
+        "auto)&"
+        "batchsize=L]</h1>"
         "artificially generate load for testing; must be used with "
-        "ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING set to true"
+        "ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING set to true. "
+        "Depending on the mode, either creates new accounts or generates "
+        "payments on accounts specified"
+        " (where number of accounts can be offset)."
+        " Additionally, allows batching up to 100 account creations per "
+        "transaction via 'batchsize'."
         "</p><p><h1> /help</h1>"
         "give a list of currently supported commands"
         "</p><p><h1> /info</h1>"
@@ -275,6 +179,9 @@ CommandHandler::fileNotFound(std::string const& params, std::string& retStr)
         "</p><p><h1> /metrics</h1>"
         "returns a snapshot of the metrics registry (for monitoring and "
         "debugging purpose)"
+        "</p><p><h1> /clearmetrics?[domain=DOMAIN]</h1>"
+        "clear metrics for a specified domain. If no domain specified, "
+        "clear all metrics (for testing purposes)"
         "</p><p><h1> /peers</h1>"
         "returns the list of known peers in JSON format"
         "</p><p><h1> /quorum?[node=NODE_ID][&compact=true]</h1>"
@@ -291,6 +198,26 @@ CommandHandler::fileNotFound(std::string const& params, std::string& retStr)
         "returns a JSON object<br>"
         "wasReceived: boolean, true if transaction was queued properly<br>"
         "result: base64 encoded, XDR serialized 'TransactionResult'<br>"
+        "</p><p><h1> /upgrades?mode=(get|set|clear)&[upgradetime=DATETIME]&"
+        "[basefee=NUM]&[basereserve=NUM]&[maxtxsize=NUM]&[protocolversion=NUM]"
+        "</h1>"
+        "gets, sets or clears upgrades.<br>"
+        "When mode=set, upgradetime is a required date in the ISO 8601 "
+        "date format (UTC) in the form 1970-01-01T00:00:00Z.<br>"
+        "fee (uint32) This is what you would prefer the base fee to be. It is "
+        "in stroops<br>"
+        "basereserve (uint32) This is what you would prefer the base reserve "
+        "to be. It is in stroops.<br>"
+        "maxtxsize (uint32) This defines the maximum number of transactions "
+        "to include in a ledger. When too many transactions are pending, "
+        "surge pricing is applied. The instance picks the top maxtxsize"
+        " transactions locally to be considered in the next ledger.Where "
+        "transactions are ordered by transaction fee(lower fee transactions"
+        " are held for later).<br>"
+        "protocolversion (uint32) defines the protocol version to upgrade to."
+        " When specified it must match one of the protocol versions supported"
+        " by the node and should be greater than ledgerVersion from the current"
+        " ledger <br>"
         "</p><p><h1> /dropcursor?id=XYZ</h1> deletes the tracking cursor with "
         "identified by `id`. See `setcursor` for more information"
         "</p><p><h1> /setcursor?id=ID&cursor=N</h1> sets or creates a cursor "
@@ -304,10 +231,13 @@ CommandHandler::fileNotFound(std::string const& params, std::string& retStr)
         "ledger sequence N the data can be safely removed by the instance."
         "The actual deletion is performed by invoking the `maintenance` "
         "endpoint."
-        "</p><p><h1> /maintenance[?queue=true]</h1> Performs maintenance tasks "
-        "on the instance."
-        "<ul><li><i>queue</i> performs deletion of queue data.See setcursor "
-        "for more information</li></ul>"
+        "</p><p><h1> /getcursor?[id=ID]</h1> gets the cursor identified by "
+        "'ID'.  If ID is not defined then all cursors will be returned."
+        "</p><p><h1> /maintenance[?queue=true[&count=N]]</h1> Performs "
+        "maintenance tasks on the instance."
+        "<ul><li><i>queue</i> performs deletion of queue data. Deletes at most "
+        "count entries from each table (defaults to 50000). See setcursor for "
+        "more information</li></ul>"
         "</p><p><h1> "
         "/unban?node=NODE_ID</h1>"
         "remove ban for PEER_ID"
@@ -334,155 +264,91 @@ CommandHandler::manualClose(std::string const& params, std::string& retStr)
 }
 
 template <typename T>
-bool
-parseOptionalNumParam(std::map<std::string, std::string> const& map,
-                      std::string const& key, T& val, std::string& retStr)
+optional<T>
+maybeParseParam(std::map<std::string, std::string> const& map,
+                std::string const& key, T& defaultVal)
 {
     auto i = map.find(key);
     if (i != map.end())
     {
         std::stringstream str(i->second);
-        str >> val;
-        if (val == 0)
+        str >> defaultVal;
+
+        // Throw an error if not all bytes were loaded into `val`
+        if (str.fail() || !str.eof())
         {
-            retStr = fmt::format("Failed to parse '{}' argument", key);
-            return false;
+            std::string errorMsg =
+                    fmt::format("Failed to parse '{}' argument", key);
+            throw std::runtime_error(errorMsg);
         }
+        return make_optional<T>(defaultVal);
     }
-    return true;
+
+    return nullopt<T>();
 }
 
-void
-CommandHandler::generateLoad(std::string const& params, std::string& retStr)
+template <typename T>
+T
+parseParam(std::map<std::string, std::string> const& map,
+           std::string const& key)
 {
-    if (mApp.getConfig().ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING)
+    T val;
+    auto res = maybeParseParam(map, key, val);
+    if (!res)
     {
-        // Defaults are 200k accounts, 200k txs, 10 tx/s. This load-test will
-        // therefore take 40k secs or about 12 hours.
-
-        uint32_t nAccounts = 200000;
-        uint32_t nTxs = 200000;
-        uint32_t txRate = 10;
-        bool autoRate = false;
-
-        std::map<std::string, std::string> map;
-        http::server::server::parseParams(params, map);
-
-        if (!parseOptionalNumParam(map, "accounts", nAccounts, retStr))
-            return;
-
-        if (!parseOptionalNumParam(map, "txs", nTxs, retStr))
-            return;
-
-        {
-            auto i = map.find("txrate");
-            if (i != map.end() && i->second == std::string("auto"))
-            {
-                autoRate = true;
-            }
-            else if (!parseOptionalNumParam(map, "txrate", txRate, retStr))
-                return;
-        }
-
-        double hours = ((nAccounts + nTxs) / txRate) / 3600.0;
-        mApp.generateLoad(nAccounts, nTxs, txRate, autoRate);
-        retStr = fmt::format(
-            "Generating load: {:d} accounts, {:d} txs, {:d} tx/s = {:f} hours",
-            nAccounts, nTxs, txRate, hours);
+        std::string errorMsg = fmt::format("'{}' argument is required!", key);
+        throw std::runtime_error(errorMsg);
     }
-    else
-    {
-        retStr = "Set ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING=true in "
-                 "the stellar-core.cfg if you want this behavior";
-    }
+    return val;
 }
 
 void
-CommandHandler::peers(std::string const& params, std::string& retStr)
+CommandHandler::peers(std::string const&, std::string& retStr)
 {
     Json::Value root;
 
-    root["peers"];
-    int counter = 0;
-    for (auto peer : mApp.getOverlayManager().getPeers())
-    {
-        root["peers"][counter]["ip"] = peer->getIP();
-        root["peers"][counter]["port"] = (int)peer->getRemoteListeningPort();
-        root["peers"][counter]["ver"] = peer->getRemoteVersion();
-        root["peers"][counter]["olver"] = (int)peer->getRemoteOverlayVersion();
-        root["peers"][counter]["id"] =
-            mApp.getConfig().toStrKey(peer->getPeerID());
+    auto& pendingPeers = root["pending_peers"];
+    auto addPendingPeers = [&](std::string const& direction,
+                               std::vector<Peer::pointer> const& peers) {
+        auto counter = 0;
+        auto& node = pendingPeers[direction];
+        for (auto const& peer : peers)
+        {
+            node[counter++] = peer->toString();
+        }
+    };
+    addPendingPeers("outbound",
+                    mApp.getOverlayManager().getOutboundPendingPeers());
+    addPendingPeers("inbound",
+                    mApp.getOverlayManager().getInboundPendingPeers());
 
-        counter++;
-    }
+    auto& authenticatedPeers = root["authenticated_peers"];
+    auto addAuthenticatedPeers =
+            [&](std::string const& direction,
+                std::map<NodeID, Peer::pointer> const& peers) {
+                auto counter = 0;
+                auto& node = authenticatedPeers[direction];
+                for (auto const& peer : peers)
+                {
+                    auto& peerNode = node[counter++];
+                    peerNode["address"] = peer.second->toString();
+                    peerNode["ver"] = peer.second->getRemoteVersion();
+                    peerNode["olver"] = (int)peer.second->getRemoteOverlayVersion();
+                    peerNode["id"] = mApp.getConfig().toStrKey(peer.first);
+                }
+            };
+    addAuthenticatedPeers(
+            "outbound", mApp.getOverlayManager().getOutboundAuthenticatedPeers());
+    addAuthenticatedPeers(
+            "inbound", mApp.getOverlayManager().getInboundAuthenticatedPeers());
 
     retStr = root.toStyledString();
 }
 
 void
-CommandHandler::info(std::string const& params, std::string& retStr)
+CommandHandler::info(std::string const&, std::string& retStr)
 {
-    Json::Value root;
-
-    auto& lm = mApp.getLedgerManager();
-
-    auto& info = root["info"];
-
-    if (mApp.getConfig().UNSAFE_QUORUM)
-        info["UNSAFE_QUORUM"] = "UNSAFE QUORUM ALLOWED";
-    info["build"] = STELLAR_CORE_VERSION;
-#ifdef XDR_REVISION
-    info["xdr_revision"] = XDR_REVISION;
-#endif
-#ifdef CORE_REVISION
-    info["core_revision"] = CORE_REVISION;
-#endif
-    info["protocol_version"] = mApp.getConfig().LEDGER_PROTOCOL_VERSION;
-    info["ledger_version"] = lm.getLastClosedLedgerHeader().header.ledgerVersion;
-    info["tx_expiration_period"] = Json::UInt64(lm.getTxExpirationPeriod()
-        - mApp.getConfig().TX_EXPIRATION_PERIOD_WINDOW);
-    info["withdrawal_details_max_length"] = Json::Int64(mApp.getWithdrawalDetailsMaxLength());
-
-    info["state"] = mApp.getStateHuman();
-    info["ledger"]["num"] = (int)lm.getLedgerNum();
-    info["ledger"]["hash"] = binToHex(lm.getLastClosedLedgerHeader().hash);
-    info["ledger"]["closeTime"] =
-        (int)lm.getLastClosedLedgerHeader().header.scpValue.closeTime;
-    info["ledger"]["age"] = (int)lm.secondsSinceLastLedgerClose();
-    info["numPeers"] = (int)mApp.getOverlayManager().getPeers().size();
-    info["network"] = mApp.getConfig().NETWORK_PASSPHRASE;
-	info["admin_account_id"] = PubKeyUtils::toStrKey(mApp.getAdminID());
-    info["base_exchange_name"] = mApp.getConfig().BASE_EXCHANGE_NAME;
-
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto statsAssetFrame = assetHelper->loadStatsAsset(mApp.getDatabase());
-    if (statsAssetFrame)
-        info["statistics_quote_asset"] = statsAssetFrame->getCode();
-
-    std::vector<AssetFrame::pointer> baseAssets;
-    assetHelper->loadBaseAssets(baseAssets, mApp.getDatabase());
-    for (auto asset: baseAssets)
-    {
-        info["base_assets"].append(asset->getCode());
-    }
-
-    auto& statusMessages = mApp.getStatusManager();
-    auto counter = 0;
-    for (auto statusMessage : statusMessages)
-    {
-        info["status"][counter++] = statusMessage.second;
-    }
-
-    auto& herder = mApp.getHerder();
-    Json::Value q;
-    herder.dumpQuorumInfo(q, mApp.getConfig().NODE_SEED.getPublicKey(), true,
-                          herder.getCurrentLedgerSeq());
-    if (q["slots"].size() != 0)
-    {
-        info["quorum"] = q["slots"];
-    }
-
-    retStr = root.toStyledString();
+    retStr = mApp.getJsonInfo().toStyledString();
 }
 
 void
@@ -497,6 +363,8 @@ void
 CommandHandler::logRotate(std::string const& params, std::string& retStr)
 {
     retStr = "Log rotate...";
+
+    Logging::rotate();
 }
 
 void
@@ -514,42 +382,26 @@ CommandHandler::catchup(std::string const& params, std::string& retStr)
         break;
     }
 
-    HistoryManager::CatchupMode mode = HistoryManager::CATCHUP_MINIMAL;
+    uint32_t count = 0;
     std::map<std::string, std::string> retMap;
     http::server::server::parseParams(params, retMap);
 
-    uint32_t ledger = 0;
-    auto ledgerP = retMap.find("ledger");
-    if (ledgerP == retMap.end())
-    {
-        retStr = "Missing required parameter 'ledger=NNN'";
-        return;
-    }
-    else
-    {
-        std::stringstream str(ledgerP->second);
-        str >> ledger;
-        if (ledger == 0)
-        {
-            retStr = "Failed to parse ledger number";
-            return;
-        }
-    }
+    uint32_t ledger = parseParam<uint32_t>(retMap, "ledger");
 
     auto modeP = retMap.find("mode");
     if (modeP != retMap.end())
     {
         if (modeP->second == std::string("complete"))
         {
-            mode = HistoryManager::CATCHUP_COMPLETE;
+            count = std::numeric_limits<uint32_t>::max();
         }
         else if (modeP->second == std::string("minimal"))
         {
-            mode = HistoryManager::CATCHUP_MINIMAL;
+            count = 0;
         }
         else if (modeP->second == std::string("recent"))
         {
-            mode = HistoryManager::CATCHUP_RECENT;
+            count = mApp.getConfig().CATCHUP_RECENT;
         }
         else
         {
@@ -558,58 +410,13 @@ CommandHandler::catchup(std::string const& params, std::string& retStr)
         }
     }
 
-    mApp.getLedgerManager().startCatchUp(ledger, mode, true);
+    mApp.getLedgerManager().startCatchup({ledger, count}, true);
     retStr = (std::string("Started catchup to ledger ") +
               std::to_string(ledger) + std::string(" in mode ") +
-              std::string(mode == HistoryManager::CATCHUP_COMPLETE
-                              ? "CATCHUP_COMPLETE"
-                              : (mode == HistoryManager::CATCHUP_RECENT
-                                     ? "CATCHUP_RECENT"
-                                     : "CATCHUP_MINIMAL")));
-}
-
-void
-CommandHandler::checkdb(std::string const& params, std::string& retStr)
-{
-    mApp.checkDB();
-    retStr = "CheckDB started.";
-}
-
-void
-CommandHandler::checkpoint(std::string const& params, std::string& retStr)
-{
-    auto& hm = mApp.getHistoryManager();
-    if (hm.hasAnyWritableHistoryArchive())
-    {
-        size_t initFail = hm.getPublishFailureCount();
-        size_t initDone = hm.getPublishSuccessCount() + initFail;
-        asio::error_code ec;
-        uint32_t lclNum = mApp.getLedgerManager().getLastClosedLedgerNum();
-        uint32_t ledgerNum = mApp.getLedgerManager().getLedgerNum();
-        hm.queueCurrentHistory();
-        size_t toPublish = hm.publishQueuedHistory();
-        while (((hm.getPublishSuccessCount() + hm.getPublishFailureCount()) -
-                initDone) != toPublish)
-        {
-            mApp.getClock().crank(false);
-        }
-        if (initFail != hm.getPublishFailureCount())
-        {
-            retStr = std::string("Publish failed");
-        }
-        else
-        {
-            retStr = fmt::format("Forcibly published checkpoint 0x{:08x}, "
-                                 "at current ledger {};\n"
-                                 "To force catch up on other peers, "
-                                 "issue the command 'catchup?ledger={}'",
-                                 lclNum, ledgerNum, ledgerNum);
-        }
-    }
-    else
-    {
-        retStr = "No writable history archives available";
-    }
+              std::string(
+                  count == std::numeric_limits<uint32_t>::max()
+                      ? "CATCHUP_COMPLETE"
+                      : (count != 0 ? "CATCHUP_RECENT" : "CATCHUP_MINIMAL")));
 }
 
 void
@@ -626,7 +433,8 @@ CommandHandler::connect(std::string const& params, std::string& retStr)
         str << peerP->second << ":" << portP->second;
         retStr = "Connect to: ";
         retStr += str.str();
-        mApp.getOverlayManager().connectTo(str.str());
+        mApp.getOverlayManager().connectTo(
+            PeerBareAddress::resolve(str.str(), mApp));
     }
     else
     {
@@ -648,13 +456,12 @@ CommandHandler::dropPeer(std::string const& params, std::string& retStr)
         NodeID n;
         if (mApp.getHerder().resolveNodeID(peerId->second, n))
         {
-            auto peers = mApp.getOverlayManager().getPeers();
-            auto peer = std::find_if(
-                peers.begin(), peers.end(),
-                [&n](Peer::pointer peer) { return peer->getPeerID() == n; });
+            auto peers = mApp.getOverlayManager().getAuthenticatedPeers();
+            auto peer = peers.find(n);
             if (peer != peers.end())
             {
-                mApp.getOverlayManager().dropPeer(*peer);
+                peer->second->drop(ErrorCode::MISC, "dropped by user",
+                                   Peer::DropMode::IGNORE_WRITE_QUEUE);
                 if (ban != retMap.end() && ban->second == "1")
                 {
                     retStr = "Drop and ban peer: ";
@@ -728,66 +535,97 @@ CommandHandler::unban(std::string const& params, std::string& retStr)
 }
 
 void
+CommandHandler::upgrades(std::string const& params, std::string& retStr)
+{
+    std::map<std::string, std::string> retMap;
+    http::server::server::parseParams(params, retMap);
+    auto s = retMap["mode"];
+    if (s.empty())
+    {
+        retStr = "mode required";
+        return;
+    }
+    if (s == "get")
+    {
+        retStr = mApp.getHerder().getUpgradesJson();
+    }
+    else if (s == "set")
+    {
+        Upgrades::UpgradeParameters p;
+
+        auto upgradeTime = retMap["upgradetime"];
+        std::tm tm;
+        try
+        {
+            tm = VirtualClock::isoStringToTm(upgradeTime);
+        }
+        catch (std::exception)
+        {
+            retStr =
+                fmt::format("could not parse upgradetime: '{}'", upgradeTime);
+            return;
+        }
+        p.mUpgradeTime = VirtualClock::tmToPoint(tm);
+
+        uint32 baseFee;
+        uint32 baseReserve;
+        uint32 maxTxSize;
+        uint32 protocolVersion;
+
+        p.mMaxTxSize = maybeParseParam(retMap, "maxtxsize", maxTxSize);
+        p.mProtocolVersion =
+            maybeParseParam(retMap, "protocolversion", protocolVersion);
+
+        mApp.getHerder().setUpgrades(p);
+    }
+    else if (s == "clear")
+    {
+        Upgrades::UpgradeParameters p;
+        mApp.getHerder().setUpgrades(p);
+    }
+    else
+    {
+        retStr = fmt::format("Unknown mode: {}", s);
+    }
+}
+
+void
 CommandHandler::quorum(std::string const& params, std::string& retStr)
 {
-    Json::Value root;
     std::map<std::string, std::string> retMap;
     http::server::server::parseParams(params, retMap);
 
     NodeID n;
 
-    try
-    {
-        std::string nID = retMap["node"];
+    std::string nID = retMap["node"];
 
-        if (nID.empty())
+    if (nID.empty())
+    {
+        n = mApp.getConfig().NODE_SEED.getPublicKey();
+    }
+    else
+    {
+        if (!mApp.getHerder().resolveNodeID(nID, n))
         {
-            n = mApp.getConfig().NODE_SEED.getPublicKey();
+            throw std::invalid_argument("unknown name");
         }
-        else
-        {
-            if (!mApp.getHerder().resolveNodeID(nID, n))
-            {
-                throw std::invalid_argument("unknown name");
-            }
-        }
+    }
 
-        mApp.getHerder().dumpQuorumInfo(root, n, retMap["compact"] == "true");
-
-        retStr = root.toStyledString();
-    }
-    catch (std::exception& e)
-    {
-        retStr = (fmt::MemoryWriter() << "{\"exception\": \"" << e.what()
-                                      << "\"}").str();
-    }
-    catch (...)
-    {
-        retStr = "{\"exception\": \"generic\"}";
-    }
+    auto root =
+        mApp.getHerder().getJsonQuorumInfo(n, retMap["compact"] == "true");
+    retStr = root.toStyledString();
 }
 
 void
 CommandHandler::scpInfo(std::string const& params, std::string& retStr)
 {
-    Json::Value root;
-
     std::map<std::string, std::string> retMap;
     http::server::server::parseParams(params, retMap);
 
     size_t lim = 2;
-    std::string limStr = retMap["limit"];
-    if (!limStr.empty())
-    {
-        size_t n = strtoul(limStr.c_str(), NULL, 0);
-        if (n != 0)
-        {
-            lim = n;
-        }
-    }
+    maybeParseParam(retMap, "limit", lim);
 
-    mApp.getHerder().dumpInfo(root, lim);
-
+    auto root = mApp.getHerder().getJsonInfo(lim);
     retStr = root.toStyledString();
 }
 
@@ -840,9 +678,6 @@ CommandHandler::ll(std::string const& params, std::string& retStr)
     retStr = root.toStyledString();
 }
 
-static const char* TX_STATUS_STRING[Herder::TX_STATUS_COUNT] = {
-    "PENDING", "DUPLICATE", "ERROR"};
-
 void
 CommandHandler::tx(std::string const& params, std::string& retStr)
 {
@@ -852,61 +687,49 @@ CommandHandler::tx(std::string const& params, std::string& retStr)
     if (params.compare(0, prefix.size(), prefix) == 0)
     {
         TransactionEnvelope envelope;
-        try
-        {
-            std::string blob = params.substr(prefix.size());
-            std::vector<uint8_t> binBlob;
-            bn::decode_b64(blob, binBlob);
+        std::string blob = params.substr(prefix.size());
+        std::vector<uint8_t> binBlob;
+        decoder::decode_b64(blob, binBlob);
 
-            xdr::xdr_from_opaque(binBlob, envelope);
-            TransactionFramePtr transaction =
+        xdr::xdr_from_opaque(binBlob, envelope);
+        TransactionFramePtr transaction =
                 TransactionFrame::makeTransactionFromWire(mApp.getNetworkID(),
                                                           envelope);
-            if (transaction)
-            {
-                // add it to our current set
-                // and make sure it is valid
-                Herder::TransactionSubmitStatus status =
+        if (transaction)
+        {
+            // add it to our current set
+            // and make sure it is valid
+            Herder::TransactionSubmitStatus status =
                     mApp.getHerder().recvTransaction(transaction);
 
-                if (status == Herder::TX_STATUS_PENDING)
-                {
-                    StellarMessage msg;
-                    msg.type(MessageType::TRANSACTION);
-                    msg.transaction() = envelope;
-                    mApp.getOverlayManager().broadcastMessage(msg);
-                }
-
-                output << "{"
-                       << "\"status\": "
-                       << "\"" << TX_STATUS_STRING[status] << "\"";
-                if (status == Herder::TX_STATUS_ERROR)
-                {
-                    std::string resultBase64;
-                    auto resultBin =
-                        xdr::xdr_to_opaque(transaction->getResult());
-                    resultBase64.reserve(bn::encoded_size64(resultBin.size()) +
-                                         1);
-                    resultBase64 = bn::encode_b64(resultBin);
-
-                    output << " , \"error\": \"" << resultBase64 << "\"";
-                }
-                output << "}";
+            if (status == Herder::TX_STATUS_PENDING)
+            {
+                StellarMessage msg;
+                msg.type(MessageType::TRANSACTION);
+                msg.transaction() = envelope;
+                mApp.getOverlayManager().broadcastMessage(msg);
             }
-        }
-        catch (std::exception& e)
-        {
-            output << "{\"exception\": \"" << e.what() << "\"}";
-        }
-        catch (...)
-        {
-            output << "{\"exception\": \"generic\"}";
+
+            output << "{"
+                   << "\"status\": "
+                   << "\"" << Herder::TX_STATUS_STRING[status] << "\"";
+            if (status == Herder::TX_STATUS_ERROR)
+            {
+                std::string resultBase64;
+                auto resultBin = xdr::xdr_to_opaque(transaction->getResult());
+                resultBase64.reserve(decoder::encoded_size64(resultBin.size()) +
+                                     1);
+                resultBase64 = decoder::encode_b64(resultBin);
+
+                output << " , \"error\": \"" << resultBase64 << "\"";
+            }
+            output << "}";
         }
     }
     else
     {
-        output << "{\"exception\": \"Must specify a tx blob: tx?blob=<tx in "
-                  "xdr format>\"}";
+        throw std::invalid_argument("Must specify a tx blob: tx?blob=<tx in "
+                                    "xdr format>\"}");
     }
 
     retStr = output.str();
@@ -938,12 +761,7 @@ CommandHandler::setcursor(std::string const& params, std::string& retStr)
     http::server::server::parseParams(params, map);
     std::string const& id = map["id"];
 
-    uint32 cursor;
-
-    if (!parseOptionalNumParam(map, "cursor", cursor, retStr))
-    {
-        return;
-    }
+    uint32 cursor = parseParam<uint32>(map, "cursor");
 
     if (!ExternalQueue::validateResourceID(id))
     {
@@ -958,13 +776,44 @@ CommandHandler::setcursor(std::string const& params, std::string& retStr)
 }
 
 void
+CommandHandler::getcursor(std::string const& params, std::string& retStr)
+{
+    Json::Value root;
+    std::map<std::string, std::string> map;
+    http::server::server::parseParams(params, map);
+    std::string const& id = map["id"];
+
+    // the decision was made not to check validity here
+    // because there are subsequent checks for that in
+    // ExternalQueue and if an exception is thrown for
+    // validity there, the ret format is technically more
+    // correct for the mime type
+    ExternalQueue ps(mApp);
+    std::map<std::string, uint32> curMap;
+    int counter = 0;
+    ps.getCursorForResource(id, curMap);
+    root["cursors"][0];
+    for (auto cursor : curMap)
+    {
+        root["cursors"][counter]["id"] = cursor.first;
+        root["cursors"][counter]["cursor"] = cursor.second;
+        counter++;
+    }
+
+    retStr = root.toStyledString();
+}
+
+void
 CommandHandler::maintenance(std::string const& params, std::string& retStr)
 {
     std::map<std::string, std::string> map;
     http::server::server::parseParams(params, map);
     if (map["queue"] == "true")
     {
-        mApp.maintenance();
+        uint32_t count = 50000;
+        maybeParseParam(map, "count", count);
+
+        mApp.getMaintainer().performMaintenance(count);
         retStr = "Done";
     }
     else
@@ -972,4 +821,203 @@ CommandHandler::maintenance(std::string const& params, std::string& retStr)
         retStr = "No work performed";
     }
 }
+
+void
+CommandHandler::clearMetrics(std::string const& params, std::string& retStr)
+{
+    std::map<std::string, std::string> map;
+    http::server::server::parseParams(params, map);
+
+    std::string domain;
+    maybeParseParam(map, "domain", domain);
+
+    mApp.clearMetrics(domain);
+
+    retStr = fmt::format("Cleared {} metrics!", domain);
+}
+
+#ifdef BUILD_TESTS
+void
+CommandHandler::generateLoad(std::string const& params, std::string& retStr)
+{
+    if (mApp.getConfig().ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING)
+    {
+        uint32_t nAccounts = 1000;
+        uint32_t nTxs = 0;
+        uint32_t txRate = 10;
+        uint32_t batchSize = 100; // Only for account creations
+        uint32_t offset = 0;
+        bool autoRate = false;
+        std::string mode = "create";
+
+        std::map<std::string, std::string> map;
+        http::server::server::parseParams(params, map);
+
+        bool isCreate;
+        maybeParseParam<std::string>(map, "mode", mode);
+        if (mode == std::string("create"))
+        {
+            isCreate = true;
+        }
+        else if (mode == std::string("pay"))
+        {
+            isCreate = false;
+        }
+        else
+        {
+            throw std::runtime_error("Unknown mode.");
+        }
+
+        maybeParseParam(map, "accounts", nAccounts);
+        maybeParseParam(map, "txs", nTxs);
+        maybeParseParam(map, "batchsize", batchSize);
+        maybeParseParam(map, "offset", offset);
+        {
+            auto i = map.find("txrate");
+            if (i != map.end() && i->second == std::string("auto"))
+            {
+                autoRate = true;
+            }
+            else
+            {
+                maybeParseParam(map, "txrate", txRate);
+            }
+        }
+
+        uint32_t numItems = isCreate ? nAccounts : nTxs;
+        std::string itemType = isCreate ? "accounts" : "txs";
+        double hours = (numItems / txRate) / 3600.0;
+
+        if (batchSize > 100)
+        {
+            batchSize = 100;
+            retStr = "Setting batch size to its limit of 100.";
+        }
+        mApp.generateLoad(isCreate, nAccounts, offset, nTxs, txRate, batchSize,
+                          autoRate);
+        retStr +=
+            fmt::format(" Generating load: {:d} {:s}, {:d} tx/s = {:f} hours",
+                        numItems, itemType, txRate, hours);
+    }
+    else
+    {
+        retStr = "Set ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING=true in "
+                 "the stellar-core.cfg if you want this behavior";
+    }
+}
+
+void
+CommandHandler::testAcc(std::string const& params, std::string& retStr)
+{
+    using namespace txtest;
+
+    std::map<std::string, std::string> retMap;
+    http::server::server::parseParams(params, retMap);
+    Json::Value root;
+    auto accName = retMap.find("name");
+    if (accName == retMap.end())
+    {
+        root["status"] = "error";
+        root["detail"] = "Bad HTTP GET: try something like: testacc?name=bob";
+    }
+    else
+    {
+        SecretKey key;
+        if (accName->second == "root")
+        {
+            //key = getRoot(mApp.getNetworkID());
+        }
+        else
+        {
+            key = getAccount(accName->second.c_str());
+        }
+
+       /* LedgerTxn ltx(mApp.getLedgerTxnRoot());
+        auto acc = stellar::loadAccount(ltx, key.getPublicKey());
+        if (acc)
+        {
+            auto const& ae = acc.current().data.account();
+            root["name"] = accName->second;
+            root["id"] = KeyUtils::toStrKey(ae.accountID);
+            root["balance"] = (Json::Int64)ae.balance;
+            root["seqnum"] = (Json::UInt64)ae.seqNum;
+        }*/
+    }
+    retStr = root.toStyledString();
+}
+
+void
+CommandHandler::testTx(std::string const& params, std::string& retStr)
+{
+    using namespace txtest;
+
+    std::map<std::string, std::string> retMap;
+    http::server::server::parseParams(params, retMap);
+
+    auto to = retMap.find("to");
+    auto from = retMap.find("from");
+    auto amount = retMap.find("amount");
+    auto create = retMap.find("create");
+
+    Json::Value root;
+
+    if (to != retMap.end() && from != retMap.end() && amount != retMap.end())
+    {
+        Hash const& networkID = mApp.getNetworkID();
+
+        auto toAccount =
+            /*to->second == "root"
+                ? TestAccount{mApp, getRoot(networkID)}
+                :*/ TestAccount{mApp, getAccount(to->second.c_str())};
+        auto fromAccount =
+            /*from->second == "root"
+                ? TestAccount{mApp, getRoot(networkID)}
+                :*/ TestAccount{mApp, getAccount(from->second.c_str())};
+
+        uint64_t paymentAmount = 0;
+        std::istringstream iss(amount->second);
+        iss >> paymentAmount;
+
+        root["from_name"] = from->second;
+        root["to_name"] = to->second;
+//        root["from_id"] = KeyUtils::toStrKey(fromAccount.getPublicKey());
+//        root["to_id"] = KeyUtils::toStrKey(toAccount.getPublicKey());
+        root["amount"] = (Json::UInt64)paymentAmount;
+
+        TransactionFramePtr txFrame;
+        if (create != retMap.end() && create->second == "true")
+        {
+            //txFrame = fromAccount.tx({/*createAccount(toAccount, paymentAmount)*/});
+        }
+        else
+        {
+            //txFrame = fromAccount.tx({/*payment(toAccount, paymentAmount)*/});
+        }
+
+        switch (mApp.getHerder().recvTransaction(txFrame))
+        {
+        case Herder::TX_STATUS_PENDING:
+            root["status"] = "pending";
+            break;
+        case Herder::TX_STATUS_DUPLICATE:
+            root["status"] = "duplicate";
+            break;
+        case Herder::TX_STATUS_ERROR:
+            root["status"] = "error";
+            root["detail"] =
+                xdr::xdr_to_string(txFrame->getResult().result.code());
+            break;
+        default:
+            assert(false);
+        }
+    }
+    else
+    {
+        root["status"] = "error";
+        root["detail"] = "Bad HTTP GET: try something like: "
+                         "testtx?from=root&to=bob&amount=1000000000";
+    }
+    retStr = root.toStyledString();
+}
+#endif
 }

@@ -6,7 +6,7 @@
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "transactions/dex/OfferExchange.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/BalanceHelperLegacy.h"

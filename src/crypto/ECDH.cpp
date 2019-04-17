@@ -4,9 +4,13 @@
 
 #include "crypto/ECDH.h"
 #include "crypto/SHA.h"
-#include <sodium.h>
-#include <functional>
 #include "util/HashOfHash.h"
+#include <functional>
+#include <sodium.h>
+
+#ifdef MSAN_ENABLED
+#include <sanitizer/msan_interface.h>
+#endif
 
 namespace stellar
 {
@@ -16,6 +20,9 @@ EcdhRandomSecret()
 {
     Curve25519Secret out;
     randombytes_buf(out.key.data(), out.key.size());
+#ifdef MSAN_ENABLED
+    __msan_unpoison(out.key.data(), out.key.size());
+#endif
     return out;
 }
 
@@ -23,7 +30,10 @@ Curve25519Public
 EcdhDerivePublic(Curve25519Secret const& sec)
 {
     Curve25519Public out;
-    crypto_scalarmult_base(out.key.data(), sec.key.data());
+    if (crypto_scalarmult_base(out.key.data(), sec.key.data()) != 0)
+    {
+        throw std::runtime_error("Could not derive key (mult_base)");
+    }
     return out;
 }
 
@@ -36,8 +46,18 @@ EcdhDeriveSharedKey(Curve25519Secret const& localSecret,
     auto const& publicB = localFirst ? remotePublic : localPublic;
 
     unsigned char q[crypto_scalarmult_BYTES];
-    crypto_scalarmult(q, localSecret.key.data(), remotePublic.key.data());
-    std::vector<uint8_t> buf(q, q + crypto_scalarmult_BYTES);
+    if (crypto_scalarmult(q, localSecret.key.data(), remotePublic.key.data()) !=
+        0)
+    {
+        throw std::runtime_error("Could not derive shared key (mult)");
+    }
+#ifdef MSAN_ENABLED
+    __msan_unpoison(q, crypto_scalarmult_BYTES);
+#endif
+    std::vector<uint8_t> buf;
+    buf.reserve(crypto_scalarmult_BYTES + publicA.key.size() +
+                publicB.key.size());
+    buf.insert(buf.end(), q, q + crypto_scalarmult_BYTES);
     buf.insert(buf.end(), publicA.key.begin(), publicA.key.end());
     buf.insert(buf.end(), publicB.key.begin(), publicB.key.end());
     return hkdfExtract(buf);
@@ -46,7 +66,8 @@ EcdhDeriveSharedKey(Curve25519Secret const& localSecret,
 
 namespace std
 {
-size_t hash<stellar::Curve25519Public>::
+size_t
+hash<stellar::Curve25519Public>::
 operator()(stellar::Curve25519Public const& k) const noexcept
 {
     return std::hash<stellar::uint256>()(k.key);

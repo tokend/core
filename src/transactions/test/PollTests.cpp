@@ -3,7 +3,7 @@
 #include <transactions/test/test_helper/ReviewRequestTestHelper.h>
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test/test_marshaler.h"

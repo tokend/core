@@ -189,7 +189,7 @@ bool AssetFrame::isAssetCodeValid(AssetCode const& code)
         }
         else
         {
-            if (b > 0x7F || !std::isalnum((char)b, cLocale))
+            if (b > 0x7F || !std::isalnum((char)b, std::locale::classic()))
             {
                 return false;
             }

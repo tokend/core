@@ -28,6 +28,8 @@ class MockDatabase : public Database
                  medida::TimerContext(std::string const& entityName));
     MOCK_METHOD1(getUpdateTimer,
                  medida::TimerContext(std::string const& entityName));
+    MOCK_METHOD1(getUpsertTimer,
+                 medida::TimerContext(std::string const& entityName));
     MOCK_METHOD0(setCurrentTransactionReadOnly, void());
     MOCK_CONST_METHOD0(isSqlite, bool());
     MOCK_CONST_METHOD0(canUsePool, bool());

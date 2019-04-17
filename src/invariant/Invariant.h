@@ -1,28 +1,63 @@
+#pragma once
+
 // Copyright 2017 Stellar Development Foundation and contributors. Licensed
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-#pragma once
 
-#ifndef STELLAR_INVARIANT_H
-#define STELLAR_INVARIANT_H
-
-
-#include <functional>
+#include <memory>
+#include <string>
 
 namespace stellar
 {
 
-    class LedgerDelta;
+class Bucket;
+//struct LedgerTxnDelta;
+class LedgerDelta;
+struct Operation;
+struct OperationResult;
 
-    class Invariant
+// NOTE: The checkOn* functions should have a default implementation so that
+//       more can be added in the future without requiring changes to all
+//       derived classes.
+class Invariant
+{
+    bool const mStrict;
+
+public:
+    explicit Invariant(bool strict) : mStrict(strict)
     {
-    public:
-        virtual ~Invariant();
+    }
 
-        virtual std::string getName() const = 0;
-        virtual std::string check(LedgerDelta const& delta) const = 0;
-    };
+    virtual ~Invariant()
+    {
+    }
+
+    virtual std::string getName() const = 0;
+
+    virtual std::string check(LedgerDelta const& delta) const
+    {
+        return std::string{};
+    }
+
+    bool
+    isStrict() const
+    {
+        return mStrict;
+    }
+
+    virtual std::string
+    checkOnBucketApply(std::shared_ptr<Bucket const> bucket,
+                       uint32_t oldestLedger, uint32_t newestLedger)
+    {
+        return std::string{};
+    }
+
+    virtual std::string
+    checkOnOperationApply(Operation const& operation,
+                          OperationResult const& result,
+                          LedgerDelta const& ltxDelta)
+    {
+        return std::string{};
+    }
+};
 }
-
-
-#endif //STELLAR_INVARIANT_H

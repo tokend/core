@@ -1,5 +1,5 @@
 #include "test/test_marshaler.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "test_helper/SaleRequestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"

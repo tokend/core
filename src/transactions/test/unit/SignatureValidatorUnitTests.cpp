@@ -1,5 +1,9 @@
 #include <crypto/SHA.h>
 #include "test/test_marshaler.h"
+#include "invariant/InvariantManagerImpl.h"
+#include "herder/HerderPersistenceImpl.h"
+#include "main/Maintainer.h"
+#include "history/HistoryArchiveManager.h"
 #include "transactions/SignatureValidatorImpl.h"
 #include "transactions/test/mocks/MockApplication.h"
 #include "transactions/test/mocks/MockStorageHelper.h"

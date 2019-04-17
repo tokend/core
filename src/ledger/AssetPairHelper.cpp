@@ -346,5 +346,4 @@ bool AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair, co
 
     return bigDivide(result, amount, ONE, currentPrice, rounding, destAssetMinimumAmount);
 }
-
 }

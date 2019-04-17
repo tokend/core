@@ -5,6 +5,7 @@
 #include "util/Logging.h"
 #include "main/Application.h"
 #include "util/types.h"
+#include <list>
 
 /*
 Levels:
@@ -18,10 +19,67 @@ Levels:
 
 namespace stellar
 {
-el::Configurations Logging::gDefaultConf;
+
+namespace
+{
+
+static const std::vector<std::string> kLoggers = {
+        "Fs",      "SCP",    "Bucket", "Database", "History", "Process",  "Ledger",
+        "Overlay", "Herder", "Tx",     "LoadGen",  "Work",    "Invariant",
+        Logging::ENTRY_LOGGER, Logging::OPERATION_LOGGER };
+}
 
 const char* Logging::ENTRY_LOGGER = "EntryFrame";
 const char* Logging::OPERATION_LOGGER = "OperationFrame";
+
+el::Configurations Logging::gDefaultConf;
+
+template <typename T> class LockElObject : public NonMovableOrCopyable
+{
+    T* const mItem;
+
+public:
+    explicit LockElObject(T* elObj) : mItem{elObj}
+    {
+        assert(mItem);
+        static_assert(std::is_base_of<el::base::threading::ThreadSafe,
+                              std::remove_cv_t<T>>::value,
+                      "ThreadSafe (easylogging) param required");
+        mItem->acquireLock();
+    }
+
+    ~LockElObject()
+    {
+        mItem->releaseLock();
+    }
+};
+
+class LockHelper
+{
+    // The declaration order is important, as this is reverse
+    // destruction order (loggers release locks first, followed
+    // by "registered loggers" object)
+    std::unique_ptr<LockElObject<el::base::RegisteredLoggers>>
+            mRegisteredLoggersLock;
+    std::list<LockElObject<el::Logger>> mLoggersLocks;
+
+public:
+    explicit LockHelper(std::vector<std::string> const& loggers)
+    {
+        mRegisteredLoggersLock =
+                std::make_unique<LockElObject<el::base::RegisteredLoggers>>(
+                        el::Helpers::storage()->registeredLoggers());
+        for (auto const& logger : loggers)
+        {
+            // `getLogger` will either return an existing logger, or nullptr
+            auto l = el::Loggers::getLogger(logger, false);
+            if (l)
+            {
+                mLoggersLocks.emplace_back(l);
+            }
+        }
+    }
+};
 
 void
 Logging::setFmt(std::string const& peerID, bool timestamps)
@@ -31,8 +89,9 @@ Logging::setFmt(std::string const& peerID, bool timestamps)
     {
         datetime = "%datetime{%Y-%M-%dT%H:%m:%s.%g}";
     }
-    std::string shortFmt = datetime + " " + peerID + " [%logger %level] %msg";
-    std::string longFmt = shortFmt + " [%fbase:%line]";
+    const std::string shortFmt =
+            datetime + " " + peerID + " [%logger %level] %msg";
+    const std::string longFmt = shortFmt + " [%fbase:%line]";
 
     gDefaultConf.setGlobally(el::ConfigurationType::Format, shortFmt);
     gDefaultConf.set(el::Level::Error, el::ConfigurationType::Format, longFmt);
@@ -47,20 +106,10 @@ Logging::init()
     // el::Loggers::addFlag(el::LoggingFlag::HierarchicalLogging);
     el::Loggers::addFlag(el::LoggingFlag::DisableApplicationAbortOnFatalLog);
 
-    el::Loggers::getLogger("Fs");
-    el::Loggers::getLogger("SCP");
-    el::Loggers::getLogger("Bucket");
-    el::Loggers::getLogger("Database");
-    el::Loggers::getLogger("History");
-    el::Loggers::getLogger("Process");
-    el::Loggers::getLogger("Ledger");
-    el::Loggers::getLogger("Overlay");
-    el::Loggers::getLogger("Herder");
-    el::Loggers::getLogger("Tx");
-    el::Loggers::getLogger("LoadGen");
-    el::Loggers::getLogger("Work");
-	el::Loggers::getLogger(ENTRY_LOGGER);
-	el::Loggers::getLogger(OPERATION_LOGGER);
+    for (auto logger : kLoggers)
+    {
+        el::Loggers::getLogger(logger);
+    }
 
     gDefaultConf.setToDefault();
     gDefaultConf.setGlobally(el::ConfigurationType::ToStandardOutput, "true");
@@ -172,24 +221,24 @@ Logging::getStringFromLL(el::Level level)
 {
     switch (level)
     {
-    case el::Level::Global:
-        return "Global";
-    case el::Level::Trace:
-        return "Trace";
-    case el::Level::Debug:
-        return "Debug";
-    case el::Level::Fatal:
-        return "Fatal";
-    case el::Level::Error:
-        return "Error";
-    case el::Level::Warning:
-        return "Warning";
-    case el::Level::Verbose:
-        return "Verbose";
-    case el::Level::Info:
-        return "Info";
-    case el::Level::Unknown:
-        return "Unknown";
+        case el::Level::Global:
+            return "Global";
+        case el::Level::Trace:
+            return "Trace";
+        case el::Level::Debug:
+            return "Debug";
+        case el::Level::Fatal:
+            return "Fatal";
+        case el::Level::Error:
+            return "Error";
+        case el::Level::Warning:
+            return "Warning";
+        case el::Level::Verbose:
+            return "Verbose";
+        case el::Level::Info:
+            return "Info";
+        case el::Level::Unknown:
+            return "Unknown";
     }
     return "????";
 }
@@ -229,6 +278,47 @@ Logging::getLLfromString(std::string const& levelName)
     }
 
     return el::Level::Info;
+}
+
+void
+Logging::rotate()
+{
+    auto loggers = kLoggers;
+    loggers.insert(loggers.begin(), "default");
+
+    // Lock the loggers while we rotate; this is needed to
+    // prevent race with worker threads which are trying to log
+    LockHelper lock{loggers};
+
+    for (auto const& logger : loggers)
+    {
+        auto loggerObj = el::Loggers::getLogger(logger);
+
+        // Grab logger configuration maxLogFileSize; Unfortunately, we cannot
+        // lock those, because during re-configuration easylogging assumes no
+        // locks are acquired and performs a delete on configs.
+
+        // This implies that worker threads are NOT expected to do anything
+        // other than logging. If worker thread does not follow,
+        // we may end up in a deadlock (e.g., main thread holds a lock on
+        // logger, while worker thread holds a lock on configs)
+        auto prevMaxFileSize =
+                loggerObj->typedConfigurations()->maxLogFileSize(el::Level::Global);
+
+        // Reconfigure the logger to enforce minimal filesize, to force
+        // closing/re-opening the file. Note that easylogging re-locks the
+        // logger inside reconfigure, which is okay, since we are using
+        // recursive mutex.
+        el::Loggers::reconfigureLogger(
+                logger, el::ConfigurationType::MaxLogFileSize, "1");
+
+        // Now return to the previous filesize value. It is important that no
+        // logging occurs in between (to prevent loss), and is achieved by the
+        // lock on logger we acquired in the beginning.
+        el::Loggers::reconfigureLogger(logger,
+                                       el::ConfigurationType::MaxLogFileSize,
+                                       std::to_string(prevMaxFileSize));
+    }
 }
 
 void

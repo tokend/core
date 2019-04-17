@@ -4,23 +4,21 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <memory>
-#include <functional>
-#include <string>
+#include "TxSetFrame.h"
+#include "Upgrades.h"
+#include "lib/json/json-forwards.h"
+#include "overlay/Peer.h"
 #include "overlay/StellarXDR.h"
 #include "scp/SCP.h"
-#include "lib/json/json-forwards.h"
 #include "util/Timer.h"
-#include "TxSetFrame.h"
+#include <functional>
+#include <memory>
+#include <string>
 
 namespace stellar
 {
 class Application;
-class Peer;
-class Database;
 class XDROutputFileStream;
-
-typedef std::shared_ptr<Peer> PeerPtr;
 
 /*
  * Public Interface to the Herder module
@@ -50,10 +48,13 @@ class Herder
     static std::chrono::seconds const NODE_EXPIRATION_SECONDS;
 
     // How many ledger in the future we consider an envelope viable.
-    static uint32 const LEDGER_VALIDITY_BRACKET;
+    static uint32_t const LEDGER_VALIDITY_BRACKET;
 
     // How many ledgers in the past we keep track of
-    static uint32 const MAX_SLOTS_TO_REMEMBER;
+    static uint32_t const MAX_SLOTS_TO_REMEMBER;
+
+    // Threshold used to filter out irrelevant events.
+    static std::chrono::nanoseconds const TIMERS_THRESHOLD_NANOSEC;
 
     static std::unique_ptr<Herder> create(Application& app);
 
@@ -72,6 +73,24 @@ class Herder
         TX_STATUS_COUNT
     };
 
+    static const char* TX_STATUS_STRING[TX_STATUS_COUNT];
+
+    enum EnvelopeStatus
+    {
+        // for some reason this envelope was discarded - either is was invalid,
+        // used unsane qset or was coming from node that is not in quorum
+        ENVELOPE_STATUS_DISCARDED,
+        // envelope was skipped as it's from this validator
+        ENVELOPE_STATUS_SKIPPED_SELF,
+        // envelope data is currently being fetched
+        ENVELOPE_STATUS_FETCHING,
+        // current call to recvSCPEnvelope() was the first when the envelope
+        // was fully fetched so it is ready for processing
+        ENVELOPE_STATUS_READY,
+        // envelope was already processed
+        ENVELOPE_STATUS_PROCESSED,
+    };
+
     virtual State getState() const = 0;
     virtual std::string getStateHuman() const = 0;
 
@@ -81,24 +100,29 @@ class Herder
 
     virtual void bootstrap() = 0;
 
-    // restores SCP state based on the last messages saved on disk
-    virtual void restoreSCPState() = 0;
+    // restores Herder's state from disk
+    virtual void restoreState() = 0;
 
-    virtual void recvSCPQuorumSet(Hash const& hash,
+    virtual bool recvSCPQuorumSet(Hash const& hash,
                                   SCPQuorumSet const& qset) = 0;
-    virtual void recvTxSet(Hash const& hash, TxSetFrame const& txset) = 0;
+    virtual bool recvTxSet(Hash const& hash, TxSetFrame const& txset) = 0;
     // We are learning about a new transaction.
     virtual TransactionSubmitStatus recvTransaction(TransactionFramePtr tx) = 0;
     virtual void peerDoesntHave(stellar::MessageType type,
-                                uint256 const& itemID, PeerPtr peer) = 0;
+                                uint256 const& itemID, Peer::pointer peer) = 0;
     virtual TxSetFramePtr getTxSet(Hash const& hash) = 0;
     virtual SCPQuorumSetPtr getQSet(Hash const& qSetHash) = 0;
 
     // We are learning about a new envelope.
-    virtual void recvSCPEnvelope(SCPEnvelope const& envelope) = 0;
+    virtual EnvelopeStatus recvSCPEnvelope(SCPEnvelope const& envelope) = 0;
+
+    // We are learning about a new fully-fetched envelope.
+    virtual EnvelopeStatus recvSCPEnvelope(SCPEnvelope const& envelope,
+                                           const SCPQuorumSet& qset,
+                                           TxSetFrame txset) = 0;
 
     // a peer needs our SCP state
-    virtual void sendSCPStateToPeer(uint32 ledgerSeq, PeerPtr peer) = 0;
+    virtual void sendSCPStateToPeer(uint32 ledgerSeq, Peer::pointer peer) = 0;
 
     // returns the latest known ledger seq using consensus information
     // and local state
@@ -106,27 +130,20 @@ class Herder
 
     virtual void triggerNextLedger(uint32_t ledgerSeqToTrigger) = 0;
 
-    // returns if the quorum set passes basic sanity checks
-    // if extraChecks is set, performs additional checks
-    virtual bool isQuorumSetSane(SCPQuorumSet const& qSet,
-                                 bool extraChecks) = 0;
-
     // lookup a nodeID in config and in SCP messages
     virtual bool resolveNodeID(std::string const& s, PublicKey& retKey) = 0;
+
+    // sets the upgrades that should be applied during consensus
+    virtual void setUpgrades(Upgrades::UpgradeParameters const& upgrades) = 0;
+    // gets the upgrades that are scheduled by this node
+    virtual std::string getUpgradesJson() = 0;
 
     virtual ~Herder()
     {
     }
 
-    virtual void dumpInfo(Json::Value& ret, size_t limit) = 0;
-    virtual void dumpQuorumInfo(Json::Value& ret, NodeID const& id,
-                                bool summary, uint64 index = 0) = 0;
-
-    static size_t copySCPHistoryToStream(Database& db, soci::session& sess,
-                                         uint32_t ledgerSeq,
-                                         uint32_t ledgerCount,
-                                         XDROutputFileStream& scpHistory);
-    static void dropAll(Database& db);
-    static void deleteOldEntries(Database& db, uint32_t ledgerSeq);
+    virtual Json::Value getJsonInfo(size_t limit) = 0;
+    virtual Json::Value getJsonQuorumInfo(NodeID const& id, bool summary,
+                                          uint64 index = 0) = 0;
 };
 }

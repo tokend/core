@@ -4,7 +4,7 @@
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageSignerTestHelper.h>
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"

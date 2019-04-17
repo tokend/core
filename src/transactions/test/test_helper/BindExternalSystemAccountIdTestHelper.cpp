@@ -69,9 +69,6 @@ namespace txtest
 
         REQUIRE(actualResultCode == expectedResultCode);
 
-        auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
-        REQUIRE(txResult.feeCharged == txFee);
-
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDsAfter;
         externalSystemAccountIDsAfter = externalSystemAccountIDHelper->loadAll(db);
 

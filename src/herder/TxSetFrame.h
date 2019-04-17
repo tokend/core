@@ -6,6 +6,7 @@
 
 #include "overlay/StellarXDR.h"
 #include "transactions/TransactionFrame.h"
+#include <functional>
 
 namespace stellar
 {
@@ -20,6 +21,10 @@ class TxSetFrame
     Hash mHash;
 
     Hash mPreviousLedgerHash;
+
+    bool
+    checkOrTrim(Application& app,
+                std::function<bool(TransactionFramePtr)> processInvalidTxLambda);
 
   public:
     std::vector<TransactionFramePtr> mTransactions;
@@ -41,7 +46,7 @@ class TxSetFrame
 
     std::vector<TransactionFramePtr> sortForApply();
 
-    bool checkValid(Application& app) const;
+    bool checkValid(Application& app);
     void trimInvalid(Application& app,
                      std::vector<TransactionFramePtr>& trimmed);
     void surgePricingFilter(LedgerManager const& lm);
@@ -63,4 +68,4 @@ class TxSetFrame
 
     void toXDR(TransactionSet& set);
 };
-}
+} // namespace stellar

@@ -2,62 +2,79 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include <ledger/EntryHelperLegacy.h>
 #include "bucket/Bucket.h"
 #include "bucket/BucketApplicator.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/EntryHelperLegacy.h"
-#include "util/Logging.h"
+//#include "ledger/LedgerTxnEntry.h"
+#include "main/Application.h"
 
 namespace stellar
 {
 
-BucketApplicator::BucketApplicator(Database& db,
+static const size_t LEDGER_ENTRY_BATCH_COMMIT_SIZE = 0xfff;
+
+BucketApplicator::BucketApplicator(Application& app,
                                    std::shared_ptr<const Bucket> bucket)
-    : mDb(db), mBucket(bucket)
+    : mApp(app), mBucketIter(bucket)
 {
-    if (!bucket->getFilename().empty())
-    {
-        mIn.open(bucket->getFilename());
-    }
 }
 
 BucketApplicator::operator bool() const
 {
-    return (bool)mIn;
+    return (bool)mBucketIter;
 }
 
-void
+size_t
+BucketApplicator::pos()
+{
+    return mBucketIter.pos();
+}
+
+size_t
+BucketApplicator::size() const
+{
+    return mBucketIter.size();
+}
+
+size_t
 BucketApplicator::advance()
 {
-    soci::transaction sqlTx(mDb.getSession());
-    BucketEntry entry;
-    while (mIn && mIn.readOne(entry))
+    size_t count = 0;
+    Database& db = mApp.getDatabase();
+    soci::transaction sqlTx(db.getSession());
+
+    for (; mBucketIter; ++mBucketIter)
     {
         LedgerHeader lh;
-        LedgerDeltaImpl delta(lh, mDb, false);
-        if (entry.type() == BucketEntryType::LIVEENTRY)
+        LedgerDeltaImpl delta(lh, db, false);
+        BucketEntry const& e = *mBucketIter;
+        if (e.type() == BucketEntryType::LIVEENTRY)
         {
-            LedgerEntry le = entry.liveEntry();
-            EntryHelperProvider::storeAddOrChangeEntry(delta, mDb, le);
+            EntryHelperProvider::storeAddOrChangeEntry(delta, db, e.liveEntry());
         }
         else
         {
-			EntryHelperProvider::storeDeleteEntry(delta, mDb, entry.deadEntry());
+            EntryHelperProvider::storeDeleteEntry(delta, db, e.deadEntry());
         }
+
         // No-op, just to avoid needless rollback.
         static_cast<LedgerDelta&>(delta).commit();
-        if ((++mSize & 0xff) == 0xff)
+        if ((++count > LEDGER_ENTRY_BATCH_COMMIT_SIZE))
         {
             break;
         }
     }
     sqlTx.commit();
-    mDb.clearPreparedStatementCache();
+    db.clearPreparedStatementCache();
 
-    if (!mIn || (mSize & 0xfff) == 0xfff)
+    mCount += count;
+
+    if (!mBucketIter || (mCount & LEDGER_ENTRY_BATCH_COMMIT_SIZE) == LEDGER_ENTRY_BATCH_COMMIT_SIZE)
     {
-        CLOG(INFO, "Bucket") << "Bucket-apply: committed " << mSize
-                             << " entries";
+        CLOG(INFO, "Bucket") << "Bucket-apply: committed " << mCount << " entries";
     }
+
+    return count;
 }
 }

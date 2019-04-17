@@ -4,17 +4,24 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include "bucket/FutureBucket.h"
+#include "main/Config.h"
+#include "xdr/Stellar-types.h"
+
 #include <cereal/cereal.hpp>
+#include <memory>
 #include <string>
 #include <system_error>
-#include <memory>
-#include "bucket/FutureBucket.h"
-#include "xdr/Stellar-types.h"
 
 namespace asio
 {
 typedef std::error_code error_code;
-};
+}
+
+namespace medida
+{
+class Meter;
+}
 
 namespace stellar
 {
@@ -62,7 +69,7 @@ struct HistoryArchiveState
 
     HistoryArchiveState();
 
-    HistoryArchiveState(uint32_t ledgerSeq, BucketList& buckets);
+    HistoryArchiveState(uint32_t ledgerSeq, BucketList const& buckets);
 
     static std::string baseName();
     static std::string wellKnownRemoteDir();
@@ -128,14 +135,9 @@ struct HistoryArchiveState
 
 class HistoryArchive : public std::enable_shared_from_this<HistoryArchive>
 {
-    std::string mName;
-    std::string mGetCmd;
-    std::string mPutCmd;
-    std::string mMkdirCmd;
-
   public:
-    HistoryArchive(std::string const& name, std::string const& getCmd,
-                   std::string const& putCmd, std::string const& mkdirCmd);
+    explicit HistoryArchive(Application& app,
+                            HistoryArchiveConfiguration const& config);
     ~HistoryArchive();
     bool hasGetCmd() const;
     bool hasPutCmd() const;
@@ -147,5 +149,16 @@ class HistoryArchive : public std::enable_shared_from_this<HistoryArchive>
     std::string putFileCmd(std::string const& local,
                            std::string const& remote) const;
     std::string mkdirCmd(std::string const& remoteDir) const;
+
+    void markSuccess();
+    void markFailure();
+
+    uint64_t getSuccessCount() const;
+    uint64_t getFailureCount() const;
+
+  private:
+    HistoryArchiveConfiguration mConfig;
+    medida::Meter& mSuccessMeter;
+    medida::Meter& mFailureMeter;
 };
 }

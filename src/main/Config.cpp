@@ -4,18 +4,38 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "main/Config.h"
-#include "history/HistoryArchive.h"
-#include "StellarCoreVersion.h"
-#include "util/Logging.h"
-#include "util/types.h"
 #include "crypto/Hex.h"
+//#include "crypto/KeyUtils.h"
+#include "herder/Herder.h"
+#include "history/HistoryArchive.h"
+#include "ledger/LedgerManager.h"
+#include "main/ExternalQueue.h"
+#include "main/StellarCoreVersion.h"
 #include "scp/LocalNode.h"
+#include "util/Fs.h"
+#include "util/Logging.h"
+#include "util/XDROperators.h"
+#include "util/types.h"
+
+#include <functional>
+#include <lib/util/format.h>
 #include <sstream>
-#include "ledger/AssetFrame.h"
+#include <unordered_set>
 
 namespace stellar
 {
-using xdr::operator<;
+const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION =
+        static_cast<uint32_t>(LedgerVersion::FIX_PAYMENT_STATS);
+
+// Options that must only be used for testing
+static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {
+        "RUN_STANDALONE", "MANUAL_CLOSE", "ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING",
+        "ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING",
+        "ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING"};
+
+// Options that should only be used for testing
+static const std::unordered_set<std::string> TESTING_SUGGESTED_OPTIONS = {
+        "ALLOW_LOCALHOST_FOR_TESTING"};
 
 Config::Config() : NODE_SEED(SecretKey::random()), 
 masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"))
@@ -24,32 +44,32 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
     // non configurable
     FORCE_SCP = false;
-    LEDGER_PROTOCOL_VERSION = static_cast<int32_t>(LedgerVersion::FIX_PAYMENT_STATS);
+    LEDGER_PROTOCOL_VERSION = CURRENT_LEDGER_PROTOCOL_VERSION;
     OVERLAY_PROTOCOL_MIN_VERSION = 5;
-    OVERLAY_PROTOCOL_VERSION = 5;
+    OVERLAY_PROTOCOL_VERSION = 8;
 
     VERSION_STR = STELLAR_CORE_VERSION;
-    DESIRED_BASE_RESERVE = 0;
 
     // configurable
     RUN_STANDALONE = false;
     MANUAL_CLOSE = false;
     CATCHUP_COMPLETE = false;
     CATCHUP_RECENT = 0;
-    MAINTENANCE_ON_STARTUP = false;
+    AUTOMATIC_MAINTENANCE_PERIOD = std::chrono::seconds{14400};
+    AUTOMATIC_MAINTENANCE_COUNT = 50000;
     ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING = false;
     ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING = false;
     ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING = 0;
     ARTIFICIALLY_PESSIMIZE_MERGES_FOR_TESTING = false;
     ALLOW_LOCALHOST_FOR_TESTING = false;
+    USE_CONFIG_FOR_GENESIS = false;
     FAILURE_SAFETY = -1;
     UNSAFE_QUORUM = false;
+    DISABLE_BUCKET_GC = false;
 
-    LOG_FILE_PATH = "stellar-core.log";
-    TMP_DIR_PATH = "tmp";
+    LOG_FILE_PATH = "stellar-core.%datetime{%Y.%M.%d-%H:%m:%s}.log";
     BUCKET_DIR_PATH = "buckets";
 
-    DESIRED_BASE_FEE = 0;
     DESIRED_MAX_TX_PER_LEDGER = 50;
 
     HTTP_PORT = DEFAULT_PEER_PORT + 1;
@@ -57,22 +77,26 @@ masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     HTTP_MAX_CLIENT = 128;
     PEER_PORT = DEFAULT_PEER_PORT;
     TARGET_PEER_CONNECTIONS = 8;
-    MAX_PEER_CONNECTIONS = 12;
+    MAX_PENDING_CONNECTIONS = 500;
+    MAX_ADDITIONAL_PEER_CONNECTIONS = -1;
+    MAX_OUTBOUND_PENDING_CONNECTIONS = 0;
+    MAX_INBOUND_PENDING_CONNECTIONS = 0;
+    PEER_AUTHENTICATION_TIMEOUT = 2;
+    PEER_TIMEOUT = 30;
+    PEER_STRAGGLER_TIMEOUT = 120;
     PREFERRED_PEERS_ONLY = false;
 
     MINIMUM_IDLE_PERCENT = 0;
 
     MAX_CONCURRENT_SUBPROCESSES = 16;
-    PARANOID_MODE = false;
     NODE_IS_VALIDATOR = false;
 
-    DATABASE = "sqlite3://:memory:";
-    NTP_SERVER = "pool.ntp.org";
-    INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE = true;
+    DATABASE = SecretValue{"sqlite3://:memory:"};
 
+    ENTRY_CACHE_SIZE = 4096;
+    BEST_OFFERS_CACHE_SIZE = 64;
     WIRED_KEYS = {PubKeyUtils::fromStrKey("GBUI4A77GUWKJ2I7QARHKR2BPLSKGAJLZUJWHQVIZODDEJCO2AVPMV7G"),
                   PubKeyUtils::fromStrKey("GA5IEUWR2FJ4KSJDMVS5DY4ORWHMI54NNNPNWN2NN5HWDUUWVGUJ4ML7")};
-
 }
 
 std::vector<PublicKey>
@@ -83,6 +107,70 @@ Config::getWiredKeys(LedgerVersion ledgerVersion) const
         default:
             return WIRED_KEYS;
     }
+}
+
+namespace
+{
+
+using ConfigItem = std::pair<std::string, std::shared_ptr<cpptoml::toml_base>>;
+
+bool
+readBool(ConfigItem const& item)
+{
+    if (!item.second->as<bool>())
+    {
+        throw std::invalid_argument(fmt::format("invalid {}", item.first));
+    }
+    return item.second->as<bool>()->value();
+}
+
+std::string
+readString(ConfigItem const& item)
+{
+    if (!item.second->as<std::string>())
+    {
+        throw std::invalid_argument(fmt::format("invalid {}", item.first));
+    }
+    return item.second->as<std::string>()->value();
+}
+
+std::vector<std::string>
+readStringArray(ConfigItem const& item)
+{
+    auto result = std::vector<std::string>{};
+    if (!item.second->is_array())
+    {
+        throw std::invalid_argument(
+                fmt::format("{} must be an array", item.first));
+    }
+    for (auto v : item.second->as_array()->array())
+    {
+        if (!v->as<std::string>())
+        {
+            throw std::invalid_argument(
+                    fmt::format("invalid element of {}", item.first));
+        }
+        result.push_back(v->as<std::string>()->value());
+    }
+    return result;
+}
+
+template <typename T>
+T
+readInt(ConfigItem const& item, T min = std::numeric_limits<T>::min(),
+        T max = std::numeric_limits<T>::max())
+{
+    if (!item.second->as<int64_t>())
+    {
+        throw std::invalid_argument(fmt::format("invalid {}", item.first));
+    }
+    int64_t v = item.second->as<int64_t>()->value();
+    if (v < min || v > max)
+    {
+        throw std::invalid_argument(fmt::format("bad {}", item.first));
+    }
+    return static_cast<T>(v);
+}
 }
 
 void
@@ -119,19 +207,11 @@ Config::loadQset(std::shared_ptr<cpptoml::toml_group> group, SCPQuorumSet& qset,
         }
         else if (item.first == "VALIDATORS")
         {
-            if (!item.second->is_array())
+            auto values = readStringArray(item);
+            for (auto v : values)
             {
-                throw std::invalid_argument("VALIDATORS must be an array");
-            }
-            for (auto v : item.second->as_array()->array())
-            {
-                if (!v->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid VALIDATORS");
-                }
-
                 PublicKey nodeID;
-                parseNodeID(v->as<std::string>()->value(), nodeID);
+                parseNodeID(v, nodeID);
                 qset.validators.emplace_back(nodeID);
             }
         }
@@ -175,7 +255,16 @@ Config::loadQset(std::shared_ptr<cpptoml::toml_group> group, SCPQuorumSet& qset,
 void
 Config::load(std::string const& filename)
 {
+    if (filename != "-" && !fs::exists(filename))
+    {
+        std::string s;
+        s = "No config file ";
+        s += filename + " found";
+        throw std::invalid_argument(s);
+    }
+
     LOG(DEBUG) << "Loading config from: " << filename;
+
     try
     {
         cpptoml::toml_group g;
@@ -193,260 +282,165 @@ Config::load(std::string const& filename)
         for (auto& item : g)
         {
             LOG(DEBUG) << "Config item: " << item.first;
+            if (TESTING_ONLY_OPTIONS.count(item.first) > 0)
+            {
+                LOG(INFO) << item.first
+                          << " enabled in configuration file - node will not "
+                             "function properly with most networks";
+            }
+            else if (TESTING_SUGGESTED_OPTIONS.count(item.first) > 0)
+            {
+                LOG(INFO) << item.first
+                          << " enabled in configuration file - node may not "
+                             "be configured for production use";
+            }
+
             if (item.first == "PEER_PORT")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid PEER_PORT");
-                }
-                int64_t parsedPort = item.second->as<int64_t>()->value();
-                if (parsedPort <= 0 || parsedPort > UINT16_MAX)
-                    throw std::invalid_argument("bad port number");
-                PEER_PORT = static_cast<unsigned short>(parsedPort);
+                PEER_PORT = readInt<unsigned short>(item, 1);
             }
             else if (item.first == "HTTP_PORT")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid HTTP_PORT");
-                }
-                int64_t parsedPort = item.second->as<int64_t>()->value();
-                if (parsedPort <= 0 || parsedPort > UINT16_MAX)
-                    throw std::invalid_argument("bad port number");
-                HTTP_PORT = static_cast<unsigned short>(parsedPort);
+                HTTP_PORT = readInt<unsigned short>(item, 1);
             }
             else if (item.first == "HTTP_MAX_CLIENT")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid HTTP_MAX_CLIENT");
-                }
-                int64_t maxHttpClient = item.second->as<int64_t>()->value();
-                if (maxHttpClient < 0 || maxHttpClient > UINT16_MAX)
-                    throw std::invalid_argument("bad HTTP_MAX_CLIENT");
-                HTTP_MAX_CLIENT = static_cast<unsigned short>(maxHttpClient);
+                HTTP_MAX_CLIENT = readInt<unsigned short>(item, 0);
             }
-
             else if (item.first == "PUBLIC_HTTP_PORT")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid PUBLIC_HTTP_PORT");
-                }
-                PUBLIC_HTTP_PORT = item.second->as<bool>()->value();
-            }
-            else if (item.first == "DESIRED_BASE_FEE")
-            {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid DESIRED_BASE_FEE");
-                }
-                int64_t f = item.second->as<int64_t>()->value();
-                if (f < 0 || f >= UINT32_MAX)
-                {
-                    throw std::invalid_argument("invalid DESIRED_BASE_FEE");
-                }
-                DESIRED_BASE_FEE = (uint32_t)f;
+                PUBLIC_HTTP_PORT = readBool(item);
             }
             else if (item.first == "DESIRED_MAX_TX_PER_LEDGER")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument(
-                        "invalid DESIRED_MAX_TX_PER_LEDGER");
-                }
-                int64_t f = item.second->as<int64_t>()->value();
-                if (f <= 0 || f >= UINT32_MAX)
-                {
-                    throw std::invalid_argument(
-                        "invalid DESIRED_MAX_TX_PER_LEDGER");
-                }
-                DESIRED_MAX_TX_PER_LEDGER = (uint32_t)f;
+                DESIRED_MAX_TX_PER_LEDGER = readInt<uint32_t>(item, 1, UINT32_MAX);
             }
             else if (item.first == "FAILURE_SAFETY")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid FAILURE_SAFETY");
-                }
-                int64_t f = item.second->as<int64_t>()->value();
-                if (f < -1 || f >= INT32_MAX)
-                {
-                    throw std::invalid_argument("invalid FAILURE_SAFETY");
-                }
-                FAILURE_SAFETY = (int32_t)f;
+                FAILURE_SAFETY = readInt<int32_t>(item, -1, INT32_MAX - 1);
             }
             else if (item.first == "UNSAFE_QUORUM")
             {
-                if (!item.second->as<bool>())
+                UNSAFE_QUORUM = readBool(item);
+            }
+            else if (item.first == "KNOWN_CURSORS")
+            {
+                KNOWN_CURSORS = readStringArray(item);
+                for (auto const& c : KNOWN_CURSORS)
                 {
-                    throw std::invalid_argument("invalid UNSAFE_QUORUM");
+                    if (!ExternalQueue::validateResourceID(c))
+                    {
+                        throw std::invalid_argument(
+                                fmt::format("invalid cursor: \"{}\"", c));
+                    }
                 }
-                UNSAFE_QUORUM = item.second->as<bool>()->value();
             }
             else if (item.first == "RUN_STANDALONE")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid RUN_STANDALONE");
-                }
-                RUN_STANDALONE = item.second->as<bool>()->value();
+                RUN_STANDALONE = readBool(item);
             }
             else if (item.first == "CATCHUP_COMPLETE")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid CATCHUP_COMPLETE");
-                }
-                CATCHUP_COMPLETE = item.second->as<bool>()->value();
+                CATCHUP_COMPLETE = readBool(item);
             }
             else if (item.first == "CATCHUP_RECENT")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid CATCHUP_RECENT");
-                }
-                int64_t r = item.second->as<int64_t>()->value();
-                if (r < 0 || r >= UINT32_MAX)
-                {
-                    throw std::invalid_argument("invalid CATCHUP_RECENT");
-                }
-                CATCHUP_RECENT = r;
+                CATCHUP_RECENT = readInt<uint32_t>(item, 0, UINT32_MAX - 1);
             }
             else if (item.first == "ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument(
-                        "invalid ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING");
-                }
-                ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING =
-                    item.second->as<bool>()->value();
+                ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING = readBool(item);
             }
             else if (item.first == "ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument(
-                        "invalid ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING");
-                }
-                ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING =
-                    item.second->as<bool>()->value();
+                ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING = readBool(item);
             }
             else if (item.first == "ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING")
             {
-                if (!item.second->as<int64>())
-                {
-                    throw std::invalid_argument(
-                        "invalid ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING");
-                }
-                int64_t f = item.second->as<int64_t>()->value();
-                if (f < 0 || f >= UINT32_MAX)
-                {
-                    throw std::invalid_argument(
-                        "invalid ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING");
-                }
-                ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING = (uint32_t)f;
+                ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING =
+                        readInt<uint32_t>(item, 0, UINT32_MAX - 1);
             }
             else if (item.first == "ALLOW_LOCALHOST_FOR_TESTING")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument(
-                        "invalid ALLOW_LOCALHOST_FOR_TESTING");
-                }
-                ALLOW_LOCALHOST_FOR_TESTING = item.second->as<bool>()->value();
+                ALLOW_LOCALHOST_FOR_TESTING = readBool(item);
+            }
+            else if (item.first == "AUTOMATIC_MAINTENANCE_PERIOD")
+            {
+                AUTOMATIC_MAINTENANCE_PERIOD =
+                        std::chrono::seconds{readInt<uint32_t>(item)};
+            }
+            else if (item.first == "AUTOMATIC_MAINTENANCE_COUNT")
+            {
+                AUTOMATIC_MAINTENANCE_COUNT = readInt<uint32_t>(item);
             }
             else if (item.first == "MANUAL_CLOSE")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid MANUAL_CLOSE");
-                }
-                MANUAL_CLOSE = item.second->as<bool>()->value();
+                MANUAL_CLOSE = readBool(item);
             }
             else if (item.first == "LOG_FILE_PATH")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid LOG_FILE_PATH");
-                }
-                LOG_FILE_PATH = item.second->as<std::string>()->value();
+                LOG_FILE_PATH = readString(item);
             }
             else if (item.first == "TMP_DIR_PATH")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid TMP_DIR_PATH");
-                }
-                TMP_DIR_PATH = item.second->as<std::string>()->value();
+                throw std::invalid_argument("TMP_DIR_PATH is not supported "
+                                            "anymore - tmp data is now kept in "
+                                            "BUCKET_DIR_PATH/tmp");
             }
             else if (item.first == "BUCKET_DIR_PATH")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid BUCKET_DIR_PATH");
-                }
-                BUCKET_DIR_PATH = item.second->as<std::string>()->value();
+                BUCKET_DIR_PATH = readString(item);
             }
             else if (item.first == "NODE_NAMES")
             {
-                if (!item.second->is_array())
+                auto names = readStringArray(item);
+                for (auto v : names)
                 {
-                    throw std::invalid_argument("NODE_NAMES must be an array");
-                }
-                for (auto v : item.second->as_array()->array())
-                {
-                    if (!v->as<std::string>())
-                    {
-                        throw std::invalid_argument(
-                            "invalid element of NODE_NAMES");
-                    }
-
                     PublicKey nodeID;
-                    parseNodeID(v->as<std::string>()->value(), nodeID);
+                    parseNodeID(v, nodeID);
                 }
             }
             else if (item.first == "NODE_SEED")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid NODE_SEED");
-                }
-
                 PublicKey nodeID;
-                parseNodeID(item.second->as<std::string>()->value(), nodeID,
-                            NODE_SEED, true);
+                parseNodeID(readString(item), nodeID, NODE_SEED, true);
             }
             else if (item.first == "NODE_IS_VALIDATOR")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid NODE_IS_VALIDATOR");
-                }
-                NODE_IS_VALIDATOR = item.second->as<bool>()->value();
+                NODE_IS_VALIDATOR = readBool(item);
             }
             else if (item.first == "TARGET_PEER_CONNECTIONS")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument(
-                        "invalid TARGET_PEER_CONNECTIONS");
-                }
-                TARGET_PEER_CONNECTIONS =
-                    (int)item.second->as<int64_t>()->value();
+                TARGET_PEER_CONNECTIONS = readInt<unsigned short>(item, 1);
             }
-            else if (item.first == "MAX_PEER_CONNECTIONS")
+            else if (item.first == "MAX_ADDITIONAL_PEER_CONNECTIONS")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid MAX_PEER_CONNECTIONS");
-                }
-                MAX_PEER_CONNECTIONS = (int)item.second->as<int64_t>()->value();
+                MAX_ADDITIONAL_PEER_CONNECTIONS = readInt<int>(
+                        item, -1, std::numeric_limits<unsigned short>::max());
+            }
+            else if (item.first == "MAX_PENDING_CONNECTIONS")
+            {
+                MAX_PENDING_CONNECTIONS = readInt<unsigned short>(
+                        item, 1, std::numeric_limits<unsigned short>::max());
+            }
+            else if (item.first == "PEER_AUTHENTICATION_TIMEOUT")
+            {
+                PEER_AUTHENTICATION_TIMEOUT = readInt<unsigned short>(
+                        item, 1, std::numeric_limits<unsigned short>::max());
+            }
+            else if (item.first == "PEER_TIMEOUT")
+            {
+                PEER_TIMEOUT = readInt<unsigned short>(
+                        item, 1, std::numeric_limits<unsigned short>::max());
             }
             else if (item.first == "PREFERRED_PEERS")
             {
-                PREFERRED_PEERS = readStrVector(item.first, item.second);
+                PREFERRED_PEERS = readStringArray(item);
+            }
+            else if (item.first == "PEER_STRAGGLER_TIMEOUT")
+            {
+                PEER_STRAGGLER_TIMEOUT = readInt<unsigned short>(
+                        item, 1, std::numeric_limits<unsigned short>::max());
             }
             else if (item.first == "PREFERRED_PEER_KEYS")
             {
@@ -454,15 +448,11 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "PREFERRED_PEERS_ONLY")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid PREFERRED_PEERS_ONLY");
-                }
-                PREFERRED_PEERS_ONLY = item.second->as<bool>()->value();
+                PREFERRED_PEERS_ONLY = readBool(item);
             }
             else if (item.first == "KNOWN_PEERS")
             {
-                KNOWN_PEERS = readStrVector(item.first, item.second);
+                KNOWN_PEERS = readStringArray(item);
             }
             else if (item.first == "QUORUM_SET")
             {
@@ -470,44 +460,32 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "TX_INTERNAL_ERROR")
             {
-                auto internalErrorsTxs = readStrVector(item.first, item.second);
-                for (std::string txHash : internalErrorsTxs)
+                auto internalErrorsTxs = readStringArray(item);
+                for (std::string const& txHash : internalErrorsTxs)
                 {
                     TX_INTERNAL_ERROR.emplace(txHash);
                 }
             }
             else if (item.first == "TX_SKIP_SIG_CHECK")
             {
-                auto txs = readStrVector(item.first, item.second);
-                for (std::string txHash : txs)
+                auto txs = readStringArray(item);
+                for (std::string const& txHash : txs)
                 {
                     TX_SKIP_SIG_CHECK.emplace(txHash);
                 }
             }
             else if (item.first == "COMMANDS")
             {
-                COMMANDS = readStrVector(item.first, item.second);
+                COMMANDS = readStringArray(item);
             }
             else if (item.first == "MAX_CONCURRENT_SUBPROCESSES")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument(
-                        "invalid MAX_CONCURRENT_SUBPROCESSES");
-                }
                 MAX_CONCURRENT_SUBPROCESSES =
-                    (size_t)item.second->as<int64_t>()->value();
+                        static_cast<size_t>(readInt<int>(item, 1));
             }
             else if (item.first == "MINIMUM_IDLE_PERCENT")
             {
-                if (!item.second->as<int64_t>() ||
-                    item.second->as<int64_t>()->value() > 100 ||
-                    item.second->as<int64_t>()->value() < 0)
-                {
-                    throw std::invalid_argument("invalid MINIMUM_IDLE_PERCENT");
-                }
-                MINIMUM_IDLE_PERCENT =
-                    (uint32_t)item.second->as<int64_t>()->value();
+                MINIMUM_IDLE_PERCENT = readInt<uint32_t>(item, 0, 100);
             }
             else if (item.first == "HISTORY")
             {
@@ -548,9 +526,8 @@ Config::load(std::string const& filename)
                                 throw std::invalid_argument(err);
                             }
                         }
-                        HISTORY[archive.first] =
-                            std::make_shared<HistoryArchive>(archive.first, get,
-                                                             put, mkdir);
+                        HISTORY[archive.first] = HistoryArchiveConfiguration{
+                            archive.first, get, put, mkdir};
                     }
                 }
                 else
@@ -560,43 +537,19 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "DATABASE")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid DATABASE");
-                }
-                DATABASE = item.second->as<std::string>()->value();
-            }
-            else if (item.first == "PARANOID_MODE")
-            {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument("invalid PARANOID_MODE");
-                }
-                PARANOID_MODE = item.second->as<bool>()->value();
+                DATABASE = SecretValue{readString(item)};
             }
             else if (item.first == "NETWORK_PASSPHRASE")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid NETWORK_PASSPHRASE");
-                }
-                NETWORK_PASSPHRASE = item.second->as<std::string>()->value();
+                NETWORK_PASSPHRASE = readString(item);
             }
             else if (item.first == "BASE_EXCHANGE_NAME")
             {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid BASE_EXCHANGE_NAME");
-                }
-                BASE_EXCHANGE_NAME = item.second->as<std::string>()->value();
+                BASE_EXCHANGE_NAME = readString(item);
             }
             else if (item.first == "TX_EXPIRATION_PERIOD")
             {
-                if (!item.second->as<int64_t>())
-                {
-                    throw std::invalid_argument("invalid TX_EXPIRATION_PERIOD");
-                }
-                TX_EXPIRATION_PERIOD = item.second->as<int64_t>()->value();
+                TX_EXPIRATION_PERIOD = readInt<int64_t>(item, 0, UINT32_MAX);
             }
             else if (item.first == "MAX_INVOICES_FOR_RECEIVER_ACCOUNT")
             {
@@ -606,46 +559,29 @@ Config::load(std::string const& filename)
                 }
                 MAX_INVOICES_FOR_RECEIVER_ACCOUNT = item.second->as<int64_t>()->value();
             }
-            else if (item.first == "NTP_SERVER")
-            {
-                if (!item.second->as<std::string>())
-                {
-                    throw std::invalid_argument("invalid NTP_SERVER");
-                }
-                NTP_SERVER = item.second->as<std::string>()->value();
-            }
-			else if (item.first == "MASTER_ACCOUNT_ID")
+            else if (item.first == "MASTER_ACCOUNT_ID")
 			{
-				if (!item.second->as<std::string>())
-				{
-					throw std::invalid_argument("invalid MASTER_ACCOUNT_ID");
-				}
-
-				masterID = PubKeyUtils::fromStrKey(item.second->as<std::string>()->value());
+                masterID = PubKeyUtils::fromStrKey(readString(item));
 			}
-            else if (item.first == "INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE")
+            else if (item.first == "INVARIANT_CHECKS")
             {
-                if (!item.second->as<bool>())
-                {
-                    throw std::invalid_argument(
-                            "invalid INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE");
-                }
-                INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE =
-                        item.second->as<bool>()->value();
+                INVARIANT_CHECKS = readStringArray(item);
             }
-            else if (item.first == "SENTRY_DSN") {
-                if (!item.second->as<std::string>()) {
-                    throw std::invalid_argument("invalid SENTRY_DSN");
-                }
-
-                SENTRY_DSN = item.second->as<std::string>()->value();
+            else if (item.first == "ENTRY_CACHE_SIZE")
+            {
+                ENTRY_CACHE_SIZE = readInt<uint32_t>(item);
             }
-            else if (item.first == "MIN_LEVEL_FOR_SENTRY") {
-                if (!item.second->as<std::string>()) {
-                    throw std::invalid_argument("invalid MIN_LEVEL_FOR_SENTRY");
-                }
-
-                MIN_LEVEL_FOR_SENTRY = item.second->as<std::string>()->value();
+            else if (item.first == "BEST_OFFERS_CACHE_SIZE")
+            {
+                BEST_OFFERS_CACHE_SIZE = readInt<uint32_t>(item);
+            }
+            else if (item.first == "SENTRY_DSN")
+            {
+                SENTRY_DSN = readString(item);
+            }
+            else if (item.first == "MIN_LEVEL_FOR_SENTRY")
+            {
+                MIN_LEVEL_FOR_SENTRY = readString(item);
             }
             else
             {
@@ -661,22 +597,13 @@ Config::load(std::string const& filename)
             auto pkeys = g.get("PREFERRED_PEER_KEYS");
             if (pkeys)
             {
-                if (!pkeys->is_array())
+                auto values =
+                    readStringArray(ConfigItem{"PREFERRED_PEER_KEYS", pkeys});
+                for (auto v : values)
                 {
-                    throw std::invalid_argument(
-                        "PREFERRED_PEER_KEYS must be an array");
-                }
-                for (auto v : pkeys->as_array()->array())
-                {
-                    if (!v->as<std::string>())
-                    {
-                        throw std::invalid_argument(
-                            "invalid element of PREFERRED_PEER_KEYS");
-                    }
                     PublicKey nodeID;
-                    parseNodeID(v->as<std::string>()->value(), nodeID);
-                    PREFERRED_PEER_KEYS.push_back(
-                        PubKeyUtils::toStrKey(nodeID));
+                    parseNodeID(v, nodeID);
+                    PREFERRED_PEER_KEYS.push_back(PubKeyUtils::toStrKey(nodeID));
                 }
             }
         }
@@ -689,6 +616,7 @@ Config::load(std::string const& filename)
             }
         }
 
+        adjust();
         validateConfig();
     }
     catch (cpptoml::toml_parse_exception& ex)
@@ -701,16 +629,108 @@ Config::load(std::string const& filename)
     }
 }
 
-AssetCode Config::getAssetCode(std::shared_ptr<cpptoml::toml_base> rawValue, const char* errorMessage)
+void
+Config::adjust()
 {
-	if (!rawValue->as<std::string>())
-	{
-		throw std::invalid_argument(errorMessage);
-	}
-	auto asset = rawValue->as<std::string>()->value();
-	if (!AssetFrame::isAssetCodeValid(asset))
-		throw std::invalid_argument(errorMessage);
-	return asset;
+    if (MAX_ADDITIONAL_PEER_CONNECTIONS == -1)
+    {
+        if (TARGET_PEER_CONNECTIONS <=
+            std::numeric_limits<unsigned short>::max() / 8)
+        {
+            MAX_ADDITIONAL_PEER_CONNECTIONS = TARGET_PEER_CONNECTIONS * 8;
+        }
+        else
+        {
+            MAX_ADDITIONAL_PEER_CONNECTIONS =
+                    std::numeric_limits<unsigned short>::max();
+        }
+    }
+
+    int maxFsConnections = std::min<int>(
+            std::numeric_limits<unsigned short>::max(), fs::getMaxConnections());
+
+    auto totalRequiredConnections = TARGET_PEER_CONNECTIONS +
+                                    MAX_ADDITIONAL_PEER_CONNECTIONS +
+                                    MAX_PENDING_CONNECTIONS;
+
+    auto totalAuthenticatedConnections =
+            TARGET_PEER_CONNECTIONS + MAX_ADDITIONAL_PEER_CONNECTIONS;
+    if (totalAuthenticatedConnections > 0 && totalRequiredConnections > 0)
+    {
+        auto outboundPendingRate =
+                double(TARGET_PEER_CONNECTIONS) / totalAuthenticatedConnections;
+
+        auto doubleToNonzeroUnsignedShort = [](double v) {
+            auto rounded = static_cast<int>(std::ceil(v));
+            auto cappedToUnsignedShort = std::min<int>(
+                    std::numeric_limits<unsigned short>::max(), rounded);
+            return static_cast<unsigned short>(
+                    std::max<int>(1, cappedToUnsignedShort));
+        };
+
+        if (totalRequiredConnections > maxFsConnections)
+        {
+            auto outboundRate =
+                    (double)TARGET_PEER_CONNECTIONS / totalRequiredConnections;
+            auto inboundRate = (double)MAX_ADDITIONAL_PEER_CONNECTIONS /
+                               totalRequiredConnections;
+
+            TARGET_PEER_CONNECTIONS =
+                    doubleToNonzeroUnsignedShort(maxFsConnections * outboundRate);
+            MAX_ADDITIONAL_PEER_CONNECTIONS =
+                    doubleToNonzeroUnsignedShort(maxFsConnections * inboundRate);
+
+            auto authenticatedConnections =
+                    TARGET_PEER_CONNECTIONS + MAX_ADDITIONAL_PEER_CONNECTIONS;
+            MAX_PENDING_CONNECTIONS =
+                    authenticatedConnections >= maxFsConnections
+                    ? 1
+                    : static_cast<unsigned short>(maxFsConnections -
+                                                  authenticatedConnections);
+        }
+
+        // allow setting own values for testing purposes
+        if (MAX_OUTBOUND_PENDING_CONNECTIONS == 0 &&
+            MAX_INBOUND_PENDING_CONNECTIONS == 0)
+        {
+            if (TARGET_PEER_CONNECTIONS <=
+                std::numeric_limits<unsigned short>::max() / 2)
+            {
+                MAX_OUTBOUND_PENDING_CONNECTIONS = TARGET_PEER_CONNECTIONS * 2;
+            }
+            else
+            {
+                MAX_OUTBOUND_PENDING_CONNECTIONS =
+                        std::numeric_limits<unsigned short>::max();
+            }
+
+            MAX_OUTBOUND_PENDING_CONNECTIONS =
+                    std::min(MAX_OUTBOUND_PENDING_CONNECTIONS,
+                             doubleToNonzeroUnsignedShort(MAX_PENDING_CONNECTIONS *
+                                                          outboundPendingRate));
+            MAX_INBOUND_PENDING_CONNECTIONS = std::max<unsigned short>(
+                    1, MAX_PENDING_CONNECTIONS - MAX_OUTBOUND_PENDING_CONNECTIONS);
+        }
+    }
+    else
+    {
+        MAX_OUTBOUND_PENDING_CONNECTIONS = 0;
+        MAX_INBOUND_PENDING_CONNECTIONS = 0;
+    }
+}
+
+void
+Config::logBasicInfo()
+{
+    LOG(INFO) << "Connection effective settings:";
+    LOG(INFO) << "TARGET_PEER_CONNECTIONS: " << TARGET_PEER_CONNECTIONS;
+    LOG(INFO) << "MAX_ADDITIONAL_PEER_CONNECTIONS: "
+              << MAX_ADDITIONAL_PEER_CONNECTIONS;
+    LOG(INFO) << "MAX_PENDING_CONNECTIONS: " << MAX_PENDING_CONNECTIONS;
+    LOG(INFO) << "MAX_OUTBOUND_PENDING_CONNECTIONS: "
+              << MAX_OUTBOUND_PENDING_CONNECTIONS;
+    LOG(INFO) << "MAX_INBOUND_PENDING_CONNECTIONS: "
+              << MAX_INBOUND_PENDING_CONNECTIONS;
 }
 
 void
@@ -729,10 +749,8 @@ Config::validateConfig()
 
 
     std::set<NodeID> nodes;
-    LocalNode::forAllNodes(QUORUM_SET, [&](NodeID const& n)
-                           {
-                               nodes.insert(n);
-                           });
+    LocalNode::forAllNodes(QUORUM_SET,
+                           [&](NodeID const& n) { nodes.insert(n); });
 
     if (nodes.size() == 0)
     {
@@ -745,14 +763,20 @@ Config::validateConfig()
 
     if (FAILURE_SAFETY == -1)
     {
-        // calculates default value for safety assuming flat quorum
-        // n = 3f+1
-        FAILURE_SAFETY = (static_cast<uint32>(nodes.size()) - 1) / 3;
+        // calculates default value for safety giving the top level entities
+        // the same weight
+        // n = 3f+1 <=> f = (n-1)/3
+        auto topLevelCount =
+            QUORUM_SET.validators.size() + QUORUM_SET.innerSets.size();
+        FAILURE_SAFETY = (static_cast<uint32>(topLevelCount) - 1) / 3;
+
+        LOG(INFO) << "Assigning calculated value of " << FAILURE_SAFETY
+                  << " to FAILURE_SAFETY";
     }
 
     try
     {
-        if (FAILURE_SAFETY >= r.size())
+        if (FAILURE_SAFETY >= static_cast<int32_t>(r.size()))
         {
             LOG(ERROR) << "Not enough nodes / thresholds too strict in your "
                           "Quorum set to ensure your desired level of "
@@ -779,7 +803,7 @@ Config::validateConfig()
             if (QUORUM_SET.threshold < minSize)
             {
                 LOG(ERROR)
-                    << "Your THESHOLD_PERCENTAGE is too low. If you really "
+                    << "Your THRESHOLD_PERCENTAGE is too low. If you really "
                        "want "
                        "this set UNSAFE_QUORUM=true. Be sure you know what you "
                        "are doing!";
@@ -807,7 +831,9 @@ Config::parseNodeID(std::string configStr, PublicKey& retKey, SecretKey& sKey,
                     bool isSeed)
 {
     if (configStr.size() < 2)
+    {
         throw std::invalid_argument("invalid key");
+    }
 
     // check if configStr is a PublicKey or a common name
     if (configStr[0] == '$')
@@ -852,8 +878,9 @@ Config::parseNodeID(std::string configStr, PublicKey& retKey, SecretKey& sKey,
                     throw std::invalid_argument("name already used");
                 }
 
-                if (!VALIDATOR_NAMES.emplace(std::make_pair(nodestr,
-                                                            commonName)).second)
+                if (!VALIDATOR_NAMES
+                         .emplace(std::make_pair(nodestr, commonName))
+                         .second)
                 {
                     std::stringstream msg;
                     msg << "naming node twice: " << commonName;
@@ -902,63 +929,80 @@ Config::toStrKey(PublicKey const& pk) const
 bool
 Config::resolveNodeID(std::string const& s, PublicKey& retKey) const
 {
-    if (s.size() > 1)
+    auto expanded = expandNodeID(s);
+    if (expanded.empty())
     {
-        std::string arg = s.substr(1);
-        auto it = VALIDATOR_NAMES.end();
-        if (s[0] == '$')
-        {
-            it = std::find_if(VALIDATOR_NAMES.begin(), VALIDATOR_NAMES.end(),
-                              [&](std::pair<std::string, std::string> const& p)
-                              {
-                                  return p.second == arg;
-                              });
-        }
-        else if (s[0] == '@')
-        {
-            it = std::find_if(VALIDATOR_NAMES.begin(), VALIDATOR_NAMES.end(),
-                              [&](std::pair<std::string, std::string> const& p)
-                              {
-                                  return p.first.compare(0, arg.size(), arg) ==
-                                         0;
-                              });
-        }
-
-        if (it == VALIDATOR_NAMES.end())
-        {
-            return false;
-        }
-        else
-        {
-            retKey = PubKeyUtils::fromStrKey(it->first);
-        }
+        return false;
     }
-    else
+
+    try
     {
-        retKey = PubKeyUtils::fromStrKey(s);
+        retKey = PubKeyUtils::fromStrKey(expanded);
+    }
+    catch (std::invalid_argument&)
+    {
+        return false;
     }
     return true;
 }
 
-std::vector<std::string> Config::readStrVector(const std::string name,
-    std::shared_ptr<cpptoml::toml_base> values)
+std::string
+Config::expandNodeID(const std::string& s) const
 {
-    if (!values->is_array())
+    if (s.length() < 2)
     {
-        throw std::invalid_argument(name + " must be an array");
+        return s;
+    }
+    if (s[0] != '$' && s[0] != '@')
+    {
+        return s;
     }
 
-    std::vector<std::string> results;
-    for (auto v : values->as_array()->array())
-    {
-        if (!v->as<std::string>())
-        {
-            throw std::invalid_argument(
-                "invalid element of " + name);
-        }
-        results.push_back(v->as<std::string>()->value());
-    }
+    using validatorMatcher_t =
+    std::function<bool(std::pair<std::string, std::string> const&)>;
+    auto arg = s.substr(1);
+    auto validatorMatcher =
+            s[0] == '$'
+            ? validatorMatcher_t{[&](std::pair<std::string, std::string> const&
+            p) { return p.second == arg; }}
+            : validatorMatcher_t{
+                    [&](std::pair<std::string, std::string> const& p) {
+                        return p.first.compare(0, arg.size(), arg) == 0;
+                    }};
 
-    return results;
+    auto it = std::find_if(VALIDATOR_NAMES.begin(), VALIDATOR_NAMES.end(),
+                           validatorMatcher);
+    if (it != VALIDATOR_NAMES.end())
+    {
+        return it->first;
+    }
+    else
+    {
+        return {};
+    }
+}
+
+
+std::chrono::seconds
+Config::getExpectedLedgerCloseTime() const
+{
+    if (ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING)
+    {
+        return std::chrono::seconds{ARTIFICIALLY_SET_CLOSE_TIME_FOR_TESTING};
+    }
+    if (ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING)
+    {
+        return std::chrono::seconds{1};
+    }
+    return Herder::EXP_LEDGER_TIMESPAN_SECONDS;
+}
+
+void
+Config::setNoListen()
+{
+    // prevent opening up a port for other peers
+    RUN_STANDALONE = true;
+    HTTP_PORT = 0;
+    MANUAL_CLOSE = true;
 }
 }

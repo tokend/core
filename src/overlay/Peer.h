@@ -5,11 +5,12 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "util/asio.h"
-#include "xdrpp/message.h"
-#include "overlay/StellarXDR.h"
-#include "util/Timer.h"
 #include "database/Database.h"
+#include "overlay/PeerBareAddress.h"
+#include "overlay/StellarXDR.h"
 #include "util/NonCopyable.h"
+#include "util/Timer.h"
+#include "xdrpp/message.h"
 
 namespace medida
 {
@@ -50,6 +51,12 @@ class Peer : public std::enable_shared_from_this<Peer>,
         WE_CALLED_REMOTE
     };
 
+    enum class DropMode
+    {
+        FLUSH_WRITE_QUEUE,
+        IGNORE_WRITE_QUEUE
+    };
+
     static medida::Meter& getByteReadMeter(Application& app);
     static medida::Meter& getByteWriteMeter(Application& app);
 
@@ -70,11 +77,12 @@ class Peer : public std::enable_shared_from_this<Peer>,
     std::string mRemoteVersion;
     uint32_t mRemoteOverlayMinVersion;
     uint32_t mRemoteOverlayVersion;
-    unsigned short mRemoteListeningPort;
+    PeerBareAddress mAddress;
 
     VirtualTimer mIdleTimer;
     VirtualClock::time_point mLastRead;
     VirtualClock::time_point mLastWrite;
+    VirtualClock::time_point mLastEmpty;
 
     medida::Meter& mMessageRead;
     medida::Meter& mMessageWrite;
@@ -83,6 +91,7 @@ class Peer : public std::enable_shared_from_this<Peer>,
     medida::Meter& mErrorRead;
     medida::Meter& mErrorWrite;
     medida::Meter& mTimeoutIdle;
+    medida::Meter& mTimeoutStraggler;
 
     medida::Timer& mRecvErrorTimer;
     medida::Timer& mRecvHelloTimer;
@@ -117,31 +126,14 @@ class Peer : public std::enable_shared_from_this<Peer>,
     medida::Meter& mSendSCPMessageSetMeter;
     medida::Meter& mSendGetSCPStateMeter;
 
-    medida::Meter& mDropInConnectHandlerMeter;
-    medida::Meter& mDropInRecvMessageDecodeMeter;
-    medida::Meter& mDropInRecvMessageSeqMeter;
-    medida::Meter& mDropInRecvMessageMacMeter;
-    medida::Meter& mDropInRecvMessageUnauthMeter;
-    medida::Meter& mDropInRecvHelloUnexpectedMeter;
-    medida::Meter& mDropInRecvHelloVersionMeter;
-    medida::Meter& mDropInRecvHelloSelfMeter;
-    medida::Meter& mDropInRecvHelloPeerIDMeter;
-    medida::Meter& mDropInRecvHelloCertMeter;
-    medida::Meter& mDropInRecvHelloBanMeter;
-    medida::Meter& mDropInRecvHelloNetMeter;
-    medida::Meter& mDropInRecvHelloPortMeter;
-    medida::Meter& mDropInRecvAuthUnexpectedMeter;
-    medida::Meter& mDropInRecvAuthRejectMeter;
-    medida::Meter& mDropInRecvErrorMeter;
-
     bool shouldAbort() const;
     void recvMessage(StellarMessage const& msg);
     void recvMessage(AuthenticatedMessage const& msg);
     void recvMessage(xdr::msg_ptr const& xdrBytes);
 
     virtual void recvError(StellarMessage const& msg);
-    // returns false if we should drop this peer
-    void noteHandshakeSuccessInPeerRecord();
+    void updatePeerRecordAfterEcho();
+    void updatePeerRecordAfterAuthentication();
     void recvAuth(StellarMessage const& msg);
     void recvDontHave(StellarMessage const& msg);
     void recvGetPeers(StellarMessage const& msg);
@@ -179,7 +171,7 @@ class Peer : public std::enable_shared_from_this<Peer>,
 
     void startIdleTimer();
     void idleTimerExpired(asio::error_code const& error);
-    size_t getIOTimeoutSeconds() const;
+    std::chrono::seconds getIOTimeout() const;
 
     // helper method to acknownledge that some bytes were received
     void receivedBytes(size_t byteCount, bool gotFullMessage);
@@ -233,11 +225,12 @@ class Peer : public std::enable_shared_from_this<Peer>,
         return mRemoteOverlayVersion;
     }
 
-    unsigned short
-    getRemoteListeningPort()
+    PeerBareAddress const&
+    getAddress()
     {
-        return mRemoteListeningPort;
+        return mAddress;
     }
+
     NodeID
     getPeerID()
     {
@@ -245,6 +238,7 @@ class Peer : public std::enable_shared_from_this<Peer>,
     }
 
     std::string toString();
+    virtual std::string getIP() const = 0;
 
     // These exist mostly to be overridden in TCPPeer and callable via
     // shared_ptr<Peer> as a captured shared_from_this().
@@ -265,9 +259,9 @@ class Peer : public std::enable_shared_from_this<Peer>,
     {
     }
 
-    void drop(ErrorCode err, std::string const& msg);
-    virtual void drop() = 0;
-    virtual std::string getIP() = 0;
+    virtual void drop(ErrorCode err, std::string const& msg, DropMode dropMode);
+
+    virtual void drop(DropMode dropMode) = 0;
     virtual ~Peer()
     {
     }

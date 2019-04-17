@@ -20,7 +20,6 @@ include_directories(${XDRS_PATH})
 #include headers files without .cpp
 set(NOT_COMMON_SOURCE_FILES
         util/asio.h
-        util/make_unique.h
         util/must_use.h
         util/NonCopyable.h
         util/optional.h
@@ -58,7 +57,7 @@ set(MOCKS_FILES transactions/test/mocks/)
 file(GLOB STELLAR_CORE_SOURCE_FILES **/*.cpp **/**/*.cpp **/**/**/*.cpp)
 
 #create executeble file "core"
-add_executable(core ${STELLAR_CORE_SOURCE_FILES} ../config.h ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES} ${MOCKS_FILES})
+add_executable(core ${STELLAR_CORE_SOURCE_FILES} ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES} ${MOCKS_FILES})
 
 #link libs
 include(platform_libs.cmake)

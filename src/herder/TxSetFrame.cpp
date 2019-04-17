@@ -4,13 +4,17 @@
 
 #include "util/asio.h"
 #include "TxSetFrame.h"
-#include "xdrpp/marshal.h"
-#include "crypto/SHA.h"
-#include "util/Logging.h"
 #include "crypto/Hex.h"
+#include "crypto/SHA.h"
+#include "database/Database.h"
+#include "ledger/LedgerManager.h"
+//#include "ledger/LedgerTxnEntry.h"
+//#include "ledger/LedgerTxnHeader.h"
 #include "main/Application.h"
 #include "main/Config.h"
-#include "database/Database.h"
+#include "util/Logging.h"
+#include "util/XDROperators.h"
+#include "xdrpp/marshal.h"
 #include <algorithm>
 
 #include "xdrpp/printer.h"
@@ -19,9 +23,6 @@ namespace stellar
 {
 
 using namespace std;
-
-using xdr::operator==;
-using xdr::operator<;
 
 TxSetFrame::TxSetFrame(Hash const& previousLedgerHash)
     : mHashIsValid(false), mPreviousLedgerHash(previousLedgerHash)
@@ -61,13 +62,14 @@ TxSetFrame::sortForHash()
 // This way people can't predict the order that txs will be applied in
 struct ApplyTxSorter
 {
-    Hash const& mSetHash;
-    ApplyTxSorter(Hash const& h) : mSetHash(h)
+    Hash mSetHash;
+    ApplyTxSorter(Hash h) : mSetHash{std::move(h)}
     {
     }
 
-    bool operator()(TransactionFramePtr const& tx1,
-                    TransactionFramePtr const& tx2) const
+    bool
+    operator()(TransactionFramePtr const& tx1,
+               TransactionFramePtr const& tx2) const
     {
         // need to use the hash of whole tx here since multiple txs could have
         // the same Contents
@@ -139,8 +141,8 @@ struct SurgeSorter
     {
     }
 
-    bool operator()(TransactionFramePtr const& tx1,
-                    TransactionFramePtr const& tx2)
+    bool
+    operator()(TransactionFramePtr const& tx1, TransactionFramePtr const& tx2)
     {
         if (tx1->getSourceID() == tx2->getSourceID())
             return tx1->getSalt() < tx2->getSalt();
@@ -155,7 +157,7 @@ struct SurgeSorter
 void
 TxSetFrame::surgePricingFilter(LedgerManager const& lm)
 {
-    size_t max = lm.getMaxTxSetSize();
+    size_t max = lm.getLastMaxTxSetSize();
     if (mTransactions.size() > max)
     { // surge pricing in effect!
         CLOG(WARNING, "Herder") << "surge pricing in effect! "
@@ -185,57 +187,64 @@ TxSetFrame::surgePricingFilter(LedgerManager const& lm)
     }
 }
 
-// TODO.3 this and checkValid share a lot of code
+bool
+TxSetFrame::checkOrTrim(Application& app,
+    std::function<bool(TransactionFramePtr)> processInvalidTxLambda)
+{
+    Hash lastHash;
+    for (auto& tx : mTransactions)
+    {
+        if (tx->getFullHash() < lastHash)
+        {
+            CLOG(DEBUG, "Herder")
+                << "bad txSet: " << hexAbbrev(mPreviousLedgerHash)
+                << " not sorted correctly";
+            return false;
+        }
+
+        if (!tx->checkValid(app))
+        {
+            if (processInvalidTxLambda(tx))
+                continue;
+
+            return false;
+        }
+
+        lastHash = tx->getFullHash();
+    }
+
+    return true;
+}
+
 void
 TxSetFrame::trimInvalid(Application& app,
                         std::vector<TransactionFramePtr>& trimmed)
 {
-    soci::transaction sqltx(app.getDatabase().getSession());
-    app.getDatabase().setCurrentTransactionReadOnly();
-
     sortForHash();
 
-    map<AccountID, vector<TransactionFramePtr>> accountTxMap;
-
-    for (auto tx : mTransactions)
+    auto processInvalidTxLambda = [&](TransactionFramePtr tx)
     {
-        accountTxMap[tx->getSourceID()].push_back(tx);
-    }
+        trimmed.push_back(tx);
+        removeTx(tx);
+        return true;
+    };
 
-    for (auto& item : accountTxMap)
-    {
-        std::sort(item.second.begin(), item.second.end(), SaltSorter);
-        for (auto& tx : item.second)
-        {
-            if (!tx->checkValid(app))
-            {
-                trimmed.push_back(tx);
-                removeTx(tx);
-                continue;
-            }
-        }
-    }
+    checkOrTrim(app, processInvalidTxLambda);
 }
 
 // need to make sure every account that is submitting a tx has enough to pay
 // the fees of all the tx it has submitted in this set
 // check seq num
 bool
-TxSetFrame::checkValid(Application& app) const
+TxSetFrame::checkValid(Application& app)
 {
-    // Establish read-only transaction for duration of checkValid.
-    soci::transaction sqltx(app.getDatabase().getSession());
-    app.getDatabase().setCurrentTransactionReadOnly();
-
     auto& lcl = app.getLedgerManager().getLastClosedLedgerHeader();
     // Start by checking previousLedgerHash
     if (lcl.hash != mPreviousLedgerHash)
     {
         CLOG(DEBUG, "Herder")
-            << "Got bad txSet: " << hexAbbrev(mPreviousLedgerHash)
-            << " ; expected: "
-            << hexAbbrev(
-                   app.getLedgerManager().getLastClosedLedgerHeader().hash);
+                << "Got bad txSet: " << hexAbbrev(mPreviousLedgerHash)
+                << " ; expected: " << hexAbbrev(lcl.hash);
         return false;
     }
 
@@ -247,47 +256,18 @@ TxSetFrame::checkValid(Application& app) const
         return false;
     }
 
-    map<AccountID, vector<TransactionFramePtr>> accountTxMap;
-
-    Hash lastHash;
-    for (auto tx : mTransactions)
+    auto processInvalidTxLambda = [&](TransactionFramePtr tx)
     {
-        // make sure the set is sorted correctly
-        if (tx->getFullHash() < lastHash)
-        {
-            CLOG(DEBUG, "Herder")
-                << "bad txSet: " << hexAbbrev(mPreviousLedgerHash)
-                << " not sorted correctly";
-            return false;
-        }
-        accountTxMap[tx->getSourceID()].push_back(tx);
-        lastHash = tx->getFullHash();
-    }
+        CLOG(DEBUG, "Herder")
+            << "bad txSet: " << hexAbbrev(mPreviousLedgerHash) << " tx invalid"
+            << " salt:" << tx->getSalt()
+            << " tx: " << xdr::xdr_to_string(tx->getEnvelope())
+            << " result: " << static_cast<int32_t>(tx->getResultCode());
 
-    for (auto& item : accountTxMap)
-    {
-        // order by salt
-        std::sort(item.second.begin(), item.second.end(), SaltSorter);
+        return false;
+    };
 
-        Salt salt = 0;
-        for (auto& tx : item.second)
-        {
-            if (!tx->checkValid(app))
-            {
-                salt = tx->getSalt();
-                CLOG(DEBUG, "Herder")
-                    << "bad txSet: " << hexAbbrev(mPreviousLedgerHash)
-                    << " tx invalid"
-                    << " salt:" << salt
-                    << " tx: " << xdr::xdr_to_string(tx->getEnvelope())
-                    << " result: " << static_cast<int32_t >(tx->getResultCode());
-
-                return false;
-            }
-
-        }
-    }
-    return true;
+    return checkOrTrim(app, processInvalidTxLambda);
 }
 
 void
@@ -340,4 +320,4 @@ TxSetFrame::toXDR(TransactionSet& txSet)
     }
     txSet.previousLedgerHash = mPreviousLedgerHash;
 }
-}
+} // namespace stellar

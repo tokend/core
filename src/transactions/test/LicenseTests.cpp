@@ -5,7 +5,7 @@
 #include "util/Timer.h"
 #include "main/Config.h"
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "test_helper/StampTestHelper.h"

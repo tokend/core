@@ -1,10 +1,18 @@
 Installation Instructions
 ==================
-These are intructions for building stellar-core from source. For a potentially quicker set up we also have stellar-core in a docker container: https://github.com/stellar/docker-stellar-core-horizon
+These are instructions for building stellar-core from source.
+
+For a potentially quicker set up, the following projects could be good alternatives:
+
+* stellar-core in a [docker container](https://github.com/stellar/docker-stellar-core-horizon)
+* pre-compiled [packages](https://github.com/stellar/packages)
 
 ## Picking a version to run
 
-Branches are organized in the following way:
+Best is to use the latest *stable* release that can be downloaded from https://github.com/stellar/stellar-core/releases
+
+
+Alternatively, branches are organized in the following way:
 
 | branch name | description | quality bar |
 | ----------- | ----------- | ----------- |
@@ -21,7 +29,9 @@ When running a node, the best bet is to go with the latest release.
 
 ## Build Dependencies
 
-- `clang` >= 3.5 or `g++` >= 4.9
+- c++ toolchain and headers that supports c++14
+    - `clang` >= 5.0
+    - `g++` >= 6.0
 - `pkg-config`
 - `bison` and `flex`
 - `libpq-devel` unless you `./configure --disable-postgres` in the build step below.
@@ -57,7 +67,28 @@ See [INSTALL-Windows.txt](INSTALL-Windows.txt)
 - `git submodule init`
 - `git submodule update`
 - Type `./autogen.sh`.
-- Type `./configure`   *(If configure complains about compiler versions, try `CXX=clang-3.5 ./configure` or `CXX=g++-4.9 ./configure` or similar, depending on your compiler.)*
+- Type `./configure`   *(If configure complains about compiler versions, try `CXX=clang-5.0 ./configure` or `CXX=g++-6 ./configure` or similar, depending on your compiler.)*
 - Type `make` or `make -j` (for aggressive parallel build)
 - Type `make check` to run tests.
 - Type `make install` to install.
+
+## Building with clang and libc++
+
+On some systems, building with `libc++`, [LLVM's version of the standard library](https://libcxx.llvm.org/) can be done instead of `libstdc++` (typically used on Linux).
+
+NB: there are newer versions available of both clang and libc++, you will have to use the versions suited for your system.
+
+You may need to install additional packages for this, for example, on Linux Ubuntu:
+
+    # install libc++ headers
+    sudo apt-get install libc++-dev libc++abi-dev
+
+Here are sample steps to achieve this:
+
+    export CC=clang-5.0
+    export CXX=clang++-5.0
+    export CFLAGS="-O3 -g1 -fno-omit-frame-pointer"
+    export CXXFLAGS="$CFLAGS -stdlib=libc++ -isystem /usr/include/libcxxabi"
+    git clone https://github.com/stellar/stellar-core.git
+    cd stellar-core/
+    ./autogen.sh && ./configure && make -j6

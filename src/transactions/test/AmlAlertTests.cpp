@@ -2,7 +2,7 @@
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include "test/test_marshaler.h"
 #include "TxTests.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "test_helper/ManageAMLAlertTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"

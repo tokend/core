@@ -531,6 +531,5 @@ BalanceHelperImpl::obtainStrAccountIDs(vector<AccountID> accountIDs)
 
     return result.substr(0, result.size() - 3);
 }
-
 } // namespace stellar
 
