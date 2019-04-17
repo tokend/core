@@ -16,7 +16,8 @@ if(DEFINED DEVELOPER_EDITION)
 endif(DEFINED DEVELOPER_EDITION)
 
 # version
-set(VERSION "3.2.0")
+execute_process(COMMAND bash -c "git describe --always --dirty --tags" OUTPUT_VARIABLE VERSION)
+string(STRIP ${VERSION} VERSION)
 configure_file(main/StellarCoreVersion.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/main/StellarCoreVersion.cpp)
 
 # add revision of xdr submodule, use in core info
