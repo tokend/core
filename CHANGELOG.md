@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+* Merge internal and non-functionality (non business logic) improvements from stellar
+
 ## 3.1.3
 
 ### Fixed
