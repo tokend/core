@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.1.3
+
 ### Fixed
 
 * Calculating statistics for payment
