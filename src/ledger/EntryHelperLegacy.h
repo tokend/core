@@ -59,7 +59,6 @@ namespace stellar
             return foundHelperIt->second;
         }
 
-
 		static void dropAll(Database &db);
 
 		// Providers for appropriate methods of adding/deleting etc.

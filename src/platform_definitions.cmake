@@ -7,16 +7,13 @@ add_definitions(
         -DASIO_SEPARATE_COMPILATION=1
         -DSQLITE_OMIT_LOAD_EXTENSION=1
         -DUSE_POSTGRES=1
+        -DBUILD_TESTS=1
     )
 
 set(DEVELOPER_EDITION ${DEVELOPER_EDITION})
 if(DEFINED DEVELOPER_EDITION)
     add_definitions(-DDEVELOPER_EDITION=1)
 endif(DEFINED DEVELOPER_EDITION)
-
-if(DEFINED BUILD_TESTS)
-    add_definitions(-DBUILD_TESTS=1)
-endif(DEFINED BUILD_TESTS)
 
 # add revision of xdr submodule, use in core info
 execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/xdr && git rev-parse HEAD)" OUTPUT_VARIABLE XDR_REVISION)
