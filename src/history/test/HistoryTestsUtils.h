@@ -200,10 +200,10 @@ class CatchupSimulation
     std::vector<int64_t> bobBalances;
     std::vector<int64_t> carolBalances;
 
-    std::vector<SequenceNumber> rootSeqs;
-    std::vector<SequenceNumber> aliceSeqs;
-    std::vector<SequenceNumber> bobSeqs;
-    std::vector<SequenceNumber> carolSeqs;
+    std::vector<int64_t> rootSeqs;
+    std::vector<int64_t> aliceSeqs;
+    std::vector<int64_t> bobSeqs;
+    std::vector<int64_t> carolSeqs;
 
   public:
     explicit CatchupSimulation(

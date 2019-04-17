@@ -24,14 +24,14 @@ class TestAccount
   public:
     static TestAccount createRoot(Application& app);
 
-    explicit TestAccount(Application& app, SecretKey sk, SequenceNumber sn = 0)
+    explicit TestAccount(Application& app, SecretKey sk, int64_t sn = 0)
         : mApp(app), mSk{std::move(sk)}, mSn{sn}
     {
         mAccountID = PubKeyUtils::toStrKey(mSk.getPublicKey());
     }
 
     TransactionFramePtr tx(std::vector<Operation> const& ops,
-                           SequenceNumber sn = 0);
+                           int64_t sn = 0);
     Operation op(Operation operation);
 
     TestAccount create(SecretKey const& secretKey, uint64_t initialBalance);
@@ -43,7 +43,7 @@ class TestAccount
 
     void manageData(std::string const& name, DataValue* value);
 
-    void bumpSequence(SequenceNumber to);
+    void bumpSequence(int64_t to);
 
     void pay(PublicKey const& destination, int64_t amount);
 
@@ -68,25 +68,25 @@ class TestAccount
     }
 
     void
-    setSequenceNumber(SequenceNumber sn)
+    setSequenceNumber(int64_t sn)
     {
         mSn = sn;
     }
 
-    SequenceNumber
+    int64_t
     getLastSequenceNumber()
     {
         //updateSequenceNumber();
         return mSn;
     }
 
-    SequenceNumber
+    int64_t
     nextSequenceNumber()
     {
         updateSequenceNumber();
         return ++mSn;
     }
-    SequenceNumber loadSequenceNumber();
+    int64_t loadSequenceNumber();
 
     std::string
     getAccountId()
@@ -102,7 +102,7 @@ class TestAccount
     Application& mApp;
     SecretKey mSk;
     std::string mAccountID;
-    SequenceNumber mSn;
+    int64_t mSn;
 
     void updateSequenceNumber();
 };

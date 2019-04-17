@@ -456,7 +456,7 @@ CatchupSimulation::generateAndPublishHistory(size_t nPublishes)
     auto& hm = mApp.getHistoryManager();
 
     size_t publishSuccesses = hm.getPublishSuccessCount();
-    SequenceNumber ledgerSeq = lm.getLastClosedLedgerNum() + 1;
+    int64_t ledgerSeq = lm.getLastClosedLedgerNum() + 1;
 
     while (hm.getPublishSuccessCount() < (publishSuccesses + nPublishes))
     {
