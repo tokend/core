@@ -88,7 +88,7 @@ PollHelperImpl::storeUpdate(LedgerEntry const &entry, bool insert)
     else
     {
         sql = "UPDATE polls SET permission_type = :p_t, number_of_choices = :n_c, "
-              " type = :t, data = :data, start_time = :s_t, end_time = e_t, "
+              " type = :t, data = :data, start_time = :s_t, end_time = :e_t, "
               " owner_id = :o_i, result_provider_id = :r_p_i, vote_confirmation_required = :v_v_r, "
               "details = :det, version = :v, lastmodified = :lm "
               "WHERE id = :id";

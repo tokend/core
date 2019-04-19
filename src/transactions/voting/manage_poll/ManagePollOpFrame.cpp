@@ -1,5 +1,7 @@
 #include "ManagePollOpFrame.h"
 #include "ClosePollOpFrame.h"
+#include "UpdatePollEndTimeOpFrame.h"
+#include "CancelPollOpFrame.h"
 
 namespace stellar
 {
@@ -18,6 +20,10 @@ ManagePollOpFrame::makeHelper(Operation const& op, OperationResult& res,
     {
         case ManagePollAction::CLOSE:
             return std::make_shared<ClosePollOpFrame>(op, res, tx);
+        case ManagePollAction::CANCEL:
+            return std::make_shared<CancelPollOpFrame>(op, res, tx);
+        case ManagePollAction::UPDATE_END_TIME:
+            return std::make_shared<UpdatePollEndTimeOpFrame>(op, res, tx);
         default:
             throw std::runtime_error("Unexpected action in manage poll op");
     }

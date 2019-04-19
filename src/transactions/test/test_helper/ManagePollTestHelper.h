@@ -23,8 +23,6 @@ public:
 
     ManageCreatePollRequestTestBuilder setCreateRequestData(CreatePollRequestData data);
 
-    ManageCreatePollRequestTestBuilder setClosePollData(ClosePollData data);
-
     ManageCreatePollRequestTestBuilder setCancelPollRequestData(CancelPollRequestData data);
 
     ManageCreatePollRequestTestBuilder setResultCode(ManageCreatePollRequestResultCode expectedResult);
@@ -52,6 +50,7 @@ public:
     ManagePollTestBuilder setAction(ManagePollAction action);
 
     ManagePollTestBuilder setClosePollData(ClosePollData data);
+    ManagePollTestBuilder setUpdateEndTimeData(UpdatePollEndTimeData data);
 
     ManagePollTestBuilder setPollID(uint64_t pollID);
 
@@ -65,6 +64,7 @@ public:
 
     ManagePollAction action;
     ClosePollData close;
+    UpdatePollEndTimeData updateEndTime;
     uint64_t pollID;
 };
 class ManagePollTestHelper : public TxHelper
