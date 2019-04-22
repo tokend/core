@@ -37,7 +37,7 @@
 #include "ledger/ReferenceHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
 #include "ledger/PollHelper.h"
-
+#include "ledger/VoteHelper.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -64,8 +64,9 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 12,
     ADD_ATOMIC_SWAP_BID = 13,
     ADD_ASSET_CUSTOM_PRECISION = 14,
-    POLL_PERMISSION_TYPE_MIGRATION = 15,
-    ADD_PEER_TYPE = 16
+    ADD_VOTING = 15,
+    POLL_PERMISSION_TYPE_MIGRATION = 16,
+    ADD_PEER_TYPE = 17
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_PEER_TYPE;
@@ -169,6 +170,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
             break;
+        case databaseSchemaVersion::ADD_VOTING:
+            addVotingTables();
+            break;
         case databaseSchemaVersion::POLL_PERMISSION_TYPE_MIGRATION:
             sh.getPollHelper().permissionTypeMigration();
             break;
@@ -179,6 +183,37 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         default:
             throw std::runtime_error("Unknown DB schema version");
     }
+}
+
+void
+DatabaseImpl::addVotingTables()
+{
+    getSession() << "CREATE TABLE IF NOT EXISTS polls"
+                    "("
+                    "id                            BIGINT      NOT NULL,"
+                    "permission_type               INT         NOT NULL,"
+                    "number_of_choices             INT         NOT NULL CHECK (number_of_choices > 0),"
+                    "type                          INT         NOT NULL,"
+                    "data                          TEXT        NOT NULL,"
+                    "start_time                    BIGINT      NOT NULL,"
+                    "end_time                      BIGINT      NOT NULL,"
+                    "owner_id                      VARCHAR(56) NOT NULL,"
+                    "result_provider_id            VARCHAR(56) NOT NULL,"
+                    "vote_confirmation_required    BOOLEAN     NOT NULL,"
+                    "details                       TEXT        NOT NULL,"
+                    "version                       INT         NOT NULL,"
+                    "lastmodified                  INT         NOT NULL,"
+                    "PRIMARY KEY (id)"
+                    ");";
+    getSession() << "CREATE TABLE IF NOT EXISTS votes"
+                    "("
+                    "poll_id             BIGINT      NOT NULL CHECK (poll_id > 0),"
+                    "voter_id            VARCHAR(56) NOT NULL,"
+                    "choice              TEXT        NOT NULL,"
+                    "version             INT         NOT NULL,"
+                    "lastmodified        INT         NOT NULL,"
+                    "PRIMARY KEY (poll_id, voter_id)"
+                    ");";
 }
 
 void
