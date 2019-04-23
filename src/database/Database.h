@@ -255,8 +255,6 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
     virtual soci::connection_pool& getPool();
 
     EntryCache& getEntryCache() override;
-
-    void addVotingTables();
 };
 
 class DBTimeExcluder : NonCopyable
