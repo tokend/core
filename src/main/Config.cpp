@@ -383,9 +383,9 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "TMP_DIR_PATH")
             {
-                throw std::invalid_argument("TMP_DIR_PATH is not supported "
-                                            "anymore - tmp data is now kept in "
-                                            "BUCKET_DIR_PATH/tmp");
+                std::cerr << "TMP_DIR_PATH is not supported "
+                             "anymore - tmp data is now kept in "
+                             "BUCKET_DIR_PATH/tmp" << std::endl;
             }
             else if (item.first == "BUCKET_DIR_PATH")
             {

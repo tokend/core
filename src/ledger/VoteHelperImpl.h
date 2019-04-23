@@ -17,6 +17,9 @@ private:
     void
     dropAll() override;
 
+    void
+    createIfNotExists() override;
+
     Database&
     getDatabase() override;
 
@@ -57,6 +60,9 @@ private:
     deleteForPoll(uint64_t pollID) override;
 
     void handleDeletedDelta(uint64_t pollID);
+
+    std::string
+    getTableSchema();
 
     StorageHelper& mStorageHelper;
     const char* mVoteColumnSelector;
