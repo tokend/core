@@ -23,7 +23,7 @@ class CreateAccountSpecificRuleOpFrame : private ManageAccountSpecificRuleOpFram
     bool doCheckValid(Application& app) override;
 
     bool
-    createSaleRule(Application& app,StorageHelper& sh, uint64_t id);
+    createSaleRule(Application& app,StorageHelper& sh, uint64_t saleID);
 
 public:
     CreateAccountSpecificRuleOpFrame(Operation const& op, OperationResult& res,

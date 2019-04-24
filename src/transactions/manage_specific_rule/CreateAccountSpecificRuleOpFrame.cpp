@@ -1,6 +1,9 @@
 #include "CreateAccountSpecificRuleOpFrame.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/LedgerDelta.h"
+#include "ledger/AccountSpecificRuleFrame.h"
+#include "ledger/AccountSpecificRuleHelper.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -36,18 +39,22 @@ CreateAccountSpecificRuleOpFrame::doApply(Application &app,
     switch (mCreateData.ledgerKey.type())
     {
         case LedgerEntryType::SALE:
-            createSaleRule(app, storageHelper, mCreateData.ledgerKey.sale().saleID);
+            return createSaleRule(app, storageHelper, mCreateData.ledgerKey.sale().saleID);
         default:
-            innerResult().code(ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED);
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected entry type on "
+                               << "creating account specific rule entry, type: "
+                               << static_cast<int32_t>(mCreateData.ledgerKey.type());
+            throw std::runtime_error("Unexpected entry type on creating account specific rule entry");
     }
 }
 
 bool
 CreateAccountSpecificRuleOpFrame::createSaleRule(Application& app,
-        StorageHelper& sh, uint64_t id)
+        StorageHelper& sh, uint64_t saleID)
 {
     auto saleHelper = SaleHelper::Instance();
-    auto sale = saleHelper->loadSale(id, sh.getDatabase(), sh.getLedgerDelta());
+    LedgerDelta& delta = sh.mustGetLedgerDelta();
+    auto sale = saleHelper->loadSale(saleID, sh.getDatabase(), &delta);
     if (!sale)
     {
         innerResult().code(ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND);
@@ -55,12 +62,38 @@ CreateAccountSpecificRuleOpFrame::createSaleRule(Application& app,
     }
 
     //  not sale owner and not admin
-    if (!(sale->getOwnerID() == getSourceID()) && !(app.getAdminID() == getSourceID()))
+    if (!isAuthorized(sale->getOwnerID(), app.getAdminID()))
     {
         innerResult().code(ManageAccountSpecificRuleResultCode::NOT_AUTORIZED);
         return false;
     }
 
+    auto ruleID = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+    auto frame = std::make_shared<AccountSpecificRuleFrame>(ruleID, mCreateData);
 
+    sh.getAccountSpecificRuleHelper().storeAdd(frame->mEntry);
+
+    innerResult().code(ManageAccountSpecificRuleResultCode::SUCCESS);
+    innerResult().success().ruleID = ruleID;
+    return true;
+}
+
+bool CreateAccountSpecificRuleOpFrame::doCheckValid(Application &app)
+{
+    switch (mCreateData.ledgerKey.type())
+    {
+        case LedgerEntryType::SALE:
+            if (mCreateData.ledgerKey.sale().saleID == 0)
+            {
+                innerResult().code(ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND);
+                return false;
+            }
+            break;
+        default:
+            innerResult().code(ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED);
+            return false;
+    }
+
+    return true;
 }
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <ledger/AccountSpecificRuleFrame.h>
+#include "ManageAccountSpecificRuleOpFrame.h"
+
 namespace stellar
 {
 
@@ -19,6 +22,10 @@ class RemoveAccountSpecificRuleOpFrame : private ManageAccountSpecificRuleOpFram
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
+
+    bool
+    tryRemoveSaleRule(Application& app, StorageHelper& storageHelper,
+            AccountSpecificRuleFrame::pointer const& frame);
 
 public:
     RemoveAccountSpecificRuleOpFrame(Operation const& op, OperationResult& res,

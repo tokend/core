@@ -16,6 +16,9 @@ protected:
         return mResult.tr().manageAccountSpecificRuleResult();
     }
 
+    bool const
+    isAuthorized(AccountID const &saleOwner, AccountID const &admin) const;
+
 public:
     ManageAccountSpecificRuleOpFrame(Operation const& op, OperationResult& res,
             TransactionFrame& parentTx);

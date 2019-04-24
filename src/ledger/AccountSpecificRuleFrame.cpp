@@ -21,6 +21,15 @@ AccountSpecificRuleFrame::AccountSpecificRuleFrame(
 {
 }
 
+AccountSpecificRuleFrame::AccountSpecificRuleFrame(uint64_t const id,
+        CreateAccountSpecificRuleData const& data) : AccountSpecificRuleFrame()
+{
+    mAccountSpecificRuleEntry.id = id;
+    mAccountSpecificRuleEntry.ledgerKey = data.ledgerKey;
+    mAccountSpecificRuleEntry.accountID = data.accountID;
+    mAccountSpecificRuleEntry.forbids = data.forbids;
+}
+
 AccountSpecificRuleFrame&
 AccountSpecificRuleFrame::operator=(const AccountSpecificRuleFrame& other)
 {

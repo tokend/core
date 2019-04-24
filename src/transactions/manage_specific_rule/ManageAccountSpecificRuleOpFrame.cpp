@@ -1,6 +1,6 @@
 #include "ManageAccountSpecificRuleOpFrame.h"
-#include "CreatePollRequestOpFrame.h"
-#include "CancelPollRequestOpFrame.h"
+#include "CreateAccountSpecificRuleOpFrame.h"
+#include "RemoveAccountSpecificRuleOpFrame.h"
 
 namespace stellar
 {
@@ -24,6 +24,14 @@ ManageAccountSpecificRuleOpFrame::makeHelper(Operation const& op,
         default:
             throw std::runtime_error("Unexpected action in manage account specific rule op");
     }
+}
+
+bool const
+ManageAccountSpecificRuleOpFrame::isAuthorized(const AccountID &saleOwner,
+                                               const AccountID &admin) const
+{
+    AccountID const& source = getSourceID();
+    return (saleOwner == source) || (admin == source);
 }
 
 } // namespace stellar

@@ -41,9 +41,9 @@ namespace stellar {
                 "lastmodified       INT              NOT NULL,"
                 "version			INT				 NOT NULL DEFAULT 0,"
                 "PRIMARY KEY      (offer_id)"
-                ");";;
+                ");";
         db.getSession() << "CREATE INDEX base_quote_price ON offer"
-                " (order_book_id, base_asset_code, quote_asset_code, is_buy, price);";;
+                " (order_book_id, base_asset_code, quote_asset_code, is_buy, price);";
     }
 
     void OfferHelper::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
@@ -342,6 +342,29 @@ std::vector<OfferFrame::pointer> OfferHelper::loadOffers(AssetCode const& base,
     });
 
     return results;
+}
+
+std::vector<OfferFrame::pointer>
+OfferHelper::loadOffers(AccountID const &accountID, uint64_t const orderBookID,
+                        Database &db)
+{
+    string sql = offerColumnSelector;
+    sql += " WHERE order_book_id = :obi AND owner_id = :oi";
+
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+
+    st.exchange(use(accountID, "obi"));
+    st.exchange(use(orderBookID, "oi"));
+
+    auto timer = db.getSelectTimer("offers");
+
+    std::vector<OfferFrame::pointer> result;
+    loadOffers(prep, [&result](LedgerEntry const& of)
+    {
+       result.emplace_back(make_shared<OfferFrame>(of));
+    });
+    return result;
 }
 
 std::unordered_map<AccountID, std::vector<OfferFrame::pointer>> OfferHelper::loadAllOffers(Database &db) {

@@ -15,6 +15,7 @@ public:
 
     AccountSpecificRuleFrame();
     AccountSpecificRuleFrame(LedgerEntry const& from);
+    AccountSpecificRuleFrame(uint64_t id, CreateAccountSpecificRuleData const& data);
 
     AccountSpecificRuleFrame& operator=(AccountSpecificRuleFrame const& other);
     EntryFrame::pointer copy() const override;

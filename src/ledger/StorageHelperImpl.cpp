@@ -343,4 +343,14 @@ StorageHelperImpl::getPollHelper()
     return *mPollHelper;
 }
 
+AccountSpecificRuleHelper&
+StorageHelperImpl::getAccountSpecificRuleHelper()
+{
+    if (!mAccountSpecificRuleHelper)
+    {
+        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelper>(*this);
+    }
+    return *mAccountSpecificRuleHelper;
+}
+
 } // namespace stellar
