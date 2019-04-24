@@ -48,7 +48,7 @@ set(NOT_COMMON_SOURCE_FILES
         transactions/SignatureValidator.h
         transactions/test/test_helper/Account.h
         transactions/rule_verifing/AccountRuleVerifier.h
-        transactions/rule_verifing/SignerRuleVerifier.h)
+        transactions/rule_verifing/SignerRuleVerifier.h ledger/AccountSpecificRuleHelper.h)
 
 # mocks
 set(MOCKS_FILES transactions/test/mocks/)
