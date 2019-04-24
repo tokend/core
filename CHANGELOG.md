@@ -12,6 +12,10 @@
 
 * Merge internal and non-functionality (non business logic) improvements from stellar
 
+### Fixed
+
+* exception on poll migration
+
 ## 3.1.3
 
 ### Fixed

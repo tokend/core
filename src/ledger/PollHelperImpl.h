@@ -17,6 +17,9 @@ private:
     dropAll() override;
 
     void
+    createIfNotExists() override;
+
+    void
     permissionTypeMigration() override;
 
     Database&
@@ -63,6 +66,9 @@ private:
 
     void
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
+
+    std::string
+    getTableSchema();
 
     StorageHelper& mStorageHelper;
     const char* mPollColumnSelector;

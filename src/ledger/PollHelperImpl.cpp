@@ -27,23 +27,36 @@ PollHelperImpl::dropAll()
     Database& db = getDatabase();
 
     db.getSession() << "DROP TABLE IF EXISTS polls;";
-    db.getSession() << "CREATE TABLE polls"
-                   "("
-                   "id                            BIGINT      NOT NULL,"
-                   "permission_type               INT         NOT NULL,"
-                   "number_of_choices             INT         NOT NULL CHECK (number_of_choices > 0),"
-                   "type                          INT         NOT NULL,"
-                   "data                          TEXT        NOT NULL,"
-                   "start_time                    BIGINT      NOT NULL,"
-                   "end_time                      BIGINT      NOT NULL,"
-                   "owner_id                      VARCHAR(56) NOT NULL,"
-                   "result_provider_id            VARCHAR(56) NOT NULL,"
-                   "vote_confirmation_required    BOOLEAN     NOT NULL,"
-                   "details                       TEXT        NOT NULL,"
-                   "version                       INT         NOT NULL,"
-                   "lastmodified                  INT         NOT NULL,"
-                   "PRIMARY KEY (id)"
-                   ");";
+    db.getSession() << "CREATE TABLE polls " << getTableSchema();
+}
+
+void
+PollHelperImpl::createIfNotExists()
+{
+    Database& db = getDatabase();
+
+    db.getSession() << "CREATE TABLE IF NOT EXISTS polls " << getTableSchema();
+}
+
+std::string
+PollHelperImpl::getTableSchema()
+{
+    return  "("
+            "id                            BIGINT      NOT NULL,"
+            "permission_type               INT         NOT NULL,"
+            "number_of_choices             INT         NOT NULL CHECK (number_of_choices > 0),"
+            "type                          INT         NOT NULL,"
+            "data                          TEXT        NOT NULL,"
+            "start_time                    BIGINT      NOT NULL,"
+            "end_time                      BIGINT      NOT NULL,"
+            "owner_id                      VARCHAR(56) NOT NULL,"
+            "result_provider_id            VARCHAR(56) NOT NULL,"
+            "vote_confirmation_required    BOOLEAN     NOT NULL,"
+            "details                       TEXT        NOT NULL,"
+            "version                       INT         NOT NULL,"
+            "lastmodified                  INT         NOT NULL,"
+            "PRIMARY KEY (id)"
+            ");";
 }
 
 void

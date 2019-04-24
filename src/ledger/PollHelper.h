@@ -22,5 +22,8 @@ public:
 
     virtual void
     permissionTypeMigration() = 0;
+
+    virtual void
+    createIfNotExists() = 0;
 };
 }
