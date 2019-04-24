@@ -39,6 +39,7 @@ SOFTWARE.
 #include "crow/crow.hpp"
 #include <lib/crow/src/crow_config.hpp>
 #include <src/crow_utilities.hpp>
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -52,7 +53,7 @@ crow::crow(const std::string& dsn,
            const json& context,
            const double sample_rate,
            const bool install_handlers)
-    : m_sample_rate(static_cast<int>(sample_rate * 100.0))
+    :m_sample_rate(static_cast<int>(sample_rate * 100.0))
     , m_enabled(not dsn.empty())
 {
     // process DSN
@@ -103,7 +104,9 @@ void crow::install_handler()
 void crow::capture_message(const std::string& message,
                            const json& attributes)
 {
-    std::lock_guard<std::mutex> lock(m_payload_mutex);
+    using namespace std;
+
+    lock_guard<mutex> lock(m_payload_mutex);
     m_payload["message"] = message;
     m_payload["event_id"] = nlohmann::crow_utilities::generate_uuid();
     m_payload["timestamp"] = nlohmann::crow_utilities::get_iso8601();
@@ -117,8 +120,12 @@ void crow::capture_message(const std::string& message,
             m_payload["logger"] = *logger;
         }
 
-        // level
-        m_payload["level"] = attributes.value("level", "error");
+        auto logger_id = attributes.find("logger_id");
+        if (logger_id != attributes.end())
+        {
+            string rawFingerprint = string(*logger_id) + " " + string(attributes.value("level", "error"));
+            m_payload["fingerprint"] = vector<char>(rawFingerprint.begin(), rawFingerprint.end());
+        }
 
         // context
         auto context = attributes.find("context");

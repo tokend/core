@@ -322,8 +322,8 @@ Logging::rotate()
 }
 
 void
-SentryClient::send(const std::string &msg) {
-    mCrowClient->capture_message(msg);
+SentryClient::send(const std::string &msg, const json& attributes) {
+    mCrowClient->capture_message(msg, attributes);
 }
 
 void
@@ -339,12 +339,18 @@ void SentryLogCallback::handle(const el::LogDispatchData *data) noexcept {
         return;
     }
 
+    json attrs = {
+            {"logger_id", mData->logMessage()->logger()->id()},
+            {"level", el::LevelHelper::convertToString(mData->logMessage()->level())},
+    };
+
     dispatch(mData->logMessage()->logger()->logBuilder()->build(
             mData->logMessage(),
-            mData->dispatchAction() == el::base::DispatchAction::NormalLog));
+            mData->dispatchAction() == el::base::DispatchAction::NormalLog), attrs);
 }
 
-void SentryLogCallback::dispatch(el::base::type::string_t&& logLine) {
-    mClient->send(logLine);
+void SentryLogCallback::dispatch(el::base::type::string_t&& logLine, const json& attrs) {
+
+    mClient->send(logLine, attrs);
 }
 }
