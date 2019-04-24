@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+* Close poll op frame
+* Update poll end time op frame
+* Voting tests
+
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar
