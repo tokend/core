@@ -67,7 +67,7 @@ CancelPollOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     auto poll = pollHelper.mustLoadPoll(mManagePoll.pollID);
     if (!isAuthorized(app.getAdminID(), poll))
     {
-        innerResult().code(ManagePollResultCode::NOT_AUTHORIZED_TO_CANCEL_POLL);
+        innerResult().code(ManagePollResultCode::NOT_AUTHORIZED);
         return false;
     }
     pollHelper.storeDelete(poll->getKey());

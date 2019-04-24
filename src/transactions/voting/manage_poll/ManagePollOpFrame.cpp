@@ -42,7 +42,7 @@ bool ManagePollOpFrame::doCheckValid(Application& app)
 bool
 ManagePollOpFrame::isAuthorized(AccountID adminID, PollFrame::pointer poll)
 {
-    return poll->getEntry().ownerID == getSourceID() || getSourceID() == adminID;
+    return (poll->getEntry().ownerID == getSourceID()) || (getSourceID() == adminID);
 }
 
 } // namespace stellar

@@ -272,7 +272,7 @@ TEST_CASE("Poll", "[tx][voting][poll]")
                 setPollID(pollID).
                 setAction(ManagePollAction::UPDATE_END_TIME).
                 setUpdateEndTimeData(updateEndTimeData).
-                setResultCode(ManagePollResultCode::NOT_AUTHORIZED_TO_UPDATE_POLL_END_TIME));
+                setResultCode(ManagePollResultCode::NOT_AUTHORIZED));
         }
 
 
@@ -393,7 +393,7 @@ TEST_CASE("Poll", "[tx][voting][poll]")
                     setSource(sneaker).
                     setPollID(pollID).
                     setAction(ManagePollAction::CANCEL).
-                    setResultCode(ManagePollResultCode::NOT_AUTHORIZED_TO_CANCEL_POLL));
+                    setResultCode(ManagePollResultCode::NOT_AUTHORIZED));
             }
 
             SECTION("Vote exists")
