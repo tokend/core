@@ -32,7 +32,7 @@ UpdatePollEndTimeOpFrame::tryGetOperationConditions(StorageHelper& storageHelper
     }
 
     resource.poll().permissionType = poll->getEntry().permissionType;
-    result.emplace_back(resource, AccountRuleAction::MANAGE, mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::UPDATE_END_TIME, mSourceAccount);
 
     return true;
 }
@@ -53,7 +53,7 @@ UpdatePollEndTimeOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     }
 
     resource.poll().permissionType = poll->getEntry().permissionType;
-    result.emplace_back(resource, SignerRuleAction::MANAGE);
+    result.emplace_back(resource, SignerRuleAction::UPDATE_END_TIME);
 
     return true;
 }
@@ -64,7 +64,13 @@ UpdatePollEndTimeOpFrame::doApply(Application& app, StorageHelper& storageHelper
 {
     auto& pollHelper = storageHelper.getPollHelper();
 
+    // Poll existence is being check on rules checking stage
     auto poll = pollHelper.mustLoadPoll(mManagePoll.pollID);
+    if(!isAuthorized(app.getAdminID(), poll))
+    {
+        innerResult().code(ManagePollResultCode::NOT_AUTHORIZED_TO_UPDATE_POLL_END_TIME);
+        return false;
+    }
     poll->getEntry().endTime = mUpdatePollEndTimeData.newEndTime;
     pollHelper.storeChange(poll->mEntry);
 
@@ -74,11 +80,6 @@ UpdatePollEndTimeOpFrame::doApply(Application& app, StorageHelper& storageHelper
 
 bool UpdatePollEndTimeOpFrame::doCheckValid(Application& app)
 {
-    if (mManagePoll.pollID == 0)
-    {
-        innerResult().code(ManagePollResultCode::NOT_FOUND);
-        return false;
-    }
 
     if (mUpdatePollEndTimeData.newEndTime <= app.getLedgerManager().getCloseTime())
     {
@@ -86,7 +87,7 @@ bool UpdatePollEndTimeOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    return true;
+    return ManagePollOpFrame::doCheckValid(app) ;
 }
 
 }

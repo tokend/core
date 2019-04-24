@@ -15,8 +15,6 @@ public:
     doApply(Application& app, StorageHelper& storageHelper,
             LedgerManager& ledgerManager);
 
-    bool
-    doCheckValid(Application& app);
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
@@ -25,7 +23,6 @@ public:
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const;
-
 };
 
 

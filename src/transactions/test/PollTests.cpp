@@ -84,11 +84,11 @@ TEST_CASE("Poll", "[tx][voting][poll]")
     resource.poll().permissionType = UINT32_MAX;
     resource.poll().pollID = UINT64_MAX;
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::MANAGE, false);
+        0, resource, AccountRuleAction::UPDATE_END_TIME, false);
     auto managePollRuleID = manageAccountRuleTestHelper.applyTx(
         root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
-    //to update poll end time
+    //to cancel poll
     resource.type(LedgerEntryType::POLL);
     resource.poll().permissionType = UINT32_MAX;
     resource.poll().pollID = UINT64_MAX;
@@ -241,6 +241,41 @@ TEST_CASE("Poll", "[tx][voting][poll]")
                 setUpdateEndTimeData(updateEndTimeData));
         }
 
+        SECTION("Admin updates end time")
+        {
+
+            UpdatePollEndTimeData updateEndTimeData;
+            updateEndTimeData.newEndTime = endTime + 1000;
+
+            managePollTestHelper.applyTx(managePollBuilder.
+                setSource(root).
+                setPollID(pollID).
+                setAction(ManagePollAction::UPDATE_END_TIME).
+                setUpdateEndTimeData(updateEndTimeData));
+        }
+
+        SECTION("Random account with rules updates end time")
+        {
+            auto sneaker = Account{SecretKey::random(), 0};
+            auto sneakerPubkey = sneaker.key.getPublicKey();
+            createAccountTestHelper.applyTx(createAccountBuilder
+                                                .setToPublicKey(sneakerPubkey)
+                                                .addBasicSigner());
+
+            managePollBuilder;
+
+            UpdatePollEndTimeData updateEndTimeData;
+            updateEndTimeData.newEndTime = endTime + 1000;
+
+            managePollTestHelper.applyTx(managePollBuilder.
+                setSource(sneaker).
+                setPollID(pollID).
+                setAction(ManagePollAction::UPDATE_END_TIME).
+                setUpdateEndTimeData(updateEndTimeData).
+                setResultCode(ManagePollResultCode::NOT_AUTHORIZED_TO_UPDATE_POLL_END_TIME));
+        }
+
+
         SECTION("Too early")
         {
             auto voteCreationResultCode = manageVoteTestHelper.applyTx(manageVoteBuilder.
@@ -334,6 +369,33 @@ TEST_CASE("Poll", "[tx][voting][poll]")
                     setAction(ManagePollAction::CANCEL));
             }
 
+            SECTION("Admin cancel poll with votes after end time")
+            {
+                testManager->advanceToTime(endTime);
+
+                managePollTestHelper.applyTx(managePollBuilder.
+                    setSource(root).
+                    setPollID(pollID).
+                    setAction(ManagePollAction::CANCEL));
+            }
+
+            SECTION("Sneaker cancel poll with votes after end time")
+            {
+                auto sneaker = Account{SecretKey::random(), 0};
+                auto sneakerPubkey = sneaker.key.getPublicKey();
+                createAccountTestHelper.applyTx(createAccountBuilder
+                                                    .setToPublicKey(sneakerPubkey)
+                                                    .addBasicSigner());
+
+                testManager->advanceToTime(endTime);
+
+                managePollTestHelper.applyTx(managePollBuilder.
+                    setSource(sneaker).
+                    setPollID(pollID).
+                    setAction(ManagePollAction::CANCEL).
+                    setResultCode(ManagePollResultCode::NOT_AUTHORIZED_TO_CANCEL_POLL));
+            }
+
             SECTION("Vote exists")
             {
                 manageVoteTestHelper.applyTx(manageVoteBuilder.
@@ -395,7 +457,7 @@ TEST_CASE("Poll", "[tx][voting][poll]")
                 );
             }
 
-            SECTION("Finish poll to early")
+            SECTION("Finish poll too early")
             {
                 ClosePollData data;
                 data.result = PollResult::PASSED;
@@ -410,138 +472,6 @@ TEST_CASE("Poll", "[tx][voting][poll]")
             }
         }
     }
-
-}
-
-TEST_CASE("Poll with vote confirmation", "[tx][voting][vote_confirmation][poll]")
-{
-    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    VirtualClock clock;
-    Application::pointer appPtr = Application::create(clock, cfg);
-    Application& app = *appPtr;
-    app.start();
-    auto testManager = TestManager::make(app);
-    TestManager::upgradeToCurrentLedgerVersion(app);
-
-    Database& db = testManager->getDB();
-
-    auto root = Account{getRoot(), Salt(0)};
-
-    CreateAccountTestHelper createAccountTestHelper(testManager);
-    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
-    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
-    ManagePollTestHelper managePollTestHelper(testManager);
-    ManageVoteTestHelper manageVoteTestHelper(testManager);
-    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
-    ReviewRequestHelper reviewRequestTestHelper(testManager);
-
-    uint32_t pollTasks = 1;
-    longstring pollKey = ManageKeyValueOpFrame::makeCreatePollKey("*");
-    manageKeyValueHelper.setKey(pollKey)->setUi32Value(pollTasks);
-    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
-
-    uint32_t pollPermissionType(1);
-
-    // create policy (just entry)
-    // to create poll
-    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_POLL);
-    resource.reviewableRequest().details.createPoll().permissionType = UINT32_MAX;
-    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::CREATE, false);
-    auto createPollRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-    // to send tx
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
-    auto txSendRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-    //to  create poll
-    resource.type(LedgerEntryType::VOTE);
-    resource.vote().permissionType = UINT32_MAX;
-    resource.vote().pollID = UINT64_MAX;
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::CREATE, false);
-    auto createVoteRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::REMOVE, false);
-    auto removeVoteRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-    //to  close poll
-    resource.type(LedgerEntryType::POLL);
-    resource.poll().permissionType = UINT32_MAX;
-    resource.poll().pollID = UINT64_MAX;
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::CLOSE, false);
-    auto closePollRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-
-    //to update poll end time
-    resource.type(LedgerEntryType::POLL);
-    resource.poll().permissionType = UINT32_MAX;
-    resource.poll().pollID = UINT64_MAX;
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::MANAGE, false);
-    auto managePollRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-
-    //to update poll end time
-    resource.type(LedgerEntryType::POLL);
-    resource.poll().permissionType = UINT32_MAX;
-    resource.poll().pollID = UINT64_MAX;
-    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-        0, resource, AccountRuleAction::CANCEL, false);
-    auto cancelPollRuleID = manageAccountRuleTestHelper.applyTx(
-        root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
-
-
-    // voting role
-    auto votingRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-        R"({"feature":"voting"})", {createPollRuleID, txSendRuleID, createVoteRuleID, removeVoteRuleID,
-                                    closePollRuleID, managePollRuleID, cancelPollRuleID});
-    auto votingRoleID = manageAccountRoleTestHelper.applyTx(
-        root, votingRoleOp).success().roleID;
-
-    // basic account builder
-    auto createAccountBuilder = CreateAccountTestBuilder()
-        .setSource(root).setRoleID(votingRoleID);
-
-    auto poller = Account{SecretKey::random(), 0};
-    auto pollerPubkey = poller.key.getPublicKey();
-    createAccountTestHelper.applyTx(createAccountBuilder
-                                        .setToPublicKey(pollerPubkey)
-                                        .addBasicSigner());
-    auto resultProvider = Account{SecretKey::random(), 0};
-    auto resultProviderPubkey = resultProvider.key.getPublicKey();
-    createAccountTestHelper.applyTx(createAccountBuilder
-                                        .setToPublicKey(resultProviderPubkey)
-                                        .addBasicSigner());
-    auto voter = Account{SecretKey::random(), 0};
-    auto voterPubkey = voter.key.getPublicKey();
-    createAccountTestHelper.applyTx(createAccountBuilder
-                                        .setToPublicKey(voterPubkey)
-                                        .addBasicSigner());
-
-    const auto currentTime = testManager->getLedgerManager().getCloseTime();
-    const auto startTime = currentTime + 500;
-    const auto endTime = currentTime + 1000;
-
-    PollData pollData;
-    pollData.type(PollType::SINGLE_CHOICE);
-    CreatePollRequest req;
-    req.permissionType = pollPermissionType;
-    req.voteConfirmationRequired = false;
-    req.resultProviderID = resultProviderPubkey;
-    req.startTime = startTime;
-    req.endTime = endTime;
-    req.creatorDetails = "{}";
-    req.data = pollData;
-    req.numberOfChoices = 2;
-    CreatePollRequestData createPollReq;
-    createPollReq.request = req;
-    auto managePollBuilder = ManagePollTestBuilder().setSource(poller);
-    auto createPollBuilder = ManageCreatePollRequestTestBuilder().setSource(poller);
 
     SECTION("Vote approve required")
     {
@@ -677,4 +607,6 @@ TEST_CASE("Poll with vote confirmation", "[tx][voting][vote_confirmation][poll]"
             }
         }
     }
+
 }
+

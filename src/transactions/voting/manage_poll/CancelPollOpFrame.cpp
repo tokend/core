@@ -63,22 +63,16 @@ CancelPollOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 {
     auto& pollHelper = storageHelper.getPollHelper();
 
+    // Poll existence is being check on rules checking stage
     auto poll = pollHelper.mustLoadPoll(mManagePoll.pollID);
-
+    if (!isAuthorized(app.getAdminID(), poll))
+    {
+        innerResult().code(ManagePollResultCode::NOT_AUTHORIZED_TO_CANCEL_POLL);
+        return false;
+    }
     pollHelper.storeDelete(poll->getKey());
 
     innerResult().code(ManagePollResultCode::SUCCESS);
-    return true;
-}
-
-bool CancelPollOpFrame::doCheckValid(Application& app)
-{
-    if (mManagePoll.pollID == 0)
-    {
-        innerResult().code(ManagePollResultCode::NOT_FOUND);
-        return false;
-    }
-
     return true;
 }
 

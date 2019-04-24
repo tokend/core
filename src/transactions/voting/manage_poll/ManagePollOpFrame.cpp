@@ -28,5 +28,21 @@ ManagePollOpFrame::makeHelper(Operation const& op, OperationResult& res,
             throw std::runtime_error("Unexpected action in manage poll op");
     }
 }
+bool ManagePollOpFrame::doCheckValid(Application& app)
+{
+    if (mManagePoll.pollID == 0)
+    {
+        innerResult().code(ManagePollResultCode::NOT_FOUND);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+ManagePollOpFrame::isAuthorized(AccountID adminID, PollFrame::pointer poll)
+{
+    return poll->getEntry().ownerID == getSourceID() || getSourceID() == adminID;
+}
 
 } // namespace stellar
