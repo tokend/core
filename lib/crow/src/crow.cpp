@@ -39,7 +39,6 @@ SOFTWARE.
 #include "crow/crow.hpp"
 #include <lib/crow/src/crow_config.hpp>
 #include <src/crow_utilities.hpp>
-#include <iostream>
 
 using json = nlohmann::json;
 
@@ -53,7 +52,7 @@ crow::crow(const std::string& dsn,
            const json& context,
            const double sample_rate,
            const bool install_handlers)
-    :m_sample_rate(static_cast<int>(sample_rate * 100.0))
+    : m_sample_rate(static_cast<int>(sample_rate * 100.0))
     , m_enabled(not dsn.empty())
 {
     // process DSN
