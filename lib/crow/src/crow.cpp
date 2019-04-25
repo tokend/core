@@ -123,7 +123,13 @@ void crow::capture_message(const std::string& message,
         auto logger_id = attributes.find("logger_id");
         if (logger_id != attributes.end())
         {
-            rawFingerprint = std::string(*logger_id) + " " + rawFingerprint;
+            rawFingerprint += ": " + std::string(*logger_id);
+        }
+
+        auto message_line = attributes.find("message_text");
+        if (message_line != attributes.end())
+        {
+            rawFingerprint += ": " + std::string(*message_line);
         }
 
         m_payload["fingerprint"] = std::vector<char>(rawFingerprint.begin(), rawFingerprint.end());

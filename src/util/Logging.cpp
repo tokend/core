@@ -340,6 +340,7 @@ void SentryLogCallback::handle(const el::LogDispatchData *data) noexcept {
     }
 
     json attrs = {
+            {"message_text", mData->logMessage()->message()},
             {"logger_id", mData->logMessage()->logger()->id()},
             {"level", el::LevelHelper::convertToString(mData->logMessage()->level())},
     };
