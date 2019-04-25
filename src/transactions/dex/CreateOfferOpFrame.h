@@ -27,6 +27,10 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
 
     FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
 
+    bool currentPriceRestrictionsMet();
+
+    bool physicalPriceRestrictionsMet();
+
 protected:
 
     BalanceFrame::pointer loadBalanceValidForTrading(

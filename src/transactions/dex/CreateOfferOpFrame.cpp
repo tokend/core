@@ -173,6 +173,17 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
         return false;
     }
 
+    if(!currentPriceRestrictionsMet())
+    {
+        innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
+        return false;
+    }
+    if(!physicalPriceRestrictionsMet())
+    {
+        innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
+        return false;
+    }
+
     return true;
 }
 
@@ -392,6 +403,43 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
     if (mManageOffer.baseBalance == mManageOffer.quoteBalance)
     {
         innerResult().code(ManageOfferResultCode::ASSET_PAIR_NOT_TRADABLE);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+CreateOfferOpFrame::currentPriceRestrictionsMet()
+{
+    if(!mAssetPair->checkPolicy(AssetPairPolicy::CURRENT_PRICE_RESTRICTION))
+    {
+        return true;
+    }
+
+    if (mManageOffer.price < mAssetPair->getMinPriceInTermsOfCurrent())
+    {
+        return false;
+    }
+
+    if (mManageOffer.price > mAssetPair->getMaxPriceInTermsOfCurrent())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+CreateOfferOpFrame::physicalPriceRestrictionsMet()
+{
+    if(!mAssetPair->checkPolicy(AssetPairPolicy::PHYSICAL_PRICE_RESTRICTION))
+    {
+        return true;
+    }
+
+    if (mManageOffer.price < mAssetPair->getMinAllowedPrice())
+    {
         return false;
     }
 
