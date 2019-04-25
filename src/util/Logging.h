@@ -61,7 +61,7 @@ public:
         mCrowClient->add_tags_context(attributes);
     }
 
-    void send(const std::string &msg);
+    void send(const std::string &msg, const json& attributes);
 private:
     crow* mCrowClient;
 };
@@ -76,6 +76,6 @@ private:
     const el::LogDispatchData* mData;
     el::Level mMinimalLevelToSend;
 
-    void dispatch(el::base::type::string_t&& logLine);
+    void dispatch(el::base::type::string_t&& logLine, const json& attrs);
 };
 }
