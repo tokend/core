@@ -5,10 +5,12 @@
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar
+* Updated Cereal serialization library version 
 
 ### Fixed
 
 * exception on poll migration
+* long serialization on OS X 64-bit
 
 ## 3.1.3
 
