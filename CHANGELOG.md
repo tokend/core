@@ -9,6 +9,7 @@
 ### Fixed
 
 * exception on poll migration
+* Current and physical price restrictions
 
 ## 3.1.3
 
