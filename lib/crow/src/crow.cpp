@@ -103,9 +103,7 @@ void crow::install_handler()
 void crow::capture_message(const std::string& message,
                            const json& attributes)
 {
-    using namespace std;
-
-    lock_guard<mutex> lock(m_payload_mutex);
+    std::lock_guard<std::mutex> lock(m_payload_mutex);
     m_payload["message"] = message;
     m_payload["event_id"] = nlohmann::crow_utilities::generate_uuid();
     m_payload["timestamp"] = nlohmann::crow_utilities::get_iso8601();
@@ -119,15 +117,16 @@ void crow::capture_message(const std::string& message,
             m_payload["logger"] = *logger;
         }
 
-        string rawFingerprint = attributes.value("level", "error");
+        // fingerprint for grouping purposes
+        std::string rawFingerprint = attributes.value("level", "error");
 
         auto logger_id = attributes.find("logger_id");
         if (logger_id != attributes.end())
         {
-            rawFingerprint = string(*logger_id) + " " + rawFingerprint;
+            rawFingerprint = std::string(*logger_id) + " " + rawFingerprint;
         }
 
-        m_payload["fingerprint"] = vector<char>(rawFingerprint.begin(), rawFingerprint.end());
+        m_payload["fingerprint"] = std::vector<char>(rawFingerprint.begin(), rawFingerprint.end());
 
         // context
         auto context = attributes.find("context");
