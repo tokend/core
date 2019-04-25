@@ -275,6 +275,7 @@ ApplicationImpl::getJsonInfo()
 
     info["history_failure_rate"] =
             fmt::format("{:.2}", getHistoryArchiveManager().getFailureRate());
+    info["base_exchange_name"] = getConfig().BASE_EXCHANGE_NAME;
 
     return root;
 }
