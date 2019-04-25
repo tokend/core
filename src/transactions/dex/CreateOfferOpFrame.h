@@ -42,7 +42,8 @@ protected:
                              std::vector<SignerRequirement>& result) const override;
 
 public:
-    bool isCapitalDeployment = false;
+    enum OfferFeeType { ORDINARY_OFFER, INVEST, CAPITAL_DEPLOYMENT };
+    OfferFeeType feeType = OfferFeeType::ORDINARY_OFFER;
 
     CreateOfferOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx);

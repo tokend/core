@@ -235,6 +235,7 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
+    feeType = OfferFeeType::INVEST;
     const auto isApplied = CreateOfferOpFrame::doApply(app, delta, ledgerManager);
     if (!isApplied)
     {

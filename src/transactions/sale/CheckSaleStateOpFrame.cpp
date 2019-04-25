@@ -282,7 +282,7 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
     opRes.tr().type(OperationType::MANAGE_OFFER);
     // need to directly create CreateOfferOpFrame to bypass validation of CreateSaleParticipationOpFrame
     CreateOfferOpFrame manageOfferOpFrame(op, opRes, mParentTx);
-    manageOfferOpFrame.isCapitalDeployment = true;
+    manageOfferOpFrame.feeType = CreateOfferOpFrame::OfferFeeType::CAPITAL_DEPLOYMENT;
     manageOfferOpFrame.setSourceAccountPtr(saleOwnerAccount);
     if (!manageOfferOpFrame.doCheckValid(app) || !manageOfferOpFrame.doApply(app, delta, lm))
     {

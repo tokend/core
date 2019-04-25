@@ -221,11 +221,16 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 FeeManager::FeeResult
 CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const
 {
-    if (isCapitalDeployment) {
-        return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount,
-                                                                   db);
+    switch (feeType) {
+        case OfferFeeType::ORDINARY_OFFER:
+            return FeeManager::calculateOfferFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
+        case OfferFeeType::CAPITAL_DEPLOYMENT:
+            return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(),
+                                                                       amount, db);
+        case OfferFeeType::INVEST:
+            return FeeManager::calculateFeeForAccount(mSourceAccount, FeeType::INVEST_FEE, mQuoteBalance->getAsset(),
+                                                      FeeFrame::SUBTYPE_ANY, amount, db);
     }
-    return FeeManager::calculateOfferFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
 }
 
 bool
