@@ -161,6 +161,7 @@ ProcessManagerImpl::shutdown()
 #ifdef _WIN32
 #include <tchar.h>
 #include <windows.h>
+#include <process.h>
 
 ProcessManagerImpl::ProcessManagerImpl(Application& app)
     : mMaxProcesses(app.getConfig().MAX_CONCURRENT_SUBPROCESSES)
