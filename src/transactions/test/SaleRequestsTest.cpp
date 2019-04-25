@@ -206,7 +206,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
     SECTION("Non zero balance on sale close"){
         auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
         EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
