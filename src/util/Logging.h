@@ -52,10 +52,11 @@ class SentryClient {
 public:
     SentryClient(const std::string &dsn) {
         mCrowClient = new crow(dsn);
-        json attributes = {
-#ifdef CORE_REVISION
-            {"revision", CORE_REVISION},
+#ifndef CORE_REVISION
+#define CORE_REVISION "core_revision_was_not_provided"
 #endif
+        json attributes = {
+            {"revision", CORE_REVISION},
         };
         mCrowClient->add_tags_context(attributes);
     }
