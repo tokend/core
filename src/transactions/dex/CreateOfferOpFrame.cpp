@@ -228,8 +228,12 @@ CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager&
             return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(),
                                                                        amount, db);
         case OfferFeeType::INVEST:
-            return FeeManager::calculateFeeForAccount(mSourceAccount, FeeType::INVEST_FEE, mQuoteBalance->getAsset(),
-                                                      FeeFrame::SUBTYPE_ANY, amount, db);
+            if (lm.shouldUse(LedgerVersion::ADD_INVEST_FEE)) {
+                return FeeManager::calculateFeeForAccount(mSourceAccount, FeeType::INVEST_FEE, mQuoteBalance->getAsset(),
+                                                          FeeFrame::SUBTYPE_ANY, amount, db);
+            } else {
+                return FeeManager::calculateOfferFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
+            }
     }
 }
 
