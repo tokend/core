@@ -249,11 +249,8 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
     SECTION("Simple happy path for test fee")
     {
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 2 * ONE,
                 nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
-        setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE,
-                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
         fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                                                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
@@ -261,14 +258,9 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
         saleRequest.hardCap = 200 * ONE;
         saleRequest.softCap = 100 * ONE;
+        uint64_t feeToPayBySyndicate(2 * ONE);
+        uint64_t feeToPay(4 * ONE);
 
-        auto syndicateAccountFrame = std::make_shared<AccountFrame>(syndicatePubKey);
-        auto syndicateFee = FeeHelper::Instance()->loadForAccount(FeeType::CAPITAL_DEPLOYMENT_FEE,
-                quoteAsset, FeeFrame::SUBTYPE_ANY, syndicateAccountFrame, saleRequest.hardCap, db);
-        uint64_t feeToPayBySyndicate = 0;
-        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP, 1));
-
-        uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
         auto saleID = result.success().typeExt.saleExtended().saleID;
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay);
