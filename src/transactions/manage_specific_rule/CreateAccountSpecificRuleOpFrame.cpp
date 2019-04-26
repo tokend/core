@@ -39,7 +39,8 @@ CreateAccountSpecificRuleOpFrame::doApply(Application &app,
     switch (mCreateData.ledgerKey.type())
     {
         case LedgerEntryType::SALE:
-            return createSaleRule(app, storageHelper, mCreateData.ledgerKey.sale().saleID);
+            return createSaleRuleWithChecks(app, storageHelper,
+                                            mCreateData.ledgerKey.sale().saleID);
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected entry type on "
                                << "creating account specific rule entry, type: "
@@ -49,12 +50,11 @@ CreateAccountSpecificRuleOpFrame::doApply(Application &app,
 }
 
 bool
-CreateAccountSpecificRuleOpFrame::createSaleRule(Application& app,
-        StorageHelper& sh, uint64_t saleID)
+CreateAccountSpecificRuleOpFrame::createSaleRuleWithChecks(Application &app,
+        StorageHelper &sh, uint64_t saleID)
 {
     auto saleHelper = SaleHelper::Instance();
-    LedgerDelta& delta = sh.mustGetLedgerDelta();
-    auto sale = saleHelper->loadSale(saleID, sh.getDatabase(), &delta);
+    auto sale = saleHelper->loadSale(saleID, sh.getDatabase(), sh.getLedgerDelta());
     if (!sale)
     {
         innerResult().code(ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND);
@@ -64,11 +64,33 @@ CreateAccountSpecificRuleOpFrame::createSaleRule(Application& app,
     //  not sale owner and not admin
     if (!isAuthorized(sale->getOwnerID(), app.getAdminID()))
     {
-        innerResult().code(ManageAccountSpecificRuleResultCode::NOT_AUTORIZED);
+        innerResult().code(ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED);
         return false;
     }
 
-    auto ruleID = delta.getHeaderFrame().generateID(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+    auto existingRule = sh.getAccountSpecificRuleHelper().loadRule(
+            mCreateData.ledgerKey, mCreateData.accountID.get(), true);
+
+    if (!existingRule)
+    {
+        return createSaleRule(sh);
+    }
+
+    if (existingRule->forbids() == mCreateData.forbids)
+    {
+        innerResult().code(ManageAccountSpecificRuleResultCode::ALREADY_EXISTS);
+        return false;
+    }
+
+    innerResult().code(ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS);
+    return false;
+}
+
+bool
+CreateAccountSpecificRuleOpFrame::createSaleRule(StorageHelper& sh)
+{
+    auto ruleID = sh.mustGetLedgerDelta().getHeaderFrame()
+            .generateID(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
     auto frame = std::make_shared<AccountSpecificRuleFrame>(ruleID, mCreateData);
 
     sh.getAccountSpecificRuleHelper().storeAdd(frame->mEntry);
@@ -78,7 +100,8 @@ CreateAccountSpecificRuleOpFrame::createSaleRule(Application& app,
     return true;
 }
 
-bool CreateAccountSpecificRuleOpFrame::doCheckValid(Application &app)
+bool
+CreateAccountSpecificRuleOpFrame::doCheckValid(Application &app)
 {
     switch (mCreateData.ledgerKey.type())
     {

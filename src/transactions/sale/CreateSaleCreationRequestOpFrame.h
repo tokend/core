@@ -31,6 +31,13 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
 
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
+
+    bool
+    checkRulesDuplication(xdr::xvector<CreateAccountSaleRuleData> const& rules);
+
+    bool
+    isSaleRulesValid(Application& app, StorageHelper& storageHelper, SaleCreationRequest const& request);
+
 public:
 
     CreateSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,

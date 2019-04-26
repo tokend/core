@@ -50,6 +50,9 @@ private:
     loadRule(uint64_t id) override;
 
     AccountSpecificRuleFrame::pointer
+    loadRule(const LedgerKey &ledgerKey, AccountID const* accountID, bool exact) override;
+
+    AccountSpecificRuleFrame::pointer
     mustLoadRule(uint64_t id) override;
 
     bool

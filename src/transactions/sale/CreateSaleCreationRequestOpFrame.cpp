@@ -18,6 +18,7 @@
 #include "bucket/BucketApplicator.h"
 #include "ledger/AssetPairHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
+#include "ledger/KeyValueHelper.h"
 
 namespace stellar
 {
@@ -232,6 +233,8 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
         return CreateSaleCreationRequestResultCode::INVALID_CREATOR_DETAILS;
     }
 
+
+
     return CreateSaleCreationRequestResultCode::SUCCESS;
 }
 
@@ -336,6 +339,74 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 }
 
 bool
+CreateSaleCreationRequestOpFrame::checkRulesDuplication(xdr::xvector<CreateAccountSaleRuleData> const& rules)
+{
+    std::unordered_set<AccountID> accountIDs;
+    bool hasGlobal = false;
+
+    for (auto const& rule : rules)
+    {
+        if (rule.accountID)
+        {
+            auto isInserted = accountIDs.insert(*rule.accountID).second;
+            if (!isInserted)
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
+                return false;
+            }
+        }
+        else
+        {
+            if (hasGlobal) // only one global is allowed
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_DUPLICATION);
+                return false;
+            }
+            hasGlobal = true;
+        }
+    }
+
+    return true;
+}
+
+
+bool
+CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
+        StorageHelper& storageHelper, SaleCreationRequest const& request)
+{
+    switch (request.ext.v())
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            return true;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+        {
+            auto const& rules = request.ext.saleRules();
+
+            uint32_t maxRulesLength = app.getMaxSaleRulesLength();
+            auto keyValue = storageHelper.getKeyValueHelper().loadKeyValue(
+                    ManageKeyValueOpFrame::makeMaxSaleRulesLengthKey());
+
+            if (keyValue)
+            {
+                maxRulesLength = keyValue->mustGetUint32Value();
+            }
+
+            if (rules.size() > maxRulesLength)
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+                return false;
+            }
+
+            return checkRulesDuplication(rules);
+        }
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale creation request version"
+                                                   << static_cast<int32_t>(request.ext.v());
+            throw std::runtime_error("Unexpected sale creation request version");
+    }
+}
+
+bool
 CreateSaleCreationRequestOpFrame::isRequestValid(
     StorageHelper& storageHelper, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
@@ -346,6 +417,11 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
     {
         innerResult().code(
             CreateSaleCreationRequestResultCode::VERSION_IS_NOT_SUPPORTED_YET);
+        return false;
+    }
+
+    if (!isSaleRulesValid())
+    {
         return false;
     }
 

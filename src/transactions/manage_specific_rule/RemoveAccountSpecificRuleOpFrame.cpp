@@ -55,18 +55,18 @@ RemoveAccountSpecificRuleOpFrame::doApply(Application &app,
 
 bool
 RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
-        StorageHelper& storageHelper, AccountSpecificRuleFrame::pointer const& frame)
+        StorageHelper& storageHelper, AccountSpecificRuleFrame::pointer const& ruleFrame)
 {
     Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto saleHelper = SaleHelper::Instance();
 
-    auto sale = saleHelper->loadSale(frame->getEntry().ledgerKey.sale().saleID, db, &delta);
+    auto sale = saleHelper->loadSale(ruleFrame->getEntry().ledgerKey.sale().saleID, db, &delta);
     if (!sale)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected sale to exists on "
                                    << "remove account specific rule, saleID: "
-                                   << frame->getEntry().ledgerKey.sale().saleID;
+                                   << ruleFrame->getEntry().ledgerKey.sale().saleID;
         throw std::runtime_error("Expected sale to exists");
     }
 
@@ -76,11 +76,14 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
         return false;
     }
 
-    saleHelper->storeDelete(delta, db, frame->getKey());
+    saleHelper->storeDelete(delta, db, ruleFrame->getKey());
 
-    auto offerHelper = OfferHelper::Instance();
-    auto offersToDelete = offerHelper->loadOffers(sale->getOwnerID(), sale->getID(), db);
-    OfferManager::deleteOffers(offersToDelete, db, delta);
+    if (!ruleFrame->forbids())
+    {
+        auto offerHelper = OfferHelper::Instance();
+        auto offersToDelete = offerHelper->loadOffers(sale->getOwnerID(), sale->getID(), db);
+        OfferManager::deleteOffers(offersToDelete, db, delta);
+    }
 
     innerResult().code(ManageAccountSpecificRuleResultCode::SUCCESS);
     return true;

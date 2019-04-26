@@ -18,6 +18,7 @@
 #include "PollHelperImpl.h"
 #include "LicenseHelperImpl.h"
 #include "StampHelperImpl.h"
+#include "AccountSpecificRuleHelperImpl.h"
 
 namespace stellar
 {
@@ -348,7 +349,7 @@ StorageHelperImpl::getAccountSpecificRuleHelper()
 {
     if (!mAccountSpecificRuleHelper)
     {
-        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelper>(*this);
+        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelperImpl>(*this);
     }
     return *mAccountSpecificRuleHelper;
 }

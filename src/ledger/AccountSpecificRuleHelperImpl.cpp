@@ -12,8 +12,8 @@ namespace stellar
 AccountSpecificRuleHelperImpl::AccountSpecificRuleHelperImpl(StorageHelper& sh)
         : mStorageHelper(sh)
 {
-    mRuleColumnSelector = "SELECT id, ledger_key, account_id, version, "
-                          "       lastmodified "
+    mRuleColumnSelector = "SELECT id, ledger_key, account_id, forbids, "
+                          "       version, lastmodified "
                           "FROM   account_specific_rules ";
 }
 
@@ -27,9 +27,11 @@ AccountSpecificRuleHelperImpl::dropAll()
                        "id           BIGINT      NOT NULL,"
                        "ledger_key   TEXT        NOT NULL,"
                        "account_id   VARCHAR(56), "
+                       "forbids      BOOLEAN     NOT NULL,"
                        "version      INT         NOT NULL,"
                        "lastmodified INT         NOT NULL,"
-                       "PRIMARY KEY (id)"
+                       "PRIMARY KEY (id),"
+                       "UNIQUE (ledger_key, account_id)"
                        ")";
 }
 
@@ -222,6 +224,57 @@ AccountSpecificRuleHelperImpl::loadRule(uint64_t const id)
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
     st.exchange(use(id, "id"));
+
+    AccountSpecificRuleFrame::pointer result;
+    load(prep, [&result](LedgerEntry const& entry)
+    {
+        result = std::make_shared<AccountSpecificRuleFrame>(entry);
+    });
+
+    if (!result)
+    {
+        return nullptr;
+    }
+
+    if (mStorageHelper.getLedgerDelta() != nullptr)
+    {
+        mStorageHelper.mustGetLedgerDelta().recordEntry(*result);
+    }
+
+    return result;
+}
+
+AccountSpecificRuleFrame::pointer
+AccountSpecificRuleHelperImpl::loadRule(const LedgerKey &ledgerKey, AccountID const* accountID, bool exact)
+{
+    Database& db = getDatabase();
+    std::string sql(mRuleColumnSelector);
+    sql += " WHERE ledger_key = :key AND (account_id = :acc_id or ";
+    if (exact)
+    {
+        sql += " (:acc_id::text is null and account_id is null))";
+    }
+    else
+    {
+        sql += " account_id is null) order by account_id = :acc_id limit 1";
+    }
+
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+
+    auto ledgerKeyBytes = xdr::xdr_to_opaque(ledgerKey);
+    std::string ledgerKeyStr = decoder::encode_b64(ledgerKeyBytes);
+
+    std::string accountIDStr;
+    indicator accountIDIndicator = i_null;
+    if (accountID != nullptr)
+    {
+        accountIDStr = PubKeyUtils::toStrKey(*accountID);
+        accountIDIndicator = i_ok;
+    }
+
+    st.exchange(use(ledgerKeyStr, "key"));
+    st.exchange(use(accountIDStr, accountIDIndicator, "acc_id"));
 
     AccountSpecificRuleFrame::pointer result;
     load(prep, [&result](LedgerEntry const& entry)

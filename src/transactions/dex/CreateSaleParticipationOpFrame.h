@@ -15,8 +15,6 @@ class CreateSaleParticipationOpFrame : public CreateOfferOpFrame
 
     bool isPriceValid(SaleFrame::pointer sale, BalanceFrame::pointer balance, Database& db) const;
 
-    void setErrorCode(BalanceFrame::Result lockingResult);
-
     bool
     tryGetOperationConditions(StorageHelper &storageHelper,
                               std::vector<OperationCondition> &result) const override;
@@ -25,13 +23,16 @@ class CreateSaleParticipationOpFrame : public CreateOfferOpFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
+    bool
+    checkSaleRules(StorageHelper& storageHelper, SaleFrame::pointer const& sale);
+
 public:
 
     CreateSaleParticipationOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
 
     bool doCheckValid(Application& app) override;
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
         LedgerManager& ledgerManager) override;
     bool isSaleActive(Database& db,LedgerManager& ledgerManager, SaleFrame::pointer sale);
     static SaleFrame::State getSaleState(const SaleFrame::pointer sale, Database& db, const uint64_t currentTime);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <ledger/AccountSpecificRuleFrame.h>
 #include "ManageAccountSpecificRuleOpFrame.h"
+#include "ledger/AccountSpecificRuleFrame.h"
 
 namespace stellar
 {
@@ -25,7 +25,7 @@ class RemoveAccountSpecificRuleOpFrame : private ManageAccountSpecificRuleOpFram
 
     bool
     tryRemoveSaleRule(Application& app, StorageHelper& storageHelper,
-            AccountSpecificRuleFrame::pointer const& frame);
+            AccountSpecificRuleFrame::pointer const& ruleFrame);
 
 public:
     RemoveAccountSpecificRuleOpFrame(Operation const& op, OperationResult& res,

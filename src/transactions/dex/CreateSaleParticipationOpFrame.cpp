@@ -15,11 +15,13 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/printer.h"
+#include "ledger/AccountSpecificRuleHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
+using xdr::operator<;
 
 bool
 CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
@@ -175,28 +177,39 @@ bool CreateSaleParticipationOpFrame::isSaleActive(Database& db, LedgerManager& l
     }
 }
 
-void CreateSaleParticipationOpFrame::setErrorCode(BalanceFrame::Result lockingResult)
+bool
+CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, SaleFrame::pointer const& sale)
 {
-    switch (lockingResult) {
-        case BalanceFrame::Result::UNDERFUNDED: {
-            innerResult().code(ManageOfferResultCode::SOURCE_UNDERFUNDED);
-            return;
-        }
-        case BalanceFrame::Result::LINE_FULL: {
-            innerResult().code(ManageOfferResultCode::SOURCE_BALANCE_LOCK_OVERFLOW);
-            return;
-        }
-        default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from try lock: " << lockingResult;
-            throw std::runtime_error("Unexpected result code from try lock");
+    if (sale->getSaleEntry().ext.v() < LedgerVersion::ADD_SALE_WHITELISTS)
+    {
+        return true;
     }
+
+    auto& accountSpecificRule = storageHelper.getAccountSpecificRuleHelper();
+
+    auto rule = accountSpecificRule.loadRule(sale->getKey(), &getSourceID(), false);
+    if (!rule)
+    {
+        innerResult().code(ManageOfferResultCode::NO_SPECIFIC_RULE_TO_PARTICIPATE);
+        return false;
+    }
+
+    if (rule->forbids())
+    {
+        innerResult().code(ManageOfferResultCode::SPECIFIC_RULE_FORBIDS);
+        return false;
+    }
+
+    return true;
 }
 
 bool CreateSaleParticipationOpFrame::doApply(Application& app,
-                                             LedgerDelta& delta,
+                                             StorageHelper& storageHelper,
                                              LedgerManager& ledgerManager)
 {
-    auto& db = app.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+
     auto sale = loadSaleForOffer(db, delta);
     if (!sale)
     {
@@ -210,6 +223,11 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
     }
 
     if (!isSaleActive(db, ledgerManager, sale))
+    {
+        return false;
+    }
+
+    if (!checkSaleRules(storageHelper, sale))
     {
         return false;
     }

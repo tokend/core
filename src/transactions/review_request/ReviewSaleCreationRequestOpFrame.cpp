@@ -14,6 +14,8 @@
 #include "xdrpp/printer.h"
 #include <ledger/AccountHelperLegacy.h>
 #include <transactions/ManageAssetPairOpFrame.h>
+#include <transactions/manage_specific_rule/CreateAccountSpecificRuleOpFrame.h>
+#include <ledger/StorageHelperImpl.h>
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 
@@ -114,7 +116,61 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
                              balances, requiredBaseAssetForHardCap);
     SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
     createAssetPair(saleFrame, app, ledgerManager, delta);
+
+    StorageHelperImpl storageHelper(db, &delta);
+    createSaleRules(storageHelper, saleCreationRequest, saleFrame->getKey());
+
     return ReviewRequestResultCode::SUCCESS;
+}
+
+void
+ReviewSaleCreationRequestOpFrame::createSaleRules(StorageHelper& storageHelper,
+        SaleCreationRequest const& request, LedgerKey const& saleKey)
+{
+    switch (request.ext.v())
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            return;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+            break;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale request version"
+                                                << static_cast<int32_t>(request.ext.v());
+            throw std::runtime_error("Unexpected sale request version");
+    }
+
+    auto createRulesData = request.ext.saleRules();
+
+    Operation op;
+    op.sourceAccount.activate() = getSourceID();
+    op.body.type(OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE);
+    ManageAccountSpecificRuleOp& manageRuleOp = op.body.manageAccountSpecificRuleOp();
+    manageRuleOp.data.action(ManageAccountSpecificRuleAction::CREATE);
+
+    OperationResult opRes;
+    opRes.code(OperationResultCode::opINNER);
+    opRes.tr().type(OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE);
+
+    CreateAccountSpecificRuleData createData;
+    createData.ledgerKey = saleKey;
+
+    for (auto const& createRuleData : createRulesData)
+    {
+        createData.accountID = createRuleData.accountID;
+        createData.forbids = createRuleData.forbids;
+        manageRuleOp.data.createData() = createData;
+
+        CreateAccountSpecificRuleOpFrame opFrame(op, opRes, mParentTx);
+
+        opFrame.setSourceAccountPtr(mSourceAccount);
+
+        if (!opFrame.createSaleRule(storageHelper))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to create sale rule "
+                                    << xdr::xdr_to_string(createData, "createData");
+            throw std::runtime_error("Failed to create sale rule");
+        }
+    }
 }
 
 bool

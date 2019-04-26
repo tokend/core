@@ -238,6 +238,7 @@ SaleFrame::pointer SaleFrame::createNew(uint64_t const& id, AccountID const &own
         sale.baseBalance = balances[request.baseAsset];
         const auto saleType = request.saleTypeExt.saleType();
         sale.saleTypeExt.saleType(saleType);
+        sale.ext.v(request.ext.v());
 
         return std::make_shared<SaleFrame>(entry);
     } catch (...)
