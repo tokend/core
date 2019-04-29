@@ -17,6 +17,8 @@ namespace stellar
 class CreateOfferOpFrame : public ManageOfferOpFrame
 {
 
+    FeeType feeType = FeeType::OFFER_FEE;
+
     bool checkOfferValid(Database& db, LedgerDelta& delta);
 
     OfferExchange::OfferFilterResult filterOffer(uint64_t price, OfferFrame const& o);
@@ -42,11 +44,8 @@ protected:
                              std::vector<SignerRequirement>& result) const override;
 
 public:
-    enum OfferFeeType { ORDINARY_OFFER, INVEST, CAPITAL_DEPLOYMENT };
-    OfferFeeType feeType = OfferFeeType::ORDINARY_OFFER;
-
     CreateOfferOpFrame(Operation const& op, OperationResult& res,
-                       TransactionFrame& parentTx);
+                       TransactionFrame& parentTx, FeeType feeType);
 
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;

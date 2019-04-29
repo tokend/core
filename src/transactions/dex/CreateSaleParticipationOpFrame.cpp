@@ -133,7 +133,7 @@ bool CreateSaleParticipationOpFrame::isPriceValid(SaleFrame::pointer sale, Balan
 
 CreateSaleParticipationOpFrame::CreateSaleParticipationOpFrame(
     Operation const& op, OperationResult& res,
-    TransactionFrame& parentTx) : CreateOfferOpFrame(op, res, parentTx)
+    TransactionFrame& parentTx) : CreateOfferOpFrame(op, res, parentTx, FeeType::INVEST_FEE)
 {
 }
 
@@ -235,7 +235,6 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
-    feeType = OfferFeeType::INVEST;
     const auto isApplied = CreateOfferOpFrame::doApply(app, delta, ledgerManager);
     if (!isApplied)
     {
