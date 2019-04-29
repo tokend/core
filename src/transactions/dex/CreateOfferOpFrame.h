@@ -17,7 +17,7 @@ namespace stellar
 class CreateOfferOpFrame : public ManageOfferOpFrame
 {
 
-    FeeType feeType = FeeType::OFFER_FEE;
+    FeeType feeType;
 
     bool checkOfferValid(Database& db, LedgerDelta& delta);
 
