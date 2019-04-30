@@ -266,7 +266,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     request->setTasks(allTasks);
     
 
-    if (!isRequestValid(storageHelper, ledgerManager, request))
+    if (!isRequestValid(app, storageHelper, ledgerManager, request))
     {
         // corresponding result code is set in the called method
         return false;
@@ -323,7 +323,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
     request.body.saleCreationRequest().sequenceNumber = sequence + 1;
     requestFrame->recalculateHashRejectReason();
 
-    if (!isRequestValid(storageHelper, ledgerManager, requestFrame))
+    if (!isRequestValid(app, storageHelper, ledgerManager, requestFrame))
     {
         // corresponding result code is set
         return false;
@@ -407,7 +407,7 @@ CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
 }
 
 bool
-CreateSaleCreationRequestOpFrame::isRequestValid(
+CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
     StorageHelper& storageHelper, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
@@ -420,7 +420,7 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
         return false;
     }
 
-    if (!isSaleRulesValid())
+    if (!isSaleRulesValid(app, storageHelper, sale))
     {
         return false;
     }

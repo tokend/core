@@ -37,7 +37,7 @@
 #include "ledger/ReferenceHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
 #include "ledger/PollHelper.h"
-
+#include "ledger/AccountSpecificRuleHelper.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -65,10 +65,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_ATOMIC_SWAP_BID = 13,
     ADD_ASSET_CUSTOM_PRECISION = 14,
     POLL_PERMISSION_TYPE_MIGRATION = 15,
-    ADD_PEER_TYPE = 16
+    ADD_PEER_TYPE = 16,
+    ADD_SPECIFIC_RULES = 17
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_PEER_TYPE;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_SPECIFIC_RULES;
 
 static void
 setSerializable(soci::session& sess)
@@ -176,7 +177,11 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             mSession << "ALTER TABLE peers ADD type INT NOT NULL DEFAULT 0";
             mSession << "CREATE INDEX scpquorumsbyseq ON scpquorums(lastledgerseq)";
             break;
+        case ADD_SPECIFIC_RULES:
+            sh.getAccountSpecificRuleHelper().dropAll();
+            break;
         default:
+            CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
             throw std::runtime_error("Unknown DB schema version");
     }
 }

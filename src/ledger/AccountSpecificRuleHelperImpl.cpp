@@ -57,18 +57,21 @@ AccountSpecificRuleHelperImpl::storeUpdate(LedgerEntry const& le, bool insert)
     auto version = static_cast<int32_t>(entry.ext.v());
     auto ledgerKeyBytes = xdr::xdr_to_opaque(entry.ledgerKey);
     std::string ledgerKeyStr = decoder::encode_b64(ledgerKeyBytes);
+    const int forbids = entry.forbids ? 1 : 0;
 
     std::string sql;
     if (insert)
     {
         sql = "INSERT INTO account_specific_rules "
-              "           (id, ledger_key, account_id, version, lastmodified) "
-              "VALUES (:id, :lk, :acc, :v, :lm)";
+              "           (id, ledger_key, account_id, forbids, "
+              "            version, lastmodified) "
+              "VALUES (:id, :lk, :acc, :f, :v, :lm)";
     }
     else
     {
         sql = "UPDATE account_specific_rules SET ledger_key = :lk, "
-              " account_id = :acc, version = :v, lastmodified = :lm "
+              " account_id = :acc, forbids = :f, "
+              " version = :v, lastmodified = :lm "
               "WHERE id = :id";
     }
 
@@ -79,6 +82,7 @@ AccountSpecificRuleHelperImpl::storeUpdate(LedgerEntry const& le, bool insert)
     st.exchange(use(entry.id, "id"));
     st.exchange(use(ledgerKeyStr, "lk"));
     st.exchange(use(accountID, accountInd, "acc"));
+    st.exchange(use(forbids, "f"));
     st.exchange(use(version, "v"));
     st.exchange(use(frame->mEntry.lastModifiedLedgerSeq, "lm"));
 
@@ -140,6 +144,37 @@ AccountSpecificRuleHelperImpl::storeDelete(const LedgerKey &key)
     mStorageHelper.mustGetLedgerDelta().deleteEntry(key);
 }
 
+void
+AccountSpecificRuleHelperImpl::deleteRulesForEntry(LedgerKey const& saleKey)
+{
+    auto ledgerKeyBytes = xdr::xdr_to_opaque(saleKey);
+    std::string ledgerKeyStr = decoder::encode_b64(ledgerKeyBytes);
+
+    Database& db = getDatabase();
+    std::string sql = "DELETE from account_specific_rules WHERE ledger_key = :lk returning id";
+
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+    uint64_t ruleID;
+    st.exchange(into(ruleID));
+    st.exchange(use(ledgerKeyStr, "lk"));
+    st.define_and_bind();
+    st.execute(true);
+
+    LedgerDelta& delta = mStorageHelper.mustGetLedgerDelta();
+
+    while (st.got_data())
+    {
+        LedgerKey key(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+        key.accountSpecificRule().id = ruleID;
+
+        flushCachedEntry(key);
+        delta.deleteEntry(key);
+
+        st.fetch();
+    }
+}
+
 bool AccountSpecificRuleHelperImpl::exists(uint64_t const id)
 {
     int exists = 0;
@@ -177,11 +212,13 @@ AccountSpecificRuleHelperImpl::load(StatementContext &prep,
         std::string accountID, ledgerKey;
         indicator accountInd;
         int32_t version;
+        int forbids;
 
         auto& st = prep.statement();
         st.exchange(into(entry.id));
         st.exchange(into(ledgerKey));
         st.exchange(into(accountID, accountInd));
+        st.exchange(into(forbids));
         st.exchange(into(version));
         st.exchange(into(le.lastModifiedLedgerSeq));
         st.define_and_bind();
@@ -197,6 +234,7 @@ AccountSpecificRuleHelperImpl::load(StatementContext &prep,
             unmarshaler.done();
 
             entry.ext.v(static_cast<LedgerVersion>(version));
+            entry.forbids = forbids > 0;
 
             if (accountInd == i_ok)
             {

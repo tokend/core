@@ -5,7 +5,7 @@
 namespace stellar
 {
 
-class CreateAccountSpecificRuleOpFrame : private ManageAccountSpecificRuleOpFrame
+class CreateAccountSpecificRuleOpFrame : public ManageAccountSpecificRuleOpFrame
 {
     CreateAccountSpecificRuleData const& mCreateData;
 

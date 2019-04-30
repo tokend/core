@@ -31,6 +31,9 @@ private:
     void
     storeDelete(LedgerKey const& key) override;
 
+    void
+    deleteRulesForEntry(LedgerKey const& key) override;
+
     bool
     exists(LedgerKey const& key) override;
 

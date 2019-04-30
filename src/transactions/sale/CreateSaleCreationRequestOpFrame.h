@@ -70,8 +70,8 @@ public:
     bool updateRequest(Application& app, StorageHelper& storageHelper,
                        LedgerManager& ledgerManager);
 
-    bool isRequestValid(StorageHelper& storageHelper, LedgerManager& ledgerManager,
-                        ReviewableRequestFrame::pointer request);
+    bool isRequestValid(Application& app, StorageHelper& storageHelper,
+            LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 
     std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 

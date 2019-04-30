@@ -264,6 +264,13 @@ struct LedgerEntryIdCmp
                 return false;
             return ap.voterID < bp.voterID;
         }
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            auto const& ar = a.accountSpecificRule();
+            auto const& br = a.accountSpecificRule();
+
+            return ar.id < br.id;
+        }
         default:
         {
             throw std::runtime_error(

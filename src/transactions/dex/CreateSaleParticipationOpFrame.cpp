@@ -6,7 +6,7 @@
 #include "ledger/LedgerDelta.h"
 #include "database/Database.h"
 #include "ledger/SaleHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
 #include "OfferManager.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -204,11 +204,11 @@ CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, Sal
 }
 
 bool CreateSaleParticipationOpFrame::doApply(Application& app,
-                                             StorageHelper& storageHelper,
+                                             LedgerDelta& delta,
                                              LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+    auto& db = app.getDatabase();
+    StorageHelperImpl storageHelper(db, &delta);
 
     auto sale = loadSaleForOffer(db, delta);
     if (!sale)

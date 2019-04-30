@@ -5,7 +5,7 @@
 namespace stellar
 {
 
-class ManageAccountSpecificRuleOpFrame : protected OperationFrame
+class ManageAccountSpecificRuleOpFrame : public OperationFrame
 {
 protected:
     ManageAccountSpecificRuleOp const& mManageAccountSpecificRule;

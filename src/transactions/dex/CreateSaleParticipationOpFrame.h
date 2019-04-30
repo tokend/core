@@ -32,7 +32,7 @@ public:
                          TransactionFrame& parentTx);
 
     bool doCheckValid(Application& app) override;
-    bool doApply(Application& app, StorageHelper& storageHelper,
+    bool doApply(Application& app, LedgerDelta& delta,
         LedgerManager& ledgerManager) override;
     bool isSaleActive(Database& db,LedgerManager& ledgerManager, SaleFrame::pointer sale);
     static SaleFrame::State getSaleState(const SaleFrame::pointer sale, Database& db, const uint64_t currentTime);

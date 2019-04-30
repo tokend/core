@@ -163,7 +163,6 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
     AssetHelperLegacy::Instance()->storeChange(delta, db, asset->mEntry);
 }
 
-
 bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& app,
     LedgerManager& lm, LedgerDelta& delta, Database& db)
 {
@@ -198,6 +197,9 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     }
 
     SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
+
+    StorageHelperImpl storageHelper(db, &delta);
+    ManageSaleOpFrame::removeSaleRules(storageHelper, sale->getKey());
 
     cleanupIssuerBalance(sale, lm, db, delta, balanceBefore);
 

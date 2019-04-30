@@ -144,6 +144,8 @@ class MockApplication : public Application
                        uint64());
     MOCK_CONST_METHOD0(getMaxContractsForContractor,
                        uint64());
+    MOCK_CONST_METHOD0(getMaxSaleRulesLength,
+                       uint32());
     MOCK_CONST_METHOD0(getMaxInvoiceDetailLength,
                        uint64());
     MOCK_CONST_METHOD0(getMaxInvoicesForReceiverAccount,

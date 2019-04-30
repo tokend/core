@@ -22,5 +22,8 @@ public:
 
     virtual bool
     exists(uint64_t id) = 0;
+
+    virtual void
+    deleteRulesForEntry(LedgerKey const& key) = 0;
 };
 }

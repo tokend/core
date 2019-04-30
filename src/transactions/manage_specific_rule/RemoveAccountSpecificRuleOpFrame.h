@@ -6,7 +6,7 @@
 namespace stellar
 {
 
-class RemoveAccountSpecificRuleOpFrame : private ManageAccountSpecificRuleOpFrame
+class RemoveAccountSpecificRuleOpFrame : public ManageAccountSpecificRuleOpFrame
 {
     RemoveAccountSpecificRuleData const& mRemoveData;
 
