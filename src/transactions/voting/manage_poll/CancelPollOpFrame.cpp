@@ -70,7 +70,10 @@ CancelPollOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         innerResult().code(ManagePollResultCode::NOT_AUTHORIZED);
         return false;
     }
+    auto& voteHelper = storageHelper.getVoteHelper();
+    voteHelper.deleteForPoll(poll->getEntry().id);
     pollHelper.storeDelete(poll->getKey());
+
 
     innerResult().code(ManagePollResultCode::SUCCESS);
     return true;
