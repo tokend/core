@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+* Invest fee
+
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar

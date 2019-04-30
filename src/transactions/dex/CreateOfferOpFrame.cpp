@@ -23,9 +23,11 @@ using xdr::operator==;
 // TODO requires refactoring
 CreateOfferOpFrame::CreateOfferOpFrame(Operation const& op,
                                        OperationResult& res,
-                                       TransactionFrame& parentTx)
+                                       TransactionFrame& parentTx,
+                                       FeeType type)
     : ManageOfferOpFrame(op, res, parentTx)
 {
+    feeType = type;
 }
 
 bool
@@ -221,11 +223,14 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 FeeManager::FeeResult
 CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const
 {
-    if (isCapitalDeployment) {
-        return FeeManager::calculateCapitalDeploymentFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount,
-                                                                   db);
+    if (!lm.shouldUse(LedgerVersion::ADD_INVEST_FEE) && feeType == FeeType::INVEST_FEE)
+    {
+        return FeeManager::calculateFeeForAccount(mSourceAccount, FeeType::OFFER_FEE, mQuoteBalance->getAsset(),
+                                                  FeeFrame::SUBTYPE_ANY, amount, db);
     }
-    return FeeManager::calculateOfferFeeForAccount(mSourceAccount, mQuoteBalance->getAsset(), amount, db);
+
+    return FeeManager::calculateFeeForAccount(mSourceAccount, feeType, mQuoteBalance->getAsset(),
+                                              FeeFrame::SUBTYPE_ANY, amount, db);
 }
 
 bool
