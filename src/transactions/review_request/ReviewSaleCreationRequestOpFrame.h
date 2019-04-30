@@ -30,7 +30,8 @@ namespace stellar {
                                               ReviewableRequestFrame::pointer request, uint64_t saleID);
 
         void
-        createSaleRules(StorageHelper& sh, SaleCreationRequest const& request, LedgerKey const& key);
+        createSaleRules(Application& app, StorageHelper& sh, LedgerManager &lm,
+                SaleCreationRequest const& request, LedgerKey const& key);
 
         SaleCreationRequest &getSaleCreationRequestFromBody(ReviewableRequestFrame::pointer request);
 

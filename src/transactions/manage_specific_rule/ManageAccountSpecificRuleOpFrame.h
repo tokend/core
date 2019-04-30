@@ -26,10 +26,10 @@ public:
     static std::shared_ptr<ManageAccountSpecificRuleOpFrame>
     makeHelper(Operation const& op, OperationResult& res, TransactionFrame& tx);
 
-    static ManageCreatePollRequestResultCode
+    static ManageAccountSpecificRuleResultCode
     getInnerCode(OperationResult const& res)
     {
-        return res.tr().manageCreatePollRequestResult().code();
+        return res.tr().manageAccountSpecificRuleResult().code();
     }
 
     std::string

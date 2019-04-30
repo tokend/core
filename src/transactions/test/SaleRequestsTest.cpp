@@ -354,6 +354,30 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
             saleRequest.endTime = INT64_MAX;
             saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
         }
+        SECTION("EXCEEDED MAX RULES SIZE")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    app.getMaxSaleRulesLength() + 1, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+        }
+        SECTION("GLOBAL SPECIFIC RULE DUPLICATION")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    app.getMaxSaleRulesLength(), CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_DUPLICATION);
+        }
+        SECTION("ACCOUNT SPECIFIC RULE DUPLICATION")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    app.getMaxSaleRulesLength(), CreateAccountSaleRuleData(new AccountID(), false, LedgerVersion::EMPTY_VERSION));
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                                                     CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
+        }
     }
 
     SECTION("Review SaleCreationRequest with tasks")

@@ -4,6 +4,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/AccountSpecificRuleFrame.h"
 #include "ledger/AccountSpecificRuleHelper.h"
+#include "ledger/AccountHelper.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -36,11 +37,34 @@ bool
 CreateAccountSpecificRuleOpFrame::doApply(Application &app,
         StorageHelper &storageHelper, LedgerManager &ledgerManager)
 {
+    auto existingRule = storageHelper.getAccountSpecificRuleHelper().loadRule(
+            mCreateData.ledgerKey, mCreateData.accountID.get(), true);
+
+    if (existingRule)
+    {
+        innerResult().code(ManageAccountSpecificRuleResultCode::ALREADY_EXISTS);
+
+        if (existingRule->forbids() != mCreateData.forbids)
+        {
+            innerResult().code(ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS);
+        }
+
+        return false;
+    }
+
+    if (mCreateData.accountID)
+    {
+        if (!storageHelper.getAccountHelper().exists(*mCreateData.accountID))
+        {
+            innerResult().code(ManageAccountSpecificRuleResultCode::ACCOUNT_NOT_FOUND);
+            return false;
+        }
+    }
+
     switch (mCreateData.ledgerKey.type())
     {
         case LedgerEntryType::SALE:
-            return createSaleRuleWithChecks(app, storageHelper,
-                                            mCreateData.ledgerKey.sale().saleID);
+            return createSaleRule(app, storageHelper, mCreateData.ledgerKey.sale().saleID);
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected entry type on "
                                << "creating account specific rule entry, type: "
@@ -50,7 +74,7 @@ CreateAccountSpecificRuleOpFrame::doApply(Application &app,
 }
 
 bool
-CreateAccountSpecificRuleOpFrame::createSaleRuleWithChecks(Application &app,
+CreateAccountSpecificRuleOpFrame::checkSaleRule(Application &app,
         StorageHelper &sh, uint64_t saleID)
 {
     auto saleHelper = SaleHelper::Instance();
@@ -68,27 +92,24 @@ CreateAccountSpecificRuleOpFrame::createSaleRuleWithChecks(Application &app,
         return false;
     }
 
-    auto existingRule = sh.getAccountSpecificRuleHelper().loadRule(
-            mCreateData.ledgerKey, mCreateData.accountID.get(), true);
-
-    if (!existingRule)
+    if (sale->getSaleEntry().ext.v() != LedgerVersion::ADD_SALE_WHITELISTS)
     {
-        return createSaleRule(sh);
-    }
-
-    if (existingRule->forbids() == mCreateData.forbids)
-    {
-        innerResult().code(ManageAccountSpecificRuleResultCode::ALREADY_EXISTS);
+        innerResult().code(ManageAccountSpecificRuleResultCode::SPECIFIC_RULE_NOT_SUPPORTED);
         return false;
     }
 
-    innerResult().code(ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS);
-    return false;
+    return true;
 }
 
 bool
-CreateAccountSpecificRuleOpFrame::createSaleRule(StorageHelper& sh)
+CreateAccountSpecificRuleOpFrame::createSaleRule(Application &app,
+        StorageHelper &sh, uint64_t saleID)
 {
+    if (mCheckRule && !checkSaleRule(app, sh, saleID))
+    {
+        return false;
+    }
+
     auto ruleID = sh.mustGetLedgerDelta().getHeaderFrame()
             .generateID(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
     auto frame = std::make_shared<AccountSpecificRuleFrame>(ruleID, mCreateData);

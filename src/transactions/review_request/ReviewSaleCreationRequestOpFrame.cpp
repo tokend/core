@@ -118,13 +118,15 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     createAssetPair(saleFrame, app, ledgerManager, delta);
 
     StorageHelperImpl storageHelper(db, &delta);
-    createSaleRules(storageHelper, saleCreationRequest, saleFrame->getKey());
+    createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest,
+            saleFrame->getKey());
 
     return ReviewRequestResultCode::SUCCESS;
 }
 
 void
-ReviewSaleCreationRequestOpFrame::createSaleRules(StorageHelper& storageHelper,
+ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
+        StorageHelper& storageHelper, LedgerManager& ledgerManager,
         SaleCreationRequest const& request, LedgerKey const& saleKey)
 {
     switch (request.ext.v())
@@ -164,10 +166,11 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(StorageHelper& storageHelper,
 
         opFrame.setSourceAccountPtr(mSourceAccount);
 
-        if (!opFrame.createSaleRule(storageHelper))
+        if (!opFrame.doApply(app, storageHelper, ledgerManager))
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to create sale rule "
-                                    << xdr::xdr_to_string(createData, "createData");
+                                    << xdr::xdr_to_string(createData, "createData")
+                                    << opFrame.getInnerResultCodeAsStr();
             throw std::runtime_error("Failed to create sale rule");
         }
     }

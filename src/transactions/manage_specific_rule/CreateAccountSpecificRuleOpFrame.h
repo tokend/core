@@ -8,6 +8,7 @@ namespace stellar
 class CreateAccountSpecificRuleOpFrame : public ManageAccountSpecificRuleOpFrame
 {
     CreateAccountSpecificRuleData const& mCreateData;
+    bool mCheckRule = true;
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
@@ -17,21 +18,18 @@ class CreateAccountSpecificRuleOpFrame : public ManageAccountSpecificRuleOpFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
-    bool doApply(Application& app, StorageHelper &storageHelper,
-                 LedgerManager& ledgerManager) override;
-
     bool doCheckValid(Application& app) override;
 
     bool
-    createSaleRuleWithChecks(Application &app, StorageHelper &sh,
-                             uint64_t saleID);
+    checkSaleRule(Application &app, StorageHelper &sh, uint64_t saleID);
 
     bool
-    createSaleRule(StorageHelper& sh);
-
-    friend class ReviewSaleCreationRequestOpFrame;
+    createSaleRule(Application &app, StorageHelper &sh, uint64_t saleID);
 
 public:
+    bool doApply(Application& app, StorageHelper &storageHelper,
+                 LedgerManager& ledgerManager) override;
+
     CreateAccountSpecificRuleOpFrame(Operation const& op, OperationResult& res,
             TransactionFrame& parentTx);
 };
