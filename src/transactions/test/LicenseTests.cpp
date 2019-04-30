@@ -66,6 +66,37 @@ TEST_CASE("license", "[tx][license]")
         }
     }
 
+    SECTION("With dev keys")
+    {
+        auto wiredKey = SecretKey::fromStrKeySeed("SADKPD3GWKLVLV6Z4XUC5F5XW6MVP3D33F7JCOIFPPUQB352N22HSUFN");
+        uint64_t adminCount = 10;
+        uint64_t dueDate = 1000;
+        auto stampResult = stampTestHelper.applyStamp(root);
+        auto stampSuccess = stampResult.success();
+        auto licenseResult = licenseTestHelper.applyLicenseOp(root,
+                                                              wiredKey,
+                                                              stampSuccess.ledgerHash,
+                                                              stampSuccess.licenseHash,
+                                                              adminCount,
+                                                              dueDate
+        );
+
+        SECTION("prolongation")
+        {
+            uint64_t adminCount = 12;
+            uint64_t dueDate = 2000;
+            auto stampResult = stampTestHelper.applyStamp(root);
+            auto stampSuccess = stampResult.success();
+            licenseTestHelper.applyLicenseOp(root,
+                                             wiredKey,
+                                             stampSuccess.ledgerHash,
+                                             stampSuccess.licenseHash,
+                                             adminCount,
+                                             dueDate
+            );
+        }
+    }
+
     SECTION("Bad due date")
     {
         uint64_t adminCount = 10;

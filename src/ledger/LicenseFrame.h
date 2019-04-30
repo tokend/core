@@ -35,6 +35,7 @@ namespace stellar
             return EntryFrame::pointer(new LicenseFrame(*this));
         }
 
+        std::vector<PublicKey> getLicenseKeys(Application& app);
         LicenseEntry& getLicenseEntry();
         bool isSignatureValid(Application &app);
 
