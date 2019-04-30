@@ -242,7 +242,8 @@ CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(const AccountFrame::pointer
                                                      AssetCode const& asset, int64_t amount,
                                                      LedgerManager& lm, Database& db) const
 {
-    return FeeManager::calculateCapitalDeploymentFeeForAccount(saleOwnerAccount, asset, amount, db);
+    return FeeManager::calculateFeeForAccount(saleOwnerAccount, FeeType::CAPITAL_DEPLOYMENT_FEE, asset,
+                                  FeeFrame::SUBTYPE_ANY, amount, db);
 }
 
 ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
