@@ -57,6 +57,12 @@ bool
 RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
         StorageHelper& storageHelper, AccountSpecificRuleFrame::pointer const& ruleFrame)
 {
+    if (!ruleFrame->getEntry().accountID)
+    {
+        innerResult().code(ManageAccountSpecificRuleResultCode::REMOVING_GLOBAL_RULE_FORBIDDEN);
+        return false;
+    }
+
     Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto saleHelper = SaleHelper::Instance();
@@ -76,12 +82,12 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
         return false;
     }
 
-    saleHelper->storeDelete(delta, db, ruleFrame->getKey());
+    storageHelper.getAccountSpecificRuleHelper().storeDelete(ruleFrame->getKey());
 
-    if (!ruleFrame->forbids())
+    if (!ruleFrame->forbids()) // accountID existing was checked above
     {
         auto offerHelper = OfferHelper::Instance();
-        auto offersToDelete = offerHelper->loadOffers(sale->getOwnerID(), sale->getID(), db);
+        auto offersToDelete = offerHelper->loadOffers(*ruleFrame->getEntry().accountID, sale->getID(), db);
         OfferManager::deleteOffers(offersToDelete, db, delta);
     }
 

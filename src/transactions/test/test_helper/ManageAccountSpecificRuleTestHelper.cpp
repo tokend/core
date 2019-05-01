@@ -107,7 +107,10 @@ ManageAccountSpecificRuleTestHelper::applyTx(Account &source,
 
     data.ledgerKey = ledgerKey;
     data.forbids = forbids;
-    data.accountID.activate() = *accountID;
+    if (accountID != nullptr)
+    {
+        data.accountID.activate() = *accountID;
+    }
 
     return applyTx(source, op, expectedResult, expectedTxResult);
 }

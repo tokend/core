@@ -1,3 +1,4 @@
+#include <transactions/dex/OfferManager.h>
 #include "test/test_marshaler.h"
 #include "test/test.h"
 #include "TxTests.h"
@@ -9,6 +10,7 @@
 #include "test_helper/CheckSaleStateTestHelper.h"
 #include "test_helper/ManageAccountSpecificRuleTestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"
+#include "test_helper/ManageBalanceTestHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/BalanceHelper.h"
 
@@ -37,6 +39,7 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
     CheckSaleStateHelper checkStateHelper(testManager);
     ManageAccountSpecificRuleTestHelper specificRuleTestHelper(testManager);
     CreateAccountTestHelper createAccountTestHelper(testManager);
+    ManageBalanceTestHelper manageBalanceTestHelper(testManager);
 
     manageKeyValueTestHelper.assetOpWithoutReview();
     longstring saleCreateKey = ManageKeyValueOpFrame::makeSaleCreateTasksKey("*");
@@ -73,12 +76,23 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
     {
         auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
                 .success().typeExt.saleExtended().saleID;
-        LedgerKey ledgerKey(LedgerEntryType::SALE);
-        ledgerKey.sale().saleID = saleID;
 
         auto account = Account{ SecretKey::random(), 0 };
         AccountID accountID = account.key.getPublicKey();
         createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
+
+        auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(
+                account.key.getPublicKey(), quoteAsset, testManager->getDB(), nullptr);
+        auto baseBalance = manageBalanceTestHelper.applyManageBalanceTx(
+                account, accountID, baseAsset).success().balanceID;
+
+        auto manageOfferOp = OfferManager::buildManageOfferOp(baseBalance,
+                quoteBalance->getBalanceID(), true, requiredBaseAssetForHardCap, price, 0, 0, saleID);
+        auto result = participateHelper.applyManageOffer(account, manageOfferOp, ManageOfferResultCode::NO_SPECIFIC_RULE_TO_PARTICIPATE);
+
+        LedgerKey ledgerKey(LedgerEntryType::SALE);
+        ledgerKey.sale().saleID = saleID;
+
 
         specificRuleTestHelper.applyTx(saleOwner, ledgerKey, false, &accountID);
 
@@ -103,11 +117,77 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
         participateHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, 0);
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
     }
-    /*SECTION("Create with allow rules")
+    SECTION("Create with allow rules")
     {
-        saleRequest.ext.saleRules()
+        saleRequest.ext.saleRules().emplace_back(nullptr, false, LedgerVersion::EMPTY_VERSION);
+
+        auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
+                .success().typeExt.saleExtended().saleID;
+
+        auto account = Account{ SecretKey::random(), 0 };
+        AccountID accountID = account.key.getPublicKey();
+        createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
+
+        participateHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, 0);
+        checkStateHelper.applyCheckSaleStateTx(root, saleID);
     }
 
+    auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
+            .success().typeExt.saleExtended().saleID;
+
+    SECTION("Successful creation")
+    {
+        LedgerKey saleKey(LedgerEntryType::SALE);
+        saleKey.sale().saleID = saleID;
+
+        auto account = Account{ SecretKey::random(), 0 };
+        AccountID accountID = account.key.getPublicKey();
+
+        SECTION("Account not found")
+        {
+            auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
+                    ManageAccountSpecificRuleResultCode::ACCOUNT_NOT_FOUND, TransactionResultCode::txFAILED);
+        }
+
+        createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
+
+        auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
+
+        SECTION("Create the same")
+        {
+            specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
+                    ManageAccountSpecificRuleResultCode::ALREADY_EXISTS, TransactionResultCode::txFAILED);
+        }
+
+        SECTION("Create inverted")
+        {
+            specificRuleTestHelper.applyTx(root, saleKey, false, &accountID,
+                    ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS, TransactionResultCode::txFAILED);
+        }
+
+        SECTION("Remove")
+        {
+            specificRuleTestHelper.applyTx(root, createRuleResult.success().ruleID);
+
+            SECTION("Create")
+            {
+                specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
+            }
+        }
+    }
+
+    SECTION("Entry type not supported")
+    {
+        LedgerKey key(LedgerEntryType::ATOMIC_SWAP_BID);
+        key.atomicSwapBid().bidID = 123;
+
+        auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
+                ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED, TransactionResultCode::txFAILED);
+    }
+
+
+
+    /*
 
     auto firstSaleID = saleRequestHelper.createApprovedSale(root, root, saleRequest)
             .success().typeExt.saleExtended().saleID;
