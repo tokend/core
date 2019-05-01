@@ -92,6 +92,7 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
     }
 
     innerResult().code(ManageAccountSpecificRuleResultCode::SUCCESS);
+    innerResult().success().ruleID = ruleFrame->getID();
     return true;
 }
 

@@ -180,9 +180,16 @@ bool CreateSaleParticipationOpFrame::isSaleActive(Database& db, LedgerManager& l
 bool
 CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, SaleFrame::pointer const& sale)
 {
-    if (sale->getSaleEntry().ext.v() < LedgerVersion::ADD_SALE_WHITELISTS)
+    switch (sale->getSaleEntry().ext.v())
     {
-        return true;
+        case LedgerVersion::EMPTY_VERSION:
+            return true;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+            break;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale request version"
+                                 << static_cast<int32_t>(sale->getSaleEntry().ext.v());
+            throw std::runtime_error("Unexpected sale request version");
     }
 
     auto& accountSpecificRule = storageHelper.getAccountSpecificRuleHelper();

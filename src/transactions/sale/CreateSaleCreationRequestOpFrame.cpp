@@ -233,8 +233,6 @@ CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreat
         return CreateSaleCreationRequestResultCode::INVALID_CREATOR_DETAILS;
     }
 
-
-
     return CreateSaleCreationRequestResultCode::SUCCESS;
 }
 

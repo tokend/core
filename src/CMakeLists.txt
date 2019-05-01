@@ -40,6 +40,7 @@ set(NOT_COMMON_SOURCE_FILES
         ledger/SignerRoleHelper.h
         ledger/KeyValueHelper.h
         ledger/PollHelper.h
+        ledger/AccountSpecificRuleHelper.h
         history/HistoryManager.h
         overlay/BanManager.h
         overlay/StellarXDR.h
@@ -48,7 +49,7 @@ set(NOT_COMMON_SOURCE_FILES
         transactions/SignatureValidator.h
         transactions/test/test_helper/Account.h
         transactions/rule_verifing/AccountRuleVerifier.h
-        transactions/rule_verifing/SignerRuleVerifier.h ledger/AccountSpecificRuleHelper.h)
+        transactions/rule_verifing/SignerRuleVerifier.h)
 
 # mocks
 set(MOCKS_FILES transactions/test/mocks/)
