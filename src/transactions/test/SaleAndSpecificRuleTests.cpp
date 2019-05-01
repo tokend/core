@@ -70,6 +70,18 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
             {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
             requiredBaseAssetForHardCap);
 
+    SECTION("Sale rule not supported")
+    {
+        auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
+                .success().typeExt.saleExtended().saleID;
+
+        LedgerKey ledgerKey(LedgerEntryType::SALE);
+        ledgerKey.sale().saleID = saleID;
+
+        auto createRuleResult = specificRuleTestHelper.applyTx(root, ledgerKey, true, nullptr,
+                ManageAccountSpecificRuleResultCode::SPECIFIC_RULE_NOT_SUPPORTED, TransactionResultCode::txFAILED);
+    }
+
     saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
 
     SECTION("Create with empty rules")
@@ -174,6 +186,12 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
                 specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
             }
         }
+
+        SECTION("Not authorized")
+        {
+            specificRuleTestHelper.applyTx(account, saleKey, false, nullptr,
+                    ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
+        }
     }
 
     SECTION("Entry type not supported")
@@ -185,37 +203,12 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
                 ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED, TransactionResultCode::txFAILED);
     }
 
+    SECTION("Sale not found")
+    {
+        LedgerKey key(LedgerEntryType::SALE);
+        key.sale().saleID = 1488;
 
-
-    /*
-
-    auto firstSaleID = saleRequestHelper.createApprovedSale(root, root, saleRequest)
-            .success().typeExt.saleExtended().saleID;
-
-    issuanceHelper.applyCreatePreIssuanceRequest(root, root.key, baseAsset, preIssuedAmount, "reference",
-                                                 CreatePreIssuanceRequestResultCode::EXCEEDED_MAX_AMOUNT);
-
-    saleRequest.hardCap = preIssuedAmount / 3 * 2;
-    saleRequest.softCap = saleRequest.hardCap / 2;
-    saleRequest.requiredBaseAssetForHardCap = ONE * saleRequest.hardCap / price;
-    auto result = saleRequestHelper.applyCreateSaleRequest(root, 0, saleRequest, nullptr,
-                                                           CreateSaleCreationRequestResultCode::AUTO_REVIEW_FAILED);
-
-    REQUIRE(result.autoReviewFailed().reviewRequestRequest.code() ==
-            ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP);
-
-    issuanceHelper.applyCreatePreIssuanceRequest(root, root.key, baseAsset, preIssuedAmount/3, "reference");
-
-    auto secondSaleID = saleRequestHelper.createApprovedSale(root, root, saleRequest)
-            .success().typeExt.saleExtended().saleID;
-
-    participateHelper.addNewParticipant(root, firstSaleID, baseAsset, quoteAsset, hardCap, ONE, 0);
-    checkStateHelper.applyCheckSaleStateTx(root, firstSaleID);
-
-    auto balance = storageHelper.getBalanceHelper().loadBalance(root.key.getPublicKey(), baseAsset);
-    issuanceHelper.applyCreateIssuanceRequest(root, baseAsset, preIssuedAmount, balance->getBalanceID(), "reference0",
-                                              nullptr, CreateIssuanceRequestResultCode::EXCEEDS_MAX_ISSUANCE_AMOUNT);
-
-    participateHelper.addNewParticipant(root, secondSaleID, baseAsset, quoteAsset, saleRequest.hardCap, ONE, 0);
-    checkStateHelper.applyCheckSaleStateTx(root, secondSaleID);*/
+        auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
+                ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND, TransactionResultCode::txFAILED);
+    }
 }

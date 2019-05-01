@@ -19,7 +19,7 @@ CreateAccountSpecificRuleOpFrame::CreateAccountSpecificRuleOpFrame(
 
 bool
 CreateAccountSpecificRuleOpFrame::tryGetOperationConditions(
-        StorageHelper &storageHelper,std::vector<OperationCondition> &result) const
+        StorageHelper &storageHelper, std::vector<OperationCondition> &result) const
 {
     // only admin or entry owner can perform such operation
     return true;
@@ -105,7 +105,7 @@ bool
 CreateAccountSpecificRuleOpFrame::createSaleRule(Application &app,
         StorageHelper &sh, uint64_t saleID)
 {
-    if (mCheckRule && !checkSaleRule(app, sh, saleID))
+    if (mCheckSaleRule && !checkSaleRule(app, sh, saleID))
     {
         return false;
     }

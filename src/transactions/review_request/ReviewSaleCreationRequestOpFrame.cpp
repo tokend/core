@@ -163,7 +163,7 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
         manageRuleOp.data.createData() = createData;
 
         CreateAccountSpecificRuleOpFrame opFrame(op, opRes, mParentTx);
-
+        opFrame.doNotCheckSaleRule();
         opFrame.setSourceAccountPtr(mSourceAccount);
 
         if (!opFrame.doApply(app, storageHelper, ledgerManager))
