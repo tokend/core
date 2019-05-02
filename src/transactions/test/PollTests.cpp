@@ -315,6 +315,21 @@ TEST_CASE("Poll", "[tx][voting][poll]")
                 setCreateVoteData(createVoteData)
             );
 
+            SECTION("Try to remove vote from ended poll")
+            {
+                testManager->advanceToTime(endTime+1);
+
+                RemoveVoteData removeData;
+                removeData.pollID = pollID;
+
+                manageVoteTestHelper.applyTx(manageVoteBuilder.
+                    setAction(ManageVoteAction::REMOVE).
+                    setRemoveVoteData(removeData).
+                    setResultCode(ManageVoteResultCode::POLL_ENDED).
+                    setTxResultCode(TransactionResultCode::txFAILED)
+                );
+            }
+
             SECTION("Cancel poll with votes")
             {
                 managePollTestHelper.applyTx(managePollBuilder.
