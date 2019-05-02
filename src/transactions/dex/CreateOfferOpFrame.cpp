@@ -173,17 +173,6 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
         return false;
     }
 
-    if(!currentPriceRestrictionsMet())
-    {
-        innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
-        return false;
-    }
-    if(!physicalPriceRestrictionsMet())
-    {
-        innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
-        return false;
-    }
-
     return true;
 }
 
@@ -243,6 +232,17 @@ bool
 CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
                             LedgerManager& ledgerManager)
 {
+    if(!currentPriceRestrictionsMet(ledgerManager))
+    {
+        innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
+        return false;
+    }
+    if(!physicalPriceRestrictionsMet(ledgerManager))
+    {
+        innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
+        return false;
+    }
+
     Database& db = app.getDatabase();
     if (!checkOfferValid(db, delta))
     {
@@ -410,8 +410,13 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
 }
 
 bool
-CreateOfferOpFrame::currentPriceRestrictionsMet()
+CreateOfferOpFrame::currentPriceRestrictionsMet(LedgerManager &lm)
 {
+    if(!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
+    {
+        return true;
+    }
+
     if(!mAssetPair->checkPolicy(AssetPairPolicy::CURRENT_PRICE_RESTRICTION))
     {
         return true;
@@ -431,8 +436,13 @@ CreateOfferOpFrame::currentPriceRestrictionsMet()
 }
 
 bool
-CreateOfferOpFrame::physicalPriceRestrictionsMet()
+CreateOfferOpFrame::physicalPriceRestrictionsMet(LedgerManager &lm)
 {
+    if(!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
+    {
+        return true;
+    }
+
     if(!mAssetPair->checkPolicy(AssetPairPolicy::PHYSICAL_PRICE_RESTRICTION))
     {
         return true;
