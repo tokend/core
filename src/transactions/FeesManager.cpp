@@ -24,21 +24,4 @@ FeeManager::calculateFeeForAccount(const AccountFrame::pointer account,
     result.isOverflow = !feeFrame->calculatePercentFee(amount, result.calculatedPercentFee, ROUND_UP, feeAssetPrecision);
     return result;
 }
-
-FeeManager::FeeResult
-FeeManager::calculateOfferFeeForAccount(const AccountFrame::pointer account,
-                                        AssetCode const& quoteAsset,
-                                        uint64_t const quoteAmount, Database& db)
-{
-    return calculateFeeForAccount(account, FeeType::OFFER_FEE, quoteAsset, FeeFrame::SUBTYPE_ANY, quoteAmount, db);
-}
-
-FeeManager::FeeResult
-FeeManager::calculateCapitalDeploymentFeeForAccount(const AccountFrame::pointer account,
-                                                    AssetCode const& quoteAsset,
-                                                    uint64_t const quoteAmount, Database& db)
-{
-    return calculateFeeForAccount(account, FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset,
-                                  FeeFrame::SUBTYPE_ANY, quoteAmount, db);
-}
 }

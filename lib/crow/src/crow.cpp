@@ -123,13 +123,19 @@ void crow::capture_message(const std::string& message,
         auto logger_id = attributes.find("logger_id");
         if (logger_id != attributes.end())
         {
-            rawFingerprint += ": " + std::string(*logger_id);
+            // Type cast will not work on OS X
+            // TODO: Find better way
+            std::string id = *logger_id;
+            rawFingerprint += ": " + id;
         }
 
         auto message_line = attributes.find("message_text");
         if (message_line != attributes.end())
         {
-            rawFingerprint += ": " + std::string(*message_line);
+            // Type cast will not work on OS X
+            // TODO: Find better way
+            std::string line = *message_line;
+            rawFingerprint += ": " + line;
         }
 
         m_payload["fingerprint"] = std::vector<char>(rawFingerprint.begin(), rawFingerprint.end());
