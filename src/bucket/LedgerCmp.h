@@ -267,7 +267,7 @@ struct LedgerEntryIdCmp
         case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
         {
             auto const& ar = a.accountSpecificRule();
-            auto const& br = a.accountSpecificRule();
+            auto const& br = b.accountSpecificRule();
 
             return ar.id < br.id;
         }

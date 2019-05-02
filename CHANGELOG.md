@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+* Manage account specific rule op frame
+
 ## 3.2.0
 
 ### Added
