@@ -15,7 +15,10 @@ public:
     loadRule(uint64_t id) = 0;
 
     virtual AccountSpecificRuleFrame::pointer
-    loadRule(LedgerKey const& ledgerKey, AccountID const* accountID, bool exact) = 0;
+    loadRule(LedgerKey const& ledgerKey, AccountID const* accountID) = 0;
+
+    virtual AccountSpecificRuleFrame::pointer
+    loadRule(LedgerKey const& ledgerKey, AccountID const& accountID) = 0;
 
     virtual AccountSpecificRuleFrame::pointer
     mustLoadRule(uint64_t id) = 0;

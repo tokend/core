@@ -8,7 +8,7 @@ namespace stellar
 class CreateAccountSpecificRuleOpFrame : public ManageAccountSpecificRuleOpFrame
 {
     CreateAccountSpecificRuleData const& mCreateData;
-    bool mCheckSaleRule = true;
+    SaleFrame::pointer mSale = nullptr;
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
@@ -34,9 +34,9 @@ public:
             TransactionFrame& parentTx);
 
     void
-    doNotCheckSaleRule()
+    setSale(SaleFrame::pointer const& sale)
     {
-        mCheckSaleRule = false;
+        mSale = sale;
     }
 };
 }

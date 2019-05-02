@@ -33,7 +33,8 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
                              SaleCreationRequest const& saleCreationRequest);
 
     bool
-    checkRulesDuplication(xdr::xvector<CreateAccountSaleRuleData> const& rules);
+    checkRulesDuplication(StorageHelper& storageHelper,
+            xdr::xvector<CreateAccountSaleRuleData> const& rules);
 
     bool
     isSaleRulesValid(Application& app, StorageHelper& storageHelper, SaleCreationRequest const& request);

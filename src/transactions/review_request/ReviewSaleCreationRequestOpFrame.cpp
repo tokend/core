@@ -118,8 +118,7 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     createAssetPair(saleFrame, app, ledgerManager, delta);
 
     StorageHelperImpl storageHelper(db, &delta);
-    createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest,
-            saleFrame->getKey());
+    createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest, saleFrame);
 
     return ReviewRequestResultCode::SUCCESS;
 }
@@ -127,7 +126,7 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
 void
 ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
         StorageHelper& storageHelper, LedgerManager& ledgerManager,
-        SaleCreationRequest const& request, LedgerKey const& saleKey)
+        SaleCreationRequest const& request, SaleFrame::pointer const& sale)
 {
     switch (request.ext.v())
     {
@@ -154,7 +153,7 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
     opRes.tr().type(OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE);
 
     CreateAccountSpecificRuleData createData;
-    createData.ledgerKey = saleKey;
+    createData.ledgerKey = sale->getKey();
 
     for (auto const& createRuleData : createRulesData)
     {
@@ -163,7 +162,7 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
         manageRuleOp.data.createData() = createData;
 
         CreateAccountSpecificRuleOpFrame opFrame(op, opRes, mParentTx);
-        opFrame.doNotCheckSaleRule();
+        opFrame.setSale(sale);
         opFrame.setSourceAccountPtr(mSourceAccount);
 
         if (!opFrame.doApply(app, storageHelper, ledgerManager))

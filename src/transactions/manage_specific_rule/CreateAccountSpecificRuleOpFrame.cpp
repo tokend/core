@@ -38,7 +38,7 @@ CreateAccountSpecificRuleOpFrame::doApply(Application &app,
         StorageHelper &storageHelper, LedgerManager &ledgerManager)
 {
     auto existingRule = storageHelper.getAccountSpecificRuleHelper().loadRule(
-            mCreateData.ledgerKey, mCreateData.accountID.get(), true);
+            mCreateData.ledgerKey, mCreateData.accountID.get());
 
     if (existingRule)
     {
@@ -77,22 +77,25 @@ bool
 CreateAccountSpecificRuleOpFrame::checkSaleRule(Application &app,
         StorageHelper &sh, uint64_t saleID)
 {
-    auto saleHelper = SaleHelper::Instance();
-    auto sale = saleHelper->loadSale(saleID, sh.getDatabase(), sh.getLedgerDelta());
-    if (!sale)
+    if (!mSale)
     {
-        innerResult().code(ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND);
-        return false;
+        auto saleHelper = SaleHelper::Instance();
+        auto mSale = saleHelper->loadSale(saleID, sh.getDatabase(), sh.getLedgerDelta());
+        if (!mSale)
+        {
+            innerResult().code(ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND);
+            return false;
+        }
     }
 
     //  not sale owner and not admin
-    if (!isAuthorized(sale->getOwnerID(), app.getAdminID()))
+    if (!isAuthorized(mSale->getOwnerID(), app.getAdminID()))
     {
         innerResult().code(ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED);
         return false;
     }
 
-    if (sale->getSaleEntry().ext.v() != LedgerVersion::ADD_SALE_WHITELISTS)
+    if (mSale->getSaleEntry().ext.v() != LedgerVersion::ADD_SALE_WHITELISTS)
     {
         innerResult().code(ManageAccountSpecificRuleResultCode::SPECIFIC_RULE_NOT_SUPPORTED);
         return false;
@@ -105,7 +108,7 @@ bool
 CreateAccountSpecificRuleOpFrame::createSaleRule(Application &app,
         StorageHelper &sh, uint64_t saleID)
 {
-    if (mCheckSaleRule && !checkSaleRule(app, sh, saleID))
+    if (!checkSaleRule(app, sh, saleID))
     {
         return false;
     }

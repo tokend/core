@@ -19,6 +19,7 @@
 #include "ledger/AssetPairHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/KeyValueHelper.h"
+#include "ledger/AccountHelper.h"
 
 namespace stellar
 {
@@ -337,7 +338,8 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 }
 
 bool
-CreateSaleCreationRequestOpFrame::checkRulesDuplication(xdr::xvector<CreateAccountSaleRuleData> const& rules)
+CreateSaleCreationRequestOpFrame::checkRulesDuplication(StorageHelper& storageHelper,
+        xdr::xvector<CreateAccountSaleRuleData> const& rules)
 {
     std::unordered_set<AccountID> accountIDs;
     bool hasGlobal = false;
@@ -352,6 +354,12 @@ CreateSaleCreationRequestOpFrame::checkRulesDuplication(xdr::xvector<CreateAccou
                 innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
                 return false;
             }
+
+            if (!storageHelper.getAccountHelper().exists(*rule.accountID))
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_NOT_FOUND);
+                return false;
+            }
         }
         else
         {
@@ -362,6 +370,12 @@ CreateSaleCreationRequestOpFrame::checkRulesDuplication(xdr::xvector<CreateAccou
             }
             hasGlobal = true;
         }
+    }
+
+    if (!hasGlobal)
+    {
+        innerResult().code(CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_REQUIRED);
+        return false;
     }
 
     return true;
@@ -382,7 +396,7 @@ CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
 
             uint32_t maxRulesLength = app.getMaxSaleRulesLength();
             auto keyValue = storageHelper.getKeyValueHelper().loadKeyValue(
-                    ManageKeyValueOpFrame::makeMaxSaleRulesLengthKey());
+                    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey());
 
             if (keyValue)
             {
@@ -395,7 +409,7 @@ CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
                 return false;
             }
 
-            return checkRulesDuplication(rules);
+            return checkRulesDuplication(storageHelper, rules);
         }
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale creation request version"

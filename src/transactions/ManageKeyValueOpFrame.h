@@ -91,7 +91,7 @@ public:
 
     static longstring makeAmlAlertCreateTasksKey();
 
-    static longstring makeMaxSaleRulesLengthKey();
+    static longstring makeMaxSaleRulesNumberKey();
 
     static longstring makeCreatePollKey(std::string type);
 
@@ -115,7 +115,7 @@ public:
     static char const * contractCreateTasks;
     static char const * amlAlertCreateTasks;
     static char const * limitsUpdateTasks;
-    static char const * maxSaleRulesLengthTasks;
+    static char const * maxSaleRulesNumbersKey;
     static char const * createPollTasks;
 };
 }

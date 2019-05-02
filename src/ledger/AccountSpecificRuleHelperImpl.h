@@ -53,7 +53,13 @@ private:
     loadRule(uint64_t id) override;
 
     AccountSpecificRuleFrame::pointer
-    loadRule(const LedgerKey &ledgerKey, AccountID const* accountID, bool exact) override;
+    loadRule(const LedgerKey &ledgerKey, AccountID const* accountID) override;
+
+    AccountSpecificRuleFrame::pointer
+    loadRule(const LedgerKey &ledgerKey, AccountID const& accountID) override;
+
+    AccountSpecificRuleFrame::pointer
+    loadRule(const LedgerKey &ledgerKey, AccountID const* accountID, std::string const& whereCondition);
 
     AccountSpecificRuleFrame::pointer
     mustLoadRule(uint64_t id) override;

@@ -84,8 +84,10 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
 
     saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
 
-    SECTION("Create with empty rules")
+    SECTION("Create with forbid rule")
     {
+        saleRequest.ext.saleRules().emplace_back(nullptr, true, LedgerVersion::EMPTY_VERSION);
+
         auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
                 .success().typeExt.saleExtended().saleID;
 
@@ -100,29 +102,11 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
 
         auto manageOfferOp = OfferManager::buildManageOfferOp(baseBalance,
                 quoteBalance->getBalanceID(), true, requiredBaseAssetForHardCap, price, 0, 0, saleID);
-        auto result = participateHelper.applyManageOffer(account, manageOfferOp, ManageOfferResultCode::NO_SPECIFIC_RULE_TO_PARTICIPATE);
+        auto result = participateHelper.applyManageOffer(account, manageOfferOp,
+                ManageOfferResultCode::SPECIFIC_RULE_FORBIDS);
 
         LedgerKey ledgerKey(LedgerEntryType::SALE);
         ledgerKey.sale().saleID = saleID;
-
-
-        specificRuleTestHelper.applyTx(saleOwner, ledgerKey, false, &accountID);
-
-        participateHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, 0);
-        checkStateHelper.applyCheckSaleStateTx(root, saleID);
-    }
-    SECTION("Create with forbid rule")
-    {
-        saleRequest.ext.saleRules().emplace_back(nullptr, true, LedgerVersion::EMPTY_VERSION);
-
-        auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
-                .success().typeExt.saleExtended().saleID;
-        LedgerKey ledgerKey(LedgerEntryType::SALE);
-        ledgerKey.sale().saleID = saleID;
-
-        auto account = Account{ SecretKey::random(), 0 };
-        AccountID accountID = account.key.getPublicKey();
-        createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
 
         specificRuleTestHelper.applyTx(saleOwner, ledgerKey, false, &accountID);
 
@@ -187,9 +171,15 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
             }
         }
 
-        SECTION("Not authorized")
+        SECTION("Not authorized to create")
         {
             specificRuleTestHelper.applyTx(account, saleKey, false, nullptr,
+                    ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
+        }
+
+        SECTION("Not authorized to remove")
+        {
+            specificRuleTestHelper.applyTx(account, createRuleResult.success().ruleID,
                     ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
         }
     }

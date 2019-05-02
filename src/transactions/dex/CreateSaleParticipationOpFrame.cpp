@@ -194,11 +194,13 @@ CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, Sal
 
     auto& accountSpecificRule = storageHelper.getAccountSpecificRuleHelper();
 
-    auto rule = accountSpecificRule.loadRule(sale->getKey(), &getSourceID(), false);
+    auto rule = accountSpecificRule.loadRule(sale->getKey(), getSourceID());
     if (!rule)
     {
-        innerResult().code(ManageOfferResultCode::NO_SPECIFIC_RULE_TO_PARTICIPATE);
-        return false;
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected specific rule to exists, sale id: "
+                                               << sale->getID() << ", account id: "
+                                               << PubKeyUtils::toStrKey(getSourceID());
+        throw std::runtime_error("Expected specific rule to exists");
     }
 
     if (rule->forbids())

@@ -283,19 +283,31 @@ AccountSpecificRuleHelperImpl::loadRule(uint64_t const id)
 }
 
 AccountSpecificRuleFrame::pointer
-AccountSpecificRuleHelperImpl::loadRule(const LedgerKey &ledgerKey, AccountID const* accountID, bool exact)
+AccountSpecificRuleHelperImpl::loadRule(const LedgerKey &ledgerKey, AccountID const* accountID)
+{
+    std::string whereCondition = " WHERE ledger_key = :key AND "
+                                 "(account_id = :acc_id OR "
+                                 "(:acc_id::text is null and account_id is null))";
+
+    return loadRule(ledgerKey, accountID, whereCondition);
+}
+
+AccountSpecificRuleFrame::pointer
+AccountSpecificRuleHelperImpl::loadRule(const LedgerKey &ledgerKey, AccountID const& accountID)
+{
+    std::string whereCondition = " WHERE ledger_key = :key AND "
+                                 "(account_id = :acc_id OR account_id is null) "
+                                 " order by account_id = :acc_id limit 1";
+
+    return loadRule(ledgerKey, &accountID, whereCondition);
+}
+
+AccountSpecificRuleFrame::pointer
+AccountSpecificRuleHelperImpl::loadRule(const LedgerKey &ledgerKey,
+        AccountID const* accountID, std::string const& whereCondition)
 {
     Database& db = getDatabase();
-    std::string sql(mRuleColumnSelector);
-    sql += " WHERE ledger_key = :key AND (account_id = :acc_id or ";
-    if (exact)
-    {
-        sql += " (:acc_id::text is null and account_id is null))";
-    }
-    else
-    {
-        sql += " account_id is null) order by account_id = :acc_id limit 1";
-    }
+    std::string sql = std::string(mRuleColumnSelector) + whereCondition;
 
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
