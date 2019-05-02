@@ -4,7 +4,10 @@
 
 ### Added
 
+* Close poll op frame
+* Update poll end time op frame
 * Invest fee
+* Voting tests
 
 ### Changed
 

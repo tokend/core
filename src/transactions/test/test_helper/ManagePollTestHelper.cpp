@@ -74,6 +74,9 @@ Operation ManagePollTestBuilder::buildOp() {
         case ManagePollAction::CLOSE:
             managePoll.data.closePollData() = close;
             break;
+        case ManagePollAction::UPDATE_END_TIME:
+            managePoll.data.updateTimeData() = updateEndTime;
+            break;
     }
 
     return op;
@@ -98,6 +101,13 @@ ManagePollTestBuilder ManagePollTestBuilder::setClosePollData(ClosePollData data
 {
     auto newBuilder = copy();
     newBuilder.close = data;
+    return newBuilder;
+}
+
+ManagePollTestBuilder ManagePollTestBuilder::setUpdateEndTimeData(UpdatePollEndTimeData data)
+{
+    auto newBuilder = copy();
+    newBuilder.updateEndTime = data;
     return newBuilder;
 }
 
