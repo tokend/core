@@ -173,6 +173,11 @@ readInt(ConfigItem const& item, T min = std::numeric_limits<T>::min(),
 }
 }
 
+std::vector<PublicKey>
+Config::getDevKeys() const
+{
+    return DEV_LICENSE_KEYS;
+}
 void
 Config::loadQset(std::shared_ptr<cpptoml::toml_group> group, SCPQuorumSet& qset,
                  int level)
@@ -383,9 +388,9 @@ Config::load(std::string const& filename)
             }
             else if (item.first == "TMP_DIR_PATH")
             {
-                throw std::invalid_argument("TMP_DIR_PATH is not supported "
-                                            "anymore - tmp data is now kept in "
-                                            "BUCKET_DIR_PATH/tmp");
+                std::cerr << "TMP_DIR_PATH is not supported "
+                             "anymore - tmp data is now kept in "
+                             "BUCKET_DIR_PATH/tmp" << std::endl;
             }
             else if (item.first == "BUCKET_DIR_PATH")
             {
@@ -398,6 +403,23 @@ Config::load(std::string const& filename)
                 {
                     PublicKey nodeID;
                     parseNodeID(v, nodeID);
+                }
+            }
+            else if (item.first == "DEV_LICENSE_KEYS")
+            {
+                if (!item.second->is_array())
+                {
+                    throw std::invalid_argument("DEV_LICENSE_KEYS must be an array");
+                }
+                for (auto v : item.second->as_array()->array())
+                {
+                    if (!v->as<std::string>())
+                    {
+                        throw std::invalid_argument(
+                            "invalid element of DEV_LICENSE_KEYS");
+                    }
+
+                    DEV_LICENSE_KEYS.emplace_back(PubKeyUtils::fromStrKey(v->as<std::string>()->value()));
                 }
             }
             else if (item.first == "NODE_SEED")

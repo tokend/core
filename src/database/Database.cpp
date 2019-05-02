@@ -38,6 +38,7 @@
 #include "ledger/AtomicSwapBidHelper.h"
 #include "ledger/PollHelper.h"
 #include "ledger/AccountSpecificRuleHelper.h"
+#include "ledger/VoteHelper.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -64,7 +65,7 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 12,
     ADD_ATOMIC_SWAP_BID = 13,
     ADD_ASSET_CUSTOM_PRECISION = 14,
-    POLL_PERMISSION_TYPE_MIGRATION = 15,
+    ADD_VOTING = 15,
     ADD_PEER_TYPE = 16,
     ADD_SPECIFIC_RULES = 17
 };
@@ -170,7 +171,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
             break;
-        case databaseSchemaVersion::POLL_PERMISSION_TYPE_MIGRATION:
+        case databaseSchemaVersion::ADD_VOTING:
+            sh.getPollHelper().createIfNotExists();
+            sh.getVoteHelper().createIfNotExists();
             sh.getPollHelper().permissionTypeMigration();
             break;
         case ADD_PEER_TYPE:

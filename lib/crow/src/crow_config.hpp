@@ -1,4 +1,4 @@
- /*
+/*
  _____ _____ _____ _ _ _
 |     | __  |     | | | |  Crow - a Sentry client for C++
 |   --|    -|  |  | | | |  version 0.0.6
@@ -34,6 +34,61 @@ SOFTWARE.
  * @file crow_config.hpp
  * @brief constants written by CMake
  */
+
+#ifndef CMAKE_SIZEOF_VOID_P
+#define NLOHMANN_CROW_CMAKE_BUILD_TYPE "win_build"
+#define NLOHMANN_CROW_BITS (0)
+// context: device
+#define NLOHMANN_CROW_CMAKE_SYSTEM_PROCESSOR "unknown"
+#define NLOHMANN_CROW_HOSTNAME "unknown"
+#define NLOHMANN_CROW_SYSCTL_HW_MODEL "unknown"
+#define NLOHMANN_CROW_TOTAL_PHYSICAL_MEMORY "unknown"
+
+// context: os
+#define NLOHMANN_CROW_CMAKE_SYSTEM_NAME "unknown"
+#define NLOHMANN_CROW_OS_RELEASE "unknown"
+#define NLOHMANN_CROW_OS_VERSION "unknown"
+#define NLOHMANN_CROW_CMAKE_SYSTEM_VERSION "unknown"
+#define NLOHMANN_CROW_UNAME "unknown"
+#define NLOHMANN_CROW_SYSTEMINFO "unknown"
+
+// context: runtime
+#define NLOHMANN_CROW_CMAKE_CXX_COMPILER_ID "unknown"
+#define NLOHMANN_CROW_CMAKE_CXX_COMPILER_VERSION "unknown"
+#define NLOHMANN_CROW_CXX "unknown"
+
+// crow version
+#define NLOHMANN_CROW_VERSION_MAJOR "unknown"
+#define NLOHMANN_CROW_VERSION_MINOR "unknown"
+#define NLOHMANN_CROW_VERSION_PATCH "unknown"
+#define NLOHMANN_CROW_VERSION "unknown"
+
+// context: device
+#define NLOHMANN_CROW_CMAKE_SYSTEM_PROCESSOR "unknown"
+#define NLOHMANN_CROW_HOSTNAME "unknown"
+#define NLOHMANN_CROW_SYSCTL_HW_MODEL "unknown"
+#define NLOHMANN_CROW_TOTAL_PHYSICAL_MEMORY "unknown"
+
+// context: os
+#define NLOHMANN_CROW_CMAKE_SYSTEM_NAME "unknown"
+#define NLOHMANN_CROW_OS_RELEASE "unknown"
+#define NLOHMANN_CROW_OS_VERSION "unknown"
+#define NLOHMANN_CROW_CMAKE_SYSTEM_VERSION "unknown"
+#define NLOHMANN_CROW_UNAME "unknown"
+#define NLOHMANN_CROW_SYSTEMINFO "unknown"
+
+// context: runtime
+#define NLOHMANN_CROW_CMAKE_CXX_COMPILER_ID "unknown"
+#define NLOHMANN_CROW_CMAKE_CXX_COMPILER_VERSION "unknown"
+#define NLOHMANN_CROW_CXX "unknown"
+
+// crow version
+#define NLOHMANN_CROW_VERSION_MAJOR "unknown"
+#define NLOHMANN_CROW_VERSION_MINOR "unknown"
+#define NLOHMANN_CROW_VERSION_PATCH "unknown"
+#define NLOHMANN_CROW_VERSION "unknown"
+
+#else
 
 // macros do decide which headers are present
 #cmakedefine NLOHMANN_CROW_HAVE_CXXABI_H
@@ -72,4 +127,30 @@ SOFTWARE.
 #define NLOHMANN_CROW_VERSION_PATCH ${PROJECT_VERSION_PATCH}
 #define NLOHMANN_CROW_VERSION "${PROJECT_VERSION}"
 
+// context: device
+#define NLOHMANN_CROW_CMAKE_SYSTEM_PROCESSOR "${CMAKE_SYSTEM_PROCESSOR}"
+#define NLOHMANN_CROW_HOSTNAME "${NLOHMANN_CROW_HOSTNAME}"
+#define NLOHMANN_CROW_SYSCTL_HW_MODEL "${NLOHMANN_CROW_SYSCTL_HW_MODEL}"
+#define NLOHMANN_CROW_TOTAL_PHYSICAL_MEMORY (${NLOHMANN_CROW_TOTAL_PHYSICAL_MEMORY} * 1048576ul)
+
+// context: os
+#define NLOHMANN_CROW_CMAKE_SYSTEM_NAME "${CMAKE_SYSTEM_NAME}"
+#define NLOHMANN_CROW_OS_RELEASE "${NLOHMANN_CROW_OS_RELEASE}"
+#define NLOHMANN_CROW_OS_VERSION "${NLOHMANN_CROW_OS_VERSION}"
+#define NLOHMANN_CROW_CMAKE_SYSTEM_VERSION "${CMAKE_SYSTEM_VERSION}"
+#define NLOHMANN_CROW_UNAME "${NLOHMANN_CROW_UNAME}"
+#define NLOHMANN_CROW_SYSTEMINFO "${NLOHMANN_CROW_SYSTEMINFO}"
+
+// context: runtime
+#define NLOHMANN_CROW_CMAKE_CXX_COMPILER_ID "${CMAKE_CXX_COMPILER_ID}"
+#define NLOHMANN_CROW_CMAKE_CXX_COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}"
+#define NLOHMANN_CROW_CXX "${NLOHMANN_CROW_CXX}"
+
+// crow version
+#define NLOHMANN_CROW_VERSION_MAJOR ${PROJECT_VERSION_MAJOR}
+#define NLOHMANN_CROW_VERSION_MINOR ${PROJECT_VERSION_MINOR}
+#define NLOHMANN_CROW_VERSION_PATCH ${PROJECT_VERSION_PATCH}
+#define NLOHMANN_CROW_VERSION "${PROJECT_VERSION}"
+
+#endif
 #endif

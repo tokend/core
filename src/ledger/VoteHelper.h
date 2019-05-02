@@ -19,5 +19,8 @@ public:
 
     virtual void
     deleteForPoll(uint64_t pollID) = 0;
+
+    virtual void
+    createIfNotExists() = 0;
 };
 }

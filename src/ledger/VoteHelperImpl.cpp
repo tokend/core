@@ -24,15 +24,28 @@ VoteHelperImpl::dropAll()
     Database& db = getDatabase();
 
     db.getSession() << "DROP TABLE IF EXISTS votes;";
-    db.getSession() << "CREATE TABLE votes"
-                   "("
-                   "poll_id             BIGINT      NOT NULL CHECK (poll_id > 0),"
-                   "voter_id            VARCHAR(56) NOT NULL,"
-                   "choice              TEXT        NOT NULL,"
-                   "version             INT         NOT NULL,"
-                   "lastmodified        INT         NOT NULL,"
-                   "PRIMARY KEY (poll_id, voter_id)"
-                   ");";
+    db.getSession() << "CREATE TABLE votes " << getTableSchema();
+}
+
+void
+VoteHelperImpl::createIfNotExists()
+{
+    Database& db = getDatabase();
+
+    db.getSession() << "CREATE TABLE IF NOT EXISTS votes " << getTableSchema();
+}
+
+std::string
+VoteHelperImpl::getTableSchema()
+{
+    return  "("
+            "poll_id             BIGINT      NOT NULL CHECK (poll_id > 0),"
+            "voter_id            VARCHAR(56) NOT NULL,"
+            "choice              TEXT        NOT NULL,"
+            "version             INT         NOT NULL,"
+            "lastmodified        INT         NOT NULL,"
+            "PRIMARY KEY (poll_id, voter_id)"
+            ");";
 }
 
 void
