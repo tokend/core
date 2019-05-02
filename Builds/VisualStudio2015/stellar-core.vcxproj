@@ -501,6 +501,7 @@
     <ClCompile Include="..\..\src\transactions\test\FlexibleFeesTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\IssuanceTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\KVLimitsTest.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\LicenseTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\LimitsUpdateTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\ManageAssetPairTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\ManageAssetTests.cpp" />
@@ -513,6 +514,8 @@
     <ClCompile Include="..\..\src\transactions\test\OfferTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\PaymentV2Tests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\PayoutTests.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\PollTests.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\SaleAndIssuanceTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleRequestsTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleWithSeveralQuotesTests.cpp" />
@@ -577,8 +580,10 @@
     <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\CancelPollRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\CreatePollRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\ManageCreatePollRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\CancelPollOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_poll\ClosePollOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_poll\ManagePollOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_vote\CreateVoteOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_vote\DeleteVoteOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\voting\manage_vote\ManageVoteOpFrame.cpp" />
@@ -1020,8 +1025,10 @@
     <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\CancelPollRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\CreatePollRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\ManageCreatePollRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\CancelPollOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_poll\ClosePollOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_poll\ManagePollOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_vote\CreateVoteOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_vote\DeleteVoteOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\voting\manage_vote\ManageVoteOpFrame.h" />
