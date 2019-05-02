@@ -64,7 +64,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             auto txFrame = manageAssetHelper.createManageAssetTx(root, 0, updateIssuanceRequest);
 
             std::string txIDString(binToHex(txFrame->getContentsHash()));
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "tx must go throug even with invalid sigs: " << txIDString;
+            CLOG(INFO, Logging::OPERATION_LOGGER) << "tx must go throug even with invalid sigs: " << txIDString;
             REQUIRE(updateMaxIssuanceTxHash == txIDString);
             LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                 app.getDatabase());

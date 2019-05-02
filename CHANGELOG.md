@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed 
+* Manage asset tests
+
 ## 3.2.0
 
 ### Added
