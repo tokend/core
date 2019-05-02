@@ -351,11 +351,14 @@ OfferHelper::loadOffers(AccountID const &accountID, uint64_t const orderBookID,
     string sql = offerColumnSelector;
     sql += " WHERE order_book_id = :obi AND owner_id = :oi";
 
+    std::string accountIDStr;
+    accountIDStr = PubKeyUtils::toStrKey(accountID);
+
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
-    st.exchange(use(accountID, "obi"));
-    st.exchange(use(orderBookID, "oi"));
+    st.exchange(use(orderBookID, "obi"));
+    st.exchange(use(accountIDStr, "oi"));
 
     auto timer = db.getSelectTimer("offers");
 

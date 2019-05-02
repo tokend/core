@@ -128,77 +128,82 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
         checkStateHelper.applyCheckSaleStateTx(root, saleID);
     }
 
-    auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
-            .success().typeExt.saleExtended().saleID;
-
-    SECTION("Successful creation")
+    SECTION("Success sale creation")
     {
-        LedgerKey saleKey(LedgerEntryType::SALE);
-        saleKey.sale().saleID = saleID;
 
-        auto account = Account{ SecretKey::random(), 0 };
-        AccountID accountID = account.key.getPublicKey();
+        saleRequest.ext.saleRules().emplace_back(nullptr, true, LedgerVersion::EMPTY_VERSION);
+        auto saleID = saleRequestHelper.createApprovedSale(root, saleOwner, saleRequest)
+                .success().typeExt.saleExtended().saleID;
 
-        SECTION("Account not found")
+        SECTION("Successful creation")
         {
-            auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
-                    ManageAccountSpecificRuleResultCode::ACCOUNT_NOT_FOUND, TransactionResultCode::txFAILED);
-        }
+            LedgerKey saleKey(LedgerEntryType::SALE);
+            saleKey.sale().saleID = saleID;
 
-        createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
+            auto account = Account{ SecretKey::random(), 0 };
+            AccountID accountID = account.key.getPublicKey();
 
-        auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
-
-        SECTION("Create the same")
-        {
-            specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
-                    ManageAccountSpecificRuleResultCode::ALREADY_EXISTS, TransactionResultCode::txFAILED);
-        }
-
-        SECTION("Create inverted")
-        {
-            specificRuleTestHelper.applyTx(root, saleKey, false, &accountID,
-                    ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS, TransactionResultCode::txFAILED);
-        }
-
-        SECTION("Remove")
-        {
-            specificRuleTestHelper.applyTx(root, createRuleResult.success().ruleID);
-
-            SECTION("Create")
+            SECTION("Account not found")
             {
-                specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
+                auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
+                        ManageAccountSpecificRuleResultCode::ACCOUNT_NOT_FOUND, TransactionResultCode::txFAILED);
+            }
+
+            createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
+
+            auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
+
+            SECTION("Create the same")
+            {
+                specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
+                        ManageAccountSpecificRuleResultCode::ALREADY_EXISTS, TransactionResultCode::txFAILED);
+            }
+
+            SECTION("Create inverted")
+            {
+                specificRuleTestHelper.applyTx(root, saleKey, false, &accountID,
+                        ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS, TransactionResultCode::txFAILED);
+            }
+
+            SECTION("Remove")
+            {
+                specificRuleTestHelper.applyTx(root, createRuleResult.success().ruleID);
+
+                SECTION("Create")
+                {
+                    specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
+                }
+
+                SECTION("Not authorized to create")
+                {
+                    specificRuleTestHelper.applyTx(account, saleKey, false, &accountID,
+                            ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
+                }
+            }
+
+            SECTION("Not authorized to remove")
+            {
+                specificRuleTestHelper.applyTx(account, createRuleResult.success().ruleID,
+                        ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
             }
         }
 
-        SECTION("Not authorized to create")
+        SECTION("Entry type not supported")
         {
-            specificRuleTestHelper.applyTx(account, saleKey, false, nullptr,
-                    ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
+            LedgerKey key(LedgerEntryType::ATOMIC_SWAP_BID);
+            key.atomicSwapBid().bidID = 123;
+
+            auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
+                    ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED, TransactionResultCode::txFAILED);
         }
 
-        SECTION("Not authorized to remove")
+        SECTION("Sale not found")
         {
-            specificRuleTestHelper.applyTx(account, createRuleResult.success().ruleID,
-                    ManageAccountSpecificRuleResultCode::NOT_AUTHORIZED, TransactionResultCode::txFAILED);
+            LedgerKey key(LedgerEntryType::SALE);
+            key.sale().saleID = 1488;
+
+            auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
+                    ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND, TransactionResultCode::txFAILED);
         }
-    }
-
-    SECTION("Entry type not supported")
-    {
-        LedgerKey key(LedgerEntryType::ATOMIC_SWAP_BID);
-        key.atomicSwapBid().bidID = 123;
-
-        auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
-                ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED, TransactionResultCode::txFAILED);
-    }
-
-    SECTION("Sale not found")
-    {
-        LedgerKey key(LedgerEntryType::SALE);
-        key.sale().saleID = 1488;
-
-        auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
-                ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND, TransactionResultCode::txFAILED);
     }
 }

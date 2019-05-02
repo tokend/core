@@ -45,7 +45,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::STAMP, &getStampHelper()},
         {LedgerEntryType::LICENSE, &getLicenseHelper()},
         {LedgerEntryType::VOTE, &getVoteHelper()},
-        {LedgerEntryType::POLL, &getPollHelper()}
+        {LedgerEntryType::POLL, &getPollHelper()},
+        {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()}
     };
 }
 
