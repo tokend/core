@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.2.0
+
 ### Added
 
 * Close poll op frame
