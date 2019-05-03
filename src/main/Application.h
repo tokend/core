@@ -293,6 +293,7 @@ class Application
     virtual int64 getMaxInvoicesForReceiverAccount() const = 0;
     virtual int32 getKYCSuperAdminMask() const = 0;
     virtual size_t getSignerRuleIDsMaxCount() const = 0;
+    virtual uint32_t getMaxSaleRulesLength() const = 0;
 
     // Factory: create a new Application object bound to `clock`, with a local
     // copy made of `cfg`.

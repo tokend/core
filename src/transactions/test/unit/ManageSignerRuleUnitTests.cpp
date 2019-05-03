@@ -32,6 +32,7 @@
 #include "transactions/test/mocks/MockTransactionFrame.h"
 #include "transactions/test/mocks/MockAccountRuleHelper.h"
 #include "transactions/test/mocks/MockAssetHelper.h"
+#include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
 #include "transactions/test/mocks/MockBalanceHelper.h"
 #include "transactions/test/mocks/MockAccountRoleHelper.h"
 #include "transactions/test/mocks/MockAccountRuleHelper.h"

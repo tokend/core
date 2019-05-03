@@ -182,6 +182,8 @@ class Config : public std::enable_shared_from_this<Config>
 
     size_t mSignerRuleIDsMaxCount = 128;
 
+    uint32_t mMaxSaleRulesLength = 150;
+
     // overlay config
     unsigned short PEER_PORT;
     unsigned short TARGET_PEER_CONNECTIONS;

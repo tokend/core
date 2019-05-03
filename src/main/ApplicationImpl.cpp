@@ -351,6 +351,12 @@ size_t ApplicationImpl::getSignerRuleIDsMaxCount() const {
     return mConfig.mSignerRuleIDsMaxCount;
 }
 
+uint32_t
+ApplicationImpl::getMaxSaleRulesLength() const
+{
+    return mConfig.mMaxSaleRulesLength;
+}
+
 ApplicationImpl::~ApplicationImpl() {
     LOG(INFO) << "Application destructing";
     if (mProcessManager)

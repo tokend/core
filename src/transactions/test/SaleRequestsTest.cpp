@@ -346,6 +346,57 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
             saleRequest.endTime = INT64_MAX;
             saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
         }
+        SECTION("Global rule required")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_REQUIRED);
+        }
+        SECTION("EXCEEDED MAX RULES SIZE, using default max length")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    app.getMaxSaleRulesLength() + 1, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+        }
+        SECTION("EXCEEDED MAX RULES SIZE, using max length from key value")
+        {
+            uint32_t maxRuleLength(10);
+            longstring rulesKey = ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey();
+            manageKeyValueHelper.setKey(rulesKey)->setUi32Value(maxRuleLength);
+            manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    maxRuleLength + 1, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+        }
+        SECTION("GLOBAL SPECIFIC RULE DUPLICATION")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    2, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_DUPLICATION);
+        }
+        SECTION("Account not found")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    2, CreateAccountSaleRuleData(new AccountID(), false, LedgerVersion::EMPTY_VERSION));;
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::ACCOUNT_NOT_FOUND);
+        }
+        SECTION("ACCOUNT SPECIFIC RULE DUPLICATION")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    2, CreateAccountSaleRuleData(new AccountID(syndicatePubKey), false, LedgerVersion::EMPTY_VERSION));
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
+        }
     }
 
     SECTION("Review SaleCreationRequest with tasks")

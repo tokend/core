@@ -6,7 +6,7 @@
 #include "ledger/LedgerDelta.h"
 #include "database/Database.h"
 #include "ledger/SaleHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
 #include "OfferManager.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -15,11 +15,13 @@
 #include "ledger/BalanceHelperLegacy.h"
 #include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/printer.h"
+#include "ledger/AccountSpecificRuleHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
+using xdr::operator<;
 
 bool
 CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
@@ -175,21 +177,39 @@ bool CreateSaleParticipationOpFrame::isSaleActive(Database& db, LedgerManager& l
     }
 }
 
-void CreateSaleParticipationOpFrame::setErrorCode(BalanceFrame::Result lockingResult)
+bool
+CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, SaleFrame::pointer const& sale)
 {
-    switch (lockingResult) {
-        case BalanceFrame::Result::UNDERFUNDED: {
-            innerResult().code(ManageOfferResultCode::SOURCE_UNDERFUNDED);
-            return;
-        }
-        case BalanceFrame::Result::LINE_FULL: {
-            innerResult().code(ManageOfferResultCode::SOURCE_BALANCE_LOCK_OVERFLOW);
-            return;
-        }
+    switch (sale->getSaleEntry().ext.v())
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            return true;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+            break;
         default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from try lock: " << lockingResult;
-            throw std::runtime_error("Unexpected result code from try lock");
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale request version"
+                                 << static_cast<int32_t>(sale->getSaleEntry().ext.v());
+            throw std::runtime_error("Unexpected sale request version");
     }
+
+    auto& accountSpecificRule = storageHelper.getAccountSpecificRuleHelper();
+
+    auto rule = accountSpecificRule.loadRule(sale->getKey(), getSourceID());
+    if (!rule)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected specific rule to exists, sale id: "
+                                               << sale->getID() << ", account id: "
+                                               << PubKeyUtils::toStrKey(getSourceID());
+        throw std::runtime_error("Expected specific rule to exists");
+    }
+
+    if (rule->forbids())
+    {
+        innerResult().code(ManageOfferResultCode::SPECIFIC_RULE_FORBIDS);
+        return false;
+    }
+
+    return true;
 }
 
 bool CreateSaleParticipationOpFrame::doApply(Application& app,
@@ -197,6 +217,8 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
                                              LedgerManager& ledgerManager)
 {
     auto& db = app.getDatabase();
+    StorageHelperImpl storageHelper(db, &delta);
+
     auto sale = loadSaleForOffer(db, delta);
     if (!sale)
     {
@@ -210,6 +232,11 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
     }
 
     if (!isSaleActive(db, ledgerManager, sale))
+    {
+        return false;
+    }
+
+    if (!checkSaleRules(storageHelper, sale))
     {
         return false;
     }
