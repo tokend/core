@@ -44,6 +44,7 @@ class Config : public std::enable_shared_from_this<Config>
     typedef std::shared_ptr<Config> pointer;
 
     std::vector<PublicKey> getWiredKeys(LedgerVersion ledgerVersion) const;
+    std::vector<PublicKey> getDevKeys() const;
     void validateConfig();
 
     enum TestDbMode
@@ -181,6 +182,8 @@ class Config : public std::enable_shared_from_this<Config>
 
     size_t mSignerRuleIDsMaxCount = 128;
 
+    uint32_t mMaxSaleRulesLength = 150;
+
     // overlay config
     unsigned short PEER_PORT;
     unsigned short TARGET_PEER_CONNECTIONS;
@@ -250,6 +253,7 @@ class Config : public std::enable_shared_from_this<Config>
     std::string MIN_LEVEL_FOR_SENTRY = "warning";
 
     std::vector<PublicKey> WIRED_KEYS;
+    std::vector<PublicKey> DEV_LICENSE_KEYS;
 
     Config();
 

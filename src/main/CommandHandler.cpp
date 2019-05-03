@@ -567,8 +567,6 @@ CommandHandler::upgrades(std::string const& params, std::string& retStr)
         }
         p.mUpgradeTime = VirtualClock::tmToPoint(tm);
 
-        uint32 baseFee;
-        uint32 baseReserve;
         uint32 maxTxSize;
         uint32 protocolVersion;
 

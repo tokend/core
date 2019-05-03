@@ -163,6 +163,8 @@ public:
 
     virtual size_t getSignerRuleIDsMaxCount() const override;
 
+    uint32_t getMaxSaleRulesLength() const override;
+
 protected:
     std::unique_ptr<LedgerManager> mLedgerManager; // allow to change that for tests
     std::unique_ptr<Herder> mHerder; // allow to change that for tests

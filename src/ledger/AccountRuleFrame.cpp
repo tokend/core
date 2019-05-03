@@ -38,4 +38,15 @@ AccountRuleFrame::copy() const
     return EntryFrame::pointer(new AccountRuleFrame(*this));
 }
 
+AccountRuleFrame&
+AccountRuleFrame::operator=(const AccountRuleFrame& other)
+{
+    if (&other != this)
+    {
+        mAccountRuleEntry = other.mAccountRuleEntry;
+        mKey = other.mKey;
+        mKeyCalculated = other.mKeyCalculated;
+    }
+    return *this;
+}
 } // namespace stellar

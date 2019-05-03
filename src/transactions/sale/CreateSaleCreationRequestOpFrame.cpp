@@ -18,6 +18,8 @@
 #include "bucket/BucketApplicator.h"
 #include "ledger/AssetPairHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
+#include "ledger/KeyValueHelper.h"
+#include "ledger/AccountHelper.h"
 
 namespace stellar
 {
@@ -263,7 +265,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     request->setTasks(allTasks);
     
 
-    if (!isRequestValid(storageHelper, ledgerManager, request))
+    if (!isRequestValid(app, storageHelper, ledgerManager, request))
     {
         // corresponding result code is set in the called method
         return false;
@@ -320,7 +322,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
     request.body.saleCreationRequest().sequenceNumber = sequence + 1;
     requestFrame->recalculateHashRejectReason();
 
-    if (!isRequestValid(storageHelper, ledgerManager, requestFrame))
+    if (!isRequestValid(app, storageHelper, ledgerManager, requestFrame))
     {
         // corresponding result code is set
         return false;
@@ -336,7 +338,88 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 }
 
 bool
-CreateSaleCreationRequestOpFrame::isRequestValid(
+CreateSaleCreationRequestOpFrame::checkRulesDuplication(StorageHelper& storageHelper,
+        xdr::xvector<CreateAccountSaleRuleData> const& rules)
+{
+    std::unordered_set<AccountID> accountIDs;
+    bool hasGlobal = false;
+
+    for (auto const& rule : rules)
+    {
+        if (rule.accountID)
+        {
+            auto isInserted = accountIDs.insert(*rule.accountID).second;
+            if (!isInserted)
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
+                return false;
+            }
+
+            if (!storageHelper.getAccountHelper().exists(*rule.accountID))
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_NOT_FOUND);
+                return false;
+            }
+        }
+        else
+        {
+            if (hasGlobal) // only one global is allowed
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_DUPLICATION);
+                return false;
+            }
+            hasGlobal = true;
+        }
+    }
+
+    if (!hasGlobal)
+    {
+        innerResult().code(CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_REQUIRED);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool
+CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
+        StorageHelper& storageHelper, SaleCreationRequest const& request)
+{
+    switch (request.ext.v())
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            return true;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+        {
+            auto const& rules = request.ext.saleRules();
+
+            uint32_t maxRulesLength = app.getMaxSaleRulesLength();
+            auto keyValue = storageHelper.getKeyValueHelper().loadKeyValue(
+                    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey());
+
+            if (keyValue)
+            {
+                maxRulesLength = keyValue->mustGetUint32Value();
+            }
+
+            if (rules.size() > maxRulesLength)
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+                return false;
+            }
+
+            return checkRulesDuplication(storageHelper, rules);
+        }
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale creation request version"
+                                                   << static_cast<int32_t>(request.ext.v());
+            throw std::runtime_error("Unexpected sale creation request version");
+    }
+}
+
+bool
+CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
     StorageHelper& storageHelper, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
@@ -346,6 +429,11 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
     {
         innerResult().code(
             CreateSaleCreationRequestResultCode::VERSION_IS_NOT_SUPPORTED_YET);
+        return false;
+    }
+
+    if (!isSaleRulesValid(app, storageHelper, sale))
+    {
         return false;
     }
 

@@ -196,6 +196,7 @@ namespace stellar
         { LedgerEntryType::STAMP, EntryHelperLegacyImpl::Instance(LedgerEntryType::STAMP) },
         { LedgerEntryType::LICENSE, EntryHelperLegacyImpl::Instance(LedgerEntryType::LICENSE) },
         { LedgerEntryType::VOTE, EntryHelperLegacyImpl::Instance(LedgerEntryType::VOTE) },
-        { LedgerEntryType::POLL, EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL) }
+        { LedgerEntryType::POLL, EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL) },
+		{ LedgerEntryType::ACCOUNT_SPECIFIC_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_SPECIFIC_RULE) }
 	};
 }

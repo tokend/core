@@ -275,6 +275,7 @@ ApplicationImpl::getJsonInfo()
 
     info["history_failure_rate"] =
             fmt::format("{:.2}", getHistoryArchiveManager().getFailureRate());
+    info["base_exchange_name"] = getConfig().BASE_EXCHANGE_NAME;
 
     return root;
 }
@@ -348,6 +349,12 @@ int32 ApplicationImpl::getKYCSuperAdminMask() const {
 
 size_t ApplicationImpl::getSignerRuleIDsMaxCount() const {
     return mConfig.mSignerRuleIDsMaxCount;
+}
+
+uint32_t
+ApplicationImpl::getMaxSaleRulesLength() const
+{
+    return mConfig.mMaxSaleRulesLength;
 }
 
 ApplicationImpl::~ApplicationImpl() {

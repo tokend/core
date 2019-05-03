@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+* Manage account specific rule op frame
+
+## 3.2.0
+
+### Added
+
+* Close poll op frame
+* Update poll end time op frame
+* Invest fee
+* Voting tests
+
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar

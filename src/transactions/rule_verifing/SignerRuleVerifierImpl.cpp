@@ -203,6 +203,7 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::TRANSACTION:
         case LedgerEntryType::LICENSE:
         case LedgerEntryType::STAMP:
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
             return true;
         default:
             return false;

@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{916B91AB-A300-422C-B9C2-D683924DC109}</ProjectGuid>
     <RootNamespace>stellar-core</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -57,8 +57,8 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(OPENSSL_ROOT)\include;src;../../src;../../lib;../../lib/libmedida/src;../../lib/soci/src/core;../../lib/autocheck/include;../../lib/cereal/include;../../lib/asio/include;../../lib/xdrpp;../../lib/libsodium/src/libsodium/include;../..;src/generated;../../lib/gtest/googletest/include;../../lib/gtest/googlemock/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NOMINMAX;ASIO_STANDALONE;USE_POSTGRES;_WINSOCK_DEPRECATED_NO_WARNINGS;SODIUM_STATIC;ASIO_SEPARATE_COMPILATION;ASIO_ERROR_CATEGORY_NOEXCEPT=noexcept;_CRT_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;WIN32;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(OPENSSL_ROOT)\include;src;../../src;../../lib;../../lib/libmedida/src;../../lib/soci/src/core;../../lib/autocheck/include;../../lib/cereal/include;../../lib/asio/include;../../lib/xdrpp;../../lib/libsodium/src/libsodium/include;../..;src/generated;../../lib/gtest/googletest/include;$(CURL_ROOT)/include;$(PSQLROOT)/include;../../lib/gtest/googlemock/include;$(ZLIB_ROOT)/include;../../lib/crow/include;../../lib/crow;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NOMINMAX;ASIO_STANDALONE;USE_POSTGRES;_WINSOCK_DEPRECATED_NO_WARNINGS;SODIUM_STATIC;ASIO_SEPARATE_COMPILATION;ASIO_ERROR_CATEGORY_NOEXCEPT=noexcept;_CRT_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0501;WIN32;_MBCS;BUILD_TESTS;WIN32_LEAN_AND_MEAN;_WIN32_WINNT=0x0601;_CRT_NONSTDC_NO_DEPRECATE;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
       <DisableSpecificWarnings>4060;4100;4127;4324;4408;4510;4512;4582;4583;4592;4996</DisableSpecificWarnings>
@@ -70,10 +70,11 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <EnablePREfast>false</EnablePREfast>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;psapi.lib;%(AdditionalDependencies);$(PSQLROOT)\lib\libpq.lib;$(OPENSSL_ROOT)\lib\libeay32.lib</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;psapi.lib;%(AdditionalDependencies);$(PSQLROOT)\lib\libpq.lib;$(OPENSSL_ROOT)\lib\libeay32.lib;$(CURL_ROOT)\lib\libcurl_a.lib;$(ZLIB_ROOT)\lib\zlib.lib;CRYPT32.LIB;Wldap32.lib;Normaliz.lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>@echo Checking XDR</Command>
@@ -152,14 +153,26 @@
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\lib\crow\src\crow.cpp" />
+    <ClCompile Include="..\..\lib\crow\src\crow_utilities.cpp" />
     <ClCompile Include="..\..\src\bucket\Bucket.cpp" />
     <ClCompile Include="..\..\src\bucket\BucketApplicator.cpp" />
+    <ClCompile Include="..\..\src\bucket\BucketInputIterator.cpp" />
     <ClCompile Include="..\..\src\bucket\BucketList.cpp" />
     <ClCompile Include="..\..\src\bucket\BucketManagerImpl.cpp" />
-    <ClCompile Include="..\..\src\bucket\BucketTests.cpp" />
+    <ClCompile Include="..\..\src\bucket\BucketOutputIterator.cpp" />
     <ClCompile Include="..\..\src\bucket\FutureBucket.cpp" />
     <ClCompile Include="..\..\src\bucket\LedgerCmp.cpp" />
-    <ClCompile Include="..\..\src\crypto\CryptoTests.cpp" />
+    <ClCompile Include="..\..\src\bucket\PublishQueueBuckets.cpp" />
+    <ClCompile Include="..\..\src\bucket\test\BucketTests.cpp" />
+    <ClCompile Include="..\..\src\catchup\ApplyBucketsWork.cpp" />
+    <ClCompile Include="..\..\src\catchup\ApplyLedgerChainWork.cpp" />
+    <ClCompile Include="..\..\src\catchup\CatchupConfiguration.cpp" />
+    <ClCompile Include="..\..\src\catchup\CatchupManagerImpl.cpp" />
+    <ClCompile Include="..\..\src\catchup\CatchupWork.cpp" />
+    <ClCompile Include="..\..\src\catchup\test\CatchupWorkTests.cpp" />
+    <ClCompile Include="..\..\src\catchup\VerifyLedgerChainWork.cpp" />
+    <ClCompile Include="..\..\src\crypto\ByteSliceHasher.cpp" />
     <ClCompile Include="..\..\src\crypto\ECDH.cpp" />
     <ClCompile Include="..\..\src\crypto\Hex.cpp" />
     <ClCompile Include="..\..\src\crypto\Random.cpp" />
@@ -167,26 +180,58 @@
     <ClCompile Include="..\..\src\crypto\SecretKey.cpp" />
     <ClCompile Include="..\..\src\crypto\StrKey.cpp" />
     <ClCompile Include="..\..\src\database\Database.cpp" />
-    <ClCompile Include="..\..\src\database\DatabaseTests.cpp" />
+    <ClCompile Include="..\..\src\database\DatabaseConnectionString.cpp" />
+    <ClCompile Include="..\..\src\database\DatabaseUtils.cpp" />
     <ClCompile Include="..\..\src\database\Marshaler.cpp" />
     <ClCompile Include="..\..\src\herder\Herder.cpp" />
     <ClCompile Include="..\..\src\herder\HerderImpl.cpp" />
-    <ClCompile Include="..\..\src\herder\HerderTests.cpp" />
+    <ClCompile Include="..\..\src\herder\HerderPersistenceImpl.cpp" />
+    <ClCompile Include="..\..\src\herder\HerderSCPDriver.cpp" />
+    <ClCompile Include="..\..\src\herder\HerderUtils.cpp" />
     <ClCompile Include="..\..\src\herder\LedgerCloseData.cpp" />
     <ClCompile Include="..\..\src\herder\PendingEnvelopes.cpp" />
     <ClCompile Include="..\..\src\herder\TxSetFrame.cpp" />
+    <ClCompile Include="..\..\src\herder\Upgrades.cpp" />
+    <ClCompile Include="..\..\src\historywork\BatchDownloadWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\BatchWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\BucketDownloadWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\DownloadBucketsWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\FetchRecentQsetsWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\GetAndUnzipRemoteFileWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\GetHistoryArchiveStateWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\GetRemoteFileWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\GunzipFileWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\GzipFileWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\MakeRemoteDirWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\Progress.cpp" />
+    <ClCompile Include="..\..\src\historywork\PublishWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\PutHistoryArchiveStateWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\PutRemoteFileWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\PutSnapshotFilesWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\RepairMissingBucketsWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\ResolveSnapshotWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\RunCommandWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\VerifyBucketWork.cpp" />
+    <ClCompile Include="..\..\src\historywork\WriteSnapshotWork.cpp" />
     <ClCompile Include="..\..\src\history\FileTransferInfo.cpp" />
     <ClCompile Include="..\..\src\history\HistoryArchive.cpp" />
+    <ClCompile Include="..\..\src\history\HistoryArchiveManager.cpp" />
     <ClCompile Include="..\..\src\history\HistoryManagerImpl.cpp" />
-    <ClCompile Include="..\..\src\history\HistoryTests.cpp" />
-    <ClCompile Include="..\..\src\history\HistoryWork.cpp" />
     <ClCompile Include="..\..\src\history\InferredQuorum.cpp" />
-    <ClCompile Include="..\..\src\history\InferredQuorumTests.cpp" />
+    <ClCompile Include="..\..\src\history\InferredQuorumUtils.cpp" />
     <ClCompile Include="..\..\src\history\StateSnapshot.cpp" />
+    <ClCompile Include="..\..\src\history\test\HistoryTests.cpp" />
+    <ClCompile Include="..\..\src\history\test\HistoryTestsUtils.cpp" />
+    <ClCompile Include="..\..\src\history\test\InferredQuorumTests.cpp" />
+    <ClCompile Include="..\..\src\history\test\SerializeTests.cpp" />
+    <ClCompile Include="..\..\src\invariant\BucketListIsConsistentWithDatabase.cpp" />
     <ClCompile Include="..\..\src\invariant\CacheIsConsistentWithDatabase.cpp" />
-    <ClCompile Include="..\..\src\invariant\Invariant.cpp" />
     <ClCompile Include="..\..\src\invariant\InvariantDoesNotHold.cpp" />
+    <ClCompile Include="..\..\src\invariant\InvariantManagerImpl.cpp" />
     <ClCompile Include="..\..\src\invariant\Invariants.cpp" />
+    <ClCompile Include="..\..\src\invariant\test\BucketListIsConsistentWithDatabaseTests.cpp" />
+    <ClCompile Include="..\..\src\invariant\test\InvariantTests.cpp" />
+    <ClCompile Include="..\..\src\invariant\test\InvariantTestUtils.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountHelperLegacy.cpp" />
@@ -210,6 +255,7 @@
     <ClCompile Include="..\..\src\ledger\BalanceFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\BalanceHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\BalanceHelperLegacy.cpp" />
+    <ClCompile Include="..\..\src\ledger\CheckpointRange.cpp" />
     <ClCompile Include="..\..\src\ledger\ContractFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\ContractHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\EntryFrame.cpp" />
@@ -229,14 +275,9 @@
     <ClCompile Include="..\..\src\ledger\KeyValueHelperLegacy.cpp" />
     <ClCompile Include="..\..\src\ledger\LedgerDeltaImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\LedgerDeltaTests.cpp" />
-    <ClCompile Include="..\..\src\ledger\LedgerEntryTests.cpp" />
-    <ClCompile Include="..\..\src\ledger\LedgerHeaderFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\LedgerHeaderFrameImpl.cpp" />
-    <ClCompile Include="..\..\src\ledger\LedgerHeaderTests.cpp" />
+    <ClCompile Include="..\..\src\ledger\LedgerHeaderUtils.cpp" />
     <ClCompile Include="..\..\src\ledger\LedgerManagerImpl.cpp" />
-    <ClCompile Include="..\..\src\ledger\LedgerPerformanceTests.cpp" />
-    <ClCompile Include="..\..\src\ledger\LedgerTests.cpp" />
-    <ClCompile Include="..\..\src\ledger\LedgerTestUtils.cpp" />
     <ClCompile Include="..\..\lib\asio\src\asio.cpp" />
     <ClCompile Include="..\..\lib\http\connection.cpp" />
     <ClCompile Include="..\..\lib\http\connection_manager.cpp" />
@@ -284,6 +325,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerRange.cpp" />
     <ClCompile Include="..\..\src\ledger\LicenseFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\LicenseHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\LicenseSignatureHelperImpl.cpp" />
@@ -293,6 +335,8 @@
     <ClCompile Include="..\..\src\ledger\OfferHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\PendingStatisticsFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\PendingStatisticsHelper.cpp" />
+    <ClCompile Include="..\..\src\ledger\PollFrame.cpp" />
+    <ClCompile Include="..\..\src\ledger\PollHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\ReferenceFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\ReferenceHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\ReviewableRequestFrame.cpp" />
@@ -315,34 +359,59 @@
     <ClCompile Include="..\..\src\ledger\StatisticsV2Frame.cpp" />
     <ClCompile Include="..\..\src\ledger\StatisticsV2Helper.cpp" />
     <ClCompile Include="..\..\src\ledger\StorageHelperImpl.cpp" />
+    <ClCompile Include="..\..\src\ledger\SyncingLedgerChain.cpp" />
+    <ClCompile Include="..\..\src\ledger\test\LedgerHeaderTests.cpp" />
+    <ClCompile Include="..\..\src\ledger\test\LedgerManagerTests.cpp" />
+    <ClCompile Include="..\..\src\ledger\test\LedgerTests.cpp" />
+    <ClCompile Include="..\..\src\ledger\test\LedgerTestUtils.cpp" />
+    <ClCompile Include="..\..\src\ledger\test\LedgerTxnTests.cpp" />
+    <ClCompile Include="..\..\src\ledger\test\SyncingLedgerChainTests.cpp" />
+    <ClCompile Include="..\..\src\ledger\VoteFrame.cpp" />
+    <ClCompile Include="..\..\src\ledger\VoteHelperImpl.cpp" />
     <ClCompile Include="..\..\src\main\Application.cpp" />
     <ClCompile Include="..\..\src\main\ApplicationImpl.cpp" />
+    <ClCompile Include="..\..\src\main\ApplicationUtils.cpp" />
+    <ClCompile Include="..\..\src\main\CommandLine.cpp" />
+    <ClCompile Include="..\..\src\main\DeprecatedCommandLine.cpp" />
     <ClCompile Include="..\..\src\main\dumpxdr.cpp" />
-    <ClCompile Include="..\..\src\main\fuzz.cpp" />
-    <ClCompile Include="..\..\src\main\NtpSynchronizationChecker.cpp" />
+    <ClCompile Include="..\..\src\main\Maintainer.cpp" />
     <ClCompile Include="..\..\src\main\PersistentState.cpp" />
     <ClCompile Include="..\..\src\main\ExternalQueue.cpp" />
+    <ClCompile Include="..\..\src\main\StellarCoreVersionWin.cpp" />
+    <ClCompile Include="..\..\src\main\test\ApplicationTests.cpp" />
+    <ClCompile Include="..\..\src\main\test\ConfigTests.cpp" />
+    <ClCompile Include="..\..\src\main\test\ExternalQueueTests.cpp" />
+    <ClCompile Include="..\..\src\main\test\LruCacheTests.cpp" />
     <ClCompile Include="..\..\src\overlay\BanManagerImpl.cpp" />
     <ClCompile Include="..\..\src\overlay\FloodTests.cpp" />
     <ClCompile Include="..\..\src\overlay\ItemFetcherTests.cpp" />
     <ClCompile Include="..\..\src\overlay\LoadManager.cpp" />
-    <ClCompile Include="..\..\src\overlay\OverlayManagerTests.cpp" />
     <ClCompile Include="..\..\src\overlay\PeerAuth.cpp" />
-    <ClCompile Include="..\..\src\overlay\PeerRecord.cpp" />
-    <ClCompile Include="..\..\src\overlay\PeerRecordTests.cpp" />
-    <ClCompile Include="..\..\src\overlay\TCPPeerTests.cpp" />
+    <ClCompile Include="..\..\src\overlay\PeerBareAddress.cpp" />
+    <ClCompile Include="..\..\src\overlay\PeerManager.cpp" />
+    <ClCompile Include="..\..\src\overlay\PeerSharedKeyId.cpp" />
+    <ClCompile Include="..\..\src\overlay\RandomPeerSource.cpp" />
+    <ClCompile Include="..\..\src\overlay\Tracker.cpp" />
     <ClCompile Include="..\..\src\scp\BallotProtocol.cpp" />
     <ClCompile Include="..\..\src\scp\LocalNode.cpp" />
     <ClCompile Include="..\..\src\scp\NominationProtocol.cpp" />
+    <ClCompile Include="..\..\src\scp\QuorumSetUtils.cpp" />
     <ClCompile Include="..\..\src\scp\SCP.cpp" />
     <ClCompile Include="..\..\src\scp\SCPDriver.cpp" />
-    <ClCompile Include="..\..\src\scp\SCPTests.cpp" />
-    <ClCompile Include="..\..\src\scp\SCPUnitTests.cpp" />
     <ClCompile Include="..\..\src\scp\Slot.cpp" />
+    <ClCompile Include="..\..\src\scp\test\QuorumSetTests.cpp" />
+    <ClCompile Include="..\..\src\scp\test\SCPTests.cpp" />
+    <ClCompile Include="..\..\src\scp\test\SCPUnitTests.cpp" />
     <ClCompile Include="..\..\src\simulation\CoreTests.cpp" />
     <ClCompile Include="..\..\src\simulation\LoadGenerator.cpp" />
     <ClCompile Include="..\..\src\simulation\Simulation.cpp" />
     <ClCompile Include="..\..\src\simulation\Topologies.cpp" />
+    <ClCompile Include="..\..\src\test\fuzz.cpp" />
+    <ClCompile Include="..\..\src\test\test.cpp" />
+    <ClCompile Include="..\..\src\test\TestAccount.cpp" />
+    <ClCompile Include="..\..\src\test\TestExceptions.cpp" />
+    <ClCompile Include="..\..\src\test\TestPrinter.cpp" />
+    <ClCompile Include="..\..\src\test\TestUtils.cpp" />
     <ClCompile Include="..\..\src\transactions\AccountManager.cpp" />
     <ClCompile Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.cpp" />
@@ -397,6 +466,7 @@
     <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewContractRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewCreatePollRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewInvoiceRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewIssuanceCreationRequestOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewLimitsUpdateRequestOpFrame.cpp" />
@@ -431,6 +501,7 @@
     <ClCompile Include="..\..\src\transactions\test\FlexibleFeesTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\IssuanceTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\KVLimitsTest.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\LicenseTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\LimitsUpdateTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\ManageAssetPairTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\ManageAssetTests.cpp" />
@@ -443,6 +514,8 @@
     <ClCompile Include="..\..\src\transactions\test\OfferTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\PaymentV2Tests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\PayoutTests.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\PollTests.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\SaleAndIssuanceTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleRequestsTest.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleTests.cpp" />
     <ClCompile Include="..\..\src\transactions\test\SaleWithSeveralQuotesTests.cpp" />
@@ -504,51 +577,71 @@
     <ClCompile Include="..\..\src\transactions\test\WithdrawalTests.cpp" />
     <ClCompile Include="..\..\src\transactions\TransactionFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\TransactionFrameImpl.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\CancelPollRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\CreatePollRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\ManageCreatePollRequestOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\CancelPollOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\ClosePollOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\ManagePollOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_vote\CreateVoteOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_vote\DeleteVoteOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\voting\manage_vote\ManageVoteOpFrame.cpp" />
     <ClCompile Include="..\..\src\util\BitsetEnumerator.cpp" />
-    <ClCompile Include="..\..\src\util\BitsetEnumeratorTests.cpp" />
     <ClCompile Include="..\..\src\util\Fs.cpp" />
     <ClCompile Include="..\..\src\util\GlobalChecks.cpp" />
     <ClCompile Include="..\..\src\util\HashOfHash.cpp" />
     <ClCompile Include="..\..\src\util\Math.cpp" />
-    <ClCompile Include="..\..\src\util\NtpClient.cpp" />
-    <ClCompile Include="..\..\src\util\NtpWork.cpp" />
+    <ClCompile Include="..\..\src\util\MetricResetter.cpp" />
+    <ClCompile Include="..\..\src\util\SecretValue.cpp" />
     <ClCompile Include="..\..\src\util\StatusManager.cpp" />
     <ClCompile Include="..\..\src\util\TmpDir.cpp" />
     <ClCompile Include="..\..\src\util\Timer.cpp" />
-    <ClCompile Include="..\..\src\util\TimerTests.cpp" />
     <ClCompile Include="..\..\src\util\types.cpp" />
     <ClCompile Include="..\..\src\main\CommandHandler.cpp" />
     <ClCompile Include="..\..\src\main\Config.cpp" />
     <ClCompile Include="..\..\src\main\main.cpp" />
-    <ClCompile Include="..\..\src\main\test.cpp" />
     <ClCompile Include="..\..\src\overlay\Floodgate.cpp" />
     <ClCompile Include="..\..\src\overlay\ItemFetcher.cpp" />
     <ClCompile Include="..\..\src\overlay\LoopbackPeer.cpp" />
-    <ClCompile Include="..\..\src\overlay\OverlayTests.cpp" />
     <ClCompile Include="..\..\src\overlay\Peer.cpp" />
     <ClCompile Include="..\..\src\overlay\PeerDoor.cpp" />
     <ClCompile Include="..\..\src\overlay\OverlayManagerImpl.cpp" />
     <ClCompile Include="..\..\src\overlay\TCPPeer.cpp" />
     <ClCompile Include="..\..\src\process\ProcessManagerImpl.cpp" />
-    <ClCompile Include="..\..\src\process\ProcessTests.cpp" />
     <ClCompile Include="..\..\src\util\Logging.cpp" />
-    <ClCompile Include="..\..\src\util\Uint128Tests.cpp" />
+    <ClCompile Include="..\..\src\util\ValidJsonTests.cpp" />
     <ClCompile Include="..\..\src\work\Work.cpp" />
     <ClCompile Include="..\..\src\work\WorkManagerImpl.cpp" />
     <ClCompile Include="..\..\src\work\WorkParent.cpp" />
-    <ClCompile Include="..\..\src\work\WorkTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\lib\catcher.cpp" />
     <ClInclude Include="..\..\lib\catch.hpp" />
+    <ClInclude Include="..\..\lib\clara.hpp" />
+    <ClInclude Include="..\..\lib\crow\src\crow_config.hpp" />
+    <ClInclude Include="..\..\lib\crow\src\crow_config_win.hpp" />
+    <ClInclude Include="..\..\lib\crow\src\crow_utilities.hpp" />
     <ClInclude Include="..\..\src\bucket\Bucket.h" />
     <ClInclude Include="..\..\src\bucket\BucketApplicator.h" />
+    <ClInclude Include="..\..\src\bucket\BucketInputIterator.h" />
     <ClInclude Include="..\..\src\bucket\BucketList.h" />
     <ClInclude Include="..\..\src\bucket\BucketManager.h" />
     <ClInclude Include="..\..\src\bucket\BucketManagerImpl.h" />
+    <ClInclude Include="..\..\src\bucket\BucketOutputIterator.h" />
     <ClInclude Include="..\..\src\bucket\FutureBucket.h" />
     <ClInclude Include="..\..\src\bucket\LedgerCmp.h" />
+    <ClInclude Include="..\..\src\bucket\PublishQueueBuckets.h" />
+    <ClInclude Include="..\..\src\catchup\ApplyBucketsWork.h" />
+    <ClInclude Include="..\..\src\catchup\ApplyLedgerChainWork.h" />
+    <ClInclude Include="..\..\src\catchup\CatchupConfiguration.h" />
+    <ClInclude Include="..\..\src\catchup\CatchupManager.h" />
+    <ClInclude Include="..\..\src\catchup\CatchupManagerImpl.h" />
+    <ClInclude Include="..\..\src\catchup\CatchupWork.h" />
+    <ClInclude Include="..\..\src\catchup\test\CatchupWorkTests.h" />
+    <ClInclude Include="..\..\src\catchup\VerifyLedgerChainWork.h" />
     <ClInclude Include="..\..\src\crypto\ByteSlice.h" />
+    <ClInclude Include="..\..\src\crypto\ByteSliceHasher.h" />
     <ClInclude Include="..\..\src\crypto\ECDH.h" />
     <ClInclude Include="..\..\src\crypto\Hex.h" />
     <ClInclude Include="..\..\src\crypto\Random.h" />
@@ -556,14 +649,49 @@
     <ClInclude Include="..\..\src\crypto\SecretKey.h" />
     <ClInclude Include="..\..\src\crypto\StrKey.h" />
     <ClInclude Include="..\..\src\database\Database.h" />
+    <ClInclude Include="..\..\src\database\DatabaseConnectionString.h" />
+    <ClInclude Include="..\..\src\database\DatabaseTypeSpecificOperation.h" />
+    <ClInclude Include="..\..\src\database\DatabaseUtils.h" />
     <ClInclude Include="..\..\src\database\Marshaler.h" />
-    <ClInclude Include="..\..\src\history\HistoryWork.h" />
+    <ClInclude Include="..\..\src\herder\HerderPersistence.h" />
+    <ClInclude Include="..\..\src\herder\HerderPersistenceImpl.h" />
+    <ClInclude Include="..\..\src\herder\HerderSCPDriver.h" />
+    <ClInclude Include="..\..\src\herder\HerderUtils.h" />
+    <ClInclude Include="..\..\src\herder\Upgrades.h" />
+    <ClInclude Include="..\..\src\historywork\BatchDownloadWork.h" />
+    <ClInclude Include="..\..\src\historywork\BatchWork.h" />
+    <ClInclude Include="..\..\src\historywork\BucketDownloadWork.h" />
+    <ClInclude Include="..\..\src\historywork\DownloadBucketsWork.h" />
+    <ClInclude Include="..\..\src\historywork\FetchRecentQsetsWork.h" />
+    <ClInclude Include="..\..\src\historywork\GetAndUnzipRemoteFileWork.h" />
+    <ClInclude Include="..\..\src\historywork\GetHistoryArchiveStateWork.h" />
+    <ClInclude Include="..\..\src\historywork\GetRemoteFileWork.h" />
+    <ClInclude Include="..\..\src\historywork\GunzipFileWork.h" />
+    <ClInclude Include="..\..\src\historywork\GzipFileWork.h" />
+    <ClInclude Include="..\..\src\historywork\MakeRemoteDirWork.h" />
+    <ClInclude Include="..\..\src\historywork\Progress.h" />
+    <ClInclude Include="..\..\src\historywork\PublishWork.h" />
+    <ClInclude Include="..\..\src\historywork\PutHistoryArchiveStateWork.h" />
+    <ClInclude Include="..\..\src\historywork\PutRemoteFileWork.h" />
+    <ClInclude Include="..\..\src\historywork\PutSnapshotFilesWork.h" />
+    <ClInclude Include="..\..\src\historywork\RepairMissingBucketsWork.h" />
+    <ClInclude Include="..\..\src\historywork\ResolveSnapshotWork.h" />
+    <ClInclude Include="..\..\src\historywork\RunCommandWork.h" />
+    <ClInclude Include="..\..\src\historywork\VerifyBucketWork.h" />
+    <ClInclude Include="..\..\src\historywork\WriteSnapshotWork.h" />
+    <ClInclude Include="..\..\src\history\HistoryArchiveManager.h" />
     <ClInclude Include="..\..\src\history\InferredQuorum.h" />
+    <ClInclude Include="..\..\src\history\InferredQuorumUtils.h" />
     <ClInclude Include="..\..\src\history\StateSnapshot.h" />
+    <ClInclude Include="..\..\src\history\test\HistoryTestsUtils.h" />
+    <ClInclude Include="..\..\src\invariant\BucketListIsConsistentWithDatabase.h" />
     <ClInclude Include="..\..\src\invariant\CacheIsConsistentWithDatabase.h" />
     <ClInclude Include="..\..\src\invariant\Invariant.h" />
     <ClInclude Include="..\..\src\invariant\InvariantDoesNotHold.h" />
+    <ClInclude Include="..\..\src\invariant\InvariantManager.h" />
+    <ClInclude Include="..\..\src\invariant\InvariantManagerImpl.h" />
     <ClInclude Include="..\..\src\invariant\Invariants.h" />
+    <ClInclude Include="..\..\src\invariant\test\InvariantTestUtils.h" />
     <ClInclude Include="..\..\src\ledger\AccountFrame.h" />
     <ClInclude Include="..\..\src\ledger\AccountHelper.h" />
     <ClInclude Include="..\..\src\ledger\AccountHelperImpl.h" />
@@ -592,6 +720,7 @@
     <ClInclude Include="..\..\src\ledger\BalanceHelper.h" />
     <ClInclude Include="..\..\src\ledger\BalanceHelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\BalanceHelperLegacy.h" />
+    <ClInclude Include="..\..\src\ledger\CheckpointRange.h" />
     <ClInclude Include="..\..\src\ledger\ContractFrame.h" />
     <ClInclude Include="..\..\src\ledger\ContractHelper.h" />
     <ClInclude Include="..\..\src\ledger\EntryFrame.h" />
@@ -614,11 +743,13 @@
     <ClInclude Include="..\..\src\ledger\KeyValueHelperLegacy.h" />
     <ClInclude Include="..\..\src\ledger\LedgerDelta.h" />
     <ClInclude Include="..\..\src\ledger\LedgerDeltaImpl.h" />
+    <ClInclude Include="..\..\src\ledger\LedgerHashUtils.h" />
     <ClInclude Include="..\..\src\ledger\LedgerHeaderFrame.h" />
     <ClInclude Include="..\..\src\ledger\LedgerHeaderFrameImpl.h" />
+    <ClInclude Include="..\..\src\ledger\LedgerHeaderUtils.h" />
     <ClInclude Include="..\..\src\ledger\LedgerManager.h" />
     <ClInclude Include="..\..\src\ledger\LedgerManagerImpl.h" />
-    <ClInclude Include="..\..\src\ledger\LedgerTestUtils.h" />
+    <ClInclude Include="..\..\src\ledger\LedgerRange.h" />
     <ClInclude Include="..\..\src\ledger\LicenseFrame.h" />
     <ClInclude Include="..\..\src\ledger\LicenseHelper.h" />
     <ClInclude Include="..\..\src\ledger\LicenseHelperImpl.h" />
@@ -630,6 +761,9 @@
     <ClInclude Include="..\..\src\ledger\OfferHelper.h" />
     <ClInclude Include="..\..\src\ledger\PendingStatisticsFrame.h" />
     <ClInclude Include="..\..\src\ledger\PendingStatisticsHelper.h" />
+    <ClInclude Include="..\..\src\ledger\PollFrame.h" />
+    <ClInclude Include="..\..\src\ledger\PollHelper.h" />
+    <ClInclude Include="..\..\src\ledger\PollHelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\ReferenceFrame.h" />
     <ClInclude Include="..\..\src\ledger\ReferenceHelper.h" />
     <ClInclude Include="..\..\src\ledger\ReviewableRequestFrame.h" />
@@ -656,12 +790,25 @@
     <ClInclude Include="..\..\src\ledger\StatisticsV2Helper.h" />
     <ClInclude Include="..\..\src\ledger\StorageHelper.h" />
     <ClInclude Include="..\..\src\ledger\StorageHelperImpl.h" />
+    <ClInclude Include="..\..\src\ledger\SyncingLedgerChain.h" />
+    <ClInclude Include="..\..\src\ledger\test\LedgerTestUtils.h" />
+    <ClInclude Include="..\..\src\ledger\VoteFrame.h" />
+    <ClInclude Include="..\..\src\ledger\VoteHelper.h" />
+    <ClInclude Include="..\..\src\ledger\VoteHelperImpl.h" />
+    <ClInclude Include="..\..\src\main\ApplicationUtils.h" />
+    <ClInclude Include="..\..\src\main\CommandLine.h" />
+    <ClInclude Include="..\..\src\main\DeprecatedCommandLine.h" />
     <ClInclude Include="..\..\src\main\ExternalQueue.h" />
-    <ClInclude Include="..\..\src\main\NtpSynchronizationChecker.h" />
+    <ClInclude Include="..\..\src\main\Maintainer.h" />
+    <ClInclude Include="..\..\src\main\StellarCoreVersion.h" />
     <ClInclude Include="..\..\src\overlay\BanManager.h" />
     <ClInclude Include="..\..\src\overlay\BanManagerImpl.h" />
     <ClInclude Include="..\..\src\overlay\LoadManager.h" />
     <ClInclude Include="..\..\src\overlay\PeerAuth.h" />
+    <ClInclude Include="..\..\src\overlay\PeerBareAddress.h" />
+    <ClInclude Include="..\..\src\overlay\PeerManager.h" />
+    <ClInclude Include="..\..\src\overlay\PeerSharedKeyId.h" />
+    <ClInclude Include="..\..\src\overlay\RandomPeerSource.h" />
     <ClInclude Include="..\..\src\overlay\StellarXDR.h" />
     <ClInclude Include="..\..\src\herder\HerderImpl.h" />
     <ClInclude Include="..\..\src\herder\Herder.h" />
@@ -693,9 +840,7 @@
     <ClInclude Include="..\..\src\main\CommandHandler.h" />
     <ClInclude Include="..\..\src\main\Config.h" />
     <ClInclude Include="..\..\src\main\dumpxdr.h" />
-    <ClInclude Include="..\..\src\main\fuzz.h" />
     <ClInclude Include="..\..\src\main\PersistentState.h" />
-    <ClInclude Include="..\..\src\main\test.h" />
     <ClInclude Include="..\..\src\overlay\Floodgate.h" />
     <ClInclude Include="..\..\src\overlay\ItemFetcher.h" />
     <ClInclude Include="..\..\src\overlay\LoopbackPeer.h" />
@@ -703,19 +848,28 @@
     <ClInclude Include="..\..\src\overlay\Peer.h" />
     <ClInclude Include="..\..\src\overlay\PeerDoor.h" />
     <ClInclude Include="..\..\src\overlay\OverlayManagerImpl.h" />
-    <ClInclude Include="..\..\src\overlay\PeerRecord.h" />
     <ClInclude Include="..\..\src\overlay\TCPPeer.h" />
+    <ClInclude Include="..\..\src\overlay\Tracker.h" />
     <ClInclude Include="..\..\src\process\ProcessManager.h" />
     <ClInclude Include="..\..\src\process\ProcessManagerImpl.h" />
     <ClInclude Include="..\..\src\scp\BallotProtocol.h" />
     <ClInclude Include="..\..\src\scp\LocalNode.h" />
     <ClInclude Include="..\..\src\scp\NominationProtocol.h" />
+    <ClInclude Include="..\..\src\scp\QuorumSetUtils.h" />
     <ClInclude Include="..\..\src\scp\SCP.h" />
     <ClInclude Include="..\..\src\scp\SCPDriver.h" />
     <ClInclude Include="..\..\src\scp\Slot.h" />
     <ClInclude Include="..\..\src\simulation\LoadGenerator.h" />
     <ClInclude Include="..\..\src\simulation\Simulation.h" />
     <ClInclude Include="..\..\src\simulation\Topologies.h" />
+    <ClInclude Include="..\..\src\test\fuzz.h" />
+    <ClInclude Include="..\..\src\test\SimpleTestReporter.h" />
+    <ClInclude Include="..\..\src\test\test.h" />
+    <ClInclude Include="..\..\src\test\TestAccount.h" />
+    <ClInclude Include="..\..\src\test\TestExceptions.h" />
+    <ClInclude Include="..\..\src\test\TestPrinter.h" />
+    <ClInclude Include="..\..\src\test\TestUtils.h" />
+    <ClInclude Include="..\..\src\test\test_marshaler.h" />
     <ClInclude Include="..\..\src\transactions\AccountManager.h" />
     <ClInclude Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.h" />
@@ -770,6 +924,7 @@
     <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewContractRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewCreatePollRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewInvoiceRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewIssuanceCreationRequestOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\review_request\ReviewLimitsUpdateRequestOpFrame.h" />
@@ -867,25 +1022,40 @@
     <ClInclude Include="..\..\src\transactions\test\TxTests.h" />
     <ClInclude Include="..\..\src\transactions\TransactionFrame.h" />
     <ClInclude Include="..\..\src\transactions\TransactionFrameImpl.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\CancelPollRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\CreatePollRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\ManageCreatePollRequestOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\CancelPollOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\ClosePollOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\ManagePollOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_vote\CreateVoteOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_vote\DeleteVoteOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\voting\manage_vote\ManageVoteOpFrame.h" />
+    <ClInclude Include="..\..\src\util\Algoritm.h" />
     <ClInclude Include="..\..\src\util\asio.h" />
     <ClInclude Include="..\..\lib\util\basen.h" />
     <ClInclude Include="..\..\lib\util\crc16.h" />
     <ClInclude Include="..\..\src\util\BitsetEnumerator.h" />
+    <ClInclude Include="..\..\src\util\crow.h" />
+    <ClInclude Include="..\..\src\util\Decoder.h" />
     <ClInclude Include="..\..\src\util\Fs.h" />
     <ClInclude Include="..\..\src\util\GlobalChecks.h" />
     <ClInclude Include="..\..\src\util\HashOfHash.h" />
     <ClInclude Include="..\..\src\util\Logging.h" />
+    <ClInclude Include="..\..\src\util\LogSlowExecution.h" />
     <ClInclude Include="..\..\src\util\make_unique.h" />
     <ClInclude Include="..\..\src\util\Math.h" />
+    <ClInclude Include="..\..\src\util\MetricResetter.h" />
     <ClInclude Include="..\..\src\util\must_use.h" />
     <ClInclude Include="..\..\src\util\NonCopyable.h" />
-    <ClInclude Include="..\..\src\util\NtpClient.h" />
-    <ClInclude Include="..\..\src\util\NtpWork.h" />
     <ClInclude Include="..\..\src\util\optional.h" />
+    <ClInclude Include="..\..\src\util\SecretValue.h" />
     <ClInclude Include="..\..\src\util\StatusManager.h" />
     <ClInclude Include="..\..\src\util\TmpDir.h" />
     <ClInclude Include="..\..\src\util\Timer.h" />
     <ClInclude Include="..\..\src\util\types.h" />
+    <ClInclude Include="..\..\src\util\XDROperators.h" />
     <ClInclude Include="..\..\src\util\XDRStream.h" />
     <ClInclude Include="..\..\src\work\Work.h" />
     <ClInclude Include="..\..\src\work\WorkManager.h" />

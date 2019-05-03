@@ -39,7 +39,7 @@ ManageOfferOpFrame* ManageOfferOpFrame::make(Operation const& op,
             return new DeleteOfferOpFrame(op, res, parentTx);
         }
 
-        return new CreateOfferOpFrame(op, res, parentTx);
+        return new CreateOfferOpFrame(op, res, parentTx, FeeType::OFFER_FEE);
     }
 
     if (manageOffer.amount == 0)

@@ -22,7 +22,7 @@ ManageCreatePollRequestOpFrame::makeHelper(Operation const& op, OperationResult&
         case ManageCreatePollRequestAction::CANCEL:
             return std::make_shared<CancelPollRequestOpFrame>(op, res, tx);
         default:
-            throw std::runtime_error("Unexpected action in manage asset op");
+            throw std::runtime_error("Unexpected action in manage create poll request op");
     }
 }
 

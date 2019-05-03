@@ -40,6 +40,7 @@ set(NOT_COMMON_SOURCE_FILES
         ledger/SignerRoleHelper.h
         ledger/KeyValueHelper.h
         ledger/PollHelper.h
+        ledger/AccountSpecificRuleHelper.h
         history/HistoryManager.h
         overlay/BanManager.h
         overlay/StellarXDR.h

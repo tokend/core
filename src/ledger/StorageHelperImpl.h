@@ -66,6 +66,7 @@ class StorageHelperImpl : public StorageHelper
     StampHelper& getStampHelper() override;
     VoteHelper& getVoteHelper() override;
     PollHelper& getPollHelper() override;
+    AccountSpecificRuleHelper& getAccountSpecificRuleHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -93,5 +94,6 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<StampHelper> mStampHelper;
     std::unique_ptr<VoteHelper> mVoteHelper;
     std::unique_ptr<PollHelper> mPollHelper;
+    std::unique_ptr<AccountSpecificRuleHelper> mAccountSpecificRuleHelper;
 };
 } // namespace stellar

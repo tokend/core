@@ -163,7 +163,6 @@ void CheckSaleStateOpFrame::cleanupIssuerBalance(SaleFrame::pointer sale, Ledger
     AssetHelperLegacy::Instance()->storeChange(delta, db, asset->mEntry);
 }
 
-
 bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& app,
     LedgerManager& lm, LedgerDelta& delta, Database& db)
 {
@@ -198,6 +197,9 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     }
 
     SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
+
+    StorageHelperImpl storageHelper(db, &delta);
+    ManageSaleOpFrame::removeSaleRules(storageHelper, sale->getKey());
 
     cleanupIssuerBalance(sale, lm, db, delta, balanceBefore);
 
@@ -242,7 +244,8 @@ CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(const AccountFrame::pointer
                                                      AssetCode const& asset, int64_t amount,
                                                      LedgerManager& lm, Database& db) const
 {
-    return FeeManager::calculateCapitalDeploymentFeeForAccount(saleOwnerAccount, asset, amount, db);
+    return FeeManager::calculateFeeForAccount(saleOwnerAccount, FeeType::CAPITAL_DEPLOYMENT_FEE, asset,
+                                  FeeFrame::SUBTYPE_ANY, amount, db);
 }
 
 ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
@@ -281,8 +284,7 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::MANAGE_OFFER);
     // need to directly create CreateOfferOpFrame to bypass validation of CreateSaleParticipationOpFrame
-    CreateOfferOpFrame manageOfferOpFrame(op, opRes, mParentTx);
-    manageOfferOpFrame.isCapitalDeployment = true;
+    CreateOfferOpFrame manageOfferOpFrame(op, opRes, mParentTx, FeeType::CAPITAL_DEPLOYMENT_FEE);
     manageOfferOpFrame.setSourceAccountPtr(saleOwnerAccount);
     if (!manageOfferOpFrame.doCheckValid(app) || !manageOfferOpFrame.doApply(app, delta, lm))
     {

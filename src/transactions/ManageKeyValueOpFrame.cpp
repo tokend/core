@@ -33,6 +33,7 @@ namespace stellar
         "atomic_swap_tasks";
     char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix =
         "withdraw_lower_bound";
+    char const* ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
     char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
@@ -268,6 +269,12 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     longstring ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()
     {
         return amlAlertCreateTasks;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey()
+    {
+        return maxSaleRulesNumbersKey;
     }
 
     longstring
