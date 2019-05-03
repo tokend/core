@@ -1,10 +1,14 @@
 # Changelog
 
 ## Unreleased
-
 ### Added
 
 * Manage account specific rule op frame
+
+## 3.2.1
+### Fixed 
+* Fail of histexists command if db has not been initialized
+
 
 ## 3.2.0
 

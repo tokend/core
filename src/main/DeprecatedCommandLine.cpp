@@ -228,7 +228,7 @@ int
 historyExists(Config& cfg, std::vector<std::string> histories)
 {
     VirtualClock clock;
-    Application::pointer app = Application::create(clock, cfg, false);
+    Application::pointer app = Application::create(clock, cfg, false, false);
 
     for (auto const &arch : histories)
     {
