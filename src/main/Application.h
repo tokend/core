@@ -297,17 +297,18 @@ class Application
     // Factory: create a new Application object bound to `clock`, with a local
     // copy made of `cfg`.
     static pointer create(VirtualClock& clock, Config const& cfg,
-                          bool newDB = true);
+                          bool newDB = true, bool validateNetworkPass = true);
 
     template <typename T>
     static std::shared_ptr<T>
-    create(VirtualClock& clock, Config const& cfg, bool newDB = true)
+    create(VirtualClock& clock, Config const& cfg, bool newDB = true, bool validateNetworkPass = true)
     {
         auto ret = std::make_shared<T>(clock, cfg);
         ret->initialize();
         if (newDB || cfg.DATABASE.value == "sqlite3://:memory:")
             ret->newDB();
-        validateNetworkPassphrase(ret);
+        if (validateNetworkPass)
+            validateNetworkPassphrase(ret);
 
         return ret;
     }
