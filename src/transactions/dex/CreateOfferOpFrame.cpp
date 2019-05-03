@@ -129,7 +129,7 @@ AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(
     return nullptr;
 }
 
-bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
+bool CreateOfferOpFrame::checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta)
 {
     assert(mManageOffer.amount != 0);
 
@@ -172,6 +172,17 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
     if (!mAssetPair)
     {
         innerResult().code(ManageOfferResultCode::ASSET_PAIR_NOT_TRADABLE);
+        return false;
+    }
+
+    if(!currentPriceRestrictionsMet(lm))
+    {
+        innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
+        return false;
+    }
+    if(!physicalPriceRestrictionsMet(lm))
+    {
+        innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
         return false;
     }
 
@@ -237,19 +248,8 @@ bool
 CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
                             LedgerManager& ledgerManager)
 {
-    if(!currentPriceRestrictionsMet(ledgerManager))
-    {
-        innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
-        return false;
-    }
-    if(!physicalPriceRestrictionsMet(ledgerManager))
-    {
-        innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
-        return false;
-    }
-
     Database& db = app.getDatabase();
-    if (!checkOfferValid(db, delta))
+    if (!checkOfferValid(ledgerManager, db, delta))
     {
         return false;
     }

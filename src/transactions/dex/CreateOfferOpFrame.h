@@ -19,7 +19,7 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
 
     FeeType feeType;
 
-    bool checkOfferValid(Database& db, LedgerDelta& delta);
+    bool checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta);
 
     OfferExchange::OfferFilterResult filterOffer(uint64_t price, OfferFrame const& o);
 
