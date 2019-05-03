@@ -290,6 +290,8 @@ vector<OfferFrame::pointer> OfferHelper::loadOffersWithFilters(
             priceUpperBound = *priceUpperBoundPtr;
         }
 
+        sql += " ORDER BY offer_id ASC";
+
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
 
@@ -323,7 +325,7 @@ std::vector<OfferFrame::pointer> OfferHelper::loadOffers(AssetCode const& base,
 {
     string sql = offerColumnSelector;
     sql += " WHERE base_asset_code=:base_asset_code AND quote_asset_code = :quote_asset_code AND order_book_id = :order_book_id AND quote_amount < :quote_amount";
-
+    sql += " ORDER BY offer_id ASC";
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
@@ -350,7 +352,7 @@ OfferHelper::loadOffers(AccountID const &accountID, uint64_t const orderBookID,
 {
     string sql = offerColumnSelector;
     sql += " WHERE order_book_id = :obi AND owner_id = :oi";
-
+    sql += " ORDER BY offer_id ASC";
     std::string accountIDStr;
     accountIDStr = PubKeyUtils::toStrKey(accountID);
 
