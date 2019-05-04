@@ -3,6 +3,7 @@
 #include "ReviewRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AccountRoleHelper.h"
 #include "ledger/AccountKYCHelper.h"
 
 namespace stellar
@@ -22,6 +23,16 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     request->checkRequestType(ReviewableRequestType::CHANGE_ROLE);
 
     Database &db = ledgerManager.getDatabase();
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+
+    auto roleID = request->getRequestEntry().body.changeRoleRequest().accountRoleToSet;
+    auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+    if(!accountRole)
+    {
+        innerResult().code(ReviewRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+        return false;
+    }
 
     auto& requestEntry = request->getRequestEntry();
     handleTasks(db, delta, request);
@@ -38,8 +49,6 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     auto& changeRoleRequest = requestEntry.body.changeRoleRequest();
     auto destinationAccount = changeRoleRequest.destinationAccount;
 
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
     auto& accountHelper = storageHelper.getAccountHelper();
 
     auto destinationAccountFrame = accountHelper.mustLoadAccount(destinationAccount);
