@@ -13,6 +13,13 @@
 * Fail of histexists command if db has not been initialized
 
 
+### Fixed 
+* Manage asset tests
+
+###Fixed
+
+* Delete vote after poll ended
+
 ## 3.2.0
 
 ### Added
@@ -29,6 +36,7 @@
 ### Fixed
 
 * exception on poll migration
+* Current and physical price restrictions
 
 ## 3.1.3
 

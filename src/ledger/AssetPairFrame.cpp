@@ -113,6 +113,19 @@ int64_t AssetPairFrame::getMinPriceInTermsOfPhysical() const
 	return minPriceInTermsOfPhysical;
 }
 
+int64_t AssetPairFrame::getMaxPriceInTermsOfCurrent() const {
+    int64_t maxPrice = INT64_MAX, minPriceInTermsOfCurrent = 0;
+    if (checkPolicy(AssetPairPolicy::CURRENT_PRICE_RESTRICTION))
+    {
+        if (!getCurrentPriceCoridor(minPriceInTermsOfCurrent, maxPrice))
+        {
+            throw std::runtime_error("Current price coridor overflow");
+        }
+    }
+
+    return maxPrice;
+}
+
 int64_t AssetPairFrame::getMinAllowedPrice() const
 {
 	return  getMinPriceInTermsOfPhysical();

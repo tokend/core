@@ -63,8 +63,20 @@ bool
 DeleteVoteOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                            LedgerManager& ledgerManager)
 {
+    auto pollID = mManageVote.data.removeData().pollID;
+    auto& pollHelper = storageHelper.getPollHelper();
+
+    //Poll exists, as we checked in tryGetSignerRequirements, tryGetOperationConditions
+    auto poll = pollHelper.mustLoadPoll(pollID);
+
+    auto lastClosedLedgerTime = app.getLedgerManager().getCloseTime();
+    if (poll->getEntry().endTime < lastClosedLedgerTime){
+        innerResult().code(ManageVoteResultCode::POLL_ENDED);
+        return false;
+    }
+
     LedgerKey key(LedgerEntryType::VOTE);
-    key.vote().pollID = mManageVote.data.removeData().pollID;
+    key.vote().pollID = pollID;
     key.vote().voterID = getSourceID();
 
     auto& voteHelper = storageHelper.getVoteHelper();

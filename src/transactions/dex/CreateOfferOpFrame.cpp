@@ -129,7 +129,7 @@ AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(
     return nullptr;
 }
 
-bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
+bool CreateOfferOpFrame::checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta)
 {
     assert(mManageOffer.amount != 0);
 
@@ -172,6 +172,17 @@ bool CreateOfferOpFrame::checkOfferValid(Database& db, LedgerDelta& delta)
     if (!mAssetPair)
     {
         innerResult().code(ManageOfferResultCode::ASSET_PAIR_NOT_TRADABLE);
+        return false;
+    }
+
+    if(!currentPriceRestrictionsMet(lm))
+    {
+        innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
+        return false;
+    }
+    if(!physicalPriceRestrictionsMet(lm))
+    {
+        innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
         return false;
     }
 
@@ -238,7 +249,7 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
                             LedgerManager& ledgerManager)
 {
     Database& db = app.getDatabase();
-    if (!checkOfferValid(db, delta))
+    if (!checkOfferValid(ledgerManager, db, delta))
     {
         return false;
     }
@@ -397,6 +408,53 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
     if (mManageOffer.baseBalance == mManageOffer.quoteBalance)
     {
         innerResult().code(ManageOfferResultCode::ASSET_PAIR_NOT_TRADABLE);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+CreateOfferOpFrame::currentPriceRestrictionsMet(LedgerManager &lm)
+{
+    if(!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
+    {
+        return true;
+    }
+
+    if(!mAssetPair->checkPolicy(AssetPairPolicy::CURRENT_PRICE_RESTRICTION))
+    {
+        return true;
+    }
+
+    if (mManageOffer.price < mAssetPair->getMinPriceInTermsOfCurrent())
+    {
+        return false;
+    }
+
+    if (mManageOffer.price > mAssetPair->getMaxPriceInTermsOfCurrent())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+CreateOfferOpFrame::physicalPriceRestrictionsMet(LedgerManager &lm)
+{
+    if(!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
+    {
+        return true;
+    }
+
+    if(!mAssetPair->checkPolicy(AssetPairPolicy::PHYSICAL_PRICE_RESTRICTION))
+    {
+        return true;
+    }
+
+    if (mManageOffer.price < mAssetPair->getMinAllowedPrice())
+    {
         return false;
     }
 
