@@ -119,16 +119,19 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(Database &db, LedgerDelt
 bool
 CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager)
 {
-    Database &db = ledgerManager.getDatabase();
+    Database& db = ledgerManager.getDatabase();
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
 
-    auto roleID = mCreateChangeRoleRequestOp.accountRoleToSet;
-    auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
-    if(!accountRole)
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
     {
-        innerResult().code(CreateChangeRoleRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
-        return false;
+        auto roleID = mCreateChangeRoleRequestOp.accountRoleToSet;
+        auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+        if(!accountRole)
+        {
+            innerResult().code(CreateChangeRoleRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+            return false;
+        }
     }
 
     if (mCreateChangeRoleRequestOp.requestID != 0)

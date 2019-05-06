@@ -26,12 +26,16 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
 
-    auto roleID = request->getRequestEntry().body.changeRoleRequest().accountRoleToSet;
-    auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
-    if(!accountRole)
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
     {
-        innerResult().code(ReviewRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
-        return false;
+        auto roleID = request->getRequestEntry().body.changeRoleRequest().accountRoleToSet;
+        auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+        if(!accountRole)
+        {
+            innerResult().code(ReviewRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+            return false;
+        }
+
     }
 
     auto& requestEntry = request->getRequestEntry();
