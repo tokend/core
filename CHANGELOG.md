@@ -13,6 +13,10 @@
 ### Fixed 
 * Manage asset tests
 
+###Fixed
+
+* Delete vote after poll ended
+
 ## 3.2.0
 
 ### Added
