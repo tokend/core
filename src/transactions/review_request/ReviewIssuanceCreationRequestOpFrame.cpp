@@ -177,18 +177,20 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
 
 bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
 													   LedgerDelta& delta, LedgerManager& ledgerManager,
-													   BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
+													   BalanceFrame::pointer balance, const uint64_t amountToAdd,
 													   uint64_t& universalAmount)
 {
+    auto account = AccountHelperLegacy::Instance()->loadAccount(balance->getAccountID(), db, &delta);
 	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-	return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount);
+	return tryAddStatsV2(statisticsV2Processor, account, balance, amountToAdd, universalAmount);
 }
 bool ReviewIssuanceCreationRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
+                                                       const AccountFrame::pointer account,
                                                        const BalanceFrame::pointer balance, const uint64_t amountToAdd,
                                                        uint64_t& universalAmount)
 {
 	const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
-														 universalAmount, mSourceAccount, balance, nullptr);
+														 universalAmount, account, balance, nullptr);
 	switch (result)
 	{
 		case StatisticsV2Processor::SUCCESS:
