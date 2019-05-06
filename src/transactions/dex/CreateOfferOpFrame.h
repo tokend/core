@@ -19,7 +19,7 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
 
     FeeType feeType;
 
-    bool checkOfferValid(Database& db, LedgerDelta& delta);
+    bool checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta);
 
     OfferExchange::OfferFilterResult filterOffer(uint64_t price, OfferFrame const& o);
 
@@ -28,6 +28,10 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
     bool lockSellingAmount(OfferEntry const& offer);
 
     FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
+
+    bool currentPriceRestrictionsMet(LedgerManager &lm);
+
+    bool physicalPriceRestrictionsMet(LedgerManager &lm);
 
 protected:
 
