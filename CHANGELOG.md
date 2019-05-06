@@ -10,6 +10,9 @@
 * Fail of histexists command if db has not been initialized
 
 
+### Fixed 
+* Manage asset tests
+
 ## 3.2.0
 
 ### Added
