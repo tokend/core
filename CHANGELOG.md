@@ -4,6 +4,7 @@
 ### Added
 
 * Manage account specific rule op frame
+* New CreateAMLAlert error codes
 
 ## 3.2.1
 ### Fixed 

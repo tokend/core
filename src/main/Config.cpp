@@ -25,7 +25,7 @@
 namespace stellar
 {
 const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION =
-        static_cast<uint32_t>(LedgerVersion::ASSET_PAIR_RESTRICTIONS);
+        static_cast<uint32_t>(LedgerVersion::FIX_AML_ALERT_ERROR_CODES);
 
 // Options that must only be used for testing
 static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {
