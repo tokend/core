@@ -631,8 +631,6 @@ TEST_CASE("Issuance", "[tx][issuance]")
 
                     REQUIRE(receiverBalance);
 
-                    auto accountIDS = PubKeyUtils::toStrKey(account.key.getPublicKey());
-
                     createIssuanceResult =
                         issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
                                                                          receiverBalance->getBalanceID(), reference, &issuanceTasks);
