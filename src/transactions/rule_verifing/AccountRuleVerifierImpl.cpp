@@ -161,12 +161,6 @@ AccountRuleVerifierImpl::isResourceMatches(
                                actualResource.vote().pollID);
         case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
         {
-            if (!isIDMatches(conditionResource.accountSpecificRule().ruleID,
-                actualResource.accountSpecificRule().ruleID))
-            {
-                return false;
-            }
-
             if (conditionResource.accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY){
                 return true;
             }
