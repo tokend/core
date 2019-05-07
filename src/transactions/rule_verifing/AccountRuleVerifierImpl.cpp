@@ -183,7 +183,7 @@ AccountRuleVerifierImpl::isResourceMatches(
                 case LedgerEntryType::SALE:
                     return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
                 default:
-                    return true;
+                    return false;
             }
         }
         case LedgerEntryType::ACCOUNT_KYC:

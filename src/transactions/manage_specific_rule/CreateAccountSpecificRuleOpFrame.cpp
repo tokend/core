@@ -21,7 +21,12 @@ bool
 CreateAccountSpecificRuleOpFrame::tryGetOperationConditions(
         StorageHelper &storageHelper, std::vector<OperationCondition> &result) const
 {
-    // only admin or entry owner can perform such operation
+
+    AccountRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+    auto ledgerKey = mCreateData.ledgerKey;
+    resource.accountSpecificRule().ledgerKey = ledgerKey;
+
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
     return true;
 }
 
@@ -29,7 +34,11 @@ bool
 CreateAccountSpecificRuleOpFrame::tryGetSignerRequirements(
         StorageHelper &storageHelper, std::vector<SignerRequirement> &result) const
 {
-    result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE), SignerRuleAction::CREATE);
+    SignerRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+    auto ledgerKey = mCreateData.ledgerKey;
+    resource.accountSpecificRule().ledgerKey = ledgerKey;
+
+    result.emplace_back(resource, SignerRuleAction::CREATE);
     return true;
 }
 
