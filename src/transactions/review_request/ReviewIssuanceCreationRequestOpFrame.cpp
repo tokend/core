@@ -180,7 +180,10 @@ bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
 													   BalanceFrame::pointer balance, const uint64_t amountToAdd,
 													   uint64_t& universalAmount)
 {
-    auto account = AccountHelperLegacy::Instance()->loadAccount(balance->getAccountID(), db, &delta);
+    AccountFrame::pointer account = AccountHelperLegacy::Instance()->loadAccount(balance->getAccountID(), db, &delta);
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS)) {
+        account = mSourceAccount;
+    }
 	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
 	return tryAddStatsV2(statisticsV2Processor, account, balance, amountToAdd, universalAmount);
 }
@@ -226,7 +229,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		uint32_t allTasks = 0;
 
         uint64_t universalAmount = 0;
-        auto balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor, issuanceRequest.asset, db, localDelta);
+        auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
 
 		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
 		{
