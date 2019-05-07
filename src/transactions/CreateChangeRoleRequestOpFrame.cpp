@@ -4,6 +4,7 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/StorageHelperImpl.h"
+#include "ledger/AccountRoleHelper.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include <crypto/SHA.h>
 #include "xdrpp/printer.h"
@@ -118,7 +119,20 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(Database &db, LedgerDelt
 bool
 CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager)
 {
-    Database &db = ledgerManager.getDatabase();
+    Database& db = ledgerManager.getDatabase();
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
+    {
+        auto roleID = mCreateChangeRoleRequestOp.accountRoleToSet;
+        auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+        if(!accountRole)
+        {
+            innerResult().code(CreateChangeRoleRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+            return false;
+        }
+    }
 
     if (mCreateChangeRoleRequestOp.requestID != 0)
     {
@@ -147,8 +161,6 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, Le
         innerResult().code(CreateChangeRoleRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
     }
-
-    StorageHelperImpl storageHelper(db, &delta);
 
     uint32 defaultMask;
     if(!loadTasks(storageHelper, defaultMask, mCreateChangeRoleRequestOp.allTasks))
