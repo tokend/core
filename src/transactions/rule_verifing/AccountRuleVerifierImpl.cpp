@@ -159,6 +159,33 @@ AccountRuleVerifierImpl::isResourceMatches(
                                  actualResource.vote().permissionType) &&
                    isIDMatches(conditionResource.vote().pollID,
                                actualResource.vote().pollID);
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            if (!isIDMatches(conditionResource.accountSpecificRule().ruleID,
+                actualResource.accountSpecificRule().ruleID))
+            {
+                return false;
+            }
+
+            if (conditionResource.accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY){
+                return true;
+            }
+
+            if (conditionResource.accountSpecificRule().ledgerKey.type() != actualResource.accountSpecificRule().ledgerKey.type())
+            {
+                return false;
+            }
+
+            auto conditionLedgerKey = conditionResource.accountSpecificRule().ledgerKey;
+            auto actualLedgerKey = actualResource.accountSpecificRule().ledgerKey;
+            switch (conditionLedgerKey.type())
+            {
+                case LedgerEntryType::SALE:
+                    return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
+                default:
+                    return true;
+            }
+        }
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -175,7 +202,6 @@ AccountRuleVerifierImpl::isResourceMatches(
         case LedgerEntryType::TRANSACTION:
         case LedgerEntryType::LICENSE:
         case LedgerEntryType::STAMP:
-        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
             return true;
         default:
             return false;
