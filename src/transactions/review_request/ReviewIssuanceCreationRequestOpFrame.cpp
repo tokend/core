@@ -229,7 +229,16 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		uint32_t allTasks = 0;
 
         uint64_t universalAmount = 0;
-        auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
+        BalanceFrame::pointer balanceFrame;
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
+        {
+            balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
+        }
+        else
+        {
+            balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
+                issuanceRequest.asset, db, localDelta);
+        }
 
 		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
 		{
