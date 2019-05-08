@@ -454,6 +454,15 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
         return false;
     }
 
+    for (auto const& quoteAsset : sale.quoteAssets)
+    {
+        if (AssetPairHelper::Instance()->exists(db, quoteAsset.quoteAsset, sale.baseAsset))
+        {
+            innerResult().code(CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
+            return false;
+        }
+    }
+
     const auto baseAsset = tryLoadBaseAssetOrRequest(sale, db, getSourceID());
     if (!baseAsset)
     {

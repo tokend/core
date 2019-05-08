@@ -237,7 +237,7 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
         const auto assetPair =
-            AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
+            AssetPairHelper::Instance()->loadAssetPair(
                 sale->getBaseAsset(), quoteAsset.quoteAsset,
                 ledgerManager.getDatabase());
         if (!!assetPair)
