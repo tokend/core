@@ -54,6 +54,7 @@
 #include "voting/manage_vote/ManageVoteOpFrame.h"
 #include "manage_specific_rule/ManageAccountSpecificRuleOpFrame.h"
 #include "ledger/SignerHelper.h"
+#include "transactions/CancelChangeRoleRequestOpFrame.h"
 
 namespace stellar
 {
@@ -146,6 +147,8 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return shared_ptr<OperationFrame>(ManageVoteOpFrame::make(op, res, tx));
         case OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE:
             return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
+        case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
+            return shared_ptr<OperationFrame>(new CancelChangeRoleRequestOpFrame(op, res, tx));
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
