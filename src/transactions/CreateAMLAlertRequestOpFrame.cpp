@@ -20,7 +20,14 @@ CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHe
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
 
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    if (mCreateAMLAlertRequest.allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+    }
+    else
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    }
 
     return true;
 }

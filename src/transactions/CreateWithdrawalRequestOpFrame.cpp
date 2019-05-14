@@ -30,6 +30,18 @@ CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storage
         return false;
     }
 
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);
+
+    if (mCreateWithdrawalRequest.allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+    }
+    else
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    }
+
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
 
     AccountRuleResource assetResource(LedgerEntryType::ASSET);

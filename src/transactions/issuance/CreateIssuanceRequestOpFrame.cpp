@@ -58,6 +58,18 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 	    return false;
 	}
 
+	AccountRuleResource issuanceResource(LedgerEntryType::REVIEWABLE_REQUEST);
+    issuanceResource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
+
+    if (mCreateIssuanceRequest.allTasks)
+    {
+        result.emplace_back(issuanceResource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+    }
+    else
+    {
+        result.emplace_back(issuanceResource, AccountRuleAction::CREATE, mSourceAccount);
+    }
+
 	auto account = storageHelper.getAccountHelper().mustLoadAccount(balance->getAccountID());
 
 	AccountRuleResource resource(LedgerEntryType::ASSET);

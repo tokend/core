@@ -18,7 +18,14 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
 
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    if (mCreateManageLimitsRequest.allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+    }
+    else
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    }
 
     return true;
 }

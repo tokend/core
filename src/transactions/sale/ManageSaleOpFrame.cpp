@@ -19,6 +19,21 @@ bool
 ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                 std::vector<OperationCondition>& result) const
 {
+    if (mManageSaleOp.data.action() == ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST)
+    {
+        AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+        resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_SALE_DETAILS);
+
+        if (mManageSaleOp.data.updateSaleDetailsData().allTasks)
+        {
+            result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        }
+        else
+        {
+            result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+        }
+    }
+
     // only sale owner or admin can manage sale
     return true;
 }
