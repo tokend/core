@@ -53,6 +53,8 @@
 #include "voting/manage_create_poll_request/ManageCreatePollRequestOpFrame.h"
 #include "voting/manage_vote/ManageVoteOpFrame.h"
 #include "manage_specific_rule/ManageAccountSpecificRuleOpFrame.h"
+#include "CreateKYCRecoveryRequestOpFrame.h"
+#include "InitiateKYCRecoveryOpFrame.h"
 #include "ledger/SignerHelper.h"
 
 namespace stellar
@@ -146,6 +148,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return shared_ptr<OperationFrame>(ManageVoteOpFrame::make(op, res, tx));
         case OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE:
             return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
+        case OperationType::INITIATE_KYC_RECOVERY:
+            return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
+        case OperationType::CREATE_KYC_RECOVERY_REQUEST:
+            return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

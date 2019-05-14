@@ -35,6 +35,9 @@ namespace stellar
         "withdraw_lower_bound";
     char const* ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
     char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
+    char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
+    char const* ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
+    char const* ManageKeyValueOpFrame::kycRecoveryAccountRole = "kyc_recovery_account_role";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -60,6 +63,9 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {assetUpdateTasks, KeyValueEntryType::UINT32},
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
         {createPollTasks, KeyValueEntryType::UINT32},
+        {createKycRecoveryTasks, KeyValueEntryType::UINT32},
+        {kycRecoveryAccountRole, KeyValueEntryType::UINT64},
+        {kycRecoveryEnabled, KeyValueEntryType::UINT32},
     };
 }
 
@@ -281,5 +287,23 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     ManageKeyValueOpFrame::makeCreatePollKey(std::string type)
     {
         return string(createPollTasks) + ":" + type;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()
+    {
+        return createKycRecoveryTasks;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeKYCRecoveryKey()
+    {
+        return kycRecoveryEnabled;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeKYCRecoveryAccountRoleKey()
+    {
+        return kycRecoveryAccountRole;
     }
 }

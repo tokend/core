@@ -95,6 +95,12 @@ public:
 
     static longstring makeCreatePollKey(std::string type);
 
+    static longstring makeCreateKYCRecoveryTasksKey();
+
+    static longstring makeKYCRecoveryKey();
+
+    static longstring makeKYCRecoveryAccountRoleKey();
+
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
     static const char * issuanceTasksPrefix;
@@ -117,5 +123,8 @@ public:
     static char const * limitsUpdateTasks;
     static char const * maxSaleRulesNumbersKey;
     static char const * createPollTasks;
+    static char const * createKycRecoveryTasks;
+    static char const * kycRecoveryEnabled;
+    static char const * kycRecoveryAccountRole;
 };
 }
