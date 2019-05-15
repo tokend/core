@@ -156,7 +156,7 @@ void
 InitiateKYCRecoveryOpFrame::createSigner(StorageHelper& storageHelper, AccountFrame& accountFrame)
 {
     SignerFrame signerFrame;
-    signerFrame.getEntry().pubKey = mInitiateKYCRecoveryOp.singer;
+    signerFrame.getEntry().pubKey = mInitiateKYCRecoveryOp.signer;
     signerFrame.getEntry().weight = 1000;
     signerFrame.getEntry().identity = 1;
     signerFrame.getEntry().roleID = 1;
