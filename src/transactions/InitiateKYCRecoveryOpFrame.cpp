@@ -84,7 +84,7 @@ InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelp
 
     createSigner(storageHelper, *accountFrame);
 
-    //todo: delete all pending KYC Recovery requests
+    deletePendingRecoveryRequests(app, storageHelper);
 
     accountFrame->setAccountRole(accountRole);
     accountHelper.storeChange(accountFrame->mEntry);
