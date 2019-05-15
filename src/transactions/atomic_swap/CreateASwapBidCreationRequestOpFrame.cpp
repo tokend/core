@@ -71,8 +71,9 @@ CreateASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper &st
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
-    resource.reviewableRequest().details.createAtomicSwapBid().assetCode = asset->getCode();
-    resource.reviewableRequest().details.createAtomicSwapBid().assetType = asset->getType();
+    resource.reviewableRequest().details.createAtomicSwapBidExt().v(LedgerVersion::ATOMIC_SWAP_RETURNING);
+    resource.reviewableRequest().details.createAtomicSwapBidExt().createAtomicSwapBid().assetCode = asset->getCode();
+    resource.reviewableRequest().details.createAtomicSwapBidExt().createAtomicSwapBid().assetType = asset->getType();
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().allTasks = 0;

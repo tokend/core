@@ -138,6 +138,30 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                          actualDetails.createWithdraw().assetType) &&
                            isStringMatches(expectedDetails.createWithdraw().assetCode,
                                            actualDetails.createWithdraw().assetCode);
+                case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
+                {
+                    auto expExt = expectedDetails.createAtomicSwapBidExt();
+                    auto actExt = actualDetails.createAtomicSwapBidExt();
+
+                    if (expExt.v() != actExt.v())
+                    {
+                        return false;
+                    }
+
+                    switch (expExt.v())
+                    {
+                        case LedgerVersion::EMPTY_VERSION:
+                            return true;
+                        case LedgerVersion::ATOMIC_SWAP_RETURNING:
+                            return isTypeMatches(expExt.createAtomicSwapBid().assetType,
+                                                 actExt.createAtomicSwapBid().assetType) &&
+                                   isStringMatches(expExt.createAtomicSwapBid().assetCode,
+                                                   actExt.createAtomicSwapBid().assetCode);
+                        default:
+                            throw new std::runtime_error("Unexpected ledger version "
+                                                         "in create atomic swap bid rule ext");
+                    }
+                }
                 default:
                     return true;
             }
