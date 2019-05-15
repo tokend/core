@@ -6,8 +6,7 @@
 namespace stellar
 {
 
-class InitiateKYCRecoveryOpFrame : public OperationFrame
-{
+class InitiateKYCRecoveryOpFrame : public OperationFrame {
     InitiateKYCRecoveryOp mInitiateKYCRecoveryOp;
 
     bool
@@ -31,13 +30,13 @@ class InitiateKYCRecoveryOpFrame : public OperationFrame
     void deletePendingRecoveryRequests(Application& app, StorageHelper& storageHelper);
 
 public:
-    InitiateKYCRecoveryOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+    InitiateKYCRecoveryOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager) override;
+    bool doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager) override;
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 
-    static InitiateKYCRecoveryResultCode getInnerCode(OperationResult const &res)
+    static InitiateKYCRecoveryResultCode getInnerCode(OperationResult const& res)
     {
         return res.tr().initiateKYCRecoveryResult().code();
     }

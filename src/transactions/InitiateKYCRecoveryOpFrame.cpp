@@ -21,22 +21,21 @@ using namespace std;
 using xdr::operator==;
 
 InitiateKYCRecoveryOpFrame::InitiateKYCRecoveryOpFrame(
-        Operation const &op, OperationResult &res, TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mInitiateKYCRecoveryOp(mOperation.body.initiateKYCRecoveryOp())
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mInitiateKYCRecoveryOp(mOperation.body.initiateKYCRecoveryOp())
 {
 }
 
 bool
 InitiateKYCRecoveryOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                        std::vector<OperationCondition>& result) const
+                                                      std::vector<OperationCondition>& result) const
 {
     return true;
 }
 
 bool
 InitiateKYCRecoveryOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                        std::vector<SignerRequirement>& result) const
+                                                     std::vector<SignerRequirement>& result) const
 {
     //todo
     SignerRuleResource resource(LedgerEntryType::ACCOUNT_KYC);
@@ -46,15 +45,15 @@ InitiateKYCRecoveryOpFrame::tryGetSignerRequirements(StorageHelper& storageHelpe
 }
 
 bool
-InitiateKYCRecoveryOpFrame::doCheckValid(Application &app)
+InitiateKYCRecoveryOpFrame::doCheckValid(Application& app)
 {
     return true;
 }
 
 bool
-InitiateKYCRecoveryOpFrame::doApply(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager)
+InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    if (! (mSourceAccount->getID() == app.getAdminID()))
+    if (!(mSourceAccount->getID() == app.getAdminID()))
     {
         innerResult().code(InitiateKYCRecoveryResultCode::NOT_AUTHORIZED);
         return false;
@@ -67,12 +66,11 @@ InitiateKYCRecoveryOpFrame::doApply(Application &app, StorageHelper& storageHelp
     }
 
     uint64_t accountRole;
-    if(!getRecoveryAccountRole(storageHelper, accountRole))
+    if (!getRecoveryAccountRole(storageHelper, accountRole))
     {
         innerResult().code(InitiateKYCRecoveryResultCode::RECOVERY_ACCOUNT_ROLE_NOT_FOUND);
         return false;
     }
-
 
     auto& accountHelper = storageHelper.getAccountHelper();
     auto accountFrame = accountHelper.loadAccount(mInitiateKYCRecoveryOp.account);
@@ -184,6 +182,5 @@ InitiateKYCRecoveryOpFrame::deletePendingRecoveryRequests(Application& app, Stor
         }
     }
 }
-
 
 }

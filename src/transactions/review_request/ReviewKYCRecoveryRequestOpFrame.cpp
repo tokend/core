@@ -11,24 +11,24 @@ namespace stellar
 {
 
 ReviewKYCRecoveryRequestOpFrame::ReviewKYCRecoveryRequestOpFrame(
-        Operation const &op, OperationResult &res, TransactionFrame &parentTx)
-        : ReviewRequestOpFrame(op, res, parentTx)
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 
-
 bool
-ReviewKYCRecoveryRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,
-                                              LedgerManager &ledgerManager,
-                                              ReviewableRequestFrame::pointer request)
+ReviewKYCRecoveryRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
+                                               LedgerManager& ledgerManager,
+                                               ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::KYC_RECOVERY);
 
-    Database &db = ledgerManager.getDatabase();
+    Database& db = ledgerManager.getDatabase();
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
 
     auto& requestEntry = request->getRequestEntry();
+
     handleTasks(db, delta, request);
 
     if (!request->canBeFulfilled(ledgerManager))
@@ -48,7 +48,6 @@ ReviewKYCRecoveryRequestOpFrame::handleApprove(Application &app, LedgerDelta &de
 
     auto& kycRecoveryRequest = requestEntry.body.kycRecoveryRequest();
 
-
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
     return true;
@@ -59,7 +58,7 @@ ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& del
 {
     request->checkRequestType(ReviewableRequestType::KYC_RECOVERY);
 
-    Database &db = ledgerManager.getDatabase();
+    Database& db = ledgerManager.getDatabase();
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
@@ -76,7 +75,8 @@ ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& del
     return true;
 }
 
-bool ReviewKYCRecoveryRequestOpFrame::createSigners(Application& app, StorageHelper& storageHelper, ReviewableRequestFrame::pointer request)
+bool
+ReviewKYCRecoveryRequestOpFrame::createSigners(Application& app, StorageHelper& storageHelper, ReviewableRequestFrame::pointer request)
 {
     auto kycRecoveryRequest = request->getRequestEntry().body.kycRecoveryRequest();
 
@@ -112,7 +112,7 @@ bool ReviewKYCRecoveryRequestOpFrame::createSigners(Application& app, StorageHel
     return true;
 }
 
-bool ReviewKYCRecoveryRequestOpFrame::doCheckValid(Application &app)
+bool ReviewKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 {
     if (!isValidJson(mReviewRequest.reviewDetails.externalDetails))
     {

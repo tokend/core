@@ -6,8 +6,7 @@
 namespace stellar
 {
 
-class CreateKYCRecoveryRequestOpFrame : public OperationFrame
-{
+class CreateKYCRecoveryRequestOpFrame : public OperationFrame {
     CreateKYCRecoveryRequestOp mCreateKYCRecoveryRequestOp;
 
     bool
@@ -26,33 +25,32 @@ class CreateKYCRecoveryRequestOpFrame : public OperationFrame
 
     std::string getReference() const;
 
-    void createRequest(ReviewableRequestEntry &requestEntry, uint32 defaultMask);
+    void createRequest(ReviewableRequestEntry& requestEntry, uint32 defaultMask);
 
     std::vector<longstring>
-    makeTasksKeyVector(StorageHelper &storageHelper) override;
-
+    makeTasksKeyVector(StorageHelper& storageHelper) override;
 
     void
-    tryAutoApprove(Database &db, LedgerDelta &delta, Application &app,
-                    ReviewableRequestFrame::pointer requestFrame);
+    tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+                   ReviewableRequestFrame::pointer requestFrame);
 
     bool
     updateRecoveryRequest(StorageHelper& storageHelper,
-                    Application &app);
+                          Application& app);
     bool
-    ensureTargetNotChanged(ReviewableRequestEntry &requestEntry);
+    ensureTargetNotChanged(ReviewableRequestEntry& requestEntry);
 
     void
-    updateRequest(ReviewableRequestEntry &requestEntry);
+    updateRequest(ReviewableRequestEntry& requestEntry);
 
 public:
-    CreateKYCRecoveryRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+    CreateKYCRecoveryRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager) override;
+    bool doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager) override;
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 
-    static CreateKYCRecoveryRequestResultCode getInnerCode(OperationResult const &res)
+    static CreateKYCRecoveryRequestResultCode getInnerCode(OperationResult const& res)
     {
         return res.tr().createKYCRecoveryRequestResult().code();
     }

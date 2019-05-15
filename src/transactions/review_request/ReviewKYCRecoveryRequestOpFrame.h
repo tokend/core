@@ -4,10 +4,9 @@
 
 namespace stellar
 {
-class ReviewKYCRecoveryRequestOpFrame : public ReviewRequestOpFrame
-{
+class ReviewKYCRecoveryRequestOpFrame : public ReviewRequestOpFrame {
 protected:
-    bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
+    bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                        ReviewableRequestFrame::pointer request) override;
 
     bool
@@ -17,8 +16,8 @@ protected:
     createSigners(Application& app, StorageHelper& storageHelper, ReviewableRequestFrame::pointer request);
 
 public:
-    ReviewKYCRecoveryRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+    ReviewKYCRecoveryRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 };
 }

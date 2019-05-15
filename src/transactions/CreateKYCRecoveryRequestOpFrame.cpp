@@ -21,15 +21,14 @@ using namespace std;
 using xdr::operator==;
 
 CreateKYCRecoveryRequestOpFrame::CreateKYCRecoveryRequestOpFrame(
-        Operation const &op, OperationResult &res, TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mCreateKYCRecoveryRequestOp(mOperation.body.createKYCRecoveryRequestOp())
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mCreateKYCRecoveryRequestOp(mOperation.body.createKYCRecoveryRequestOp())
 {
 }
 
 bool
 CreateKYCRecoveryRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                        std::vector<OperationCondition>& result) const
+                                                           std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::KYC_RECOVERY);
@@ -46,7 +45,7 @@ CreateKYCRecoveryRequestOpFrame::tryGetOperationConditions(StorageHelper& storag
 
 bool
 CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                        std::vector<SignerRequirement>& result) const
+                                                          std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::KYC_RECOVERY);
@@ -64,7 +63,7 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
 }
 
 bool
-CreateKYCRecoveryRequestOpFrame::doCheckValid(Application &app)
+CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 {
     if (!isValidJson(mCreateKYCRecoveryRequestOp.creatorDetails))
     {
@@ -72,7 +71,7 @@ CreateKYCRecoveryRequestOpFrame::doCheckValid(Application &app)
         return false;
     }
 
-    if(mCreateKYCRecoveryRequestOp.signersData.size() == 0)
+    if (mCreateKYCRecoveryRequestOp.signersData.size() == 0)
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_SIGNER_DATA);
         return false;
@@ -97,7 +96,7 @@ CreateKYCRecoveryRequestOpFrame::doCheckValid(Application &app)
 }
 
 bool
-CreateKYCRecoveryRequestOpFrame::doApply(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager)
+CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
@@ -113,7 +112,7 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application &app, StorageHelper& storag
     }
 
     uint64_t recoveryRole;
-    if(!InitiateKYCRecoveryOpFrame::getRecoveryAccountRole(storageHelper, recoveryRole))
+    if (!InitiateKYCRecoveryOpFrame::getRecoveryAccountRole(storageHelper, recoveryRole))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::RECOVERY_ACCOUNT_ROLE_NOT_FOUND);
         return false;
@@ -144,14 +143,13 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application &app, StorageHelper& storag
     }
 
     uint32 defaultMask;
-    if(!loadTasks(storageHelper, defaultMask, mCreateKYCRecoveryRequestOp.allTasks))
+    if (!loadTasks(storageHelper, defaultMask, mCreateKYCRecoveryRequestOp.allTasks))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::KYC_RECOVERY_TASKS_NOT_FOUND);
         return false;
     }
 
-
-    auto &requestEntry = requestFrame->getRequestEntry();
+    auto& requestEntry = requestFrame->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::KYC_RECOVERY);
 
     createRequest(requestEntry, defaultMask);
@@ -163,12 +161,11 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application &app, StorageHelper& storag
     targetAccount->setAccountRole(recoveryRole);
     accountHelper.storeChange(targetAccount->mEntry);
 
-
     innerResult().code(CreateKYCRecoveryRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
     innerResult().success().fulfilled = false;
 
-    if(requestFrame->canBeFulfilled(ledgerManager))
+    if (requestFrame->canBeFulfilled(ledgerManager))
     {
         tryAutoApprove(db, delta, app, requestFrame);
     }
@@ -177,7 +174,7 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application &app, StorageHelper& storag
 }
 
 void
-CreateKYCRecoveryRequestOpFrame::createRequest(ReviewableRequestEntry &requestEntry, uint32 defaultMask)
+CreateKYCRecoveryRequestOpFrame::createRequest(ReviewableRequestEntry& requestEntry, uint32 defaultMask)
 {
     auto& kycRecoveryRequest = requestEntry.body.kycRecoveryRequest();
 
@@ -191,14 +188,14 @@ CreateKYCRecoveryRequestOpFrame::createRequest(ReviewableRequestEntry &requestEn
 }
 
 std::vector<longstring>
-CreateKYCRecoveryRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+CreateKYCRecoveryRequestOpFrame::makeTasksKeyVector(StorageHelper& storageHelper)
 {
     AccountFrame& account = getSourceAccount();
 
     return std::vector<longstring>
-    {
-        ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey(),
-    };
+        {
+            ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey(),
+        };
 }
 
 std::string
@@ -208,12 +205,11 @@ CreateKYCRecoveryRequestOpFrame::getReference() const
     return binToHex(hash);
 }
 
-
 void
-CreateKYCRecoveryRequestOpFrame::tryAutoApprove(Database &db, LedgerDelta &delta, Application &app,
-                                               ReviewableRequestFrame::pointer requestFrame)
+CreateKYCRecoveryRequestOpFrame::tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+                                                ReviewableRequestFrame::pointer requestFrame)
 {
-    auto &ledgerManager = app.getLedgerManager();
+    auto& ledgerManager = app.getLedgerManager();
     auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, requestFrame);
     if (result != ReviewRequestResultCode::SUCCESS)
     {
@@ -226,10 +222,9 @@ CreateKYCRecoveryRequestOpFrame::tryAutoApprove(Database &db, LedgerDelta &delta
     innerResult().success().fulfilled = true;
 }
 
-
 bool
 CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHelper,
-                                                        Application &app)
+                                                       Application& app)
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
@@ -249,15 +244,14 @@ CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHel
         return false;
     }
 
-    auto &requestEntry = request->getRequestEntry();
+    auto& requestEntry = request->getRequestEntry();
     if (!ensureTargetNotChanged(requestEntry))
     {
         return false;
     }
-    
+
     //update request
     updateRequest(requestEntry);
-    
 
     request->recalculateHashRejectReason();
 
@@ -269,9 +263,9 @@ CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHel
 }
 
 bool
-CreateKYCRecoveryRequestOpFrame::ensureTargetNotChanged(ReviewableRequestEntry &requestEntry)
+CreateKYCRecoveryRequestOpFrame::ensureTargetNotChanged(ReviewableRequestEntry& requestEntry)
 {
-    auto &kycRecoveryRequest = requestEntry.body.kycRecoveryRequest();
+    auto& kycRecoveryRequest = requestEntry.body.kycRecoveryRequest();
 
     if (!(kycRecoveryRequest.targetAccount == mCreateKYCRecoveryRequestOp.targetAccount))
     {
@@ -287,9 +281,8 @@ CreateKYCRecoveryRequestOpFrame::ensureTargetNotChanged(ReviewableRequestEntry &
     return true;
 }
 
-
 void
-CreateKYCRecoveryRequestOpFrame::updateRequest(ReviewableRequestEntry &requestEntry)
+CreateKYCRecoveryRequestOpFrame::updateRequest(ReviewableRequestEntry& requestEntry)
 {
     requestEntry.body.kycRecoveryRequest().creatorDetails = mCreateKYCRecoveryRequestOp.creatorDetails;
     requestEntry.body.kycRecoveryRequest().signersData = mCreateKYCRecoveryRequestOp.signersData;
