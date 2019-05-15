@@ -1,6 +1,16 @@
 # Changelog
 
-## 3.2.0
+## Unreleased
+
+### Added
+
+* `atomic_swap_bid_tasks` reserved key
+
+### Fixed
+
+* atomic swaps, enable them
+
+## 3.3.0
 
 ### Added
 
@@ -72,15 +82,10 @@
 
 ## 3.0.2-x.0
 
-### Added
-
-* `atomic_swap_bid_tasks` reserved key
-
 ### Fixed
 
 * Managing fee for not existing account (horizon panics)
 * get exists Entry from cache
-* atomic swaps, enable them
 
 ## 3.0.1
 

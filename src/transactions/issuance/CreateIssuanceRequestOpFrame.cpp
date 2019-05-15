@@ -95,7 +95,7 @@ CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 
 bool
 CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
-									  LedgerManager& ledgerManager)
+                                      LedgerManager& ledgerManager)
 {
 	LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 	auto requestFrame = tryCreateIssuanceRequest(app, delta, ledgerManager);
@@ -222,8 +222,8 @@ bool CreateIssuanceRequestOpFrame::isAuthorizedToRequestIssuance(AssetFrame::poi
 }
 
 ReviewableRequestFrame::pointer
-CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application & app, LedgerDelta & delta,
-													   LedgerManager & ledgerManager)
+CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application& app, LedgerDelta& delta,
+                                                       LedgerManager& ledgerManager)
 {
 	Database& db = ledgerManager.getDatabase();
 

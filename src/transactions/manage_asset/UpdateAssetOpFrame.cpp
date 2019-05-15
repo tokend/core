@@ -104,8 +104,8 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         }
     }
     bool autoreview = true;
-	if (mManageAsset.requestID == 0)
-	{
+    if (mManageAsset.requestID == 0)
+    {
         KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
         uint32_t allTasks = 0;
         if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAssetUpdateTasksKey()},
@@ -116,7 +116,7 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         }
 
         request->setTasks(allTasks);
-		EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+        EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 		autoreview = allTasks == 0;
 	}
 	else {
