@@ -65,6 +65,11 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
 bool
 CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 {
+    if( !(getSourceID() == app.getAdminID()) && !(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount) )
+    {
+        innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_AUTHORIZED);
+        return false;
+    }
     if (!isValidJson(mCreateKYCRecoveryRequestOp.creatorDetails))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_CREATOR_DETAILS);
