@@ -24,7 +24,8 @@ class MockKeyValueHelper : public KeyValueHelper
     MOCK_METHOD1(loadKeyValue, KeyValueEntryFrame::pointer(string256 valueKey));
     MOCK_METHOD2(loadKeyValues, void(StatementContext& prep,
             std::function<void(LedgerEntry const&)> keyValueProcessor));
-    MOCK_METHOD3(loadTasks, bool(uint32_t, std::vector<std::string>, uint32_t));
+    MOCK_METHOD3(loadTasks,
+                 bool(uint32_t &allTasks, std::vector<std::string> keys, uint32_t *passedTasks));
 };
 
 } // namespace stellar

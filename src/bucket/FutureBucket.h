@@ -5,11 +5,11 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "overlay/StellarXDR.h"
-#include <string>
-#include <memory>
-#include <vector>
-#include <future>
 #include <cereal/cereal.hpp>
+#include <future>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace stellar
 {
@@ -70,11 +70,10 @@ class FutureBucket
     std::string mInputSnapBucketHash;
     std::vector<std::string> mInputShadowBucketHashes;
     std::string mOutputBucketHash;
-    bool mKeepDeadEntries;
 
     void checkHashesMatch() const;
     void checkState() const;
-    void startMerge(Application& app);
+    void startMerge(Application& app, bool keepDeadEntries);
 
     void clearInputs();
     void clearOutput();
@@ -85,8 +84,6 @@ class FutureBucket
                  std::shared_ptr<Bucket> const& snap,
                  std::vector<std::shared_ptr<Bucket>> const& shadows,
                  bool keepDeadEntries);
-
-    FutureBucket(std::shared_ptr<Bucket> output);
 
     FutureBucket() = default;
     FutureBucket(FutureBucket const& other) = default;
@@ -118,7 +115,7 @@ class FutureBucket
     std::shared_ptr<Bucket> resolve();
 
     // Precondition: !isLive(); transitions from FB_HASH_FOO to FB_LIVE_FOO
-    void makeLive(Application& app);
+    void makeLive(Application& app, bool keepDeadEntries);
 
     // Return all hashes referenced by this future.
     std::vector<std::string> getHashes() const;

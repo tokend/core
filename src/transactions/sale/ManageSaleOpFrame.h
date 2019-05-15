@@ -43,6 +43,9 @@ namespace stellar {
 
         static void cancelSale(SaleFrame::pointer sale, LedgerDelta &delta, Database &db, LedgerManager &lm);
 
+        static void
+        removeSaleRules(StorageHelper& sh, LedgerKey const& saleKey);
+
         static void cancelAllOffersForQuoteAsset(SaleFrame::pointer sale, SaleQuoteAsset const &saleQuoteAsset,
                                      LedgerDelta &delta, Database &db);
 

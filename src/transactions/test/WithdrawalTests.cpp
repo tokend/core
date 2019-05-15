@@ -9,7 +9,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
-#include "main/test.h"
+#include "test/test.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"

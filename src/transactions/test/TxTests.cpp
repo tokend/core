@@ -6,8 +6,7 @@
 #include "main/Application.h"
 #include "invariant/Invariants.h"
 #include "overlay/LoopbackPeer.h"
-#include "util/make_unique.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "test/test_marshaler.h"
 #include "TxTests.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -141,9 +140,6 @@ bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app)
         }
     }
 
-    // validates db state
-    app.getLedgerManager().checkDbState();
-    app.getInvariants().check(txSet, delta);
     return res;
 }
 
@@ -222,8 +218,6 @@ TxSetResultMeta closeLedgerOn(Application& app, uint32 ledgerSeq, time_t closeTi
 		ledgerSeq);
 	auto z2 =
 		TransactionFrame::getTransactionFeeMeta(app.getDatabase(), ledgerSeq);
-
-	REQUIRE(app.getLedgerManager().getLedgerNum() == (ledgerSeq + 1));
 
 	TxSetResultMeta res;
 	std::transform(z1.results.begin(), z1.results.end(), z2.begin(),
@@ -385,8 +379,6 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     auto innerCode =
         CreateAccountOpFrame::getInnerCode(txResult.result.results()[0]);
     REQUIRE(innerCode == result);
-
-    REQUIRE(txResult.feeCharged == app.getLedgerManager().getTxFee());
 
     AccountFrame::pointer toAccountAfter;
     toAccountAfter = loadAccount(to, app, false);

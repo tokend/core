@@ -25,6 +25,7 @@ public:
             AccountRoleFrame::pointer(uint64_t const roleID));
     MOCK_METHOD1(loadRoleIDsByRule,
             std::vector<uint64_t>(uint64_t const ruleID));
+    MOCK_CONST_METHOD0(getTableName, const std::string());
 };
 
 }  // namespace stellar

@@ -7,7 +7,7 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
@@ -154,10 +154,8 @@ TEST_CASE("Sale", "[tx][sale]")
     {
         //set offer fee for sale owner and participants
         // TODO: use set fees
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                 nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
@@ -606,6 +604,43 @@ TEST_CASE("Sale", "[tx][sale]")
                     participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION);
                 }
             }
+        }
+
+        SECTION("invest fee")
+        {
+            auto offerFee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 2 * ONE,
+                                                             nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
+            setFeesTestHelper.applySetFeesTx(participant, &offerFee, false);
+            auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
+                                                        nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
+            setFeesTestHelper.applySetFeesTx(participant, &fee, false);
+
+            // create sale to participate in:
+            uint64_t startTime = testManager->getLedgerManager().getCloseTime() + 1000;
+            uint64_t endTime = startTime + 1000;
+            uint64_t price = 2 * ONE;
+            int64_t hardCap = bigDivide(maxIssuanceAmount, price, ONE, ROUND_UP);
+            auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, startTime, endTime,
+                                                                   hardCap/2, hardCap, "{}",
+                                                                   { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price) },
+                                                                   maxIssuanceAmount);
+            saleRequestHelper.createApprovedSale(root, owner, saleRequest);
+            auto sales = SaleHelper::Instance()->loadSalesForOwner(owner.key.getPublicKey(), db);
+            uint64_t saleID = sales[0]->getID();
+
+            // fund participant with quote asset
+            uint64_t quoteBalanceAmount = saleRequest.hardCap;
+            issuanceHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteBalanceAmount, quoteBalance,
+                                                      SecretKey::random().getStrKeyPublic(), &issuanceTasks);
+
+            testManager->advanceToTime(startTime);
+
+            auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(quoteAsset, db);
+            const uint64_t feeAssetPrecision = feeAssetFrame->getMinimumAmount();
+            auto manageOfferFee = bigDivide(price, 1 * ONE, 100 * ONE, ROUND_UP, feeAssetPrecision);
+            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, ONE,
+                                                                saleRequest.quoteAssets[0].price, manageOfferFee, 0, saleID);
+            participateHelper.applyManageOffer(participant, manageOffer);
         }
 
         SECTION("With tasks")

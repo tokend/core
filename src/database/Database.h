@@ -7,9 +7,10 @@
 #include "database/Marshaler.h"
 #include "medida/timer_context.h"
 #include "overlay/StellarXDR.h"
+#include "database/DatabaseTypeSpecificOperation.h"
+#include "util/lrucache.hpp"
 #include "util/NonCopyable.h"
 #include "util/Timer.h"
-#include "util/lrucache.hpp"
 #include <set>
 #include <soci.h>
 #include <string>
@@ -17,7 +18,6 @@
 namespace medida
 {
 class Meter;
-class Timer;
 class Counter;
 }
 
@@ -132,6 +132,8 @@ class Database
     getDeleteTimer(std::string const& entityName) = 0;
     virtual medida::TimerContext
     getUpdateTimer(std::string const& entityName) = 0;
+    virtual medida::TimerContext
+    getUpsertTimer(std::string const& entityName) = 0;
 
     // If possible (i.e. "on postgres") issue an SQL pragma that marks
     // the current transaction as read-only. The effects of this last
@@ -172,7 +174,7 @@ class Database
     // invalidating entries in this cache as they perform statements
     // against the database. It's kept here only for ease of access.
     typedef cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>
-        EntryCache;
+            EntryCache;
     virtual EntryCache& getEntryCache() = 0;
 
     virtual ~Database()
@@ -190,8 +192,7 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
     std::map<std::string, std::shared_ptr<soci::statement>> mStatements;
     medida::Counter& mStatementsSize;
 
-    cache::lru_cache<std::string, std::shared_ptr<LedgerEntry const>>
-        mEntryCache;
+    EntryCache mEntryCache;
 
     // Helpers for maintaining the total query time and calculating
     // idle percentage.
@@ -231,6 +232,7 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
     virtual medida::TimerContext getSelectTimer(std::string const& entityName);
     virtual medida::TimerContext getDeleteTimer(std::string const& entityName);
     virtual medida::TimerContext getUpdateTimer(std::string const& entityName);
+    virtual medida::TimerContext getUpsertTimer(std::string const& entityName);
 
     virtual void setCurrentTransactionReadOnly();
 
@@ -252,7 +254,7 @@ class DatabaseImpl : public Database, public NonMovableOrCopyable
 
     virtual soci::connection_pool& getPool();
 
-    virtual EntryCache& getEntryCache();
+    EntryCache& getEntryCache() override;
 };
 
 class DBTimeExcluder : NonCopyable

@@ -65,9 +65,6 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
 
     REQUIRE(actualResultCode == expectedResultCode);
 
-    auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
-    REQUIRE(txResult.feeCharged == txFee);
-
     auto accountAfter = accountHelper->loadAccount(accountToUpdateKYC, db);
 
     auto opResult = txResult.result.results()[0].tr().createChangeRoleRequestResult();

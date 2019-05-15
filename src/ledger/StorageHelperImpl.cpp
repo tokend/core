@@ -14,8 +14,11 @@
 #include "SignerHelperImpl.h"
 #include "SignerRuleHelperImpl.h"
 #include "SignerRoleHelperImpl.h"
+#include "VoteHelperImpl.h"
+#include "PollHelperImpl.h"
 #include "LicenseHelperImpl.h"
 #include "StampHelperImpl.h"
+#include "AccountSpecificRuleHelperImpl.h"
 
 namespace stellar
 {
@@ -40,7 +43,10 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
         {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, &getExternalSystemAccountIDHelper()},
         {LedgerEntryType::STAMP, &getStampHelper()},
-        {LedgerEntryType::LICENSE, &getLicenseHelper()}
+        {LedgerEntryType::LICENSE, &getLicenseHelper()},
+        {LedgerEntryType::VOTE, &getVoteHelper()},
+        {LedgerEntryType::POLL, &getPollHelper()},
+        {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()}
     };
 }
 
@@ -317,6 +323,36 @@ StorageHelperImpl::getStampHelper()
         mStampHelper = std::make_unique<StampHelperImpl>(*this);
     }
     return *mStampHelper;
+}
+
+VoteHelper&
+StorageHelperImpl::getVoteHelper()
+{
+    if(!mVoteHelper)
+    {
+        mVoteHelper = std::make_unique<VoteHelperImpl>(*this);
+    }
+    return *mVoteHelper;
+}
+
+PollHelper&
+StorageHelperImpl::getPollHelper()
+{
+    if(!mPollHelper)
+    {
+        mPollHelper = std::make_unique<PollHelperImpl>(*this);
+    }
+    return *mPollHelper;
+}
+
+AccountSpecificRuleHelper&
+StorageHelperImpl::getAccountSpecificRuleHelper()
+{
+    if (!mAccountSpecificRuleHelper)
+    {
+        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelperImpl>(*this);
+    }
+    return *mAccountSpecificRuleHelper;
 }
 
 } // namespace stellar

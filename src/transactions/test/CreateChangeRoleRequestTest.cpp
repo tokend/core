@@ -4,7 +4,7 @@
 #include <ledger/ReviewableRequestHelper.h>
 #include "transactions/test/test_helper/CreateChangeRoleRequestTestHelper.h"
 #include "test/test_marshaler.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountKYCHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -212,5 +212,34 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                   account.key.getPublicKey(), tokenOwnerRoleID, kycData, &newTasks,
                   CreateChangeRoleRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST);
         }
+
+        SECTION("try change to nonexisting role")
+        {
+            uint64_t nonExistingID = 42;
+            changeRoleRequestHelper.
+                applyCreateChangeRoleRequest(account, 0,
+                                             account.key.getPublicKey(), nonExistingID, kycData, nullptr,
+                                             CreateChangeRoleRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+        }
+
+        SECTION("create request -> delete role -> try approve")
+        {
+            auto createUpdateKYCRequestResult = changeRoleRequestHelper.
+                applyCreateChangeRoleRequest(account, 0,
+                                             account.key.getPublicKey(), tokenOwnerRoleID, kycData, nullptr);
+
+            auto removeAccountRoleOp = manageAccountRoleTestHelper.buildRemoveRoleOp(tokenOwnerRoleID);
+            manageAccountRoleTestHelper.applyTx(master, removeAccountRoleOp);
+
+            requestID = createUpdateKYCRequestResult.success().requestID;
+            auto request = ReviewableRequestHelper::Instance()->loadRequest(
+                requestID, account.key.getPublicKey(),
+                ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
+
+            reviewChangeRoleRequestHelper.
+                applyReviewRequestTx(master, requestID, ReviewRequestOpAction::APPROVE,
+                                     "", ReviewRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+        }
+
     }
 }

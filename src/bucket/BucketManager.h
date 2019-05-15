@@ -4,10 +4,10 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <memory>
-#include "overlay/StellarXDR.h"
 #include "bucket/Bucket.h"
+#include "overlay/StellarXDR.h"
 #include "util/NonCopyable.h"
+#include <memory>
 
 #include "medida/timer_context.h"
 
@@ -16,6 +16,7 @@ namespace stellar
 
 class Application;
 class BucketList;
+class TmpDirManager;
 struct LedgerHeader;
 struct HistoryArchiveState;
 
@@ -45,12 +46,14 @@ class BucketManager : NonMovableOrCopyable
 
   public:
     static std::unique_ptr<BucketManager> create(Application&);
-    static void dropAll(Application& app);
 
     virtual ~BucketManager()
     {
     }
+    virtual void initialize() = 0;
+    virtual void dropAll() = 0;
     virtual std::string const& getTmpDir() = 0;
+    virtual TmpDirManager& getTmpDirManager() = 0;
     virtual std::string const& getBucketDir() = 0;
     virtual BucketList& getBucketList() = 0;
 
@@ -97,5 +100,8 @@ class BucketManager : NonMovableOrCopyable
     // Restart from a saved state: find and attach all buckets in `has`, set
     // current BL.
     virtual void assumeState(HistoryArchiveState const& has) = 0;
+
+    // Ensure all needed buckets are retained
+    virtual void shutdown() = 0;
 };
 }

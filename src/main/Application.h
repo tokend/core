@@ -8,11 +8,12 @@
 #include <string>
 #include "xdr/Stellar-types.h"
 #include "util/types.h"
+#include <lib/json/json.h>
+#include "main/Config.h"
 #include <unordered_set>
 
 namespace asio
 {
-class io_service;
 }
 namespace medida
 {
@@ -23,22 +24,33 @@ namespace stellar
 {
 
 class VirtualClock;
-class Config;
 class TmpDirManager;
 class LedgerManager;
 class BucketManager;
+class CatchupManager;
+class HistoryArchiveManager;
 class HistoryManager;
+class Maintainer;
 class ProcessManager;
 class Herder;
-class Invariants;
+class HerderPersistence;
+class InvariantManager;
 class OverlayManager;
 class Database;
 class PersistentState;
-class LoadGenerator;
 class CommandHandler;
 class WorkManager;
 class BanManager;
 class StatusManager;
+class LedgerTxnRoot;
+
+#ifdef BUILD_TESTS
+class LoadGenerator;
+#endif
+
+class Application;
+void validateNetworkPassphrase(std::shared_ptr<Application> app);
+
 
 /*
  * State of a single instance of the stellar-core application.
@@ -123,8 +135,8 @@ class Application
     // certain subsystem responses to IO events, timers etc.
     enum State
     {
-        // Loading state from database, not yet active. SCP is inhibited.
-        APP_BOOTING_STATE,
+        // Application created, but not started
+        APP_CREATED_STATE,
 
         // Out of sync with SCP peers
         APP_ACQUIRING_CONSENSUS_STATE,
@@ -149,6 +161,8 @@ class Application
     };
 
     virtual ~Application(){};
+
+    virtual void initialize() = 0;
 
     // Return the time in seconds since the POSIX epoch, according to the
     // VirtualClock this Application is bound to. Convenience method.
@@ -178,26 +192,40 @@ class Application
     // Call syncOwnMetrics on self and syncMetrics all objects owned by App.
     virtual void syncAllMetrics() = 0;
 
+    // Clear all metrics
+    virtual void clearMetrics(std::string const& domain) = 0;
+
     // Get references to each of the "subsystem" objects.
     virtual TmpDirManager& getTmpDirManager() = 0;
     virtual LedgerManager& getLedgerManager() = 0;
     virtual BucketManager& getBucketManager() = 0;
+    virtual CatchupManager& getCatchupManager() = 0;
+    virtual HistoryArchiveManager& getHistoryArchiveManager() = 0;
     virtual HistoryManager& getHistoryManager() = 0;
+    virtual Maintainer& getMaintainer() = 0;
     virtual ProcessManager& getProcessManager() = 0;
     virtual Herder& getHerder() = 0;
-    virtual Invariants& getInvariants() = 0;
+    virtual HerderPersistence& getHerderPersistence() = 0;
+    virtual InvariantManager& getInvariantManager() = 0;
     virtual OverlayManager& getOverlayManager() = 0;
-    virtual Database& getDatabase() = 0;
+    virtual Database& getDatabase() const = 0;
     virtual PersistentState& getPersistentState() = 0;
     virtual CommandHandler& getCommandHandler() = 0;
     virtual WorkManager& getWorkManager() = 0;
     virtual BanManager& getBanManager() = 0;
-    virtual StatusManager &getStatusManager() = 0;
+    virtual StatusManager& getStatusManager() = 0;
 
     // Get the worker IO service, served by background threads. Work posted to
     // this io_service will execute in parallel with the calling thread, so use
     // with caution.
     virtual asio::io_service& getWorkerIOService() = 0;
+
+    virtual void postOnMainThread(std::function<void()>&& f,
+                                  std::string jobName) = 0;
+    virtual void postOnMainThreadWithDelay(std::function<void()>&& f,
+                                           std::string jobName) = 0;
+    virtual void postOnBackgroundThread(std::function<void()>&& f,
+                                        std::string jobName) = 0;
 
     // Perform actions necessary to transition from BOOTING_STATE to other
     // states. In particular: either reload or reinitialize the database, and
@@ -219,21 +247,16 @@ class Application
     // true. Otherwise return false. This method exists only for testing.
     virtual bool manualClose() = 0;
 
+#ifdef BUILD_TESTS
     // If config.ARTIFICIALLY_GENERATE_LOAD_FOR_TESTING=true, generate some load
     // against the current application.
-    virtual void generateLoad(uint32_t nAccounts, uint32_t nTxs,
-                              uint32_t txRate, bool autoRate) = 0;
+    virtual void generateLoad(bool isCreate, uint32_t nAccounts,
+                              uint32_t offset, uint32_t nTxs, uint32_t txRate,
+                              uint32_t batchSize, bool autoRate) = 0;
 
     // Access the load generator for manual operation.
     virtual LoadGenerator& getLoadGenerator() = 0;
-
-    // Run a consistency check between the database and the bucketlist.
-    virtual void checkDB() = 0;
-	virtual void checkDBSync() = 0;
-
-
-    // perform maintenance tasks
-    virtual void maintenance() = 0;
+#endif
 
     // Execute any administrative commands written in the Config.COMMANDS
     // variable of the config file. This permits scripting certain actions to
@@ -243,6 +266,9 @@ class Application
     // Report, via standard logging, the current state any metrics defined in
     // the Config.REPORT_METRICS (or passed on the command line with --metric)
     virtual void reportCfgMetrics() = 0;
+
+    // Get information about the instance as JSON object
+    virtual Json::Value getJsonInfo() = 0;
 
     // Report information about the instance to standard logging
     virtual void reportInfo() = 0;
@@ -267,17 +293,26 @@ class Application
     virtual int64 getMaxInvoicesForReceiverAccount() const = 0;
     virtual int32 getKYCSuperAdminMask() const = 0;
     virtual size_t getSignerRuleIDsMaxCount() const = 0;
-
-    // Returns false if policies should not be checked,
-    // for sake of testing or otherwise.
-    virtual bool isCheckingPolicies() const = 0;
-    virtual void stopCheckingPolicies() = 0;
-    virtual void resumeCheckingPolicies() = 0;
+    virtual uint32_t getMaxSaleRulesLength() const = 0;
 
     // Factory: create a new Application object bound to `clock`, with a local
     // copy made of `cfg`.
     static pointer create(VirtualClock& clock, Config const& cfg,
-                          bool newDB = true);
+                          bool newDB = true, bool validateNetworkPass = true);
+
+    template <typename T>
+    static std::shared_ptr<T>
+    create(VirtualClock& clock, Config const& cfg, bool newDB = true, bool validateNetworkPass = true)
+    {
+        auto ret = std::make_shared<T>(clock, cfg);
+        ret->initialize();
+        if (newDB || cfg.DATABASE.value == "sqlite3://:memory:")
+            ret->newDB();
+        if (validateNetworkPass)
+            validateNetworkPassphrase(ret);
+
+        return ret;
+    }
 
   protected:
     Application()

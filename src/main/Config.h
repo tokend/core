@@ -3,20 +3,29 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "overlay/StellarXDR.h"
-#include <string>
-#include <memory>
-#include <map>
-#include <set>
 #include "crypto/SecretKey.h"
 #include "lib/util/cpptoml.h"
-#include "util/types.h"
+#include "overlay/StellarXDR.h"
+#include "util/SecretValue.h"
+#include "util/Timer.h"
+#include "util/optional.h"
+
+#include <map>
+#include <memory>
+#include <string>
+#include <set>
 
 #define DEFAULT_PEER_PORT 11625
 
 namespace stellar
 {
-class HistoryArchive;
+struct HistoryArchiveConfiguration
+{
+    std::string mName;
+    std::string mGetCmd;
+    std::string mPutCmd;
+    std::string mMkdirCmd;
+};
 
 class Config : public std::enable_shared_from_this<Config>
 {
@@ -27,12 +36,15 @@ class Config : public std::enable_shared_from_this<Config>
     void parseNodeID(std::string configStr, PublicKey& retKey, SecretKey& sKey,
                      bool isSeed);
 
-	static AssetCode getAssetCode(std::shared_ptr<cpptoml::toml_base> rawValue, const char* errorMessage);
+    std::string expandNodeID(std::string const& s) const;
 
   public:
+    static const uint32_t CURRENT_LEDGER_PROTOCOL_VERSION;
+    
     typedef std::shared_ptr<Config> pointer;
 
     std::vector<PublicKey> getWiredKeys(LedgerVersion ledgerVersion) const;
+    std::vector<PublicKey> getDevKeys() const;
     void validateConfig();
 
     enum TestDbMode
@@ -77,8 +89,12 @@ class Config : public std::enable_shared_from_this<Config>
     // If you want, say, a week of history, set this to 120000.
     uint32_t CATCHUP_RECENT;
 
-    // Enables or disables automatic maintenance on startup
-    bool MAINTENANCE_ON_STARTUP;
+    // Interval between automatic maintenance executions
+    std::chrono::seconds AUTOMATIC_MAINTENANCE_PERIOD;
+
+    // Number of unneeded rows in each table that will be removed during one
+    // maintenance run
+    uint32_t AUTOMATIC_MAINTENANCE_COUNT;
 
     // A config parameter that enables synthetic load generation on demand,
     // using the `generateload` runtime command (see CommandHandler.cpp). This
@@ -105,6 +121,10 @@ class Config : public std::enable_shared_from_this<Config>
     // this should only be enabled when testing as it's a security issue
     bool ALLOW_LOCALHOST_FOR_TESTING;
 
+    // Set to use config file values for genesis ledger
+    // not setable in config file - only tests are allowed to do this
+    bool USE_CONFIG_FOR_GENESIS;
+
     // This is the number of failures you want to be able to tolerate.
     // You will need at least 3f+1 nodes in your quorum set.
     // If you don't have enough in your quorum set to tolerate the level you
@@ -117,7 +137,15 @@ class Config : public std::enable_shared_from_this<Config>
     //  aren't concerned with byzantine failures.
     bool UNSAFE_QUORUM;
 
+    // If set to true, bucket GC will not be performed. It can lead to massive
+    // disk usage, but it is useful for recovering of nodes.
+    bool DISABLE_BUCKET_GC;
+
+    // Set of cursors added at each startup with value '1'.
+    std::vector<std::string> KNOWN_CURSORS;
+
     uint32_t LEDGER_PROTOCOL_VERSION;
+    VirtualClock::time_point TESTING_UPGRADE_DATETIME;
 
     // note: all versions in the range
     // [OVERLAY_PROTOCOL_MIN_VERSION, OVERLAY_PROTOCOL_VERSION] must be handled
@@ -125,21 +153,20 @@ class Config : public std::enable_shared_from_this<Config>
     uint32_t OVERLAY_PROTOCOL_VERSION;     // max overlay version understood
     std::string VERSION_STR;
     std::string LOG_FILE_PATH;
-    std::string TMP_DIR_PATH;
     std::string BUCKET_DIR_PATH;
-    uint32_t DESIRED_BASE_FEE;     // in stroops
-    uint32_t DESIRED_BASE_RESERVE; // in stroops
+    uint32_t TESTING_UPGRADE_DESIRED_FEE; // in stroops
+    uint32_t TESTING_UPGRADE_RESERVE;     // in stroops
     uint32_t DESIRED_MAX_TX_PER_LEDGER;
-    unsigned short HTTP_PORT;       // what port to listen for commands
-    bool PUBLIC_HTTP_PORT;          // if you accept commands from not localhost
-    int HTTP_MAX_CLIENT;  // maximum number of http clients, i.e backlog
+    unsigned short HTTP_PORT; // what port to listen for commands
+    bool PUBLIC_HTTP_PORT;    // if you accept commands from not localhost
+    int HTTP_MAX_CLIENT;      // maximum number of http clients, i.e backlog
     std::string NETWORK_PASSPHRASE; // identifier for the network
 
 	PublicKey masterID; // account id of master account
     uint64_t adminRoleID;
 
     std::string BASE_EXCHANGE_NAME;
-    int64 TX_EXPIRATION_PERIOD;
+    int64_t TX_EXPIRATION_PERIOD;
     int64 TX_EXPIRATION_PERIOD_WINDOW = 60*60;
     
     uint64 MAX_INVOICES_FOR_RECEIVER_ACCOUNT = 20;
@@ -151,16 +178,23 @@ class Config : public std::enable_shared_from_this<Config>
     uint64 LICENSE_FREE_PERIOD_NUM_BLOCKS = 600000;
     uint64 LICENSE_FREE_NUM_ADMINS = 2;
 
-
-
     int32 KYC_SUPER_ADMIN_MASK = 1;
 
     size_t mSignerRuleIDsMaxCount = 128;
 
+    uint32_t mMaxSaleRulesLength = 150;
+
     // overlay config
     unsigned short PEER_PORT;
-    unsigned TARGET_PEER_CONNECTIONS;
-    unsigned MAX_PEER_CONNECTIONS;
+    unsigned short TARGET_PEER_CONNECTIONS;
+    unsigned short MAX_PENDING_CONNECTIONS;
+    int MAX_ADDITIONAL_PEER_CONNECTIONS;
+    unsigned short MAX_INBOUND_PENDING_CONNECTIONS;
+    unsigned short MAX_OUTBOUND_PENDING_CONNECTIONS;
+    unsigned short PEER_AUTHENTICATION_TIMEOUT;
+    unsigned short PEER_TIMEOUT;
+    unsigned short PEER_STRAGGLER_TIMEOUT;
+    static constexpr auto const POSSIBLY_PREFERRED_EXTRA = 2;
     // Peers we will always try to stay connected to
     std::vector<std::string> PREFERRED_PEERS;
     std::vector<std::string> KNOWN_PEERS;
@@ -187,42 +221,57 @@ class Config : public std::enable_shared_from_this<Config>
     // process-management config
     size_t MAX_CONCURRENT_SUBPROCESSES;
 
-    // Setting this causes all sorts of extra checks to occur
-    // the overhead may cause slower systems to not perform as fast
-    // as the rest of the network, caution is advised when using this.
-    bool PARANOID_MODE;
-
     // SCP config
     SecretKey NODE_SEED;
     bool NODE_IS_VALIDATOR;
     stellar::SCPQuorumSet QUORUM_SET;
 
     // Invariants
-    bool INVARIANT_CHECK_CACHE_CONSISTENT_WITH_DATABASE;
+    std::vector<std::string> INVARIANT_CHECKS;
 
     std::map<std::string, std::string> VALIDATOR_NAMES;
 
     // History config
-    std::map<std::string, std::shared_ptr<HistoryArchive>> HISTORY;
+    std::map<std::string, HistoryArchiveConfiguration> HISTORY;
 
     // Database config
-    std::string DATABASE;
+    SecretValue DATABASE;
 
     std::vector<std::string> COMMANDS;
     std::vector<std::string> REPORT_METRICS;
 
-    std::string NTP_SERVER; // ntp server used to check if time is valid on host
+    // Data layer cache configuration
+    // - ENTRY_CACHE_SIZE controls the maximum number of LedgerEntry objects
+    //   that will be stored in the cache
+    // - BEST_OFFERS_CACHE_SIZE controls the maximum number of Asset pairs that
+    //   will be stored in the cache, although many LedgerEntry objects may be
+    //   associated with a single Asset pair
+    size_t ENTRY_CACHE_SIZE;
+    size_t BEST_OFFERS_CACHE_SIZE;
+
+    std::string SENTRY_DSN;
+    std::string MIN_LEVEL_FOR_SENTRY = "warning";
 
     std::vector<PublicKey> WIRED_KEYS;
+    std::vector<PublicKey> DEV_LICENSE_KEYS;
 
     Config();
 
     void load(std::string const& filename);
 
+    // fixes values of connection-relates settings
+    void adjust();
+
     std::string toShortString(PublicKey const& pk) const;
     std::string toStrKey(PublicKey const& pk, bool& isAlias) const;
     std::string toStrKey(PublicKey const& pk) const;
     bool resolveNodeID(std::string const& s, PublicKey& retKey) const;
+
+
+    std::chrono::seconds getExpectedLedgerCloseTime() const;
+
+    void logBasicInfo();
+    void setNoListen();
 
 	std::vector<PublicKey> getSystemAccounts() const {
 		return{ masterID };
@@ -233,7 +282,5 @@ class Config : public std::enable_shared_from_this<Config>
     {
         return adminRoleID;
     }
-
-    static std::vector<std::string> readStrVector(std::string name, std::shared_ptr<cpptoml::toml_base> values);
 };
 }

@@ -3,6 +3,7 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/StorageHelperImpl.h"
+#include "ledger/AccountRoleHelper.h"
 #include <lib/xdrpp/xdrpp/marshal.h>
 #include "xdrpp/printer.h"
 #include "ledger/LedgerDelta.h"
@@ -119,6 +120,17 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, StorageHelper& storage
 {
     Database &db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
+    {
+        auto roleID = mCreateChangeRoleRequestOp.accountRoleToSet;
+        auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+        if(!accountRole)
+        {
+            innerResult().code(CreateChangeRoleRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+            return false;
+        }
+    }
 
     if (mCreateChangeRoleRequestOp.requestID != 0)
     {

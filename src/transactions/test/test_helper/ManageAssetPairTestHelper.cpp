@@ -53,8 +53,6 @@ namespace txtest
 
         REQUIRE(expectedResult == actualResultCode);
 
-        REQUIRE(txResult.feeCharged == mTestManager->getApp().getLedgerManager().getTxFee());
-
         auto countAfter = assetPairHelper->countObjects(db.getSession());
         auto assetPairFrameAfter = assetPairHelper->loadAssetPair(base, quote, db);
 

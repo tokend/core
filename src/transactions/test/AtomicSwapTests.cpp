@@ -12,7 +12,7 @@
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "test/test_marshaler.h"
-#include "main/test.h"
+#include "test/test.h"
 
 using namespace stellar;
 using namespace stellar::txtest;

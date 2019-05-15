@@ -7,7 +7,7 @@
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "ledger/AccountLimitsHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "crypto/SHA.h"
 #include "test_helper/CreateAccountTestHelper.h"

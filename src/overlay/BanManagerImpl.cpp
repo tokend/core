@@ -3,11 +3,11 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "overlay/BanManagerImpl.h"
+//#include "crypto/KeyUtils.h"
 #include "crypto/SecretKey.h"
 #include "database/Database.h"
 #include "main/Application.h"
 #include "util/Logging.h"
-#include "util/make_unique.h"
 
 namespace stellar
 {
@@ -17,7 +17,7 @@ using namespace std;
 std::unique_ptr<BanManager>
 BanManager::create(Application& app)
 {
-    return make_unique<BanManagerImpl>(app);
+    return std::make_unique<BanManagerImpl>(app);
 }
 
 BanManagerImpl::BanManagerImpl(Application& app) : mApp(app)
@@ -77,8 +77,8 @@ BanManagerImpl::getBans()
     std::vector<std::string> result;
     std::string nodeIDString;
     auto timer = mApp.getDatabase().getSelectTimer("ban");
-    auto prep = mApp.getDatabase().getPreparedStatement(
-        "SELECT nodeid FROM ban");
+    auto prep =
+        mApp.getDatabase().getPreparedStatement("SELECT nodeid FROM ban");
     auto& st = prep.statement();
     st.exchange(soci::into(nodeIDString));
     st.define_and_bind();

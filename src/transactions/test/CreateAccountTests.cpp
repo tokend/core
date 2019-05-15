@@ -7,7 +7,7 @@
 #include <ledger/ExternalSystemAccountIDPoolEntry.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/ExternalSystemAccountID.h"
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"

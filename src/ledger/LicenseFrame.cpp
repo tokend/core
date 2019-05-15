@@ -69,15 +69,31 @@ bool LicenseFrame::isSignatureValid(Application &app)
 
     SignatureValidatorImpl signatureValidator(contentsHash, signatures);
 
-    LedgerVersion ledgerVersion = LedgerVersion(app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion);
-    const auto config = app.getConfig();
-    auto keys = config.getWiredKeys(ledgerVersion);
+    auto ledgerVersion = LedgerVersion(app.getLedgerManager().getCurrentLedgerHeader().ledgerVersion);
+    auto keys = getLicenseKeys(app);
 
     SignatureValidator::Result result =
             signatureValidator.check(keys,
                                      VALID_SIGNATURES_REQUIRED,
                                      ledgerVersion);
     return result == SignatureValidator::Result::SUCCESS;
+}
+
+std::vector<PublicKey>
+LicenseFrame::getLicenseKeys(Application& app) {
+    const auto config = app.getConfig();
+    std::vector<PublicKey> keys;
+    auto& header = app.getLedgerManager().getCurrentLedgerHeader();
+    if (header.ledgerSeq <= config.LICENSE_FREE_PERIOD_NUM_BLOCKS){
+        auto devKeys = config.getDevKeys();
+        keys.insert(keys.end(), devKeys.begin(), devKeys.end());
+    }
+
+    LedgerVersion ledgerVersion = LedgerVersion(header.ledgerVersion);
+    auto wiredKeys = config.getWiredKeys(ledgerVersion);
+    keys.insert(keys.end(), wiredKeys.begin(), wiredKeys.end());
+
+    return keys;
 }
 
 bool LicenseFrame::isExpired(Application &app)

@@ -4,23 +4,20 @@
 
 #include "NominationProtocol.h"
 
-#include <functional>
-#include "util/types.h"
-#include "xdrpp/marshal.h"
+#include "Slot.h"
 #include "crypto/Hex.h"
 #include "crypto/SHA.h"
-#include "util/Logging.h"
-#include "scp/LocalNode.h"
 #include "lib/json/json.h"
-#include "util/make_unique.h"
+#include "scp/LocalNode.h"
+#include "scp/QuorumSetUtils.h"
 #include "util/GlobalChecks.h"
-#include "Slot.h"
-#include "main/Config.h"
+#include "util/Logging.h"
+#include "util/XDROperators.h"
+#include "xdrpp/marshal.h"
+#include <functional>
 
 namespace stellar
 {
-using xdr::operator==;
-using xdr::operator<;
 using namespace std::placeholders;
 
 NominationProtocol::NominationProtocol(Slot& slot)
@@ -74,7 +71,7 @@ NominationProtocol::isSubsetHelper(xdr::xvector<Value> const& p,
 SCPDriver::ValidationLevel
 NominationProtocol::validateValue(Value const& v)
 {
-    return mSlot.getSCPDriver().validateValue(mSlot.getSlotIndex(), v);
+    return mSlot.getSCPDriver().validateValue(mSlot.getSlotIndex(), v, true);
 }
 
 Value
@@ -110,12 +107,16 @@ NominationProtocol::isSane(SCPStatement const& st)
     auto const& nom = st.pledges.nominate();
     bool res = (nom.votes.size() + nom.accepted.size()) != 0;
 
-    res = res && std::is_sorted(nom.votes.begin(), nom.votes.end());
-    res = res && std::is_sorted(nom.accepted.begin(), nom.accepted.end());
-
-    res = res &&
-          mSlot.getLocalNode()->isQuorumSetSane(
-              *mSlot.getQuorumSetFromStatement(st), false);
+    res = res && (std::adjacent_find(
+                      nom.votes.begin(), nom.votes.end(),
+                      [](stellar::Value const& l, stellar::Value const& r) {
+                          return !(l < r);
+                      }) == nom.votes.end());
+    res = res && (std::adjacent_find(
+                      nom.accepted.begin(), nom.accepted.end(),
+                      [](stellar::Value const& l, stellar::Value const& r) {
+                          return !(l < r);
+                      }) == nom.accepted.end());
 
     return res;
 }
@@ -165,7 +166,7 @@ NominationProtocol::emitNomination()
             isNewerStatement(mLastEnvelope->statement.pledges.nominate(),
                              st.pledges.nominate()))
         {
-            mLastEnvelope = make_unique<SCPEnvelope>(envelope);
+            mLastEnvelope = std::make_unique<SCPEnvelope>(envelope);
             if (mSlot.isFullyValidated())
             {
                 mSlot.getSCPDriver().emitEnvelope(envelope);
@@ -207,30 +208,40 @@ NominationProtocol::applyAll(SCPNomination const& nom,
 void
 NominationProtocol::updateRoundLeaders()
 {
-    mRoundLeaders.clear();
-    uint64 topPriority = 0;
-    SCPQuorumSet const& myQSet = mSlot.getLocalNode()->getQuorumSet();
+    SCPQuorumSet myQSet = mSlot.getLocalNode()->getQuorumSet();
 
-    LocalNode::forAllNodes(myQSet, [&](NodeID const& cur)
-                           {
-                               uint64 w = getNodePriority(cur, myQSet);
-                               if (w > topPriority)
-                               {
-                                   topPriority = w;
-                                   mRoundLeaders.clear();
-                               }
-                               if (w == topPriority && w > 0)
-                               {
-                                   mRoundLeaders.insert(cur);
-                               }
-                           });
-    CLOG(DEBUG, "SCP") << "updateRoundLeaders: " << mRoundLeaders.size();
+    // initialize priority with value derived from self
+    std::set<NodeID> newRoundLeaders;
+    auto localID = mSlot.getLocalNode()->getNodeID();
+    normalizeQSet(myQSet, &localID);
+
+    newRoundLeaders.insert(localID);
+    uint64 topPriority = getNodePriority(localID, myQSet);
+
+    LocalNode::forAllNodes(myQSet, [&](NodeID const& cur) {
+        uint64 w = getNodePriority(cur, myQSet);
+        if (w > topPriority)
+        {
+            topPriority = w;
+            newRoundLeaders.clear();
+        }
+        if (w == topPriority && w > 0)
+        {
+            newRoundLeaders.insert(cur);
+        }
+    });
+    // expand mRoundLeaders with the newly computed leaders
+    mRoundLeaders.insert(newRoundLeaders.begin(), newRoundLeaders.end());
+    CLOG(DEBUG, "SCP") << "updateRoundLeaders: " << newRoundLeaders.size()
+                       << " -> " << mRoundLeaders.size();
     if (Logging::logDebug("SCP"))
+    {
         for (auto const& rl : mRoundLeaders)
         {
-            CLOG(DEBUG, "SCP") << "    leader "
-                               << mSlot.getSCPDriver().toShortString(rl);
+            CLOG(DEBUG, "SCP")
+                << "    leader " << mSlot.getSCPDriver().toShortString(rl);
         }
+    }
 }
 
 uint64
@@ -254,9 +265,21 @@ NominationProtocol::getNodePriority(NodeID const& nodeID,
                                     SCPQuorumSet const& qset)
 {
     uint64 res;
-    uint64 w = LocalNode::getNodeWeight(nodeID, qset);
+    uint64 w;
 
-    if (hashNode(false, nodeID) < w)
+    if (nodeID == mSlot.getLocalNode()->getNodeID())
+    {
+        // local node is in all quorum sets
+        w = UINT64_MAX;
+    }
+    else
+    {
+        w = LocalNode::getNodeWeight(nodeID, qset);
+    }
+
+    // if w > 0; w is inclusive here as
+    // 0 <= hashNode <= UINT64_MAX
+    if (w > 0 && hashNode(false, nodeID) <= w)
     {
         res = hashNode(true, nodeID);
     }
@@ -275,31 +298,30 @@ NominationProtocol::getNewValueFromNomination(SCPNomination const& nom)
     Value newVote;
     uint64 newHash = 0;
 
-    applyAll(nom, [&](Value const& value)
-             {
-                 Value valueToNominate;
-                 auto vl = validateValue(value);
-                 if (vl == SCPDriver::kFullyValidatedValue)
-                 {
-                     valueToNominate = value;
-                 }
-                 else
-                 {
-                     valueToNominate = extractValidValue(value);
-                 }
-                 if (!valueToNominate.empty())
-                 {
-                     if (mVotes.find(valueToNominate) == mVotes.end())
-                     {
-                         uint64 curHash = hashValue(valueToNominate);
-                         if (curHash >= newHash)
-                         {
-                             newHash = curHash;
-                             newVote = valueToNominate;
-                         }
-                     }
-                 }
-             });
+    applyAll(nom, [&](Value const& value) {
+        Value valueToNominate;
+        auto vl = validateValue(value);
+        if (vl == SCPDriver::kFullyValidatedValue)
+        {
+            valueToNominate = value;
+        }
+        else
+        {
+            valueToNominate = extractValidValue(value);
+        }
+        if (!valueToNominate.empty())
+        {
+            if (mVotes.find(valueToNominate) == mVotes.end())
+            {
+                uint64 curHash = hashValue(valueToNominate);
+                if (curHash >= newHash)
+                {
+                    newHash = curHash;
+                    newVote = valueToNominate;
+                }
+            }
+        }
+    });
     return newVote;
 }
 
@@ -332,8 +354,7 @@ NominationProtocol::processEnvelope(SCPEnvelope const& envelope)
                         continue;
                     }
                     if (mSlot.federatedAccept(
-                            [&v](SCPStatement const& st) -> bool
-                            {
+                            [&v](SCPStatement const& st) -> bool {
                                 auto const& nom = st.pledges.nominate();
                                 bool res;
                                 res = (std::find(nom.votes.begin(),
@@ -396,6 +417,8 @@ NominationProtocol::processEnvelope(SCPEnvelope const& envelope)
                     {
                         mVotes.emplace(newVote);
                         modified = true;
+                        mSlot.getSCPDriver().nominatingValue(
+                            mSlot.getSlotIndex(), newVote);
                     }
                 }
 
@@ -430,10 +453,8 @@ std::vector<Value>
 NominationProtocol::getStatementValues(SCPStatement const& st)
 {
     std::vector<Value> res;
-    applyAll(st.pledges.nominate(), [&](Value const& v)
-             {
-                 res.emplace_back(v);
-             });
+    applyAll(st.pledges.nominate(),
+             [&](Value const& v) { res.emplace_back(v); });
     return res;
 }
 
@@ -443,8 +464,8 @@ NominationProtocol::nominate(Value const& value, Value const& previousValue,
                              bool timedout)
 {
     if (Logging::logDebug("SCP"))
-        CLOG(DEBUG, "SCP") << "NominationProtocol::nominate "
-                           << mSlot.getSCP().getValueString(value);
+        CLOG(DEBUG, "SCP") << "NominationProtocol::nominate (" << mRoundNumber
+                           << ") " << mSlot.getSCP().getValueString(value);
 
     bool updated = false;
 
@@ -463,6 +484,7 @@ NominationProtocol::nominate(Value const& value, Value const& previousValue,
 
     Value nominatingValue;
 
+    // if we're leader, add our value
     if (mRoundLeaders.find(mSlot.getLocalNode()->getNodeID()) !=
         mRoundLeaders.end())
     {
@@ -473,20 +495,18 @@ NominationProtocol::nominate(Value const& value, Value const& previousValue,
         }
         nominatingValue = value;
     }
-    else
+    // add a few more values from other leaders
+    for (auto const& leader : mRoundLeaders)
     {
-        for (auto const& leader : mRoundLeaders)
+        auto it = mLatestNominations.find(leader);
+        if (it != mLatestNominations.end())
         {
-            auto it = mLatestNominations.find(leader);
-            if (it != mLatestNominations.end())
+            nominatingValue = getNewValueFromNomination(
+                it->second.statement.pledges.nominate());
+            if (!nominatingValue.empty())
             {
-                nominatingValue = getNewValueFromNomination(
-                    it->second.statement.pledges.nominate());
-                if (!nominatingValue.empty())
-                {
-                    mVotes.insert(nominatingValue);
-                    updated = true;
-                }
+                mVotes.insert(nominatingValue);
+                updated = true;
             }
         }
     }
@@ -499,8 +519,7 @@ NominationProtocol::nominate(Value const& value, Value const& previousValue,
     std::shared_ptr<Slot> slot = mSlot.shared_from_this();
     mSlot.getSCPDriver().setupTimer(
         mSlot.getSlotIndex(), Slot::NOMINATION_TIMER, timeout,
-        [slot, value, previousValue]()
-        {
+        [slot, value, previousValue]() {
             slot->nominate(value, previousValue, true);
         });
 
@@ -522,33 +541,41 @@ NominationProtocol::stopNomination()
     mNominationStarted = false;
 }
 
-void
-NominationProtocol::dumpInfo(Json::Value& ret)
+std::set<NodeID> const&
+NominationProtocol::getLeaders() const
 {
-    Json::Value& nomState = ret["nomination"];
-    nomState["roundnumber"] = mRoundNumber;
-    nomState["started"] = mNominationStarted;
+    return mRoundLeaders;
+}
+
+Json::Value
+NominationProtocol::getJsonInfo()
+{
+    Json::Value ret;
+    ret["roundnumber"] = mRoundNumber;
+    ret["started"] = mNominationStarted;
 
     int counter = 0;
     for (auto const& v : mVotes)
     {
-        nomState["X"][counter] = mSlot.getSCP().getValueString(v);
+        ret["X"][counter] = mSlot.getSCP().getValueString(v);
         counter++;
     }
 
     counter = 0;
     for (auto const& v : mAccepted)
     {
-        nomState["Y"][counter] = mSlot.getSCP().getValueString(v);
+        ret["Y"][counter] = mSlot.getSCP().getValueString(v);
         counter++;
     }
 
     counter = 0;
     for (auto const& v : mCandidates)
     {
-        nomState["Z"][counter] = mSlot.getSCP().getValueString(v);
+        ret["Z"][counter] = mSlot.getSCP().getValueString(v);
         counter++;
     }
+
+    return ret;
 }
 
 void
@@ -570,7 +597,7 @@ NominationProtocol::setStateFromEnvelope(SCPEnvelope const& e)
         mVotes.emplace(v);
     }
 
-    mLastEnvelope = make_unique<SCPEnvelope>(e);
+    mLastEnvelope = std::make_unique<SCPEnvelope>(e);
 }
 
 std::vector<SCPEnvelope>

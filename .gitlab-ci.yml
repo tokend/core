@@ -17,15 +17,17 @@ variables:
   DH_IMAGE: tokend/core
 
 stages:
+  - buildbase
   - build
   - publish
 
 build-base-image:
   image: docker:latest
-  stage: build
+  stage: buildbase
   only:
     refs:
       - master
+      - feature/docker-healthcheck
     changes:
       - buildbase.dockerfile
   tags:

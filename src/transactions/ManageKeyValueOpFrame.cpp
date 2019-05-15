@@ -31,6 +31,8 @@ namespace stellar
     char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_tasks";
     char const* ManageKeyValueOpFrame::atomicSwapBidTasks = "atomic_swap_bid_tasks";
     char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
+    char const* ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
+    char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -57,6 +59,7 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
         {atomicSwapBidTasks, KeyValueEntryType::UINT32},
         {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
+        {createPollTasks, KeyValueEntryType::UINT32},
     };
 }
 
@@ -271,5 +274,17 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey()
     {
         return atomicSwapBidTasks;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey()
+    {
+        return maxSaleRulesNumbersKey;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreatePollKey(std::string type)
+    {
+        return string(createPollTasks) + ":" + type;
     }
 }

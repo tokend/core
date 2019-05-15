@@ -85,7 +85,6 @@ namespace stellar {
 
             CreateAccountResultCode applyTx(CreateAccountTestBuilder builder);
 
-            [[deprecated]]
             CreateAccountResultCode applyCreateAccountTx(Account &from, PublicKey to, uint64_t roleID = 1,
                                                          Account *signer = nullptr, AccountID *referrer = nullptr,
                                                          int32 policies = -1,

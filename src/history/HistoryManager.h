@@ -4,9 +4,9 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "overlay/StellarXDR.h"
-#include "history/InferredQuorum.h"
 #include "history/HistoryArchive.h"
+#include "history/InferredQuorum.h"
+#include "overlay/StellarXDR.h"
 #include <functional>
 #include <memory>
 
@@ -184,61 +184,17 @@ struct StateSnapshot;
 class HistoryManager
 {
   public:
-    // The two supported styles of catchup. CATCHUP_COMPLETE will replay all
-    // history blocks, from the last closed ledger to the present, when catching
-    // up; CATCHUP_MINIMAL will attempt to "fast forward" to the next BucketList
-    // checkpoint, skipping the history log that happened between the last
-    // closed ledger and the catchup point. This is set by config, default is
-    // CATCHUP_MINIMAL but it should be CATCHUP_COMPLETE for any server with
-    // API clients. See LedgerManager::startCatchUp and its callers for uses.
-    //
-    // CATCHUP_RECENT is a hybrid mode that does a CATCHUP_MINIMAL to a point
-    // in the recent past, then runs CATCHUP_COMPLETE from there forward to
-    // the present.
-    enum CatchupMode
+    // Status code returned from LedgerManager::verifyCatchupCandidate. Look
+    // there for additional documentation.
+    enum LedgerVerificationStatus
     {
-        CATCHUP_COMPLETE,
-        CATCHUP_MINIMAL,
-        CATCHUP_RECENT,
-        CATCHUP_BUCKET_REPAIR
+        VERIFY_STATUS_OK,
+        VERIFY_STATUS_ERR_BAD_HASH,
+        VERIFY_STATUS_ERR_BAD_LEDGER_VERSION,
+        VERIFY_STATUS_ERR_OVERSHOT,
+        VERIFY_STATUS_ERR_UNDERSHOT,
+        VERIFY_STATUS_ERR_MISSING_ENTRIES
     };
-
-    // Status code returned from LedgerManager::verifyCatchupCandidate. The
-    // HistoryManager's catchup algorithm downloads _untrusted_ history from a
-    // configured history archive, then (once it has done internal consistency
-    // checking of the chain of history it downloaded) calls
-    // verifyCatchupCandidate to check the validity of a proposed target ledger
-    // against the running consensus of the SCP protocol, thus turning untrusted
-    // history into trusted history.
-    //
-    // LedgerManager will return VERIFY_HASH_OK if the proposed ledger is
-    // definitely part of the consensus history chain (i.e. the ledger hash
-    // matches the consensus for the provided ledger number); VERIFY_HASH_BAD if
-    // the proposed ledger is definitely _not_ valid (i.e. if it has a different
-    // hash than the consensus ledger with its number); or VERIFY_HASH_UNKNOWN
-    // if the network consensus has not yet advanced to the proposed catchup
-    // target.
-    //
-    // In the first case, catchup will proceed; in the second it will fail (and
-    // restart, possibly against a different untrusted history archive); in the
-    // third it will pause and retry the query after a timeout.
-    enum VerifyHashStatus
-    {
-        VERIFY_HASH_OK,
-        VERIFY_HASH_BAD,
-        VERIFY_HASH_UNKNOWN
-    };
-
-    // Select any readable history archive. If there are more than one,
-    // select one at random.
-    virtual std::shared_ptr<HistoryArchive>
-    selectRandomReadableHistoryArchive() = 0;
-
-    // Initialize a named history archive by writing
-    // .well-known/stellar-history.json to it.
-    static bool initializeHistoryArchive(Application& app, std::string arch);
-
-    static bool isHistoryArchiveExists(Application& app, std::string arch);
 
     // Check that config settings are at least somewhat reasonable.
     static bool checkSensibleConfig(Config const& cfg);
@@ -251,14 +207,19 @@ class HistoryManager
     // Checkpoints are made every getCheckpointFrequency() ledgers.
     // This should normally be a constant (64) but in testing cases
     // may be different (see ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING).
-    virtual uint32_t getCheckpointFrequency() = 0;
+    virtual uint32_t getCheckpointFrequency() const = 0;
+
+    // Return checkpoint that contains given ledger. Checkpoint is identified
+    // by last ledger in range. This does not consult the network nor take
+    // account of manual checkpoints.
+    virtual uint32_t checkpointContainingLedger(uint32_t ledger) const = 0;
 
     // Given a "current ledger" (not LCL) for a node, return the "current
     // ledger" value at which the previous scheduled checkpoint should have
     // occurred, by rounding-down to the next multiple of checkpoint
     // frequency. This does not consult the network nor take account of manual
     // checkpoints.
-    virtual uint32_t prevCheckpointLedger(uint32_t ledger) = 0;
+    virtual uint32_t prevCheckpointLedger(uint32_t ledger) const = 0;
 
     // Given a "current ledger" (not LCL) for a node, return the "current
     // ledger" value at which the next checkpoint should occur; usually this
@@ -267,17 +228,11 @@ class HistoryManager
     // checkpoint it will return the ledger passed in, indicating that the
     // "next" checkpoint-ledger to look forward to is the same as the "init"
     // ledger of the catchup operation.
-    virtual uint32_t nextCheckpointLedger(uint32_t ledger) = 0;
+    virtual uint32_t nextCheckpointLedger(uint32_t ledger) const = 0;
 
-    // Given a ledger, tell the number of seconds to sleep until the next
-    // catchup probe.
-    virtual uint64_t nextCheckpointCatchupProbe(uint32_t ledger) = 0;
-
-    // Emit a log message and set StatusManager HISTORY status to
-    // describe current catchup/publish state. The `contiguous` argument
-    // is passed in to describe whether the ledger-manager's view of
-    // current catchup tasks is currently contiguous or discontiguous.
-    virtual void logAndUpdateStatus(bool contiguous) = 0;
+    // Emit a log message and set StatusManager HISTORY_PUBLISH status to
+    // describe current publish state.
+    virtual void logAndUpdatePublishStatus() = 0;
 
     // Return the length of the current publishing queue.
     virtual size_t publishQueueLength() const = 0;
@@ -293,10 +248,6 @@ class HistoryManager
     // publication-queue in the database. This should be followed shortly
     // (typically after commit) with a call to publishQueuedHistory.
     virtual void queueCurrentHistory() = 0;
-
-    // Returns whether or not the HistoryManager has any writable history
-    // archives (those configured with both a `get` and `put` command).
-    virtual bool hasAnyWritableHistoryArchive() = 0;
 
     // Return the youngest ledger still in the outgoing publish queue;
     // returns 0 if the publish queue has nothing in it.
@@ -325,30 +276,14 @@ class HistoryManager
     // configured archives published correctly; if so the snapshot
     // can be dequeued, otherwise it should remain and be tried again
     // later.
-    virtual void historyPublished(uint32_t ledgerSeq, bool success) = 0;
-
-    // Callback from catchup, indicates that any catchup work is done.
-    virtual void historyCaughtup() = 0;
+    virtual void
+    historyPublished(uint32_t ledgerSeq,
+                     std::vector<std::string> const& originalBuckets,
+                     bool success) = 0;
 
     virtual void downloadMissingBuckets(
         HistoryArchiveState desiredState,
         std::function<void(asio::error_code const& ec)> handler) = 0;
-
-    // Run catchup, we've just heard `initLedger` from the network. Mode can be
-    // CATCHUP_COMPLETE, meaning replay history from last to present, or
-    // CATCHUP_MINIMAL, meaning snap to the next state possible and discard
-    // history. See larger comment above for more detail.
-    //
-    // The `manualCatchup` flag modifies catchup behavior to avoid rounding up
-    // to the next scheduled checkpoint boundary, instead catching up to a
-    // checkpoint presumed to have been made at `initLedger` (i.e. with
-    // checkpoint ledger number equal to initLedger-1). This 'manual' catchup
-    // mode exists to support catching-up to manually created checkpoints.
-    virtual void catchupHistory(
-        uint32_t initLedger, CatchupMode mode,
-        std::function<void(asio::error_code const& ec, CatchupMode mode,
-                           LedgerHeaderHistoryEntry const& lastClosed)> handler,
-        bool manualCatchup = false) = 0;
 
     // Return the HistoryArchiveState of the LedgerManager's LCL
     virtual HistoryArchiveState getLastClosedHistoryArchiveState() const = 0;
@@ -364,39 +299,16 @@ class HistoryManager
     // tmpdir.
     virtual std::string localFilename(std::string const& basename) = 0;
 
-    // Return the number of checkpoints that have been skipped due to
-    // unavailability of any publish targets.
-    virtual uint64_t getPublishSkipCount() = 0;
-
     // Return the number of checkpoints that have been enqueued for
     // publication. This may be less than the number "started", but every
     // enqueued checkpoint should eventually start.
     virtual uint64_t getPublishQueueCount() = 0;
-
-    // Return the number of enqueued checkpoints that have been delayed due to
-    // the publish system being busy with a previous checkpoint. This indicates
-    // a degree of overloading in the publish system.
-    virtual uint64_t getPublishDelayCount() = 0;
-
-    // Return the number of enqueued checkpoints that have "started", meaning
-    // that their history logs have been written to disk and the publish system
-    // has commenced running the external put commands for them.
-    virtual uint64_t getPublishStartCount() = 0;
 
     // Return the number of checkpoints that completed publication successfully.
     virtual uint64_t getPublishSuccessCount() = 0;
 
     // Return the number of checkpoints that failed publication.
     virtual uint64_t getPublishFailureCount() = 0;
-
-    // Return the number of times the process has commenced catchup.
-    virtual uint64_t getCatchupStartCount() = 0;
-
-    // Return the number of times the catchup has completed successfully.
-    virtual uint64_t getCatchupSuccessCount() = 0;
-
-    // Return the number of times the catchup has failed.
-    virtual uint64_t getCatchupFailureCount() = 0;
 
     virtual ~HistoryManager(){};
 };

@@ -3,16 +3,15 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "overlay/LoopbackPeer.h"
-#include "util/Logging.h"
+#include "crypto/Random.h"
 #include "main/Application.h"
-#include "overlay/StellarXDR.h"
-#include "xdrpp/marshal.h"
+#include "medida/timer.h"
 #include "overlay/LoadManager.h"
 #include "overlay/OverlayManager.h"
-#include "crypto/Random.h"
-#include "medida/metrics_registry.h"
-#include "medida/timer.h"
-#include "medida/meter.h"
+#include "overlay/StellarXDR.h"
+#include "util/Logging.h"
+#include "util/Math.h"
+#include "xdrpp/marshal.h"
 
 namespace stellar
 {
@@ -25,6 +24,12 @@ using namespace std;
 
 LoopbackPeer::LoopbackPeer(Application& app, PeerRole role) : Peer(app, role)
 {
+}
+
+std::string
+LoopbackPeer::getIP() const
+{
+    return "127.0.0.1";
 }
 
 AuthCert
@@ -41,6 +46,12 @@ LoopbackPeer::getAuthCert()
 void
 LoopbackPeer::sendMessage(xdr::msg_ptr&& msg)
 {
+    if (mRemote.expired())
+    {
+        drop(Peer::DropMode::IGNORE_WRITE_QUEUE);
+        return;
+    }
+
     // Damage authentication material.
     if (mDamageAuth)
     {
@@ -53,18 +64,31 @@ LoopbackPeer::sendMessage(xdr::msg_ptr&& msg)
     // Possibly flush some queued messages if queue's full.
     while (mOutQueue.size() > mMaxQueueDepth && !mCorked)
     {
+        // If our recipient is straggling, we will break off sending 50% of the
+        // time even when we have more things to send, causing the outbound
+        // queue to back up gradually.
+        auto remote = mRemote.lock();
+        if (remote && remote->getStraggling() && rand_flip())
+        {
+            CLOG(INFO, "Overlay") << "LoopbackPeer recipient straggling, "
+                                  << "outbound queue at " << mOutQueue.size();
+            break;
+        }
         deliverOne();
     }
 }
 
-std::string
-LoopbackPeer::getIP()
+void
+LoopbackPeer::drop(ErrorCode err, std::string const& msg, DropMode mode)
 {
-    return "127.0.0.1";
+    if (mState != CLOSING)
+    {
+        mDropReason = msg;
+    }
+    Peer::drop(err, msg, mode);
 }
 
-void
-LoopbackPeer::drop()
+void LoopbackPeer::drop(DropMode)
 {
     if (mState == CLOSING)
     {
@@ -72,16 +96,14 @@ LoopbackPeer::drop()
     }
     mState = CLOSING;
     mIdleTimer.cancel();
-    auto self = shared_from_this();
-    getApp().getOverlayManager().dropPeer(self);
+    getApp().getOverlayManager().removePeer(this);
 
     auto remote = mRemote.lock();
     if (remote)
     {
-        remote->getApp().getClock().getIOService().post([remote]()
-                                                        {
-                                                            remote->drop();
-                                                        });
+        remote->getApp().postOnMainThread(
+            [remote]() { remote->drop(Peer::DropMode::IGNORE_WRITE_QUEUE); },
+            "LoopbackPeer: drop");
     }
 }
 
@@ -129,10 +151,8 @@ LoopbackPeer::processInQueue()
         if (!mInQueue.empty())
         {
             auto self = static_pointer_cast<LoopbackPeer>(shared_from_this());
-            mApp.getClock().getIOService().post([self]()
-                                                {
-                                                    self->processInQueue();
-                                                });
+            mApp.postOnMainThread([self]() { self->processInQueue(); },
+                                  "LoopbackPeer: processInQueue");
         }
     }
 }
@@ -143,7 +163,7 @@ LoopbackPeer::deliverOne()
     // CLOG(TRACE, "Overlay") << "LoopbackPeer attempting to deliver message";
     if (mRemote.expired())
     {
-        throw std::runtime_error("LoopbackPeer missing target");
+        return;
     }
 
     if (!mOutQueue.empty() && !mCorked)
@@ -197,14 +217,16 @@ LoopbackPeer::deliverOne()
         {
             // move msg to remote's in queue
             remote->mInQueue.emplace(std::move(msg));
-            remote->getApp().getClock().getIOService().post(
-                [remote]()
-                {
-                    remote->processInQueue();
-                });
+            remote->getApp().postOnMainThread(
+                [remote]() { remote->processInQueue(); },
+                "LoopbackPeer: processInQueue in deliverOne");
         }
         LoadManager::PeerContext loadCtx(mApp, mPeerID);
         mLastWrite = mApp.getClock().now();
+        if (mOutQueue.empty())
+        {
+            mLastEmpty = mApp.getClock().now();
+        }
         mMessageWrite.Mark();
         mByteWrite.Mark(nBytes);
 
@@ -260,6 +282,18 @@ void
 LoopbackPeer::setCorked(bool c)
 {
     mCorked = c;
+}
+
+bool
+LoopbackPeer::getStraggling() const
+{
+    return mStraggling;
+}
+
+void
+LoopbackPeer::setStraggling(bool s)
+{
+    mStraggling = s;
 }
 
 size_t
@@ -370,24 +404,31 @@ LoopbackPeerConnection::LoopbackPeerConnection(Application& initiator,
     mAcceptor->mRemote = mInitiator;
     mAcceptor->mState = Peer::CONNECTED;
 
-    initiator.getOverlayManager().addConnectedPeer(mInitiator);
-    acceptor.getOverlayManager().addConnectedPeer(mAcceptor);
+    initiator.getOverlayManager().addOutboundConnection(mInitiator);
+    acceptor.getOverlayManager().addInboundConnection(mAcceptor);
+
+    // if connection was dropped during addPendingPeer, we don't want do call
+    // connectHandler
+    if (mInitiator->mState != Peer::CONNECTED ||
+        mAcceptor->mState != Peer::CONNECTED)
+    {
+        return;
+    }
+
     mInitiator->startIdleTimer();
     mAcceptor->startIdleTimer();
 
     auto init = mInitiator;
-    mInitiator->getApp().getClock().getIOService().post(
-        [init]()
-        {
-            init->connectHandler(asio::error_code());
-        });
+    mInitiator->getApp().postOnMainThread(
+        [init]() { init->connectHandler(asio::error_code()); },
+        "LoopbackPeer: connect");
 }
 
 LoopbackPeerConnection::~LoopbackPeerConnection()
 {
     // NB: Dropping the peer from one side will automatically drop the
     // other.
-    mInitiator->drop();
+    mInitiator->drop(Peer::DropMode::IGNORE_WRITE_QUEUE);
 }
 
 std::shared_ptr<LoopbackPeer>
@@ -395,6 +436,7 @@ LoopbackPeerConnection::getInitiator() const
 {
     return mInitiator;
 }
+
 std::shared_ptr<LoopbackPeer>
 LoopbackPeerConnection::getAcceptor() const
 {

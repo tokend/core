@@ -52,6 +52,9 @@ namespace stellar
         std::vector<OfferFrame::pointer> loadOffers(AssetCode const& base, AssetCode const& quote, uint64_t const orderBookID,
             int64_t quoteamountUpperBound, Database& db);
 
+        std::vector<OfferFrame::pointer>
+        loadOffers(AccountID const& accountID, uint64_t orderBookID, Database& db);
+
         std::unordered_map<AccountID, std::vector<OfferFrame::pointer>> loadAllOffers(Database& db);
 
         void loadBestOffers(size_t numOffers, size_t offset,

@@ -1,7 +1,7 @@
 #include <transactions/test/test_helper/TestManager.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "test/test_marshaler.h"
 #include "TxTests.h"

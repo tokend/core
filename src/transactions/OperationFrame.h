@@ -46,9 +46,10 @@ struct SignerRequirement
 {
     SignerRuleResource resource;
     SignerRuleAction action;
+    std::shared_ptr<AccountID> source;
 
-    SignerRequirement(SignerRuleResource res, SignerRuleAction act)
-            : resource(res), action(act)
+    SignerRequirement(SignerRuleResource res, SignerRuleAction act, std::shared_ptr<AccountID> src = nullptr)
+            : resource(res), action(act), source(src)
     {
     }
 };

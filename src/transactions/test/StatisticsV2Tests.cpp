@@ -4,15 +4,23 @@
 
 #include <catch.hpp>
 #include <src/main/Config.h>
-#include <src/main/test.h>
+#include <src/test/test.h>
 #include <util/Timer.h>
 #include <main/Application.h>
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/StatisticsFrame.h"
 #include "ledger/EntryHelperLegacy.h"
-#include <src/transactions/test/TxTests.h>
-#include <transactions/test/test_helper/TestManager.h>
+#include "src/transactions/test/TxTests.h"
+#include "transactions/test/test_helper/TestManager.h"
+#include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
+#include "transactions/test/test_helper/CreateAccountTestHelper.h"
+#include "transactions/test/test_helper/PaymentTestHelper.h"
+#include "transactions/test/test_helper/ManageLimitsTestHelper.h"
+#include "transactions/test/test_helper/IssuanceRequestHelper.h"
+#include "transactions/test/test_helper/ManageAssetTestHelper.h"
+#include "ledger/BalanceHelperLegacy.h"
+#include "transactions/test/test_helper/ManageAssetPairTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -149,5 +157,67 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
             REQUIRE_THROWS(statisticsV2Frame.revert(bigAmount, currentTime, currentTime));
         }
 
+    }
+
+    SECTION("limits by account does not work")
+    {
+        auto testManager = TestManager::make(*app);
+        PaymentTestHelper paymentV2TestHelper(testManager);
+        CreateAccountTestHelper createAccountTestHelper(testManager);
+        ManageLimitsTestHelper manageLimitsTestHelper(testManager);
+        IssuanceRequestHelper issuanceTestHelper(testManager);
+        ManageAssetTestHelper manageAssetTestHelper(testManager);
+        ManageAssetPairTestHelper manageAssetPairTestHelper(testManager);
+        ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+
+        auto root = Account{ getRoot(), Salt(0) };
+        AssetCode assetCode("SCT");
+
+        longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+        manageKeyValueHelper.setKey(assetKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
+        manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
+        manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+        longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+        manageKeyValueHelper.setKey(key)->setUi32Value(0);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+        issuanceTestHelper.createAssetWithPreIssuedAmount(root, assetCode, 10*ONE, root);
+        manageAssetTestHelper.updateAsset(root, assetCode, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
+                                                                 static_cast<uint32_t>(AssetPolicy::TRANSFERABLE));
+
+        SecretKey sender = SecretKey::random();
+        createAccountTestHelper.applyCreateAccountTx(root, sender.getPublicKey(), 1);
+        SecretKey receiver = SecretKey::random();
+        createAccountTestHelper.applyCreateAccountTx(root, receiver.getPublicKey(), 1);
+        auto corporateKey = xdr::pointer<AccountID>(new AccountID(sender.getPublicKey()));
+        Account payer = Account{sender, Salt(0)};
+
+
+        auto op = manageLimitsTestHelper.createManageLimitsOp(
+                assetCode, StatsOpType::PAYMENT_OUT, false, 3*ONE, INT64_MAX, INT64_MAX, INT64_MAX, corporateKey);
+
+        manageLimitsTestHelper.applyManageLimitsTx(root, op);
+
+        auto payerBalance = BalanceHelperLegacy::Instance()->loadBalance(*corporateKey, assetCode, db, nullptr);
+        REQUIRE(payerBalance);
+
+        uint32_t issuanceTasks = 0;
+        issuanceTestHelper.applyCreateIssuanceRequest(root, assetCode, 10*ONE, payerBalance->getBalanceID(),
+                                                      SecretKey::random().getStrKeyPublic(), &issuanceTasks);
+
+        auto feeData = paymentV2TestHelper.createFeeData(0, 0);
+        paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(),
+                paymentV2TestHelper.createDestinationForAccount(receiver.getPublicKey()), 2*ONE,
+                paymentV2TestHelper.createPaymentFeeData(feeData, feeData, true), "sdd", "dlsd");
+
+        paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(),
+                paymentV2TestHelper.createDestinationForAccount(receiver.getPublicKey()), 2*ONE,
+                paymentV2TestHelper.createPaymentFeeData(feeData, feeData, true), "dasftd", "dgflsd",
+                nullptr, PaymentResultCode::LIMITS_EXCEEDED);
     }
 }

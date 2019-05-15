@@ -1,5 +1,75 @@
 # Changelog
 
+## 3.2.0
+
+### Added
+
+* Manage account specific rule op frame
+
+### Fixed
+
+* Create and approve change role request for role that does  not exist
+
+
+## 3.2.1
+
+### Fixed 
+* Fail of histexists command if db has not been initialized
+
+
+### Fixed 
+* Manage asset tests
+
+###Fixed
+
+* Delete vote after poll ended
+
+## 3.2.0
+
+### Added
+
+* Close poll op frame
+* Update poll end time op frame
+* Invest fee
+* Voting tests
+
+### Changed
+
+* Merge internal and non-functionality (non business logic) improvements from stellar
+
+### Fixed
+
+* exception on poll migration
+* Current and physical price restrictions
+
+## 3.1.3
+
+### Fixed
+
+* Calculating statistics for payment
+
+## 3.1.2
+
+### Fixed
+
+* Writing poll permission type to db which more then int32_max
+
+## 3.1.1
+
+### Fixed
+
+* Rule checking for voting (by permissionType equaled UINT32)
+
+## 3.1.0
+
+### Added
+
+* Manage create poll request op frame
+* Manage poll op frame
+* Manage vote op frame
+* Docker healthcheck
+* Logging to Sentry besides of the regular logging with configurable DSN and minimal level of messages to send
+
 ## 3.0.2-x.0
 
 ### Added
@@ -28,7 +98,7 @@
 
 * Fixed unexpected error (`Unexpected state: tring to unlock more then we have in current cap in base asset`) on cancel of sale participation for fixed price sale
 * unexpected sale participation exceeds hard cap for fixed price sales
-* adding signer to admin results in failure of other admins operations due to license violation 
+* adding signer to admin results in failure of other admins operations due to license violation
 * Do not add to cache if load entry without delta (add delta to putCacheEntry method)
 * Implement getLedgerDelta method for all new helpers
 * Issue with update of not rejected reviewable request

@@ -248,6 +248,29 @@ struct LedgerEntryIdCmp
             auto const& bl = b.license();
             return getLicenseHash(al) < getLicenseHash(bl);
         }
+        case LedgerEntryType::POLL:
+        {
+            auto const& ap = a.poll();
+            auto const& bp = b.poll();
+            return ap.id < bp.id;
+        }
+        case LedgerEntryType::VOTE:
+        {
+            auto const& ap = a.vote();
+            auto const& bp = b.vote();
+            if (ap.pollID < bp.pollID)
+                return true;
+            if (bp.pollID < ap.pollID)
+                return false;
+            return ap.voterID < bp.voterID;
+        }
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            auto const& ar = a.accountSpecificRule();
+            auto const& br = b.accountSpecificRule();
+
+            return ar.id < br.id;
+        }
         default:
         {
             throw std::runtime_error(
@@ -255,21 +278,6 @@ struct LedgerEntryIdCmp
                 "Unknown ledger entry type");
         }
         }
-    }
-
-    template <typename T>
-    bool
-    operator()(T const& a, LedgerEntry const& b) const
-    {
-        return (*this)(a, b.data);
-    }
-
-    template <typename T, typename = typename std::enable_if<
-                              !std::is_same<T, LedgerEntry>::value>::type>
-    bool
-    operator()(LedgerEntry const& a, T const& b) const
-    {
-        return (*this)(a.data, b);
     }
 };
 
@@ -280,7 +288,6 @@ struct LedgerEntryIdCmp
  */
 struct BucketEntryIdCmp
 {
-    LedgerEntryIdCmp mCmp;
     bool
     operator()(BucketEntry const& a, BucketEntry const& b) const
     {
@@ -291,22 +298,23 @@ struct BucketEntryIdCmp
         {
             if (bty == BucketEntryType::LIVEENTRY)
             {
-                return mCmp(a.liveEntry(), b.liveEntry());
+                return LedgerEntryIdCmp{}(a.liveEntry().data,
+                                          b.liveEntry().data);
             }
             else
             {
-                return mCmp(a.liveEntry(), b.deadEntry());
+                return LedgerEntryIdCmp{}(a.liveEntry().data, b.deadEntry());
             }
         }
         else
         {
             if (bty == BucketEntryType::LIVEENTRY)
             {
-                return mCmp(a.deadEntry(), b.liveEntry());
+                return LedgerEntryIdCmp{}(a.deadEntry(), b.liveEntry().data);
             }
             else
             {
-                return mCmp(a.deadEntry(), b.deadEntry());
+                return LedgerEntryIdCmp{}(a.deadEntry(), b.deadEntry());
             }
         }
     }

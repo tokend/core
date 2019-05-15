@@ -6,11 +6,12 @@
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "transactions/dex/OfferExchange.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/OfferHelper.h"
+#include "ledger/AssetPairHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
@@ -219,6 +220,120 @@ TEST_CASE("manage offer", "[tx][offer]")
             REQUIRE(quoteBuyerBalance->getLocked() == quoteAssetAmount);
             REQUIRE(quoteBuyerBalance->getAmount() == 0);
         }
+        SECTION("Current price restrictions not met")
+        {
+            offerTestHelper.applyManageOffer(buyer, 0,
+                                             baseBuyerBalance->getBalanceID(),
+                                             quoteBuyerBalance->getBalanceID(),
+                                             baseAssetAmount / 2, 5 * ONE, true, 0);
+
+            offerTestHelper.applyManageOffer(seller, 0,
+                                             baseSellerBalance->getBalanceID(),
+                                             quoteSellerBalance->getBalanceID(),
+                                             baseAssetAmount / 2, 5 * ONE, false, 0);
+
+            auto assetPair = AssetPairHelper::Instance()->loadAssetPair(base, quote, db);
+
+            REQUIRE(assetPair->getCurrentPrice() == 5 * ONE);
+
+            //update policies
+            auto maxPriceStep = ONE;
+            auto policies = static_cast<int32_t>(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET) |
+                       static_cast<int32_t>(AssetPairPolicy::
+                       CURRENT_PRICE_RESTRICTION);
+            assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote,
+                                                       0,
+                                                       0,
+                                                       maxPriceStep,
+                                                       policies,
+                                                       ManageAssetPairAction
+                                                       ::UPDATE_POLICIES);
+
+
+            offerTestHelper.applyManageOffer(buyer, 0,
+                                             baseBuyerBalance->getBalanceID(),
+                                             quoteBuyerBalance->getBalanceID(),
+                                             baseAssetAmount / 2, 6 * ONE, true, 0,
+                                             ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
+
+            offerTestHelper.applyManageOffer(seller, 0,
+                                             baseSellerBalance->getBalanceID(),
+                                             quoteSellerBalance->getBalanceID(),
+                                             baseAssetAmount / 2, 6 * ONE, false, 0,
+                                             ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
+
+        }
+
+        SECTION("Current price restrictions met")
+        {
+            auto maxPriceStep = ONE;
+            auto policies = static_cast<int32_t>(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET) |
+                       static_cast<int32_t>(AssetPairPolicy::
+                       CURRENT_PRICE_RESTRICTION);
+            assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote,
+                                                       ONE,
+                                                       0,
+                                                       maxPriceStep,
+                                                       policies,
+                                                       ManageAssetPairAction
+                                                       ::UPDATE_POLICIES);
+
+            assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote,
+                                                       5 * ONE,
+                                                       0,
+                                                       maxPriceStep,
+                                                       policies,
+                                                       ManageAssetPairAction
+                                                       ::UPDATE_PRICE);
+
+
+            offerTestHelper.applyManageOffer(buyer, 0,
+                                             baseBuyerBalance->getBalanceID(),
+                                             quoteBuyerBalance->getBalanceID(),
+                                             baseAssetAmount / 2, int64_t(4.95 * ONE), true, 0);
+
+            offerTestHelper.applyManageOffer(seller, 0,
+                                             baseSellerBalance->getBalanceID(),
+                                             quoteSellerBalance->getBalanceID(),
+                                             baseAssetAmount / 2, int64_t(5.05 * ONE), false, 0);
+
+        }
+
+        SECTION("Physical price restriction")
+        {
+            auto policies = static_cast<int32_t>(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET) |
+                       static_cast<int32_t>(AssetPairPolicy::
+                       PHYSICAL_PRICE_RESTRICTION);
+            assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote,
+                                                       2*ONE,
+                                                       100 * ONE,
+                                                       ONE,
+                                                       policies,
+                                                       ManageAssetPairAction
+                                                       ::UPDATE_POLICIES);
+
+            assetPairHelper.applyManageAssetPairTx(rootAccount, base, quote,
+                                                       2*ONE,
+                                                       ONE,
+                                                       ONE,
+                                                       policies,
+                                                       ManageAssetPairAction
+                                                       ::UPDATE_PRICE);
+
+
+            offerTestHelper.applyManageOffer(buyer, 0,
+                                             baseBuyerBalance->getBalanceID(),
+                                             quoteBuyerBalance->getBalanceID(),
+                                             baseAssetAmount, int64_t(1.99 * ONE), true, 0,
+                                             ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
+
+            offerTestHelper.applyManageOffer(seller, 0,
+                                             baseSellerBalance->getBalanceID(),
+                                             quoteSellerBalance->getBalanceID(),
+                                             baseAssetAmount, int64_t(2.00 * ONE), false, 0);
+
+        }
+
         SECTION("Place and delete offer")
         {
             auto result = offerTestHelper.applyManageOffer(buyer, 0,

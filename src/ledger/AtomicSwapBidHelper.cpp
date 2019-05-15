@@ -308,5 +308,4 @@ AtomicSwapBidHelper::loadAtomicSwapBids(Database& db, StatementContext &prep,
         st.fetch();
     }
 }
-
 }

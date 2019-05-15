@@ -105,7 +105,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\lib\soci\src\core;..\..\..\lib\sqlite</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\lib;..\..\..\lib\soci\src\core;..\..\..\lib\sqlite</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <EnableParallelCodeGeneration>

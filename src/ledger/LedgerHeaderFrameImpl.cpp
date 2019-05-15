@@ -10,6 +10,7 @@
 #include "util/Logging.h"
 #include "util/XDRStream.h"
 #include <util/basen.h>
+#include <util/types.h>
 
 namespace stellar
 {

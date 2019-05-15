@@ -3,6 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "database/Database.h"
+#include "DatabaseConnectionString.h"
 #include "main/Application.h"
 #include "main/Config.h"
 #include "util/Logging.h"
@@ -18,6 +19,11 @@
 #include "transactions/TransactionFrame.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
+#include "bucket/BucketManager.h"
+#include "herder/HerderPersistence.h"
+#include "herder/Upgrades.h"
+#include "history/HistoryManager.h"
+#include "ledger/LedgerHeaderUtils.h"
 #include "medida/metrics_registry.h"
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AssetHelperImpl.h>
@@ -30,12 +36,9 @@
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
 #include "ledger/AtomicSwapBidHelper.h"
-
-extern "C" void register_factory_sqlite3();
-
-#ifdef USE_POSTGRES
-extern "C" void register_factory_postgresql();
-#endif
+#include "ledger/PollHelper.h"
+#include "ledger/AccountSpecificRuleHelper.h"
+#include "ledger/VoteHelper.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -61,10 +64,13 @@ enum databaseSchemaVersion : unsigned long {
     ADD_CONTRACTS = 11,
     ADD_CUSTOMER_DETAILS_TO_CONTRACT = 12,
     ADD_ATOMIC_SWAP_BID = 13,
-    ADD_ASSET_CUSTOM_PRECISION = 14
+    ADD_ASSET_CUSTOM_PRECISION = 14,
+    ADD_VOTING = 15,
+    ADD_PEER_TYPE = 16,
+    ADD_SPECIFIC_RULES = 17
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_SPECIFIC_RULES;
 
 static void
 setSerializable(soci::session& sess)
@@ -99,8 +105,10 @@ DatabaseImpl::DatabaseImpl(Application& app)
     , mLastIdleTotalTime(app.getClock().now())
 {
     registerDrivers();
-    CLOG(INFO, "Database") << "Connecting to: " << app.getConfig().DATABASE;
-    mSession.open(app.getConfig().DATABASE);
+    CLOG(INFO, "Database") << "Connecting to: "
+          << removePasswordFromConnectionString(app.getConfig().DATABASE.value);
+    mSession.open(app.getConfig().DATABASE.value);
+
     if (isSqlite())
     {
         mSession << "PRAGMA journal_mode = WAL";
@@ -120,9 +128,10 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
     clearPreparedStatementCache();
 
     StorageHelperImpl storageHelper(*this, nullptr);
+    StorageHelper& sh = storageHelper;
     switch (vers) {
         case databaseSchemaVersion::DROP_SCP:
-            Herder::dropAll(*this);
+            HerderPersistence::dropAll(*this);
             break;
         case databaseSchemaVersion::DROP_BAN:
             BanManager::dropAll(*this);
@@ -162,7 +171,20 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
             break;
+        case databaseSchemaVersion::ADD_VOTING:
+            sh.getPollHelper().createIfNotExists();
+            sh.getVoteHelper().createIfNotExists();
+            sh.getPollHelper().permissionTypeMigration();
+            break;
+        case ADD_PEER_TYPE:
+            mSession << "ALTER TABLE peers ADD type INT NOT NULL DEFAULT 0";
+            mSession << "CREATE INDEX scpquorumsbyseq ON scpquorums(lastledgerseq)";
+            break;
+        case ADD_SPECIFIC_RULES:
+            sh.getAccountSpecificRuleHelper().dropAll();
+            break;
         default:
+            CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
             throw std::runtime_error("Unknown DB schema version");
     }
 }
@@ -181,8 +203,8 @@ DatabaseImpl::upgradeToCurrentSchema()
     while (vers < SCHEMA_VERSION)
     {
         ++vers;
-        CLOG(INFO, "Database") << "Applying DB schema upgrade to version "
-                               << vers;
+        CLOG(INFO, "Database")
+            << "Applying DB schema upgrade to version " << vers;
         applySchemaUpgrade(vers);
         putSchemaVersion(vers);
     }
@@ -262,6 +284,16 @@ DatabaseImpl::getUpdateTimer(std::string const& entityName)
         .TimeScope();
 }
 
+medida::TimerContext
+DatabaseImpl::getUpsertTimer(std::string const& entityName)
+{
+    mEntityTypes.insert(entityName);
+    mQueryMeter.Mark();
+    return mApp.getMetrics()
+            .NewTimer({"database", "upsert", entityName})
+            .TimeScope();
+}
+
 void
 DatabaseImpl::setCurrentTransactionReadOnly()
 {
@@ -277,13 +309,14 @@ DatabaseImpl::setCurrentTransactionReadOnly()
 bool
 DatabaseImpl::isSqlite() const
 {
-    return mApp.getConfig().DATABASE.find("sqlite3:") != std::string::npos;
+    return mApp.getConfig().DATABASE.value.find("sqlite3:") !=
+           std::string::npos;
 }
 
 bool
 DatabaseImpl::canUsePool() const
 {
-    return !(mApp.getConfig().DATABASE == ("sqlite3://:memory:"));
+    return !(mApp.getConfig().DATABASE.value == ("sqlite3://:memory:"));
 }
 
 void
@@ -320,10 +353,13 @@ DatabaseImpl::initialize()
     OverlayManager::dropAll(*this);
     PersistentState::dropAll(*this);
     ExternalQueue::dropAll(*this);
-    LedgerHeaderFrame::dropAll(*this);
+    LedgerHeaderUtils::dropAll(*this);
     TransactionFrame::dropAll(*this);
     HistoryManager::dropAll(*this);
-    BucketManager::dropAll(mApp);
+    mApp.getBucketManager().dropAll();
+    HerderPersistence::dropAll(*this);
+    BanManager::dropAll(*this);
+    Upgrades::dropAll(*this);
     putSchemaVersion(1);
 }
 
@@ -340,21 +376,22 @@ DatabaseImpl::getPool()
 {
     if (!mPool)
     {
-        std::string const& c = mApp.getConfig().DATABASE;
+        auto const& c = mApp.getConfig().DATABASE;
         if (!canUsePool())
         {
             std::string s("Can't create connection pool to ");
-            s += c;
+            s += removePasswordFromConnectionString(c.value);
             throw std::runtime_error(s);
         }
         size_t n = std::thread::hardware_concurrency();
-        LOG(INFO) << "Establishing " << n << "-entry connection pool to: " << c;
-        mPool = make_unique<soci::connection_pool>(n);
+        LOG(INFO) << "Establishing " << n << "-entry connection pool to: "
+                  << removePasswordFromConnectionString(c.value);
+        mPool = std::make_unique<soci::connection_pool>(n);
         for (size_t i = 0; i < n; ++i)
         {
             LOG(DEBUG) << "Opening pool entry " << i;
             soci::session& sess = mPool->at(i);
-            sess.open(c);
+            sess.open(c.value);
             if (!isSqlite())
             {
                 setSerializable(sess);
@@ -476,6 +513,11 @@ DatabaseImpl::recentIdleDbPercent()
 
     std::chrono::nanoseconds total = mApp.getClock().now() - mLastIdleTotalTime;
     total -= mExcludedTotalTime;
+
+    if (total == std::chrono::nanoseconds::zero())
+    {
+        return 100;
+    }
 
     uint32_t queryPercent =
         static_cast<uint32_t>((100 * query.count()) / total.count());

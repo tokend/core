@@ -3,33 +3,33 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "overlay/Floodgate.h"
-#include "crypto/SHA.h"
-#include "main/Application.h"
-#include "overlay/OverlayManager.h"
-#include "herder/Herder.h"
-#include "util/Logging.h"
 #include "crypto/Hex.h"
+#include "crypto/SHA.h"
+#include "herder/Herder.h"
+#include "main/Application.h"
 #include "medida/counter.h"
 #include "medida/metrics_registry.h"
+#include "overlay/OverlayManager.h"
+#include "util/Logging.h"
+#include "util/XDROperators.h"
 #include "xdrpp/marshal.h"
 
 namespace stellar
 {
-
 Floodgate::FloodRecord::FloodRecord(StellarMessage const& msg, uint32_t ledger,
                                     Peer::pointer peer)
     : mLedgerSeq(ledger), mMessage(msg)
 {
     if (peer)
-        mPeersTold.insert(peer);
+        mPeersTold.insert(peer->toString());
 }
 
 Floodgate::Floodgate(Application& app)
     : mApp(app)
     , mFloodMapSize(
-          app.getMetrics().NewCounter({"overlay", "memory", "flood-map"}))
+          app.getMetrics().NewCounter({"overlay", "memory", "flood-known"}))
     , mSendFromBroadcast(app.getMetrics().NewMeter(
-          {"overlay", "message", "send-from-broadcast"}, "message"))
+          {"overlay", "flood", "broadcast"}, "message"))
     , mShuttingDown(false)
 {
 }
@@ -71,7 +71,7 @@ Floodgate::addRecord(StellarMessage const& msg, Peer::pointer peer)
     }
     else
     {
-        result->second->mPeersTold.insert(peer);
+        result->second->mPeersTold.insert(peer->toString());
         return false;
     }
 }
@@ -96,18 +96,19 @@ Floodgate::broadcast(StellarMessage const& msg, bool force)
         mFloodMapSize.set_count(mFloodMap.size());
     }
     // send it to people that haven't sent it to us
-    std::set<Peer::pointer>& peersTold = result->second->mPeersTold;
+    auto& peersTold = result->second->mPeersTold;
 
     // make a copy, in case peers gets modified
-    std::vector<Peer::pointer> peers(mApp.getOverlayManager().getPeers());
+    auto peers = mApp.getOverlayManager().getAuthenticatedPeers();
 
     for (auto peer : peers)
     {
-        if (peersTold.find(peer) == peersTold.end() && peer->isAuthenticated())
+        assert(peer.second->isAuthenticated());
+        if (peersTold.find(peer.second->toString()) == peersTold.end())
         {
             mSendFromBroadcast.Mark();
-            peer->sendMessage(msg);
-            peersTold.insert(peer);
+            peer.second->sendMessage(msg);
+            peersTold.insert(peer.second->toString());
         }
     }
     CLOG(TRACE, "Overlay") << "broadcast " << hexAbbrev(index) << " told "
@@ -121,7 +122,15 @@ Floodgate::getPeersKnows(Hash const& h)
     auto record = mFloodMap.find(h);
     if (record != mFloodMap.end())
     {
-        res = record->second->mPeersTold;
+        auto& ids = record->second->mPeersTold;
+        auto const& peers = mApp.getOverlayManager().getAuthenticatedPeers();
+        for (auto& p : peers)
+        {
+            if (ids.find(p.second->toString()) != ids.end())
+            {
+                res.insert(p.second);
+            }
+        }
     }
     return res;
 }

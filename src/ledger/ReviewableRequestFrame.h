@@ -37,6 +37,7 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureInvoiceValid(InvoiceRequest const& request);
 	static void ensureASwapBidCreationValid(ASwapBidCreationRequest const& request);
 	static void ensureASwapValid(ASwapRequest const& request);
+	static void ensurePollCreationValid(CreatePollRequest const& request);
 
 
   public:

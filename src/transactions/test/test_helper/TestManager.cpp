@@ -4,6 +4,7 @@
 
 #include <herder/LedgerCloseData.h>
 #include <ledger/StorageHelperImpl.h>
+#include "ledger/AssetHelperLegacy.h"
 #include "TestManager.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "invariant/Invariants.h"
@@ -16,12 +17,10 @@ namespace stellar {
         TestManager::TestManager(Application &app, Database &db, LedgerManager &lm) :
                 mApp(app), mDB(db), mLm(lm), mSh(*(new StorageHelperImpl(db, nullptr)))
         {
-            mApp.stopCheckingPolicies();
         }
 
         TestManager::~TestManager()
         {
-            mApp.resumeCheckingPolicies();
         }
 
         TestManager::pointer TestManager::make(Application &app) {
@@ -104,12 +103,33 @@ namespace stellar {
             LedgerDeltaImpl delta(mLm.getCurrentLedgerHeader(), mDB);
             const bool isApplied = apply(tx, stateBeforeOp, delta);
             // validates db state
-            mLm.checkDbState();
+            checkDbState();
             auto txSet = std::make_shared<TxSetFrame>(mLm.getLastClosedLedgerHeader().hash);
             txSet->add(tx);
-            mApp.getInvariants().check(txSet, delta);
+            //mApp.getInvariantManager().check(txSet, delta); // TODO
             return isApplied;
         }
+
+        void
+        TestManager::checkDbState()
+        {
+            Database& db = mDB;
+
+            auto allAssetsWithIssued = AssetHelperLegacy::Instance()->loadIssuedForAssets(db);
+
+            for (const auto& item : allAssetsWithIssued)
+            {
+                auto totalAssetAmount = BalanceHelperLegacy::Instance()->loadTotalAssetAmount(
+                        db, item.first);
+
+                if (totalAssetAmount != item.second)
+                {
+                    throw std::runtime_error("Total asset amount on all balances not equal to "
+                                             "total issued amount of asset");
+                }
+            }
+        }
+
 
         void TestManager::advanceToTime(uint64_t closeTime) {
             // can't get to the past
@@ -120,7 +140,7 @@ namespace stellar {
 
             // prepare data for ledger close
             StellarValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, StellarValue::_ext_t{});
-            LedgerCloseData ledgerCloseData(mLm.getLedgerNum() + 1, txSet, sv);
+            LedgerCloseData ledgerCloseData(mLm.getLastClosedLedgerNum() + 1, txSet, sv);
 
             // close ledger
             mLm.closeLedger(ledgerCloseData);

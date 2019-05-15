@@ -4,9 +4,10 @@
 #include <ledger/OfferHelper.h>
 #include <ledger/KeyValueHelper.h>
 #include <ledger/SaleHelper.h>
-#include <ledger/StorageHelper.h>
+#include "ledger/StorageHelperImpl.h"
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include "ledger/AccountSpecificRuleHelper.h"
 
 namespace stellar
 {
@@ -144,6 +145,14 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         return true;
     }
 
+void
+ManageSaleOpFrame::removeSaleRules(StorageHelper& sh, LedgerKey const& saleKey)
+{
+    auto& ruleHelper = sh.getAccountSpecificRuleHelper();
+
+    ruleHelper.deleteRulesForEntry(saleKey);
+}
+
     void ManageSaleOpFrame::cancelSale(SaleFrame::pointer sale, LedgerDelta &delta, Database &db, LedgerManager &lm) {
         for (auto &saleQuoteAsset : sale->getSaleEntry().quoteAssets) {
             cancelAllOffersForQuoteAsset(sale, saleQuoteAsset, delta, db);
@@ -151,6 +160,9 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 
         AccountManager::unlockPendingIssuanceForSale(sale, delta, db, lm);
         SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
+
+        StorageHelperImpl storageHelper(db, &delta);
+        removeSaleRules(storageHelper, sale->getKey());
     }
 
     void ManageSaleOpFrame::cancelAllOffersForQuoteAsset(SaleFrame::pointer sale, SaleQuoteAsset const &saleQuoteAsset,

@@ -21,6 +21,7 @@ public:
     MOCK_METHOD0(getLedgerDelta, LedgerDelta*());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
+    MOCK_CONST_METHOD0(getTableName, const std::string());
 
     MOCK_METHOD1(loadAccount, AccountFrame::pointer(AccountID const& accountID));
 };
