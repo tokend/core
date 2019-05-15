@@ -8,13 +8,13 @@ namespace stellar
 
 class CreateASwapRequestOpFrame : public OperationFrame
 {
-    CreateASwapRequestResult&
+    CreateAtomicSwapRequestResult&
     innerResult()
     {
-        return mResult.tr().createASwapRequestResult();
+        return mResult.tr().createAtomicSwapRequestResult();
     }
 
-    CreateASwapRequestOp const& mCreateASwapRequest;
+    CreateAtomicSwapRequestOp const& mCreateASwapRequest;
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
@@ -31,7 +31,7 @@ class CreateASwapRequestOpFrame : public OperationFrame
     }
 
     AtomicSwapBidFrame::pointer
-    loadAtomicSwapBid(ASwapRequest aSwapRequest, Database& db, LedgerDelta& delta);
+    loadAtomicSwapBid(AtomicSwapRequest aSwapRequest, Database& db, LedgerDelta& delta);
 
     bool
     tryFillRequest(ReviewableRequestEntry& requestEntry, StorageHelper& storageHelper);
@@ -44,14 +44,14 @@ public:
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
-    static CreateASwapRequestResultCode getInnerCode(OperationResult const& res)
+    static CreateAtomicSwapRequestResultCode getInnerCode(OperationResult const& res)
     {
-        return res.tr().createASwapRequestResult().code();
+        return res.tr().createAtomicSwapRequestResult().code();
     }
 
     std::string getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<CreateASwapRequestResultCode>::enum_name(
+        return xdr::xdr_traits<CreateAtomicSwapRequestResultCode>::enum_name(
                 innerResult().code());
     }
 };

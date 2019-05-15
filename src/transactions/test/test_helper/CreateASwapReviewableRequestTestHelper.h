@@ -12,16 +12,16 @@ public:
     explicit CreateASwapReviewableRequestTestHelper(
             TestManager::pointer testManager);
 
-    CreateASwapRequestOp createASwapRequestOp(uint64_t bidID, AssetCode asset,
+    CreateAtomicSwapRequestOp createASwapRequestOp(uint64_t bidID, AssetCode asset,
                                               uint64_t amount);
 
     TransactionFramePtr createASwapRequestTx(Account& source,
-                 CreateASwapRequestOp& createASwapRequestOp);
+                 CreateAtomicSwapRequestOp& createASwapRequestOp);
 
-    CreateASwapRequestResult applyCreateASwapRequest(Account& source,
-                          CreateASwapRequestOp& createASwapRequestOp,
-                          CreateASwapRequestResultCode expectedResult =
-                          CreateASwapRequestResultCode::SUCCESS,
+    CreateAtomicSwapRequestResult applyCreateASwapRequest(Account& source,
+                          CreateAtomicSwapRequestOp& createASwapRequestOp,
+                          CreateAtomicSwapRequestResultCode expectedResult =
+                          CreateAtomicSwapRequestResultCode::SUCCESS,
                           OperationResultCode expectedOpRes =
                           OperationResultCode::opINNER);
 };

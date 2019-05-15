@@ -18,7 +18,7 @@ ASwapBidCreationRequestReviewChecker::ASwapBidCreationRequestReviewChecker(
     auto& db = mTestManager->getDB();
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
     auto& aSwapCreationRequest =
-            request->getRequestEntry().body.aSwapBidCreationRequest();
+            request->getRequestEntry().body.atomicSwapBidCreationRequest();
     mBaseBalanceBeforeTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
             aSwapCreationRequest.baseBalance, db);
 }
@@ -34,7 +34,7 @@ void ASwapBidCreationRequestReviewChecker::checkPermanentReject(
     REQUIRE(requestAfterTx == nullptr);
 
     auto& aSwapCreationRequest =
-            request->getRequestEntry().body.aSwapBidCreationRequest();
+            request->getRequestEntry().body.atomicSwapBidCreationRequest();
     auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(
             aSwapCreationRequest.baseBalance, db);
 

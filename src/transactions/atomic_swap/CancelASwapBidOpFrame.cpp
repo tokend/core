@@ -14,7 +14,7 @@ namespace stellar
 CancelASwapBidOpFrame::CancelASwapBidOpFrame(Operation const &op, OperationResult &opRes,
                                              TransactionFrame &parentTx)
         : OperationFrame(op, opRes, parentTx),
-          mCancelASwapBid(mOperation.body.cancelASwapBidOp())
+          mCancelASwapBid(mOperation.body.cancelAtomicSwapBidOp())
 {
 }
 
@@ -59,20 +59,20 @@ CancelASwapBidOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 bool CancelASwapBidOpFrame::doApply(Application &app, LedgerDelta &delta,
                                     LedgerManager &ledgerManager)
 {
-    innerResult().code(CancelASwapBidResultCode::SUCCESS);
+    innerResult().code(CancelAtomicSwapBidResultCode::SUCCESS);
     Database& db = app.getDatabase();
 
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             getSourceID(), mCancelASwapBid.bidID, db, &delta);
     if (bidFrame == nullptr)
     {
-        innerResult().code(CancelASwapBidResultCode::NOT_FOUND);
+        innerResult().code(CancelAtomicSwapBidResultCode::NOT_FOUND);
         return false;
     }
 
     if (bidFrame->isCancelled())
     {
-        innerResult().code(CancelASwapBidResultCode::ALREADY_CANCELLED);
+        innerResult().code(CancelAtomicSwapBidResultCode::ALREADY_CANCELLED);
         return false;
     }
 
@@ -106,7 +106,7 @@ bool CancelASwapBidOpFrame::doCheckValid(Application &app)
 {
     if (mCancelASwapBid.bidID == 0)
     {
-        innerResult().code(CancelASwapBidResultCode::NOT_FOUND);
+        innerResult().code(CancelAtomicSwapBidResultCode::NOT_FOUND);
         return false;
     }
 

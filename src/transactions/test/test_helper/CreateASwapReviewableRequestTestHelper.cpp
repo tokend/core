@@ -18,12 +18,12 @@ CreateASwapReviewableRequestTestHelper(TestManager::pointer testManager)
 {
 }
 
-CreateASwapRequestOp
+CreateAtomicSwapRequestOp
 CreateASwapReviewableRequestTestHelper::createASwapRequestOp(uint64_t bidID,
                                                              AssetCode asset,
                                                              uint64_t amount)
 {
-    CreateASwapRequestOp result;
+    CreateAtomicSwapRequestOp result;
     result.request.baseAmount = amount;
     result.request.quoteAsset = asset;
     result.request.bidID = bidID;
@@ -35,19 +35,19 @@ CreateASwapReviewableRequestTestHelper::createASwapRequestOp(uint64_t bidID,
 
 TransactionFramePtr
 CreateASwapReviewableRequestTestHelper::createASwapRequestTx(
-        txtest::Account &source, CreateASwapRequestOp &createASwapRequestOp)
+        txtest::Account &source, CreateAtomicSwapRequestOp &createASwapRequestOp)
 {
     Operation op;
-    op.body.type(OperationType::CREATE_ASWAP_REQUEST);
-    op.body.createASwapRequestOp() = createASwapRequestOp;
+    op.body.type(OperationType::CREATE_ATOMIC_SWAP_REQUEST);
+    op.body.createAtomicSwapRequestOp() = createASwapRequestOp;
 
     return txFromOperation(source, op, nullptr);
 }
 
-CreateASwapRequestResult
+CreateAtomicSwapRequestResult
 CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
-        txtest::Account &source, CreateASwapRequestOp &createASwapRequestOp,
-        CreateASwapRequestResultCode expectedResult, OperationResultCode expectedOpRes)
+        txtest::Account &source, CreateAtomicSwapRequestOp &createASwapRequestOp,
+        CreateAtomicSwapRequestResultCode expectedResult, OperationResultCode expectedOpRes)
 {
     Database& db = mTestManager->getDB();
 
@@ -68,7 +68,7 @@ CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
 
     if (expectedOpRes != OperationResultCode::opINNER)
     {
-        return CreateASwapRequestResult();
+        return CreateAtomicSwapRequestResult();
     }
 
     auto actualResult = CreateASwapRequestOpFrame::getInnerCode(opResult);
@@ -76,19 +76,19 @@ CreateASwapReviewableRequestTestHelper::applyCreateASwapRequest(
 
     uint64 reviewableRequestCountAfterTx =
             reviewableRequestHelper->countObjects(db.getSession());
-    if (expectedResult != CreateASwapRequestResultCode::SUCCESS)
+    if (expectedResult != CreateAtomicSwapRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
-        return CreateASwapRequestResult{};
+        return CreateAtomicSwapRequestResult{};
     }
 
-    auto createASwapRequestResult = opResult.tr().createASwapRequestResult();
+    auto createASwapRequestResult = opResult.tr().createAtomicSwapRequestResult();
 
     auto requestAfterTx = reviewableRequestHelper->loadRequest(
             createASwapRequestResult.success().requestID, db);
     REQUIRE(requestAfterTx != nullptr);
 
-    auto createASwapRequest = requestAfterTx->getRequestEntry().body.aSwapRequest();
+    auto createASwapRequest = requestAfterTx->getRequestEntry().body.atomicSwapRequest();
     REQUIRE(createASwapRequest == createASwapRequestOp.request);
 
     REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);

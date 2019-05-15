@@ -19,16 +19,16 @@ TransactionFramePtr
 CancelASwapBidHelper::createCancelASwapBidTx(Account &source, uint64_t bidID)
 {
     Operation baseOp;
-    baseOp.body.type(OperationType::CANCEL_ASWAP_BID);
-    auto& op = baseOp.body.cancelASwapBidOp();
+    baseOp.body.type(OperationType::CANCEL_ATOMIC_SWAP_BID);
+    auto& op = baseOp.body.cancelAtomicSwapBidOp();
     op.bidID = bidID;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);
 }
 
-CancelASwapBidResult
+CancelAtomicSwapBidResult
 CancelASwapBidHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
-                                          CancelASwapBidResultCode expectedResult,
+                                          CancelAtomicSwapBidResultCode expectedResult,
                                           OperationResultCode expectedOpCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
@@ -53,16 +53,16 @@ CancelASwapBidHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
     REQUIRE(opResult.code() == expectedOpCode);
     if (expectedOpCode != OperationResultCode::opINNER)
     {
-        return CancelASwapBidResult();
+        return CancelAtomicSwapBidResult();
     }
 
     auto actualResultCode = CancelASwapBidOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResult);
 
-    auto cancelASwapBidResult = opResult.tr().cancelASwapBidResult();
+    auto cancelASwapBidResult = opResult.tr().cancelAtomicSwapBidResult();
 
-    if (expectedResult != CancelASwapBidResultCode::SUCCESS)
+    if (expectedResult != CancelAtomicSwapBidResultCode::SUCCESS)
     {
         return cancelASwapBidResult;
     }

@@ -19,7 +19,7 @@ using xdr::operator==;
 CreateASwapRequestOpFrame::CreateASwapRequestOpFrame(
         Operation const& op, OperationResult& res, TransactionFrame& parentTx)
         : OperationFrame(op, res, parentTx)
-        , mCreateASwapRequest(mOperation.body.createASwapRequestOp())
+        , mCreateASwapRequest(mOperation.body.createAtomicSwapRequestOp())
 {
 }
 
@@ -76,19 +76,19 @@ CreateASwapRequestOpFrame::tryFillRequest(ReviewableRequestEntry& requestEntry,
                                           StorageHelper& storageHelper)
 {
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP);
-    requestEntry.body.aSwapRequest() = mCreateASwapRequest.request;
+    requestEntry.body.atomicSwapRequest() = mCreateASwapRequest.request;
 
     uint32_t allTasks = 0;
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
     if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAtomicSwapTasksKey()}))
     {
-        innerResult().code(CreateASwapRequestResultCode::ATOMIC_SWAP_TASKS_NOT_FOUND);
+        innerResult().code(CreateAtomicSwapRequestResultCode::ATOMIC_SWAP_TASKS_NOT_FOUND);
         return false;
     }
 
     if (allTasks == 0)
     {
-        innerResult().code(CreateASwapRequestResultCode::ATOMIC_SWAP_ZERO_TASKS_NOT_ALLOWED);
+        innerResult().code(CreateAtomicSwapRequestResultCode::ATOMIC_SWAP_ZERO_TASKS_NOT_ALLOWED);
         return false;
     }
 
@@ -99,40 +99,40 @@ CreateASwapRequestOpFrame::tryFillRequest(ReviewableRequestEntry& requestEntry,
 }
 
 AtomicSwapBidFrame::pointer
-CreateASwapRequestOpFrame::loadAtomicSwapBid(ASwapRequest aSwapRequest,
+CreateASwapRequestOpFrame::loadAtomicSwapBid(AtomicSwapRequest atomicSwapRequest,
                                              Database& db, LedgerDelta& delta)
 {
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            aSwapRequest.bidID, db, &delta);
+            atomicSwapRequest.bidID, db, &delta);
     if (!bidFrame)
     {
-        innerResult().code(CreateASwapRequestResultCode::BID_NOT_FOUND);
+        innerResult().code(CreateAtomicSwapRequestResultCode::BID_NOT_FOUND);
         return nullptr;
     }
 
     if (bidFrame->getOwnerID() == getSourceID())
     {
         innerResult().code(
-                CreateASwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
+                CreateAtomicSwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
         return nullptr;
     }
 
     if (bidFrame->isCancelled())
     {
-        innerResult().code(CreateASwapRequestResultCode::BID_IS_CANCELLED);
+        innerResult().code(CreateAtomicSwapRequestResultCode::BID_IS_CANCELLED);
         return nullptr;
     }
 
-    uint64_t price = bidFrame->getQuoteAssetPrice(aSwapRequest.quoteAsset);
+    uint64_t price = bidFrame->getQuoteAssetPrice(atomicSwapRequest.quoteAsset);
     if (price == 0)
     {
-        innerResult().code(CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
+        innerResult().code(CreateAtomicSwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
         return nullptr;
     }
 
-    auto quoteAsset = AssetHelperLegacy::Instance()->mustLoadAsset(aSwapRequest.quoteAsset, db);
+    auto quoteAsset = AssetHelperLegacy::Instance()->mustLoadAsset(atomicSwapRequest.quoteAsset, db);
     auto quoteAmount = OfferManager::calculateQuoteAmount(
-            aSwapRequest.baseAmount, price, quoteAsset->getMinimumAmount());
+            atomicSwapRequest.baseAmount, price, quoteAsset->getMinimumAmount());
     innerResult().success().quoteAmount = static_cast<uint64_t>(quoteAmount);
 
     return bidFrame;
@@ -142,7 +142,7 @@ bool
 CreateASwapRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                    LedgerManager& ledgerManager)
 {
-    innerResult().code(CreateASwapRequestResultCode::SUCCESS);
+    innerResult().code(CreateAtomicSwapRequestResultCode::SUCCESS);
 
     Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
@@ -157,13 +157,13 @@ CreateASwapRequestOpFrame::doApply(Application& app, StorageHelper& storageHelpe
     auto baseAssetFrame = storageHelper.getAssetHelper().mustLoadAsset(bid->getBaseAsset());
     if (!baseAssetFrame->isAmountAppropriate(aSwapRequest.baseAmount))
     {
-        innerResult().code(CreateASwapRequestResultCode::INCORRECT_PRECISION);
+        innerResult().code(CreateAtomicSwapRequestResultCode::INCORRECT_PRECISION);
         return false;
     }
 
     if (!bid->tryLockAmount(aSwapRequest.baseAmount))
     {
-        innerResult().code(CreateASwapRequestResultCode::BID_UNDERFUNDED);
+        innerResult().code(CreateAtomicSwapRequestResultCode::BID_UNDERFUNDED);
         return false;
     }
 
@@ -191,19 +191,19 @@ CreateASwapRequestOpFrame::doCheckValid(Application& app)
 {
     if (mCreateASwapRequest.request.bidID == 0)
     {
-        innerResult().code(CreateASwapRequestResultCode::BID_NOT_FOUND);
+        innerResult().code(CreateAtomicSwapRequestResultCode::BID_NOT_FOUND);
         return false;
     }
 
     if (mCreateASwapRequest.request.baseAmount == 0)
     {
-        innerResult().code(CreateASwapRequestResultCode::INVALID_BASE_AMOUNT);
+        innerResult().code(CreateAtomicSwapRequestResultCode::INVALID_BASE_AMOUNT);
         return false;
     }
 
     if (!AssetFrame::isAssetCodeValid(mCreateASwapRequest.request.quoteAsset))
     {
-        innerResult().code(CreateASwapRequestResultCode::INVALID_QUOTE_ASSET);
+        innerResult().code(CreateAtomicSwapRequestResultCode::INVALID_QUOTE_ASSET);
         return false;
     }
 

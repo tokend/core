@@ -17,12 +17,12 @@ CreateASwapBidCreationRequestHelper::CreateASwapBidCreationRequestHelper(
 {
 }
 
-ASwapBidCreationRequest
+AtomicSwapBidCreationRequest
 CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
         BalanceID baseBalance, uint64_t amount, std::string creatorDetails,
-        std::vector<ASwapBidQuoteAsset> quoteAssets)
+        std::vector<AtomicSwapBidQuoteAsset> quoteAssets)
 {
-    ASwapBidCreationRequest request;
+    AtomicSwapBidCreationRequest request;
     request.baseBalance = baseBalance;
     request.amount = amount;
     request.creatorDetails = creatorDetails;
@@ -34,20 +34,20 @@ CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
 
 TransactionFramePtr
 CreateASwapBidCreationRequestHelper::createCreateASwapBidCreationRequestTx(
-        Account &source, ASwapBidCreationRequest request)
+        Account &source, AtomicSwapBidCreationRequest request)
 {
     Operation baseOp;
-    baseOp.body.type(OperationType::CREATE_ASWAP_BID_REQUEST);
-    auto& op = baseOp.body.createASwapBidCreationRequestOp();
+    baseOp.body.type(OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST);
+    auto& op = baseOp.body.createAtomicSwapBidCreationRequestOp();
     op.request = request;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);
 }
 
-CreateASwapBidCreationRequestResult
+CreateAtomicSwapBidCreationRequestResult
 CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
-        Account &source, ASwapBidCreationRequest request,
-        CreateASwapBidCreationRequestResultCode expectedResult,
+        Account &source, AtomicSwapBidCreationRequest request,
+        CreateAtomicSwapBidCreationRequestResultCode expectedResult,
         OperationResultCode expectedOpResCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
@@ -69,7 +69,7 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
 
     if (expectedOpResCode != OperationResultCode::opINNER)
     {
-        return CreateASwapBidCreationRequestResult();
+        return CreateAtomicSwapBidCreationRequestResult();
     }
 
     auto actualResultCode = CreateASwapBidCreationRequestOpFrame::getInnerCode(opResult);
@@ -77,12 +77,12 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
     REQUIRE(actualResultCode == expectedResult);
 
     auto createBidCreationRequestResult =
-            opResult.tr().createASwapBidCreationRequestResult();
+            opResult.tr().createAtomicSwapBidCreationRequestResult();
 
     auto reviewableRequestCountAfterTx =
             reviewableRequestHelper->countObjects(db.getSession());
 
-    if (expectedResult != CreateASwapBidCreationRequestResultCode::SUCCESS)
+    if (expectedResult != CreateAtomicSwapBidCreationRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
         return createBidCreationRequestResult;
@@ -99,23 +99,6 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
     }
 
     return createBidCreationRequestResult;
-
-    /*
-    REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
-
-    auto newRequestID = createBidCreationRequestResult.success().requestID;
-
-    auto newRequestFrame = reviewableRequestHelper->loadRequest(newRequestID, db);
-    REQUIRE(newRequestFrame);
-
-    auto newBidCreationRequest =
-            newRequestFrame->getRequestEntry().body.aSwapBidCreationRequest();
-
-    REQUIRE(newBidCreationRequest.baseBalance == request.baseBalance);
-    REQUIRE(newBidCreationRequest.amount == request.amount);
-    REQUIRE(newBidCreationRequest.details == request.details);
-    REQUIRE(newBidCreationRequest.quoteAssets == request.quoteAssets);
-     */
 }
 
 }

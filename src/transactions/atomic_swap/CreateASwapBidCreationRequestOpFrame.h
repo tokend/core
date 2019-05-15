@@ -9,11 +9,11 @@ namespace stellar
 class CreateASwapBidCreationRequestOpFrame : public OperationFrame
 {
 private:
-    CreateASwapBidCreationRequestOp const& mCreateASwapBidCreationRequest;
+    CreateAtomicSwapBidCreationRequestOp const& mCreateASwapBidCreationRequest;
 
-    CreateASwapBidCreationRequestResult& innerResult()
+    CreateAtomicSwapBidCreationRequestResult& innerResult()
     {
-        return mResult.tr().createASwapBidCreationRequestResult();
+        return mResult.tr().createAtomicSwapBidCreationRequestResult();
     }
 
     bool
@@ -32,7 +32,7 @@ private:
 
     void
     fillRequest(ReviewableRequestEntry &requestEntry,
-                ASwapBidCreationRequest body, uint32_t allTasks);
+                AtomicSwapBidCreationRequest body, uint32_t allTasks);
 
     std::vector<std::string>
     makeTasksKeyVector();
@@ -41,19 +41,20 @@ public:
     CreateASwapBidCreationRequestOpFrame(Operation const &op, OperationResult &opRes,
                                       TransactionFrame &parentTx);
 
-    static CreateASwapBidCreationRequestResultCode
+    static CreateAtomicSwapBidCreationRequestResultCode
     isBaseAssetValid(Database& db, AssetCode baseAssetCode);
 
-    static CreateASwapBidCreationRequestResultCode
-    isQuoteAssetValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode, ASwapBidQuoteAsset quoteAsset);
+    static CreateAtomicSwapBidCreationRequestResultCode
+    isQuoteAssetValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode,
+            AtomicSwapBidQuoteAsset quoteAsset);
 
-    static CreateASwapBidCreationRequestResultCode
+    static CreateAtomicSwapBidCreationRequestResultCode
     areQuoteAssetsValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode,
-                        xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
+                        xdr::xvector<AtomicSwapBidQuoteAsset> quoteAssets);
 
-    static CreateASwapBidCreationRequestResultCode
+    static CreateAtomicSwapBidCreationRequestResultCode
     areAllAssetsValid(Database& db, uint64_t baseAmount, AssetCode baseAssetCode,
-                      xdr::xvector<ASwapBidQuoteAsset> quoteAssets);
+                      xdr::xvector<AtomicSwapBidQuoteAsset> quoteAssets);
 
     void tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
                         ReviewableRequestFrame::pointer request);
@@ -63,14 +64,14 @@ public:
 
     bool doCheckValid(Application &app) override;
 
-    static CreateASwapBidCreationRequestResultCode getInnerCode(OperationResult& res)
+    static CreateAtomicSwapBidCreationRequestResultCode getInnerCode(OperationResult& res)
     {
-        return res.tr().createASwapBidCreationRequestResult().code();
+        return res.tr().createAtomicSwapBidCreationRequestResult().code();
     }
 
     std::string getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<CreateASwapBidCreationRequestResultCode>::enum_name(
+        return xdr::xdr_traits<CreateAtomicSwapBidCreationRequestResultCode>::enum_name(
                 innerResult().code());
     }
 };

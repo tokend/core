@@ -17,11 +17,11 @@ protected:
 bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                   ReviewableRequestFrame::pointer request) override;
 
-bool handleAllAssetsValidationResultCode(CreateASwapBidCreationRequestResultCode code);
+bool handleAllAssetsValidationResultCode(CreateAtomicSwapBidCreationRequestResultCode code);
 
 AtomicSwapBidFrame::pointer
 buildNewBid(AccountID ownerID, AssetCode baseAsset, uint64_t ledgerCloseTime,
-            ASwapBidCreationRequest request, LedgerDelta& delta);
+            AtomicSwapBidCreationRequest request, LedgerDelta& delta);
 
 bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
                    ReviewableRequestFrame::pointer request) override;

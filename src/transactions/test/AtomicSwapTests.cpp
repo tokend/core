@@ -139,15 +139,15 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     manageAssetTestHelper.createAsset(root, root.key, secondQuoteAsset, root,
               static_cast<uint32_t>(AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP));
 
-    auto firstASwapQuoteAsset = ASwapBidQuoteAsset();
+    auto firstASwapQuoteAsset = AtomicSwapBidQuoteAsset();
     firstASwapQuoteAsset.quoteAsset = firstQuoteAsset;
     firstASwapQuoteAsset.price = 10 * ONE;
 
-    auto secondASwapQuoteAsset = ASwapBidQuoteAsset();
+    auto secondASwapQuoteAsset = AtomicSwapBidQuoteAsset();
     secondASwapQuoteAsset.quoteAsset = secondQuoteAsset;
     secondASwapQuoteAsset.price = 20 * ONE;
 
-    std::vector<ASwapBidQuoteAsset> quoteAssets =
+    std::vector<AtomicSwapBidQuoteAsset> quoteAssets =
             {firstASwapQuoteAsset, secondASwapQuoteAsset};
 
     // fund seller account
@@ -171,12 +171,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::INVALID_AMOUNT);
+                CreateAtomicSwapBidCreationRequestResultCode::INVALID_AMOUNT);
     }
 
     SECTION("Invalid price")
     {
-        auto thirdASwapQuoteAsset = ASwapBidQuoteAsset();
+        auto thirdASwapQuoteAsset = AtomicSwapBidQuoteAsset();
         thirdASwapQuoteAsset.quoteAsset = "BTC";
         thirdASwapQuoteAsset.price = 0;
         quoteAssets.emplace_back(thirdASwapQuoteAsset);
@@ -185,7 +185,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::INVALID_PRICE);
+                CreateAtomicSwapBidCreationRequestResultCode::INVALID_PRICE);
     }
 
     SECTION("Invalid details")
@@ -195,12 +195,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               "Invalid details", quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::INVALID_DETAILS);
+                CreateAtomicSwapBidCreationRequestResultCode::INVALID_DETAILS);
     }
 
     SECTION("Atomic swap bid overflow")
     {
-        auto thirdASwapQuoteAsset = ASwapBidQuoteAsset();
+        auto thirdASwapQuoteAsset = AtomicSwapBidQuoteAsset();
         thirdASwapQuoteAsset.quoteAsset = "BTC";
         thirdASwapQuoteAsset.price = INT64_MAX;
         quoteAssets.emplace_back(thirdASwapQuoteAsset);
@@ -211,7 +211,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::ATOMIC_SWAP_BID_OVERFLOW);
+                CreateAtomicSwapBidCreationRequestResultCode::ATOMIC_SWAP_BID_OVERFLOW);
     }
 
     SECTION("Base asset cannot be swapped")
@@ -222,12 +222,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
+                CreateAtomicSwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
     }
 
     SECTION("Quote asset not found")
     {
-        auto thirdASwapQuoteAsset = ASwapBidQuoteAsset();
+        auto thirdASwapQuoteAsset = AtomicSwapBidQuoteAsset();
         thirdASwapQuoteAsset.quoteAsset = "BTC";
         thirdASwapQuoteAsset.price = ONE;
         quoteAssets.emplace_back(thirdASwapQuoteAsset);
@@ -237,12 +237,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND);
+                CreateAtomicSwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND);
     }
 
     SECTION("Quote asset cannot be swapped")
     {
-        auto thirdASwapQuoteAsset = ASwapBidQuoteAsset();
+        auto thirdASwapQuoteAsset = AtomicSwapBidQuoteAsset();
         thirdASwapQuoteAsset.quoteAsset = "BTC";
         thirdASwapQuoteAsset.price = ONE;
         quoteAssets.emplace_back(thirdASwapQuoteAsset);
@@ -257,7 +257,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                               details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
+                CreateAtomicSwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
     }
 
     SECTION("Base asset not found")
@@ -267,13 +267,13 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 absentBalanceID, baseAssetAmount, details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND,
+                CreateAtomicSwapBidCreationRequestResultCode::BASE_BALANCE_NOT_FOUND,
                 OperationResultCode::opNO_ENTRY);
     }
 
     SECTION("Base and quote assets are equal")
     {
-        auto sameQuoteAsset = ASwapBidQuoteAsset();
+        auto sameQuoteAsset = AtomicSwapBidQuoteAsset();
         sameQuoteAsset.quoteAsset = baseAsset;
         sameQuoteAsset.price = ONE;
         quoteAssets.push_back(sameQuoteAsset);
@@ -281,7 +281,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 sellerBalanceID, baseAssetAmount, details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL);
+                CreateAtomicSwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL);
     }
 
     SECTION("Base balance underfunded")
@@ -291,12 +291,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 sellerBalanceID, tooBigAmount, details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::BASE_BALANCE_UNDERFUNDED);
+                CreateAtomicSwapBidCreationRequestResultCode::BASE_BALANCE_UNDERFUNDED);
     }
 
     SECTION("Invalid quote asset")
     {
-        ASwapBidQuoteAsset invalidQuoteAsset;
+        AtomicSwapBidQuoteAsset invalidQuoteAsset;
         invalidQuoteAsset.quoteAsset = "";
         invalidQuoteAsset.price = ONE;
         quoteAssets.push_back(invalidQuoteAsset);
@@ -304,7 +304,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 sellerBalanceID, baseAssetAmount, details, quoteAssets);
         aSwapBidCreationRequestHelper.applyCreateASwapBidCreationRequest(
                 seller, request,
-                CreateASwapBidCreationRequestResultCode::INVALID_QUOTE_ASSET);
+                CreateAtomicSwapBidCreationRequestResultCode::INVALID_QUOTE_ASSET);
     }
 
     SECTION("Atomic swap bid creation request created")
@@ -342,7 +342,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 SECTION("Try to cancel foreign atomic swap bid")
                 {
                     cancelASwapBidHelper.applyCancelASwapBid(root, bidID,
-                                                             CancelASwapBidResultCode::NOT_FOUND);
+                                                             CancelAtomicSwapBidResultCode::NOT_FOUND);
                 }
 
                 SECTION("Cancel bid without any atomic swap requests")
@@ -361,7 +361,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(
                                         0, firstQuoteAsset, amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
-                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::BID_NOT_FOUND);
+                                firstBuyer, aSwapRequest, CreateAtomicSwapRequestResultCode::BID_NOT_FOUND);
                     }
 
                     SECTION("Try to create aswap request for own bid")
@@ -370,7 +370,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 bidID, firstQuoteAsset, amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                 seller, aSwapRequest,
-                                CreateASwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
+                                CreateAtomicSwapRequestResultCode::CANNOT_CREATE_ASWAP_REQUEST_FOR_OWN_BID);
                     }
 
                     SECTION("Invalid base amount")
@@ -379,7 +379,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(
                                         bidID, firstQuoteAsset, 0);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
-                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::INVALID_BASE_AMOUNT);
+                                firstBuyer, aSwapRequest, CreateAtomicSwapRequestResultCode::INVALID_BASE_AMOUNT);
                     }
 
                     SECTION("Invalid quote asset")
@@ -388,7 +388,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(
                                         bidID, "", amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
-                                firstBuyer, aSwapRequest, CreateASwapRequestResultCode::INVALID_QUOTE_ASSET);
+                                firstBuyer, aSwapRequest, CreateAtomicSwapRequestResultCode::INVALID_QUOTE_ASSET);
                     }
 
                     SECTION("Bid has not such quote asset")
@@ -398,7 +398,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                         bidID, "VLT", amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                 firstBuyer, aSwapRequest,
-                                CreateASwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
+                                CreateAtomicSwapRequestResultCode::QUOTE_ASSET_NOT_FOUND);
                     }
 
                     SECTION("Bid underfunded")
@@ -408,7 +408,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                         bidID, firstQuoteAsset, INT64_MAX);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                 firstBuyer, aSwapRequest,
-                                CreateASwapRequestResultCode::BID_UNDERFUNDED);
+                                CreateAtomicSwapRequestResultCode::BID_UNDERFUNDED);
                     }
 
                     SECTION("Atomic swap tasks not found")
@@ -418,7 +418,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                         bidID, firstQuoteAsset, amountToBuy);
                         createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                 firstBuyer, aSwapRequest,
-                                CreateASwapRequestResultCode::ATOMIC_SWAP_TASKS_NOT_FOUND);
+                                CreateAtomicSwapRequestResultCode::ATOMIC_SWAP_TASKS_NOT_FOUND);
                     }
 
                     SECTION("Atomic swap requests created")
@@ -463,7 +463,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                                 {
                                     createASwapReviewableRequestTestHelper.applyCreateASwapRequest(
                                             secondBuyer, secondBuyerASwapRequest,
-                                            CreateASwapRequestResultCode::BID_NOT_FOUND,
+                                            CreateAtomicSwapRequestResultCode::BID_NOT_FOUND,
                                             OperationResultCode::opNO_ENTRY);
                                 }
                             }

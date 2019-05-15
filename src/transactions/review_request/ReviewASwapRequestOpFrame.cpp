@@ -50,7 +50,7 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
                                                  ReviewableRequestFrame::pointer request)
 {
     Database& db = app.getDatabase();
-    auto& aSwapCreationRequest = request->getRequestEntry().body.aSwapRequest();
+    auto& aSwapCreationRequest = request->getRequestEntry().body.atomicSwapRequest();
 
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapCreationRequest.bidID, db, &delta);
@@ -125,7 +125,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         return true;
     }
 
-    auto aSwapRequest = request->getRequestEntry().body.aSwapRequest();
+    auto aSwapRequest = request->getRequestEntry().body.atomicSwapRequest();
 
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapRequest.bidID, db, &delta);

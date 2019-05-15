@@ -15,9 +15,9 @@ explicit CancelASwapBidHelper(TestManager::pointer testManager);
 
 TransactionFramePtr createCancelASwapBidTx(Account& source, uint64_t bidID);
 
-CancelASwapBidResult applyCancelASwapBid(Account& source, uint64_t bidID,
-                                         CancelASwapBidResultCode expectedResult =
-                                         CancelASwapBidResultCode::SUCCESS,
+CancelAtomicSwapBidResult applyCancelASwapBid(Account& source, uint64_t bidID,
+                                         CancelAtomicSwapBidResultCode expectedResult =
+                                         CancelAtomicSwapBidResultCode::SUCCESS,
                                          OperationResultCode expectedOpCode =
                                          OperationResultCode::opINNER);
 };

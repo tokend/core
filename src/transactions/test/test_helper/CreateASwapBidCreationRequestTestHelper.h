@@ -13,17 +13,17 @@ class CreateASwapBidCreationRequestHelper : TxHelper
 public:
 explicit CreateASwapBidCreationRequestHelper(TestManager::pointer testManager);
 
-static ASwapBidCreationRequest createASwapBidCreationRequest(
+static AtomicSwapBidCreationRequest createASwapBidCreationRequest(
         BalanceID baseBalance, uint64_t amount, std::string details,
-        std::vector<ASwapBidQuoteAsset> quoteAssets);
+        std::vector<AtomicSwapBidQuoteAsset> quoteAssets);
 
 TransactionFramePtr
-createCreateASwapBidCreationRequestTx(Account& source, ASwapBidCreationRequest request);
+createCreateASwapBidCreationRequestTx(Account& source, AtomicSwapBidCreationRequest request);
 
-CreateASwapBidCreationRequestResult applyCreateASwapBidCreationRequest(
-        Account& source, ASwapBidCreationRequest request,
-        CreateASwapBidCreationRequestResultCode expectedResult =
-        CreateASwapBidCreationRequestResultCode::SUCCESS,
+CreateAtomicSwapBidCreationRequestResult applyCreateASwapBidCreationRequest(
+        Account& source, AtomicSwapBidCreationRequest request,
+        CreateAtomicSwapBidCreationRequestResultCode expectedResult =
+        CreateAtomicSwapBidCreationRequestResultCode::SUCCESS,
         OperationResultCode expectedOpResCode = OperationResultCode::opINNER);
 };
 

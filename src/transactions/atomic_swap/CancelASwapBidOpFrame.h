@@ -8,11 +8,11 @@ namespace stellar
 class CancelASwapBidOpFrame : public OperationFrame
 {
 private:
-    CancelASwapBidOp const& mCancelASwapBid;
+    CancelAtomicSwapBidOp const& mCancelASwapBid;
 
-    CancelASwapBidResult& innerResult()
+    CancelAtomicSwapBidResult& innerResult()
     {
-        return mResult.tr().cancelASwapBidResult();
+        return mResult.tr().cancelAtomicSwapBidResult();
     }
 
     bool
@@ -38,14 +38,14 @@ public:
 
     bool doCheckValid(Application &app) override;
 
-    static CancelASwapBidResultCode getInnerCode(OperationResult& res)
+    static CancelAtomicSwapBidResultCode getInnerCode(OperationResult& res)
     {
-        return res.tr().cancelASwapBidResult().code();
+        return res.tr().cancelAtomicSwapBidResult().code();
     }
 
     std::string getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<CancelASwapBidResultCode>::enum_name(innerResult().code());
+        return xdr::xdr_traits<CancelAtomicSwapBidResultCode>::enum_name(innerResult().code());
     }
 
 };

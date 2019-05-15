@@ -117,11 +117,11 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
         case OperationType::CANCEL_SALE_REQUEST:
             return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
-        case OperationType::CREATE_ASWAP_BID_REQUEST:
+        case OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST:
             return make_shared<CreateASwapBidCreationRequestOpFrame>(op, res, tx);
-        case OperationType::CANCEL_ASWAP_BID:
+        case OperationType::CANCEL_ATOMIC_SWAP_BID:
             return make_shared<CancelASwapBidOpFrame>(op, res, tx);
-        case OperationType::CREATE_ASWAP_REQUEST:
+        case OperationType::CREATE_ATOMIC_SWAP_REQUEST:
             return make_shared<CreateASwapRequestOpFrame>(op, res, tx);
         case OperationType::MANAGE_ACCOUNT_ROLE:
             return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));

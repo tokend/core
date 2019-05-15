@@ -1,5 +1,6 @@
 #include <util/Logging.h>
 #include "AtomicSwapBidQuoteAssetHelper.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;
@@ -35,7 +36,7 @@ ASwapBidQuoteAssetHelper::deleteAllForBid(Database &db, uint64_t bidID)
 
 void
 ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
-                                      xdr::xvector<ASwapBidQuoteAsset> quoteAssets,
+                                      xdr::xvector<AtomicSwapBidQuoteAsset> quoteAssets,
                                       bool insert)
 {
     for (auto const& quoteAsset : quoteAssets)
@@ -45,7 +46,7 @@ ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
 }
 
 void ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
-                                           ASwapBidQuoteAsset const &quoteAsset,
+                                           AtomicSwapBidQuoteAsset const &quoteAsset,
                                            bool insert)
 {
     string sql;
@@ -84,9 +85,9 @@ void ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
 
 void ASwapBidQuoteAssetHelper::loadASwapQuoteAsset(
         StatementContext &prep, const std::function<void(
-                ASwapBidQuoteAsset const &)> saleProcessor)
+                AtomicSwapBidQuoteAsset const &)> saleProcessor)
 {
-    ASwapBidQuoteAsset quoteAsset;
+    AtomicSwapBidQuoteAsset quoteAsset;
     int64_t version;
 
     statement& st = prep.statement();
@@ -105,7 +106,7 @@ void ASwapBidQuoteAssetHelper::loadASwapQuoteAsset(
     }
 }
 
-xdr::xvector<ASwapBidQuoteAsset>
+xdr::xvector<AtomicSwapBidQuoteAsset>
 ASwapBidQuoteAssetHelper::loadQuoteAssets(Database &db, uint64_t bidID)
 {
     string const sql = "SELECT quote_asset, price, version FROM atomic_swap_quote_asset "
@@ -114,9 +115,9 @@ ASwapBidQuoteAssetHelper::loadQuoteAssets(Database &db, uint64_t bidID)
     auto& st = prep.statement();
     st.exchange(use(bidID, "id"));
 
-    xdr::xvector<ASwapBidQuoteAsset> result;
+    xdr::xvector<AtomicSwapBidQuoteAsset> result;
     auto timer = db.getSelectTimer("atomic-swap-bid");
-    loadASwapQuoteAsset(prep, [&result](ASwapBidQuoteAsset const& entry)
+    loadASwapQuoteAsset(prep, [&result](AtomicSwapBidQuoteAsset const& entry)
     {
         result.push_back(entry);
     });
