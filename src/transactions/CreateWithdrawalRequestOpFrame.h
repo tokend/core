@@ -47,7 +47,8 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
+                              std::vector<OperationCondition>& result,
+                              LedgerManager& ledgerManager) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,

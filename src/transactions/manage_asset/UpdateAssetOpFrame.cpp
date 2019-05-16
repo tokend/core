@@ -25,18 +25,22 @@ using xdr::operator==;
 
 bool
 UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                          std::vector<OperationCondition>& result) const
+                          std::vector<OperationCondition>& result,
+                          LedgerManager& ledgerManager) const
 {
-    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_ASSET);
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS))
+    {
+        AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+        resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_ASSET);
 
-    if (mManageAsset.request.createAssetUpdateRequest().allTasks)
-    {
-        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
-    }
-    else
-    {
-        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+        if (mManageAsset.request.createAssetUpdateRequest().allTasks)
+        {
+            result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        }
+        else
+        {
+            result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+        }
     }
 
     // only asset owner can update asset

@@ -17,9 +17,11 @@ namespace stellar
 
 bool
 ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                std::vector<OperationCondition>& result) const
+                                std::vector<OperationCondition>& result,
+                                LedgerManager& ledgerManager) const
 {
-    if (mManageSaleOp.data.action() == ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST)
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS)
+        && mManageSaleOp.data.action() == ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST)
     {
         AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
         resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_SALE_DETAILS);

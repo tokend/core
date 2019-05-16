@@ -32,6 +32,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     auto& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
+    TestManager::upgradeToCurrentLedgerVersion(app);
 
 
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
