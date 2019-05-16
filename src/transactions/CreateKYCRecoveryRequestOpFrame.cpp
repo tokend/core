@@ -65,7 +65,7 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
 bool
 CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 {
-    if( !(getSourceID() == app.getAdminID()) && !(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount) )
+    if (!(getSourceID() == app.getAdminID()) && !(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_AUTHORIZED);
         return false;
@@ -133,15 +133,18 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
     if (mCreateKYCRecoveryRequestOp.requestID != 0)
         updateRecoveryRequest(storageHelper, app);
 
-    auto reference = getReference();
+    auto reference = getReference(mCreateKYCRecoveryRequestOp.targetAccount);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
     auto requestFrame = ReviewableRequestFrame::createNew(delta,
                                                           getSourceID(), app.getAdminID(),
                                                           referencePtr, ledgerManager.getCloseTime());
 
     auto requestHelper = ReviewableRequestHelper::Instance();
+    //Here reference is being checked against two requestors - admin and kyc recovery target account
     if (requestHelper->isReferenceExist(db, getSourceID(),
-                                        reference, requestFrame->getRequestID()))
+                                        reference, requestFrame->getRequestID())
+        || requestHelper->isReferenceExist(db, app.getAdminID(),
+                                           reference, requestFrame->getRequestID()))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
@@ -204,9 +207,11 @@ CreateKYCRecoveryRequestOpFrame::makeTasksKeyVector(StorageHelper& storageHelper
 }
 
 std::string
-CreateKYCRecoveryRequestOpFrame::getReference() const
+CreateKYCRecoveryRequestOpFrame::getReference(AccountID& target)
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::KYC_RECOVERY));
+    auto address = PubKeyUtils::toStrKey(target);
+    std::string rawData = "kyc_recovery:target_account:" + address;
+    const auto hash = sha256(rawData);
     return binToHex(hash);
 }
 

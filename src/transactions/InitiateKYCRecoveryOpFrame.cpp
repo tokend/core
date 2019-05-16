@@ -14,6 +14,8 @@
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ManageKeyValueOpFrame.h"
+#include "ManageSignerOpFrame.h"
+#include "CreateKYCRecoveryRequestOpFrame.h"
 
 namespace stellar
 {
@@ -30,6 +32,9 @@ bool
 InitiateKYCRecoveryOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                                       std::vector<OperationCondition>& result) const
 {
+    AccountRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
+    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+
     return true;
 }
 
@@ -37,9 +42,8 @@ bool
 InitiateKYCRecoveryOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                      std::vector<SignerRequirement>& result) const
 {
-    //todo
-    SignerRuleResource resource(LedgerEntryType::ACCOUNT_KYC);
-    result.emplace_back(resource, SignerRuleAction::CREATE_FOR_OTHER);
+    SignerRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }
@@ -80,9 +84,7 @@ InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelp
         return false;
     }
 
-    clearSigners(storageHelper);
-
-    createSigner(storageHelper, *accountFrame);
+    handleSigners(app, storageHelper, accountFrame);
 
     deletePendingRecoveryRequests(app, storageHelper);
 
@@ -139,47 +141,84 @@ InitiateKYCRecoveryOpFrame::getRecoveryAccountRole(StorageHelper& storageHelper,
 }
 
 void
-InitiateKYCRecoveryOpFrame::clearSigners(StorageHelper& storageHelper)
+InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& storageHelper, AccountFrame::pointer accountFrame)
 {
+    Operation op;
+    op.sourceAccount.activate() = accountFrame->getID();
+    op.body.type(OperationType::MANAGE_SIGNER);
+    ManageSignerOp& manageSignerOp = op.body.manageSignerOp();
+    manageSignerOp.data.action(ManageSignerAction::CREATE);
+
+    OperationResult opRes;
+    opRes.code(OperationResultCode::opINNER);
+    opRes.tr().type(OperationType::MANAGE_SIGNER);
+
     auto& signerHelper = storageHelper.getSignerHelper();
     auto signers = signerHelper.loadSigners(mInitiateKYCRecoveryOp.account);
+
     for (auto& s : signers)
     {
-        LedgerKey key(LedgerEntryType::SIGNER);
-        key.signer().accountID = mInitiateKYCRecoveryOp.account;
-        key.signer().pubKey = s->getEntry().pubKey;
-        signerHelper.storeDelete(key);
+        RemoveSignerData removeData;
+        removeData.publicKey = s->getEntry().pubKey;
+        manageSignerOp.data.removeData() = removeData;
+
+        ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
+
+        manageSignerOpFrame.setSourceAccountPtr(accountFrame);
+
+        if (!manageSignerOpFrame.doCheckValid(app) ||
+            !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: Failed to delete existing signers of account";
+            throw std::runtime_error("Failed to delete existing signers");
+        }
+    }
+    manageSignerOp.data.action(ManageSignerAction::CREATE);
+
+    UpdateSignerData createData;
+    createData.publicKey = mInitiateKYCRecoveryOp.signer;
+    createData.weight = 1000;
+    createData.identity = 1;
+    createData.roleID = 1;
+
+    manageSignerOp.data.createData() = createData;
+
+    ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
+
+    manageSignerOpFrame.setSourceAccountPtr(accountFrame);
+
+    if (!manageSignerOpFrame.doCheckValid(app) ||
+        !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: Failed to create recovery signer for account";
+        throw std::runtime_error("Failed to create recovery signer");
     }
 }
 
-void
-InitiateKYCRecoveryOpFrame::createSigner(StorageHelper& storageHelper, AccountFrame& accountFrame)
-{
-    SignerFrame signerFrame;
-    signerFrame.getEntry().pubKey = mInitiateKYCRecoveryOp.signer;
-    signerFrame.getEntry().weight = 1000;
-    signerFrame.getEntry().identity = 1;
-    signerFrame.getEntry().roleID = 1;
-    signerFrame.getEntry().accountID = accountFrame.getID();
 
-    auto& signerHelper = storageHelper.getSignerHelper();
-    signerHelper.storeAdd(signerFrame.mEntry);
-}
-
+// KYC recovery request can be created by either admin or account itself. Thus we need to check for pending requests
+// existence and delete them beforehand
 void
 InitiateKYCRecoveryOpFrame::deletePendingRecoveryRequests(Application& app, StorageHelper& storageHelper)
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto requests = reviewableRequestHelper->loadRequests(app.getAdminID(), ReviewableRequestType::KYC_RECOVERY, db);
-    for (auto& rec : requests)
-    {
-        auto recovery = rec->getRequestEntry().body.kycRecoveryRequest();
-        if (recovery.targetAccount == mInitiateKYCRecoveryOp.account)
-        {
-            reviewableRequestHelper->storeDelete(delta, db, rec->getKey());
-        }
+
+    auto targetAccRequest =
+        reviewableRequestHelper->loadRequest(mInitiateKYCRecoveryOp.account,
+            CreateKYCRecoveryRequestOpFrame::getReference(mInitiateKYCRecoveryOp.account), db, &delta);
+    if(targetAccRequest){
+        reviewableRequestHelper->storeDelete(delta, db, targetAccRequest->getKey());
+    }
+
+    auto adminID = app.getAdminID();
+
+    auto adminRequest =
+        reviewableRequestHelper->loadRequest(adminID,
+            CreateKYCRecoveryRequestOpFrame::getReference(mInitiateKYCRecoveryOp.account), db, &delta);
+    if(adminRequest){
+        reviewableRequestHelper->storeDelete(delta, db, adminRequest->getKey());
     }
 }
 

@@ -23,9 +23,7 @@ class InitiateKYCRecoveryOpFrame : public OperationFrame {
         return mResult.tr().initiateKYCRecoveryResult();
     }
 
-    void clearSigners(StorageHelper& signerHelper);
-
-    void createSigner(StorageHelper& signerHelper, AccountFrame& accountFrame);
+    void handleSigners(Application& app, StorageHelper& signerHelper, AccountFrame::pointer accountFrame);
 
     void deletePendingRecoveryRequests(Application& app, StorageHelper& storageHelper);
 

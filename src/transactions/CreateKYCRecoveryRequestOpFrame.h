@@ -23,8 +23,6 @@ class CreateKYCRecoveryRequestOpFrame : public OperationFrame {
         return mResult.tr().createKYCRecoveryRequestResult();
     }
 
-    std::string getReference() const;
-
     void createRequest(ReviewableRequestEntry& requestEntry, uint32 defaultMask);
 
     std::vector<longstring>
@@ -59,5 +57,8 @@ public:
     {
         return xdr::xdr_traits<CreateKYCRecoveryRequestResultCode>::enum_name(innerResult().code());
     }
+
+    static std::string getReference(AccountID& target);
+
 };
 }
