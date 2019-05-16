@@ -25,7 +25,7 @@
 namespace stellar
 {
 const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION =
-        static_cast<uint32_t>(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE);
+        static_cast<uint32_t>(LedgerVersion::UNLIMITED_ADMIN_COUNT);
 
 // Options that must only be used for testing
 static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {

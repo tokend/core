@@ -212,9 +212,14 @@ namespace stellar
     {
         auto lastLedgerSeq = app.getLedgerManager().getLastClosedLedgerHeader().header.ledgerSeq;
 
+        auto freeAdminCount = app.getConfig().LICENSE_FREE_NUM_ADMINS;
+        if (app.getLedgerManager().shouldUse(LedgerVersion::UNLIMITED_ADMIN_COUNT)) {
+            freeAdminCount = UINT64_MAX;
+        }
+
         uint64_t DEFAULT_ADMIN_COUNT =
             lastLedgerSeq < app.getConfig().LICENSE_FREE_PERIOD_NUM_BLOCKS
-                ? app.getConfig().LICENSE_FREE_NUM_ADMINS
+                ? freeAdminCount
                 : 0;
 
         auto licenseEntry = loadCurrentLicense();
