@@ -18,6 +18,9 @@
 #include "test_helper/ReviewLimitsUpdateRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
+#include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
+#include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -181,6 +184,59 @@ TEST_CASE("limits update", "[tx][limits_update]")
                                                                                           limitsUpdateRequest, nullptr,
                                                                                           &requestID,
                                                                                           CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
+        }
+    }
+    SECTION("Tasks permissions")
+    {
+        longstring key = ManageKeyValueOpFrame::makeLimitsUpdateTasksKey();
+        ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+        manageKeyValueHelper.setKey(key)->setUi32Value(2);
+        manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+        ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+        ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+
+        AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+        auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                              txResource, AccountRuleAction::SEND, false);
+        auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                            txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+        AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+        reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
+        auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                  reviewableRequestResource, AccountRuleAction::CREATE, false);
+        auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+        auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
+                                                                                   {revReqRuleId, txRuleId});
+        auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
+
+        auto createAccountBuilder = CreateAccountTestBuilder()
+                .setSource(root);
+
+        auto syndicate = Account{ SecretKey::random(), 0 };
+        auto syndicatePubKey = syndicate.key.getPublicKey();
+        createAccountTestHelper.applyTx(createAccountBuilder
+                                                .setToPublicKey(syndicatePubKey)
+                                                .addBasicSigner()
+                                                .setRoleID(syndicateRoleID));
+
+        SECTION("Set tasks without permission")
+        {
+            uint32_t zeroTasks = 0;
+            auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
+            auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(syndicate,
+                    limitsUpdateRequest, &zeroTasks, nullptr,
+                    CreateManageLimitsRequestResultCode::SUCCESS, // No need to check inner code
+                    OperationResultCode::opNO_ROLE_PERMISSION);
+        }
+        SECTION("Without setting tasks")
+        {
+            auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
+            auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(syndicate,
+                    limitsUpdateRequest, nullptr, nullptr, CreateManageLimitsRequestResultCode::SUCCESS);
         }
     }
 }

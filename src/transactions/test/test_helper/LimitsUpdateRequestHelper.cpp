@@ -23,7 +23,8 @@ LimitsUpdateRequestHelper(TestManager::pointer testManager) : TxHelper(testManag
 
 CreateManageLimitsRequestResult
 LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, LimitsUpdateRequest request, uint32_t *allTasks, uint64_t *requestID,
-                                                          CreateManageLimitsRequestResultCode expectedResult)
+                                                          CreateManageLimitsRequestResultCode expectedResult,
+                                                          OperationResultCode expectedOpResultCode)
 {
     Database& db = mTestManager->getDB();
 
@@ -40,6 +41,11 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+    REQUIRE(opResult.code() == expectedOpResultCode);
+    if (opResult.code() != OperationResultCode::opINNER)
+    {
+        return CreateManageLimitsRequestResult();
+    }
 
     auto actualResultCode = CreateManageLimitsRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);

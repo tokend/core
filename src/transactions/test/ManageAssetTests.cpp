@@ -271,7 +271,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             manageAssetHelper.applyManageAssetTx(root, 0, request,
                                                  ManageAssetResultCode::INVALID_CREATOR_DETAILS);
         }
-        SECTION("update asset permissions")
+        SECTION("Tasks permissions")
         {
             ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
             ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
@@ -317,14 +317,14 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             auto creationResult = manageAssetHelper.applyManageAssetTx(syndicate, 0, createRequest,
                     ManageAssetResultCode::SUCCESS);
 
-            SECTION("set tasks without permission")
+            SECTION("Set tasks without permission")
             {
                 const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, "{}", 0, &zeroTasks);
                 manageAssetHelper.applyManageAssetTx(syndicate, 0, request,
                                                      ManageAssetResultCode::SUCCESS, // No check of inner permission
                                                      OperationResultCode::opNO_ROLE_PERMISSION);
             }
-            SECTION("update without setting tasks")
+            SECTION("Without setting tasks")
             {
                 const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, "{}", 0);
                 manageAssetHelper.applyManageAssetTx(syndicate, 0, request, ManageAssetResultCode::SUCCESS);

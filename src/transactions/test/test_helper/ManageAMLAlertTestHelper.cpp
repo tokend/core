@@ -32,13 +32,20 @@ TransactionFramePtr ManageAMLAlertTestHelper::createAmlAlertTx(Account& source, 
 CreateAMLAlertRequestResult ManageAMLAlertTestHelper::applyCreateAmlAlert(
     Account& source, const BalanceID balance, uint64 amount, const std::string reason, const std::string reference,
     uint32_t *allTasks,
-    CreateAMLAlertRequestResultCode expectedResultCode)
+    CreateAMLAlertRequestResultCode expectedResultCode,
+    OperationResultCode expectedOpResultCode)
 {
     auto tx = createAmlAlertTx(source, balance, amount, reason, reference, allTasks);
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOps;
     mTestManager->applyCheck(tx, stateBeforeOps);
     auto txResult = tx->getResult();
-    const auto amlAlertResult = txResult.result.results()[0].tr().createAMLAlertRequestResult();
+    auto opResult = txResult.result.results()[0];
+    REQUIRE(opResult.code() == expectedOpResultCode);
+    if (opResult.code() != OperationResultCode::opINNER)
+    {
+        return CreateAMLAlertRequestResult();
+    }
+    const auto amlAlertResult = opResult.tr().createAMLAlertRequestResult();
     auto actualResultCode = amlAlertResult.code();
     REQUIRE(actualResultCode == expectedResultCode);
 
