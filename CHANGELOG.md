@@ -5,6 +5,7 @@
 ### Added
 
 * Manage account specific rule op frame
+* Cancel change role reviewable request
 
 ### Fixed
 
