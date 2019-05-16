@@ -290,6 +290,25 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             master, ops, ManageSignerResultCode::SUCCESS,
             OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
     }
+
+    SECTION("Adding 1000 signers with free license")
+    {
+        auto& storageHelper = testManager->getStorageHelper();
+
+        for (int i = 0; i < 1000; i++)
+        {
+            auto signer = Account{SecretKey::random(), Salt(4)};
+            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                    signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+                    ownerSignerRoleID);
+            manageSignerTestHelper.applyTx(
+                    master, {createSignerOp},
+                    ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
+        }
+
+    }
+
     SECTION("Should not allow to add new signers above license limits")
     {
 
@@ -312,7 +331,6 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         auto allowedNumberOfAdmins =
                 storageHelper.getLicenseHelper().getAllowedAdmins(
                     testManager->getApp());
-        std::cout << currentNumberOfAdmins << ' ' << allowedNumberOfAdmins << '\n';
         for (; currentNumberOfAdmins < allowedNumberOfAdmins;
              currentNumberOfAdmins++)
         {
