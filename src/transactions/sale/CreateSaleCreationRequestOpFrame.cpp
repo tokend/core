@@ -454,12 +454,15 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
         return false;
     }
 
-    for (auto const& quoteAsset : sale.quoteAssets)
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR))
     {
-        if (AssetPairHelper::Instance()->exists(db, quoteAsset.quoteAsset, sale.baseAsset))
+        for (auto const& quoteAsset : sale.quoteAssets)
         {
-            innerResult().code(CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
-            return false;
+            if (AssetPairHelper::Instance()->exists(db, quoteAsset.quoteAsset, sale.baseAsset))
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
+                return false;
+            }
         }
     }
 
