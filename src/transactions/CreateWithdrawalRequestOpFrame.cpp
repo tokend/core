@@ -20,8 +20,7 @@ using xdr::operator==;
 
 bool
 CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                                          std::vector<OperationCondition>& result,
-                                                          LedgerManager& ledgerManager) const
+                                                          std::vector<OperationCondition>& result) const
 {
     auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
     if (!balance)
@@ -29,21 +28,6 @@ CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storage
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
-    }
-
-    if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS))
-    {
-        AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-        resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);
-
-        if (mCreateWithdrawalRequest.allTasks)
-        {
-            result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
-        }
-        else
-        {
-            result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
-        }
     }
 
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
