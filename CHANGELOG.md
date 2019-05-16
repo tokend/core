@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.2.0
+## Unreleased
 
 ### Added
 
@@ -10,6 +10,7 @@
 ### Fixed
 
 * Create and approve change role request for role that does  not exist
+* Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
 
 
 ## 3.2.1
