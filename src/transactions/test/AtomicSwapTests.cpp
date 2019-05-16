@@ -337,7 +337,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 auto result = reviewASwapBidCreationRequestHelper.applyReviewRequestTxWithTasks(
                         root, requestID, ReviewRequestOpAction::APPROVE, "", 1);
 
-                auto bidID = result.success().typeExt.aSwapBidExtended().bidID;
+                auto bidID = result.success().typeExt.atomicSwapBidExtended().bidID;
 
                 SECTION("Try to cancel foreign atomic swap bid")
                 {

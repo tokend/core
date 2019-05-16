@@ -142,7 +142,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
     innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
-    innerResult().success().typeExt.aSwapBidExtended().bidID = bidFrame->getBidID();
+    innerResult().success().typeExt.atomicSwapBidExtended().bidID = bidFrame->getBidID();
 
     return true;
 }

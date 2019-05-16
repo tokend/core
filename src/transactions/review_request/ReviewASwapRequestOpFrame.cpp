@@ -206,7 +206,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     innerResult().success().fulfilled = true;
     innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP);
 
-    auto& aSwapExtended = innerResult().success().typeExt.aSwapExtended();
+    auto& aSwapExtended = innerResult().success().typeExt.atomicSwapExtended();
 
     aSwapExtended.bidID = bidFrame->getBidID();
     aSwapExtended.bidOwnerID = bidFrame->getOwnerID();
