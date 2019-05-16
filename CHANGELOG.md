@@ -1,14 +1,19 @@
 # Changelog
 
-## Unreleased
+## 3.2.0
+
 ### Added
 
 * Manage account specific rule op frame
+* Cancel change role reviewable request
 
 ### Fixed
+
 * Create and approve change role request for role that does  not exist
 
+
 ## 3.2.1
+
 ### Fixed 
 * Fail of histexists command if db has not been initialized
 
