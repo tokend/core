@@ -5,6 +5,7 @@
 ### Added
 
 * Unlimited (`UINT_64MAX`) signers amount in free license
+* New CreateAMLAlert error codes
 
 ### Fixed
 
@@ -21,7 +22,6 @@
 ### Added
 
 * Manage account specific rule op frame
-* New CreateAMLAlert error codes
 * Cancel change role reviewable request
 
 ### Fixed
