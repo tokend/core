@@ -59,8 +59,9 @@ BindExternalSystemAccountIdOpFrame::doApply(Application& app,
         mSourceAccount->getID());
     if (!!existingPoolEntryFrame)
     {
+        int expiresAt = getExpiresAt(storageHelper, ledgerManager, mBindExternalSystemAccountId.externalSystemType);
         existingPoolEntryFrame->getExternalSystemAccountIDPoolEntry()
-            .expiresAt = ledgerManager.getCloseTime() + dayInSeconds;
+            .expiresAt = ledgerManager.getCloseTime() + expiresAt;
         externalSystemAccountIDPoolEntryHelper.storeChange(
             existingPoolEntryFrame->mEntry);
         innerResult().code(BindExternalSystemAccountIdResultCode::SUCCESS);
