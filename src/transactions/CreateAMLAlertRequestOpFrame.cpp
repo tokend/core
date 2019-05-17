@@ -8,7 +8,6 @@
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "review_request/ReviewRequestHelper.h"
 
-
 namespace stellar
 {
 using xdr::operator==;
@@ -35,8 +34,8 @@ CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHe
 }
 
 bool
-CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                        std::vector<SignerRequirement> &result) const
+CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                       std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
@@ -60,7 +59,6 @@ CreateAMLAlertRequestOpFrame::CreateAMLAlertRequestOpFrame(
 {
 }
 
-
 bool
 CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
                                       LedgerManager& ledgerManager)
@@ -73,13 +71,13 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     auto balanceFrame = balanceHelper.loadBalance(amlAlertRequest.balanceID);
     if (!balanceFrame)
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::BALANCE_NOT_EXIST);
+        pickResultCode(app.getLedgerManager(), CreateAMLAlertRequestResultCode::BALANCE_NOT_EXIST);
         return false;
     }
     const auto result = balanceFrame->tryLock(amlAlertRequest.amount);
     if (result != BalanceFrame::Result::SUCCESS)
     {
-        innerResult().code(result == BalanceFrame::Result::NONMATCHING_PRECISION ?
+        pickResultCode(app.getLedgerManager(), result == BalanceFrame::Result::NONMATCHING_PRECISION ?
                            CreateAMLAlertRequestResultCode::INCORRECT_PRECISION :
                            CreateAMLAlertRequestResultCode::UNDERFUNDED);
         return false;
@@ -88,7 +86,7 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     const bool isReferenceExists = ReviewableRequestHelper::Instance()->isReferenceExist(db, getSourceID(), mCreateAMLAlertRequest.reference, 0);
     if (isReferenceExists)
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
+        pickResultCode(app.getLedgerManager(), CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
         return false;
     }
 
@@ -101,7 +99,6 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
                                                           referencePtr,
                                                           ledgerManager.
                                                           getCloseTime());
-
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::CREATE_AML_ALERT);
@@ -142,13 +139,13 @@ bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
 {
     if (mCreateAMLAlertRequest.amlAlertRequest.creatorDetails.empty())
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::INVALID_CREATOR_DETAILS);
+        pickResultCode(app.getLedgerManager(), CreateAMLAlertRequestResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
 
     if (mCreateAMLAlertRequest.amlAlertRequest.amount == 0)
     {
-        innerResult().code(CreateAMLAlertRequestResultCode::INVALID_AMOUNT);
+        pickResultCode(app.getLedgerManager(), CreateAMLAlertRequestResultCode::INVALID_AMOUNT);
         return false;
     }
 
@@ -159,5 +156,22 @@ std::vector<longstring> CreateAMLAlertRequestOpFrame::makeTasksKeyVector(Storage
     return std::vector<longstring> {
         ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey(),
     };
+}
+
+void
+CreateAMLAlertRequestOpFrame::pickResultCode(LedgerManager& lm, CreateAMLAlertRequestResultCode code)
+{
+    if (lm.shouldUse(LedgerVersion::FIX_AML_ALERT_ERROR_CODES))
+    {
+        innerResult().code(code);
+        return;
+    }
+
+    if (mOldCodes.find(code) == mOldCodes.end())
+    {
+        throw std::runtime_error("No mapping from new to old code for aml alert");
+    }
+
+    innerResult().code(mOldCodes.at(code));
 }
 }
