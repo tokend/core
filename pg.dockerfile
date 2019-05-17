@@ -2,7 +2,7 @@ FROM registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
 
 RUN true \
  && apt-get update \
- && apt-get install -y --no-install-recommends libpq5 libssl1.0.0 awscli s3cmd dumb-init libcurl4 \
+ && apt-get install -y --no-install-recommends libpq5 libssl1.0.0 awscli s3cmd dumb-init libcurl4 curl \
  && rm -rf /var/lib/apt/lists/* /var/log/*.log /var/log/*/*.log \
  && mkdir /data
 
