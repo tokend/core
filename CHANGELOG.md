@@ -1,12 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
 
 ## 3.3.1
 
 ### Fixed
 
 * curl now added in containers
-
 
 ## 3.3.0
 
@@ -19,7 +23,6 @@
 
 * Create and approve change role request for role that does  not exist
 * Removed ability to create sale for reversed pair
-
 
 ## 3.2.1
 

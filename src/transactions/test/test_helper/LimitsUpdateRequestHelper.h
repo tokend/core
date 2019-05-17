@@ -21,7 +21,8 @@ public:
     CreateManageLimitsRequestResult
     applyCreateLimitsUpdateRequest(Account &source, LimitsUpdateRequest request, uint32_t *allTasks,
                                        uint64_t *requestID = 0,
-                                       CreateManageLimitsRequestResultCode expectedResult = CreateManageLimitsRequestResultCode::SUCCESS);
+                                       CreateManageLimitsRequestResultCode expectedResult = CreateManageLimitsRequestResultCode::SUCCESS,
+                                       OperationResultCode expectedOpResultCode = OperationResultCode::opINNER);
 
     static LimitsUpdateRequest createLimitsUpdateRequest(longstring details);
 
