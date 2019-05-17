@@ -413,9 +413,9 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         SECTION("try to add the signer and exceed the license signers limit")
         {
             auto signer = Account
-                    {
-                            SecretKey::random(), Salt(4)
-                    };
+            {
+                SecretKey::random(), Salt(4)
+            };
             auto createSignerOp = manageSignerTestHelper.buildCreateOp(
                     signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
                     ownerSignerRoleID);
