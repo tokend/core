@@ -236,10 +236,11 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
 {
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
-        const auto assetPair =
-            AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
-                sale->getBaseAsset(), quoteAsset.quoteAsset,
-                ledgerManager.getDatabase());
+        const auto assetPair = ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR)
+                ? AssetPairHelper::Instance()->loadAssetPair(sale->getBaseAsset(), quoteAsset.quoteAsset,
+                    ledgerManager.getDatabase())
+                : AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getBaseAsset(), quoteAsset.quoteAsset,
+                    ledgerManager.getDatabase());
         if (!!assetPair)
         {
             continue;

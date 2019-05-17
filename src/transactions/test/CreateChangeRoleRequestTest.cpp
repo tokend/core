@@ -11,6 +11,7 @@
 #include "bucket/BucketApplicator.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ReviewChangeRoleRequestHelper.h"
+#include "transactions/test/test_helper/CancelChangeRoleRequestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -40,6 +41,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
     ReviewChangeRoleRequestTestHelper reviewChangeRoleRequestHelper(testManager);
+    CancelChangeRoleRequestHelper cancelChangeRoleRequestHelper(testManager);
 
     // create new account with empty role
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
@@ -139,6 +141,55 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
 
             changeRoleRequestHelper.applyCreateChangeRoleRequest(master, 0,
                      account.key.getPublicKey(), emptyAccountRoleID, kycData);
+        }
+    }
+
+    SECTION("cancel")
+    {
+        //store KV record into DB
+        manageKVHelper.setKey(key)->setUi32Value(tasks);
+        manageKVHelper.doApply(app, ManageKVAction::PUT, true);
+
+        manageKVHelper.setKey(anotherKey)->setUi32Value(tasks);
+        manageKVHelper.doApply(app, ManageKVAction::PUT, true);
+
+        auto createUpdateKYCRequestResult = changeRoleRequestHelper.applyCreateChangeRoleRequest(
+                master, 0, account.key.getPublicKey(), tokenOwnerRoleID, kycData);
+        requestID = createUpdateKYCRequestResult.success().requestID;
+
+        SECTION("can't be canceled by another user")
+        {
+            auto newAccount = Account{ SecretKey::random(), 0 };
+            auto newPubKey = newAccount.key.getPublicKey();
+
+            auto createAccountTestBuilder = CreateAccountTestBuilder()
+                    .setSource(master)
+                    .setToPublicKey(newPubKey)
+                    .addBasicSigner();
+
+            auto createAccountHelper = CreateAccountTestHelper(testManager);
+            createAccountHelper.applyTx(createAccountTestBuilder);
+
+            cancelChangeRoleRequestHelper.applyCancelChangeRoleRequest(newAccount, requestID,
+                                                                       CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
+        }
+
+        SECTION("can't be canceled with zero id")
+        {
+            cancelChangeRoleRequestHelper.applyCancelChangeRoleRequest(account, 0,
+                                                                       CancelChangeRoleRequestResultCode::REQUEST_ID_INVALID);
+        }
+
+        SECTION("success")
+        {
+            cancelChangeRoleRequestHelper.applyCancelChangeRoleRequest(account, requestID,
+                                                                       CancelChangeRoleRequestResultCode::SUCCESS);
+
+            SECTION("can't be canceled second time")
+            {
+                cancelChangeRoleRequestHelper.applyCancelChangeRoleRequest(account, requestID,
+                                                                           CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
+            }
         }
     }
 

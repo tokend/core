@@ -57,7 +57,8 @@ struct SignerRequirement
 class OperationFrame
 {
 private:
-	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
+	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier,
+	                          LedgerManager& ledgerManager);
 
 	bool canBeApplied(Application& app, StorageHelper& storageHelper);
     bool checkOp(Application& app, StorageHelper& storageHelper);
@@ -84,7 +85,12 @@ protected:
 
     virtual bool
     tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const = 0;
+                              std::vector<OperationCondition> &result,
+                              LedgerManager& ledgerManager) const;
+
+    virtual bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const;
 
     virtual bool
     tryGetSignerRequirements(StorageHelper& storageHelper,

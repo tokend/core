@@ -397,6 +397,13 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
             saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
                     CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
         }
+        SECTION("Trying to create sale for reversed pair")
+        {
+            auto assetPairTestHelper = ManageAssetPairTestHelper(testManager);
+            assetPairTestHelper.createAssetPair(root, saleRequest.defaultQuoteAsset, saleRequest.baseAsset, 2);
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                                                     CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
+        }
     }
 
     SECTION("Review SaleCreationRequest with tasks")
