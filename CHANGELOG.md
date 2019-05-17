@@ -10,6 +10,7 @@
 ### Fixed
 
 * Create and approve change role request for role that does  not exist
+* Removed ability to create sale for reversed pair
 * Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
 
 
