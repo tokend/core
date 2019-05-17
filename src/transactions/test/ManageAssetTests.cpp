@@ -13,6 +13,8 @@
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
+#include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
 
 using namespace stellar;
 using namespace txtest;
@@ -30,6 +32,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     auto& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
+    TestManager::upgradeToCurrentLedgerVersion(app);
 
 
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
@@ -38,6 +41,9 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
     longstring assetUpdateKey = ManageKeyValueOpFrame::makeAssetUpdateTasksKey();
     manageKeyValueHelper.setKey(assetUpdateKey)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    longstring assetCreateKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(assetCreateKey)->setUi32Value(0);
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
     uint32_t zeroTasks = 0;
 
@@ -264,6 +270,65 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, invalidDetails, 0);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
                                                  ManageAssetResultCode::INVALID_CREATOR_DETAILS);
+        }
+        SECTION("Tasks permissions")
+        {
+            ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+            ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+
+            AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+            auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                    txResource, AccountRuleAction::SEND, false);
+            auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
+                    txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+            AccountRuleResource assetResource(LedgerEntryType::ASSET);
+            assetResource.asset().assetType = 0;
+            assetResource.asset().assetCode = "*";
+            auto assetRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                    assetResource, AccountRuleAction::ANY, false);
+            auto assetRuleId = manageAccountRuleTestHelper.applyTx(root,
+                    assetRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+            AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+            reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
+            auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                    reviewableRequestResource, AccountRuleAction::CREATE, false);
+            auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
+                    revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+            auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
+                    {assetRuleId, revReqRuleId, txRuleId});
+            auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
+
+            auto createAccountBuilder = CreateAccountTestBuilder()
+                    .setSource(root);
+
+            auto syndicate = Account{ SecretKey::random(), 0 };
+            auto syndicatePubKey = syndicate.key.getPublicKey();
+            createAccountTestHelper.applyTx(createAccountBuilder
+                                                    .setToPublicKey(syndicatePubKey)
+                                                    .addBasicSigner()
+                                                    .setRoleID(syndicateRoleID));
+
+            const AssetCode assetCode = "AST";
+            auto createRequest = manageAssetHelper.createAssetCreationRequest(assetCode,
+                    syndicatePubKey, "{}", UINT64_MAX, 0, &zeroTasks);
+            auto creationResult = manageAssetHelper.applyManageAssetTx(syndicate, 0, createRequest,
+                    ManageAssetResultCode::SUCCESS);
+
+            SECTION("Set tasks without permission")
+            {
+                const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, "{}", 0, &zeroTasks);
+                manageAssetHelper.applyManageAssetTx(syndicate, 0, request,
+                                                     ManageAssetResultCode::SUCCESS, // No check of inner permission
+                                                     OperationResultCode::opNO_ROLE_PERMISSION);
+            }
+            SECTION("Without setting tasks")
+            {
+                const auto request = manageAssetHelper.createAssetUpdateRequest(assetCode, "{}", 0);
+                manageAssetHelper.applyManageAssetTx(syndicate, 0, request, ManageAssetResultCode::SUCCESS);
+            }
         }
     }
     SECTION("create base asset")

@@ -14,12 +14,21 @@ using xdr::operator==;
 
 bool
 CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                                        std::vector<OperationCondition>& result) const
+                              std::vector<OperationCondition>& result,
+                              LedgerManager& ledgerManager) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
 
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS)
+        && mCreateAMLAlertRequest.allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+    }
+    else
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    }
 
     return true;
 }

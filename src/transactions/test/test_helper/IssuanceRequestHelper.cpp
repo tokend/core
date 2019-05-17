@@ -29,7 +29,8 @@ namespace txtest
 	CreatePreIssuanceRequestResult IssuanceRequestHelper::applyCreatePreIssuanceRequest(Account & source,
                                                           SecretKey & preIssuedAssetSigner, AssetCode assetCode,
                                                           uint64_t amount, std::string reference,
-                                                          CreatePreIssuanceRequestResultCode expectedResult)
+                                                          CreatePreIssuanceRequestResultCode expectedResult,
+                                                          uint32_t* allTasks, OperationResultCode expectedOpCode)
 	{
 		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
 		auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
@@ -38,13 +39,18 @@ namespace txtest
 		auto referenceBeforeTx = referenceHelper->loadReference(source.key.getPublicKey(), reference, mTestManager->getDB());
 
         auto preIssuanceRequest = createPreIssuanceRequest(preIssuedAssetSigner, assetCode, amount, reference);
-		auto txFrame = createPreIssuanceRequestTx(source, preIssuanceRequest);
+		auto txFrame = createPreIssuanceRequestTx(source, preIssuanceRequest, allTasks);
 
         auto checker = ReviewPreIssuanceChecker(mTestManager, std::make_shared<PreIssuanceRequest>(preIssuanceRequest));
 
 		mTestManager->applyCheck(txFrame);
 		auto txResult = txFrame->getResult();
 		auto opResult = txResult.result.results()[0];
+		REQUIRE(opResult.code() == expectedOpCode);
+		if (opResult.code() != OperationResultCode::opINNER)
+        {
+            return CreatePreIssuanceRequestResult();
+        }
 		auto actualResultCode = CreatePreIssuanceRequestOpFrame::getInnerCode(opResult);
 		REQUIRE(actualResultCode == expectedResult);
 
@@ -68,12 +74,17 @@ namespace txtest
 		return createPreIssuanceResult;
 	}
 
-	TransactionFramePtr IssuanceRequestHelper::createPreIssuanceRequestTx(Account &source, const PreIssuanceRequest &request)
+	TransactionFramePtr IssuanceRequestHelper::createPreIssuanceRequestTx(Account &source,
+	        const PreIssuanceRequest &request, uint32_t* allTasks)
 	{
 		Operation op;
 		op.body.type(OperationType::CREATE_PREISSUANCE_REQUEST);
 		CreatePreIssuanceRequestOp& createPreIssuanceRequestOp = op.body.createPreIssuanceRequest();
 		createPreIssuanceRequestOp.request = request;
+        if (allTasks != nullptr)
+        {
+            createPreIssuanceRequestOp.allTasks.activate() = *allTasks;
+        }
 		createPreIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
 		return txFromOperation(source, op, nullptr);
 	}
