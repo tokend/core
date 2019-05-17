@@ -18,7 +18,6 @@ using namespace stellar::txtest;
 TEST_CASE("Signer tests", "[tx][manage_signer]")
 {
     Config cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    cfg.LICENSE_FREE_NUM_ADMINS += 2;
     auto wiredKey = SecretKey::random();
     cfg.WIRED_KEYS.emplace_back(wiredKey.getPublicKey());
 
@@ -265,7 +264,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
 
         SECTION("Remove previous owner")
         {
-            auto op = // freezes here
+            auto op =
                 manageSignerTestHelper.buildRemoveOp(master.key.getPublicKey());
             manageSignerTestHelper.applyTx(
                 master, op, ManageSignerResultCode::SUCCESS,
@@ -355,5 +354,46 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             master, {createSignerOp},
                 ManageSignerResultCode::NUMBER_OF_ADMINS_EXCEEDS_LICENSE,
                 OperationResultCode::opINNER, TransactionResultCode::txFAILED);
+    }
+
+    SECTION("Removing signers when applied license with lower amount of signers")
+    {
+        auto& storageHelper = testManager->getStorageHelper();
+
+        std::vector<Account> signers;
+
+        for (int i = 0; i < 6; i++)
+        {
+            auto signer = Account{SecretKey::random(), Salt(4)};
+            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                    signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+                    ownerSignerRoleID);
+            manageSignerTestHelper.applyTx(
+                    master, {createSignerOp},
+                    ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
+            signers.push_back(signer);
+        }
+
+        uint64_t adminCount = 5;
+        uint64_t dueDate = 1000;
+        auto stampResult = stampTestHelper.applyStamp(master);
+        auto stampSuccess = stampResult.success();
+        auto licenseResult = licenseTestHelper.applyLicenseOp(master,
+                                                              wiredKey,
+                                                              stampSuccess.ledgerHash,
+                                                              stampSuccess.licenseHash,
+                                                              adminCount,
+                                                              dueDate
+        );
+
+        auto signerToRemove = signers[5];
+        auto op =
+                manageSignerTestHelper.buildRemoveOp(signerToRemove.key.getPublicKey());
+
+        manageSignerTestHelper.applyTx(
+                master, op, ManageSignerResultCode::SUCCESS,
+                OperationResultCode::opINNER, TransactionResultCode::txSUCCESS,
+                &signers[0]);
     }
 }
