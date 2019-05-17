@@ -115,6 +115,53 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
             REQUIRE(result.success().fulfilled);
         }
 
+        SECTION("Tasks permissions")
+        {
+            longstring key = ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey();
+            manageKeyValueHelper.setKey(key)->setUi32Value(0);
+            manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+            AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+            auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                  txResource, AccountRuleAction::SEND, false);
+            auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+            AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+            reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
+            auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                      reviewableRequestResource, AccountRuleAction::CREATE, false);
+            auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                    revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+            auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
+                                                                                       {revReqRuleId, txRuleId});
+            auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
+
+            auto createAccountBuilder = CreateAccountTestBuilder()
+                    .setSource(root);
+
+            auto syndicate = Account{ SecretKey::random(), 0 };
+            auto syndicatePubKey = syndicate.key.getPublicKey();
+            createAccountTestHelper.applyTx(createAccountBuilder
+                                                    .setToPublicKey(syndicatePubKey)
+                                                    .addBasicSigner()
+                                                    .setRoleID(syndicateRoleID));
+
+            SECTION("Set tasks without permission")
+            {
+                amlAlertHelper.applyCreateAmlAlert(syndicate, balance->getBalanceID(), preIssuedAmount / 2, "Inalid",
+                        reference, &zeroTasks,
+                        CreateAMLAlertRequestResultCode::SUCCESS, // No need to check inner code
+                        OperationResultCode::opNO_ROLE_PERMISSION);
+            }
+            SECTION("Without setting tasks")
+            {
+                amlAlertHelper.applyCreateAmlAlert(syndicate, balance->getBalanceID(), preIssuedAmount / 2, "Inalid",
+                        reference, nullptr, CreateAMLAlertRequestResultCode::SUCCESS);
+            }
+        }
+
         SECTION("Given valid aml alert request with tasks")
         {
             uint32_t nonZeroTasks = 2;

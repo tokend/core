@@ -329,6 +329,15 @@ bool OperationFrame::doApply(Application& app, StorageHelper& storageHelper,
     return doApply(app, *storageHelper.getLedgerDelta(), ledgerManager);
 }
 
+// Wraper to make it work for old operations
+// This method should be implemented by inheritors
+bool OperationFrame::tryGetOperationConditions(stellar::StorageHelper &storageHelper,
+                                               std::vector<stellar::OperationCondition> &result,
+                                               stellar::LedgerManager &ledgerManager) const
+{
+    return tryGetOperationConditions(storageHelper, result);
+}
+
 AccountID const&
 OperationFrame::getSourceID() const
 {
@@ -410,7 +419,7 @@ OperationFrame::checkValid(Application& app,
     }
 
     StorageHelperImpl storageHelper(db, delta);
-    if (!checkRolePermissions(storageHelper, accountRuleVerifier))
+    if (!checkRolePermissions(storageHelper, accountRuleVerifier, app.getLedgerManager()))
     {
         return false;
     }
@@ -432,10 +441,11 @@ OperationFrame::checkValid(Application& app,
 
 bool
 OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
-                                     AccountRuleVerifier& accountRuleVerifier)
+                                     AccountRuleVerifier& accountRuleVerifier,
+                                     LedgerManager& ledgerManager)
 {
     std::vector<OperationCondition> operationConditions;
-    if (!tryGetOperationConditions(storageHelper, operationConditions))
+    if (!tryGetOperationConditions(storageHelper, operationConditions, ledgerManager))
     {
         return false;
     }

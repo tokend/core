@@ -354,6 +354,76 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                               ReviewRequestResultCode::SUCCESS,
                                                                               &toAdd, &toRemove);
             }
+
+            SECTION("Tasks permissions")
+            {
+                AssetCode assetCode = "AST";
+                AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+                auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                      txResource, AccountRuleAction::SEND, false);
+                auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                    txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                AccountRuleResource assetResource(LedgerEntryType::ASSET);
+                assetResource.asset().assetType = 0;
+                assetResource.asset().assetCode = "*";
+                auto assetRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                         assetResource, AccountRuleAction::ANY, false);
+                auto assetRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                       assetRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+                reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
+                auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                          reviewableRequestResource, AccountRuleAction::CREATE, false);
+                auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                        revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
+                                                                                           {assetRuleId, revReqRuleId, txRuleId});
+                auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
+
+                auto createAccountBuilder = CreateAccountTestBuilder()
+                        .setSource(root);
+
+                auto syndicate = Account{ SecretKey::random(), 0 };
+                auto syndicatePubKey = syndicate.key.getPublicKey();
+                createAccountTestHelper.applyTx(createAccountBuilder
+                                                        .setToPublicKey(syndicatePubKey)
+                                                        .addBasicSigner()
+                                                        .setRoleID(syndicateRoleID));
+
+                assetCreationRequest = assetTestHelper.createAssetCreationRequest(assetCode,
+                                                                                  syndicate.key.getPublicKey(), "{}", maxIssuanceAmount, 0, nullptr,
+                                                                                  preIssuedAmount, testSet.trailingDigitsCount);
+                assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
+
+                auto saleRequest = SaleRequestHelper::createSaleRequest(assetCode, quoteAsset, currentTime,
+                                                                        endTime, softCap, hardCap, "{}", {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
+                                                                        requiredBaseAssetForHardCap);
+                saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
+                auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+                REQUIRE(sales.size() == 1);
+                const auto saleId = sales[0]->getID();
+
+                uint64_t requestId = 0;
+                std::string details = "{}";
+
+                SECTION("Set tasks without permission")
+                {
+                    auto data = manageSaleTestHelper.createDataForAction(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST,
+                                                                         &zeroTasks, &requestId, &details);
+                    manageSaleTestHelper.applyManageSaleTx(syndicate, saleId, data,
+                                                           ManageSaleResultCode::SUCCESS, // No check of inner permission
+                                                           OperationResultCode::opNO_ROLE_PERMISSION);
+                }
+                SECTION("Without setting tasks")
+                {
+                    auto data = manageSaleTestHelper.createDataForAction(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST,
+                                                                         nullptr, &requestId, &details);
+                    manageSaleTestHelper.applyManageSaleTx(syndicate, saleId, data, ManageSaleResultCode::SUCCESS);
+                }
+            }
         }
     }
 
