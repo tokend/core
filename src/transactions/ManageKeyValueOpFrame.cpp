@@ -37,7 +37,7 @@ namespace stellar
     char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
     char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
     char const* ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
-    char const* ManageKeyValueOpFrame::kycRecoveryAccountRole = "kyc_recovery_account_role";
+    char const* ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_account_role";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -64,7 +64,7 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
         {createPollTasks, KeyValueEntryType::UINT32},
         {createKycRecoveryTasks, KeyValueEntryType::UINT32},
-        {kycRecoveryAccountRole, KeyValueEntryType::UINT64},
+        {kycRecoverySignerRole, KeyValueEntryType::UINT64},
         {kycRecoveryEnabled, KeyValueEntryType::UINT32},
     };
 }
@@ -302,8 +302,8 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     }
 
     longstring
-    ManageKeyValueOpFrame::makeKYCRecoveryAccountRoleKey()
+    ManageKeyValueOpFrame::makeKYCRecoverySignerRoleKey()
     {
-        return kycRecoveryAccountRole;
+        return kycRecoverySignerRole;
     }
 }

@@ -33,6 +33,7 @@ InitiateKYCRecoveryOpFrame::tryGetOperationConditions(StorageHelper& storageHelp
                                                       std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
+    resource.initiateKYCRecovery().roleID = mSourceAccount->getAccountRole();
     result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
@@ -43,6 +44,7 @@ InitiateKYCRecoveryOpFrame::tryGetSignerRequirements(StorageHelper& storageHelpe
                                                      std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
+    resource.initiateKYCRecovery().roleID = mSourceAccount->getAccountRole();
     result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
@@ -57,11 +59,6 @@ InitiateKYCRecoveryOpFrame::doCheckValid(Application& app)
 bool
 InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    if (!(mSourceAccount->getID() == app.getAdminID()))
-    {
-        innerResult().code(InitiateKYCRecoveryResultCode::NOT_AUTHORIZED);
-        return false;
-    }
 
     if (!isRecoveryAllowed(storageHelper))
     {
@@ -69,12 +66,6 @@ InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelp
         return false;
     }
 
-    uint64_t accountRole;
-    if (!getRecoveryAccountRole(storageHelper, accountRole))
-    {
-        innerResult().code(InitiateKYCRecoveryResultCode::RECOVERY_ACCOUNT_ROLE_NOT_FOUND);
-        return false;
-    }
 
     auto& accountHelper = storageHelper.getAccountHelper();
     auto accountFrame = accountHelper.loadAccount(mInitiateKYCRecoveryOp.account);
@@ -84,12 +75,16 @@ InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelp
         return false;
     }
 
-    handleSigners(app, storageHelper, accountFrame);
+    uint64_t signerRole;
+    if (!getRecoverySignerRole(storageHelper, signerRole))
+    {
+        innerResult().code(InitiateKYCRecoveryResultCode::RECOVERY_SIGNER_ROLE_NOT_FOUND);
+        return false;
+    }
+
+    handleSigners(app, storageHelper, accountFrame, signerRole);
 
     deletePendingRecoveryRequests(app, storageHelper);
-
-    accountFrame->setAccountRole(accountRole);
-    accountHelper.storeChange(accountFrame->mEntry);
 
     innerResult().code(InitiateKYCRecoveryResultCode::SUCCESS);
     return true;
@@ -114,12 +109,12 @@ InitiateKYCRecoveryOpFrame::isRecoveryAllowed(StorageHelper& storageHelper)
 }
 
 bool
-InitiateKYCRecoveryOpFrame::getRecoveryAccountRole(StorageHelper& storageHelper, uint64_t& roleID)
+InitiateKYCRecoveryOpFrame::getRecoverySignerRole(StorageHelper& storageHelper, uint64_t& roleID)
 {
     roleID = 0;
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
 
-    auto key = ManageKeyValueOpFrame::makeKYCRecoveryAccountRoleKey();
+    auto key = ManageKeyValueOpFrame::makeKYCRecoverySignerRoleKey();
     auto recoveryRole = keyValueHelper.loadKeyValue(key);
     if (!recoveryRole)
     {
@@ -134,14 +129,15 @@ InitiateKYCRecoveryOpFrame::getRecoveryAccountRole(StorageHelper& storageHelper,
     roleID = value.ui64Value();
 
     LedgerKey ledgerKey;
-    ledgerKey.type(LedgerEntryType::ACCOUNT_ROLE);
+    ledgerKey.type(LedgerEntryType::SIGNER_ROLE);
     ledgerKey.accountRole().id = roleID;
 
     return storageHelper.getAccountRoleHelper().exists(ledgerKey);
 }
 
 void
-InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& storageHelper, AccountFrame::pointer accountFrame)
+InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& storageHelper,
+    AccountFrame::pointer accountFrame, uint64_t signerRole)
 {
     Operation op;
     op.sourceAccount.activate() = accountFrame->getID();
@@ -179,7 +175,7 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
     createData.publicKey = mInitiateKYCRecoveryOp.signer;
     createData.weight = 1000;
     createData.identity = 1;
-    createData.roleID = 1;
+    createData.roleID = signerRole;
 
     manageSignerOp.data.createData() = createData;
 
@@ -195,9 +191,6 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
     }
 }
 
-
-// KYC recovery request can be created by either admin or account itself. Thus we need to check for pending requests
-// existence and delete them beforehand
 void
 InitiateKYCRecoveryOpFrame::deletePendingRecoveryRequests(Application& app, StorageHelper& storageHelper)
 {
@@ -207,18 +200,9 @@ InitiateKYCRecoveryOpFrame::deletePendingRecoveryRequests(Application& app, Stor
 
     auto targetAccRequest =
         reviewableRequestHelper->loadRequest(mInitiateKYCRecoveryOp.account,
-            CreateKYCRecoveryRequestOpFrame::getReference(mInitiateKYCRecoveryOp.account), db, &delta);
+            CreateKYCRecoveryRequestOpFrame::getReference(), db, &delta);
     if(targetAccRequest){
         reviewableRequestHelper->storeDelete(delta, db, targetAccRequest->getKey());
-    }
-
-    auto adminID = app.getAdminID();
-
-    auto adminRequest =
-        reviewableRequestHelper->loadRequest(adminID,
-            CreateKYCRecoveryRequestOpFrame::getReference(mInitiateKYCRecoveryOp.account), db, &delta);
-    if(adminRequest){
-        reviewableRequestHelper->storeDelete(delta, db, adminRequest->getKey());
     }
 }
 

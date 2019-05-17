@@ -58,7 +58,7 @@ public:
         return xdr::xdr_traits<CreateKYCRecoveryRequestResultCode>::enum_name(innerResult().code());
     }
 
-    static std::string getReference(AccountID& target);
+    static std::string getReference();
 
 };
 }

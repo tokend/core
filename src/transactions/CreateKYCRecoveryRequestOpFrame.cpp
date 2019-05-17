@@ -33,13 +33,25 @@ CreateKYCRecoveryRequestOpFrame::tryGetOperationConditions(StorageHelper& storag
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::KYC_RECOVERY);
 
-    if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount) || (mCreateKYCRecoveryRequestOp.allTasks))
-    {
-        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
-        return true;
-    }
+    auto action = AccountRuleAction::CREATE;
 
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
+    {
+        action = AccountRuleAction::CREATE_FOR_OTHER;
+        if (mCreateKYCRecoveryRequestOp.allTasks)
+        {
+            action = AccountRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
+        }
+    }
+    if (getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount)
+    {
+        action = AccountRuleAction::CREATE;
+        if (mCreateKYCRecoveryRequestOp.allTasks)
+        {
+            action = AccountRuleAction::CREATE_WITH_TASKS;
+        }
+    }
+    result.emplace_back(resource, action, mSourceAccount);
     return true;
 }
 
@@ -65,11 +77,7 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
 bool
 CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 {
-    if (!(getSourceID() == app.getAdminID()) && !(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
-    {
-        innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_AUTHORIZED);
-        return false;
-    }
+
     if (!isValidJson(mCreateKYCRecoveryRequestOp.creatorDetails))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_CREATOR_DETAILS);
@@ -78,12 +86,21 @@ CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 
     if (mCreateKYCRecoveryRequestOp.signersData.size() == 0)
     {
-        innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_SIGNER_DATA);
+        innerResult().code(CreateKYCRecoveryRequestResultCode::NO_SIGNER_DATA);
         return false;
     }
 
+    set<PublicKey> usedKeys;
     for (auto& data : mCreateKYCRecoveryRequestOp.signersData)
     {
+        if (usedKeys.find(data.publicKey) != usedKeys.end())
+        {
+            //todo: signer duplication
+            innerResult().code(CreateKYCRecoveryRequestResultCode::SIGNER_DUPLICATION);
+        }
+
+        usedKeys.insert(data.publicKey);
+
         if (data.weight > SignerRuleFrame::threshold)
         {
             innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_WEIGHT);
@@ -116,35 +133,18 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
         return false;
     }
 
-    uint64_t recoveryRole;
-    if (!InitiateKYCRecoveryOpFrame::getRecoveryAccountRole(storageHelper, recoveryRole))
-    {
-        innerResult().code(CreateKYCRecoveryRequestResultCode::RECOVERY_ACCOUNT_ROLE_NOT_FOUND);
-        return false;
-    }
-
-    //check role
-    if (targetAccount->getAccountRole() != recoveryRole)
-    {
-        innerResult().code(CreateKYCRecoveryRequestResultCode::TARGET_ACCOUNT_NOT_IN_RECOVERY_ROLE);
-        return false;
-    }
-
     if (mCreateKYCRecoveryRequestOp.requestID != 0)
-        updateRecoveryRequest(storageHelper, app);
+        return updateRecoveryRequest(storageHelper, app);
 
-    auto reference = getReference(mCreateKYCRecoveryRequestOp.targetAccount);
+    auto reference = getReference();
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
     auto requestFrame = ReviewableRequestFrame::createNew(delta,
-                                                          getSourceID(), app.getAdminID(),
+                                                          targetAccountID, app.getAdminID(),
                                                           referencePtr, ledgerManager.getCloseTime());
 
     auto requestHelper = ReviewableRequestHelper::Instance();
     //Here reference is being checked against two requestors - admin and kyc recovery target account
-    if (requestHelper->isReferenceExist(db, getSourceID(),
-                                        reference, requestFrame->getRequestID())
-        || requestHelper->isReferenceExist(db, app.getAdminID(),
-                                           reference, requestFrame->getRequestID()))
+    if (requestHelper->isReferenceExist(db, targetAccountID, reference, requestFrame->getRequestID()))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
@@ -165,9 +165,6 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
     requestFrame->recalculateHashRejectReason();
 
     requestHelper->storeAdd(delta, db, requestFrame->mEntry);
-
-    targetAccount->setAccountRole(recoveryRole);
-    accountHelper.storeChange(targetAccount->mEntry);
 
     innerResult().code(CreateKYCRecoveryRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
@@ -207,11 +204,9 @@ CreateKYCRecoveryRequestOpFrame::makeTasksKeyVector(StorageHelper& storageHelper
 }
 
 std::string
-CreateKYCRecoveryRequestOpFrame::getReference(AccountID& target)
+CreateKYCRecoveryRequestOpFrame::getReference()
 {
-    auto address = PubKeyUtils::toStrKey(target);
-    std::string rawData = "kyc_recovery:target_account:" + address;
-    const auto hash = sha256(rawData);
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::KYC_RECOVERY));
     return binToHex(hash);
 }
 

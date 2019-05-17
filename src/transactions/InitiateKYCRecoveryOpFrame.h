@@ -23,7 +23,8 @@ class InitiateKYCRecoveryOpFrame : public OperationFrame {
         return mResult.tr().initiateKYCRecoveryResult();
     }
 
-    void handleSigners(Application& app, StorageHelper& signerHelper, AccountFrame::pointer accountFrame);
+    void handleSigners(Application& app, StorageHelper& signerHelper,
+                       AccountFrame::pointer accountFrame, uint64_t signerRole);
 
     void deletePendingRecoveryRequests(Application& app, StorageHelper& storageHelper);
 
@@ -46,6 +47,6 @@ public:
 
     static bool isRecoveryAllowed(StorageHelper& storageHelper);
 
-    static bool getRecoveryAccountRole(StorageHelper& storageHelper, uint64_t& roleID);
+    static bool getRecoverySignerRole(StorageHelper& storageHelper, uint64_t& roleID);
 };
 }

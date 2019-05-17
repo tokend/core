@@ -99,7 +99,7 @@ public:
 
     static longstring makeKYCRecoveryKey();
 
-    static longstring makeKYCRecoveryAccountRoleKey();
+    static longstring makeKYCRecoverySignerRoleKey();
 
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
@@ -125,6 +125,6 @@ public:
     static char const * createPollTasks;
     static char const * createKycRecoveryTasks;
     static char const * kycRecoveryEnabled;
-    static char const * kycRecoveryAccountRole;
+    static char const * kycRecoverySignerRole;
 };
 }
