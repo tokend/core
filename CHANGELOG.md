@@ -1,6 +1,14 @@
 # Changelog
 
-## 3.2.0
+
+## 3.3.1
+
+### Fixed
+
+* curl now added in containers
+
+
+## 3.3.0
 
 ### Added
 
