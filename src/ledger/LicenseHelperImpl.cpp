@@ -212,7 +212,7 @@ namespace stellar
     {
         auto lastLedgerSeq = app.getLedgerManager().getLastClosedLedgerHeader().header.ledgerSeq;
 
-        uint64_t freeAdminCount = 0;
+        uint64_t freeAdminCount = 2;
         if (app.getLedgerManager().shouldUse(LedgerVersion::UNLIMITED_ADMIN_COUNT)) {
             freeAdminCount = UINT64_MAX;
         }
