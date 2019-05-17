@@ -10,6 +10,7 @@
 ### Fixed
 
 * Create and approve change role request for role that does  not exist
+* Removed ability to create sale for reversed pair
 
 
 ## 3.2.1
