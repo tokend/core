@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+* Unlimited (`UINT_64MAX`) signers amount in free license
+
 ### Fixed
 
 * Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
@@ -17,6 +21,7 @@
 ### Added
 
 * Manage account specific rule op frame
+* New CreateAMLAlert error codes
 * Cancel change role reviewable request
 
 ### Fixed

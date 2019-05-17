@@ -166,6 +166,9 @@
     <Filter Include="lib\crow">
       <UniqueIdentifier>{d9fec4df-6a8b-4d72-b062-489f34dc69b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="transactions\manage_specific_rule">
+      <UniqueIdentifier>{3332a440-0476-4e59-9e3e-c721a001adf4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main\Application.cpp">
@@ -1472,6 +1475,33 @@
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\SaleAndIssuanceTest.cpp">
       <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\LicenseTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManagePollTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageVoteTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\StampTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountSpecificRuleFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountSpecificRuleHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\CreateAccountSpecificRuleOpFrame.cpp">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\ManageAccountSpecificRuleOpFrame.cpp">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\RemoveAccountSpecificRuleOpFrame.cpp">
+      <Filter>transactions\manage_specific_rule</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2946,6 +2976,36 @@
     <ClInclude Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.h">
       <Filter>transactions\voting</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\LicenseTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManagePollTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageVoteTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\StampTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\CreateAccountSpecificRuleOpFrame.h">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\ManageAccountSpecificRuleOpFrame.h">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\RemoveAccountSpecificRuleOpFrame.h">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\AUTHORS" />
@@ -3031,6 +3091,185 @@
     <Text Include="..\..\INSTALL-Windows.txt" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
     <CustomBuild Include="..\..\src\xdr\*.x" />
     <CustomBuild Include="..\..\src\xdr\*.x" />
     <CustomBuild Include="..\..\src\xdr\*.x" />
