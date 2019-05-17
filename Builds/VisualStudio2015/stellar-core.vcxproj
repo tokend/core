@@ -244,6 +244,8 @@
     <ClCompile Include="..\..\src\ledger\AccountRoleRulesHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountRuleFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\AccountRuleHelperImpl.cpp" />
+    <ClCompile Include="..\..\src\ledger\AccountSpecificRuleFrame.cpp" />
+    <ClCompile Include="..\..\src\ledger\AccountSpecificRuleHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\AssetFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\AssetHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\AssetHelperLegacy.cpp" />
@@ -457,6 +459,9 @@
     <ClCompile Include="..\..\src\transactions\manage_role_rule\ManageAccountRuleOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\manage_role_rule\ManageSignerRoleOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\manage_role_rule\ManageSignerRuleOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\CreateAccountSpecificRuleOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\ManageAccountSpecificRuleOpFrame.cpp" />
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\RemoveAccountSpecificRuleOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\OperationFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\payment\PaymentOpFrame.cpp" />
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAMLAlertRequestOpFrame.cpp" />
@@ -529,6 +534,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateChangeRoleRequestTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\test_helper\LicenseTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageAccountRuleTestHelper.cpp" />
@@ -543,10 +549,12 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageKeyValueTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageLimitsTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageOfferTestHelper.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManagePollTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSaleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSignerRoleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSignerRuleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ManageSignerTestHelper.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageVoteTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\PaymentTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.cpp" />
@@ -566,6 +574,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\ReviewWithdrawalRequestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\SaleRequestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\SetFeesTestHelper.cpp" />
+    <ClCompile Include="..\..\src\transactions\test\test_helper\StampTestHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\StateBeforeTxHelper.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\TestManager.cpp" />
     <ClCompile Include="..\..\src\transactions\test\test_helper\TxHelper.cpp" />
@@ -707,6 +716,9 @@
     <ClInclude Include="..\..\src\ledger\AccountRuleFrame.h" />
     <ClInclude Include="..\..\src\ledger\AccountRuleHelper.h" />
     <ClInclude Include="..\..\src\ledger\AccountRuleHelperImpl.h" />
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleFrame.h" />
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleHelper.h" />
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleHelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\AssetFrame.h" />
     <ClInclude Include="..\..\src\ledger\AssetHelper.h" />
     <ClInclude Include="..\..\src\ledger\AssetHelperImpl.h" />
@@ -914,6 +926,9 @@
     <ClInclude Include="..\..\src\transactions\manage_role_rule\ManageAccountRuleOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\manage_role_rule\ManageSignerRoleOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\manage_role_rule\ManageSignerRuleOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\CreateAccountSpecificRuleOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\ManageAccountSpecificRuleOpFrame.h" />
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\RemoveAccountSpecificRuleOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\OperationFrame.h" />
     <ClInclude Include="..\..\src\transactions\PaymentOpFrame.h" />
     <ClInclude Include="..\..\src\transactions\payment\PaymentOpFrame.h" />
@@ -978,6 +993,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateChangeRoleRequestTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\IssuanceRequestHelper.h" />
+    <ClInclude Include="..\..\src\transactions\test\test_helper\LicenseTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\LimitsUpdateRequestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRoleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageAccountRuleTestHelper.h" />
@@ -992,10 +1008,12 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageKeyValueTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageLimitsTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageOfferTestHelper.h" />
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManagePollTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSaleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSignerRoleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSignerRuleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ManageSignerTestHelper.h" />
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageVoteTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\ParticipateInSaleTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\PaymentTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\PayoutTestHelper.h" />
@@ -1015,6 +1033,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\ReviewWithdrawalRequestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\SaleRequestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\SetFeesTestHelper.h" />
+    <ClInclude Include="..\..\src\transactions\test\test_helper\StampTestHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\StateBeforeTxHelper.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\TestManager.h" />
     <ClInclude Include="..\..\src\transactions\test\test_helper\TxHelper.h" />

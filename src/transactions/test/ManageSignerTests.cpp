@@ -5,6 +5,8 @@
 #include "ledger/StorageHelper.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
+#include "test_helper/LicenseTestHelper.h"
+#include "test_helper/StampTestHelper.h"
 #include "transactions/test/test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRoleTestHelper.h"
 #include "transactions/test/test_helper/ManageSignerRuleTestHelper.h"
@@ -16,7 +18,8 @@ using namespace stellar::txtest;
 TEST_CASE("Signer tests", "[tx][manage_signer]")
 {
     Config cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
-    cfg.LICENSE_FREE_NUM_ADMINS += 2;
+    auto wiredKey = SecretKey::random();
+    cfg.WIRED_KEYS.emplace_back(wiredKey.getPublicKey());
 
     VirtualClock clock;
     Application::pointer appPtr = Application::create(clock, cfg);
@@ -26,13 +29,17 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
     TestManager::upgradeToCurrentLedgerVersion(app);
 
     // set up world
-    auto master = Account{getRoot(), Salt(1)};
+    auto master = Account{getRoot(), Salt(0)};
     uint64_t ownerSignerRoleID = 1;
 
+
+    LicenseTestHelper licenseTestHelper(testManager);
+    StampTestHelper stampTestHelper(testManager);
     ManageSignerTestHelper manageSignerTestHelper(testManager);
     ManageSignerRoleTestHelper manageSignerRoleTestHelper(testManager);
     ManageSignerRuleTestHelper manageSignerRuleTestHelper(testManager);
     CreateAccountTestHelper createAccountTestHelper(testManager);
+
 
     SECTION("Create operational signer")
     {
@@ -282,9 +289,42 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             master, ops, ManageSignerResultCode::SUCCESS,
             OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
     }
-    SECTION("Should not allow to add new signers abowe license limits")
+
+    SECTION("Adding 1000 signers with free license")
     {
         auto& storageHelper = testManager->getStorageHelper();
+
+        for (int i = 0; i < 1000; i++)
+        {
+            auto signer = Account{SecretKey::random(), Salt(4)};
+            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                    signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+                    ownerSignerRoleID);
+            manageSignerTestHelper.applyTx(
+                    master, {createSignerOp},
+                    ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
+        }
+
+    }
+
+    SECTION("Should not allow to add new signers above license limits")
+    {
+
+        auto& storageHelper = testManager->getStorageHelper();
+
+        uint64_t adminCount = 10;
+        uint64_t dueDate = 1000;
+        auto stampResult = stampTestHelper.applyStamp(master);
+        auto stampSuccess = stampResult.success();
+        auto licenseResult = licenseTestHelper.applyLicenseOp(master,
+                                                              wiredKey,
+                                                              stampSuccess.ledgerHash,
+                                                              stampSuccess.licenseHash,
+                                                              adminCount,
+                                                              dueDate
+        );
+
         auto currentNumberOfAdmins =
             storageHelper.getSignerHelper().loadSigners(testManager->getApp().getAdminID()).size();
         auto allowedNumberOfAdmins =
@@ -302,7 +342,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
                 ManageSignerResultCode::SUCCESS,
                 OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
         }
-        
+
         auto signer = Account
         {
             SecretKey::random(), Salt(4)
@@ -312,7 +352,77 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
             ownerSignerRoleID);
         manageSignerTestHelper.applyTx(
             master, {createSignerOp},
-            ManageSignerResultCode::NUMBER_OF_ADMINS_EXCEEDS_LICENSE,
-            OperationResultCode::opINNER, TransactionResultCode::txFAILED);
+                ManageSignerResultCode::NUMBER_OF_ADMINS_EXCEEDS_LICENSE,
+                OperationResultCode::opINNER, TransactionResultCode::txFAILED);
+    }
+
+    SECTION("Removing signers when applied license with lower amount of signers")
+    {
+        auto& storageHelper = testManager->getStorageHelper();
+
+        std::stack<Account> signers;
+        Account* removeOpSigner = nullptr;
+        for (int i = 0; i < 10; i++)
+        {
+            auto signer = Account{SecretKey::random(), Salt(4)};
+            if (!removeOpSigner) {
+                removeOpSigner = &signer;
+            }
+            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                    signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+                    ownerSignerRoleID);
+            manageSignerTestHelper.applyTx(
+                    master, {createSignerOp},
+                    ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opINNER, TransactionResultCode::txSUCCESS);
+            signers.push(signer);
+        }
+
+        uint64_t adminCount = 5;
+        uint64_t dueDate = 1000;
+        auto stampResult = stampTestHelper.applyStamp(master);
+        auto stampSuccess = stampResult.success();
+        auto licenseResult = licenseTestHelper.applyLicenseOp(master,
+                                                              wiredKey,
+                                                              stampSuccess.ledgerHash,
+                                                              stampSuccess.licenseHash,
+                                                              adminCount,
+                                                              dueDate
+        );
+
+        auto currentNumberOfAdmins =
+                storageHelper.getSignerHelper().loadSigners(testManager->getApp().getAdminID()).size();
+
+        auto allowedNumberOfAdmins =
+                storageHelper.getLicenseHelper().getAllowedAdmins(
+                        testManager->getApp());
+
+        while (currentNumberOfAdmins > allowedNumberOfAdmins) {
+            auto signerToRemove = signers.top();
+            auto op =
+                    manageSignerTestHelper.buildRemoveOp(signerToRemove.key.getPublicKey());
+
+            manageSignerTestHelper.applyTx(
+                    master, op, ManageSignerResultCode::SUCCESS,
+                    OperationResultCode::opINNER, TransactionResultCode::txSUCCESS, removeOpSigner);
+            signers.pop();
+            currentNumberOfAdmins =
+                    storageHelper.getSignerHelper().loadSigners(testManager->getApp().getAdminID()).size();
+        }
+
+        SECTION("try to add the signer and exceed the license signers limit")
+        {
+            auto signer = Account
+            {
+                SecretKey::random(), Salt(4)
+            };
+            auto createSignerOp = manageSignerTestHelper.buildCreateOp(
+                    signer.key.getPublicKey(), SignerRuleFrame::threshold, 200,
+                    ownerSignerRoleID);
+            manageSignerTestHelper.applyTx(
+                    master, {createSignerOp},
+                    ManageSignerResultCode::NUMBER_OF_ADMINS_EXCEEDS_LICENSE,
+                    OperationResultCode::opINNER, TransactionResultCode::txFAILED);
+        }
     }
 }

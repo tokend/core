@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+* Unlimited (`UINT_64MAX`) signers amount in free license
+
 ### Fixed
 
 * Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`

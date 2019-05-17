@@ -200,6 +200,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
 {
     auto& ledgerHeader = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
+    // restrict any operations with default signer rule
     LedgerEntry firstSignerRuleEntry;
     firstSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& firstSignerRule = firstSignerRuleEntry.data.signerRule();
@@ -216,6 +217,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     auto& helper = storageHelper.getSignerRuleHelper();
     helper.storeAdd(firstSignerRuleEntry);
 
+    // restric any operations with default role
     LedgerEntry secondSignerRuleEntry;
     secondSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& secondSignerRule = secondSignerRuleEntry.data.signerRule();
@@ -231,6 +233,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
 
     helper.storeAdd(secondSignerRuleEntry);
 
+    // restric any operations with recovery signer
     LedgerEntry thirdSignerRuleEntry;
     thirdSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& thirdSignerRule = thirdSignerRuleEntry.data.signerRule();
