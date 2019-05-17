@@ -1,5 +1,6 @@
 #include "RemoveAccountSpecificRuleOpFrame.h"
 #include "transactions/dex/OfferManager.h"
+#include "transactions/dex/DeleteSaleParticipationOpFrame.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
@@ -88,7 +89,11 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
     {
         auto offerHelper = OfferHelper::Instance();
         auto offersToDelete = offerHelper->loadOffers(*ruleFrame->getEntry().accountID, sale->getID(), db);
-        OfferManager::deleteOffers(offersToDelete, db, delta);
+        for (auto const& offerToCancel : offersToDelete)
+        {
+            DeleteSaleParticipationOpFrame::deleteSaleParticipation(app, delta,
+                    app.getLedgerManager(), offerToCancel, mParentTx);
+        }
     }
 
     innerResult().code(ManageAccountSpecificRuleResultCode::SUCCESS);
