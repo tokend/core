@@ -17,12 +17,12 @@ CreateASwapBidCreationRequestHelper::CreateASwapBidCreationRequestHelper(
 {
 }
 
-AtomicSwapBidCreationRequest
+CreateAtomicSwapBidRequest
 CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
         BalanceID baseBalance, uint64_t amount, std::string creatorDetails,
         std::vector<AtomicSwapBidQuoteAsset> quoteAssets)
 {
-    AtomicSwapBidCreationRequest request;
+    CreateAtomicSwapBidRequest request;
     request.baseBalance = baseBalance;
     request.amount = amount;
     request.creatorDetails = creatorDetails;
@@ -34,20 +34,20 @@ CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
 
 TransactionFramePtr
 CreateASwapBidCreationRequestHelper::createCreateASwapBidCreationRequestTx(
-        Account &source, AtomicSwapBidCreationRequest request)
+        Account &source, CreateAtomicSwapBidRequest request)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST);
-    auto& op = baseOp.body.createAtomicSwapBidCreationRequestOp();
+    auto& op = baseOp.body.createAtomicSwapBidRequestOp();
     op.request = request;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);
 }
 
-CreateAtomicSwapBidCreationRequestResult
+CreateAtomicSwapBidRequestResult
 CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
-        Account &source, AtomicSwapBidCreationRequest request,
-        CreateAtomicSwapBidCreationRequestResultCode expectedResult,
+        Account &source, CreateAtomicSwapBidRequest request,
+        CreateAtomicSwapBidRequestResultCode expectedResult,
         OperationResultCode expectedOpResCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
@@ -69,7 +69,7 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
 
     if (expectedOpResCode != OperationResultCode::opINNER)
     {
-        return CreateAtomicSwapBidCreationRequestResult();
+        return CreateAtomicSwapBidRequestResult();
     }
 
     auto actualResultCode = CreateASwapBidCreationRequestOpFrame::getInnerCode(opResult);
@@ -77,12 +77,12 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
     REQUIRE(actualResultCode == expectedResult);
 
     auto createBidCreationRequestResult =
-            opResult.tr().createAtomicSwapBidCreationRequestResult();
+            opResult.tr().createAtomicSwapBidRequestResult();
 
     auto reviewableRequestCountAfterTx =
             reviewableRequestHelper->countObjects(db.getSession());
 
-    if (expectedResult != CreateAtomicSwapBidCreationRequestResultCode::SUCCESS)
+    if (expectedResult != CreateAtomicSwapBidRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
         return createBidCreationRequestResult;

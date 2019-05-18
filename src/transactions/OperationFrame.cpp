@@ -121,7 +121,7 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<CreateASwapBidCreationRequestOpFrame>(op, res, tx);
         case OperationType::CANCEL_ATOMIC_SWAP_BID:
             return make_shared<CancelASwapBidOpFrame>(op, res, tx);
-        case OperationType::CREATE_ATOMIC_SWAP_REQUEST:
+        case OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST:
             return make_shared<CreateASwapRequestOpFrame>(op, res, tx);
         case OperationType::MANAGE_ACCOUNT_ROLE:
             return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));

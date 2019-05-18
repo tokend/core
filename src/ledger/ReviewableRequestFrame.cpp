@@ -183,7 +183,7 @@ void ReviewableRequestFrame::ensureInvoiceValid(InvoiceRequest const& request)
 }
 
 void ReviewableRequestFrame::ensureASwapBidCreationValid(
-        const AtomicSwapBidCreationRequest &request)
+        const CreateAtomicSwapBidRequest &request)
 {
     if (request.amount == 0)
     {
@@ -201,7 +201,7 @@ void ReviewableRequestFrame::ensureASwapBidCreationValid(
     }
 }
 
-void ReviewableRequestFrame::ensureASwapValid(const AtomicSwapRequest &request)
+void ReviewableRequestFrame::ensureASwapValid(const CreateAtomicSwapAskRequest &request)
 {
     if (request.bidID == 0)
     {
@@ -276,9 +276,9 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
         case ReviewableRequestType::MANAGE_CONTRACT:
             return;
         case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
-            return ensureASwapBidCreationValid(oe.body.atomicSwapBidCreationRequest());
-        case ReviewableRequestType::CREATE_ATOMIC_SWAP:
-            return ensureASwapValid(oe.body.atomicSwapRequest());
+            return ensureASwapBidCreationValid(oe.body.createAtomicSwapBidRequest());
+        case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
+            return ensureASwapValid(oe.body.createAtomicSwapAskRequest());
         case ReviewableRequestType::CREATE_POLL:
             return ensurePollCreationValid(oe.body.createPollRequest());
         default:

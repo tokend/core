@@ -50,7 +50,7 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
                                                  ReviewableRequestFrame::pointer request)
 {
     Database& db = app.getDatabase();
-    auto& aSwapCreationRequest = request->getRequestEntry().body.atomicSwapRequest();
+    auto& aSwapCreationRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
 
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapCreationRequest.bidID, db, &delta);
@@ -91,15 +91,15 @@ ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &
 
 bool ReviewASwapRequestOpFrame::canRemoveBid(AtomicSwapBidFrame::pointer bid)
 {
-    bool bidIsSoldOut = bid->getAmount() == 0 && bid->getLockedAmount() == 0;
-    return bidIsSoldOut || (bid->isCancelled() && bid->getLockedAmount() == 0);
+    bool bidIsSoldOut = (bid->getAmount() == 0) && (bid->getLockedAmount() == 0);
+    return bidIsSoldOut || (bid->isCancelled() && (bid->getLockedAmount() == 0));
 }
 
 bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,
                                               LedgerManager &ledgerManager,
                                               ReviewableRequestFrame::pointer request)
 {
-    request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP);
+    request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
 
     auto& requestTasksExt = request->getRequestEntry().tasks;
 
@@ -125,7 +125,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         return true;
     }
 
-    auto aSwapRequest = request->getRequestEntry().body.atomicSwapRequest();
+    auto aSwapRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
 
     auto bidFrame = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapRequest.bidID, db, &delta);
@@ -139,8 +139,9 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     if (!bidFrame->tryChargeFromLocked(aSwapRequest.baseAmount))
     {
-        innerResult().code(ReviewRequestResultCode::ASWAP_BID_UNDERFUNDED);
-        return false;
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state. Expected bid has enough locked amount";
+        throw runtime_error("Unexpected state. Expected bid has enough locked amount");
     }
 
     AccountManager accountManager(app, db, delta, ledgerManager);
@@ -158,7 +159,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     if (purchaserBalanceFrame->tryFundAccount(aSwapRequest.baseAmount) != BalanceFrame::Result::SUCCESS)
     {
-        innerResult().code(ReviewRequestResultCode::ASWAP_PURCHASER_FULL_LINE);
+        innerResult().code(ReviewRequestResultCode::ATOMIC_SWAP_ASK_OWNER_FULL_LINE);
         return false;
     }
 
@@ -174,6 +175,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
                 "Unexpected state: failed to charge from bid owner balance locked amount");
     }
 
+    // save entries after changes
     EntryHelperProvider::storeChangeEntry(delta, db, bidFrame->mEntry);
     EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
     EntryHelperProvider::storeChangeEntry(delta, db, purchaserBalanceFrame->mEntry);
@@ -204,9 +206,9 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP);
+    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
 
-    auto& aSwapExtended = innerResult().success().typeExt.atomicSwapExtended();
+    auto& aSwapExtended = innerResult().success().typeExt.atomicSwapAskExtended();
 
     aSwapExtended.bidID = bidFrame->getBidID();
     aSwapExtended.bidOwnerID = bidFrame->getOwnerID();
@@ -217,7 +219,7 @@ bool ReviewASwapRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     aSwapExtended.quoteAmount = static_cast<uint64>(quoteAmount);
     aSwapExtended.price = quoteAssetPrice;
     aSwapExtended.bidOwnerBaseBalanceID = bidOwnerBalanceFrame->getBalanceID();
-    aSwapExtended.purchaserBaseBalanceID = purchaserBalanceFrame->getBalanceID();
+    aSwapExtended.askOwnerBaseBalanceID = purchaserBalanceFrame->getBalanceID();
 
     return true;
 }

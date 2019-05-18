@@ -133,7 +133,7 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 		return new ReviewContractRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
 		return new ReviewASwapBidCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ATOMIC_SWAP:
+	case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
 		return new ReviewASwapRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_POLL:
 		return new ReviewCreatePollRequestOpFrame(op, res, parentTx);

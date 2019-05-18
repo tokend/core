@@ -9,21 +9,23 @@ namespace txtest
 class CreateASwapReviewableRequestTestHelper : TxHelper
 {
 public:
-    explicit CreateASwapReviewableRequestTestHelper(
-            TestManager::pointer testManager);
+    explicit
+    CreateASwapReviewableRequestTestHelper(TestManager::pointer testManager);
 
-    CreateAtomicSwapRequestOp createASwapRequestOp(uint64_t bidID, AssetCode asset,
-                                              uint64_t amount);
+    CreateAtomicSwapAskRequestOp
+    createASwapRequestOp(uint64_t bidID, AssetCode asset, uint64_t amount);
 
-    TransactionFramePtr createASwapRequestTx(Account& source,
-                 CreateAtomicSwapRequestOp& createASwapRequestOp);
+    TransactionFramePtr
+    createASwapRequestTx(Account& source,
+            CreateAtomicSwapAskRequestOp& createASwapRequestOp);
 
-    CreateAtomicSwapRequestResult applyCreateASwapRequest(Account& source,
-                          CreateAtomicSwapRequestOp& createASwapRequestOp,
-                          CreateAtomicSwapRequestResultCode expectedResult =
-                          CreateAtomicSwapRequestResultCode::SUCCESS,
-                          OperationResultCode expectedOpRes =
-                          OperationResultCode::opINNER);
+    CreateAtomicSwapAskRequestResult
+    applyCreateASwapRequest(Account& source,
+            CreateAtomicSwapAskRequestOp& createASwapRequestOp,
+            CreateAtomicSwapAskRequestResultCode expectedResult =
+                    CreateAtomicSwapAskRequestResultCode::SUCCESS,
+            OperationResultCode expectedOpRes =
+                    OperationResultCode::opINNER);
 };
 
 }

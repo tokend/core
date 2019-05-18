@@ -15,7 +15,7 @@ ASwapRequestReviewChecker::ASwapRequestReviewChecker(TestManager::pointer testMa
 {
     auto& db = mTestManager->getDB();
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
-    auto& aSwapRequest = request->getRequestEntry().body.atomicSwapRequest();
+    auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
     mBidBeforeTx = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapRequest.bidID, db);
     mBidOwnerBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(
@@ -34,7 +34,7 @@ ASwapRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer 
 
     REQUIRE(requestAfterTx == nullptr);
 
-    auto& aSwapRequest = request->getRequestEntry().body.atomicSwapRequest();
+    auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
 
     auto bidAfterTx = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
             aSwapRequest.bidID, db);
@@ -72,7 +72,7 @@ ASwapRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
     auto purchaserBalanceAfterTx = balanceHelper->loadBalance(
             request->getRequestor(), mBidBeforeTx->getBaseAsset(), db, nullptr);
 
-    auto& aSwapRequest = request->getRequestEntry().body.atomicSwapRequest();
+    auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
 
     if (mPurchaserBalanceBeforeTx != nullptr)
     {

@@ -17,11 +17,11 @@ protected:
 bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                   ReviewableRequestFrame::pointer request) override;
 
-bool handleAllAssetsValidationResultCode(CreateAtomicSwapBidCreationRequestResultCode code);
+bool handleAllAssetsValidationResultCode(CreateAtomicSwapBidRequestResultCode code);
 
 AtomicSwapBidFrame::pointer
 buildNewBid(AccountID ownerID, AssetCode baseAsset, uint64_t ledgerCloseTime,
-            AtomicSwapBidCreationRequest request, LedgerDelta& delta);
+            CreateAtomicSwapBidRequest request, LedgerDelta& delta);
 
 bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
                    ReviewableRequestFrame::pointer request) override;
@@ -29,6 +29,10 @@ bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerMa
 bool handlePermanentReject(Application& app, LedgerDelta& delta,
                            LedgerManager& ledgerManager,
                            ReviewableRequestFrame::pointer request) override;
+
+bool
+tryGetSignerRequirements(StorageHelper& storageHelper,
+                         std::vector<SignerRequirement>& result) const override;
 };
 
 }

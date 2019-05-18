@@ -35,8 +35,8 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureChangeRoleValid(ChangeRoleRequest const &request);
 	static void ensureUpdateSaleDetailsValid(UpdateSaleDetailsRequest const &request);
 	static void ensureInvoiceValid(InvoiceRequest const& request);
-	static void ensureASwapBidCreationValid(AtomicSwapBidCreationRequest const& request);
-	static void ensureASwapValid(AtomicSwapRequest const& request);
+	static void ensureASwapBidCreationValid(CreateAtomicSwapBidRequest const& request);
+	static void ensureASwapValid(CreateAtomicSwapAskRequest const& request);
 	static void ensurePollCreationValid(CreatePollRequest const& request);
 
 

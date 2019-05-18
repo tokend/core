@@ -6,6 +6,10 @@
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
 #include <ledger/AccountHelperLegacy.h>
 #include "ReviewASwapBidCreationRequestOpFrame.h"
+#include <ledger/AtomicSwapBidHelper.h>
+#include <ledger/ReviewableRequestHelper.h>
+#include <ledger/StorageHelper.h>
+#include <ledger/AssetHelper.h>
 
 using namespace std;
 
@@ -18,6 +22,47 @@ ReviewASwapBidCreationRequestOpFrame::ReviewASwapBidCreationRequestOpFrame(
 {
 }
 
+
+bool
+ReviewASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                    std::vector<SignerRequirement>& result) const
+{
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
+            request->getRequestEntry().body.createAtomicSwapAskRequest().bidID,
+            storageHelper.getDatabase());
+    if (!bid)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: expected atomic swap bid to exist, bid ID: "
+                << bid->getBidID();
+        throw runtime_error("Unexpected state: expected atomic swap bid to exist");
+    }
+
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(bid->getBaseAsset());
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
+    resource.reviewableRequest().details.createAtomicSwapBidExt().v(LedgerVersion::ATOMIC_SWAP_RETURNING);
+    resource.reviewableRequest().details.createAtomicSwapBidExt().createAtomicSwapBid().assetCode = asset->getCode();
+    resource.reviewableRequest().details.createAtomicSwapBidExt().createAtomicSwapBid().assetType = asset->getType();
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
+
 bool ReviewASwapBidCreationRequestOpFrame::handleReject(
         Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
         ReviewableRequestFrame::pointer request)
@@ -27,41 +72,26 @@ bool ReviewASwapBidCreationRequestOpFrame::handleReject(
 }
 
 bool ReviewASwapBidCreationRequestOpFrame::handleAllAssetsValidationResultCode(
-        CreateAtomicSwapBidCreationRequestResultCode code) {
+        CreateAtomicSwapBidRequestResultCode code) {
     switch (code)
     {
-        case CreateAtomicSwapBidCreationRequestResultCode::BASE_ASSET_NOT_FOUND:
-        {
-            innerResult().code(ReviewRequestResultCode::BASE_ASSET_NOT_FOUND);
-            return false;
-        }
-        case CreateAtomicSwapBidCreationRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED:
+        case CreateAtomicSwapBidRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED:
         {
             innerResult().code(
                     ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
             return false;
         }
-        case CreateAtomicSwapBidCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND:
-        {
-            innerResult().code(ReviewRequestResultCode::QUOTE_ASSET_NOT_FOUND);
-            return false;
-        }
-        case CreateAtomicSwapBidCreationRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED:
+        case CreateAtomicSwapBidRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED:
         {
             innerResult().code(
                     ReviewRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
-            return false;
-        }
-        case CreateAtomicSwapBidCreationRequestResultCode::ASSETS_ARE_EQUAL:
-        {
-            innerResult().code(ReviewRequestResultCode::ASSETS_ARE_EQUAL);
             return false;
         }
         default:
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected error code from atomic swap bid assets validator: "
-                << xdr::xdr_traits<CreateAtomicSwapBidCreationRequestResultCode>::enum_name(
+                << xdr::xdr_traits<CreateAtomicSwapBidRequestResultCode>::enum_name(
                         code);
             throw runtime_error(
                     "Unexpected error code from atomic swap bid assets validator");
@@ -71,9 +101,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleAllAssetsValidationResultCode(
 
 AtomicSwapBidFrame::pointer
 ReviewASwapBidCreationRequestOpFrame::buildNewBid(AccountID ownerID, AssetCode baseAsset,
-                                                  uint64_t ledgerCloseTime,
-                                                  AtomicSwapBidCreationRequest request,
-                                                  LedgerDelta &delta)
+        uint64_t ledgerCloseTime, CreateAtomicSwapBidRequest request, LedgerDelta &delta)
 {
     AtomicSwapBidEntry bidEntry;
     bidEntry.bidID = delta.getHeaderFrame().generateID(LedgerEntryType::ATOMIC_SWAP_BID);
@@ -99,7 +127,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
 {
     request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
 
-    auto requestBody = request->getRequestEntry().body.atomicSwapBidCreationRequest();
+    auto requestBody = request->getRequestEntry().body.createAtomicSwapBidRequest();
 
     Database& db = app.getDatabase();
     handleTasks(db, delta, request);
@@ -124,7 +152,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handleApprove(
 
     auto validationResultCode = CreateASwapBidCreationRequestOpFrame::areAllAssetsValid(
             db, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
-    if (validationResultCode != CreateAtomicSwapBidCreationRequestResultCode::SUCCESS)
+    if (validationResultCode != CreateAtomicSwapBidRequestResultCode::SUCCESS)
     {
         return handleAllAssetsValidationResultCode(validationResultCode);
     }
@@ -153,7 +181,7 @@ bool ReviewASwapBidCreationRequestOpFrame::handlePermanentReject(
 {
     request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
 
-    auto aSwapCreationRequest = request->getRequestEntry().body.atomicSwapBidCreationRequest();
+    auto aSwapCreationRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
     auto& db = app.getDatabase();
 
     auto baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
