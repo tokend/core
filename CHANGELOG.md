@@ -10,6 +10,7 @@
 ### Fixed
 
 * Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
+* Exception on check sale state op because of wrong removing sale specific rules
 
 ## 3.3.1
 
