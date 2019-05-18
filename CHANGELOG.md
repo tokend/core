@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.4.0
+
 ### Added
 
 * Unlimited (`UINT_64MAX`) signers amount in free license
