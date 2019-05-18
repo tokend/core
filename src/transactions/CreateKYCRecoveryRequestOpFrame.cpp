@@ -95,8 +95,8 @@ CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
     {
         if (usedKeys.find(data.publicKey) != usedKeys.end())
         {
-            //todo: signer duplication
             innerResult().code(CreateKYCRecoveryRequestResultCode::SIGNER_DUPLICATION);
+            return false;
         }
 
         usedKeys.insert(data.publicKey);
@@ -107,7 +107,7 @@ CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
             return false;
         }
 
-        if (isValidJson(data.details))
+        if (!isValidJson(data.details))
         {
             innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_DETAILS);
             return false;

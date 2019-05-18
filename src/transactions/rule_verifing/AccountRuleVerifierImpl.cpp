@@ -12,11 +12,11 @@ bool
 AccountRuleVerifierImpl::isAllowed(OperationCondition& condition,
                                    StorageHelper& storageHelper)
 {
-    if (!condition.account) 
+    if (!condition.account)
     {
         throw std::runtime_error("Expected account ro exists on account rule verifying");
     }
-    
+
     auto& accountRoleHelper = storageHelper.getAccountRoleHelper();
     auto& accountRuleHelper = storageHelper.getAccountRuleHelper();
 

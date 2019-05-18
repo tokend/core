@@ -33,7 +33,6 @@ InitiateKYCRecoveryOpFrame::tryGetOperationConditions(StorageHelper& storageHelp
                                                       std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
-    resource.initiateKYCRecovery().roleID = mSourceAccount->getAccountRole();
     result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
@@ -65,7 +64,6 @@ InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelp
         innerResult().code(InitiateKYCRecoveryResultCode::RECOVERY_NOT_ALLOWED);
         return false;
     }
-
 
     auto& accountHelper = storageHelper.getAccountHelper();
     auto accountFrame = accountHelper.loadAccount(mInitiateKYCRecoveryOp.account);
@@ -130,14 +128,14 @@ InitiateKYCRecoveryOpFrame::getRecoverySignerRole(StorageHelper& storageHelper, 
 
     LedgerKey ledgerKey;
     ledgerKey.type(LedgerEntryType::SIGNER_ROLE);
-    ledgerKey.accountRole().id = roleID;
+    ledgerKey.signerRole().id = roleID;
 
-    return storageHelper.getAccountRoleHelper().exists(ledgerKey);
+    return storageHelper.getSignerRoleHelper().exists(ledgerKey);
 }
 
 void
 InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& storageHelper,
-    AccountFrame::pointer accountFrame, uint64_t signerRole)
+                                          AccountFrame::pointer accountFrame, uint64_t signerRole)
 {
     Operation op;
     op.sourceAccount.activate() = accountFrame->getID();
@@ -156,6 +154,7 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
     {
         RemoveSignerData removeData;
         removeData.publicKey = s->getEntry().pubKey;
+        manageSignerOp.data.action(ManageSignerAction::REMOVE);
         manageSignerOp.data.removeData() = removeData;
 
         ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
@@ -176,6 +175,7 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
     createData.weight = 1000;
     createData.identity = 1;
     createData.roleID = signerRole;
+    createData.details = "{}";
 
     manageSignerOp.data.createData() = createData;
 
@@ -200,8 +200,9 @@ InitiateKYCRecoveryOpFrame::deletePendingRecoveryRequests(Application& app, Stor
 
     auto targetAccRequest =
         reviewableRequestHelper->loadRequest(mInitiateKYCRecoveryOp.account,
-            CreateKYCRecoveryRequestOpFrame::getReference(), db, &delta);
-    if(targetAccRequest){
+                                             CreateKYCRecoveryRequestOpFrame::getReference(), db, &delta);
+    if (targetAccRequest)
+    {
         reviewableRequestHelper->storeDelete(delta, db, targetAccRequest->getKey());
     }
 }

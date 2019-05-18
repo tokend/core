@@ -95,6 +95,7 @@ ReviewKYCRecoveryRequestOpFrame::createSigners(Application& app, StorageHelper& 
 
     for (auto const& createData : kycRecoveryRequest.signersData)
     {
+        manageSignerOp.data.action(ManageSignerAction::CREATE);
         manageSignerOp.data.createData() = createData;
 
         ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
