@@ -37,7 +37,7 @@ namespace stellar
     char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
     char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
     char const* ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
-    char const* ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_account_role";
+    char const* ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_signer_role";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
