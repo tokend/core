@@ -64,12 +64,21 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().allTasks = 0;
+    SignerRuleAction action;
     if (mCreateKYCRecoveryRequestOp.allTasks)
     {
         resource.reviewableRequest().allTasks = *mCreateKYCRecoveryRequestOp.allTasks;
+        action = SignerRuleAction::CREATE_WITH_TASKS;
+        if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
+            action = SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
+    }
+    else {
+        action = SignerRuleAction::CREATE_WITH_TASKS;
+        if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
+            action = SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
     }
 
-    result.emplace_back(resource, SignerRuleAction::CREATE);
+    result.emplace_back(resource, action);
 
     return true;
 }
@@ -77,6 +86,11 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
 bool
 CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 {
+    if (mCreateKYCRecoveryRequestOp.requestID != 0 && mCreateKYCRecoveryRequestOp.allTasks)
+    {
+        innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+        return false;
+    }
 
     if (!isValidJson(mCreateKYCRecoveryRequestOp.creatorDetails))
     {
@@ -143,15 +157,17 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
                                                           referencePtr, ledgerManager.getCloseTime());
 
     auto requestHelper = ReviewableRequestHelper::Instance();
-    //Here reference is being checked against two requestors - admin and kyc recovery target account
     if (requestHelper->isReferenceExist(db, targetAccountID, reference, requestFrame->getRequestID()))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
     }
 
-    uint32 defaultMask;
-    if (!loadTasks(storageHelper, defaultMask, mCreateKYCRecoveryRequestOp.allTasks))
+    uint32 allTasks = 0;
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    if (!keyValueHelper.loadTasks(allTasks,
+        {ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()},
+        mCreateKYCRecoveryRequestOp.allTasks.get()))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::KYC_RECOVERY_TASKS_NOT_FOUND);
         return false;
@@ -160,7 +176,7 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
     auto& requestEntry = requestFrame->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::KYC_RECOVERY);
 
-    createRequest(requestEntry, defaultMask);
+    createRequest(requestEntry, allTasks);
 
     requestFrame->recalculateHashRejectReason();
 
@@ -234,7 +250,7 @@ CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHel
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
-    // ensure that logic is true
+    // ensure that request is being updated legitimately
     if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST);
@@ -275,11 +291,6 @@ CreateKYCRecoveryRequestOpFrame::ensureTargetNotChanged(ReviewableRequestEntry& 
     if (!(kycRecoveryRequest.targetAccount == mCreateKYCRecoveryRequestOp.targetAccount))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::INVALID_UPDATE_DATA);
-        return false;
-    }
-    if (mCreateKYCRecoveryRequestOp.allTasks)
-    {
-        innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
         return false;
     }
 

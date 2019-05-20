@@ -33,6 +33,14 @@ InitiateKYCRecoveryOpFrame::tryGetOperationConditions(StorageHelper& storageHelp
                                                       std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
+    auto targetAccount = storageHelper.getAccountHelper().loadAccount(mInitiateKYCRecoveryOp.account);
+    if (!targetAccount)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ACCOUNT;
+        return false;
+    }
+    resource.initiateKYCRecovery().roleID = targetAccount->getAccountRole();
     result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
 
     return true;
@@ -43,7 +51,14 @@ InitiateKYCRecoveryOpFrame::tryGetSignerRequirements(StorageHelper& storageHelpe
                                                      std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
-    resource.initiateKYCRecovery().roleID = mSourceAccount->getAccountRole();
+    auto targetAccount = storageHelper.getAccountHelper().loadAccount(mInitiateKYCRecoveryOp.account);
+    if (!targetAccount)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ACCOUNT;
+        return false;
+    }
+    resource.initiateKYCRecovery().roleID = targetAccount->getAccountRole();
     result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
@@ -66,12 +81,8 @@ InitiateKYCRecoveryOpFrame::doApply(Application& app, StorageHelper& storageHelp
     }
 
     auto& accountHelper = storageHelper.getAccountHelper();
-    auto accountFrame = accountHelper.loadAccount(mInitiateKYCRecoveryOp.account);
-    if (!accountFrame)
-    {
-        innerResult().code(InitiateKYCRecoveryResultCode::NOT_FOUND);
-        return false;
-    }
+    //Account existence was checked earlier
+    auto accountFrame = accountHelper.mustLoadAccount(mInitiateKYCRecoveryOp.account);
 
     uint64_t signerRole;
     if (!getRecoverySignerRole(storageHelper, signerRole))
@@ -122,6 +133,9 @@ InitiateKYCRecoveryOpFrame::getRecoverySignerRole(StorageHelper& storageHelper, 
     auto value = recoveryRole->getKeyValue().value;
     if (value.type() != KeyValueEntryType::UINT64)
     {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected type of key value entry by key \"kyc_recovery_signer_role\""
+            << xdr::xdr_traits<KeyValueEntryType>::enum_name(value.type());
         return false;
     }
     roleID = value.ui64Value();
@@ -157,9 +171,9 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
         manageSignerOp.data.action(ManageSignerAction::REMOVE);
         manageSignerOp.data.removeData() = removeData;
 
-        ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
+    ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
 
-        manageSignerOpFrame.setSourceAccountPtr(accountFrame);
+    manageSignerOpFrame.setSourceAccountPtr(accountFrame);
 
         if (!manageSignerOpFrame.doCheckValid(app) ||
             !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))

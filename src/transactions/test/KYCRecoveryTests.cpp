@@ -75,7 +75,7 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
 
         initKycRecoveryTestHelper.applyTx(initKYCRecovery
                                               .setTargetAccount(accID)
-                                              .setResultCode(InitiateKYCRecoveryResultCode::NOT_FOUND)
+                                              .setOperationResultCode(OperationResultCode::opNO_ENTRY)
                                               .setTxResultCode(TransactionResultCode::txFAILED));
 
     }

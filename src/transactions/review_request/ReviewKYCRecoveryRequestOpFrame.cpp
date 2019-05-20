@@ -4,6 +4,7 @@
 #include "transactions/ManageSignerOpFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/SignerHelper.h"
 #include "ledger/AccountRoleHelper.h"
 #include "ledger/AccountKYCHelper.h"
 
@@ -38,7 +39,7 @@ ReviewKYCRecoveryRequestOpFrame::handleApprove(Application& app, LedgerDelta& de
         return true;
     }
 
-    if (!createSigners(app, storageHelper, request))
+    if (!handleSigners(app, storageHelper, request))
     {
         innerResult().code(ReviewRequestResultCode::INVALID_SIGNER_DATA);
         return false;
@@ -76,40 +77,86 @@ ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& del
 }
 
 bool
-ReviewKYCRecoveryRequestOpFrame::createSigners(Application& app, StorageHelper& storageHelper, ReviewableRequestFrame::pointer request)
+ReviewKYCRecoveryRequestOpFrame::handleSigners(Application& app, StorageHelper& storageHelper, ReviewableRequestFrame::pointer request)
 {
     auto kycRecoveryRequest = request->getRequestEntry().body.kycRecoveryRequest();
 
-    auto accountFrame = storageHelper.getAccountHelper().mustLoadAccount(
-        kycRecoveryRequest.targetAccount);
+    auto accountFrame = storageHelper.getAccountHelper().mustLoadAccount(kycRecoveryRequest.targetAccount);
+
+    removeRecoverySigner(app, storageHelper, kycRecoveryRequest, accountFrame);
+    if (!createSigners(app, storageHelper, kycRecoveryRequest, accountFrame))
+    {
+        innerResult().code(ReviewRequestResultCode::INVALID_SIGNER_DATA);
+        return false;
+    }
+
+    return true;
+}
+
+void
+ReviewKYCRecoveryRequestOpFrame::removeRecoverySigner(Application& app, StorageHelper& storageHelper, KYCRecoveryRequest request, AccountFrame::pointer account)
+{
+    auto signers = storageHelper.getSignerHelper().loadSigners(request.targetAccount);
+    if (signers.size() != 1)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: expected account during recovery "
+                                                  "to have exactly 1 signer, have" <<
+                                               signers.size();
+        throw std::runtime_error("Unexpected state: expected account during recovery to have exactly 1 signer");
+    }
 
     Operation op;
-    op.sourceAccount.activate() = accountFrame->getID();
+    op.sourceAccount.activate() = request.targetAccount;
     op.body.type(OperationType::MANAGE_SIGNER);
     ManageSignerOp& manageSignerOp = op.body.manageSignerOp();
-    manageSignerOp.data.action(ManageSignerAction::CREATE);
 
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::MANAGE_SIGNER);
 
-    for (auto const& createData : kycRecoveryRequest.signersData)
+    RemoveSignerData removeData;
+
+    removeData.publicKey = signers[0]->getEntry().pubKey;
+    manageSignerOp.data.action(ManageSignerAction::REMOVE);
+    manageSignerOp.data.removeData() = removeData;
+
+    ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
+
+    manageSignerOpFrame.setSourceAccountPtr(account);
+    if (!manageSignerOpFrame.doCheckValid(app) ||
+        !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to delete recovery signer";
+        throw std::runtime_error("Unexpected state: failed to delete recovery signer");
+    }
+}
+bool
+ReviewKYCRecoveryRequestOpFrame::createSigners(Application& app, StorageHelper& storageHelper, KYCRecoveryRequest request, AccountFrame::pointer account)
+{
+    Operation op;
+    op.sourceAccount.activate() = request.targetAccount;
+    op.body.type(OperationType::MANAGE_SIGNER);
+    ManageSignerOp& manageSignerOp = op.body.manageSignerOp();
+
+    OperationResult opRes;
+    opRes.code(OperationResultCode::opINNER);
+    opRes.tr().type(OperationType::MANAGE_SIGNER);
+
+    for (auto const& createData : request.signersData)
     {
         manageSignerOp.data.action(ManageSignerAction::CREATE);
         manageSignerOp.data.createData() = createData;
 
         ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
 
-        manageSignerOpFrame.setSourceAccountPtr(accountFrame);
+        manageSignerOpFrame.setSourceAccountPtr(account);
 
         if (!manageSignerOpFrame.doCheckValid(app) ||
             !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))
         {
-            innerResult().code(ReviewRequestResultCode::INVALID_SIGNER_DATA);
             return false;
         }
     }
-
     return true;
 }
 
