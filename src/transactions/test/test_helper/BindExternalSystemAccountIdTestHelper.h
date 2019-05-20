@@ -11,6 +11,8 @@ namespace txtest
 {
     class BindExternalSystemAccountIdTestHelper : TxHelper
     {
+    private:
+        int getExpireAt(int32 externalSystemType);
     public:
         explicit BindExternalSystemAccountIdTestHelper(TestManager::pointer testManager);
 
