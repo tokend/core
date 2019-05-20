@@ -245,7 +245,7 @@ CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHel
         mCreateKYCRecoveryRequestOp.requestID, db, &delta);
     if (!request)
     {
-        innerResult().code(CreateKYCRecoveryRequestResultCode::KYC_RECOVERY_REQUEST_NOT_FOUND);
+        innerResult().code(CreateKYCRecoveryRequestResultCode::REQUEST_NOT_FOUND);
         return false;
     }
 
