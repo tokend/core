@@ -62,11 +62,16 @@ CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
     auto& assetHelper = storageHelper.getAssetHelper();
     auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
 
-    SignerRuleResource resource(LedgerEntryType::ASSET);
-    resource.asset().assetType = asset->getType();
-    resource.asset().assetCode = asset->getCode();
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
+    resource.reviewableRequest().details.createAtomicSwapAskExt().v(LedgerVersion::ATOMIC_SWAP_RETURNING);
+    resource.reviewableRequest().details.createAtomicSwapAskExt().createAtomicSwapAsk().assetCode = asset->getCode();
+    resource.reviewableRequest().details.createAtomicSwapAskExt().createAtomicSwapAsk().assetType = asset->getType();
+    resource.reviewableRequest().tasksToRemove = 0;
+    resource.reviewableRequest().tasksToAdd = 0;
+    resource.reviewableRequest().allTasks = 0;
 
-    result.emplace_back(resource, SignerRuleAction::RECEIVE_ATOMIC_SWAP);
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }
