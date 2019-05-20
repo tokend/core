@@ -39,7 +39,8 @@ CreateIssuanceRequestOpFrame::CreateIssuanceRequestOpFrame(Operation const& op,
 
 bool
 CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-									 	std::vector<OperationCondition>& result) const
+									 	std::vector<OperationCondition>& result,
+									 	LedgerManager& ledgerManager) const
 {
 	auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
 	if (!asset)
@@ -55,6 +56,21 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHe
 		mResult.code(OperationResultCode::opNO_ENTRY);
 		mResult.entryType() = LedgerEntryType::BALANCE;
 	    return false;
+	}
+
+	if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS))
+	{
+        AccountRuleResource issuanceResource(LedgerEntryType::REVIEWABLE_REQUEST);
+        issuanceResource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
+
+        if (mCreateIssuanceRequest.allTasks)
+        {
+            result.emplace_back(issuanceResource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        }
+        else
+        {
+            result.emplace_back(issuanceResource, AccountRuleAction::CREATE, mSourceAccount);
+        }
 	}
 
 	auto account = storageHelper.getAccountHelper().mustLoadAccount(balance->getAccountID());

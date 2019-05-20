@@ -10,16 +10,35 @@
 
 * atomic swaps, enable them
 
+## 3.4.0
+
+### Added
+
+* Unlimited (`UINT_64MAX`) signers amount in free license
+* New CreateAMLAlert error codes
+
+### Fixed
+
+* Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
+* Exception on check sale state op because of wrong removing sale specific rules
+
+## 3.3.1
+
+### Fixed
+
+* curl now added in containers
+
 ## 3.3.0
 
 ### Added
 
 * Manage account specific rule op frame
+* Cancel change role reviewable request
 
 ### Fixed
 
 * Create and approve change role request for role that does  not exist
-
+* Removed ability to create sale for reversed pair
 
 ## 3.2.1
 

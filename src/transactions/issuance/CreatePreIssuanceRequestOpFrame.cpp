@@ -133,8 +133,26 @@ Hash CreatePreIssuanceRequestOpFrame::getSignatureData(stellar::string64 const &
 
 bool
 CreatePreIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-							  			std::vector<OperationCondition>& result) const
+							  			std::vector<OperationCondition>& result,
+							  			LedgerManager& ledgerManager) const
 {
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS))
+    {
+        return true;
+    }
+
+    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_PRE_ISSUANCE);
+
+    if (mCreatePreIssuanceRequest.allTasks)
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+    }
+    else
+    {
+        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    }
+
 	// only asset pre issuer can do pre issuance;
 	return true;
 }
