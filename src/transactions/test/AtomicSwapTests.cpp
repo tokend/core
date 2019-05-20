@@ -127,7 +127,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     // create base asset
-    uint64_t  baseAssetAmount = INT64_MAX - (INT64_MAX % ONE);
+    uint64_t  baseAssetAmount = (INT64_MAX - (INT64_MAX % ONE)) / 100;
     issuanceTestHelper.createAssetWithPreIssuedAmount(seller, baseAsset,
                                                       baseAssetAmount, root, 6, 1);
     manageAssetTestHelper.updateAsset(seller, baseAsset, root,

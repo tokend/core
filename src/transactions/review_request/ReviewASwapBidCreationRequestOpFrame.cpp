@@ -6,7 +6,7 @@
 #include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
 #include <ledger/AccountHelperLegacy.h>
 #include "ReviewASwapBidCreationRequestOpFrame.h"
-#include <ledger/AtomicSwapBidHelper.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StorageHelper.h>
 #include <ledger/AssetHelper.h>
@@ -22,32 +22,23 @@ ReviewASwapBidCreationRequestOpFrame::ReviewASwapBidCreationRequestOpFrame(
 {
 }
 
-
 bool
 ReviewASwapBidCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                     std::vector<SignerRequirement>& result) const
 {
     auto request = ReviewableRequestHelper::Instance()->loadRequest(
             mReviewRequest.requestID, storageHelper.getDatabase());
-    if (!request || (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK))
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_BID))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
         return false;
     }
 
-    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            request->getRequestEntry().body.createAtomicSwapAskRequest().bidID,
-            storageHelper.getDatabase());
-    if (!bid)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: expected atomic swap bid to exist, bid ID: "
-                << bid->getBidID();
-        throw runtime_error("Unexpected state: expected atomic swap bid to exist");
-    }
+    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
+            request->getRequestEntry().body.createAtomicSwapBidRequest().baseBalance);
 
-    auto asset = storageHelper.getAssetHelper().mustLoadAsset(bid->getBaseAsset());
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
