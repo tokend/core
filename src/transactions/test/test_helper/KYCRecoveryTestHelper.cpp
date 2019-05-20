@@ -2,6 +2,8 @@
 #include "test/test_marshaler.h"
 #include "transactions/InitiateKYCRecoveryOpFrame.h"
 #include "transactions/CreateKYCRecoveryRequestOpFrame.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/SignerHelper.h"
 
 
 namespace stellar
@@ -104,6 +106,12 @@ InitiateKYCRecoveryChecker::doCheck(InitiateKYCRecoveryTestBuilder builder, Tran
     {
         return;
     }
+
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto signers = storageHelper.getSignerHelper().loadSigners(builder.targetAccount);
+    REQUIRE(signers.size() == 1);
+    REQUIRE(signers[0]->getEntry().weight == 1000);
+    REQUIRE(signers[0]->getEntry().identity == 1);
     return;
 }
 

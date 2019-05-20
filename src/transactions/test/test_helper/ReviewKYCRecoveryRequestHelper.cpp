@@ -1,6 +1,8 @@
 #include "ReviewKYCRecoveryRequestHelper.h"
 #include "test/test_marshaler.h"
-
+#include "ledger/SignerHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 
 namespace stellar
 {
@@ -14,6 +16,9 @@ void KycRecoveryReviewChecker::checkApproval(KYCRecoveryRequest const& request,
 void KycRecoveryReviewChecker::checkPermanentReject(KYCRecoveryRequest const& request,
                                             AccountID const& requestor)
 {
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto signers = storageHelper.getSignerHelper().loadSigners(request.targetAccount);
+    REQUIRE(signers.size() == 1);
 }
 
 void KycRecoveryReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
@@ -45,12 +50,12 @@ ReviewRequestResult ReviewKycRecoveryHelper::applyReviewRequestTx(Account& sourc
                                                                ReviewRequestOpAction action, std::string rejectReason,
                                                                ReviewRequestResultCode expectedResult)
 {
-    auto amlReviewChecker = KycRecoveryReviewChecker(mTestManager);
+    auto kycRecoveryReviewChecker = KycRecoveryReviewChecker(mTestManager);
     return ReviewRequestHelper::applyReviewRequestTx(source, requestID,
                                                      requestHash, requestType,
                                                      action, rejectReason,
                                                      expectedResult,
-                                                     amlReviewChecker);
+                                                     kycRecoveryReviewChecker);
 }
 
 ReviewRequestResult
