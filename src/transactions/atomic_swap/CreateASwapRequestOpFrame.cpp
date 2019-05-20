@@ -52,15 +52,14 @@ bool
 CreateASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
                                     std::vector<SignerRequirement> &result) const
 {
-    auto bid = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            mCreateASwapRequest.request.bidID, storageHelper.getDatabase());
-    if (!bid)
-    {
-        throw std::runtime_error("Expected bid to exists");
-    }
-
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
+    auto asset = assetHelper.loadAsset(mCreateASwapRequest.request.quoteAsset);
+    if (!asset)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
+    }
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);

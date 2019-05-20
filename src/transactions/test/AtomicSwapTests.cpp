@@ -78,7 +78,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, assetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
+            0, AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
+    auto txSendRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, assetResource, AccountRuleAction::ANY, false);
     auto baseAssetReceiverRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
@@ -88,12 +93,13 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     auto createSellerAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            R"({"name":"base_asset_seller"})", {baseAssetOwnerRuleID, ownBalanceCreationRuleID, baseAssetASwapBidCreationRuleID});
+            R"({"name":"base_asset_seller"})", {baseAssetOwnerRuleID, ownBalanceCreationRuleID,
+                                                baseAssetASwapBidCreationRuleID, txSendRuleID});
     auto sellerAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createSellerAccountRoleOp).success().roleID;
 
     auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            R"({"name":"usd_receiver"})", {baseAssetReceiverRuleID, ownBalanceCreationRuleID});
+            R"({"name":"usd_receiver"})", {baseAssetReceiverRuleID, ownBalanceCreationRuleID, txSendRuleID});
     auto receiverAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createReceiverAccountRoleOp).success().roleID;
 
@@ -104,21 +110,21 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
             .setSource(root)
             .setToPublicKey(sellerPubKey)
             .addBasicSigner()
-            .setRoleID(1);
+            .setRoleID(sellerAccountRoleID);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(firstBuyerPubKey)
             .addBasicSigner()
-            .setRoleID(1);
+            .setRoleID(receiverAccountRoleID);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
             .setToPublicKey(secondBuyerPubKey)
             .addBasicSigner()
-            .setRoleID(1);
+            .setRoleID(receiverAccountRoleID);
     createAccountHelper.applyTx(createAccountTestBuilder);
 
     manageKeyValueHelper.assetOpWithoutReview();
@@ -377,6 +383,8 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
 
                     SECTION("Bid has not such quote asset")
                     {
+                        manageAssetTestHelper.createAsset(root, root.key, "VLT", root, 0);
+
                         auto aSwapRequest =
                                 createASwapReviewableRequestTestHelper.createASwapRequestOp(
                                         bidID, "VLT", amountToBuy);

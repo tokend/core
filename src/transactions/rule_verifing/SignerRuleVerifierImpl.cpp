@@ -162,6 +162,30 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                                          "in create atomic swap bid rule ext");
                     }
                 }
+                case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
+                {
+                    auto expExt = expectedDetails.createAtomicSwapAskExt();
+                    auto actExt = actualDetails.createAtomicSwapAskExt();
+
+                    if (expExt.v() != actExt.v())
+                    {
+                        return false;
+                    }
+
+                    switch (expExt.v())
+                    {
+                        case LedgerVersion::EMPTY_VERSION:
+                            return true;
+                        case LedgerVersion::ATOMIC_SWAP_RETURNING:
+                            return isTypeMatches(expExt.createAtomicSwapAsk().assetType,
+                                                 actExt.createAtomicSwapAsk().assetType) &&
+                                   isStringMatches(expExt.createAtomicSwapAsk().assetCode,
+                                                   actExt.createAtomicSwapAsk().assetCode);
+                        default:
+                            throw new std::runtime_error("Unexpected ledger version "
+                                                         "in create atomic swap ask rule ext");
+                    }
+                }
                 default:
                     return true;
             }

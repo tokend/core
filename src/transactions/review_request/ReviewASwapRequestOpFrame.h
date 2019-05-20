@@ -13,6 +13,10 @@ public:
 
 protected:
 
+bool
+tryGetSignerRequirements(StorageHelper& storageHelper,
+        std::vector<SignerRequirement>& result) const override;
+
 bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
                   ReviewableRequestFrame::pointer request) override;
 

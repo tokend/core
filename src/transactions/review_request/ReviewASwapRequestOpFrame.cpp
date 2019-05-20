@@ -19,6 +19,36 @@ stellar::ReviewASwapRequestOpFrame::ReviewASwapRequestOpFrame(
 {
 }
 
+bool
+ReviewASwapRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+        std::vector<SignerRequirement>& result) const
+{
+    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    auto asset = storageHelper.getAssetHelper().mustLoadAsset(
+            request->getRequestEntry().body.createAtomicSwapAskRequest().quoteAsset);
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
+    resource.reviewableRequest().details.createAtomicSwapAskExt().v(LedgerVersion::ATOMIC_SWAP_RETURNING);
+    resource.reviewableRequest().details.createAtomicSwapAskExt().createAtomicSwapAsk().assetCode = asset->getCode();
+    resource.reviewableRequest().details.createAtomicSwapAskExt().createAtomicSwapAsk().assetType = asset->getType();
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
+
 bool ReviewASwapRequestOpFrame::handleReject(Application &app, LedgerDelta &delta,
                                              LedgerManager &ledgerManager,
                                              ReviewableRequestFrame::pointer request)
@@ -42,7 +72,6 @@ void ReviewASwapRequestOpFrame::removeBid(Database &db, LedgerDelta &delta,
     EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalance->mEntry);
     EntryHelperProvider::storeDeleteEntry(delta, db, bid->getKey());
 }
-
 
 bool
 ReviewASwapRequestOpFrame::handlePermanentReject(Application &app, LedgerDelta &delta,
