@@ -1,6 +1,7 @@
 FROM registry.gitlab.com/tokend/core/buildbase:2
 
 ARG RSA_KEY
+ARG VERSION
 WORKDIR /build
 COPY . $PWD
 
@@ -12,6 +13,6 @@ RUN true \
  && echo "Host gitlab\n\tHostName gitlab.com\n\tIdentityFile ~/.ssh/id_rsa\n\tUser git\n" >> ~/.ssh/config \
  && git config --global url.ssh://git@gitlab.com/.insteadOf https://gitlab.com/ \
  && GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa" git submodule update --init \
- && cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so \
- && make -j2 \
+ && CORE_REVISION=${VERSION} cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so \
+ && make -j12 \
  && rm ~/.ssh/id_rsa
