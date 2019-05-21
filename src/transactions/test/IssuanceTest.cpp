@@ -613,34 +613,68 @@ TEST_CASE("Issuance", "[tx][issuance]")
                     manageLimitsOp.details.limitsCreateDetails().annualOut = preIssuedAmount*15;
                     manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
 
-                    issuanceTasks = 0;
-                    auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
+                    SECTION("With tasks")
+                    {
+                        issuanceTasks = 8;
+                        auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
 
-                    auto createIssuanceResult =
-                        issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
-                                                                         issuerBalanceID, anotherReference, &issuanceTasks);
-                    REQUIRE(createIssuanceResult.success().fulfilled);
+                        auto createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             issuerBalanceID, anotherReference, &issuanceTasks);
+                        REQUIRE_FALSE(createIssuanceResult.success().fulfilled);
 
-                    auto requestID = createIssuanceResult.success().requestID;
-                    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
-                    REQUIRE(!request);
+                        auto requestID = createIssuanceResult.success().requestID;
+                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(request);
 
-                    manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
+                        manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
 
-                    auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
+                        auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
 
-                    REQUIRE(receiverBalance);
+                        REQUIRE(receiverBalance);
 
-                    createIssuanceResult =
-                        issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
-                                                                         receiverBalance->getBalanceID(), reference, &issuanceTasks);
-                    REQUIRE(!createIssuanceResult.success().fulfilled);
+                        createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             receiverBalance->getBalanceID(), reference, &issuanceTasks);
+                        REQUIRE(!createIssuanceResult.success().fulfilled);
 
-                    requestID = createIssuanceResult.success().requestID;
-                    request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
-                    REQUIRE(request->getAllTasks() ==
-                            CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED);
+                        requestID = createIssuanceResult.success().requestID;
+                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(request->getAllTasks() ==
+                        (CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED | issuanceTasks)
+                        );
+                    }
+                    SECTION("with autoapprove")
+                    {
+                        issuanceTasks = 0;
+                        auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
 
+                        auto createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             issuerBalanceID, anotherReference, &issuanceTasks);
+                        REQUIRE(createIssuanceResult.success().fulfilled);
+
+                        auto requestID = createIssuanceResult.success().requestID;
+                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(!request);
+
+                        manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
+
+                        auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
+
+                        REQUIRE(receiverBalance);
+
+                        createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             receiverBalance->getBalanceID(), reference, &issuanceTasks);
+                        REQUIRE(!createIssuanceResult.success().fulfilled);
+
+                        requestID = createIssuanceResult.success().requestID;
+                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(request->getAllTasks() ==
+                                CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED);
+
+                    }
                 }
 
                 SECTION("Not exceeded"){

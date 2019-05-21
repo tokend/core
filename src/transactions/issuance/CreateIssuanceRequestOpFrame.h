@@ -37,6 +37,16 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
+    bool addStatistics(Database& db,
+    LedgerDelta& delta, LedgerManager& ledgerManager,
+    BalanceFrame::pointer balance, const uint64_t amountToAdd,
+        uint64_t& universalAmount, uint64_t requestID);
+
+    bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
+                       const AccountFrame::pointer account,
+                       const BalanceFrame::pointer balance, const uint64_t amountToAdd,
+                       uint64_t& universalAmount, uint64_t requestID);
+
 public:
 
     CreateIssuanceRequestOpFrame(Operation const& op, OperationResult& res,

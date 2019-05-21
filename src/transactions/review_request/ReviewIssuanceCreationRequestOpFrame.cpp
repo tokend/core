@@ -46,6 +46,15 @@ ReviewIssuanceCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& st
 	return true;
 }
 
+bool
+ReviewIssuanceCreationRequestOpFrame::handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
+{
+    auto& db = app.getDatabase();
+    StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
+    statisticsV2Processor.revertStatsV2(request->getRequestID());
+    return ReviewRequestOpFrame::handlePermanentReject(app, delta, ledgerManager, request);
+}
+
 bool ReviewIssuanceCreationRequestOpFrame::
 handleApprove(Application &app, LedgerDelta &delta,
 														   LedgerManager &ledgerManager,
@@ -84,14 +93,10 @@ handleApprove(Application &app, LedgerDelta &delta,
         return true;
     }
 
-	if (!request->canBeFulfilled(ledgerManager))
-	{
-		innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().fulfilled = false;
-		return true;
-	}
-
     createReference(delta, db, request->getRequestor(), request->getReference());
+
+    deletePendingStats(db, delta, request->getRequestID());
+
 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
 	if (!asset->tryIssue(issuanceRequest.amount))
@@ -180,10 +185,7 @@ bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
 													   BalanceFrame::pointer balance, const uint64_t amountToAdd,
 													   uint64_t& universalAmount)
 {
-    AccountFrame::pointer account = AccountHelperLegacy::Instance()->loadAccount(balance->getAccountID(), db, &delta);
-    if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS)) {
-        account = mSourceAccount;
-    }
+    AccountFrame::pointer account = mSourceAccount;
 	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
 	return tryAddStatsV2(statisticsV2Processor, account, balance, amountToAdd, universalAmount);
 }
@@ -230,15 +232,9 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 
         uint64_t universalAmount = 0;
         BalanceFrame::pointer balanceFrame;
-        if (ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
-        {
-            balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
-        }
-        else
-        {
-            balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
-                issuanceRequest.asset, db, localDelta);
-        }
+
+        balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
+            issuanceRequest.asset, db, localDelta);
 
 		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
 		{
@@ -249,12 +245,15 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
 		}
 
-		if (!addStatistics(db, localDelta, ledgerManager,
-							   balanceFrame, issuanceRequest.amount,
-							   universalAmount))
-		{
-			allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-		}
+		if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
+        {
+            if (!addStatistics(db, localDelta, ledgerManager,
+                               balanceFrame, issuanceRequest.amount,
+                               universalAmount))
+            {
+                allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+            }
+        }
 		else
 		{
 			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
@@ -269,4 +268,16 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
         return allTasks;
 	}
 
+void ReviewIssuanceCreationRequestOpFrame::deletePendingStats(Database& db, LedgerDelta &delta, uint64_t requestID)
+{
+    //Delete pending_statistics entries before reviewable request due to constraint change
+    auto pendingStats = PendingStatisticsHelper::Instance()->loadPendingStatistics(requestID, db, delta);
+    for (auto& pending : pendingStats){
+        LedgerKey lk;
+        lk.type(LedgerEntryType::PENDING_STATISTICS);
+        lk.pendingStatistics().statisticsID = pending->getStatsID();
+        lk.pendingStatistics().requestID = requestID;
+        PendingStatisticsHelper::Instance()->storeDelete(delta, db, lk);
+    }
+}
 }

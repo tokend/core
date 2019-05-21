@@ -5,33 +5,40 @@
 
 namespace stellar
 {
-class ReviewIssuanceCreationRequestOpFrame : public ReviewRequestOpFrame
-{
-	bool
-	tryGetSignerRequirements(StorageHelper& storageHelper,
-							 std::vector<SignerRequirement>& result) const override;
+class ReviewIssuanceCreationRequestOpFrame : public ReviewRequestOpFrame {
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 protected:
-	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
-					   ReviewableRequestFrame::pointer request) override;
+    bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+                       ReviewableRequestFrame::pointer request) override;
 
-	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
-					  ReviewableRequestFrame::pointer request) override;
+    bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+                      ReviewableRequestFrame::pointer request) override;
     bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                             const AccountFrame::pointer account,
-                                                             const BalanceFrame::pointer balance, const uint64_t amountToAdd,
-                                                             uint64_t& universalAmount);
+                       const AccountFrame::pointer account,
+                       const BalanceFrame::pointer balance, const uint64_t amountToAdd,
+                       uint64_t& universalAmount);
     bool addStatistics(Database& db,
-					 LedgerDelta& delta, LedgerManager& ledgerManager,
-					 BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
-					 uint64_t& universalAmount);
+                       LedgerDelta& delta, LedgerManager& ledgerManager,
+                       BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
+                       uint64_t& universalAmount);
 
-    uint32_t getSystemTasksToAdd( Application &app, Database& db, LedgerDelta &delta, LedgerManager &ledgerManager,
-            ReviewableRequestFrame::pointer request);
+    uint32_t getSystemTasksToAdd(Application& app, Database& db, LedgerDelta& delta, LedgerManager& ledgerManager,
+                                 ReviewableRequestFrame::pointer request);
+
+    void deletePendingStats(Database
+                            & db,
+                            LedgerDelta& delta, uint64_t
+                            requestID);
+
+    bool
+    handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
 public:
 
     ReviewIssuanceCreationRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 };
 }
