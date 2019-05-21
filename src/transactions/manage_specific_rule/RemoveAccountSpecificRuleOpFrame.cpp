@@ -18,8 +18,13 @@ RemoveAccountSpecificRuleOpFrame::RemoveAccountSpecificRuleOpFrame(
 
 bool
 RemoveAccountSpecificRuleOpFrame::tryGetOperationConditions(
-        StorageHelper &storageHelper, std::vector<OperationCondition> &result) const
+    StorageHelper& storageHelper, std::vector<OperationCondition>& result, LedgerManager& lm) const
 {
+    if (!lm.shouldUse(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE))
+    {
+        return true;
+    }
+
     AccountRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
 
     auto rule = storageHelper.getAccountSpecificRuleHelper().loadRule(mRemoveData.ruleID);
@@ -29,7 +34,8 @@ RemoveAccountSpecificRuleOpFrame::tryGetOperationConditions(
         mResult.entryType() = LedgerEntryType::ACCOUNT_SPECIFIC_RULE;
         return false;
     }
-    resource.accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
+    resource.ext().v(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE);
+    resource.ext().accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
 
     result.emplace_back(resource, AccountRuleAction::REMOVE, mSourceAccount);
     return true;
@@ -37,8 +43,14 @@ RemoveAccountSpecificRuleOpFrame::tryGetOperationConditions(
 
 bool
 RemoveAccountSpecificRuleOpFrame::tryGetSignerRequirements(
-        StorageHelper &storageHelper, std::vector<SignerRequirement> &result) const
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result,
+    LedgerManager& lm) const
 {
+    if (!lm.shouldUse(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE))
+    {
+        result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE), SignerRuleAction::REMOVE);
+        return true;
+    }
     SignerRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
 
     auto rule = storageHelper.getAccountSpecificRuleHelper().loadRule(mRemoveData.ruleID);
@@ -48,7 +60,8 @@ RemoveAccountSpecificRuleOpFrame::tryGetSignerRequirements(
         mResult.entryType() = LedgerEntryType::ACCOUNT_SPECIFIC_RULE;
         return false;
     }
-    resource.accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
+    resource.ext().v(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE);
+    resource.ext().accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
 
     result.emplace_back(resource, SignerRuleAction::REMOVE);
     return true;

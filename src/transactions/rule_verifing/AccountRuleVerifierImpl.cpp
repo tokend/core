@@ -161,23 +161,38 @@ AccountRuleVerifierImpl::isResourceMatches(
                                actualResource.vote().pollID);
         case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
         {
-            if (conditionResource.accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY){
-                return true;
-            }
-
-            if (conditionResource.accountSpecificRule().ledgerKey.type() != actualResource.accountSpecificRule().ledgerKey.type())
+            switch (conditionResource.ext().v())
             {
-                return false;
-            }
+                case LedgerVersion::EMPTY_VERSION:
+                    return true;
+                case LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
+                {
+                    if (conditionResource.ext().v() != actualResource.ext().v())
+                    {
+                        return false;
+                    }
 
-            auto conditionLedgerKey = conditionResource.accountSpecificRule().ledgerKey;
-            auto actualLedgerKey = actualResource.accountSpecificRule().ledgerKey;
-            switch (conditionLedgerKey.type())
-            {
-                case LedgerEntryType::SALE:
-                    return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
-                default:
-                    return false;
+                    if (conditionResource.ext().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
+                    {
+                        return true;
+                    }
+
+                    if (conditionResource.ext().accountSpecificRule().ledgerKey.type()
+                        != actualResource.ext().accountSpecificRule().ledgerKey.type())
+                    {
+                        return false;
+                    }
+
+                    auto conditionLedgerKey = conditionResource.ext().accountSpecificRule().ledgerKey;
+                    auto actualLedgerKey = actualResource.ext().accountSpecificRule().ledgerKey;
+                    switch (conditionLedgerKey.type())
+                    {
+                        case LedgerEntryType::SALE:
+                            return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
+                        default:
+                            return false;
+                    }
+                }
             }
         }
         case LedgerEntryType::ACCOUNT_KYC:
@@ -202,5 +217,7 @@ AccountRuleVerifierImpl::isResourceMatches(
     }
 
 }
+
+
 
 }

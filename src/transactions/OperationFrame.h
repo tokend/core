@@ -94,7 +94,12 @@ protected:
 
     virtual bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const = 0;
+                             std::vector<SignerRequirement>& result) const;
+
+    virtual bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result,
+                             LedgerManager& ledgerManager) const;
 
 	// returns true if operation is allowed in the system
 	virtual bool isSupported() const;

@@ -192,23 +192,38 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                actualResource.vote().pollID);
         case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
         {
-            if (requiredResource.accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY){
-                return true;
-            }
-
-            if (requiredResource.accountSpecificRule().ledgerKey.type() != actualResource.accountSpecificRule().ledgerKey.type())
+            switch (requiredResource.ext().v())
             {
-                return false;
-            }
+                case LedgerVersion::EMPTY_VERSION:
+                    return true;
+                case LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
+                {
+                    if (requiredResource.ext().v() != actualResource.ext().v())
+                    {
+                        return false;
+                    }
 
-            auto conditionLedgerKey = requiredResource.accountSpecificRule().ledgerKey;
-            auto actualLedgerKey = actualResource.accountSpecificRule().ledgerKey;
-            switch (conditionLedgerKey.type())
-            {
-                case LedgerEntryType::SALE:
-                    return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
-                default:
-                    return false;
+                    if (requiredResource.ext().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
+                    {
+                        return true;
+                    }
+
+                    if (requiredResource.ext().accountSpecificRule().ledgerKey.type()
+                        != actualResource.ext().accountSpecificRule().ledgerKey.type())
+                    {
+                        return false;
+                    }
+
+                    auto conditionLedgerKey = requiredResource.ext().accountSpecificRule().ledgerKey;
+                    auto actualLedgerKey = actualResource.ext().accountSpecificRule().ledgerKey;
+                    switch (conditionLedgerKey.type())
+                    {
+                        case LedgerEntryType::SALE:
+                            return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
+                        default:
+                            return false;
+                    }
+                }
             }
         }
         case LedgerEntryType::ACCOUNT_KYC:
@@ -224,6 +239,7 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::TRANSACTION:
         case LedgerEntryType::LICENSE:
         case LedgerEntryType::STAMP:
+            return true;
         default:
             return false;
     }
