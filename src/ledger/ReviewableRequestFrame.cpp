@@ -296,7 +296,7 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
         case ReviewableRequestType::CREATE_POLL:
             return ensurePollCreationValid(oe.body.createPollRequest());
         case ReviewableRequestType::KYC_RECOVERY:
-            return;
+            return ensureKYCRecoveryValid(oe.body.kycRecoveryRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

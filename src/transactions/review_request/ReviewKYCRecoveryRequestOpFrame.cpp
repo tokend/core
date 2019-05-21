@@ -61,9 +61,15 @@ ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& del
 
     Database& db = ledgerManager.getDatabase();
 
+    if (mReviewRequest.reviewDetails.tasksToRemove != 0)
+    {
+        innerResult().code(ReviewRequestResultCode::NON_ZERO_TASKS_TO_REMOVE_NOT_ALLOWED);
+        return false;
+    }
+
     auto& requestEntry = request->getRequestEntry();
     requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-    requestEntry.tasks.pendingTasks = mReviewRequest.reviewDetails.tasksToAdd;
+    requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
     requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
 
     request->setRejectReason(mReviewRequest.reason);

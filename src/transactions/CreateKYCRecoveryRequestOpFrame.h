@@ -25,9 +25,6 @@ class CreateKYCRecoveryRequestOpFrame : public OperationFrame {
 
     void createRequest(ReviewableRequestEntry& requestEntry, uint32 defaultMask);
 
-    std::vector<longstring>
-    makeTasksKeyVector(StorageHelper& storageHelper) override;
-
     void
     tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
                    ReviewableRequestFrame::pointer requestFrame);

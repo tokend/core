@@ -208,17 +208,6 @@ CreateKYCRecoveryRequestOpFrame::createRequest(ReviewableRequestEntry& requestEn
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
 }
 
-std::vector<longstring>
-CreateKYCRecoveryRequestOpFrame::makeTasksKeyVector(StorageHelper& storageHelper)
-{
-    AccountFrame& account = getSourceAccount();
-
-    return std::vector<longstring>
-        {
-            ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey(),
-        };
-}
-
 std::string
 CreateKYCRecoveryRequestOpFrame::getReference()
 {
