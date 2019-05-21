@@ -77,6 +77,27 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     auto baseAssetASwapBidCreationRuleID = manageAccountRuleTestHelper.applyTx(
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
+    AccountRuleResource issueResource(LedgerEntryType::REVIEWABLE_REQUEST);
+    issueResource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, issueResource, AccountRuleAction::CREATE_WITH_TASKS, false);
+    auto issuerRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    AccountRuleResource preIssueResource(LedgerEntryType::REVIEWABLE_REQUEST);
+    preIssueResource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_PRE_ISSUANCE);
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, preIssueResource, AccountRuleAction::CREATE, false);
+    auto preIssuerRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    AccountRuleResource updateAssetResource(LedgerEntryType::REVIEWABLE_REQUEST);
+    updateAssetResource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_ASSET);
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, updateAssetResource, AccountRuleAction::CREATE, false);
+    auto updateAssetRuleID = manageAccountRuleTestHelper.applyTx(
+            root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
     ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
             0, AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
     auto txSendRuleID = manageAccountRuleTestHelper.applyTx(
@@ -93,8 +114,8 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
             root, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
     auto createSellerAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-            R"({"name":"base_asset_seller"})", {baseAssetOwnerRuleID, ownBalanceCreationRuleID,
-                                                baseAssetASwapBidCreationRuleID, txSendRuleID});
+            R"({"name":"base_asset_seller"})", {baseAssetOwnerRuleID, ownBalanceCreationRuleID, preIssuerRuleID,
+                                                baseAssetASwapBidCreationRuleID, txSendRuleID, issuerRuleID, updateAssetRuleID});
     auto sellerAccountRoleID = manageAccountRoleTestHelper.applyTx(
             root, createSellerAccountRoleOp).success().roleID;
 
