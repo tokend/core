@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+* `InitiateKYCRecoveryOpFrame`
+* `CreateKYCRecoveryRequestOpFrame`
+* `ReviewKYCRecoveryOpFrame`
+
+### Fixed
+
+* Tasks handling on `ChangeRoleRequest` reject 
+
 ## 3.4.0
 
 ### Added
