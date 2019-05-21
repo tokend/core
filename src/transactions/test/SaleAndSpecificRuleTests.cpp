@@ -1,4 +1,5 @@
 #include <transactions/dex/OfferManager.h>
+#include <transactions/dex/CreateSaleParticipationOpFrame.h>
 #include "test/test_marshaler.h"
 #include "test/test.h"
 #include "TxTests.h"
@@ -13,6 +14,7 @@
 #include "test_helper/ManageBalanceTestHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/BalanceHelper.h"
+#include "ledger/SaleHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -151,23 +153,30 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
 
             createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
 
-            auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, true, &accountID);
+            auto createRuleResult = specificRuleTestHelper.applyTx(root, saleKey, false, &accountID);
 
             SECTION("Create the same")
             {
-                specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
+                specificRuleTestHelper.applyTx(root, saleKey, false, &accountID,
                         ManageAccountSpecificRuleResultCode::ALREADY_EXISTS, TransactionResultCode::txFAILED);
             }
 
             SECTION("Create inverted")
             {
-                specificRuleTestHelper.applyTx(root, saleKey, false, &accountID,
+                specificRuleTestHelper.applyTx(root, saleKey, true, &accountID,
                         ManageAccountSpecificRuleResultCode::REVERSED_ALREADY_EXISTS, TransactionResultCode::txFAILED);
             }
 
             SECTION("Remove")
             {
+                participateHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, 0);
                 specificRuleTestHelper.applyTx(root, createRuleResult.success().ruleID);
+                checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
+                auto sale = SaleHelper::Instance()->loadSale(saleID, testManager->getDB());
+                uint64_t currentCap(0);
+                REQUIRE(CreateSaleParticipationOpFrame::getSaleCurrentCap(sale, testManager->getDB(), currentCap));
+                REQUIRE(currentCap == 0);
+                REQUIRE(sale->getCurrentCapInBase() == 0);
 
                 SECTION("Create")
                 {
