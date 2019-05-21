@@ -20,7 +20,9 @@ namespace txtest
                 std::string reason, std::string reference, uint32_t *allTasks = nullptr);
 
         CreateAMLAlertRequestResult applyCreateAmlAlert(Account &source, BalanceID balance, uint64 amount, std::string reason,
-            std::string reference, uint32_t *allTasks = nullptr, CreateAMLAlertRequestResultCode expectedResultCode = CreateAMLAlertRequestResultCode::SUCCESS);
+            std::string reference, uint32_t *allTasks = nullptr,
+            CreateAMLAlertRequestResultCode expectedResultCode = CreateAMLAlertRequestResultCode::SUCCESS,
+            OperationResultCode expectedOpResult = OperationResultCode::opINNER);
 
     };
 }
