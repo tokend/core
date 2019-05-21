@@ -69,7 +69,7 @@ ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& del
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-    requestEntry.tasks.pendingTasks |= mReviewRequest.reviewDetails.tasksToAdd;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
 
     request->setRejectReason(mReviewRequest.reason);
