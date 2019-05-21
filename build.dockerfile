@@ -14,5 +14,5 @@ RUN true \
  && git config --global url.ssh://git@gitlab.com/.insteadOf https://gitlab.com/ \
  && GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa" git submodule update --init \
  && CORE_REVISION=${VERSION} cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so \
- && make -j12 \
+ && make -j2 \
  && rm ~/.ssh/id_rsa
