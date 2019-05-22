@@ -304,7 +304,13 @@ void
 Upgrades::dropAll(Database& db)
 {
     db.getSession() << "DROP TABLE IF EXISTS upgradehistory";
-    db.getSession() << "CREATE TABLE upgradehistory ("
+    createIfNotExists(db);
+}
+
+void
+Upgrades::createIfNotExists(Database& db)
+{
+    db.getSession() << "CREATE TABLE IF NOT EXISTS upgradehistory ("
                        "ledgerseq    INT NOT NULL CHECK (ledgerseq >= 0), "
                        "upgradeindex INT NOT NULL, "
                        "upgrade      TEXT NOT NULL, "
@@ -312,7 +318,7 @@ Upgrades::dropAll(Database& db)
                        "PRIMARY KEY (ledgerseq, upgradeindex)"
                        ")";
     db.getSession()
-        << "CREATE INDEX upgradehistbyseq ON upgradehistory (ledgerseq);";
+            << "CREATE INDEX IF NOT EXISTS upgradehistbyseq ON upgradehistory (ledgerseq);";
 }
 
 void

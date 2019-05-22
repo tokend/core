@@ -67,10 +67,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_ASSET_CUSTOM_PRECISION = 14,
     ADD_VOTING = 15,
     ADD_PEER_TYPE = 16,
-    ADD_SPECIFIC_RULES = 17
+    ADD_SPECIFIC_RULES = 17,
+    FIX_HISTORY_UPGRADES = 18
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ADD_SPECIFIC_RULES;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::FIX_HISTORY_UPGRADES;
 
 static void
 setSerializable(soci::session& sess)
@@ -182,6 +183,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case ADD_SPECIFIC_RULES:
             sh.getAccountSpecificRuleHelper().dropAll();
+            break;
+        case FIX_HISTORY_UPGRADES:
+            Upgrades::createIfNotExists(*this);
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
