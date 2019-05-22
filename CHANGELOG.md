@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 3.4.1
+
+### Fixed
+
+* exception on ledger version upgrade
+
 ## 3.4.0
 
 ### Added
