@@ -53,6 +53,8 @@
 #include "voting/manage_create_poll_request/ManageCreatePollRequestOpFrame.h"
 #include "voting/manage_vote/ManageVoteOpFrame.h"
 #include "manage_specific_rule/ManageAccountSpecificRuleOpFrame.h"
+#include "CreateKYCRecoveryRequestOpFrame.h"
+#include "InitiateKYCRecoveryOpFrame.h"
 #include "ledger/SignerHelper.h"
 #include "transactions/CancelChangeRoleRequestOpFrame.h"
 
@@ -149,6 +151,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
         case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
             return shared_ptr<OperationFrame>(new CancelChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::INITIATE_KYC_RECOVERY:
+            return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
+        case OperationType::CREATE_KYC_RECOVERY_REQUEST:
+            return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

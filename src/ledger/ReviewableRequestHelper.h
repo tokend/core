@@ -42,6 +42,8 @@ namespace stellar
         void loadRequests(StatementContext & prep, std::function<void(LedgerEntry const&)> requestsProcessor);
 
         ReviewableRequestFrame::pointer loadRequest(uint64 requestID, Database& db, LedgerDelta* delta = nullptr);
+        ReviewableRequestFrame::pointer loadRequest(AccountID& requestor, string64 reference,
+                                                    Database &db, LedgerDelta *delta = nullptr);
         ReviewableRequestFrame::pointer loadRequest(uint64 requestID, AccountID requestor, Database& db,
                                                     LedgerDelta* delta = nullptr);
         ReviewableRequestFrame::pointer loadRequest(uint64 requestID, AccountID requestor,

@@ -38,6 +38,7 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureASwapBidCreationValid(ASwapBidCreationRequest const& request);
 	static void ensureASwapValid(ASwapRequest const& request);
 	static void ensurePollCreationValid(CreatePollRequest const& request);
+    static void ensureKYCRecoveryValid(KYCRecoveryRequest const& request);
 
 
   public:
