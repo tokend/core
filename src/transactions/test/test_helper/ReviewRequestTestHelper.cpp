@@ -222,6 +222,8 @@ TransactionFramePtr ReviewRequestHelper::createReviewRequestTx(
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+    reviewRequestOp.reviewDetails.externalDetails = "{}";
+
     return txFromOperation(source, op, nullptr);
 }
 
@@ -241,6 +243,7 @@ TransactionFramePtr ReviewRequestHelper::createReviewRequestTxWithTasks(txtest::
     reviewRequestOp.requestID = requestID;
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+    reviewRequestOp.reviewDetails.externalDetails = "{}";
     if (tasksToAdd != nullptr){
         reviewRequestOp.reviewDetails.tasksToAdd = *tasksToAdd;
     }

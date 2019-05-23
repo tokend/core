@@ -137,6 +137,20 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
     }
 }
 
+void ReviewableRequestFrame::ensureKYCRecoveryValid(
+    KYCRecoveryRequest const& request
+    )
+{
+    if(request.creatorDetails.empty()){
+        throw runtime_error("creator details are invalid");
+    }
+
+    if (request.signersData.size() == 0)
+    {
+        throw runtime_error("empty signer data");
+    }
+}
+
 void ReviewableRequestFrame::ensureSaleCreationValid(
     SaleCreationRequest const& request)
 {
@@ -281,6 +295,8 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureASwapValid(oe.body.aSwapRequest());
         case ReviewableRequestType::CREATE_POLL:
             return ensurePollCreationValid(oe.body.createPollRequest());
+        case ReviewableRequestType::KYC_RECOVERY:
+            return ensureKYCRecoveryValid(oe.body.kycRecoveryRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

@@ -81,6 +81,8 @@ class Upgrades
 
     static void dropAll(Database& db);
 
+    static void createIfNotExists(Database& db);
+
     static void storeUpgradeHistory(Database& db, uint32_t ledgerSeq,
                                     LedgerUpgrade const& upgrade,
                                     LedgerEntryChanges const& changes,

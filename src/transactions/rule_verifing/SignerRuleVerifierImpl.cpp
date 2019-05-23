@@ -190,6 +190,9 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.vote().permissionType) &&
                    isIDMatches(requiredResource.vote().pollID,
                                actualResource.vote().pollID);
+        case LedgerEntryType::INITIATE_KYC_RECOVERY:
+            return isIDMatches(requiredResource.initiateKYCRecovery().roleID,
+                                actualResource.initiateKYCRecovery().roleID);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
