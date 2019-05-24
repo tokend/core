@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed 
+
+* Statistics calculation for deposit stats op type
+
 ## 3.4.0
 
 ### Added

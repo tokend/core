@@ -182,20 +182,18 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
 
 bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
 													   LedgerDelta& delta, LedgerManager& ledgerManager,
-													   BalanceFrame::pointer balance, const uint64_t amountToAdd,
+													   BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
 													   uint64_t& universalAmount)
 {
-    AccountFrame::pointer account = mSourceAccount;
 	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-	return tryAddStatsV2(statisticsV2Processor, account, balance, amountToAdd, universalAmount);
+	return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount);
 }
 bool ReviewIssuanceCreationRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                       const AccountFrame::pointer account,
                                                        const BalanceFrame::pointer balance, const uint64_t amountToAdd,
                                                        uint64_t& universalAmount)
 {
 	const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
-														 universalAmount, account, balance, nullptr);
+														 universalAmount, mSourceAccount, balance, nullptr);
 	switch (result)
 	{
 		case StatisticsV2Processor::SUCCESS:
@@ -231,9 +229,7 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		uint32_t allTasks = 0;
 
         uint64_t universalAmount = 0;
-        BalanceFrame::pointer balanceFrame;
-
-        balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
+        auto balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
             issuanceRequest.asset, db, localDelta);
 
 		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
@@ -253,11 +249,11 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
             {
                 allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
             }
+            else
+            {
+                requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+            }
         }
-		else
-		{
-			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-		}
 
 		if (allTasks == 0)
         {
