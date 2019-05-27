@@ -11,7 +11,7 @@
 ### Fixed
 
 * Tasks handling on `ChangeRoleRequest` reject
-
+* Ability to create asset pair for the same asset, i.e. `A/A`
 ## 3.4.1
 
 ### Fixed
