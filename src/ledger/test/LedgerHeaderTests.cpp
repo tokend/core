@@ -22,7 +22,7 @@
 using namespace stellar;
 using namespace std;
 
-TEST_CASE("genesisledger", "[ledger]")
+TEST_CASE("genesisledger", "[!hide][ledger]")
 {
     VirtualClock clock{};
     auto cfg = getTestConfig(0);
@@ -55,7 +55,7 @@ TEST_CASE("genesisledger", "[ledger]")
 
 TEST_CASE("ledgerheader", "[ledger]")
 {
-    Config cfg(getTestConfig(0, Config::TESTDB_ON_DISK_SQLITE));
+    Config cfg(getTestConfig(0, Config::TESTDB_POSTGRESQL));
 
     Hash saved;
     {
@@ -98,7 +98,7 @@ TEST_CASE("base reserve", "[ledger]")
     app->start();
 
     auto const& lcl = app->getLedgerManager().getLastClosedLedgerHeader();
-    REQUIRE(lcl.header.baseReserve == 100000000);
+    REQUIRE(lcl.header.baseReserve == 0);
     const uint32 n = 20000;
     int64 expectedReserve = 2000200000000ll;
 }

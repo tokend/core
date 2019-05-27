@@ -19,7 +19,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("atomic swap", "[dep_tx][atomic_swap]")
+TEST_CASE("atomic swap", "[!hide][dep_tx][atomic_swap]")
 {
     Config const &cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 

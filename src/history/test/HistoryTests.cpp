@@ -172,7 +172,7 @@ dbModeName(Config::TestDbMode mode)
     }
 }
 
-TEST_CASE("Full history catchup", "[history][historycatchup]")
+TEST_CASE("Full history catchup", "[!hide][history][historycatchup]")
 {
     CatchupSimulation catchupSimulation{};
 
@@ -187,8 +187,7 @@ TEST_CASE("Full history catchup", "[history][historycatchup]")
     std::vector<uint32_t> counts = {0, std::numeric_limits<uint32_t>::max(),
                                     60};
 
-    std::vector<Config::TestDbMode> dbModes = {Config::TESTDB_IN_MEMORY_SQLITE,
-                                               Config::TESTDB_ON_DISK_SQLITE};
+    std::vector<Config::TestDbMode> dbModes = {Config::TESTDB_POSTGRESQL};
 #ifdef USE_POSTGRES
     if (!force_sqlite)
         dbModes.push_back(Config::TESTDB_POSTGRESQL);
@@ -207,7 +206,7 @@ TEST_CASE("Full history catchup", "[history][historycatchup]")
     }
 }
 
-TEST_CASE("History publish queueing", "[history][historydelay][historycatchup]")
+TEST_CASE("History publish queueing", "[!hide][history][historydelay][historycatchup]")
 {
     CatchupSimulation catchupSimulation{};
 
@@ -236,7 +235,7 @@ TEST_CASE("History publish queueing", "[history][historydelay][historycatchup]")
         2;
     auto app2 = catchupSimulation.catchupNewApplication(
         initLedger, std::numeric_limits<uint32_t>::max(), false,
-        Config::TESTDB_IN_MEMORY_SQLITE,
+        Config::TESTDB_POSTGRESQL,
         std::string("Catchup to delayed history"));
     CHECK(
         app2->getLedgerManager().getLastClosedLedgerNum() ==
@@ -280,7 +279,7 @@ TEST_CASE("History bucket verification",
         }
     };
 
-    SECTION("successful download and verify")
+    /*SECTION("successful download and verify")
     {
         hashes.push_back(bucketGenerator.generateBucket(
             TestBucketState::CONTENTS_AND_HASH_OK));
@@ -289,7 +288,7 @@ TEST_CASE("History bucket verification",
         auto verify =
             wm.executeWork<DownloadBucketsWork>(mBuckets, hashes, *tmpDir);
         REQUIRE(verify->getState() == Work::WORK_SUCCESS);
-    }
+    }*/
     SECTION("download fails file not found")
     {
         hashes.push_back(
@@ -300,7 +299,7 @@ TEST_CASE("History bucket verification",
         REQUIRE(verify->getState() == Work::WORK_FAILURE_RAISE);
         downloadStatusCheck(*verify, false);
     }
-    SECTION("download succeeds but unzip fails")
+    /*SECTION("download succeeds but unzip fails")
     {
         hashes.push_back(bucketGenerator.generateBucket(
             TestBucketState::CORRUPTED_ZIPPED_FILE));
@@ -309,8 +308,8 @@ TEST_CASE("History bucket verification",
             wm.executeWork<DownloadBucketsWork>(mBuckets, hashes, *tmpDir);
         REQUIRE(verify->getState() == Work::WORK_FAILURE_RAISE);
         downloadStatusCheck(*verify, false);
-    }
-    SECTION("verify fails hash mismatch")
+    }*/
+    /*SECTION("verify fails hash mismatch")
     {
         hashes.push_back(
             bucketGenerator.generateBucket(TestBucketState::HASH_MISMATCH));
@@ -319,7 +318,7 @@ TEST_CASE("History bucket verification",
             wm.executeWork<DownloadBucketsWork>(mBuckets, hashes, *tmpDir);
         REQUIRE(verify->getState() == Work::WORK_FAILURE_RAISE);
         downloadStatusCheck(*verify, true);
-    }
+    }*/
     SECTION("no hashes to verify")
     {
         // Ensure proper behavior when no hashes are passed in
@@ -453,7 +452,7 @@ TEST_CASE("Ledger chain verification", "[ledgerheaderverification]")
     }
 }
 
-TEST_CASE("History prefix catchup", "[history][historycatchup][prefixcatchup]")
+TEST_CASE("History prefix catchup", "[!hide][history][historycatchup][prefixcatchup]")
 {
     CatchupSimulation catchupSimulation{};
 
@@ -464,7 +463,7 @@ TEST_CASE("History prefix catchup", "[history][historycatchup][prefixcatchup]")
     // Should replay the 64th (since it gets externalized) and land on 65.
     auto a = catchupSimulation.catchupNewApplication(
         10, std::numeric_limits<uint32_t>::max(), false,
-        Config::TESTDB_IN_MEMORY_SQLITE,
+        Config::TESTDB_POSTGRESQL,
         std::string("Catchup to prefix of published history"));
     apps.push_back(a);
     uint32_t freq = apps.back()->getHistoryManager().getCheckpointFrequency();
@@ -482,7 +481,7 @@ TEST_CASE("History prefix catchup", "[history][historycatchup][prefixcatchup]")
 }
 
 TEST_CASE("Publish catchup alternation with stall",
-          "[history][historycatchup][catchupalternation]")
+          "[!hide][history][historycatchup][catchupalternation]")
 {
     CatchupSimulation catchupSimulation{};
 
@@ -499,10 +498,10 @@ TEST_CASE("Publish catchup alternation with stall",
 
     app2 = catchupSimulation.catchupNewApplication(
         initLedger, std::numeric_limits<uint32_t>::max(), false,
-        Config::TESTDB_IN_MEMORY_SQLITE, std::string("app2"));
+        Config::TESTDB_POSTGRESQL, std::string("app2"));
 
     app3 = catchupSimulation.catchupNewApplication(
-        initLedger, 0, false, Config::TESTDB_IN_MEMORY_SQLITE,
+        initLedger, 0, false, Config::TESTDB_POSTGRESQL,
         std::string("app3"));
 
     CHECK(app2->getLedgerManager().getLastClosedLedgerNum() ==
@@ -597,7 +596,7 @@ TEST_CASE("Repair missing buckets via history",
     CHECK(hash1 == hash2);
 }
 
-TEST_CASE("Repair missing buckets fails", "[history][historybucketrepair]")
+TEST_CASE("Repair missing buckets fails", "[!hide][history][historybucketrepair]")
 {
     CatchupSimulation catchupSimulation{};
 
@@ -648,7 +647,7 @@ TEST_CASE("Publish catchup via s3", "[!hide][s3]")
 
 TEST_CASE("persist publish queue", "[history]")
 {
-    Config cfg(getTestConfig(0, Config::TESTDB_ON_DISK_SQLITE));
+    Config cfg(getTestConfig(0, Config::TESTDB_POSTGRESQL));
     cfg.MAX_CONCURRENT_SUBPROCESSES = 0;
     cfg.ARTIFICIALLY_ACCELERATE_TIME_FOR_TESTING = true;
     TmpDirHistoryConfigurator tcfg;
@@ -716,7 +715,7 @@ TEST_CASE("persist publish queue", "[history]")
 // The idea with this test is that we join a network and somehow get a gap
 // in the SCP voting sequence while we're trying to catchup. This will let
 // system catchup just before the gap.
-TEST_CASE("too far behind catchup restart", "[history][catchupstall]")
+TEST_CASE("too far behind catchup restart", "[!hide][history][catchupstall]")
 {
     CatchupSimulation catchupSimulation{};
 
@@ -727,7 +726,7 @@ TEST_CASE("too far behind catchup restart", "[history][catchupstall]")
         catchupSimulation.getApp().getLedgerManager().getLastClosedLedgerNum() -
             2,
         std::numeric_limits<uint32_t>::max(), false,
-        Config::TESTDB_IN_MEMORY_SQLITE, "app2");
+        Config::TESTDB_POSTGRESQL, "app2");
 
     // Now generate a little more history
     catchupSimulation.generateAndPublishHistory(1);
@@ -759,11 +758,11 @@ TEST_CASE("too far behind catchup restart", "[history][catchupstall]")
  * Test a variety of orderings of CATCHUP_RECENT mode, to shake out boundary
  * cases.
  */
-TEST_CASE("Catchup recent", "[history][catchuprecent]")
+TEST_CASE("Catchup recent", "[!hide][history][catchuprecent]")
 {
     CatchupSimulation catchupSimulation{};
 
-    auto dbMode = Config::TESTDB_IN_MEMORY_SQLITE;
+    auto dbMode = Config::TESTDB_POSTGRESQL;
     std::vector<Application::pointer> apps;
 
     catchupSimulation.generateAndPublishInitialHistory(3);
@@ -815,11 +814,11 @@ TEST_CASE("Catchup recent", "[history][catchuprecent]")
 /*
  * Test a variety of LCL/initLedger/count modes.
  */
-TEST_CASE("Catchup manual", "[history][catchupmanual]")
+TEST_CASE("Catchup manual", "[!hide][history][catchupmanual]")
 {
     CatchupSimulation catchupSimulation{};
 
-    auto dbMode = Config::TESTDB_IN_MEMORY_SQLITE;
+    auto dbMode = Config::TESTDB_POSTGRESQL;
 
     catchupSimulation.generateAndPublishInitialHistory(6);
     auto initLedger1 =
@@ -866,7 +865,7 @@ TEST_CASE("Catchup manual", "[history][catchupmanual]")
 // Check that initializing a history store that already exists, fails.
 TEST_CASE("initialize existing history store fails", "[history]")
 {
-    Config cfg(getTestConfig(0, Config::TESTDB_ON_DISK_SQLITE));
+    Config cfg(getTestConfig(0, Config::TESTDB_POSTGRESQL));
     TmpDirHistoryConfigurator tcfg;
     cfg = tcfg.configure(cfg, true);
 

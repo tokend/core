@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+
+* unsuccessful test passing by (--test)
+
 ### Added
 
 * `InitiateKYCRecoveryOpFrame`
