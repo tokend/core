@@ -11,6 +11,7 @@
 ### Fixed
 
 * Tasks handling on `ChangeRoleRequest` reject
+* Ability to set fixed fee for `INVEST_FEE` type
 
 ## 3.4.1
 

@@ -393,6 +393,10 @@ SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
                 break;
             case FeeType::INVEST_FEE:
                 isValidFee = isInvestFeeValid(*mSetFees.fee, app.getMetrics());
+                if (!app.getLedgerManager().shouldUse(LedgerVersion::FIX_INVEST_FEE))
+                    break;
+                if (isValidFee)
+                    isValidFee = isValidFee && mustEmptyFixed(*mSetFees.fee, app.getMetrics());
                 break;
             case FeeType::OPERATION_FEE:
                 isValidFee = isOperationFeeValid(*mSetFees.fee, app.getMetrics());
