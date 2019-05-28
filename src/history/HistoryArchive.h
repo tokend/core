@@ -6,7 +6,7 @@
 
 #include "bucket/FutureBucket.h"
 #include "main/Config.h"
-#include "xdr/Stellar-types.h"
+#include "xdr/Tokend-types.h"
 
 #include <cereal/cereal.hpp>
 #include <memory>

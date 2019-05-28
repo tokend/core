@@ -22,7 +22,7 @@
 
 #include "overlay/Peer.h"
 #include "util/Timer.h"
-#include "xdr/Stellar-types.h"
+#include "xdr/Tokend-types.h"
 
 #include <functional>
 #include <utility>

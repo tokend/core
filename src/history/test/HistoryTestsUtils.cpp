@@ -429,7 +429,7 @@ CatchupSimulation::generateRandomLedger()
                            << " with " << txSet->size() << " txs (txhash:"
                            << hexAbbrev(txSet->getContentsHash()) << ")";
 
-    StellarValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
+    TokendValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
     mLedgerCloseDatas.emplace_back(ledgerSeq, txSet, sv);
     lm.closeLedger(mLedgerCloseDatas.back());
 

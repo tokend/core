@@ -42,7 +42,7 @@ namespace stellar {
             auto ledgerVersionValue = TestManager::ledgerVersion(app, ledgerVersion);
             upgrades.emplace_back(ledgerVersionValue.begin(), ledgerVersionValue.end());
 
-            StellarValue sv(txSet->getContentsHash(), 1, upgrades, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
+            TokendValue sv(txSet->getContentsHash(), 1, upgrades, TokendValue::_ext_t(LedgerVersion::EMPTY_VERSION));
             LedgerCloseData ledgerData(1, txSet, sv);
             app.getLedgerManager().closeLedger(ledgerData);
         }
@@ -139,7 +139,7 @@ namespace stellar {
             auto txSet = std::make_shared<TxSetFrame>(mLm.getLastClosedLedgerHeader().hash);
 
             // prepare data for ledger close
-            StellarValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, StellarValue::_ext_t{});
+            TokendValue sv(txSet->getContentsHash(), closeTime, emptyUpgradeSteps, TokendValue::_ext_t{});
             LedgerCloseData ledgerCloseData(mLm.getLastClosedLedgerNum() + 1, txSet, sv);
 
             // close ledger

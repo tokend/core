@@ -22,7 +22,7 @@ TEST_CASE("cannot close ledger with unsupported ledger version", "[ledger]")
         auto const& lcl = app->getLedgerManager().getLastClosedLedgerHeader();
         auto txSet = std::make_shared<TxSetFrame>(lcl.hash);
 
-        StellarValue sv(txSet->getContentsHash(), 1, emptyUpgradeSteps, 0);
+        TokendValue sv(txSet->getContentsHash(), 1, emptyUpgradeSteps, 0);
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
         app->getLedgerManager().closeLedger(ledgerData);
     };

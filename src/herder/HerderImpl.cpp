@@ -155,7 +155,7 @@ findOrAdd(HerderImpl::AccountTxMap& acc, AccountID const& aid)
 }
 
 void
-HerderImpl::valueExternalized(uint64 slotIndex, StellarValue const& value)
+HerderImpl::valueExternalized(uint64 slotIndex, TokendValue const& value)
 {
     // record metrics
     getHerderSCPDriver().recordSCPExecutionMetrics(slotIndex);
@@ -240,7 +240,7 @@ HerderImpl::broadcast(SCPEnvelope const& e)
 {
     if (!mApp.getConfig().MANUAL_CLOSE)
     {
-        StellarMessage m;
+        TokendMessage m;
         m.type(MessageType::SCP_MESSAGE);
         m.envelope() = e;
 
@@ -446,7 +446,7 @@ HerderImpl::sendSCPStateToPeer(uint32 ledgerSeq, Peer::pointer peer)
 
             for (auto const& e : envelopes)
             {
-                StellarMessage m;
+                TokendMessage m;
                 m.type(MessageType::SCP_MESSAGE);
                 m.envelope() = e;
                 peer->sendMessage(m);
@@ -739,8 +739,8 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
         nextCloseTime = lcl.header.scpValue.closeTime + 1;
     }
 
-    StellarValue newProposedValue(txSetHash, nextCloseTime, emptyUpgradeSteps,
-		StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
+    TokendValue newProposedValue(txSetHash, nextCloseTime, emptyUpgradeSteps,
+		TokendValue::_ext_t(LedgerVersion::EMPTY_VERSION));
 
     auto upgrades = mUpgrades.createUpgradesFor(lcl.header);
     for (auto const& upgrade : upgrades)
@@ -1051,7 +1051,7 @@ HerderImpl::updatePendingTransactions(
         }
         for (auto tx : toBroadcast.sortForApply())
         {
-            auto msg = tx->toStellarMessage();
+            auto msg = tx->toTokendMessage();
             mApp.getOverlayManager().broadcastMessage(msg);
         }
     }

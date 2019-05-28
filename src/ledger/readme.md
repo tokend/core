@@ -23,7 +23,7 @@ behaves just like pointers in typical data structures but with added
 security guarantees.
 
 See the protocol file for the object definitions.
-[`src/xdr/Stellar-ledger.x`](../xdr/Stellar-ledger.x)
+[`src/xdr/Tokend-ledger.x`](../xdr/Tokend-ledger.x)
 
 One can think of the historical chain as a linked list of LedgerHeaders:
 
@@ -40,10 +40,10 @@ The way a ledger header refers to a previous ledger is actually done with
 alternate validation in mind.
 
 ###Fields decided by consensus (SCP)
-During consensus, nodes work together to decide on the value of StellarValue.
-StellarValue is then saved in the scpValue field of the ledger header.
+During consensus, nodes work together to decide on the value of TokendValue.
+TokendValue is then saved in the scpValue field of the ledger header.
 Any node on the network, given the previous ledger (their previous state) and
-'StellarValue' should be able to transition to the same new ledger.
+'TokendValue' should be able to transition to the same new ledger.
 
 ####The hash of the transaction set
 This field is a hash which allows to lookup the related TransactionSet object.
@@ -92,7 +92,7 @@ the data contained in a ledger.
 
 ## Ledger state entries
 Ledger entries are specified in
-[`src/xdr/Stellar-ledger-entries.x`](../xdr/Stellar-ledger-entries.x)
+[`src/xdr/Tokend-ledger-entries.x`](../xdr/Tokend-ledger-entries.x)
 
 ### AccountEntry
 This entry represents an account. In Stellar, everything is centered around

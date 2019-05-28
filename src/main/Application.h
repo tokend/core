@@ -6,7 +6,7 @@
 
 #include <memory>
 #include <string>
-#include "xdr/Stellar-types.h"
+#include "xdr/Tokend-types.h"
 #include "util/types.h"
 #include <lib/json/json.h>
 #include "main/Config.h"

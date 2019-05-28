@@ -16,7 +16,7 @@
 
 namespace stellar
 {
-Floodgate::FloodRecord::FloodRecord(StellarMessage const& msg, uint32_t ledger,
+Floodgate::FloodRecord::FloodRecord(TokendMessage const& msg, uint32_t ledger,
                                     Peer::pointer peer)
     : mLedgerSeq(ledger), mMessage(msg)
 {
@@ -54,7 +54,7 @@ Floodgate::clearBelow(uint32_t currentLedger)
 }
 
 bool
-Floodgate::addRecord(StellarMessage const& msg, Peer::pointer peer)
+Floodgate::addRecord(TokendMessage const& msg, Peer::pointer peer)
 {
     if (mShuttingDown)
     {
@@ -78,7 +78,7 @@ Floodgate::addRecord(StellarMessage const& msg, Peer::pointer peer)
 
 // send message to anyone you haven't gotten it from
 void
-Floodgate::broadcast(StellarMessage const& msg, bool force)
+Floodgate::broadcast(TokendMessage const& msg, bool force)
 {
     if (mShuttingDown)
     {

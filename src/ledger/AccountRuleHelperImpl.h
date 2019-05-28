@@ -3,7 +3,7 @@
 #include "AccountRuleFrame.h"
 #include "ledger/AccountRuleHelper.h"
 #include "ledger/StorageHelper.h"
-#include "xdr/Stellar-types.h"
+#include "xdr/Tokend-types.h"
 
 namespace stellar
 {

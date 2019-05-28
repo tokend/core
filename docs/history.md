@@ -262,7 +262,7 @@ In total, each checkpoint number `0xwwxxyyzz` consists of the following files:
 
   - One ledger-headers file, named by ledger number as `ledger/ww/xx/yy/ledger-wwxxyyzz.xdr.gz`. The
     file contains a sequence of XDR structures of type
-    [`LedgerHeaderHistoryEntry`](/src/xdr/Stellar-ledger.x), one per ledger in the checkpoint (so
+    [`LedgerHeaderHistoryEntry`](/src/xdr/Tokend-ledger.x), one per ledger in the checkpoint (so
     there should be 64 such structures in all checkpoints except the first, which has 63
     headers). These header structures are fixed-size and small, and are sufficient to establish the
     "trust chain" of linked cryptographic hashes between the present state of the network and
@@ -270,7 +270,7 @@ In total, each checkpoint number `0xwwxxyyzz` consists of the following files:
 
   - One transactions file, named by ledger number as
     `transactions/ww/xx/yy/transactions-wwxxyyzz.xdr.gz`. The file contains a sequence of XDR
-    structures of the type [`TransactionHistoryEntry`](/src/xdr/Stellar-ledger.x), with zero-or-more
+    structures of the type [`TransactionHistoryEntry`](/src/xdr/Tokend-ledger.x), with zero-or-more
     structures per ledger; it is the concatenation of all the transactions applied in all the
     ledgers of a given checkpoint. Each `TransactionHistoryEntry` structure indicates the ledger it
     was a part of, and there may be dozens, hundreds, even thousands of such structures per
@@ -279,7 +279,7 @@ In total, each checkpoint number `0xwwxxyyzz` consists of the following files:
 
   - One results file, named by ledger number as `results/ww/xx/yy/results-wwxxyyzz.xdr.gz`. The file
     contains a sequence of XDR structures of the type
-    [`TransactionHistoryResultEntry`](/src/xdr/Stellar-ledger.x), with zero-or-more structures per
+    [`TransactionHistoryResultEntry`](/src/xdr/Tokend-ledger.x), with zero-or-more structures per
     ledger. The file is similar to the transactions file, in that there is one entry per transaction
     applied to a ledger in the checkpoint; but this file stores the _results_ of applying each
     transaction. These files allow reconstruction the history of changes to the ledger without
@@ -287,7 +287,7 @@ In total, each checkpoint number `0xwwxxyyzz` consists of the following files:
 
   - (Optionally) one SCP file, named by ledger number as `scp/ww/xx/yy/scp-wwxxyyzz.xdr.gz`. The file
     contains a sequence of XDR structures of the type
-    [`SCPHistoryEntry`](/src/xdr/Stellar-ledger.x), with zero-or-more structures per ledger. The
+    [`SCPHistoryEntry`](/src/xdr/Tokend-ledger.x), with zero-or-more structures per ledger. The
     file records the sequence of nomination and ballot protocol messages exchanged during consensus
     for each ledger. It is primarily of interest when debugging, or when analyzing
     trust-relationships and protocol behavior of SCP. It is not required for reconstructing the

@@ -37,10 +37,10 @@ class Floodgate
         typedef std::shared_ptr<FloodRecord> pointer;
 
         uint32_t mLedgerSeq;
-        StellarMessage mMessage;
+        TokendMessage mMessage;
         std::set<std::string> mPeersTold;
 
-        FloodRecord(StellarMessage const& msg, uint32_t ledger,
+        FloodRecord(TokendMessage const& msg, uint32_t ledger,
                     Peer::pointer peer);
     };
 
@@ -55,9 +55,9 @@ class Floodgate
     // Floodgate will be cleared after every ledger close
     void clearBelow(uint32_t currentLedger);
     // returns true if this is a new record
-    bool addRecord(StellarMessage const& msg, Peer::pointer fromPeer);
+    bool addRecord(TokendMessage const& msg, Peer::pointer fromPeer);
 
-    void broadcast(StellarMessage const& msg, bool force);
+    void broadcast(TokendMessage const& msg, bool force);
 
     // returns the list of peers that sent us the item with hash `h`
     std::set<Peer::pointer> getPeersKnows(Hash const& h);

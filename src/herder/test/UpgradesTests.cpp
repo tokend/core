@@ -486,7 +486,7 @@ TEST_CASE("Ledger Manager applies upgrades properly", "[upgrades]")
             LedgerManager::GENESIS_LEDGER_BASE_RESERVE);
 
     auto executeUpgrades = [&](xdr::xvector<UpgradeType, 6> const& upgrades) {
-        StellarValue sv{txSet->getContentsHash(), 2, upgrades, 0};
+        TokendValue sv{txSet->getContentsHash(), 2, upgrades, 0};
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
         app->getLedgerManager().closeLedger(ledgerData);
         return app->getLedgerManager().getLastClosedLedgerHeader();
@@ -565,7 +565,7 @@ TEST_CASE("upgrade to version 10", "[upgrades]")
         auto upgrades = xdr::xvector<UpgradeType, 6>{};
         upgrades.push_back(toUpgradeType(makeProtocolVersionUpgrade(10)));
 
-        StellarValue sv{txSet->getContentsHash(), 2, upgrades, 0};
+        TokendValue sv{txSet->getContentsHash(), 2, upgrades, 0};
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
         app->getLedgerManager().closeLedger(ledgerData);
 
@@ -1410,7 +1410,7 @@ TEST_CASE("upgrade base reserve", "[upgrades]")
         upgrades.push_back(toUpgradeType(
                 makeTxExpirationPeriodUpgrade(newReserve)));
 
-        StellarValue sv{txSet->getContentsHash(), 2, upgrades, 0};
+        TokendValue sv{txSet->getContentsHash(), 2, upgrades, 0};
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
         app->getLedgerManager().closeLedger(ledgerData);
 

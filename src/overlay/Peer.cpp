@@ -143,7 +143,7 @@ void
 Peer::sendHello()
 {
     CLOG(DEBUG, "Overlay") << "Peer::sendHello to " << toString();
-    StellarMessage msg;
+    TokendMessage msg;
     msg.type(MessageType::HELLO);
     Hello& elo = msg.hello();
     elo.ledgerVersion = mApp.getConfig().LEDGER_PROTOCOL_VERSION;
@@ -244,7 +244,7 @@ Peer::idleTimerExpired(asio::error_code const& error)
 void
 Peer::sendAuth()
 {
-    StellarMessage msg;
+    TokendMessage msg;
     msg.type(MessageType::AUTH);
     sendMessage(msg);
 }
@@ -258,7 +258,7 @@ Peer::toString()
 void
 Peer::drop(ErrorCode err, std::string const& msg, DropMode dropMode)
 {
-    StellarMessage m;
+    TokendMessage m;
     m.type(MessageType::ERROR_MSG);
     m.error().code = err;
     m.error().msg = msg;
@@ -291,7 +291,7 @@ Peer::connectHandler(asio::error_code const& error)
 void
 Peer::sendDontHave(MessageType type, uint256 const& itemID)
 {
-    StellarMessage msg;
+    TokendMessage msg;
     msg.type(MessageType::DONT_HAVE);
     msg.dontHave().reqHash = itemID;
     msg.dontHave().type = type;
@@ -302,7 +302,7 @@ Peer::sendDontHave(MessageType type, uint256 const& itemID)
 void
 Peer::sendSCPQuorumSet(SCPQuorumSetPtr qSet)
 {
-    StellarMessage msg;
+    TokendMessage msg;
     msg.type(MessageType::SCP_QUORUMSET);
     msg.qSet() = *qSet;
 
@@ -311,7 +311,7 @@ Peer::sendSCPQuorumSet(SCPQuorumSetPtr qSet)
 void
 Peer::sendGetTxSet(uint256 const& setID)
 {
-    StellarMessage newMsg;
+    TokendMessage newMsg;
     newMsg.type(MessageType::GET_TX_SET);
     newMsg.txSetHash() = setID;
 
@@ -323,7 +323,7 @@ Peer::sendGetQuorumSet(uint256 const& setID)
     if (Logging::logTrace("Overlay"))
         CLOG(TRACE, "Overlay") << "Get quorum set: " << hexAbbrev(setID);
 
-    StellarMessage newMsg;
+    TokendMessage newMsg;
     newMsg.type(MessageType::GET_SCP_QUORUMSET);
     newMsg.qSetHash() = setID;
 
@@ -335,7 +335,7 @@ Peer::sendGetPeers()
 {
     CLOG(TRACE, "Overlay") << "Get peers";
 
-    StellarMessage newMsg;
+    TokendMessage newMsg;
     newMsg.type(MessageType::GET_PEERS);
 
     sendMessage(newMsg);
@@ -346,7 +346,7 @@ Peer::sendGetScpState(uint32 ledgerSeq)
 {
     CLOG(TRACE, "Overlay") << "Get SCP State for " << ledgerSeq;
 
-    StellarMessage newMsg;
+    TokendMessage newMsg;
     newMsg.type(MessageType::GET_SCP_STATE);
     newMsg.getSCPLedgerSeq() = ledgerSeq;
 
@@ -356,7 +356,7 @@ Peer::sendGetScpState(uint32 ledgerSeq)
 void
 Peer::sendPeers()
 {
-    StellarMessage newMsg;
+    TokendMessage newMsg;
     newMsg.type(MessageType::PEERS);
     uint32 maxPeerCount = std::min<uint32>(50, newMsg.peers().max_size());
 
@@ -374,7 +374,7 @@ Peer::sendPeers()
 }
 
 static std::string
-msgSummary(StellarMessage const& msg)
+msgSummary(TokendMessage const& msg)
 {
     switch (msg.type())
     {
@@ -422,7 +422,7 @@ msgSummary(StellarMessage const& msg)
 }
 
 void
-Peer::sendMessage(StellarMessage const& msg)
+Peer::sendMessage(TokendMessage const& msg)
 {
     if (Logging::logTrace("Overlay"))
         CLOG(TRACE, "Overlay")
@@ -566,7 +566,7 @@ Peer::recvMessage(AuthenticatedMessage const& msg)
 }
 
 void
-Peer::recvMessage(StellarMessage const& stellarMsg)
+Peer::recvMessage(TokendMessage const& stellarMsg)
 {
     if (shouldAbort())
     {
@@ -689,19 +689,19 @@ Peer::recvMessage(StellarMessage const& stellarMsg)
 }
 
 void
-Peer::recvDontHave(StellarMessage const& msg)
+Peer::recvDontHave(TokendMessage const& msg)
 {
     mApp.getHerder().peerDoesntHave(msg.dontHave().type, msg.dontHave().reqHash,
                                     shared_from_this());
 }
 
 void
-Peer::recvGetTxSet(StellarMessage const& msg)
+Peer::recvGetTxSet(TokendMessage const& msg)
 {
     auto self = shared_from_this();
     if (auto txSet = mApp.getHerder().getTxSet(msg.txSetHash()))
     {
-        StellarMessage newMsg;
+        TokendMessage newMsg;
         newMsg.type(MessageType::TX_SET);
         txSet->toXDR(newMsg.txSet());
 
@@ -714,14 +714,14 @@ Peer::recvGetTxSet(StellarMessage const& msg)
 }
 
 void
-Peer::recvTxSet(StellarMessage const& msg)
+Peer::recvTxSet(TokendMessage const& msg)
 {
     TxSetFrame frame(mApp.getNetworkID(), msg.txSet());
     mApp.getHerder().recvTxSet(frame.getContentsHash(), frame);
 }
 
 void
-Peer::recvTransaction(StellarMessage const& msg)
+Peer::recvTransaction(TokendMessage const& msg)
 {
     TransactionFramePtr transaction = TransactionFrame::makeTransactionFromWire(
             mApp.getNetworkID(), msg.transaction());
@@ -747,7 +747,7 @@ Peer::recvTransaction(StellarMessage const& msg)
 }
 
 void
-Peer::recvGetSCPQuorumSet(StellarMessage const& msg)
+Peer::recvGetSCPQuorumSet(TokendMessage const& msg)
 {
     SCPQuorumSetPtr qset = mApp.getHerder().getQSet(msg.qSetHash());
 
@@ -765,14 +765,14 @@ Peer::recvGetSCPQuorumSet(StellarMessage const& msg)
     }
 }
 void
-Peer::recvSCPQuorumSet(StellarMessage const& msg)
+Peer::recvSCPQuorumSet(TokendMessage const& msg)
 {
     Hash hash = sha256(xdr::xdr_to_opaque(msg.qSet()));
     mApp.getHerder().recvSCPQuorumSet(hash, msg.qSet());
 }
 
 void
-Peer::recvSCPMessage(StellarMessage const& msg)
+Peer::recvSCPMessage(TokendMessage const& msg)
 {
     SCPEnvelope const& envelope = msg.envelope();
     if (Logging::logTrace("Overlay"))
@@ -797,7 +797,7 @@ Peer::recvSCPMessage(StellarMessage const& msg)
 }
 
 void
-Peer::recvGetSCPState(StellarMessage const& msg)
+Peer::recvGetSCPState(TokendMessage const& msg)
 {
     uint32 seq = msg.getSCPLedgerSeq();
     CLOG(TRACE, "Overlay") << "get SCP State " << seq;
@@ -805,7 +805,7 @@ Peer::recvGetSCPState(StellarMessage const& msg)
 }
 
 void
-Peer::recvError(StellarMessage const& msg)
+Peer::recvError(TokendMessage const& msg)
 {
     std::string codeStr = "UNKNOWN";
     switch (msg.error().code)
@@ -997,7 +997,7 @@ Peer::recvHello(Hello const& elo)
 }
 
 void
-Peer::recvAuth(StellarMessage const& msg)
+Peer::recvAuth(TokendMessage const& msg)
 {
     if (mState != GOT_HELLO)
     {
@@ -1050,13 +1050,13 @@ Peer::recvAuth(StellarMessage const& msg)
 }
 
 void
-Peer::recvGetPeers(StellarMessage const& msg)
+Peer::recvGetPeers(TokendMessage const& msg)
 {
     sendPeers();
 }
 
 void
-Peer::recvPeers(StellarMessage const& msg)
+Peer::recvPeers(TokendMessage const& msg)
 {
     for (auto const& peer : msg.peers())
     {

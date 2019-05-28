@@ -10,7 +10,7 @@
 #include "main/Config.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
-#include "xdr/Stellar-ledger.h"
+#include "xdr/Tokend-ledger.h"
 #include "xdrpp/printer.h"
 
 namespace stellar

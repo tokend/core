@@ -13,8 +13,8 @@
 #include "main/Application.h"
 #include "scp/SCP.h"
 #include "util/Logging.h"
-#include "xdr/Stellar-SCP.h"
-#include "xdr/Stellar-ledger-entries.h"
+#include "xdr/Tokend-SCP.h"
+#include "xdr/Tokend-ledger-entries.h"
 #include <medida/metrics_registry.h>
 #include <util/format.h>
 #include <xdrpp/marshal.h>
@@ -91,7 +91,7 @@ HerderSCPDriver::getState() const
 }
 
 void
-HerderSCPDriver::restoreSCPState(uint64_t index, StellarValue const& value)
+HerderSCPDriver::restoreSCPState(uint64_t index, TokendValue const& value)
 {
     mTrackingSCP = std::make_unique<ConsensusData>(index, value);
 }
@@ -148,7 +148,7 @@ HerderSCPDriver::isSlotCompatibleWithCurrentState(uint64_t slotIndex) const
 
 bool
 HerderSCPDriver::checkCloseTime(uint64_t slotIndex, uint64_t lastCloseTime,
-                                StellarValue const& b) const
+                                TokendValue const& b) const
 {
     // Check closeTime (not too old)
     if (b.closeTime <= lastCloseTime)
@@ -173,7 +173,7 @@ HerderSCPDriver::checkCloseTime(uint64_t slotIndex, uint64_t lastCloseTime,
 
 SCPDriver::ValidationLevel
 HerderSCPDriver::validateValueHelper(uint64_t slotIndex,
-                                     StellarValue const& b) const
+                                     TokendValue const& b) const
 {
     uint64_t lastCloseTime;
 
@@ -316,7 +316,7 @@ SCPDriver::ValidationLevel
 HerderSCPDriver::validateValue(uint64_t slotIndex, Value const& value,
                                bool nomination)
 {
-    StellarValue b;
+    TokendValue b;
     try
     {
         xdr::xdr_from_opaque(value, b);
@@ -373,7 +373,7 @@ HerderSCPDriver::validateValue(uint64_t slotIndex, Value const& value,
 Value
 HerderSCPDriver::extractValidValue(uint64_t slotIndex, Value const& value)
 {
-    StellarValue b;
+    TokendValue b;
     try
     {
         xdr::xdr_from_opaque(value, b);
@@ -419,7 +419,7 @@ HerderSCPDriver::toShortString(PublicKey const& pk) const
 std::string
 HerderSCPDriver::getValueString(Value const& v) const
 {
-    StellarValue b;
+    TokendValue b;
     if (v.empty())
     {
         return "[:empty:]";
@@ -429,7 +429,7 @@ HerderSCPDriver::getValueString(Value const& v) const
     {
         xdr::xdr_from_opaque(v, b);
 
-        return stellarValueToString(b);
+        return TokendValueToString(b);
     }
     catch (...)
     {
@@ -500,7 +500,7 @@ HerderSCPDriver::combineCandidates(uint64_t slotIndex,
 
     Hash h;
 
-    StellarValue comp(h, 0, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
+    TokendValue comp(h, 0, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
 
     std::map<LedgerUpgradeType, LedgerUpgrade> upgrades;
 
@@ -510,12 +510,12 @@ HerderSCPDriver::combineCandidates(uint64_t slotIndex,
 
     Hash candidatesHash;
 
-    std::vector<StellarValue> candidateValues;
+    std::vector<TokendValue> candidateValues;
 
     for (auto const& c : candidates)
     {
         candidateValues.emplace_back();
-        StellarValue& sv = candidateValues.back();
+        TokendValue& sv = candidateValues.back();
 
         xdr::xdr_from_opaque(c, sv);
         candidatesHash ^= sha256(c);
@@ -644,7 +644,7 @@ HerderSCPDriver::valueExternalized(uint64_t slotIndex, Value const& value)
         return;
     }
 
-    StellarValue b;
+    TokendValue b;
     try
     {
         xdr::xdr_from_opaque(value, b);
@@ -652,9 +652,9 @@ HerderSCPDriver::valueExternalized(uint64_t slotIndex, Value const& value)
     catch (...)
     {
         // This may not be possible as all messages are validated and should
-        // therefore contain a valid StellarValue.
+        // therefore contain a valid TokendValue.
         CLOG(ERROR, "Herder") << "HerderSCPDriver::valueExternalized"
-                              << " Externalized StellarValue malformed";
+                              << " Externalized TokendValue malformed";
         // no point in continuing as 'b' contains garbage at this point
         abort();
     }
@@ -713,9 +713,9 @@ HerderSCPDriver::logQuorumInformation(uint64_t index)
 }
 
 void
-HerderSCPDriver::nominate(uint64_t slotIndex, StellarValue const& value,
+HerderSCPDriver::nominate(uint64_t slotIndex, TokendValue const& value,
                           TxSetFramePtr proposedSet,
-                          StellarValue const& previousValue)
+                          TokendValue const& previousValue)
 {
     mCurrentValue = xdr::xdr_to_opaque(value);
     mLedgerSeqNominating = static_cast<uint32_t>(slotIndex);

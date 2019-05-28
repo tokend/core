@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xdr/Stellar-operation-manage-invoice-request.h>
+#include <xdr/Tokend-operation-manage-invoice-request.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar

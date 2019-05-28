@@ -30,7 +30,7 @@ TEST_CASE("PendingEnvelopes recvSCPEnvelope", "[herder]")
     using TxPair = std::pair<Value, TxSetFramePtr>;
     auto makeTxPair = [](TxSetFramePtr txSet, uint64_t closeTime) {
         txSet->sortForHash();
-        auto sv = StellarValue{txSet->getContentsHash(), closeTime,
+        auto sv = TokendValue{txSet->getContentsHash(), closeTime,
                                emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION};
         auto v = xdr::xdr_to_opaque(sv);
 

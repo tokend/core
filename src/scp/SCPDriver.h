@@ -10,7 +10,7 @@
 #include <memory>
 #include <set>
 
-#include "xdr/Stellar-SCP.h"
+#include "xdr/Tokend-SCP.h"
 
 namespace stellar
 {

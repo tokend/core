@@ -678,7 +678,7 @@ LoadGenerator::TxInfo::execute(Application& app, bool isCreate,
     }
     txm.mTxnAttempted.Mark();
 
-    StellarMessage msg;
+    TokendMessage msg;
     msg.type(MessageType::TRANSACTION);
     msg.transaction() = txf->getEnvelope();
     txm.mTxnBytes.Mark(xdr::xdr_argpack_size(msg));

@@ -209,8 +209,8 @@ closeLedgerOn(Application& app, uint32 ledgerSeq, int day, int month, int year,
 
 TxSetResultMeta closeLedgerOn(Application& app, uint32 ledgerSeq, time_t closeTime, TxSetFramePtr txSet)
 {
-	StellarValue sv(txSet->getContentsHash(), closeTime,
-		emptyUpgradeSteps, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
+	TokendValue sv(txSet->getContentsHash(), closeTime,
+		emptyUpgradeSteps, TokendValue::_ext_t(LedgerVersion::EMPTY_VERSION));
 	LedgerCloseData ledgerData(ledgerSeq, txSet, sv);
 	app.getLedgerManager().closeLedger(ledgerData);
 

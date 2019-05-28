@@ -83,7 +83,7 @@
       <Message>XDR</Message>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Inputs>src/generated/xdr/Stellar-overlay.h</Inputs>
+      <Inputs>src/generated/xdr/Tokend-overlay.h</Inputs>
       <Command>@echo XDR &gt; $(IntermediateOutputPath)\xdrgen.stamp</Command>
       <Message>XDR check</Message>
       <Outputs>$(IntermediateOutputPath)\xdrgen.stamp</Outputs>
@@ -135,7 +135,7 @@
       <Message>XDR</Message>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Inputs>src/generated/xdr/Stellar-overlay.h</Inputs>
+      <Inputs>src/generated/xdr/Tokend-overlay.h</Inputs>
       <Command>@echo XDR &gt; $(IntermediateOutputPath)\xdrgen.stamp</Command>
       <Message>XDR check</Message>
       <Outputs>$(IntermediateOutputPath)\xdrgen.stamp</Outputs>

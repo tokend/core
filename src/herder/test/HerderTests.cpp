@@ -555,7 +555,7 @@ TEST_CASE("SCP Driver", "[herder]")
     using TxPair = std::pair<Value, TxSetFramePtr>;
     auto makeTxPair = [](TxSetFramePtr txSet, uint64_t closeTime) {
         txSet->sortForHash();
-        auto sv = StellarValue{txSet->getContentsHash(), closeTime,
+        auto sv = TokendValue{txSet->getContentsHash(), closeTime,
                                emptyUpgradeSteps, 0};
         auto v = xdr::xdr_to_opaque(sv);
 
@@ -604,7 +604,7 @@ TEST_CASE("SCP Driver", "[herder]")
         addToCandidates(makeTxPair(txSet0, 100));
 
         Value v;
-        StellarValue sv;
+        TokendValue sv;
 
         v = herder.getHerderSCPDriver().combineCandidates(1, candidates);
         xdr::xdr_from_opaque(v, sv);

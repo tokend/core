@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "xdr/Stellar-SCP.h"
+#include "xdr/Tokend-SCP.h"
 
 namespace stellar
 {

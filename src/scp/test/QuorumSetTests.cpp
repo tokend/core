@@ -7,7 +7,7 @@
 #include "crypto/SecretKey.h"
 #include "lib/catch.hpp"
 #include "scp/QuorumSetUtils.h"
-#include "xdr/Stellar-SCP.h"
+#include "xdr/Tokend-SCP.h"
 
 namespace stellar
 {

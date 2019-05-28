@@ -29,7 +29,7 @@ corpus. So to make this all work the program has to (a) run quickly and (b) take
 small inputs in binary form. We've modified stellar-core to have a mode for (b)
 but (a) is still unsatisfactory; the binary-input mode starts up a pair of
 Application objects in loopback configuration, and reads-and-receives a
-StellarMessage into them. This is quite a lot of setup and the fuzzing speed of
+TokendMessage into them. This is quite a lot of setup and the fuzzing speed of
 AFL suffers as a result (it actually complains that the target is too slow).
 
 
@@ -98,7 +98,7 @@ part of staging-tests", here are some directions I think we should take fuzzing:
 
   - Make startup-modes at different points in the process: instantiate an
     application and feed it transactions to run directly, not full
-    `StellarMessage`s. Let the fuzzer generte bucket ledger entries, and try to
+    `TokendMessage`s. Let the fuzzer generte bucket ledger entries, and try to
     apply them to the database as one would during catchup. This sort of thing.
 
   - Add a mode -- with a giant red flashing TESTING_ONLY light on it -- that
