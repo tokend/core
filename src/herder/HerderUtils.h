@@ -12,8 +12,8 @@ namespace stellar
 
 struct SCPEnvelope;
 struct SCPStatement;
-struct TokendValue;
+struct StellarValue;
 
 std::vector<Hash> getTxSetHashes(SCPEnvelope const& envelope);
-std::vector<TokendValue> getTokendValues(SCPStatement const& envelope);
+std::vector<StellarValue> getStellarValues(SCPStatement const& envelope);
 }

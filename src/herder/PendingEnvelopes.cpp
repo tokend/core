@@ -304,7 +304,7 @@ PendingEnvelopes::isDiscarded(SCPEnvelope const& envelope) const
 void
 PendingEnvelopes::envelopeReady(SCPEnvelope const& envelope)
 {
-    TokendMessage msg;
+    StellarMessage msg;
     msg.type(MessageType::SCP_MESSAGE);
     msg.envelope() = envelope;
     mApp.getOverlayManager().broadcastMessage(msg);

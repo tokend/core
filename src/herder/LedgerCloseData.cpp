@@ -14,7 +14,7 @@ namespace stellar
 {
 
 LedgerCloseData::LedgerCloseData(uint32_t ledgerSeq, TxSetFramePtr txSet,
-                                 TokendValue const& v)
+                                 StellarValue const& v)
     : mLedgerSeq(ledgerSeq), mTxSet(txSet), mValue(v)
 {
     Value x;
@@ -24,7 +24,7 @@ LedgerCloseData::LedgerCloseData(uint32_t ledgerSeq, TxSetFramePtr txSet,
 }
 
 std::string
-TokendValueToString(TokendValue const& sv)
+StellarValueToString(StellarValue const& sv)
 {
     std::stringstream res;
 

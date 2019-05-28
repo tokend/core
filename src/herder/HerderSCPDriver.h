@@ -25,7 +25,7 @@ class PendingEnvelopes;
 class SCP;
 class Upgrades;
 class VirtualTimer;
-struct TokendValue;
+struct StellarValue;
 struct SCPEnvelope;
 
 class HerderSCPDriver : public SCPDriver
@@ -34,8 +34,8 @@ class HerderSCPDriver : public SCPDriver
     struct ConsensusData
     {
         uint64_t mConsensusIndex;
-        TokendValue mConsensusValue;
-        ConsensusData(uint64_t index, TokendValue const& b)
+        StellarValue mConsensusValue;
+        ConsensusData(uint64_t index, StellarValue const& b)
             : mConsensusIndex(index), mConsensusValue(b)
         {
         }
@@ -62,7 +62,7 @@ class HerderSCPDriver : public SCPDriver
         return mLastTrackingSCP.get();
     }
 
-    void restoreSCPState(uint64_t index, TokendValue const& value);
+    void restoreSCPState(uint64_t index, StellarValue const& value);
 
     // the ledger index that was last externalized
     uint32
@@ -115,8 +115,8 @@ class HerderSCPDriver : public SCPDriver
 
     // Submit a value to consider for slotIndex
     // previousValue is the value from slotIndex-1
-    void nominate(uint64_t slotIndex, TokendValue const& value,
-                  TxSetFramePtr proposedSet, TokendValue const& previousValue);
+    void nominate(uint64_t slotIndex, StellarValue const& value,
+                  TxSetFramePtr proposedSet, StellarValue const& previousValue);
 
     SCPQuorumSetPtr getQSet(Hash const& qSetHash) override;
 
@@ -197,10 +197,10 @@ class HerderSCPDriver : public SCPDriver
     void stateChanged();
 
     bool checkCloseTime(uint64_t slotIndex, uint64_t lastCloseTime,
-                        TokendValue const& b) const;
+                        StellarValue const& b) const;
 
     SCPDriver::ValidationLevel
-    validateValueHelper(uint64_t slotIndex, TokendValue const& sv) const;
+    validateValueHelper(uint64_t slotIndex, StellarValue const& sv) const;
 
     // returns true if the local instance is in a state compatible with
     // this slot

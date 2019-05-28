@@ -22,7 +22,7 @@ class LedgerCloseData
 {
   public:
     LedgerCloseData(uint32_t ledgerSeq, TxSetFramePtr txSet,
-                    TokendValue const& v);
+                    StellarValue const& v);
 
     uint32_t
     getLedgerSeq() const
@@ -34,7 +34,7 @@ class LedgerCloseData
     {
         return mTxSet;
     }
-    TokendValue const&
+    StellarValue const&
     getValue() const
     {
         return mValue;
@@ -43,10 +43,10 @@ class LedgerCloseData
   private:
     uint32_t mLedgerSeq;
     TxSetFramePtr mTxSet;
-    TokendValue mValue;
+    StellarValue mValue;
 };
 
-std::string TokendValueToString(TokendValue const& sv);
+std::string StellarValueToString(StellarValue const& sv);
 
 #define emptyUpgradeSteps (xdr::xvector<UpgradeType, 6>(0))
 }

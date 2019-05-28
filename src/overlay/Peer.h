@@ -127,26 +127,26 @@ class Peer : public std::enable_shared_from_this<Peer>,
     medida::Meter& mSendGetSCPStateMeter;
 
     bool shouldAbort() const;
-    void recvMessage(TokendMessage const& msg);
+    void recvMessage(StellarMessage const& msg);
     void recvMessage(AuthenticatedMessage const& msg);
     void recvMessage(xdr::msg_ptr const& xdrBytes);
 
-    virtual void recvError(TokendMessage const& msg);
+    virtual void recvError(StellarMessage const& msg);
     void updatePeerRecordAfterEcho();
     void updatePeerRecordAfterAuthentication();
-    void recvAuth(TokendMessage const& msg);
-    void recvDontHave(TokendMessage const& msg);
-    void recvGetPeers(TokendMessage const& msg);
+    void recvAuth(StellarMessage const& msg);
+    void recvDontHave(StellarMessage const& msg);
+    void recvGetPeers(StellarMessage const& msg);
     void recvHello(Hello const& elo);
-    void recvPeers(TokendMessage const& msg);
+    void recvPeers(StellarMessage const& msg);
 
-    void recvGetTxSet(TokendMessage const& msg);
-    void recvTxSet(TokendMessage const& msg);
-    void recvTransaction(TokendMessage const& msg);
-    void recvGetSCPQuorumSet(TokendMessage const& msg);
-    void recvSCPQuorumSet(TokendMessage const& msg);
-    void recvSCPMessage(TokendMessage const& msg);
-    void recvGetSCPState(TokendMessage const& msg);
+    void recvGetTxSet(StellarMessage const& msg);
+    void recvTxSet(StellarMessage const& msg);
+    void recvTransaction(StellarMessage const& msg);
+    void recvGetSCPQuorumSet(StellarMessage const& msg);
+    void recvSCPQuorumSet(StellarMessage const& msg);
+    void recvSCPMessage(StellarMessage const& msg);
+    void recvGetSCPState(StellarMessage const& msg);
 
     void sendHello();
     void sendAuth();
@@ -190,7 +190,7 @@ class Peer : public std::enable_shared_from_this<Peer>,
     void sendGetPeers();
     void sendGetScpState(uint32 ledgerSeq);
 
-    void sendMessage(TokendMessage const& msg);
+    void sendMessage(StellarMessage const& msg);
 
     PeerRole
     getRole() const

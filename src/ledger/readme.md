@@ -40,10 +40,10 @@ The way a ledger header refers to a previous ledger is actually done with
 alternate validation in mind.
 
 ###Fields decided by consensus (SCP)
-During consensus, nodes work together to decide on the value of TokendValue.
-TokendValue is then saved in the scpValue field of the ledger header.
+During consensus, nodes work together to decide on the value of StellarValue.
+StellarValue is then saved in the scpValue field of the ledger header.
 Any node on the network, given the previous ledger (their previous state) and
-'TokendValue' should be able to transition to the same new ledger.
+'StellarValue' should be able to transition to the same new ledger.
 
 ####The hash of the transaction set
 This field is a hash which allows to lookup the related TransactionSet object.

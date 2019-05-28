@@ -516,10 +516,10 @@ TransactionFrameImpl::apply(LedgerDelta& delta, TransactionMeta& meta,
     }
 }
 
-TokendMessage
-TransactionFrameImpl::toTokendMessage() const
+StellarMessage
+TransactionFrameImpl::toStellarMessage() const
 {
-    TokendMessage msg;
+    StellarMessage msg;
     msg.type(MessageType::TRANSACTION);
     msg.transaction() = mEnvelope;
     return msg;

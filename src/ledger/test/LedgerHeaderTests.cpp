@@ -68,7 +68,7 @@ TEST_CASE("ledgerheader", "[ledger]")
         TxSetFramePtr txSet = make_shared<TxSetFrame>(lastHash);
 
         // close this ledger
-        TokendValue sv(txSet->getContentsHash(), 1, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
+        StellarValue sv(txSet->getContentsHash(), 1, emptyUpgradeSteps, LedgerVersion::EMPTY_VERSION);
         LedgerCloseData ledgerData(lcl.header.ledgerSeq + 1, txSet, sv);
         app->getLedgerManager().closeLedger(ledgerData);
 

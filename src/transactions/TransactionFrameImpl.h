@@ -157,7 +157,7 @@ class TransactionFrameImpl : public TransactionFrame
     // version without meta
     bool apply(LedgerDelta& delta, Application& app);
 
-    TokendMessage toTokendMessage() const;
+    StellarMessage toStellarMessage() const;
 
     AccountFrame::pointer loadAccount(LedgerDelta* delta, Database& app,
                                       AccountID const& accountID);

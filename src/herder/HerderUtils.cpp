@@ -14,26 +14,26 @@ namespace stellar
 std::vector<Hash>
 getTxSetHashes(SCPEnvelope const& envelope)
 {
-    auto values = getTokendValues(envelope.statement);
+    auto values = getStellarValues(envelope.statement);
     auto result = std::vector<Hash>{};
     result.resize(values.size());
 
     std::transform(std::begin(values), std::end(values), std::begin(result),
-                   [](TokendValue const& sv) { return sv.txSetHash; });
+                   [](StellarValue const& sv) { return sv.txSetHash; });
 
     return result;
 }
 
-std::vector<TokendValue>
-getTokendValues(SCPStatement const& statement)
+std::vector<StellarValue>
+getStellarValues(SCPStatement const& statement)
 {
     auto values = Slot::getStatementValues(statement);
-    auto result = std::vector<TokendValue>{};
+    auto result = std::vector<StellarValue>{};
     result.resize(values.size());
 
     std::transform(std::begin(values), std::end(values), std::begin(result),
                    [](Value const& v) {
-                       auto wb = TokendValue{};
+                       auto wb = StellarValue{};
                        xdr::xdr_from_opaque(v, wb);
                        return wb;
                    });

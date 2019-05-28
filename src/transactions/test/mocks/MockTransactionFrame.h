@@ -52,8 +52,8 @@ namespace stellar {
                      bool(LedgerDelta& delta, TransactionMeta& meta, Application& app, std::vector<LedgerDelta::KeyEntryMap>& stateBeforeOp));
         MOCK_METHOD2(apply,
                      bool(LedgerDelta& delta, Application& app));
-        MOCK_CONST_METHOD0(toTokendMessage,
-                           TokendMessage());
+        MOCK_CONST_METHOD0(toStellarMessage,
+                           StellarMessage());
         MOCK_METHOD3(loadAccount,
                      AccountFrame::pointer(LedgerDelta* delta, Database& app, AccountID const& accountID));
         MOCK_CONST_METHOD4(storeTransaction,

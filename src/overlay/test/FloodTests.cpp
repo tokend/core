@@ -144,7 +144,7 @@ TEST_CASE("Flooding", "[flood][overlay]")
                 {createAccount(dest.getPublicKey(), txAmount)}, expectedSeq);
 
             // this is basically a modified version of Peer::recvTransaction
-            auto msg = tx1->toTokendMessage();
+            auto msg = tx1->toStellarMessage();
             auto res = inApp->getHerder().recvTransaction(tx1);
             REQUIRE(res == Herder::TX_STATUS_PENDING);
             inApp->getOverlayManager().broadcastMessage(msg);
@@ -246,7 +246,7 @@ TEST_CASE("Flooding", "[flood][overlay]")
 
             // build an SCP nomination message for the next ledger
 
-            TokendValue sv(txSet.getContentsHash(),
+            StellarValue sv(txSet.getContentsHash(),
                             lcl.header.scpValue.closeTime + 1,
                             emptyUpgradeSteps, 0);
 

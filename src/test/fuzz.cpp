@@ -30,7 +30,7 @@
  * It has two modes:
  *
  *   - In --genfuzz mode it spits out a small file containing a handful of
- *     random TokendMessages. This is the mode you use to generate seed data
+ *     random StellarMessages. This is the mode you use to generate seed data
  *     for the external fuzzer's corpus.
  *
  *   - In --fuzz mode it reads back a file and appplies it to a pair of of
@@ -65,7 +65,7 @@ struct CfgDirGuard
 };
 
 std::string
-msgSummary(TokendMessage const& m)
+msgSummary(StellarMessage const& m)
 {
     xdr::detail::Printer p(0);
     xdr::archive(p, m.type(), nullptr);
@@ -73,7 +73,7 @@ msgSummary(TokendMessage const& m)
 }
 
 bool
-tryRead(XDRInputFileStream& in, TokendMessage& m)
+tryRead(XDRInputFileStream& in, StellarMessage& m)
 {
     try
     {
@@ -142,7 +142,7 @@ restart:
 
     XDRInputFileStream in(MAX_MESSAGE_SIZE);
     in.open(filename);
-    TokendMessage msg;
+    StellarMessage msg;
     size_t i = 0;
     while (tryRead(in, msg))
     {
@@ -176,12 +176,12 @@ genfuzz(std::string const& filename)
     LOG(INFO) << "Writing " << n << "-message random fuzz file " << filename;
     XDROutputFileStream out;
     out.open(filename);
-    autocheck::generator<TokendMessage> gen;
+    autocheck::generator<StellarMessage> gen;
     for (size_t i = 0; i < n; ++i)
     {
         try
         {
-            TokendMessage m(gen(10));
+            StellarMessage m(gen(10));
             out.writeOne(m);
             LOG(INFO) << "Message " << i << ": " << msgSummary(m);
         }

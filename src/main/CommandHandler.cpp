@@ -702,7 +702,7 @@ CommandHandler::tx(std::string const& params, std::string& retStr)
 
             if (status == Herder::TX_STATUS_PENDING)
             {
-                TokendMessage msg;
+                StellarMessage msg;
                 msg.type(MessageType::TRANSACTION);
                 msg.transaction() = envelope;
                 mApp.getOverlayManager().broadcastMessage(msg);

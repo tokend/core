@@ -87,7 +87,7 @@ class TransactionFrame
     // version without meta
     virtual bool apply(LedgerDelta& delta, Application& app) = 0;
 
-    virtual TokendMessage toTokendMessage() const = 0;
+    virtual StellarMessage toStellarMessage() const = 0;
 
     virtual AccountFrame::pointer loadAccount(LedgerDelta* delta, Database& app,
                                               AccountID const& accountID) = 0;

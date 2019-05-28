@@ -765,14 +765,14 @@ OverlayManagerImpl::getRandomAuthenticatedPeers()
 }
 
 void
-OverlayManagerImpl::recvFloodedMsg(TokendMessage const& msg,
+OverlayManagerImpl::recvFloodedMsg(StellarMessage const& msg,
                                    Peer::pointer peer)
 {
     mFloodGate.addRecord(msg, peer);
 }
 
 void
-OverlayManagerImpl::broadcastMessage(TokendMessage const& msg, bool force)
+OverlayManagerImpl::broadcastMessage(StellarMessage const& msg, bool force)
 {
     mMessagesBroadcast.Mark();
     mFloodGate.broadcast(msg, force);
