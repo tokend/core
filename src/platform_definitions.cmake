@@ -26,7 +26,10 @@ string(STRIP ${XDR_REVISION} XDR_REVISION)
 add_definitions(-DXDR_REVISION="${XDR_REVISION}")
 
 # add revision of core itself, using it in /info EP
-execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/ && git rev-parse HEAD)" OUTPUT_VARIABLE CORE_REVISION)
+set (CORE_REVISION $ENV{CORE_REVISION})
+if(NOT DEFINED CORE_REVISION)
+    execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/ && git rev-parse HEAD)" OUTPUT_VARIABLE CORE_REVISION)
+endif(DEFINED CORE_REVISION)
 string(STRIP ${CORE_REVISION} CORE_REVISION)
 add_definitions(-DCORE_REVISION="${CORE_REVISION}")
 
