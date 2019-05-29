@@ -41,9 +41,9 @@
 #include "CreateManageLimitsRequestOpFrame.h"
 #include "transactions/deprecated/ManageContractRequestOpFrame.h"
 #include "transactions/deprecated/ManageContractOpFrame.h"
-#include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
-#include "atomic_swap/CancelASwapBidOpFrame.h"
-#include "atomic_swap/CreateASwapRequestOpFrame.h"
+#include "transactions/atomic_swap/CreateAtomicSwapAskRequestOpFrame.h"
+#include "transactions/atomic_swap/CancelAtomicSwapAskOpFrame.h"
+#include "transactions/atomic_swap/CreateAtomicSwapBidRequestOpFrame.h"
 #include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
 #include "ManageSignerOpFrame.h"
 #include "LicenseOpFrame.h"
@@ -52,6 +52,8 @@
 #include "voting/manage_create_poll_request/ManageCreatePollRequestOpFrame.h"
 #include "voting/manage_vote/ManageVoteOpFrame.h"
 #include "manage_specific_rule/ManageAccountSpecificRuleOpFrame.h"
+#include "CreateKYCRecoveryRequestOpFrame.h"
+#include "InitiateKYCRecoveryOpFrame.h"
 #include "ledger/SignerHelper.h"
 #include "transactions/CancelChangeRoleRequestOpFrame.h"
 
@@ -118,12 +120,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
         case OperationType::CANCEL_SALE_REQUEST:
             return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
-        case OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST:
-            return make_shared<CreateASwapBidCreationRequestOpFrame>(op, res, tx);
-        case OperationType::CANCEL_ATOMIC_SWAP_BID:
-            return make_shared<CancelASwapBidOpFrame>(op, res, tx);
         case OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST:
-            return make_shared<CreateASwapRequestOpFrame>(op, res, tx);
+            return make_shared<CreateAtomicSwapAskRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_ATOMIC_SWAP_ASK:
+            return make_shared<CancelAtomicSwapAskOpFrame>(op, res, tx);
+        case OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST:
+            return make_shared<CreateAtomicSwapBidRequestOpFrame>(op, res, tx);
         case OperationType::MANAGE_ACCOUNT_ROLE:
             return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
         case OperationType::MANAGE_ACCOUNT_RULE:
@@ -148,6 +150,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
         case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
             return shared_ptr<OperationFrame>(new CancelChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::INITIATE_KYC_RECOVERY:
+            return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
+        case OperationType::CREATE_KYC_RECOVERY_REQUEST:
+            return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

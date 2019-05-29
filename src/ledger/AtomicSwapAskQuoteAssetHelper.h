@@ -8,26 +8,26 @@ namespace stellar
 class Database;
 class StatementContext;
 
-class ASwapBidQuoteAssetHelper
+class AtomicSwapAskQuoteAssetHelper
 {
 public:
     static void dropAll(Database& db);
 
-    static void deleteAllForBid(Database& db, uint64_t bidID);
+    static void deleteAllForAsk(Database &db, uint64_t bidID);
 
     static void storeUpdate(Database& db, uint64_t bidID,
-                            xdr::xvector<AtomicSwapBidQuoteAsset> quoteAssets,
+                            xdr::xvector<AtomicSwapAskQuoteAsset> quoteAssets,
                             bool insert);
 
     static void storeUpdate(Database& db, uint64_t bidID,
-                            AtomicSwapBidQuoteAsset const& quoteAsset,
+                            AtomicSwapAskQuoteAsset const& quoteAsset,
                             bool insert);
 
     static void
     loadASwapQuoteAsset(StatementContext& prep,
-            const std::function<void (AtomicSwapBidQuoteAsset const&)> saleProcessor);
+            const std::function<void (AtomicSwapAskQuoteAsset const&)> saleProcessor);
 
-    static xdr::xvector<AtomicSwapBidQuoteAsset> loadQuoteAssets(Database& db, uint64_t bidID);
+    static xdr::xvector<AtomicSwapAskQuoteAsset> loadQuoteAssets(Database& db, uint64_t bidID);
 };
 
 }

@@ -1,8 +1,8 @@
 #include <ledger/BalanceHelperLegacy.h>
-#include <ledger/AtomicSwapBidHelper.h>
+#include <ledger/AtomicSwapAskHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include "ReviewRequestTestHelper.h"
-#include "ReviewASwapBidCreationRequestTestHelper.h"
+#include "ReviewASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"
 
 namespace stellar
@@ -11,19 +11,19 @@ namespace stellar
 namespace txtest
 {
 
-ASwapBidCreationRequestReviewChecker::ASwapBidCreationRequestReviewChecker(
+ASwapAskRequestReviewChecker::ASwapAskRequestReviewChecker(
         TestManager::pointer testManager, uint64_t requestID)
         : ReviewChecker(testManager)
 {
     auto& db = mTestManager->getDB();
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
     auto& aSwapCreationRequest =
-            request->getRequestEntry().body.createAtomicSwapBidRequest();
+            request->getRequestEntry().body.createAtomicSwapAskRequest();
     mBaseBalanceBeforeTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
             aSwapCreationRequest.baseBalance, db);
 }
 
-void ASwapBidCreationRequestReviewChecker::checkPermanentReject(
+void ASwapAskRequestReviewChecker::checkPermanentReject(
         ReviewableRequestFrame::pointer request)
 {
     auto& db = mTestManager->getDB();
@@ -34,7 +34,7 @@ void ASwapBidCreationRequestReviewChecker::checkPermanentReject(
     REQUIRE(requestAfterTx == nullptr);
 
     auto& aSwapCreationRequest =
-            request->getRequestEntry().body.createAtomicSwapBidRequest();
+            request->getRequestEntry().body.createAtomicSwapAskRequest();
     auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(
             aSwapCreationRequest.baseBalance, db);
 
@@ -45,7 +45,7 @@ void ASwapBidCreationRequestReviewChecker::checkPermanentReject(
 }
 
 
-void ASwapBidCreationRequestReviewChecker::checkApprove(
+void ASwapAskRequestReviewChecker::checkApprove(
         ReviewableRequestFrame::pointer request)
 {
     auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(
@@ -55,13 +55,13 @@ void ASwapBidCreationRequestReviewChecker::checkApprove(
 }
 
 
-ReviewASwapBidCreationRequestHelper::ReviewASwapBidCreationRequestHelper(
+ReviewASwapAskRequestHelper::ReviewASwapAskRequestHelper(
         TestManager::pointer testManager) : ReviewRequestHelper(testManager)
 {
 }
 
 TransactionFramePtr
-ReviewASwapBidCreationRequestHelper::createReviewRequestTx(
+ReviewASwapAskRequestHelper::createReviewRequestTx(
         Account &source, uint64_t requestID, Hash requestHash,
         ReviewableRequestType requestType, ReviewRequestOpAction action,
         std::string rejectReason)
@@ -81,13 +81,13 @@ ReviewASwapBidCreationRequestHelper::createReviewRequestTx(
 }
 
 ReviewRequestResult
-ReviewASwapBidCreationRequestHelper::applyReviewRequestTx(
+ReviewASwapAskRequestHelper::applyReviewRequestTx(
         Account &source, uint64_t requestID, Hash requestHash,
         ReviewableRequestType requestType, ReviewRequestOpAction action,
         std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
     auto swapBidCreationRequestChecker =
-            ASwapBidCreationRequestReviewChecker(mTestManager, requestID);
+            ASwapAskRequestReviewChecker(mTestManager, requestID);
     return ReviewRequestHelper::applyReviewRequestTx(source, requestID, requestHash,
                                                      requestType, action, rejectReason,
                                                      expectedResult,
@@ -96,7 +96,7 @@ ReviewASwapBidCreationRequestHelper::applyReviewRequestTx(
 }
 
 ReviewRequestResult
-ReviewASwapBidCreationRequestHelper::applyReviewRequestTx(
+ReviewASwapAskRequestHelper::applyReviewRequestTx(
         Account &source, uint64_t requestID, ReviewRequestOpAction action,
         std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
@@ -109,7 +109,7 @@ ReviewASwapBidCreationRequestHelper::applyReviewRequestTx(
 }
 
 ReviewRequestResult
-ReviewASwapBidCreationRequestHelper::applyReviewRequestTxWithTasks(Account &source,
+ReviewASwapAskRequestHelper::applyReviewRequestTxWithTasks(Account &source,
        uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason,
        uint32_t tasksToRemove, ReviewRequestResultCode expectedResult)
 {

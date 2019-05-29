@@ -1,5 +1,5 @@
 #include <util/Logging.h>
-#include "AtomicSwapBidQuoteAssetHelper.h"
+#include "AtomicSwapAskQuoteAssetHelper.h"
 #include "database/Database.h"
 
 using namespace soci;
@@ -10,44 +10,43 @@ namespace stellar
 using xdr::operator<;
 
 void
-ASwapBidQuoteAssetHelper::dropAll(Database &db)
+AtomicSwapAskQuoteAssetHelper::dropAll(Database &db)
 {
     db.getSession() << "DROP TABLE IF EXISTS atomic_swap_quote_asset;";
     db.getSession() << "CREATE TABLE atomic_swap_quote_asset"
                        "("
-                       "bid_id      BIGINT          NOT NULL CHECK (bid_id >= 0),"
+                       "ask_id      BIGINT          NOT NULL CHECK (ask_id >= 0),"
                        "quote_asset VARCHAR(16)     NOT NULL,"
                        "price       NUMERIC(20,0)   NOT NULL CHECK (price > 0),"
                        "version     INT             NOT NULL,"
-                       "PRIMARY KEY (bid_id, quote_asset)"
+                       "PRIMARY KEY (ask_id, quote_asset)"
                        ");";
 }
 
 void
-ASwapBidQuoteAssetHelper::deleteAllForBid(Database &db, uint64_t bidID)
+AtomicSwapAskQuoteAssetHelper::deleteAllForAsk(Database &db, uint64_t askID)
 {
     auto prep = db.getPreparedStatement("DELETE FROM atomic_swap_quote_asset "
-                                        "WHERE bid_id = :id");
+                                        "WHERE ask_id = :id");
     auto& st = prep.statement();
-    st.exchange(use(bidID, "id"));
+    st.exchange(use(askID, "id"));
     st.define_and_bind();
     st.execute(true);
 }
 
 void
-ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
-                                      xdr::xvector<AtomicSwapBidQuoteAsset> quoteAssets,
-                                      bool insert)
+AtomicSwapAskQuoteAssetHelper::storeUpdate(Database &db, uint64_t askID,
+        xdr::xvector<AtomicSwapAskQuoteAsset> quoteAssets, bool insert)
 {
     for (auto const& quoteAsset : quoteAssets)
     {
-        storeUpdate(db, bidID, quoteAsset, insert);
+        storeUpdate(db, askID, quoteAsset, insert);
     }
 }
 
-void ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
-                                           AtomicSwapBidQuoteAsset const &quoteAsset,
-                                           bool insert)
+void
+AtomicSwapAskQuoteAssetHelper::storeUpdate(Database &db, uint64_t askID,
+        AtomicSwapAskQuoteAsset const &quoteAsset, bool insert)
 {
     string sql;
 
@@ -55,19 +54,19 @@ void ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
 
     if (insert)
     {
-        sql = "INSERT INTO atomic_swap_quote_asset (bid_id, quote_asset, price, version) "
+        sql = "INSERT INTO atomic_swap_quote_asset (ask_id, quote_asset, price, version) "
               "VALUES (:id, :qa, :p, :v)";
     }
     else
     {
         sql = "UPDATE atomic_swap_quote_asset SET price = :p, version = :v "
-              "WHERE bid_id = :id AND quote_asset = :qa";
+              "WHERE ask_id = :id AND quote_asset = :qa";
     }
 
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
-    st.exchange(use(bidID, "id"));
+    st.exchange(use(askID, "id"));
     st.exchange(use(quoteAsset.quoteAsset, "qa"));
     st.exchange(use(quoteAsset.price, "p"));
     st.exchange(use(version, "v"));
@@ -76,18 +75,18 @@ void ASwapBidQuoteAssetHelper::storeUpdate(Database &db, uint64_t bidID,
 
     if (st.get_affected_rows() != 1)
     {
-        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Failed to update atomic swap bid quote "
-                                              "asset with id: " << bidID
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Failed to update atomic swap ask quote "
+                                              "asset with id: " << askID
                                            << quoteAsset.quoteAsset;
-        throw runtime_error("Failed to update atomic swap bid quote asset");
+        throw runtime_error("Failed to update atomic swap ask quote asset");
     }
 }
 
-void ASwapBidQuoteAssetHelper::loadASwapQuoteAsset(
+void AtomicSwapAskQuoteAssetHelper::loadASwapQuoteAsset(
         StatementContext &prep, const std::function<void(
-                AtomicSwapBidQuoteAsset const &)> saleProcessor)
+                AtomicSwapAskQuoteAsset const &)> processor)
 {
-    AtomicSwapBidQuoteAsset quoteAsset;
+    AtomicSwapAskQuoteAsset quoteAsset;
     int64_t version;
 
     statement& st = prep.statement();
@@ -101,25 +100,25 @@ void ASwapBidQuoteAssetHelper::loadASwapQuoteAsset(
     {
         quoteAsset.ext.v(static_cast<LedgerVersion>(version));
 
-        saleProcessor(quoteAsset);
+        processor(quoteAsset);
         st.fetch();
     }
 }
 
-xdr::xvector<AtomicSwapBidQuoteAsset>
-ASwapBidQuoteAssetHelper::loadQuoteAssets(Database &db, uint64_t bidID)
+xdr::xvector<AtomicSwapAskQuoteAsset>
+AtomicSwapAskQuoteAssetHelper::loadQuoteAssets(Database &db, uint64_t askID)
 {
     string const sql = "SELECT quote_asset, price, version FROM atomic_swap_quote_asset "
-                       "WHERE bid_id = :id";
+                       "WHERE ask_id = :id";
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(bidID, "id"));
+    st.exchange(use(askID, "id"));
 
-    xdr::xvector<AtomicSwapBidQuoteAsset> result;
-    auto timer = db.getSelectTimer("atomic-swap-bid");
-    loadASwapQuoteAsset(prep, [&result](AtomicSwapBidQuoteAsset const& entry)
+    xdr::xvector<AtomicSwapAskQuoteAsset> result;
+    auto timer = db.getSelectTimer("atomic-swap-ask-quote-asset");
+    loadASwapQuoteAsset(prep, [&result](AtomicSwapAskQuoteAsset const& entry)
     {
-        result.push_back(entry);
+        result.emplace_back(entry);
     });
 
     return result;

@@ -56,7 +56,7 @@ public:
 #define CORE_REVISION "core_revision_was_not_provided"
 #endif
         json attributes = {
-            {"revision", CORE_REVISION},
+            {"release", CORE_REVISION},
         };
         mCrowClient->add_tags_context(attributes);
     }

@@ -1,20 +1,20 @@
 #pragma once
 
 #include "transactions/OperationFrame.h"
-#include "ledger/AtomicSwapBidFrame.h"
+#include "ledger/AtomicSwapAskFrame.h"
 
 namespace stellar
 {
 
-class CreateASwapRequestOpFrame : public OperationFrame
+class CreateAtomicSwapBidRequestOpFrame : public OperationFrame
 {
-    CreateAtomicSwapAskRequestResult&
+    CreateAtomicSwapBidRequestResult&
     innerResult()
     {
-        return mResult.tr().createAtomicSwapAskRequestResult();
+        return mResult.tr().createAtomicSwapBidRequestResult();
     }
 
-    CreateAtomicSwapAskRequestOp const& mCreateASwapRequest;
+    CreateAtomicSwapBidRequestOp const& mCreateASwapRequest;
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
@@ -30,31 +30,34 @@ class CreateASwapRequestOpFrame : public OperationFrame
         return lm.shouldUse(LedgerVersion::ATOMIC_SWAP_RETURNING);
     }
 
-    AtomicSwapBidFrame::pointer
-    loadAtomicSwapBid(CreateAtomicSwapAskRequest aSwapRequest, Database& db, LedgerDelta& delta);
+    AtomicSwapAskFrame::pointer
+    loadAtomicSwapAsk(CreateAtomicSwapBidRequest aSwapRequest, Database& db, LedgerDelta& delta);
 
     bool
-    checkAmounts(StorageHelper& storageHelper, AtomicSwapBidFrame::pointer const& bidFrame);
+    checkAmounts(StorageHelper& storageHelper, AtomicSwapAskFrame::pointer const& bidFrame);
 
     bool
     tryFillRequest(ReviewableRequestEntry& requestEntry, StorageHelper& storageHelper);
 
+    std::vector<std::string>
+    makeTasksKeyVector();
+
 public:
-    CreateASwapRequestOpFrame(Operation const& op, OperationResult& res,
+    CreateAtomicSwapBidRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
 
     bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
-    static CreateAtomicSwapAskRequestResultCode getInnerCode(OperationResult const& res)
+    static CreateAtomicSwapBidRequestResultCode getInnerCode(OperationResult const& res)
     {
-        return res.tr().createAtomicSwapAskRequestResult().code();
+        return res.tr().createAtomicSwapBidRequestResult().code();
     }
 
     std::string getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<CreateAtomicSwapAskRequestResultCode>::enum_name(
+        return xdr::xdr_traits<CreateAtomicSwapBidRequestResultCode>::enum_name(
                 innerResult().code());
     }
 };

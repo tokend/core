@@ -1,7 +1,7 @@
 #include <ledger/ReviewableRequestHelper.h>
-#include <transactions/atomic_swap/CreateASwapBidCreationRequestOpFrame.h>
+#include <transactions/atomic_swap/CreateAtomicSwapAskRequestOpFrame.h>
 #include <ledger/BalanceHelperLegacy.h>
-#include "CreateASwapBidCreationRequestTestHelper.h"
+#include "CreateASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace std;
@@ -12,20 +12,20 @@ namespace stellar
 namespace txtest
 {
 
-CreateASwapBidCreationRequestHelper::CreateASwapBidCreationRequestHelper(
+CreateASwapAskRequestHelper::CreateASwapAskRequestHelper(
         TestManager::pointer testManager) : TxHelper(testManager)
 {
 }
 
-CreateAtomicSwapBidRequest
-CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
-        BalanceID baseBalance, uint64_t amount, std::string creatorDetails,
-        std::vector<AtomicSwapBidQuoteAsset> quoteAssets)
+CreateAtomicSwapAskRequest
+CreateASwapAskRequestHelper::createASwapAskCreationRequest(
+        BalanceID baseBalance, uint64_t amount, std::string details,
+        std::vector<AtomicSwapAskQuoteAsset> quoteAssets)
 {
-    CreateAtomicSwapBidRequest request;
+    CreateAtomicSwapAskRequest request;
     request.baseBalance = baseBalance;
     request.amount = amount;
-    request.creatorDetails = creatorDetails;
+    request.creatorDetails = details;
     request.quoteAssets.clear();
     request.quoteAssets.append(&quoteAssets[0], quoteAssets.size());
 
@@ -33,21 +33,21 @@ CreateASwapBidCreationRequestHelper::createASwapBidCreationRequest(
 }
 
 TransactionFramePtr
-CreateASwapBidCreationRequestHelper::createCreateASwapBidCreationRequestTx(
-        Account &source, CreateAtomicSwapBidRequest request)
+CreateASwapAskRequestHelper::createCreateASwapAskCreationRequestTx(
+        Account &source, CreateAtomicSwapAskRequest request)
 {
     Operation baseOp;
-    baseOp.body.type(OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST);
-    auto& op = baseOp.body.createAtomicSwapBidRequestOp();
+    baseOp.body.type(OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST);
+    auto& op = baseOp.body.createAtomicSwapAskRequestOp();
     op.request = request;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);
 }
 
-CreateAtomicSwapBidRequestResult
-CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
-        Account &source, CreateAtomicSwapBidRequest request,
-        CreateAtomicSwapBidRequestResultCode expectedResult,
+CreateAtomicSwapAskRequestResult
+CreateASwapAskRequestHelper::applyCreateASwapAskCreationRequest(
+        Account &source, CreateAtomicSwapAskRequest request,
+        CreateAtomicSwapAskRequestResultCode expectedResult,
         OperationResultCode expectedOpResCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
@@ -60,7 +60,7 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
 
     auto baseBalanceBeforeTx = balanceHelper->loadBalance(request.baseBalance, db);
 
-    auto txFrame = createCreateASwapBidCreationRequestTx(source, request);
+    auto txFrame = createCreateASwapAskCreationRequestTx(source, request);
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
@@ -69,23 +69,23 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
 
     if (expectedOpResCode != OperationResultCode::opINNER)
     {
-        return CreateAtomicSwapBidRequestResult();
+        return CreateAtomicSwapAskRequestResult();
     }
 
-    auto actualResultCode = CreateASwapBidCreationRequestOpFrame::getInnerCode(opResult);
+    auto actualResultCode = CreateAtomicSwapAskRequestOpFrame::getInnerCode(opResult);
 
     REQUIRE(actualResultCode == expectedResult);
 
-    auto createBidCreationRequestResult =
-            opResult.tr().createAtomicSwapBidRequestResult();
+    auto createAskCreationRequestResult =
+            opResult.tr().createAtomicSwapAskRequestResult();
 
     auto reviewableRequestCountAfterTx =
             reviewableRequestHelper->countObjects(db.getSession());
 
-    if (expectedResult != CreateAtomicSwapBidRequestResultCode::SUCCESS)
+    if (expectedResult != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
-        return createBidCreationRequestResult;
+        return createAskCreationRequestResult;
     }
 
     auto baseBalanceAfterTx = balanceHelper->loadBalance(request.baseBalance, db);
@@ -98,7 +98,7 @@ CreateASwapBidCreationRequestHelper::applyCreateASwapBidCreationRequest(
                 baseBalanceBeforeTx->getLocked());
     }
 
-    return createBidCreationRequestResult;
+    return createAskCreationRequestResult;
 }
 
 }

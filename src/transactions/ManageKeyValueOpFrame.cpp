@@ -28,11 +28,14 @@ namespace stellar
     char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
     char const* ManageKeyValueOpFrame::limitsUpdateTasks = "limits_update_tasks";
-    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_tasks";
-    char const* ManageKeyValueOpFrame::atomicSwapBidTasks = "atomic_swap_bid_tasks";
+    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_bid_tasks";
+    char const* ManageKeyValueOpFrame::atomicSwapAskTasks = "atomic_swap_ask_tasks";
     char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
     char const* ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
     char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
+    char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
+    char const* ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
+    char const* ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_signer_role";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -57,9 +60,12 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {assetCreateTasks, KeyValueEntryType::UINT32},
         {assetUpdateTasks, KeyValueEntryType::UINT32},
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
-        {atomicSwapBidTasks, KeyValueEntryType::UINT32},
+        {atomicSwapAskTasks, KeyValueEntryType::UINT32},
         {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
         {createPollTasks, KeyValueEntryType::UINT32},
+        {createKycRecoveryTasks, KeyValueEntryType::UINT32},
+        {kycRecoverySignerRole, KeyValueEntryType::UINT64},
+        {kycRecoveryEnabled, KeyValueEntryType::UINT32},
     };
 }
 
@@ -204,9 +210,9 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         return string(issuanceTasksPrefix) + ":" + assetCode;
     }
 
-    longstring ManageKeyValueOpFrame::makeAtomicSwapTasksKey()
+    longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey(AssetCode assetCode)
     {
-        return atomicSwapTasksPrefix;
+        return string(atomicSwapTasksPrefix) + ":" + assetCode;
     }
 
     longstring ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(AssetCode assetCode)
@@ -271,9 +277,9 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         return amlAlertCreateTasks;
     }
 
-    longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey()
+    longstring ManageKeyValueOpFrame::makeAtomicSwapAskTasksKey()
     {
-        return atomicSwapBidTasks;
+        return atomicSwapAskTasks;
     }
 
     longstring
@@ -286,5 +292,23 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     ManageKeyValueOpFrame::makeCreatePollKey(std::string type)
     {
         return string(createPollTasks) + ":" + type;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()
+    {
+        return createKycRecoveryTasks;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeKYCRecoveryKey()
+    {
+        return kycRecoveryEnabled;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeKYCRecoverySignerRoleKey()
+    {
+        return kycRecoverySignerRole;
     }
 }

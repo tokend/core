@@ -96,7 +96,11 @@ ReviewChangeRoleRequestOpFrame::handleReject(Application &app, LedgerDelta &delt
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-    requestEntry.tasks.pendingTasks = mReviewRequest.reviewDetails.tasksToAdd;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REJECT_TASKS))
+    {
+        requestEntry.tasks.pendingTasks = mReviewRequest.reviewDetails.tasksToAdd;
+    }
     requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
 
     request->setRejectReason(mReviewRequest.reason);

@@ -85,11 +85,11 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.asset().assetType) &&
                    isStringMatches(requiredResource.asset().assetCode,
                                    actualResource.asset().assetCode);
-        case LedgerEntryType::ATOMIC_SWAP_BID:
-            return isTypeMatches(requiredResource.atomicSwapBid().assetType,
-                                 actualResource.atomicSwapBid().assetType) &&
-                   isStringMatches(requiredResource.atomicSwapBid().assetCode,
-                                   actualResource.atomicSwapBid().assetCode);
+        case LedgerEntryType::ATOMIC_SWAP_ASK:
+            return isTypeMatches(requiredResource.atomicSwapAsk().assetType,
+                                 actualResource.atomicSwapAsk().assetType) &&
+                   isStringMatches(requiredResource.atomicSwapAsk().assetCode,
+                                   actualResource.atomicSwapAsk().assetCode);
         case LedgerEntryType::REVIEWABLE_REQUEST:
         {
             if (!isTasksMatch(requiredResource.reviewableRequest().tasksToAdd,
@@ -238,6 +238,9 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.vote().permissionType) &&
                    isIDMatches(requiredResource.vote().pollID,
                                actualResource.vote().pollID);
+        case LedgerEntryType::INITIATE_KYC_RECOVERY:
+            return isIDMatches(requiredResource.initiateKYCRecovery().roleID,
+                                actualResource.initiateKYCRecovery().roleID);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:

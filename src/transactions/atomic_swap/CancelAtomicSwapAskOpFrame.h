@@ -5,14 +5,14 @@
 namespace stellar
 {
 
-class CancelASwapBidOpFrame : public OperationFrame
+class CancelAtomicSwapAskOpFrame : public OperationFrame
 {
 private:
-    CancelAtomicSwapBidOp const& mCancelASwapBid;
+    CancelAtomicSwapAskOp const& mCancelASwapBid;
 
-    CancelAtomicSwapBidResult& innerResult()
+    CancelAtomicSwapAskResult& innerResult()
     {
-        return mResult.tr().cancelAtomicSwapBidResult();
+        return mResult.tr().cancelAtomicSwapAskResult();
     }
 
     bool
@@ -30,7 +30,7 @@ private:
     }
 
 public:
-    CancelASwapBidOpFrame(Operation const &op, OperationResult &opRes,
+    CancelAtomicSwapAskOpFrame(Operation const &op, OperationResult &opRes,
                           TransactionFrame &parentTx);
 
     bool doApply(Application &app, LedgerDelta &delta,
@@ -38,14 +38,14 @@ public:
 
     bool doCheckValid(Application &app) override;
 
-    static CancelAtomicSwapBidResultCode getInnerCode(OperationResult& res)
+    static CancelAtomicSwapAskResultCode getInnerCode(OperationResult& res)
     {
-        return res.tr().cancelAtomicSwapBidResult().code();
+        return res.tr().cancelAtomicSwapAskResult().code();
     }
 
     std::string getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<CancelAtomicSwapBidResultCode>::enum_name(innerResult().code());
+        return xdr::xdr_traits<CancelAtomicSwapAskResultCode>::enum_name(innerResult().code());
     }
 
 };

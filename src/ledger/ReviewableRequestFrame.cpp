@@ -137,6 +137,20 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
     }
 }
 
+void ReviewableRequestFrame::ensureKYCRecoveryValid(
+    KYCRecoveryRequest const& request
+    )
+{
+    if(request.creatorDetails.empty()){
+        throw runtime_error("creator details are invalid");
+    }
+
+    if (request.signersData.size() == 0)
+    {
+        throw runtime_error("empty signer data");
+    }
+}
+
 void ReviewableRequestFrame::ensureSaleCreationValid(
     SaleCreationRequest const& request)
 {
@@ -182,8 +196,8 @@ void ReviewableRequestFrame::ensureInvoiceValid(InvoiceRequest const& request)
         throw runtime_error("amount can not be 0");
 }
 
-void ReviewableRequestFrame::ensureASwapBidCreationValid(
-        const CreateAtomicSwapBidRequest &request)
+void ReviewableRequestFrame::ensureASwapAskValid(
+        const CreateAtomicSwapAskRequest &request)
 {
     if (request.amount == 0)
     {
@@ -201,9 +215,9 @@ void ReviewableRequestFrame::ensureASwapBidCreationValid(
     }
 }
 
-void ReviewableRequestFrame::ensureASwapValid(const CreateAtomicSwapAskRequest &request)
+void ReviewableRequestFrame::ensureASwapBidValid(const CreateAtomicSwapBidRequest &request)
 {
-    if (request.bidID == 0)
+    if (request.askID == 0)
     {
         throw runtime_error("bid ID cannot be zero");
     }
@@ -275,12 +289,14 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return;
         case ReviewableRequestType::MANAGE_CONTRACT:
             return;
-        case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
-            return ensureASwapBidCreationValid(oe.body.createAtomicSwapBidRequest());
         case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
-            return ensureASwapValid(oe.body.createAtomicSwapAskRequest());
+            return ensureASwapAskValid(oe.body.createAtomicSwapAskRequest());
+        case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
+            return ensureASwapBidValid(oe.body.createAtomicSwapBidRequest());
         case ReviewableRequestType::CREATE_POLL:
             return ensurePollCreationValid(oe.body.createPollRequest());
+        case ReviewableRequestType::KYC_RECOVERY:
+            return ensureKYCRecoveryValid(oe.body.kycRecoveryRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

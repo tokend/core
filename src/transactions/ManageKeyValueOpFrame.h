@@ -73,8 +73,8 @@ public:
 
     static longstring makeMaxInvoiceDetailLengthKey();
 
-    static longstring makeAtomicSwapTasksKey();
-    static longstring makeAtomicSwapBidTasksKey();
+    static longstring makeAtomicSwapBidTasksKey(AssetCode assetCode);
+    static longstring makeAtomicSwapAskTasksKey();
     static longstring makePreIssuanceTasksKey(AssetCode assetCode);
     static longstring makeAssetCreateTasksKey();
 
@@ -96,6 +96,12 @@ public:
 
     static longstring makeCreatePollKey(std::string type);
 
+    static longstring makeCreateKYCRecoveryTasksKey();
+
+    static longstring makeKYCRecoveryKey();
+
+    static longstring makeKYCRecoverySignerRoleKey();
+
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
     static const char * issuanceTasksPrefix;
@@ -106,7 +112,7 @@ public:
     static const char * maxInvoicesCountPrefix;
     static const char * maxInvoiceDetailLengthPrefix;
     static const char * atomicSwapTasksPrefix;
-    static const char * atomicSwapBidTasks;
+    static const char * atomicSwapAskTasks;
     static const char * withdrawLowerBoundPrefix;
     static char const * preIssuanceTasksPrefix;
     static char const * assetCreateTasks;
@@ -119,5 +125,8 @@ public:
     static char const * limitsUpdateTasks;
     static char const * maxSaleRulesNumbersKey;
     static char const * createPollTasks;
+    static char const * createKycRecoveryTasks;
+    static char const * kycRecoveryEnabled;
+    static char const * kycRecoverySignerRole;
 };
 }

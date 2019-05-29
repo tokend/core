@@ -382,4 +382,37 @@ ReviewableRequestFrame::pointer
     EntryFrame::pointer ReviewableRequestHelper::storeLoad(LedgerKey const &key, Database &db) {
         return loadRequest(key.reviewableRequest().requestID, db);
     }
+
+ReviewableRequestFrame::pointer
+ReviewableRequestHelper::loadRequest(AccountID& rawRequestor, string64 reference, Database &db, LedgerDelta *delta) {
+
+    std::string sql = selectorReviewableRequest;
+    sql += +" WHERE requestor = :requestor AND reference = :reference";
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+    auto requestor = PubKeyUtils::toStrKey(rawRequestor);
+    st.exchange(use(requestor, "requestor"));
+    st.exchange(use(reference, "reference"));
+
+    ReviewableRequestFrame::pointer retReviewableRequest;
+    auto timer = db.getSelectTimer("reviewable_request");
+    loadRequests(prep, [&retReviewableRequest](LedgerEntry const& entry)
+    {
+        retReviewableRequest = make_shared<ReviewableRequestFrame>(entry);
+    });
+
+    if (!retReviewableRequest)
+    {
+        return nullptr;
+    }
+
+    if (delta)
+    {
+        delta->recordEntry(*retReviewableRequest);
+    }
+
+    auto pEntry = std::make_shared<LedgerEntry>(retReviewableRequest->mEntry);
+    putCachedEntry(retReviewableRequest->getKey(), pEntry, db, delta);
+    return retReviewableRequest;
+}
 }
