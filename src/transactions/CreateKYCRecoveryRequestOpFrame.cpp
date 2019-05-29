@@ -140,6 +140,12 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
     auto targetAccountID = mCreateKYCRecoveryRequestOp.targetAccount;
     auto& accountHelper = storageHelper.getAccountHelper();
 
+    if (!InitiateKYCRecoveryOpFrame::isRecoveryAllowed(storageHelper))
+    {
+        innerResult().code(CreateKYCRecoveryRequestResultCode::RECOVERY_NOT_ALLOWED);
+        return false;
+    }
+
     auto targetAccount = accountHelper.loadAccount(targetAccountID);
     if (!targetAccount)
     {
