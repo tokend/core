@@ -56,7 +56,7 @@ bool ManageAssetPairOpFrame::createNewAssetPair(Application& app, LedgerDelta& d
 {
 	Database& db = ledgerManager.getDatabase();
 	// already exists or reverced already exists
-	
+
 	auto assetPairHelper = AssetPairHelper::Instance();
 	if (assetPair || assetPairHelper->exists(db, mManageAssetPair.quote, mManageAssetPair.base))
 	{
@@ -163,7 +163,6 @@ ManageAssetPairOpFrame::doCheckValid(Application& app)
         innerResult().code(ManageAssetPairResultCode::INVALID_ASSET);
         return false;
     }
-
 	if (!isValidManageAssetPairAction(mManageAssetPair.action))
 	{
 		app.getMetrics().NewMeter({ "op-manage-asset-pair", "invalid",
@@ -172,6 +171,14 @@ ManageAssetPairOpFrame::doCheckValid(Application& app)
 		innerResult().code(ManageAssetPairResultCode::INVALID_ACTION);
 		return false;
 	}
+    if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_SAME_ASSET_PAIR) &&
+        mManageAssetPair.action == ManageAssetPairAction::CREATE &&
+        mManageAssetPair.base == mManageAssetPair.quote)
+    {
+        innerResult().code(ManageAssetPairResultCode::SAME_ASSET);
+        return false;
+    }
+
 
 	if (mManageAssetPair.physicalPrice < 0 ||
             (mManageAssetPair.action == ManageAssetPairAction::UPDATE_PRICE && mManageAssetPair.physicalPrice == 0))
