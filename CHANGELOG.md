@@ -1,24 +1,17 @@
 # Changelog
 
-## Unreleased
-
-### Added
-
-* `atomic_swap_bid_tasks` reserved key
-
-### Fixed
-
-* atomic swaps, enable them
-
 ### Added
 
 * `InitiateKYCRecoveryOpFrame`
 * `CreateKYCRecoveryRequestOpFrame`
 * `ReviewKYCRecoveryOpFrame`
+* `atomic_swap_bid_tasks` and `atomic_swap_ask_tasks` reserved keys
 
 ### Fixed
 
 * Tasks handling on `ChangeRoleRequest` reject
+* Ability to create asset pair for the same asset, i.e. `A/A`
+* atomic swaps, enable them
 
 ## 3.4.1
 
