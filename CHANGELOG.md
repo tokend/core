@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ### Added
 
 * `InitiateKYCRecoveryOpFrame`
