@@ -4,10 +4,12 @@
 
 #include "transactions/ManageAssetPairOpFrame.h"
 #include "transactions/dex/ManageOfferOpFrame.h"
+#include "transactions/managers/BalanceManager.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/StorageHelperImpl.h"
 
 #include "database/Database.h"
 
@@ -81,7 +83,9 @@ bool ManageAssetPairOpFrame::createNewAssetPair(Application& app, LedgerDelta& d
 		mManageAssetPair.physicalPrice, mManageAssetPair.physicalPriceCorrection,
 		mManageAssetPair.maxPriceStep, mManageAssetPair.policies);
 	EntryHelperProvider::storeAddEntry(delta, db, assetPair->mEntry);
-        AccountManager::loadOrCreateBalanceForAsset(app.getAdminID(), assetPair->getQuoteAsset(), db, delta);
+	StorageHelperImpl sh(db, &delta);
+	BalanceManager balanceManager(app, sh);
+	balanceManager.loadOrCreateBalanceForAdmin(assetPair->getQuoteAsset());
 
 	app.getMetrics().NewMeter({ "op-manage-asset-pair", "success", "apply" },
 		"operation").Mark();

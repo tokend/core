@@ -1,9 +1,11 @@
 #pragma once
 
-#include <transactions/OperationFrame.h>
+#include "transactions/OperationFrame.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
+
 class PaymentOpFrame : public OperationFrame
 {
     PaymentResult &innerResult() {
@@ -15,22 +17,25 @@ class PaymentOpFrame : public OperationFrame
     bool isDestinationFeeValid();
 
     BalanceFrame::pointer
-    tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
+    tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper, Application& app);
 
     bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db);
 
     Fee getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
                            PaymentFeeType feeType, Database &db, LedgerManager& lm);
 
-    bool processTransfer(AccountManager &accountManager, AccountFrame::pointer payer, BalanceFrame::pointer from, BalanceFrame::pointer to,
-                         uint64_t amount, uint64_t& universalAmount, Database &db);
+    bool
+    processTransfer(BalanceManager& balanceManager, AccountFrame::pointer payer,
+                    BalanceFrame::pointer from, BalanceFrame::pointer to,
+                    uint64_t amount, uint64_t& universalAmount, LedgerManager& lm);
 
-    bool processTransferFee(AccountManager &accountManager, AccountFrame::pointer payer,
-                            BalanceFrame::pointer candidateToCharge, Fee expectedFee, Fee actualFee,
-                            AccountID const &commissionID, Database &db, LedgerDelta &delta, bool ignoreStats,
-                            uint64_t& universalAmount);
+    bool
+    processTransferFee(BalanceManager& balanceManager, AccountFrame::pointer payer,
+                       BalanceFrame::pointer candidateToCharge, Fee expectedFee, Fee actualFee,
+                       uint64_t& universalAmount, LedgerManager& lm);
 
-    void setErrorCode(AccountManager::Result transferResult);
+    void
+    setErrorCode(BalanceManager::Result transferResult);
 
     bool isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID);
 

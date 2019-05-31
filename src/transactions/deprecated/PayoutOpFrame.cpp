@@ -5,6 +5,8 @@
 #include "ledger/StorageHelper.h"
 #include <ledger/FeeHelper.h>
 #include "main/Application.h"
+#include "transactions/managers/BalanceManager.h"
+#include "transactions/managers/StatisticsV2Processor.h"
 
 namespace stellar {
 using xdr::operator==;
@@ -56,7 +58,7 @@ PayoutOpFrame::isFeeAppropriate(Fee const& actualFee) const
 }
 
 bool
-PayoutOpFrame::tryProcessTransferFee(AccountManager& accountManager,
+PayoutOpFrame::tryProcessTransferFee(BalanceManager& accountManager,
                                      Database& db, uint64_t actualTotalAmount,
                                      BalanceFrame::pointer sourceBalance)
 {
@@ -333,7 +335,7 @@ PayoutOpFrame::doApply(Application &app, StorageHelper &storageHelper,
 
     Database& db = storageHelper.getDatabase();
     LedgerDelta* delta = storageHelper.getLedgerDelta();
-    AccountManager accountManager(app, db, *delta, ledgerManager);
+    BalanceManager accountManager(app, storageHelper);
     if (!tryProcessTransferFee(accountManager, db, actualTotalAmount,
                                sourceBalance))
         return false;

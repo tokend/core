@@ -263,4 +263,12 @@ ManageSaleOpFrame::removeSaleRules(StorageHelper& sh, LedgerKey const& saleKey)
 
         return true;
     }
+
+    void AccountManager::unlockPendingIssuanceForSale(SaleFrame::pointer const sale, LedgerDelta &delta, Database &db,
+                                                      LedgerManager &lm) {
+        auto baseAsset = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db, &delta);
+        const auto baseAmount = sale->getSaleEntry().maxAmountToBeSold;
+        baseAsset->mustUnlockIssuedAmount(baseAmount);
+        AssetHelperLegacy::Instance()->storeChange(delta, db, baseAsset->mEntry);
+    }
 }

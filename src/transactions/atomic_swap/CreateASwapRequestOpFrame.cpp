@@ -4,7 +4,7 @@
 #include <ledger/KeyValueHelper.h>
 #include "ledger/StorageHelper.h"
 #include <ledger/ReviewableRequestFrame.h>
-#include <transactions/FeesManager.h>
+#include <transactions/managers/FeeManager.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/AssetHelper.h>

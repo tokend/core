@@ -1,15 +1,12 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
-#include <transactions/manage_asset/ManageAssetHelper.h>
 #include "util/asio.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "main/Application.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -46,12 +43,16 @@ bool ReviewAssetCreationRequestOpFrame::handleApprove(Application & app, LedgerD
 	auto assetFrame = AssetFrame::create(assetCreationRequest, request->getRequestor());
 	EntryHelperProvider::storeAddEntry(delta, db, assetFrame->mEntry);
 
+	StorageHelperImpl storageHelper(db, &delta);
+	BalanceManager balanceManager(app, storageHelper);
+
     if (assetFrame->isPolicySet(AssetPolicy::BASE_ASSET))
     {
-        ManageAssetHelper::createSystemBalances(assetFrame->getCode(), app, delta);
-    } else
+		balanceManager.loadOrCreateBalanceForAdmin(assetFrame->getCode());
+    }
+    else
     {
-        AccountManager::loadOrCreateBalanceForAsset(assetFrame->getOwner(), assetFrame->getCode(), db, delta);
+        balanceManager.loadOrCreateBalance(assetFrame->getOwner(), assetFrame->getCode());
     }
 
 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());

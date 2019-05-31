@@ -6,9 +6,9 @@
 
 #include "ledger/OfferFrame.h"
 #include "ledger/AssetPairFrame.h"
+#include "ledger/BalanceFrame.h"
 #include <functional>
 #include <vector>
-#include "transactions/AccountManager.h"
 
 namespace stellar
 {
@@ -36,7 +36,6 @@ class OfferExchange
     uint64_t mOrderBookID;
     LedgerDelta& mDelta;
     LedgerManager& mLedgerManager;
-    AccountManager& mAccountManager;
     int64_t mNow;
 
     AssetPairFrame::pointer mAssetPair;
@@ -79,8 +78,7 @@ private:
                           BalanceFrame::pointer quoteBalance, Database& db);
 
 public:
-    OfferExchange(AccountManager& accountManager, LedgerDelta& delta,
-                  LedgerManager& ledgerManager,
+    OfferExchange(LedgerDelta& delta,LedgerManager& ledgerManager,
                   AssetPairFrame::pointer assetPair,
                   BalanceFrame::pointer commissionBalance, uint64_t orderBookID);
 

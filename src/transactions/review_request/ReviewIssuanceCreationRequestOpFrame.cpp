@@ -1,5 +1,7 @@
 #include <ledger/AccountHelperLegacy.h>
 #include <transactions/issuance/CreateIssuanceRequestOpFrame.h>
+#include "transactions/managers/StatisticsV2Processor.h"
+#include "transactions/managers/BalanceManager.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include "ledger/LedgerDeltaImpl.h"
@@ -8,7 +10,7 @@
 #include "main/Application.h"
 #include "xdrpp/printer.h"
 #include "ReviewRequestHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 
 namespace stellar
@@ -119,9 +121,10 @@ handleApprove(Application &app, LedgerDelta &delta,
 		throw std::runtime_error("Unexpected state. totalFee exceeds amount");
 	}
 
-	//transfer fee
-	AccountManager accountManager(app, db, delta, ledgerManager);
-	accountManager.transferFee(issuanceRequest.asset, totalFee);
+	//transfer
+	StorageHelperImpl storageHelper(db, &delta);
+	BalanceManager balanceManager(app, storageHelper);
+	balanceManager.transferFee(issuanceRequest.asset, totalFee);
 
 	const uint64_t destinationReceive = issuanceRequest.amount - totalFee;
 	const BalanceFrame::Result fundResult = receiver->tryFundAccount(destinationReceive);
@@ -175,20 +178,15 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
 }
 
 
-bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
-													   LedgerDelta& delta, LedgerManager& ledgerManager,
-													   BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
-													   uint64_t& universalAmount)
+bool
+ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db, LedgerDelta& delta,
+		LedgerManager& ledgerManager, BalanceFrame::pointer balanceFrame,
+		const uint64_t amountToAdd, uint64_t& universalAmount)
 {
 	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-	return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount);
-}
-bool ReviewIssuanceCreationRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                       const BalanceFrame::pointer balance, const uint64_t amountToAdd,
-                                                       uint64_t& universalAmount)
-{
-	const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
-														 universalAmount, mSourceAccount, balance, nullptr);
+
+	const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT,
+			amountToAdd, universalAmount, mSourceAccount, balanceFrame, nullptr);
 	switch (result)
 	{
 		case StatisticsV2Processor::SUCCESS:
@@ -224,7 +222,9 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		uint32_t allTasks = 0;
 
         uint64_t universalAmount = 0;
-        auto balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor, issuanceRequest.asset, db, localDelta);
+        StorageHelperImpl storageHelper(db, &localDelta);
+        BalanceManager balanceManager(app, storageHelper);
+        auto balanceFrame = balanceManager.loadOrCreateBalance(requestEntry.requestor, issuanceRequest.asset);
 
 		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
 		{

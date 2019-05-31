@@ -8,12 +8,13 @@
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "main/Application.h"
 #include "OfferManager.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -298,13 +299,13 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     innerResult().code(ManageOfferResultCode::SUCCESS);
 
-    const auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
-            app.getAdminID(), mAssetPair->getQuoteAsset(), db, delta);
+    StorageHelperImpl storageHelper(db, &delta);
+    BalanceManager balanceManager(app, storageHelper);
+    const auto commissionBalance = balanceManager.loadOrCreateBalanceForAdmin(
+            mAssetPair->getQuoteAsset());
 
-    AccountManager accountManager(app, db, delta, ledgerManager);
-
-    OfferExchange oe(accountManager, delta, ledgerManager, mAssetPair,
-        commissionBalance, mManageOffer.orderBookID);
+    OfferExchange oe(delta, ledgerManager, mAssetPair, commissionBalance,
+                     mManageOffer.orderBookID);
 
     int64_t price = offer.price;
     const OfferExchange::ConvertResult r = oe.convertWithOffers(offer,

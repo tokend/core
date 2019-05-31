@@ -10,6 +10,7 @@
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "transactions/ManageKeyValueOpFrame.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -117,8 +118,9 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     if (!checkMaxInvoiceDetailsLength(app, keyValueHelper))
         return false;
 
-    auto receiverBalanceID = AccountManager::loadOrCreateBalanceForAsset(getSourceID(),
-                                                                         invoiceCreationRequest.asset, db, *delta);
+    BalanceManager balanceManager(app, storageHelper);
+    auto receiverBalance = balanceManager.loadOrCreateBalance(getSourceID(), invoiceCreationRequest.asset);
+
     InvoiceRequest invoiceRequest;
     invoiceRequest.asset = invoiceCreationRequest.asset;
     invoiceRequest.amount = invoiceCreationRequest.amount;
@@ -126,7 +128,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     invoiceRequest.isApproved = false;
     invoiceRequest.contractID = invoiceCreationRequest.contractID;
     invoiceRequest.senderBalance = senderBalance->getBalanceID();
-    invoiceRequest.receiverBalance = receiverBalanceID;
+    invoiceRequest.receiverBalance = receiverBalance->getBalanceID();
     invoiceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
 
     ReviewableRequestEntry::_body_t body;
@@ -189,7 +191,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     innerResult().success().details.action(ManageInvoiceRequestAction::CREATE);
     innerResult().success().fulfilled = fulfilled;
     innerResult().success().details.response().requestID = request->getRequestID();
-    innerResult().success().details.response().receiverBalance = receiverBalanceID;
+    innerResult().success().details.response().receiverBalance = receiverBalance->getBalanceID();
     innerResult().success().details.response().senderBalance = senderBalance->getBalanceID();
 
     return true;

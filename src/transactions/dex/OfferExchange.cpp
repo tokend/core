@@ -13,13 +13,11 @@
 
 namespace stellar
 {
-OfferExchange::OfferExchange(AccountManager& accountManager, LedgerDelta& delta,
-                             LedgerManager& ledgerManager,
+OfferExchange::OfferExchange(LedgerDelta& delta, LedgerManager& ledgerManager,
                              AssetPairFrame::pointer assetPair,
                              BalanceFrame::pointer commissionBalance, uint64_t orderBookID)
     : mDelta(delta)
     , mLedgerManager(ledgerManager)
-    , mAccountManager(accountManager)
     , mAssetPair(assetPair)
     , mCommissionBalance(commissionBalance)
 {
