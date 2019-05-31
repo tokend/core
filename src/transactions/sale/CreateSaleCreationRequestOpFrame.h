@@ -74,7 +74,7 @@ public:
     bool isRequestValid(Application& app, StorageHelper& storageHelper,
             LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector();
 
 };
 }
