@@ -22,7 +22,7 @@ typedef std::unique_ptr<Application> appPtr;
 // try setting high threshold ones without the correct sigs
 // make sure it doesn't allow us to add signers when we don't have the
 // minbalance
-TEST_CASE("account_manager", "[dep_tx][account_manager]")
+TEST_CASE("account_manager", "[!hide][dep_tx][account_manager]")
 {
     using xdr::operator==;
 

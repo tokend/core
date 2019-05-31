@@ -465,14 +465,19 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
 
                             SECTION("Reject all aswap requests")
                             {
-                                reviewAswapRequestHelper.applyReviewRequestTx(
+                                auto res = reviewAswapRequestHelper.applyReviewRequestTx(
                                         root, firstBuyerASwapRequestID,
                                         ReviewRequestOpAction::PERMANENT_REJECT,
                                         R"({"reason":"invalid aswap request"})");
-                                reviewAswapRequestHelper.applyReviewRequestTx(
+
+                                REQUIRE(res.success().typeExt.atomicSwapBidExtended().bidOwnerBaseBalanceID == BalanceID());
+
+                                res = reviewAswapRequestHelper.applyReviewRequestTx(
                                         root, secondBuyerASwapRequestID,
                                         ReviewRequestOpAction::PERMANENT_REJECT,
                                         R"({"reason":"invalid aswap request"})");
+
+                                REQUIRE(res.success().typeExt.atomicSwapBidExtended().bidOwnerBaseBalanceID == BalanceID());
 
                                 SECTION("Bid is removed, cannot create atomic swap request")
                                 {

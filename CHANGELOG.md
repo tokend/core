@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+* unsuccessful test passing by (--test)
+* exception on drop and ban peer command
+
 ### Added
 
 * `InitiateKYCRecoveryOpFrame`
