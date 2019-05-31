@@ -5,14 +5,14 @@
 namespace stellar
 {
 
-class CancelASwapBidOpFrame : public OperationFrame
+class CancelAtomicSwapAskOpFrame : public OperationFrame
 {
 private:
-    CancelASwapBidOp const& mCancelASwapBid;
+    CancelAtomicSwapAskOp const& mCancelASwapBid;
 
-    CancelASwapBidResult& innerResult()
+    CancelAtomicSwapAskResult& innerResult()
     {
-        return mResult.tr().cancelASwapBidResult();
+        return mResult.tr().cancelAtomicSwapAskResult();
     }
 
     bool
@@ -24,13 +24,13 @@ private:
                              std::vector<SignerRequirement>& result) const override;
 
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
-        return false;
+        return lm.shouldUse(LedgerVersion::ATOMIC_SWAP_RETURNING);
     }
 
 public:
-    CancelASwapBidOpFrame(Operation const &op, OperationResult &opRes,
+    CancelAtomicSwapAskOpFrame(Operation const &op, OperationResult &opRes,
                           TransactionFrame &parentTx);
 
     bool doApply(Application &app, LedgerDelta &delta,
@@ -38,14 +38,14 @@ public:
 
     bool doCheckValid(Application &app) override;
 
-    static CancelASwapBidResultCode getInnerCode(OperationResult& res)
+    static CancelAtomicSwapAskResultCode getInnerCode(OperationResult& res)
     {
-        return res.tr().cancelASwapBidResult().code();
+        return res.tr().cancelAtomicSwapAskResult().code();
     }
 
     std::string getInnerResultCodeAsStr() override
     {
-        return xdr::xdr_traits<CancelASwapBidResultCode>::enum_name(innerResult().code());
+        return xdr::xdr_traits<CancelAtomicSwapAskResultCode>::enum_name(innerResult().code());
     }
 
 };

@@ -73,7 +73,8 @@ public:
 
     static longstring makeMaxInvoiceDetailLengthKey();
 
-    static longstring makeAtomicSwapTasksKey();
+    static longstring makeAtomicSwapBidTasksKey(AssetCode assetCode);
+    static longstring makeAtomicSwapAskTasksKey();
     static longstring makePreIssuanceTasksKey(AssetCode assetCode);
     static longstring makeAssetCreateTasksKey();
 
@@ -111,6 +112,7 @@ public:
     static const char * maxInvoicesCountPrefix;
     static const char * maxInvoiceDetailLengthPrefix;
     static const char * atomicSwapTasksPrefix;
+    static const char * atomicSwapAskTasks;
     static const char * withdrawLowerBoundPrefix;
     static char const * preIssuanceTasksPrefix;
     static char const * assetCreateTasks;

@@ -35,7 +35,7 @@
 #include <ledger/ContractHelper.h>
 #include "ledger/SaleHelper.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/AtomicSwapBidHelper.h"
+#include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/PollHelper.h"
 #include "ledger/AccountSpecificRuleHelper.h"
 #include "ledger/VoteHelper.h"
@@ -68,10 +68,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_VOTING = 15,
     ADD_PEER_TYPE = 16,
     ADD_SPECIFIC_RULES = 17,
-    FIX_HISTORY_UPGRADES = 18
+    FIX_HISTORY_UPGRADES = 18,
+    ENABLE_ATOMIC_SWAP = 19
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::FIX_HISTORY_UPGRADES;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ENABLE_ATOMIC_SWAP;
 
 static void
 setSerializable(soci::session& sess)
@@ -167,7 +168,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             ContractHelper::Instance()->addCustomerDetails(*this);
             break;
         case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
-            AtomicSwapBidHelper::Instance()->dropAll(*this);
+            AtomicSwapAskHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
@@ -186,6 +187,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case FIX_HISTORY_UPGRADES:
             Upgrades::createIfNotExists(*this);
+            break;
+        case ENABLE_ATOMIC_SWAP:
+            AtomicSwapAskHelper::Instance()->dropAll(*this);
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;

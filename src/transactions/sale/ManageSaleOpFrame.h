@@ -64,7 +64,7 @@ namespace stellar {
             return xdr::xdr_traits<ManageSaleResultCode>::enum_name(innerResult().code());
         }
 
-        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+        std::vector<std::string> makeTasksKeyVector();
 
     };
 }
