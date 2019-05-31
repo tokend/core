@@ -27,12 +27,10 @@ namespace stellar
     char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
     char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
     char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
-    char const* ManageKeyValueOpFrame::limitsUpdateTasks =
-        "limits_update_tasks";
-    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix =
-        "atomic_swap_tasks";
-    char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix =
-        "withdraw_lower_bound";
+    char const* ManageKeyValueOpFrame::limitsUpdateTasks = "limits_update_tasks";
+    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_bid_tasks";
+    char const* ManageKeyValueOpFrame::atomicSwapAskTasks = "atomic_swap_ask_tasks";
+    char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
     char const* ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
     char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
     char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
@@ -62,6 +60,8 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {assetCreateTasks, KeyValueEntryType::UINT32},
         {assetUpdateTasks, KeyValueEntryType::UINT32},
         {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
+        {atomicSwapAskTasks, KeyValueEntryType::UINT32},
+        {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
         {createPollTasks, KeyValueEntryType::UINT32},
         {createKycRecoveryTasks, KeyValueEntryType::UINT32},
         {kycRecoverySignerRole, KeyValueEntryType::UINT64},
@@ -210,9 +210,9 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
         return string(issuanceTasksPrefix) + ":" + assetCode;
     }
 
-    longstring ManageKeyValueOpFrame::makeAtomicSwapTasksKey()
+    longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey(AssetCode assetCode)
     {
-        return atomicSwapTasksPrefix;
+        return string(atomicSwapTasksPrefix) + ":" + assetCode;
     }
 
     longstring ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(AssetCode assetCode)
@@ -275,6 +275,11 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     longstring ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()
     {
         return amlAlertCreateTasks;
+    }
+
+    longstring ManageKeyValueOpFrame::makeAtomicSwapAskTasksKey()
+    {
+        return atomicSwapAskTasks;
     }
 
     longstring

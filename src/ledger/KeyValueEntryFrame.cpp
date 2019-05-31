@@ -34,7 +34,7 @@ namespace stellar{
             return mKeyEntry.value.ui32Value();
         }
 
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected database state. "
                 << "Expected " + mKeyEntry.key + " key to be UINT32 type, get:"
                 << xdr::xdr_traits<KeyValueEntryType>::enum_name(
                                 getKeyValueEntryType());

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ReviewRequestTestHelper.h"
-#include <ledger/AtomicSwapBidHelper.h>
+#include <ledger/AtomicSwapAskHelper.h>
 
 namespace stellar
 {
@@ -9,25 +9,25 @@ namespace stellar
 namespace txtest
 {
 
-class ASwapRequestReviewChecker : public ReviewChecker
+class ASwapBidRequestReviewChecker : public ReviewChecker
 {
 protected:
-    AtomicSwapBidFrame::pointer mBidBeforeTx;
-    BalanceFrame::pointer mBidOwnerBalanceBeforeTx;
+    AtomicSwapAskFrame::pointer mAskBeforeTx;
+    BalanceFrame::pointer mAskOwnerBalanceBeforeTx;
     BalanceFrame::pointer mPurchaserBalanceBeforeTx;
 
 public:
-    ASwapRequestReviewChecker(TestManager::pointer testManager, uint64_t requestID);
+    ASwapBidRequestReviewChecker(TestManager::pointer testManager, uint64_t requestID);
 
     void checkPermanentReject(ReviewableRequestFrame::pointer request) override;
 
     void checkApprove(ReviewableRequestFrame::pointer request) override;
 };
 
-class ReviewASwapRequestHelper : public ReviewRequestHelper
+class ReviewASwapBidRequestHelper : public ReviewRequestHelper
 {
 public:
-    explicit ReviewASwapRequestHelper(TestManager::pointer testManager);
+    explicit ReviewASwapBidRequestHelper(TestManager::pointer testManager);
 
     TransactionFramePtr createReviewRequestTx(Account& source,
                                               uint64_t requestID, Hash requestHash,

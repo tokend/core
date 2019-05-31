@@ -5,26 +5,26 @@
 namespace stellar
 {
 
-class AtomicSwapBidFrame : public EntryFrame
+class AtomicSwapAskFrame : public EntryFrame
 {
-    AtomicSwapBidEntry& mAtomicSwapBid;
+    AtomicSwapAskEntry& mAtomicSwapAsk;
 
-    AtomicSwapBidFrame(AtomicSwapBidFrame const& from);
+    AtomicSwapAskFrame(AtomicSwapAskFrame const& from);
 
 public:
-    typedef std::shared_ptr<AtomicSwapBidFrame> pointer;
+    typedef std::shared_ptr<AtomicSwapAskFrame> pointer;
 
-    AtomicSwapBidFrame();
+    AtomicSwapAskFrame();
 
-    explicit AtomicSwapBidFrame(LedgerEntry const& from);
+    explicit AtomicSwapAskFrame(LedgerEntry const& from);
 
-    AtomicSwapBidFrame& operator=(AtomicSwapBidFrame const& other);
+    AtomicSwapAskFrame& operator=(AtomicSwapAskFrame const& other);
 
     EntryFrame::pointer copy() const override;
 
-    AtomicSwapBidEntry& getAtomicSwapBid();
+    AtomicSwapAskEntry& getAtomicSwapAsk();
 
-    uint64_t getBidID() const;
+    uint64_t getID() const;
 
     AccountID getOwnerID() const;
 
@@ -52,7 +52,7 @@ public:
 
     bool isValid() const;
 
-    static bool isValid(AtomicSwapBidEntry const& atomicSwapBidEntry);
+    static bool isValid(AtomicSwapAskEntry const& atomicSwapBidEntry);
 };
 
 }

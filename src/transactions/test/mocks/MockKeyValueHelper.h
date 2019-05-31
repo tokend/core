@@ -9,7 +9,6 @@ class MockKeyValueHelper : public KeyValueHelper
 {
   public:
     MOCK_METHOD0(dropAll, void());
-    MOCK_CONST_METHOD0(getTableName, const std::string());
     MOCK_METHOD1(storeAdd, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeChange, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeDelete, void(LedgerKey const& key));
@@ -23,10 +22,8 @@ class MockKeyValueHelper : public KeyValueHelper
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
     MOCK_METHOD1(loadKeyValue, KeyValueEntryFrame::pointer(string256 valueKey));
-    MOCK_METHOD2(
-        loadKeyValues,
-        void(StatementContext& prep,
-             std::function<void(LedgerEntry const&)> keyValueProcessor));
+    MOCK_METHOD2(loadKeyValues, void(StatementContext& prep,
+            std::function<void(LedgerEntry const&)> keyValueProcessor));
     MOCK_METHOD3(loadTasks,
                  bool(uint32_t &allTasks, std::vector<std::string> keys, uint32_t *passedTasks));
 };

@@ -109,7 +109,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     ManageSaleOpFrame::createUpdateSaleDetailsRequest(Application &app, StorageHelper &storageHelper,
                                                       LedgerManager &ledgerManager) {
         auto& db = storageHelper.getDatabase();
-        auto delta = storageHelper.getLedgerDelta();
+        LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
         auto reference = getUpdateSaleDetailsRequestReference();
         auto const referencePtr = xdr::pointer<string64>(new string64(reference));
@@ -119,7 +119,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
             return false;
         }
 
-        auto request = ReviewableRequestFrame::createNew(*delta, getSourceID(),
+        auto request = ReviewableRequestFrame::createNew(delta, getSourceID(),
                                                          app.getAdminID(),
                                                          referencePtr, ledgerManager.getCloseTime());
         auto &requestEntry = request->getRequestEntry();
@@ -130,23 +130,24 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 
         request->recalculateHashRejectReason();
 
-        requestHelper->storeAdd(*delta, db, request->mEntry);
+        requestHelper->storeAdd(delta, db, request->mEntry);
 
-
+        KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks, mManageSaleOp.data.updateSaleDetailsData().allTasks))
+        if (!keyValueHelper.loadTasks(allTasks, makeTasksKeyVector(),
+                                      mManageSaleOp.data.updateSaleDetailsData().allTasks.get()))
         {
             innerResult().code(ManageSaleResultCode::SALE_UPDATE_DETAILS_TASKS_NOT_FOUND);
             return false;
         }
 
         request->setTasks(allTasks);
-        EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+        EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
 
         bool fulfilled = false;
 
         if (allTasks == 0) {
-            auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+            auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, delta, request);
             if (result.code() != ReviewRequestResultCode::SUCCESS) {
                 throw std::runtime_error("Failed to review manage sale request");
             }
@@ -243,12 +244,15 @@ ManageSaleOpFrame::removeSaleRules(StorageHelper& sh, LedgerKey const& saleKey)
         return true;
     }
 
-    std::vector<longstring> ManageSaleOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
-        return std::vector<longstring> {
-                ManageKeyValueOpFrame::makeSaleUpdateTasksKey(xdr::xdr_to_string(mManageSaleOp.saleID)),
-                ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*")
-        };
-    }
+std::vector<std::string>
+ManageSaleOpFrame::makeTasksKeyVector()
+{
+    return
+    {
+        ManageKeyValueOpFrame::makeSaleUpdateTasksKey(std::to_string(mManageSaleOp.saleID)),
+        ManageKeyValueOpFrame::makeSaleUpdateTasksKey("*")
+    };
+}
 
     bool ManageSaleOpFrame::ensureSaleUpdateDataValid(ReviewableRequestFrame::pointer request)
     {

@@ -8,7 +8,7 @@ namespace stellar
 class ManageInvoiceRequestOpFrame : public OperationFrame
 {
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
         return false;
     }
@@ -57,8 +57,6 @@ public:
     {
         return res.tr().manageInvoiceRequestResult().code();
     }
-
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
 };
 }

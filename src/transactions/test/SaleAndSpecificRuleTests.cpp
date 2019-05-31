@@ -199,8 +199,8 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
 
         SECTION("Entry type not supported")
         {
-            LedgerKey key(LedgerEntryType::ATOMIC_SWAP_BID);
-            key.atomicSwapBid().bidID = 123;
+            LedgerKey key(LedgerEntryType::ATOMIC_SWAP_ASK);
+            key.atomicSwapAsk().id = 123;
 
             auto createRuleResult = specificRuleTestHelper.applyTx(root, key, true, nullptr,
                     ManageAccountSpecificRuleResultCode::ENTRY_TYPE_NOT_SUPPORTED, TransactionResultCode::txFAILED);
