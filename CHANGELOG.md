@@ -12,6 +12,7 @@
 ### Fixed
 
 * Tasks handling on `ChangeRoleRequest` reject
+* Ability to set fixed fee for `INVEST_FEE` type
 * Ability to create asset pair for the same asset, i.e. `A/A`
 * atomic swaps, enable them
 
