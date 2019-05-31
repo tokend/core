@@ -10,8 +10,6 @@ add_definitions(
         -DBUILD_TESTS=1
     )
 
-set(TEST)
-
 set(DEVELOPER_EDITION ${DEVELOPER_EDITION})
 if(DEFINED DEVELOPER_EDITION)
     add_definitions(-DDEVELOPER_EDITION=1)

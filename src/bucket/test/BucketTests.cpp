@@ -456,7 +456,7 @@ TEST_CASE("bucket tombstones expire at bottom level", "[bucket][tombstones]")
     REQUIRE(pair2.second == 0);
 }
 
-/*TEST_CASE("file backed buckets", "[bucket][bucketbench]")
+TEST_CASE("file backed buckets", "[!hide][bucket][bucketbench]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -488,9 +488,9 @@ TEST_CASE("bucket tombstones expire at bottom level", "[bucket][tombstones]")
         }
     }
     CLOG(DEBUG, "Bucket") << "Spill file size: " << fileSize(b1->getFilename());
-}*/
+}
 
-TEST_CASE("merging bucket entries", "[bucket]")
+TEST_CASE("merging bucket entries", "[!hide][bucket]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -515,21 +515,6 @@ TEST_CASE("merging bucket entries", "[bucket]")
         CHECK(countEntries(b1) == 1);
     }
 
-    /*SECTION("dead trustline entry annihilates live trustline entry")
-    {
-        liveEntry.data.type(TRUSTLINE);
-        liveEntry.data.trustLine() =
-            LedgerTestUtils::generateValidTrustLineEntry(10);
-        deadEntry.type(TRUSTLINE);
-        deadEntry.trustLine().accountID = liveEntry.data.trustLine().accountID;
-        deadEntry.trustLine().asset = liveEntry.data.trustLine().asset;
-        std::vector<LedgerEntry> live{liveEntry};
-        std::vector<LedgerKey> dead{deadEntry};
-        std::shared_ptr<Bucket> b1 =
-            Bucket::fresh(app->getBucketManager(), live, dead);
-        CHECK(countEntries(b1) == 1);
-    }*/
-
     /*SECTION("dead offer entry annihilates live offer entry")
     {
         liveEntry.data.type(OFFER);
@@ -544,7 +529,7 @@ TEST_CASE("merging bucket entries", "[bucket]")
         CHECK(countEntries(b1) == 1);
     }*/
 
-    /*SECTION("random dead entries annihilates live entries")
+    SECTION("random dead entries annihilates live entries")
     {
         std::vector<LedgerEntry> live(100);
         std::vector<LedgerKey> dead;
@@ -563,9 +548,9 @@ TEST_CASE("merging bucket entries", "[bucket]")
         CLOG(DEBUG, "Bucket")
             << "post-merge live count: " << liveCount << " of " << live.size();
         CHECK(liveCount == live.size() - dead.size());
-    }*/
+    }
 
-    /*SECTION("random live entries overwrite live entries in any order")
+    SECTION("random live entries overwrite live entries in any order")
     {
         std::vector<LedgerEntry> live(100);
         std::vector<LedgerKey> dead;
@@ -590,7 +575,7 @@ TEST_CASE("merging bucket entries", "[bucket]")
         std::shared_ptr<Bucket> b3 =
             Bucket::merge(app->getBucketManager(), b1, b2);
         CHECK(countEntries(b3) == liveCount);
-    }*/
+    }
 }
 
 static void
@@ -634,8 +619,7 @@ clearFutures(Application::pointer app, BucketList& bl)
     }
 }
 
-/*
-TEST_CASE("bucketmanager ownership", "[bucket]")
+TEST_CASE("bucketmanager ownership", "[!hide][bucket]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -701,9 +685,8 @@ TEST_CASE("bucketmanager ownership", "[bucket]")
     app->getBucketManager().forgetUnreferencedBuckets();
     CHECK(!fs::exists(filename));
 }
-*/
 
-/*TEST_CASE("single entry bubbling up", "[bucket][bucketbubble]")
+TEST_CASE("single entry bubbling up", "[!hide][bucket][bucketbubble]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -760,7 +743,7 @@ TEST_CASE("bucketmanager ownership", "[bucket]")
             << "Test caught std::future_error " << e.code() << ": " << e.what();
         REQUIRE(false);
     }
-}*/
+}
 
 static Hash
 closeLedger(Application& app)
@@ -1005,7 +988,7 @@ TEST_CASE("BucketList sizes at ledger 1", "[bucket][count]")
     }
 }
 
-/*TEST_CASE("BucketList check bucket sizes", "[bucket][count]")
+TEST_CASE("BucketList check bucket sizes", "[!hide][bucket][count]")
 {
     VirtualClock clock;
     Config cfg(getTestConfig());
@@ -1028,7 +1011,7 @@ TEST_CASE("BucketList sizes at ledger 1", "[bucket][count]")
             checkBucketSizeAndBounds(bl, ledgerSeq, level, false);
         }
     }
-}*/
+}
 
 TEST_CASE("bucket apply", "[bucket]")
 {

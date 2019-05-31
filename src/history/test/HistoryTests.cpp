@@ -243,7 +243,7 @@ TEST_CASE("History publish queueing", "[!hide][history][historydelay][historycat
 }
 
 TEST_CASE("History bucket verification",
-          "[history][bucketverification][batching]")
+          "[!hide][history][bucketverification][batching]")
 {
     /* Tests bucket verification stage of catchup. Assumes ledger chain
      * verification was successful. **/
@@ -279,7 +279,7 @@ TEST_CASE("History bucket verification",
         }
     };
 
-    /*SECTION("successful download and verify")
+    SECTION("successful download and verify")
     {
         hashes.push_back(bucketGenerator.generateBucket(
             TestBucketState::CONTENTS_AND_HASH_OK));
@@ -288,7 +288,7 @@ TEST_CASE("History bucket verification",
         auto verify =
             wm.executeWork<DownloadBucketsWork>(mBuckets, hashes, *tmpDir);
         REQUIRE(verify->getState() == Work::WORK_SUCCESS);
-    }*/
+    }
     SECTION("download fails file not found")
     {
         hashes.push_back(
@@ -299,7 +299,7 @@ TEST_CASE("History bucket verification",
         REQUIRE(verify->getState() == Work::WORK_FAILURE_RAISE);
         downloadStatusCheck(*verify, false);
     }
-    /*SECTION("download succeeds but unzip fails")
+    SECTION("download succeeds but unzip fails")
     {
         hashes.push_back(bucketGenerator.generateBucket(
             TestBucketState::CORRUPTED_ZIPPED_FILE));
@@ -308,8 +308,8 @@ TEST_CASE("History bucket verification",
             wm.executeWork<DownloadBucketsWork>(mBuckets, hashes, *tmpDir);
         REQUIRE(verify->getState() == Work::WORK_FAILURE_RAISE);
         downloadStatusCheck(*verify, false);
-    }*/
-    /*SECTION("verify fails hash mismatch")
+    }
+    SECTION("verify fails hash mismatch")
     {
         hashes.push_back(
             bucketGenerator.generateBucket(TestBucketState::HASH_MISMATCH));
@@ -318,7 +318,7 @@ TEST_CASE("History bucket verification",
             wm.executeWork<DownloadBucketsWork>(mBuckets, hashes, *tmpDir);
         REQUIRE(verify->getState() == Work::WORK_FAILURE_RAISE);
         downloadStatusCheck(*verify, true);
-    }*/
+    }
     SECTION("no hashes to verify")
     {
         // Ensure proper behavior when no hashes are passed in
