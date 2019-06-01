@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include <xdr/Stellar-types.h>
+#include <xdr/types.h>
 
 namespace stellar
 {

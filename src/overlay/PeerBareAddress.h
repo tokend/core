@@ -5,7 +5,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "main/Config.h"
-#include "xdr/Stellar-overlay.h"
+#include "xdr/overlay.h"
 
 namespace stellar
 {

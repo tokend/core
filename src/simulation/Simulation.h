@@ -14,7 +14,7 @@
 #include "simulation/LoadGenerator.h"
 #include "util/Timer.h"
 #include "util/XDROperators.h"
-#include "xdr/Stellar-types.h"
+#include "xdr/types.h"
 
 #define SIMULATION_CREATE_NODE(N) \
 const Hash v##N##VSeed = sha256("NODE_SEED_" #N); \
