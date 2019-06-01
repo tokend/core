@@ -6,7 +6,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "crypto/ByteSliceHasher.h"
-#include "xdr/Tokend-ledger.h"
+#include "xdr/ledger.h"
 #include <functional>
 
 // implements a default hasher for "LedgerKey"

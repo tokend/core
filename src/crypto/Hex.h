@@ -5,7 +5,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "crypto/ByteSlice.h"
-#include "xdr/Tokend-types.h"
+#include "xdr/types.h"
 
 namespace stellar
 {

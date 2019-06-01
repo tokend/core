@@ -8,7 +8,7 @@
 #include "herder/Herder.h"
 #include "main/Application.h"
 #include "test/TestAccount.h"
-#include "xdr/Tokend-types.h"
+#include "xdr/types.h"
 #include <util/format.h>
 #include <vector>
 

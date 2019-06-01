@@ -5,7 +5,7 @@
 #pragma once
 
 #include "work/Work.h"
-#include "xdr/Tokend-types.h"
+#include "xdr/types.h"
 
 namespace medida
 {

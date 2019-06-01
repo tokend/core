@@ -13,8 +13,8 @@
 #include "main/Application.h"
 #include "scp/SCP.h"
 #include "util/Logging.h"
-#include "xdr/Tokend-SCP.h"
-#include "xdr/Tokend-ledger-entries.h"
+#include "xdr/SCP.h"
+#include "xdr/ledger-entries.h"
 #include <medida/metrics_registry.h>
 #include <util/format.h>
 #include <xdrpp/marshal.h>

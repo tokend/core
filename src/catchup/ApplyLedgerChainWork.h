@@ -8,8 +8,8 @@
 #include "ledger/LedgerRange.h"
 #include "util/XDRStream.h"
 #include "work/Work.h"
-#include "xdr/Tokend-SCP.h"
-#include "xdr/Tokend-ledger.h"
+#include "xdr/SCP.h"
+#include "xdr/ledger.h"
 
 namespace medida
 {

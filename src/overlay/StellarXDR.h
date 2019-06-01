@@ -1,9 +1,9 @@
 #pragma once
-#include "xdr/Tokend-ledger-entries.h"
-#include "xdr/Tokend-ledger.h"
-#include "xdr/Tokend-overlay.h"
-#include "xdr/Tokend-transaction.h"
-#include "xdr/Tokend-types.h"
+#include "xdr/ledger-entries.h"
+#include "xdr/ledger.h"
+#include "xdr/overlay.h"
+#include "xdr/transaction.h"
+#include "xdr/types.h"
 
 namespace stellar
 {

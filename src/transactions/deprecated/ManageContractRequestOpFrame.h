@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xdr/Tokend-operation-manage-invoice-request.h>
+#include <xdr/operation-manage-invoice-request.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar
@@ -8,7 +8,7 @@ namespace stellar
 class ManageContractRequestOpFrame : public OperationFrame
 {
     bool
-    isSupported() const override
+    isSupported(LedgerManager& lm) const override
     {
         return false;
     }
@@ -56,7 +56,5 @@ public:
     {
         return res.tr().manageContractRequestResult().code();
     }
-
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 };
 }

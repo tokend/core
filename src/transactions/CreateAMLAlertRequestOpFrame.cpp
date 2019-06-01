@@ -3,7 +3,7 @@
 #include "transactions/CreateAMLAlertRequestOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "review_request/ReviewRequestHelper.h"
@@ -108,8 +108,10 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     ReviewableRequestHelper::Instance()->storeAdd(*delta, db,
                                                   request->mEntry);
 
+    KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks, mCreateAMLAlertRequest.allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()},
+                   mCreateAMLAlertRequest.allTasks.get()))
     {
         innerResult().code(CreateAMLAlertRequestResultCode::AML_ALERT_TASKS_NOT_FOUND);
         return false;
@@ -150,12 +152,6 @@ bool CreateAMLAlertRequestOpFrame::doCheckValid(Application& app)
     }
 
     return true;
-}
-
-std::vector<longstring> CreateAMLAlertRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
-    return std::vector<longstring> {
-        ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey(),
-    };
 }
 
 void

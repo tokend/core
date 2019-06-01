@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xdr/Tokend-ledger-entries-contract.h>
+#include <xdr/ledger-entries-contract.h>
 #include "ledger/EntryFrame.h"
 
 namespace  soci

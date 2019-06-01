@@ -4,7 +4,7 @@
 
 #include "herder/HerderUtils.h"
 #include "scp/Slot.h"
-#include "xdr/Tokend-ledger.h"
+#include "xdr/ledger.h"
 #include <algorithm>
 #include <xdrpp/marshal.h>
 

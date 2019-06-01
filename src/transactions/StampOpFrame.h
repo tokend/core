@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xdr/Tokend-operation-stamp.h>
+#include <xdr/operation-stamp.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar

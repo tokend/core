@@ -7,7 +7,7 @@
 #include "herder/Herder.h"
 #include "herder/TxSetFrame.h"
 #include "scp/SCPDriver.h"
-#include "xdr/Tokend-ledger.h"
+#include "xdr/ledger.h"
 
 namespace medida
 {

@@ -1,7 +1,7 @@
 #ifndef STELLAR_MANAGEASSETHELPER_H
 #define STELLAR_MANAGEASSETHELPER_H
 
-#include <xdr/Tokend-types.h>
+#include <xdr/types.h>
 #include <main/Application.h>
 #include <ledger/LedgerDelta.h>
 #include <ledger/BalanceFrame.h>

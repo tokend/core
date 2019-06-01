@@ -8,8 +8,8 @@
 #include "scp/QuorumSetUtils.h"
 #include "util/Logging.h"
 #include "util/XDROperators.h"
-#include "xdr/Tokend-SCP.h"
-#include "xdr/Tokend-types.h"
+#include "xdr/SCP.h"
+#include "xdr/types.h"
 
 #include <algorithm>
 #include <set>

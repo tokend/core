@@ -15,7 +15,7 @@ title: Ledger
 
 - **Ledger header**: The ledger's header contains meta data about the ledger,
   including the hash of the previous ledger (thus recording the chain) and its
-  own hash. (See [`src/xdr/Tokend-ledger.x`](/src/xdr/Tokend-ledger.x))
+  own hash. (See [`src/xdr/ledger.x`](/src/xdr/ledger.x))
 
 
 `Stellar-core` maintains the content of the latest ledger and of the ledger

@@ -207,7 +207,7 @@ TEST_CASE("resilience tests", "[resilience][simulation][long][!hide]")
 
     auto confGen = [](int configNum) -> Config {
         // we have to have persistent nodes as we want to simulate a restart
-        auto c = getTestConfig(configNum, Config::TESTDB_ON_DISK_SQLITE);
+        auto c = getTestConfig(configNum, Config::TESTDB_POSTGRESQL);
         return c;
     };
 

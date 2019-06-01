@@ -6,8 +6,8 @@
 
 #include "crypto/SecretKey.h"
 #include "transactions/TransactionFrame.h"
-#include "xdr/Tokend-ledger-entries.h"
-#include "xdr/Tokend-transaction.h"
+#include "xdr/ledger-entries.h"
+#include "xdr/transaction.h"
 
 namespace stellar
 {
