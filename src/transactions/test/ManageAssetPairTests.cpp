@@ -301,7 +301,7 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
                 offerTestHelper.applyManageOffer(root, 0,
                                                  baseBalance->getBalanceID(),
                                                  quoteBalance->getBalanceID(),
-                                                 offerAmount / 2, 5 * ONE, false, 0);
+                                                 offerAmount / 2, 12, false, 0);
 
                 assetPairTestHelper.applyRemoveAssetPairTx(root, base, quote, nullptr,
                                                            RemoveAssetPairResultCode::HAS_ACTIVE_OFFERS);
