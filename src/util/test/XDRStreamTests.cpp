@@ -9,7 +9,7 @@
 
 using namespace stellar;
 
-TEST_CASE("XDROutputFileStream fail modes", "[xdrstream]")
+TEST_CASE("XDROutputFileStream fail modes", "[!hide][xdrstream]")
 {
     XDROutputFileStream out;
     auto filename = "someFile";

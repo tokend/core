@@ -200,11 +200,11 @@ struct LedgerEntryIdCmp
             auto const& bcon = b.contract();
             return acon.contractID < bcon.contractID;
         }
-        case LedgerEntryType::ATOMIC_SWAP_BID:
+            case LedgerEntryType::ATOMIC_SWAP_ASK:
         {
-            auto const& abid = a.atomicSwapBid();
-            auto const& bbid = b.atomicSwapBid();
-            return abid.bidID < bbid.bidID;
+            auto const& abid = a.atomicSwapAsk();
+            auto const& bbid = b.atomicSwapAsk();
+            return abid.id < bbid.id;
         }
         case LedgerEntryType::ACCOUNT_ROLE:
         {

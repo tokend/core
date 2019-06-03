@@ -158,6 +158,15 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
                                                            .setResultCode(CreateKYCRecoveryRequestResultCode::TARGET_ACCOUNT_NOT_FOUND)
                                                            .setTxResultCode(TransactionResultCode::txFAILED));
         }
+        SECTION("Not allowed again")
+        {
+            manageKVHelper.setKey(ManageKeyValueOpFrame::makeKYCRecoveryKey());
+            manageKVHelper.doApply(testManager->getApp(), ManageKVAction::REMOVE, true);
+
+            createKycRecoveryRequestTestHelper.applyTx(createKYCRecoveryReqBuilder
+                                                           .setResultCode(CreateKYCRecoveryRequestResultCode::RECOVERY_NOT_ALLOWED)
+                                                           .setTxResultCode(TransactionResultCode::txFAILED));
+        }
 
         SECTION("Autoapprove")
         {

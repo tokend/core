@@ -9,6 +9,7 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
@@ -217,8 +218,9 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &st
         return false;
     }
 
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks, nullptr))
+    if (!keyValueHelper.loadTasks(allTasks, {makeTasksKeyVector(assetFrame->getCode())}))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::WITHDRAWAL_TASKS_NOT_FOUND);
         return false;
@@ -330,15 +332,12 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
     return lowerBound.get()->getKeyValue().value.ui64Value() <= request.amount;
 }
 
-std::vector<longstring>
-CreateWithdrawalRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+std::vector<std::string>
+CreateWithdrawalRequestOpFrame::makeTasksKeyVector(AssetCode const& code)
 {
-    auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
-    if (!balanceFrame){
-        throw std::runtime_error("Withdrawer balance not found");
-    }
-    return std::vector<longstring> {
-        ManageKeyValueOpFrame::makeWithdrawalTasksKey(balanceFrame->getAsset()),
+    return
+    {
+        ManageKeyValueOpFrame::makeWithdrawalTasksKey(code),
         ManageKeyValueOpFrame::makeWithdrawalTasksKey("*")
     };
 }

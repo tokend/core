@@ -1,4 +1,4 @@
-#include "ReviewAswapRequestTestHelper.h"
+#include "ReviewASwapBidRequestTestHelper.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include "test/test_marshaler.h"
@@ -9,23 +9,23 @@ namespace stellar
 namespace txtest
 {
 
-ASwapRequestReviewChecker::ASwapRequestReviewChecker(TestManager::pointer testManager,
+ASwapBidRequestReviewChecker::ASwapBidRequestReviewChecker(TestManager::pointer testManager,
                                                      uint64_t requestID)
         : ReviewChecker(testManager)
 {
     auto& db = mTestManager->getDB();
     auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
-    auto& aSwapRequest = request->getRequestEntry().body.aSwapRequest();
-    mBidBeforeTx = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            aSwapRequest.bidID, db);
-    mBidOwnerBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(
-            mBidBeforeTx->getOwnerID(), mBidBeforeTx->getBaseAsset(), db, nullptr);
+    auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
+    mAskBeforeTx = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
+            aSwapRequest.askID, db);
+    mAskOwnerBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(
+            mAskBeforeTx->getOwnerID(), mAskBeforeTx->getBaseAsset(), db, nullptr);
     mPurchaserBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(
-            request->getRequestor(), mBidBeforeTx->getBaseAsset(), db, nullptr);
+            request->getRequestor(), mAskBeforeTx->getBaseAsset(), db, nullptr);
 }
 
 void
-ASwapRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer request)
+ASwapBidRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer request)
 {
     auto& db = mTestManager->getDB();
 
@@ -34,31 +34,31 @@ ASwapRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer 
 
     REQUIRE(requestAfterTx == nullptr);
 
-    auto& aSwapRequest = request->getRequestEntry().body.aSwapRequest();
+    auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
 
-    auto bidAfterTx = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            aSwapRequest.bidID, db);
+    auto bidAfterTx = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
+            aSwapRequest.askID, db);
 
     if (bidAfterTx != nullptr)
     {
         REQUIRE(bidAfterTx->getAmount() - aSwapRequest.baseAmount ==
-                mBidBeforeTx->getAmount());
-        REQUIRE(mBidBeforeTx->getLockedAmount() - aSwapRequest.baseAmount ==
+                mAskBeforeTx->getAmount());
+        REQUIRE(mAskBeforeTx->getLockedAmount() - aSwapRequest.baseAmount ==
                 bidAfterTx->getLockedAmount());
         return;
     }
 
     auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
-            mBidBeforeTx->getOwnerID(), mBidBeforeTx->getBaseAsset(), db);
+            mAskBeforeTx->getOwnerID(), mAskBeforeTx->getBaseAsset(), db);
 
-    REQUIRE(baseBalanceAfterTx->getAmount() - mBidBeforeTx->getTotalAmount() ==
-            mBidOwnerBalanceBeforeTx->getAmount());
-    REQUIRE(mBidOwnerBalanceBeforeTx->getLocked() - mBidBeforeTx->getTotalAmount() ==
+    REQUIRE(baseBalanceAfterTx->getAmount() - mAskBeforeTx->getTotalAmount() ==
+            mAskOwnerBalanceBeforeTx->getAmount());
+    REQUIRE(mAskOwnerBalanceBeforeTx->getLocked() - mAskBeforeTx->getTotalAmount() ==
             baseBalanceAfterTx->getLocked());
 }
 
 void
-ASwapRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
+ASwapBidRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
 {
     auto& db = mTestManager->getDB();
 
@@ -70,9 +70,9 @@ ASwapRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
     auto balanceHelper = BalanceHelperLegacy::Instance();
 
     auto purchaserBalanceAfterTx = balanceHelper->loadBalance(
-            request->getRequestor(), mBidBeforeTx->getBaseAsset(), db, nullptr);
+            request->getRequestor(), mAskBeforeTx->getBaseAsset(), db, nullptr);
 
-    auto& aSwapRequest = request->getRequestEntry().body.aSwapRequest();
+    auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
 
     if (mPurchaserBalanceBeforeTx != nullptr)
     {
@@ -84,30 +84,30 @@ ASwapRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
         REQUIRE(purchaserBalanceAfterTx->getAmount() == aSwapRequest.baseAmount);
     }
 
-    auto bidAfterTx = AtomicSwapBidHelper::Instance()->loadAtomicSwapBid(
-            mBidBeforeTx->getBidID(), db);
+    auto bidAfterTx = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
+            mAskBeforeTx->getID(), db);
 
     auto baseBalanceAfterTx = balanceHelper->mustLoadBalance(
-            mBidBeforeTx->getOwnerID(), mBidBeforeTx->getBaseAsset(), db);
+            mAskBeforeTx->getOwnerID(), mAskBeforeTx->getBaseAsset(), db);
 
     if (bidAfterTx == nullptr)
     {
-        REQUIRE(mBidOwnerBalanceBeforeTx->getLocked() - mBidBeforeTx->getTotalAmount() ==
+        REQUIRE(mAskOwnerBalanceBeforeTx->getLocked() - mAskBeforeTx->getTotalAmount() ==
                 baseBalanceAfterTx->getLocked());
         return;
     }
 
-    REQUIRE(mBidOwnerBalanceBeforeTx->getLocked() - aSwapRequest.baseAmount ==
+    REQUIRE(mAskOwnerBalanceBeforeTx->getLocked() - aSwapRequest.baseAmount ==
             baseBalanceAfterTx->getLocked());
 }
 
-ReviewASwapRequestHelper::ReviewASwapRequestHelper(TestManager::pointer testManager)
+ReviewASwapBidRequestHelper::ReviewASwapBidRequestHelper(TestManager::pointer testManager)
         : ReviewRequestHelper(testManager)
 {
 }
 
 TransactionFramePtr
-ReviewASwapRequestHelper::createReviewRequestTx(Account &source, uint64_t requestID,
+ReviewASwapBidRequestHelper::createReviewRequestTx(Account &source, uint64_t requestID,
                                                 Hash requestHash,
                                                 ReviewableRequestType requestType,
                                                 ReviewRequestOpAction action,
@@ -130,12 +130,12 @@ ReviewASwapRequestHelper::createReviewRequestTx(Account &source, uint64_t reques
 }
 
 ReviewRequestResult
-ReviewASwapRequestHelper::applyReviewRequestTx(
+ReviewASwapBidRequestHelper::applyReviewRequestTx(
         Account &source, uint64_t requestID, Hash requestHash,
         ReviewableRequestType requestType, ReviewRequestOpAction action,
         std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-    auto aSwapRequestChecker = ASwapRequestReviewChecker(mTestManager, requestID);
+    auto aSwapRequestChecker = ASwapBidRequestReviewChecker(mTestManager, requestID);
     return ReviewRequestHelper::applyReviewRequestTx(source, requestID, requestHash,
                                                      requestType, action, rejectReason,
                                                      expectedResult,
@@ -143,7 +143,7 @@ ReviewASwapRequestHelper::applyReviewRequestTx(
 }
 
 ReviewRequestResult
-ReviewASwapRequestHelper::applyReviewRequestTx(Account &source, uint64_t requestID,
+ReviewASwapBidRequestHelper::applyReviewRequestTx(Account &source, uint64_t requestID,
                                                ReviewRequestOpAction action,
                                                std::string rejectReason,
                                                ReviewRequestResultCode expectedResult)

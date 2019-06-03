@@ -32,7 +32,14 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
     Application& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
+<<<<<<< HEAD
 
+=======
+    testManager->upgradeToCurrentLedgerVersion(app);
+    auto assetPairTestHelper = ManageAssetPairTestHelper(testManager);
+
+    // set up world
+>>>>>>> master
     auto root = Account{getRoot(), 0};
 
     auto assetPairTestHelper = ManageAssetPairTestHelper(testManager);
@@ -72,6 +79,25 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
                                                        CREATE, nullptr,
                                                        ManageAssetPairResultCode
                                                        ::INVALID_ASSET);
+        }
+
+        SECTION("Same asset")
+        {
+            base = quote;
+            assetPairTestHelper.applyManageAssetPairTx(root, base, quote,
+                                                       physicalPrice,
+                                                       physicalPriceCorrection,
+                                                       maxPriceStep, policies,
+                                                       ManageAssetPairAction::
+                                                       CREATE, nullptr,
+                                                       ManageAssetPairResultCode::SAME_ASSET);
+            assetPairTestHelper.applyManageAssetPairTx(root, quote, base,
+                                                       physicalPrice,
+                                                       physicalPriceCorrection,
+                                                       maxPriceStep, policies,
+                                                       ManageAssetPairAction::
+                                                       CREATE, nullptr,
+                                                       ManageAssetPairResultCode::SAME_ASSET);
         }
         SECTION("Invalid action")
         {

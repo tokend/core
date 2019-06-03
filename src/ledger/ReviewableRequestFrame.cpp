@@ -196,8 +196,8 @@ void ReviewableRequestFrame::ensureInvoiceValid(InvoiceRequest const& request)
         throw runtime_error("amount can not be 0");
 }
 
-void ReviewableRequestFrame::ensureASwapBidCreationValid(
-        const ASwapBidCreationRequest &request)
+void ReviewableRequestFrame::ensureASwapAskValid(
+        const CreateAtomicSwapAskRequest &request)
 {
     if (request.amount == 0)
     {
@@ -215,9 +215,9 @@ void ReviewableRequestFrame::ensureASwapBidCreationValid(
     }
 }
 
-void ReviewableRequestFrame::ensureASwapValid(const ASwapRequest &request)
+void ReviewableRequestFrame::ensureASwapBidValid(const CreateAtomicSwapBidRequest &request)
 {
-    if (request.bidID == 0)
+    if (request.askID == 0)
     {
         throw runtime_error("bid ID cannot be zero");
     }
@@ -289,10 +289,10 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return;
         case ReviewableRequestType::MANAGE_CONTRACT:
             return;
+        case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
+            return ensureASwapAskValid(oe.body.createAtomicSwapAskRequest());
         case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
-            return ensureASwapBidCreationValid(oe.body.aSwapBidCreationRequest());
-        case ReviewableRequestType::CREATE_ATOMIC_SWAP:
-            return ensureASwapValid(oe.body.aSwapRequest());
+            return ensureASwapBidValid(oe.body.createAtomicSwapBidRequest());
         case ReviewableRequestType::CREATE_POLL:
             return ensurePollCreationValid(oe.body.createPollRequest());
         case ReviewableRequestType::KYC_RECOVERY:

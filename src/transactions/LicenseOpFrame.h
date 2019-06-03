@@ -1,6 +1,6 @@
 #pragma once
 
-#include <xdr/Stellar-operation-license.h>
+#include <xdr/operation-license.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar

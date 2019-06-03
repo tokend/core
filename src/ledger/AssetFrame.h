@@ -127,6 +127,11 @@ public:
         mAsset.availableForIssueance = availableForIssuance;
     }
 
+    bool isAmountAppropriate(uint64_t amount)
+    {
+        return (amount % getMinimumAmount()) == 0;
+    }
+
     void setTrailingDigitsCount(uint32 trailingDigitsCount);
 
     bool isPolicySet(const AssetPolicy policy) const
