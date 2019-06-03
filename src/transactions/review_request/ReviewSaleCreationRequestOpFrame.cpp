@@ -85,6 +85,11 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
             db, saleCreationRequest.quoteAssets,
             saleCreationRequest.defaultQuoteAsset))
     {
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_INVEST_FEE))
+        {
+            return ReviewRequestResultCode::ASSET_PAIR_NOT_FOUND;
+        }
+
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state, quote asset does not exist: "
             << request->getRequestID();
