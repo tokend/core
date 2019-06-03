@@ -4,8 +4,8 @@
 #include "TxHelper.h"
 #include <ledger/AssetPairFrame.h>
 #include <ledger/AssetPairHelper.h>
-#include <transactions/ManageAssetPairOpFrame.h>
-#include <transactions/RemoveAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/RemoveAssetPairOpFrame.h>
 
 namespace stellar
 {

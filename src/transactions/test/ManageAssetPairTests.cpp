@@ -32,14 +32,9 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
     Application& app = *appPtr;
     app.start();
     auto testManager = TestManager::make(app);
-<<<<<<< HEAD
-
-=======
     testManager->upgradeToCurrentLedgerVersion(app);
-    auto assetPairTestHelper = ManageAssetPairTestHelper(testManager);
 
     // set up world
->>>>>>> master
     auto root = Account{getRoot(), 0};
 
     auto assetPairTestHelper = ManageAssetPairTestHelper(testManager);

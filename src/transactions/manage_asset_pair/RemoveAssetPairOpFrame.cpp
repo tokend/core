@@ -5,7 +5,7 @@
 #include "main/Application.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
-#include "dex/ManageOfferOpFrame.h"
+#include "transactions/dex/ManageOfferOpFrame.h"
 
 namespace stellar
 {
