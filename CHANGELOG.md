@@ -9,6 +9,7 @@
 
 ### Added
 
+* Rules for `AccountSpecificRule`
 * `RemoveAssetPairOp` operation to remove asset pair
 * `InitiateKYCRecoveryOpFrame`
 * `CreateKYCRecoveryRequestOpFrame`

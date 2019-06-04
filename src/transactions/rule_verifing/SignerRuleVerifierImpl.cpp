@@ -238,6 +238,42 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.vote().permissionType) &&
                    isIDMatches(requiredResource.vote().pollID,
                                actualResource.vote().pollID);
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            switch (requiredResource.accountSpecificRuleExt().v())
+            {
+                case LedgerVersion::EMPTY_VERSION:
+                    return true;
+                case LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
+                {
+                    if (requiredResource.accountSpecificRuleExt().v() != actualResource.accountSpecificRuleExt().v())
+                    {
+                        return false;
+                    }
+
+                    if (requiredResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
+                    {
+                        return true;
+                    }
+
+                    if (requiredResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type()
+                        != actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type())
+                    {
+                        return false;
+                    }
+
+                    auto conditionLedgerKey = requiredResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    auto actualLedgerKey = actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    switch (conditionLedgerKey.type())
+                    {
+                        case LedgerEntryType::SALE:
+                            return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
+                        default:
+                            return false;
+                    }
+                }
+            }
+        }
         case LedgerEntryType::INITIATE_KYC_RECOVERY:
             return isIDMatches(requiredResource.initiateKYCRecovery().roleID,
                                 actualResource.initiateKYCRecovery().roleID);
@@ -254,7 +290,6 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::TRANSACTION:
         case LedgerEntryType::LICENSE:
         case LedgerEntryType::STAMP:
-        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
             return true;
         default:
             return false;

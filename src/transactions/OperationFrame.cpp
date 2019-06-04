@@ -255,6 +255,13 @@ OperationFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return false;
 }
 
+bool
+OperationFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result, LedgerManager& lm) const
+{
+    return tryGetSignerRequirements(storageHelper, result);
+}
+
 int64_t OperationFrame::getPaidFee() const
 {
     // default fee for all operations is 0, finantial operations must override this function
@@ -265,7 +272,8 @@ bool
 OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
 {
     std::vector<SignerRequirement> signerRequirements;
-    if (!tryGetSignerRequirements(storageHelper, signerRequirements))
+    LedgerManager& lm = app.getLedgerManager();
+    if (!tryGetSignerRequirements(storageHelper, signerRequirements, lm))
     {
         return false;
     }
