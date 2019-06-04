@@ -161,30 +161,30 @@ AccountRuleVerifierImpl::isResourceMatches(
                                actualResource.vote().pollID);
         case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
         {
-            switch (conditionResource.ext().v())
+            switch (conditionResource.accountSpecificRuleExt().v())
             {
                 case LedgerVersion::EMPTY_VERSION:
                     return true;
                 case LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
                 {
-                    if (conditionResource.ext().v() != actualResource.ext().v())
+                    if (conditionResource.accountSpecificRuleExt().v() != actualResource.accountSpecificRuleExt().v())
                     {
                         return false;
                     }
 
-                    if (conditionResource.ext().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
+                    if (conditionResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
                     {
                         return true;
                     }
 
-                    if (conditionResource.ext().accountSpecificRule().ledgerKey.type()
-                        != actualResource.ext().accountSpecificRule().ledgerKey.type())
+                    if (conditionResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type()
+                        != actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type())
                     {
                         return false;
                     }
 
-                    auto conditionLedgerKey = conditionResource.ext().accountSpecificRule().ledgerKey;
-                    auto actualLedgerKey = actualResource.ext().accountSpecificRule().ledgerKey;
+                    auto conditionLedgerKey = conditionResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    auto actualLedgerKey = actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
                     switch (conditionLedgerKey.type())
                     {
                         case LedgerEntryType::SALE:
