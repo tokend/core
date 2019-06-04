@@ -62,7 +62,7 @@ public:
 
     bool doCheckValid(Application& app) override;
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector(AssetCode const& code);
 
     static CreateWithdrawalRequestResultCode getInnerCode(
         OperationResult const& res)

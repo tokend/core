@@ -4,7 +4,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "xdr/Stellar-ledger.h"
+#include "xdr/ledger.h"
 
 #include "main/Config.h"
 #include "util/Timer.h"
@@ -80,6 +80,8 @@ class Upgrades
                    bool& updated);
 
     static void dropAll(Database& db);
+
+    static void createIfNotExists(Database& db);
 
     static void storeUpgradeHistory(Database& db, uint32_t ledgerSeq,
                                     LedgerUpgrade const& upgrade,

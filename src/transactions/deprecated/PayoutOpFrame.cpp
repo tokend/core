@@ -16,7 +16,7 @@ PayoutOpFrame::PayoutOpFrame(Operation const &op, OperationResult &res,
 }
 
 bool
-PayoutOpFrame::isSupported() const
+PayoutOpFrame::isSupported(LedgerManager& lm) const
 {
     return false;
 }

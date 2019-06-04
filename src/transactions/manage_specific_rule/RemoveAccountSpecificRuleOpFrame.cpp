@@ -25,8 +25,6 @@ RemoveAccountSpecificRuleOpFrame::tryGetOperationConditions(
         return true;
     }
 
-    AccountRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
-
     auto rule = storageHelper.getAccountSpecificRuleHelper().loadRule(mRemoveData.ruleID);
     if (!rule)
     {
@@ -34,8 +32,10 @@ RemoveAccountSpecificRuleOpFrame::tryGetOperationConditions(
         mResult.entryType() = LedgerEntryType::ACCOUNT_SPECIFIC_RULE;
         return false;
     }
-    resource.ext().v(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE);
-    resource.ext().accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
+
+    AccountRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+    resource.accountSpecificRuleExt().v(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE);
+    resource.accountSpecificRuleExt().accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
 
     result.emplace_back(resource, AccountRuleAction::REMOVE, mSourceAccount);
     return true;
@@ -51,7 +51,6 @@ RemoveAccountSpecificRuleOpFrame::tryGetSignerRequirements(
         result.emplace_back(SignerRuleResource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE), SignerRuleAction::REMOVE);
         return true;
     }
-    SignerRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
 
     auto rule = storageHelper.getAccountSpecificRuleHelper().loadRule(mRemoveData.ruleID);
     if (!rule)
@@ -60,8 +59,10 @@ RemoveAccountSpecificRuleOpFrame::tryGetSignerRequirements(
         mResult.entryType() = LedgerEntryType::ACCOUNT_SPECIFIC_RULE;
         return false;
     }
-    resource.ext().v(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE);
-    resource.ext().accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
+
+    SignerRuleResource resource(LedgerEntryType::ACCOUNT_SPECIFIC_RULE);
+    resource.accountSpecificRuleExt().v(LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE);
+    resource.accountSpecificRuleExt().accountSpecificRule().ledgerKey = rule->getEntry().ledgerKey;
 
     result.emplace_back(resource, SignerRuleAction::REMOVE);
     return true;

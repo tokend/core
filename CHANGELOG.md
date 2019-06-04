@@ -2,8 +2,32 @@
 
 ## Unreleased
 
+### Fixed
+
+* unsuccessful test passing by (--test)
+* exception on drop and ban peer command
+
 ### Added
+
 * Rules for `AccountSpecificRule`
+* `RemoveAssetPairOp` operation to remove asset pair
+* `InitiateKYCRecoveryOpFrame`
+* `CreateKYCRecoveryRequestOpFrame`
+* `ReviewKYCRecoveryOpFrame`
+* `atomic_swap_bid_tasks` and `atomic_swap_ask_tasks` reserved keys
+
+### Fixed
+
+* Tasks handling on `ChangeRoleRequest` reject
+* Ability to set fixed fee for `INVEST_FEE` type
+* Ability to create asset pair for the same asset, i.e. `A/A`
+* atomic swaps, enable them
+
+## 3.4.1
+
+### Fixed
+
+* exception on ledger version upgrade
 
 ## 3.4.0
 

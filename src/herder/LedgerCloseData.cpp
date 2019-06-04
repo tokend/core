@@ -24,7 +24,7 @@ LedgerCloseData::LedgerCloseData(uint32_t ledgerSeq, TxSetFramePtr txSet,
 }
 
 std::string
-stellarValueToString(StellarValue const& sv)
+StellarValueToString(StellarValue const& sv)
 {
     std::stringstream res;
 

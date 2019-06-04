@@ -36,8 +36,6 @@ public:
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
-
 protected:
     std::string getAssetCode() const override;
 	void updateRequest(ReviewableRequestEntry &requestEntry);
