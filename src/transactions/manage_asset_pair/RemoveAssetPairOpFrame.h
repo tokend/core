@@ -35,6 +35,13 @@ public:
     {
         return res.tr().removeAssetPairResult().code();
     }
+
+    std::string
+    getInnerResultCodeAsStr() override
+    {
+        return xdr::xdr_traits<RemoveAssetPairResultCode>::enum_name(
+                innerResult().code());
+    }
 };
 
 }

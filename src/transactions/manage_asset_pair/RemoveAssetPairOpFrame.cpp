@@ -44,8 +44,6 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application &app, stellar::LedgerD
     auto assetPair = assetPairHelper->loadAssetPair(mRemoveAssetPair.base, mRemoveAssetPair.quote, db, &delta);
     if (assetPair == nullptr)
     {
-        app.getMetrics().NewMeter({"op-remove-asset-pair", "invalid", "not-found" },
-                "operation").Mark();
         innerResult().code(RemoveAssetPairResultCode::NOT_FOUND);
         return false;
     }
@@ -54,8 +52,6 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application &app, stellar::LedgerD
     auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
     if (offerHelper->exists(db, mRemoveAssetPair.base, mRemoveAssetPair.quote, &orderBookID))
     {
-        app.getMetrics().NewMeter({"op-remove-asset-pair", "invalid", "has-active-offers" },
-                                  "operation").Mark();
         innerResult().code(RemoveAssetPairResultCode::HAS_ACTIVE_OFFERS);
         return false;
     }
@@ -63,8 +59,6 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application &app, stellar::LedgerD
     auto saleHelper = SaleHelper::Instance();
     if (saleHelper->exists(db, mRemoveAssetPair.base, mRemoveAssetPair.quote))
     {
-        app.getMetrics().NewMeter({"op-remove-asset-pair", "invalid", "has-active-sales" },
-                                  "operation").Mark();
         innerResult().code(RemoveAssetPairResultCode::HAS_ACTIVE_SALES);
         return false;
     }
@@ -79,8 +73,6 @@ bool RemoveAssetPairOpFrame::doCheckValid(stellar::Application &app)
 {
     if (!AssetFrame::isAssetCodeValid(mRemoveAssetPair.base) || !AssetFrame::isAssetCodeValid(mRemoveAssetPair.quote))
     {
-        app.getMetrics().NewMeter({"op-remove-asset-pair", "invalid", "malformed-invalid-asset-pair"},
-                "operation").Mark();
         innerResult().code(RemoveAssetPairResultCode::INVALID_ASSET_CODE);
         return false;
     }
