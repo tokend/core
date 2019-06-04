@@ -24,7 +24,7 @@
 #include "transactions/issuance/CreatePreIssuanceRequestOpFrame.h"
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
-#include "transactions/ManageAssetPairOpFrame.h"
+#include "transactions/manage_asset_pair/ManageAssetPairOpFrame.h"
 #include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "transactions/deprecated/PayoutOpFrame.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
@@ -56,6 +56,7 @@
 #include "InitiateKYCRecoveryOpFrame.h"
 #include "ledger/SignerHelper.h"
 #include "transactions/CancelChangeRoleRequestOpFrame.h"
+#include "transactions/manage_asset_pair/RemoveAssetPairOpFrame.h"
 
 namespace stellar
 {
@@ -150,6 +151,8 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
         case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
             return shared_ptr<OperationFrame>(new CancelChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::REMOVE_ASSET_PAIR:
+            return make_shared<RemoveAssetPairOpFrame>(op, res, tx);
         case OperationType::INITIATE_KYC_RECOVERY:
             return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
         case OperationType::CREATE_KYC_RECOVERY_REQUEST:

@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "transactions/ManageAssetPairOpFrame.h"
+#include "ManageAssetPairOpFrame.h"
 #include "transactions/dex/ManageOfferOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/AssetFrame.h"
@@ -15,7 +15,7 @@
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
 #include "ledger/OfferHelper.h"
-#include "dex/OfferManager.h"
+#include "transactions/dex/OfferManager.h"
 #include "ledger/BalanceHelperLegacy.h"
 
 namespace stellar

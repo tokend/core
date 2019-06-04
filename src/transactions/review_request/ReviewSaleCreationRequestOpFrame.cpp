@@ -13,7 +13,7 @@
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "xdrpp/printer.h"
 #include <ledger/AccountHelperLegacy.h>
-#include <transactions/ManageAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
 #include <transactions/manage_specific_rule/CreateAccountSpecificRuleOpFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "ledger/ReviewableRequestHelper.h"
@@ -85,6 +85,11 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
             db, saleCreationRequest.quoteAssets,
             saleCreationRequest.defaultQuoteAsset))
     {
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_INVEST_FEE))
+        {
+            return ReviewRequestResultCode::ASSET_PAIR_NOT_FOUND;
+        }
+
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state, quote asset does not exist: "
             << request->getRequestID();

@@ -9,6 +9,7 @@
 
 ### Added
 
+* `RemoveAssetPairOp` operation to remove asset pair
 * `InitiateKYCRecoveryOpFrame`
 * `CreateKYCRecoveryRequestOpFrame`
 * `ReviewKYCRecoveryOpFrame`
