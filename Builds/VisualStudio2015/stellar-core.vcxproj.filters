@@ -663,13 +663,13 @@
     <ClCompile Include="..\..\src\ledger\StorageHelperImpl.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CancelAtomicSwapAskOpFrame.cpp">
       <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapAskRequestOpFrame.cpp">
       <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapBidRequestOpFrame.cpp">
       <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\AccountHelperImpl.cpp">
@@ -759,10 +759,10 @@
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapBidCreationRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapAskRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapBidRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.cpp">
@@ -927,7 +927,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapBidCreationRequestTestHelper.cpp">
       <Filter>transactions\test\test_helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.cpp">
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapBidRequestTestHelper.cpp">
       <Filter>transactions\test\test_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateChangeRoleRequestTestHelper.cpp">
@@ -1742,22 +1742,22 @@
     <ClInclude Include="..\..\src\main\dumpxdr.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger.h">
+    <ClInclude Include="src\generated\xdr\ledger.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-overlay.h">
+    <ClInclude Include="src\generated\xdr\overlay.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-SCP.h">
+    <ClInclude Include="src\generated\xdr\SCP.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-transaction.h">
+    <ClInclude Include="src\generated\xdr\transaction.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-types.h">
+    <ClInclude Include="src\generated\xdr\types.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\ExternalQueue.h">
@@ -1811,121 +1811,121 @@
     <ClInclude Include="..\..\src\util\StatusManager.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-asset.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-asset.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-account.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-account.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-offer.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-offer.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-trustline.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-trustline.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-account-merge.h">
+    <ClInclude Include="src\generated\xdr\operation-account-merge.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-allow-trust.h">
+    <ClInclude Include="src\generated\xdr\operation-allow-trust.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-change-trust.h">
+    <ClInclude Include="src\generated\xdr\operation-change-trust.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-create-account.h">
+    <ClInclude Include="src\generated\xdr\operation-create-account.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-create-passive-offer.h">
+    <ClInclude Include="src\generated\xdr\operation-create-passive-offer.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-inflation.h">
+    <ClInclude Include="src\generated\xdr\operation-inflation.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-path-payment.h">
+    <ClInclude Include="src\generated\xdr\operation-path-payment.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-payment.h">
+    <ClInclude Include="src\generated\xdr\operation-payment.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-set-options.h">
+    <ClInclude Include="src\generated\xdr\operation-set-options.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-coins-emission-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-coins-emission-request.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-account-type-limits.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-account-type-limits.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-balance.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-balance.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-exchange.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-exchange.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-fee.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-fee.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-forfeit-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-forfeit-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-reference.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-reference.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-payment-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-payment-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-recovery-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-recovery-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-statistics.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-statistics.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-demurrage.h">
+    <ClInclude Include="src\generated\xdr\operation-demurrage.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-emit-coins.h">
+    <ClInclude Include="src\generated\xdr\operation-emit-coins.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-forfeit.h">
+    <ClInclude Include="src\generated\xdr\operation-forfeit.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-account.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-account.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-asset.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-asset.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-balance.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-balance.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-forfeit-request.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-forfeit-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-recovery-request.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-recovery-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-recover.h">
+    <ClInclude Include="src\generated\xdr\operation-recover.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-coins-emission-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-forfeit-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-forfeit-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-payment-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-payment-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-recovery-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-recovery-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-set-fees.h">
+    <ClInclude Include="src\generated\xdr\operation-set-fees.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-upload-preemissions.h">
+    <ClInclude Include="src\generated\xdr\operation-upload-preemissions.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
     <ClInclude Include="src\generated\StellarCoreVersion.h">
@@ -2187,13 +2187,13 @@
     <ClInclude Include="..\..\src\ledger\StorageHelperImpl.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CancelAtomicSwapAskOpFrame.h">
       <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapAskRequestOpFrame.h">
       <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapBidRequestOpFrame.h">
       <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\AccountHelper.h">
@@ -2295,10 +2295,10 @@
     <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapBidCreationRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapAskRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapBidRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.h">
@@ -2445,7 +2445,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapBidCreationRequestTestHelper.h">
       <Filter>transactions\test\test_helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.h">
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapBidRequestTestHelper.h">
       <Filter>transactions\test\test_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateChangeRoleRequestTestHelper.h">
@@ -3059,13 +3059,13 @@
     <None Include="..\..\docs\readme.md">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\docs\stellar-core_example.cfg">
+    <None Include="..\..\docs\core_example.cfg">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\docs\stellar-core_standalone.cfg">
+    <None Include="..\..\docs\core_standalone.cfg">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\docs\stellar-core_testnet.cfg">
+    <None Include="..\..\docs\core_testnet.cfg">
       <Filter>docs</Filter>
     </None>
     <None Include="..\..\docs\transaction.md">

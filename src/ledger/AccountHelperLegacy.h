@@ -8,7 +8,7 @@
 #include <functional>
 #include "map"
 #include <unordered_map>
-#include "xdr/Stellar-ledger-entries-account.h"
+#include "xdr/ledger-entries-account.h"
 #include "AccountFrame.h"
 
 namespace soci

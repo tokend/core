@@ -9,7 +9,7 @@ namespace stellar
 class PayoutOpFrame : public OperationFrame
 {
     bool
-    isSupported() const override;
+    isSupported(LedgerManager& lm) const override;
 
     PayoutResult &innerResult() {
         return mResult.tr().payoutResult();

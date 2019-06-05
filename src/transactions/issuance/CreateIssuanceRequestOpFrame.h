@@ -79,7 +79,7 @@ public:
         mIsFeeRequired = false;
     }
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector();
 
     // flags for issuance tasks
     static const uint32_t INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT = 1;

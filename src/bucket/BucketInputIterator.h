@@ -6,7 +6,7 @@
 
 #include "bucket/LedgerCmp.h"
 #include "util/XDRStream.h"
-#include "xdr/Stellar-ledger.h"
+#include "xdr/ledger.h"
 
 #include <memory>
 

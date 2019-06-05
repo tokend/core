@@ -49,7 +49,5 @@ namespace stellar {
         std::string getInnerResultCodeAsStr() override {
             return xdr::xdr_traits<CreateAMLAlertRequestResultCode>::enum_name(innerResult().code());
         }
-
-        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
     };
 }

@@ -65,9 +65,9 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
                                                           LedgerManager& ledgerManager)
 {
     Database& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
-    auto& contractRequest = mManageContractRequest.details.createContractRequest().contractRequest;
+    auto& contractRequest = mManageContractRequest.details.createContractRequest();
 
     if (!checkMaxContractsForContractor(app, storageHelper, ledgerManager))
         return false;
@@ -78,32 +78,30 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
 
     ReviewableRequestEntry::_body_t body;
     body.type(ReviewableRequestType::MANAGE_CONTRACT);
-    body.contractRequest() = contractRequest;
+    body.contractRequest() = contractRequest.contractRequest;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(),
-                                                             contractRequest.customer,
+    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),
+                                                             contractRequest.contractRequest.customer,
                                                              nullptr, body,
                                                              ledgerManager.getCloseTime());
 
-
-
-    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
-
+    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
 
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks, mManageContractRequest.details.createContractRequest().allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeContractCreateTasksKey()},
+                                  contractRequest.allTasks.get()))
     {
         innerResult().code(ManageContractRequestResultCode::CONTRACT_CREATE_TASKS_NOT_FOUND);
         return false;
     }
 
     request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+    EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
 
     bool fulfilled = false;
 
     if (allTasks == 0) {
-        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, delta, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS) {
             throw std::runtime_error("Failed to review manage contract request");
         }
@@ -245,14 +243,6 @@ ManageContractRequestOpFrame::doCheckValid(Application& app)
     }
 
     return true;
-}
-
-std::vector<longstring>
-ManageContractRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
-{
-    return std::vector<longstring>{
-        ManageKeyValueOpFrame::makeContractCreateTasksKey()
-    };
 }
 
 }
