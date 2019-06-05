@@ -734,6 +734,9 @@ TEST_CASE("Issuance", "[tx][issuance]")
                         REQUIRE(!createIssuanceResult.success().fulfilled);
 
                         requestID = createIssuanceResult.success().requestID;
+                        auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
+                        reviewRequestHelper.applyReviewRequestTx(issuer, requestID, ReviewRequestOpAction::APPROVE, "");
+
                         request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
                         REQUIRE(request->getAllTasks() ==
                         (CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED | issuanceTasks)

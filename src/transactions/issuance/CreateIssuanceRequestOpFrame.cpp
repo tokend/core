@@ -149,26 +149,6 @@ CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
 		EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
 	}
 
-	if(ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
-    {
-	    uint64_t universalAmount = 0;
-        auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(mCreateIssuanceRequest.request.receiver);
-        if(!addStatistics(db, *delta, ledgerManager,
-                       balanceFrame, mCreateIssuanceRequest.request.amount,
-                       universalAmount, requestFrame->getRequestID()))
-        {
-            allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-            requestFrame->setTasks(allTasks);
-        }
-        else
-        {
-            requestFrame->getRequestEntry().tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-
-        }
-        EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
-    }
-
-
     bool fulfilled = false;
 	ReviewRequestResultCode reviewRequestResultCode = ReviewRequestResultCode::SUCCESS;
 
@@ -382,38 +362,4 @@ CreateIssuanceRequestOpFrame::makeTasksKeyVector()
 		ManageKeyValueOpFrame::makeIssuanceTasksKey("*")
 	};
 }
-
-
-bool CreateIssuanceRequestOpFrame::addStatistics(Database& db,
-                                                         LedgerDelta& delta, LedgerManager& ledgerManager,
-                                                         BalanceFrame::pointer balance, const uint64_t amountToAdd,
-                                                         uint64_t& universalAmount, uint64_t requestID)
-{
-    AccountFrame::pointer account = AccountHelperLegacy::Instance()->loadAccount(balance->getAccountID(), db, &delta);
-    StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-    return tryAddStatsV2(statisticsV2Processor, account, balance, amountToAdd, universalAmount, requestID);
-}
-bool CreateIssuanceRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                         const AccountFrame::pointer account,
-                                                         const BalanceFrame::pointer balance, const uint64_t amountToAdd,
-                                                         uint64_t& universalAmount, uint64_t requestID)
-{
-    const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
-                                                         universalAmount, account, balance, &requestID);
-    switch (result)
-    {
-        case StatisticsV2Processor::SUCCESS:
-            return true;
-        case StatisticsV2Processor::STATS_V2_OVERFLOW:
-            return false;
-        case StatisticsV2Processor::LIMITS_V2_EXCEEDED:
-            return false;
-        default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpeced result from statisticsV2Processor when updating statsV2:" << result;
-            throw std::runtime_error("Unexpected state from statisticsV2Processor when updating statsV2");
-    }
-
-}
-
 }

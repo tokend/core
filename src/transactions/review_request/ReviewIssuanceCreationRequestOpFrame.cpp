@@ -185,15 +185,27 @@ bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
 													   BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
 													   uint64_t& universalAmount)
 {
+    AccountFrame::pointer targetAccount;
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
+    {
+        targetAccount = mSourceAccount;
+    }
+    else
+    {
+        targetAccount = AccountHelperLegacy::Instance()->loadAccount(balanceFrame->getAccountID(),db, &delta );
+
+    }
 	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-	return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount);
+	return tryAddStatsV2(statisticsV2Processor, targetAccount, balanceFrame, amountToAdd, universalAmount);
 }
 bool ReviewIssuanceCreationRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                       const BalanceFrame::pointer balance, const uint64_t amountToAdd,
+                                                         const AccountFrame::pointer targetAccount,
+                                                         const BalanceFrame::pointer balance, const uint64_t amountToAdd,
                                                        uint64_t& universalAmount)
 {
+
 	const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
-														 universalAmount, mSourceAccount, balance, nullptr);
+														 universalAmount, targetAccount, balance, nullptr);
 	switch (result)
 	{
 		case StatisticsV2Processor::SUCCESS:
@@ -229,8 +241,13 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		uint32_t allTasks = 0;
 
         uint64_t universalAmount = 0;
-        auto balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
-            issuanceRequest.asset, db, localDelta);
+        BalanceFrame::pointer balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
+        if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
+        {
+            balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
+                                                                            issuanceRequest.asset, db, localDelta);
+        }
+
 
 		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
 		{
@@ -241,18 +258,16 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
 		}
 
-		if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
+
+        if (!addStatistics(db, localDelta, ledgerManager,
+                           balanceFrame, issuanceRequest.amount,
+                           universalAmount))
         {
-            if (!addStatistics(db, localDelta, ledgerManager,
-                               balanceFrame, issuanceRequest.amount,
-                               universalAmount))
-            {
-                allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-            }
-            else
-            {
-                requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-            }
+            allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+        }
+        else
+        {
+            requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
         }
 
 		if (allTasks == 0)
