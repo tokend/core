@@ -1,11 +1,6 @@
 # Changelog
 
-## Unreleased
-
-### Fixed
-
-* unsuccessful test passing by (--test)
-* exception on drop and ban peer command
+## 3.5.0-x.0
 
 ### Added
 
@@ -18,6 +13,8 @@
 
 ### Fixed
 
+* unsuccessful test passing by (--test)
+* exception on drop and ban peer command
 * Tasks handling on `ChangeRoleRequest` reject
 * Ability to set fixed fee for `INVEST_FEE` type
 * Ability to create asset pair for the same asset, i.e. `A/A`
