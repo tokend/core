@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* Changes after removing signer and signer role
+
 ## 3.5.0-x.0
 
 ### Added

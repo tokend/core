@@ -218,7 +218,7 @@ ManageSignerRoleOpFrame::deleteRole(Application& app,
     signerRoleHelper.storeDelete(key);
     if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_SIGNER_CHANGES_REMOVE))
     {
-        storageHelper.mustGetLedgerDelta().deleteEntry(frame->getKey());
+        storageHelper.mustGetLedgerDelta().deleteEntry(key);
     }
 
     innerResult().code(ManageSignerRoleResultCode::SUCCESS);
