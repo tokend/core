@@ -4,7 +4,8 @@
 #include "TxHelper.h"
 #include <ledger/AssetPairFrame.h>
 #include <ledger/AssetPairHelper.h>
-#include <transactions/ManageAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/RemoveAssetPairOpFrame.h>
 
 namespace stellar
 {
@@ -35,6 +36,16 @@ namespace txtest
 
         void createAssetPair(Account &source, AssetCode base, AssetCode quote, int64_t physicalPrice,
                              int64_t physicalPriceCorrection = 0, int64_t maxPriceStep = 0, int32_t policies = 0);
+
+        TransactionFramePtr createRemoveAssetPairTx(Account &source, AssetCode base, AssetCode quote,
+                                                    Account* signer = nullptr);
+
+        RemoveAssetPairResult applyRemoveAssetPairTx(Account &source, AssetCode base, AssetCode quote,
+                                                     Account* signer = nullptr,
+                                                     RemoveAssetPairResultCode expectedResult = RemoveAssetPairResultCode::SUCCESS,
+                                                     OperationResultCode expectedOpResult = OperationResultCode::opINNER);
+
+        void removeAssetPair(Account &source, AssetCode base, AssetCode quote);
 
     };
 }

@@ -26,9 +26,10 @@
 #include "ReviewChangeRoleRequestOpFrame.h"
 #include "ReviewInvoiceRequestOpFrame.h"
 #include "ReviewContractRequestOpFrame.h"
-#include "ReviewASwapBidCreationRequestOpFrame.h"
-#include "ReviewASwapRequestOpFrame.h"
+#include "ReviewASwapAskRequestOpFrame.h"
+#include "ReviewASwapBidRequestOpFrame.h"
 #include "ReviewCreatePollRequestOpFrame.h"
+#include "ReviewKYCRecoveryRequestOpFrame.h"
 
 namespace stellar
 {
@@ -131,12 +132,14 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 		return new ReviewInvoiceRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::MANAGE_CONTRACT:
 		return new ReviewContractRequestOpFrame(op, res, parentTx);
+	case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
+		return new ReviewASwapAskRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
-		return new ReviewASwapBidCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ATOMIC_SWAP:
-		return new ReviewASwapRequestOpFrame(op, res, parentTx);
+		return new ReviewASwapBidRequestOpFrame(op, res, parentTx);
 	case ReviewableRequestType::CREATE_POLL:
 		return new ReviewCreatePollRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::KYC_RECOVERY:
+		return new ReviewKYCRecoveryRequestOpFrame(op, res, parentTx);
 	default:
 		throw std::runtime_error("Unexpected request type for review request op");
 	}

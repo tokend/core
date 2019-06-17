@@ -3,6 +3,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/SignerHelper.h"
 #include "ledger/SignerRoleHelper.h"
+#include "ledger/LedgerDelta.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -223,6 +224,10 @@ ManageSignerOpFrame::deleteSigner(Application &app, StorageHelper &storageHelper
     }
 
     signerHelper.storeDelete(key);
+    if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_SIGNER_CHANGES_REMOVE))
+    {
+        storageHelper.mustGetLedgerDelta().deleteEntry(key);
+    }
 
     innerResult().code(ManageSignerResultCode::SUCCESS);
 

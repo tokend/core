@@ -28,10 +28,6 @@ protected:
     uint32_t getSystemTasksToAdd(Application& app, Database& db, LedgerDelta& delta, LedgerManager& ledgerManager,
                                  ReviewableRequestFrame::pointer request);
 
-    void deletePendingStats(Database
-                            & db,
-                            LedgerDelta& delta, uint64_t
-                            requestID);
 
     bool
     handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;

@@ -14,7 +14,7 @@
  * pairs (ItemFetcher).
  *
  * Overlay network messages are defined as the XDR structure type
- * `StellarMessage`, in the file src/xdr/Stellar-overlay.x
+ * `StellarMessage`, in the file src/xdr/overlay.x
  *
  * They are minimally framed using the Record Marking (RM) standard of RFC5531
  * (https://tools.ietf.org/html/rfc5531#page-16) and the RM-framed messages are

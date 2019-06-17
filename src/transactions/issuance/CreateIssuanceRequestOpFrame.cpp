@@ -5,7 +5,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include <ledger/FeeHelper.h>
 #include <transactions/ManageKeyValueOpFrame.h>
-#include <ledger/KeyValueHelperLegacy.h>
+#include <ledger/KeyValueHelper.h>
 #include <ledger/BalanceHelper.h>
 #include "CreateIssuanceRequestOpFrame.h"
 #include "ledger/AccountHelperLegacy.h"
@@ -16,7 +16,6 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/StorageHelperImpl.h"
-#include "crypto/SHA.h"
 #include "xdrpp/marshal.h"
 
 namespace stellar
@@ -110,10 +109,12 @@ CreateIssuanceRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 	return true;
 }
 
-bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
+bool
+CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
+                                      LedgerManager& ledgerManager)
 {
-	auto delta = storageHelper.getLedgerDelta();
-	auto requestFrame = tryCreateIssuanceRequest(app, *delta, ledgerManager);
+	LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+	auto requestFrame = tryCreateIssuanceRequest(app, delta, ledgerManager);
 	if (!requestFrame)
     {
 		return false;
@@ -121,15 +122,17 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 
 	auto& db = storageHelper.getDatabase();
 
+	auto& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks, mCreateIssuanceRequest.allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, makeTasksKeyVector(),
+								  mCreateIssuanceRequest.allTasks.get()))
     {
         innerResult().code(CreateIssuanceRequestResultCode::ISSUANCE_TASKS_NOT_FOUND);
         return false;
     }
 
     requestFrame->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
+    EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
 
     const auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(mCreateIssuanceRequest.request.asset, db);
     if (!assetFrame)
@@ -143,7 +146,7 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 	{
 		allTasks |= ISSUANCE_MANUAL_REVIEW_REQUIRED;
 		requestFrame->setTasks(allTasks);
-		EntryHelperProvider::storeChangeEntry(*delta, db, requestFrame->mEntry);
+		EntryHelperProvider::storeChangeEntry(delta, db, requestFrame->mEntry);
 	}
 
 	if(ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
@@ -171,9 +174,9 @@ bool CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper &stor
 
 	if (allTasks == 0)
 	{
-		ReviewRequestResult reviewRequestResult = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app,
-																								   ledgerManager, *delta,
-																								   requestFrame);
+		ReviewRequestResult reviewRequestResult = ReviewRequestHelper::tryApproveRequestWithResult(
+				mParentTx, app, ledgerManager, delta, requestFrame);
+
 		reviewRequestResultCode = reviewRequestResult.code();
 		fulfilled = reviewRequestResultCode == ReviewRequestResultCode::SUCCESS ?
 					  reviewRequestResult.success().fulfilled:
@@ -254,7 +257,9 @@ bool CreateIssuanceRequestOpFrame::isAuthorizedToRequestIssuance(AssetFrame::poi
 	return assetFrame->getOwner() == getSourceID();
 }
 
-ReviewableRequestFrame::pointer CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager)
+ReviewableRequestFrame::pointer
+CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application& app, LedgerDelta& delta,
+                                                       LedgerManager& ledgerManager)
 {
 	Database& db = ledgerManager.getDatabase();
 
@@ -368,8 +373,11 @@ CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
     return issuanceRequestOp;
 }
 
-std::vector<longstring> CreateIssuanceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
-	return std::vector<longstring> {
+std::vector<std::string>
+CreateIssuanceRequestOpFrame::makeTasksKeyVector()
+{
+	return
+	{
 		ManageKeyValueOpFrame::makeIssuanceTasksKey(mCreateIssuanceRequest.request.asset),
 		ManageKeyValueOpFrame::makeIssuanceTasksKey("*")
 	};

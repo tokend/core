@@ -2,9 +2,36 @@
 
 ## Unreleased
 
-### Fixed 
+### Fixed
 
+* Ledger changes after removing signer and signer role
 * Statistics calculation for deposit stats op type
+
+## 3.5.0-x.0
+
+### Added
+
+* Rules for `AccountSpecificRule`
+* `RemoveAssetPairOp` operation to remove asset pair
+* `InitiateKYCRecoveryOpFrame`
+* `CreateKYCRecoveryRequestOpFrame`
+* `ReviewKYCRecoveryOpFrame`
+* `atomic_swap_bid_tasks` and `atomic_swap_ask_tasks` reserved keys
+
+### Fixed
+
+* unsuccessful test passing by (--test)
+* exception on drop and ban peer command
+* Tasks handling on `ChangeRoleRequest` reject
+* Ability to set fixed fee for `INVEST_FEE` type
+* Ability to create asset pair for the same asset, i.e. `A/A`
+* atomic swaps, enable them
+
+## 3.4.1
+
+### Fixed
+
+* exception on ledger version upgrade
 
 ## 3.4.0
 

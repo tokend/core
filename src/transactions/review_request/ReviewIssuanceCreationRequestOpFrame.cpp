@@ -46,15 +46,6 @@ ReviewIssuanceCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& st
 	return true;
 }
 
-bool
-ReviewIssuanceCreationRequestOpFrame::handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
-{
-    auto& db = app.getDatabase();
-    StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-    statisticsV2Processor.revertStatsV2(request->getRequestID());
-    return ReviewRequestOpFrame::handlePermanentReject(app, delta, ledgerManager, request);
-}
-
 bool ReviewIssuanceCreationRequestOpFrame::
 handleApprove(Application &app, LedgerDelta &delta,
 														   LedgerManager &ledgerManager,
@@ -94,8 +85,6 @@ handleApprove(Application &app, LedgerDelta &delta,
     }
 
     createReference(delta, db, request->getRequestor(), request->getReference());
-
-    deletePendingStats(db, delta, request->getRequestID());
 
 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
 
@@ -263,17 +252,4 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
         }
         return allTasks;
 	}
-
-void ReviewIssuanceCreationRequestOpFrame::deletePendingStats(Database& db, LedgerDelta &delta, uint64_t requestID)
-{
-    //Delete pending_statistics entries before reviewable request due to constraint change
-    auto pendingStats = PendingStatisticsHelper::Instance()->loadPendingStatistics(requestID, db, delta);
-    for (auto& pending : pendingStats){
-        LedgerKey lk;
-        lk.type(LedgerEntryType::PENDING_STATISTICS);
-        lk.pendingStatistics().statisticsID = pending->getStatsID();
-        lk.pendingStatistics().requestID = requestID;
-        PendingStatisticsHelper::Instance()->storeDelete(delta, db, lk);
-    }
-}
 }

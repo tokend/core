@@ -8,7 +8,7 @@
 #include "overlay/Peer.h"
 #include "util/HashOfHash.h"
 #include "util/lrucache.hpp"
-#include "xdr/Stellar-types.h"
+#include "xdr/types.h"
 
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"

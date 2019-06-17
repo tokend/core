@@ -13,8 +13,8 @@
 #include "main/Application.h"
 #include "scp/SCP.h"
 #include "util/Logging.h"
-#include "xdr/Stellar-SCP.h"
-#include "xdr/Stellar-ledger-entries.h"
+#include "xdr/SCP.h"
+#include "xdr/ledger-entries.h"
 #include <medida/metrics_registry.h>
 #include <util/format.h>
 #include <xdrpp/marshal.h>
@@ -429,7 +429,7 @@ HerderSCPDriver::getValueString(Value const& v) const
     {
         xdr::xdr_from_opaque(v, b);
 
-        return stellarValueToString(b);
+        return StellarValueToString(b);
     }
     catch (...)
     {

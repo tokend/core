@@ -2,7 +2,7 @@
 
 #include "main/Application.h"
 #include "medida/metrics_registry.h"
-#include "xdr/Stellar-operation-manage-sale.h"
+#include "xdr/operation-manage-sale.h"
 #include "xdrpp/printer.h"
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestFrame.h>
@@ -64,7 +64,7 @@ namespace stellar {
             return xdr::xdr_traits<ManageSaleResultCode>::enum_name(innerResult().code());
         }
 
-        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+        std::vector<std::string> makeTasksKeyVector();
 
     };
 }

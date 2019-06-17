@@ -10,7 +10,7 @@
 #include "ledger/SyncingLedgerChain.h"
 #include "main/PersistentState.h"
 #include "transactions/TransactionFrame.h"
-#include "xdr/Stellar-ledger.h"
+#include "xdr/ledger.h"
 #include "LedgerHeaderFrame.h"
 #include <string>
 

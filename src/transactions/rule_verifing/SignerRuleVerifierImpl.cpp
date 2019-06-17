@@ -85,11 +85,11 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.asset().assetType) &&
                    isStringMatches(requiredResource.asset().assetCode,
                                    actualResource.asset().assetCode);
-        case LedgerEntryType::ATOMIC_SWAP_BID:
-            return isTypeMatches(requiredResource.atomicSwapBid().assetType,
-                                 actualResource.atomicSwapBid().assetType) &&
-                   isStringMatches(requiredResource.atomicSwapBid().assetCode,
-                                   actualResource.atomicSwapBid().assetCode);
+        case LedgerEntryType::ATOMIC_SWAP_ASK:
+            return isTypeMatches(requiredResource.atomicSwapAsk().assetType,
+                                 actualResource.atomicSwapAsk().assetType) &&
+                   isStringMatches(requiredResource.atomicSwapAsk().assetCode,
+                                   actualResource.atomicSwapAsk().assetCode);
         case LedgerEntryType::REVIEWABLE_REQUEST:
         {
             if (!isTasksMatch(requiredResource.reviewableRequest().tasksToAdd,
@@ -138,6 +138,54 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                          actualDetails.createWithdraw().assetType) &&
                            isStringMatches(expectedDetails.createWithdraw().assetCode,
                                            actualDetails.createWithdraw().assetCode);
+                case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
+                {
+                    auto expExt = expectedDetails.createAtomicSwapBidExt();
+                    auto actExt = actualDetails.createAtomicSwapBidExt();
+
+                    if (expExt.v() != actExt.v())
+                    {
+                        return false;
+                    }
+
+                    switch (expExt.v())
+                    {
+                        case LedgerVersion::EMPTY_VERSION:
+                            return true;
+                        case LedgerVersion::ATOMIC_SWAP_RETURNING:
+                            return isTypeMatches(expExt.createAtomicSwapBid().assetType,
+                                                 actExt.createAtomicSwapBid().assetType) &&
+                                   isStringMatches(expExt.createAtomicSwapBid().assetCode,
+                                                   actExt.createAtomicSwapBid().assetCode);
+                        default:
+                            throw new std::runtime_error("Unexpected ledger version "
+                                                         "in create atomic swap bid rule ext");
+                    }
+                }
+                case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
+                {
+                    auto expExt = expectedDetails.createAtomicSwapAskExt();
+                    auto actExt = actualDetails.createAtomicSwapAskExt();
+
+                    if (expExt.v() != actExt.v())
+                    {
+                        return false;
+                    }
+
+                    switch (expExt.v())
+                    {
+                        case LedgerVersion::EMPTY_VERSION:
+                            return true;
+                        case LedgerVersion::ATOMIC_SWAP_RETURNING:
+                            return isTypeMatches(expExt.createAtomicSwapAsk().assetType,
+                                                 actExt.createAtomicSwapAsk().assetType) &&
+                                   isStringMatches(expExt.createAtomicSwapAsk().assetCode,
+                                                   actExt.createAtomicSwapAsk().assetCode);
+                        default:
+                            throw new std::runtime_error("Unexpected ledger version "
+                                                         "in create atomic swap ask rule ext");
+                    }
+                }
                 default:
                     return true;
             }
@@ -190,6 +238,45 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
                                  actualResource.vote().permissionType) &&
                    isIDMatches(requiredResource.vote().pollID,
                                actualResource.vote().pollID);
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            switch (requiredResource.accountSpecificRuleExt().v())
+            {
+                case LedgerVersion::EMPTY_VERSION:
+                    return true;
+                case LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
+                {
+                    if (requiredResource.accountSpecificRuleExt().v() != actualResource.accountSpecificRuleExt().v())
+                    {
+                        return false;
+                    }
+
+                    if (requiredResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
+                    {
+                        return true;
+                    }
+
+                    if (requiredResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type()
+                        != actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type())
+                    {
+                        return false;
+                    }
+
+                    auto conditionLedgerKey = requiredResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    auto actualLedgerKey = actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    switch (conditionLedgerKey.type())
+                    {
+                        case LedgerEntryType::SALE:
+                            return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
+                        default:
+                            return false;
+                    }
+                }
+            }
+        }
+        case LedgerEntryType::INITIATE_KYC_RECOVERY:
+            return isIDMatches(requiredResource.initiateKYCRecovery().roleID,
+                                actualResource.initiateKYCRecovery().roleID);
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -203,7 +290,6 @@ SignerRuleVerifierImpl::isResourceMatches(SignerRuleResource const requiredResou
         case LedgerEntryType::TRANSACTION:
         case LedgerEntryType::LICENSE:
         case LedgerEntryType::STAMP:
-        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
             return true;
         default:
             return false;

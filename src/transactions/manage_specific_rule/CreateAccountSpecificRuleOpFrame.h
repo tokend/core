@@ -12,11 +12,11 @@ class CreateAccountSpecificRuleOpFrame : public ManageAccountSpecificRuleOpFrame
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
+                              std::vector<OperationCondition>& result, LedgerManager& lm) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const override;
+                             std::vector<SignerRequirement>& result, LedgerManager& lm) const override;
 
     bool doCheckValid(Application& app) override;
 

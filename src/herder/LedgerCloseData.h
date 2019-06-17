@@ -46,7 +46,7 @@ class LedgerCloseData
     StellarValue mValue;
 };
 
-std::string stellarValueToString(StellarValue const& sv);
+std::string StellarValueToString(StellarValue const& sv);
 
 #define emptyUpgradeSteps (xdr::xvector<UpgradeType, 6>(0))
 }
