@@ -168,34 +168,36 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application &app)
     return true;
 }
 
-
 bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
-													   LedgerDelta& delta, LedgerManager& ledgerManager,
-													   BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
-													   uint64_t& universalAmount)
+                                                         LedgerDelta& delta, LedgerManager& ledgerManager,
+                                                         const AccountFrame::pointer accountFrame,
+                                                         const BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
+                                                         uint64_t& universalAmount)
 {
-	StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-	return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount);
+    StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
+    return tryAddStatsV2(statisticsV2Processor, accountFrame, balanceFrame, amountToAdd, universalAmount);
 }
+
 bool ReviewIssuanceCreationRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                       const BalanceFrame::pointer balance, const uint64_t amountToAdd,
-                                                       uint64_t& universalAmount)
+                                                         const AccountFrame::pointer account,
+                                                         const BalanceFrame::pointer balance, const uint64_t amountToAdd,
+                                                         uint64_t& universalAmount)
 {
-	const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
-														 universalAmount, mSourceAccount, balance, nullptr);
-	switch (result)
-	{
-		case StatisticsV2Processor::SUCCESS:
-			return true;
-		case StatisticsV2Processor::STATS_V2_OVERFLOW:
-			return false;
-		case StatisticsV2Processor::LIMITS_V2_EXCEEDED:
-			return false;
-		default:
-			CLOG(ERROR, Logging::OPERATION_LOGGER)
-					<< "Unexpeced result from statisticsV2Processor when updating statsV2:" << result;
-			throw std::runtime_error("Unexpected state from statisticsV2Processor when updating statsV2");
-	}
+    const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
+                                                         universalAmount, account, balance, nullptr);
+    switch (result)
+    {
+        case StatisticsV2Processor::SUCCESS:
+            return true;
+        case StatisticsV2Processor::STATS_V2_OVERFLOW:
+            return false;
+        case StatisticsV2Processor::LIMITS_V2_EXCEEDED:
+            return false;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpeced result from statisticsV2Processor when updating statsV2:" << result;
+            throw std::runtime_error("Unexpected state from statisticsV2Processor when updating statsV2");
+    }
 
 }
 
@@ -217,39 +219,44 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 
 		uint32_t allTasks = 0;
 
-        uint64_t universalAmount = 0;
-        auto balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
-            issuanceRequest.asset, db, localDelta);
+    uint64_t universalAmount = 0;
+    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
+    auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(balanceFrame->getAccountID(), db, &localDelta);
 
-		if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
-		{
-			allTasks |= CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
-		}
-		else
-		{
-			requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
-		}
+    if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
+    {
+        allTasks |= CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
+    }
+    else
+    {
+        requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
+    }
 
-		if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
-        {
-            if (!addStatistics(db, localDelta, ledgerManager,
-                               balanceFrame, issuanceRequest.amount,
-                               universalAmount))
-            {
-                allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-            }
-            else
-            {
-                requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
-            }
-        }
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
+    {
+        balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
+                                                                             issuanceRequest.asset, db, localDelta);
+        accountFrame = mSourceAccount;
+    }
 
-		if (allTasks == 0)
-        {
-		    localTx.commit();
-		    localDelta.commit();
-            return allTasks;
-        }
+    if (!addStatistics(db, localDelta, ledgerManager,
+                       accountFrame,
+                       balanceFrame, issuanceRequest.amount,
+                       universalAmount))
+    {
+        allTasks |= CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+    }
+    else
+    {
+        requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
+    }
+
+    if (allTasks == 0)
+    {
+        localTx.commit();
+        localDelta.commit();
         return allTasks;
-	}
+    }
+    return allTasks;
+}
 }
