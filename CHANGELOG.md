@@ -5,6 +5,7 @@
 ### Fixed
 
 * Ledger changes after removing signer and signer role
+* Statistics calculation for deposit stats op type
 
 ## 3.5.0-x.0
 

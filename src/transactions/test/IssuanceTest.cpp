@@ -20,6 +20,7 @@
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
+#include <transactions/test/test_helper/ManageBalanceTestHelper.h>
 
 using namespace std;
 using namespace stellar;
@@ -687,6 +688,103 @@ TEST_CASE("Issuance", "[tx][issuance]")
                 manageLimitsOp.details.limitsCreateDetails().assetCode = "EUR";
                 manageLimitsOp.details.limitsCreateDetails().statsOpType = StatsOpType::DEPOSIT;
                 manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = false;
+
+                SECTION("Issue to someone else")
+                {
+                    auto balanceHelper = BalanceHelperLegacy::Instance();
+                    ManageBalanceTestHelper manageBalanceTestHelper(testManager);
+
+                    auto account = Account{SecretKey::random() , 0};
+                    CreateAccountTestHelper createAccountTestHelper(testManager);
+                    createAccountTestHelper.
+                        applyCreateAccountTx(root, account.key.getPublicKey(), 1);
+
+                    auto accountID = account.key.getPublicKey();
+
+                    manageLimitsOp.details.limitsCreateDetails().accountID.activate() = account.key.getPublicKey();
+                    manageLimitsOp.details.limitsCreateDetails().dailyOut = preIssuedAmount/3;
+                    manageLimitsOp.details.limitsCreateDetails().weeklyOut = preIssuedAmount*6;
+                    manageLimitsOp.details.limitsCreateDetails().monthlyOut = preIssuedAmount*12;
+                    manageLimitsOp.details.limitsCreateDetails().annualOut = preIssuedAmount*15;
+                    manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
+
+                    SECTION("With tasks")
+                    {
+                        issuanceTasks = 8;
+                        uint32_t zeroTasks = 0;
+
+                        auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
+
+                        auto createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued,
+                                                                             preIssuedAmount / 2,
+                                                                             issuerBalanceID, anotherReference, &zeroTasks);
+                        REQUIRE(createIssuanceResult.success().fulfilled);
+
+                        manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
+
+                        auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
+
+                        REQUIRE(receiverBalance);
+
+                        createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued,
+                                                                             preIssuedAmount / 2,
+                                                                             receiverBalance->getBalanceID(), reference, &issuanceTasks);
+                        REQUIRE_FALSE(createIssuanceResult.success().fulfilled);
+
+                        auto requestID = createIssuanceResult.success().requestID;
+                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+
+                        uint32_t toAdd = 0, toRemove = issuanceTasks;
+                        auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
+                        reviewRequestHelper.applyReviewRequestTxWithTasks(
+                            issuer,
+                            requestID,
+                            request->getHash(),
+                            ReviewableRequestType::CREATE_ISSUANCE,
+                            ReviewRequestOpAction::APPROVE,
+                            "",
+                            ReviewRequestResultCode::SUCCESS,
+                            &toAdd,
+                            &toRemove);
+
+                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+
+                        REQUIRE(request->getAllTasks() == (issuanceTasks | CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED));
+                    }
+                    SECTION("with autoapprove")
+                    {
+                        issuanceTasks = 0;
+                        auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
+
+                        auto createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             issuerBalanceID, anotherReference, &issuanceTasks);
+                        REQUIRE(createIssuanceResult.success().fulfilled);
+
+                        auto requestID = createIssuanceResult.success().requestID;
+                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(!request);
+
+                        manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
+
+                        auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
+
+                        REQUIRE(receiverBalance);
+
+                        createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             receiverBalance->getBalanceID(), reference, &issuanceTasks);
+                        REQUIRE(!createIssuanceResult.success().fulfilled);
+
+                        requestID = createIssuanceResult.success().requestID;
+                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(request->getAllTasks() ==
+                                CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED);
+
+                    }
+                }
 
                 SECTION("Not exceeded"){
                     manageLimitsOp.details.limitsCreateDetails().dailyOut = preIssuedAmount*3;
