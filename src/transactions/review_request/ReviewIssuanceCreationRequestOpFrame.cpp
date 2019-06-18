@@ -220,8 +220,8 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd( Application 
 		uint32_t allTasks = 0;
 
     uint64_t universalAmount = 0;
-    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest.receiver, db, &localDelta);
-    auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(balanceFrame->getAccountID(), db, &localDelta);
+    auto balanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(issuanceRequest.receiver, db, &localDelta);
+    auto accountFrame = AccountHelperLegacy::Instance()->mustLoadAccount(balanceFrame->getAccountID(), db);
 
     if (!asset->isAvailableForIssuanceAmountSufficient(issuanceRequest.amount))
     {
