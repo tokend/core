@@ -15,7 +15,8 @@ class CreateKYCRecoveryRequestOpFrame : public OperationFrame {
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const override;
+                             std::vector<SignerRequirement>& result,
+                             LedgerManager& ledgerManager) const override;
 
     CreateKYCRecoveryRequestResult&
     innerResult()

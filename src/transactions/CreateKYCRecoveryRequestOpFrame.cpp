@@ -57,7 +57,8 @@ CreateKYCRecoveryRequestOpFrame::tryGetOperationConditions(StorageHelper& storag
 
 bool
 CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                                          std::vector<SignerRequirement>& result) const
+                                                          std::vector<SignerRequirement>& result,
+                                                          LedgerManager& ledgerManager) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::KYC_RECOVERY);
@@ -73,9 +74,16 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
             action = SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
     }
     else {
-        action = SignerRuleAction::CREATE_WITH_TASKS;
+        action = SignerRuleAction::CREATE;
         if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
-            action = SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
+            action = SignerRuleAction::CREATE_FOR_OTHER;
+
+        if (!ledgerManager.shouldUse(LedgerVersion::FIX_CREATE_KYC_RECOVERY_PERMISSIONS))
+        {
+            action = SignerRuleAction::CREATE_WITH_TASKS;
+            if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
+                action = SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
+        }
     }
 
     result.emplace_back(resource, action);
