@@ -8,7 +8,7 @@
 * Statistics calculation for deposit stats op type
 * Create KYC recovery request permissions
 
-## 3.5.0-x.0
+## 3.5.0
 
 ### Added
 
