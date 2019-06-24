@@ -2,9 +2,11 @@
 #include "main/Application.h"
 #include "crypto/Hex.h"
 #include <overlay/OverlayManager.h>
+#include "herder/Upgrades.h"
 #include <xdrpp/marshal.h>
 #include "util/Logging.h"
-#include "LedgerCloseData.h"
+#include "util/asio.h"
+#include "util/XDROperators.h"
 
 using namespace std;
 
@@ -18,12 +20,11 @@ LedgerCloseData::LedgerCloseData(uint32_t ledgerSeq, TxSetFramePtr txSet,
     Value x;
     Value y(x.begin(), x.end());
 
-    using xdr::operator==;
     assert(txSet->getContentsHash() == mValue.txSetHash);
 }
 
 std::string
-stellarValueToString(StellarValue const& sv)
+StellarValueToString(StellarValue const& sv)
 {
     std::stringstream res;
 
@@ -43,20 +44,7 @@ stellarValueToString(StellarValue const& sv)
             {
                 LedgerUpgrade lupgrade;
                 xdr::xdr_from_opaque(upgrade, lupgrade);
-                switch (lupgrade.type())
-                {
-                case LedgerUpgradeType::VERSION:
-                    res << "VERSION=" << lupgrade.newLedgerVersion();
-                    break;
-                case LedgerUpgradeType::MAX_TX_SET_SIZE:
-                    res << "MAX_TX_SET_SIZE=" << lupgrade.newMaxTxSetSize();
-                    break;
-                case LedgerUpgradeType::TX_EXPIRATION_PERIOD:
-                    res << "TX_EXPIRATION_PERIOD=" << lupgrade.newTxExpirationPeriod();
-                    break;
-                default:
-                    res << "<unsupported>";
-                }
+                res << Upgrades::toString(lupgrade);
             }
             catch (std::exception&)
             {

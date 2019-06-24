@@ -3,6 +3,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/SignerHelper.h"
 #include "ledger/SignerRoleHelper.h"
+#include "ledger/LedgerDelta.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -188,6 +189,13 @@ ManageSignerOpFrame::updateSigner(Application &app, StorageHelper &storageHelper
         return false;
     }
 
+    auto& signerRoleHelper = storageHelper.getSignerRoleHelper();
+    if (!signerRoleHelper.exists(data.roleID))
+    {
+        innerResult().code(ManageSignerResultCode::NO_SUCH_ROLE);
+        return false;
+    }
+
     auto& signerEntry = signerFrame->getEntry();
     signerEntry.roleID = data.roleID;
     signerEntry.weight = data.weight;
@@ -216,6 +224,10 @@ ManageSignerOpFrame::deleteSigner(Application &app, StorageHelper &storageHelper
     }
 
     signerHelper.storeDelete(key);
+    if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_SIGNER_CHANGES_REMOVE))
+    {
+        storageHelper.mustGetLedgerDelta().deleteEntry(key);
+    }
 
     innerResult().code(ManageSignerResultCode::SUCCESS);
 

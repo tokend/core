@@ -4,13 +4,13 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <memory>
-#include <functional>
-#include <string>
-#include <set>
-#include <utility>
-#include "scp/SCP.h"
 #include "lib/json/json-forwards.h"
+#include "scp/SCP.h"
+#include <functional>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
 
 namespace stellar
 {
@@ -48,6 +48,7 @@ class BallotProtocol
     std::unique_ptr<SCPBallot> mCommit;             // c
     std::map<NodeID, SCPEnvelope> mLatestEnvelopes; // M
     SCPPhase mPhase;                                // Phi
+    std::unique_ptr<Value> mValueOverride;          // z
 
     int mCurrentMessageLevel; // number of messages triggered in one run
 
@@ -84,10 +85,10 @@ class BallotProtocol
 
     // returns information about the local state in JSON format
     // including historical statements if available
-    void dumpInfo(Json::Value& ret);
+    Json::Value getJsonInfo();
 
     // returns information about the quorum for a given node
-    void dumpQuorumInfo(Json::Value& ret, NodeID const& id, bool summary);
+    Json::Value getJsonQuorumInfo(NodeID const& id, bool summary);
 
     // returns the hash of the QuorumSet that should be downloaded
     // with the statement.
@@ -164,7 +165,7 @@ class BallotProtocol
     std::set<SCPBallot> getPrepareCandidates(SCPStatement const& hint);
 
     // helper to perform step (8) from the paper
-    void updateCurrentIfNeeded();
+    bool updateCurrentIfNeeded(SCPBallot const& h);
 
     // An interval is [low,high] represented as a pair
     using Interval = std::pair<uint32, uint32>;
@@ -260,5 +261,7 @@ class BallotProtocol
     bool federatedRatify(StatementPredicate voted);
 
     void startBallotProtocolTimer();
+    void stopBallotProtocolTimer();
+    void checkHeardFromQuorum();
 };
 }

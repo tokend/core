@@ -15,9 +15,11 @@ namespace stellar
  */
 enum class StatusCategory
 {
-    HISTORY,
+    HISTORY_CATCHUP,
+    HISTORY_PUBLISH,
     NTP,
-    NUM
+    REQUIRES_UPGRADES,
+    COUNT
 };
 
 /*
@@ -37,12 +39,23 @@ class StatusManager
     void removeStatusMessage(StatusCategory issue);
     std::string getStatusMessage(StatusCategory issue) const;
 
-    const_iterator begin() const { return mStatusMessages.begin(); }
-    const_iterator end() const { return mStatusMessages.end(); }
-    std::size_t size() const { return mStatusMessages.size(); }
+    const_iterator
+    begin() const
+    {
+        return mStatusMessages.begin();
+    }
+    const_iterator
+    end() const
+    {
+        return mStatusMessages.end();
+    }
+    std::size_t
+    size() const
+    {
+        return mStatusMessages.size();
+    }
 
   private:
     storage mStatusMessages;
 };
-
 }

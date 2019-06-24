@@ -20,7 +20,8 @@ class UpdateAssetOpFrame : public ManageAssetOpFrame
 
 	bool
 	tryGetOperationConditions(StorageHelper& storageHelper,
-							  std::vector<OperationCondition>& result) const override;
+							  std::vector<OperationCondition>& result,
+							  LedgerManager& ledgerManager) const override;
 
 	bool
 	tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -34,8 +35,6 @@ public:
     bool doApply(Application& app, StorageHelper &storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
-
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
 
 protected:
     std::string getAssetCode() const override;

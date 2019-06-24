@@ -51,9 +51,6 @@ namespace txtest
 
         REQUIRE(actualResultCode == expectedResultCode);
 
-        auto txfee = mTestManager->getApp().getLedgerManager().getTxFee();
-        REQUIRE(txResult.feeCharged == txfee);
-
         std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer> poolAfter;
         poolAfter = poolEntryHelper->loadPool(db);
 
@@ -105,9 +102,6 @@ namespace txtest
                 ManageExternalSystemAccountIdPoolEntryOpFrame::getInnerCode(txResult.result.results()[0]);
 
         REQUIRE(actualResultCode == expectedResultCode);
-
-        auto txfee = mTestManager->getApp().getLedgerManager().getTxFee();
-        REQUIRE(txResult.feeCharged == txfee);
 
         std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer> poolAfter;
         poolAfter = poolEntryHelper->loadPool(db);

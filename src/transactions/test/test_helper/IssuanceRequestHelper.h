@@ -19,12 +19,14 @@ class IssuanceRequestHelper : TxHelper
     CreatePreIssuanceRequestResult applyCreatePreIssuanceRequest(
         Account& source, SecretKey& preIssuedAssetSigner, AssetCode assetCode,
         uint64_t amount, std::string reference,
-        CreatePreIssuanceRequestResultCode expectedResult =
-            CreatePreIssuanceRequestResultCode::SUCCESS);
+        CreatePreIssuanceRequestResultCode expectedResult = CreatePreIssuanceRequestResultCode::SUCCESS,
+        uint32_t* allTasks = nullptr,
+        OperationResultCode expectedOpCode = OperationResultCode::opINNER);
 
     TransactionFramePtr
     createPreIssuanceRequestTx(Account& source,
-                               const PreIssuanceRequest& request);
+                               const PreIssuanceRequest& request,
+                               uint32_t* allTasks = nullptr);
 
     PreIssuanceRequest createPreIssuanceRequest(SecretKey& preIssuedAssetSigner,
                                                 AssetCode assetCode,

@@ -376,5 +376,4 @@ namespace stellar {
             throw std::runtime_error("Fixed fee amount does not fit asset precision");
         }
     }
-
 }

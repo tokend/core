@@ -57,9 +57,6 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
 
     REQUIRE(actualResultCode == expectedResultCode);
 
-    auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
-    REQUIRE(txResult.feeCharged == txFee);
-
     std::vector<BalanceFrame::pointer> balancesAfter;
     balanceHelper->loadBalances(account, balancesAfter, db);
 

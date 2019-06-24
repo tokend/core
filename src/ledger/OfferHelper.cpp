@@ -41,9 +41,9 @@ namespace stellar {
                 "lastmodified       INT              NOT NULL,"
                 "version			INT				 NOT NULL DEFAULT 0,"
                 "PRIMARY KEY      (offer_id)"
-                ");";;
+                ");";
         db.getSession() << "CREATE INDEX base_quote_price ON offer"
-                " (order_book_id, base_asset_code, quote_asset_code, is_buy, price);";;
+                " (order_book_id, base_asset_code, quote_asset_code, is_buy, price);";
     }
 
     void OfferHelper::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
@@ -231,6 +231,38 @@ namespace stellar {
         }
     }
 
+    bool OfferHelper::exists(Database &db, AssetCode const &base, AssetCode const &quote, uint64_t *orderBookIDPtr)
+    {
+        auto timer = db.getSelectTimer("offer-exists");
+        string sql = "SELECT NULL FROM offer "
+                        "WHERE base_asset_code = :base_asset "
+                            "AND quote_asset_code = :quote_asset";
+        if (orderBookIDPtr != nullptr)
+        {
+            sql += " AND order_book_id = :order_book_id";
+        }
+        sql = "SELECT EXISTS (" + sql + ")";
+        auto prep = db.getPreparedStatement(sql);
+        auto& st = prep.statement();
+
+        string baseAssetCode = base;
+        string quoteAssetCode = quote;
+        st.exchange(use(baseAssetCode, "base_asset"));
+        st.exchange(use(quoteAssetCode, "quote_asset"));
+        if (orderBookIDPtr != nullptr)
+        {
+            uint64_t orderBookID = *orderBookIDPtr;
+            st.exchange(use(orderBookID, "order_book_id"));
+        }
+
+        auto exists = 0;
+        st.exchange(into(exists));
+        st.define_and_bind();
+        st.execute(true);
+
+        return exists != 0;
+    }
+
     OfferFrame::pointer
     OfferHelper::loadOffer(AccountID const &accountID, uint64_t offerID,  Database &db, LedgerDelta *delta) {
         OfferFrame::pointer retOffer;
@@ -290,6 +322,8 @@ vector<OfferFrame::pointer> OfferHelper::loadOffersWithFilters(
             priceUpperBound = *priceUpperBoundPtr;
         }
 
+        sql += " ORDER BY offer_id ASC";
+
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
 
@@ -323,7 +357,7 @@ std::vector<OfferFrame::pointer> OfferHelper::loadOffers(AssetCode const& base,
 {
     string sql = offerColumnSelector;
     sql += " WHERE base_asset_code=:base_asset_code AND quote_asset_code = :quote_asset_code AND order_book_id = :order_book_id AND quote_amount < :quote_amount";
-
+    sql += " ORDER BY offer_id ASC";
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
 
@@ -342,6 +376,32 @@ std::vector<OfferFrame::pointer> OfferHelper::loadOffers(AssetCode const& base,
     });
 
     return results;
+}
+
+std::vector<OfferFrame::pointer>
+OfferHelper::loadOffers(AccountID const &accountID, uint64_t const orderBookID,
+                        Database &db)
+{
+    string sql = offerColumnSelector;
+    sql += " WHERE order_book_id = :obi AND owner_id = :oi";
+    sql += " ORDER BY offer_id ASC";
+    std::string accountIDStr;
+    accountIDStr = PubKeyUtils::toStrKey(accountID);
+
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+
+    st.exchange(use(orderBookID, "obi"));
+    st.exchange(use(accountIDStr, "oi"));
+
+    auto timer = db.getSelectTimer("offers");
+
+    std::vector<OfferFrame::pointer> result;
+    loadOffers(prep, [&result](LedgerEntry const& of)
+    {
+       result.emplace_back(make_shared<OfferFrame>(of));
+    });
+    return result;
 }
 
 std::unordered_map<AccountID, std::vector<OfferFrame::pointer>> OfferHelper::loadAllOffers(Database &db) {

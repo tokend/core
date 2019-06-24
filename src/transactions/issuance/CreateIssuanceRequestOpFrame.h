@@ -31,7 +31,8 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
+                              std::vector<OperationCondition>& result,
+                              LedgerManager& ledgerManager) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -68,7 +69,7 @@ public:
         mIsFeeRequired = false;
     }
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector();
 
     // flags for issuance tasks
     static const uint32_t INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT = 1;

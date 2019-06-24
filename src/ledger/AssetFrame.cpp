@@ -5,6 +5,7 @@
 #include "AssetFrame.h"
 #include "util/types.h"
 #include "xdrpp/printer.h"
+#include <locale>
 
 using namespace std;
 
@@ -189,7 +190,8 @@ bool AssetFrame::isAssetCodeValid(AssetCode const& code)
         }
         else
         {
-            if (b > 0x7F || !std::isalnum((char)b, cLocale))
+            auto bAsChar = (char)b;
+            if (b > 0x7F || !std::isalnum(bAsChar, std::locale::classic()))
             {
                 return false;
             }

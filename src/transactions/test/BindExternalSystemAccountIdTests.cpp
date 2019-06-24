@@ -3,7 +3,7 @@
 #include "util/Timer.h"
 #include "main/Config.h"
 #include "overlay/LoopbackPeer.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -13,6 +13,7 @@
 #include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
 #include "test/test_marshaler.h"
+#include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -22,6 +23,7 @@ typedef std::unique_ptr<Application> appPtr;
 
 TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_id]")
 {
+    const int32 BitcoinExternalSystemType = 1;
     auto const ERC20_TokenExternalSystemType = 4;
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
     VirtualClock clock;
@@ -41,6 +43,10 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
     ManageExternalSystemAccountIDPoolEntryTestHelper manageExternalSystemAccountIDPoolEntryTestHelper(testManager);
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring assetKey = ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(BitcoinExternalSystemType);
+    manageKeyValueHelper.setKey(assetKey)->setUi32Value(BindExternalSystemAccountIdOpFrame::dayInSeconds * 2);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
     // create policy (just entry)
     AccountRuleResource poolResource(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
@@ -75,8 +81,6 @@ TEST_CASE("bind external system account_id", "[tx][bind_external_system_account_
 
     SECTION("Happy path")
     {
-        int32 BitcoinExternalSystemType = 1;
-
         manageExternalSystemAccountIDPoolEntryTestHelper.createExternalSystemAccountIdPoolEntry(root,
                                                                                                 BitcoinExternalSystemType,
                                                                                             "Some data");

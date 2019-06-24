@@ -143,7 +143,6 @@ namespace stellar {
             auto opResult = txResult.result.results()[0];
             auto actualResultCode = CreateAccountOpFrame::getInnerCode(opResult);
             REQUIRE(actualResultCode == builder.expectedResult);
-            REQUIRE(txResult.feeCharged == mTestManager->getApp().getLedgerManager().getTxFee());
             Database& db = mTestManager->getDB();
 
             auto accountHelper = AccountHelperLegacy::Instance();

@@ -2,20 +2,19 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "main/Application.h"
-#include "main/Config.h"
 #include "overlay/PeerAuth.h"
 #include "crypto/ECDH.h"
 #include "crypto/Hex.h"
 #include "crypto/SHA.h"
 #include "crypto/SecretKey.h"
-#include "xdrpp/marshal.h"
+#include "main/Application.h"
+#include "main/Config.h"
 #include "util/Logging.h"
+#include "util/XDROperators.h"
+#include "xdrpp/marshal.h"
 
 namespace stellar
 {
-
-using xdr::operator==;
 
 // Certs expire every hour, are reissued every half hour.
 static const uint64_t expirationLimit = 3600;
@@ -59,9 +58,9 @@ PeerAuth::verifyRemoteAuthCert(NodeID const& remoteNode, AuthCert const& cert)
 {
     if (cert.expiration < mApp.timeNow())
     {
-        CLOG(ERROR, "Overlay") << "PeerAuth cert expired: "
-                               << "expired= " << cert.expiration
-                               << ", now=" << mApp.timeNow();
+        CLOG(ERROR, "Overlay")
+            << "PeerAuth cert expired: "
+            << "expired= " << cert.expiration << ", now=" << mApp.timeNow();
         return false;
     }
     auto hash = sha256(xdr::xdr_to_opaque(
@@ -76,14 +75,16 @@ HmacSha256Key
 PeerAuth::getSharedKey(Curve25519Public const& remotePublic,
                        Peer::PeerRole role)
 {
-    if (mSharedKeyCache.exists(remotePublic))
+    auto key = PeerSharedKeyId{remotePublic, role};
+    if (mSharedKeyCache.exists(key))
     {
-        return mSharedKeyCache.get(remotePublic);
+        return mSharedKeyCache.get(key);
     }
-    auto k = EcdhDeriveSharedKey(mECDHSecretKey, mECDHPublicKey, remotePublic,
-                                 role == Peer::WE_CALLED_REMOTE);
-    mSharedKeyCache.put(remotePublic, k);
-    return k;
+    auto value =
+        EcdhDeriveSharedKey(mECDHSecretKey, mECDHPublicKey, remotePublic,
+                            role == Peer::WE_CALLED_REMOTE);
+    mSharedKeyCache.put(key, value);
+    return value;
 }
 
 HmacSha256Key

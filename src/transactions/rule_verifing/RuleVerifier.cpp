@@ -25,6 +25,13 @@ RuleVerifier::isTypeMatches(uint64_t const expectedType,
 }
 
 bool
+RuleVerifier::isType32Matches(uint32_t const expectedType,
+                              uint32_t const actualType) const
+{
+    return isNumber32Matches(expectedType, actualType);
+}
+
+bool
 RuleVerifier::isIDMatches(uint64_t const expectedID,
                           uint64_t const actualID) const
 {
@@ -36,6 +43,13 @@ RuleVerifier::isNumberMatches(uint64_t const expectedNum,
                               uint64_t const actualNum) const
 {
     return (expectedNum == actualNum) || (actualNum == UINT64_MAX);
+}
+
+bool
+RuleVerifier::isNumber32Matches(uint32_t const expectedNum,
+                                uint32_t const actualNum) const
+{
+    return (expectedNum == actualNum) || (actualNum == UINT32_MAX);
 }
 
 bool

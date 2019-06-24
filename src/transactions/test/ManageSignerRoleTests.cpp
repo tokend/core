@@ -3,7 +3,7 @@
 #include <transactions/test/test_helper/ManageSignerTestHelper.h>
 #include "TxTests.h"
 #include "crypto/SHA.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "overlay/LoopbackPeer.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"

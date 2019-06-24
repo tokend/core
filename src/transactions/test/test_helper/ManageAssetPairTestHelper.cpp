@@ -53,8 +53,6 @@ namespace txtest
 
         REQUIRE(expectedResult == actualResultCode);
 
-        REQUIRE(txResult.feeCharged == mTestManager->getApp().getLedgerManager().getTxFee());
-
         auto countAfter = assetPairHelper->countObjects(db.getSession());
         auto assetPairFrameAfter = assetPairHelper->loadAssetPair(base, quote, db);
 
@@ -127,6 +125,62 @@ namespace txtest
         applyManageAssetPairTx(source, base, quote, physicalPrice, physicalPriceCorrection, maxPriceStep, policies);
     }
 
+    TransactionFramePtr ManageAssetPairTestHelper::createRemoveAssetPairTx(txtest::Account &source, AssetCode base,
+                                                                           AssetCode quote, txtest::Account *signer)
+    {
+        Operation op;
+        op.body.type(OperationType::REMOVE_ASSET_PAIR);
+        auto& body = op.body.removeAssetPairOp();
+        body.base = base;
+        body.quote = quote;
+
+        return TxHelper::txFromOperation(source, op, signer);
+    }
+
+    RemoveAssetPairResult ManageAssetPairTestHelper::applyRemoveAssetPairTx(txtest::Account &source, AssetCode base,
+                                                                            AssetCode quote, txtest::Account *signer,
+                                                                            RemoveAssetPairResultCode expectedResult,
+                                                                            OperationResultCode expectedOpResult)
+    {
+        auto assetPairHelper = AssetPairHelper::Instance();
+        Database& db = mTestManager->getDB();
+        auto countBefore = assetPairHelper->countObjects(db.getSession());
+
+        TransactionFramePtr txFrame;
+        txFrame = createRemoveAssetPairTx(source, base, quote, signer);
+
+        mTestManager->applyCheck(txFrame);
+        auto txResult = txFrame->getResult();
+        auto opResult = txResult.result.results()[0];
+        REQUIRE(opResult.code() == expectedOpResult);
+        if (opResult.code() != OperationResultCode::opINNER)
+        {
+            return RemoveAssetPairResult();
+        }
+
+        auto actualResultCode = RemoveAssetPairOpFrame::getInnerCode(opResult);
+
+        REQUIRE(expectedResult == actualResultCode);
+
+        auto countAfter = assetPairHelper->countObjects(db.getSession());
+        auto assetPairFrameAfter = assetPairHelper->loadAssetPair(base, quote, db);
+
+        if (actualResultCode != RemoveAssetPairResultCode::SUCCESS)
+        {
+            REQUIRE(countBefore == countAfter);
+        }
+        else
+        {
+            REQUIRE(countBefore == countAfter + 1);
+        }
+
+        return opResult.tr().removeAssetPairResult();
+    }
+
+    void ManageAssetPairTestHelper::removeAssetPair(txtest::Account &source, AssetCode base, AssetCode quote)
+    {
+        applyRemoveAssetPairTx(source, base, quote);
+    }
 
 }
 

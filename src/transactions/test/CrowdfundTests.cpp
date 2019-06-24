@@ -4,7 +4,7 @@
 #include <ledger/AssetPairHelper.h>
 #include <transactions/FeesManager.h>
 #include "main/Application.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "test_helper/TestManager.h"
 #include "test_helper/Account.h"

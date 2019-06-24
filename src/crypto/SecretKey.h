@@ -4,7 +4,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "xdr/Stellar-types.h"
+#include "xdr/types.h"
 #include <ostream>
 #include <functional>
 #include <array>
@@ -15,12 +15,14 @@ namespace stellar
 using xdr::operator==;
 
 class ByteSlice;
+struct SecretValue;
 
 class SecretKey
 {
     using uint512 = xdr::opaque_array<64>;
     CryptoKeyType mKeyType;
     uint512 mSecretKey;
+    PublicKey mPublicKey;
 
     struct Seed
     {
@@ -37,10 +39,10 @@ class SecretKey
     ~SecretKey();
 
     // Get the public key portion of this secret key.
-    PublicKey getPublicKey() const;
+    PublicKey const& getPublicKey() const;
 
     // Get the seed portion of this secret key as a StrKey string.
-    std::string getStrKeySeed() const;
+    SecretValue getStrKeySeed() const;
 
     // Get the public key portion of this secret key as a StrKey string.
     std::string getStrKeyPublic() const;
@@ -56,7 +58,9 @@ class SecretKey
 
     // Decode a secret key from a provided StrKey seed value.
     static SecretKey fromStrKeySeed(std::string const& strKeySeed);
-    static SecretKey fromStrKeySeed(std::string &&strKeySeed) {
+    static SecretKey
+    fromStrKeySeed(std::string&& strKeySeed)
+    {
         SecretKey ret = fromStrKeySeed(strKeySeed);
         for (std::size_t i = 0; i < strKeySeed.size(); ++i)
             strKeySeed[i] = 0;
@@ -66,7 +70,8 @@ class SecretKey
     // Decode a secret key from a binary seed value.
     static SecretKey fromSeed(ByteSlice const& seed);
 
-    bool operator==(SecretKey const& rh)
+    bool
+    operator==(SecretKey const& rh) const
     {
         return (mKeyType == rh.mKeyType) && (mSecretKey == rh.mSecretKey);
     }
@@ -80,8 +85,7 @@ bool verifySig(PublicKey const& key, Signature const& signature,
                ByteSlice const& bin);
 
 void clearVerifySigCache();
-void flushVerifySigCacheCounts(uint64_t& hits, uint64_t& misses,
-                               uint64_t& ignores);
+void flushVerifySigCacheCounts(uint64_t& hits, uint64_t& misses);
 
 std::string toShortString(PublicKey const& pk);
 

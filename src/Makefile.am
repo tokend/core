@@ -1,5 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
+AUTOMAKE_OPTIONS = serial-tests
 bin_PROGRAMS = stellar-core
 
 include $(top_srcdir)/common.mk
@@ -21,16 +22,23 @@ SUFFIXES = .x .h
 $(srcdir)/src.mk: $(top_srcdir)/make-mks
 	cd $(top_srcdir) && ./make-mks
 
+$(TESTDATA_DIR)/%.cfg : $(top_srcdir)/docs/%.cfg
+	mkdir -p $(@D) && cp $< $@
+
+$(TESTDATA_DIR)/%.json : $(top_srcdir)/src/history/serialize-tests/%.json
+	mkdir -p $(@D) && cp $< $@
+
 .PHONY: always
 always:
 	@:
 
 # Always rebuild because .git/HEAD is a symbolic ref one can't depend on
-StellarCoreVersion.h: always
+main/StellarCoreVersion.cpp: always
 	@vers=$$(cd "$(srcdir)" \
 		&& git describe --always --dirty --tags 2>/dev/null \
 		|| echo "$(PACKAGE) $(VERSION)"); \
-	    echo "#define STELLAR_CORE_VERSION \"$$vers\"" > $@~
+		sed -e "s/%%VERSION%%/$$vers/" \
+			< "$(srcdir)/main/StellarCoreVersion.cpp.in" > $@~
 	@if cmp -s $@~ $@; then rm -f $@~; else \
 	    mv -f $@~ $@ && printf "echo '%s' > $@\n" "$$(cat $@)"; fi
 
@@ -42,7 +50,7 @@ endif # !USE_POSTGRES
 
 if USE_CLANG_FORMAT
 format: always
-	cd $(srcdir) && $(CLANG_FORMAT) -i $(SRC_CXX_FILES) $(SRC_H_FILES)
+	cd $(srcdir) && $(CLANG_FORMAT) -style=file -i $(SRC_CXX_FILES) $(SRC_H_FILES) $(SRC_TEST_CXX_FILES) $(SRC_TEST_H_FILES)
 endif # USE_CLANG_FORMAT
 
 if USE_AFL_FUZZ
@@ -54,7 +62,7 @@ fuzz-testcases: stellar-core
 
 fuzz: fuzz-testcases stellar-core
 	mkdir -p fuzz-findings
-	afl-fuzz -m 8000 -i fuzz-testcases -o fuzz-findings \
+	afl-fuzz -m 8000 -t 250 -i fuzz-testcases -o fuzz-findings \
 	    ./stellar-core --fuzz @@
 
 fuzz-clean: always

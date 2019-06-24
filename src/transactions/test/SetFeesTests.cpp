@@ -4,8 +4,7 @@
 
 #include "main/Application.h"
 #include "overlay/LoopbackPeer.h"
-#include "util/make_unique.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/FeeHelper.h"
@@ -188,6 +187,35 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         }
         SECTION("Invalid percent fee") {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::WITHDRAWAL_FEE, assetCode, 0, 101 * ONE);
+            setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
+        }
+    }
+
+    SECTION("Investment fee") {
+        SECTION("Success") {
+            auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 2 * ONE);
+            setFeesTestHelper.applySetFeesTx(master, &fee, false);
+            SECTION("update existing") {
+                fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 0);
+                setFeesTestHelper.applySetFeesTx(master, &fee, false);
+            }
+            SECTION("Can delete") {
+                fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 0);
+                setFeesTestHelper.applySetFeesTx(master, &fee, true);
+            }
+
+        }
+        SECTION("Success zero") {
+            auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 0);
+            setFeesTestHelper.applySetFeesTx(master, &fee, false);
+        }
+        SECTION("Invalid percent fee") {
+            auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 101 * ONE);
+            setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
+        }
+
+        SECTION("Fixed invest fee not allowed") {
+            auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 12, 10 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }
     }

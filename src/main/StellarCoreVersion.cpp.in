@@ -1,0 +1,4 @@
+#include "main/StellarCoreVersion.h"
+
+const char * STELLAR_CORE_VERSION = "@VERSION@";
+

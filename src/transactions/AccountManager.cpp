@@ -118,11 +118,14 @@ namespace stellar {
         EntryHelperProvider::storeChangeEntry(mDelta, mDb, toBalance->mEntry);
 
         uint64_t universalAmount = 0;
-        if (!calculateUniversalAmount(fromBalance->getAsset(), amount, universalAmount)) {
-            return ProcessTransferResult(Result::STATS_OVERFLOW, 0);
-        }
-        if (universalAmount == 0) {
-            return ProcessTransferResult(Result::SUCCESS, 0);
+        if (!mLm.shouldUse(LedgerVersion::FIX_PAYMENT_STATS))
+        {
+            if (!calculateUniversalAmount(fromBalance->getAsset(), amount, universalAmount)) {
+                return ProcessTransferResult(Result::STATS_OVERFLOW, 0);
+            }
+            if (universalAmount == 0) {
+                return ProcessTransferResult(Result::SUCCESS, 0);
+            }
         }
 
         auto result = ProcessTransferResult(Result::SUCCESS, universalAmount);

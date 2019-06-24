@@ -121,9 +121,6 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 
     REQUIRE(actualResultCode == expectedResultCode);
 
-    auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
-    REQUIRE(txResult.feeCharged == txFee);
-
     ManageSaleResult manageSaleResult = opResult.tr().manageSaleResult();
 
     if (actualResultCode != ManageSaleResultCode::SUCCESS)

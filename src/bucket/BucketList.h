@@ -240,15 +240,20 @@ namespace stellar
 class Application;
 class Bucket;
 
+namespace testutil
+{
+class BucketListDepthModifier;
+}
+
 class BucketLevel
 {
-    size_t mLevel;
+    uint32_t mLevel;
     FutureBucket mNextCurr;
     std::shared_ptr<Bucket> mCurr;
     std::shared_ptr<Bucket> mSnap;
 
   public:
-    BucketLevel(size_t i);
+    BucketLevel(uint32_t i);
     uint256 getHash() const;
     FutureBucket const& getNext() const;
     FutureBucket& getNext();
@@ -264,6 +269,24 @@ class BucketLevel
     std::shared_ptr<Bucket> snap();
 };
 
+// NOTE: The access specifications for this class have been carefully chosen to
+//       make it so BucketList::kNumLevels can only be modified from
+//       BucketListDepthModifier -- not even BucketList can modify it. Please
+//       use care when modifying this class.
+class BucketListDepth
+{
+    uint32_t mNumLevels;
+
+    BucketListDepth& operator=(uint32_t numLevels);
+
+  public:
+    BucketListDepth(uint32_t numLevels);
+
+    operator uint32_t() const;
+
+    friend class testutil::BucketListDepthModifier;
+};
+
 class BucketList
 {
     // Helper for calculating `levelShouldSpill`
@@ -274,24 +297,46 @@ class BucketList
     // Number of bucket levels in the bucketlist. Every bucketlist in the system
     // will have this many levels and it effectively gets wired-in to the
     // protocol. Careful about changing it.
-    static size_t const kNumLevels;
+    static BucketListDepth kNumLevels;
 
     // Returns size of a given level, in ledgers.
-    static uint32_t levelSize(size_t level);
+    static uint32_t levelSize(uint32_t level);
 
     // Returns half the size of a given level, in ledgers.
-    static uint32_t levelHalf(size_t level);
+    static uint32_t levelHalf(uint32_t level);
+
+    // Returns the size of curr on a given level and ledger, in ledgers,
+    // assuming that every ledger is present.
+    static uint32_t sizeOfCurr(uint32_t ledger, uint32_t level);
+
+    // Returns the size of snap on a given level and ledger, in ledgers,
+    // assuming that every ledger is present.
+    static uint32_t sizeOfSnap(uint32_t ledger, uint32_t level);
+
+    // Returns the oldest ledger in curr on a given level and ledger,
+    // assuming that every ledger is present.
+    static uint32_t oldestLedgerInCurr(uint32_t ledger, uint32_t level);
+
+    // Returns the oldest ledger in snap on a given level and ledger,
+    // assuming that every ledger is present.
+    static uint32_t oldestLedgerInSnap(uint32_t ledger, uint32_t level);
 
     // Returns true if, at a given point-in-time (`ledger`), a given `level`
     // should spill curr->snap and start merging snap into its next level.
-    static bool levelShouldSpill(uint32_t ledger, size_t level);
+    static bool levelShouldSpill(uint32_t ledger, uint32_t level);
+
+    // Returns true if at given `level` dead entries should be kept.
+    static bool keepDeadEntries(uint32_t level);
 
     // Create a new BucketList with every `kNumLevels` levels, each with
     // an empty bucket in `curr` and `snap`.
     BucketList();
 
     // Return level `i` of the BucketList.
-    BucketLevel& getLevel(size_t i);
+    BucketLevel const& getLevel(uint32_t i) const;
+
+    // Return level `i` of the BucketList.
+    BucketLevel& getLevel(uint32_t i);
 
     // Return a cumulative hash of the entire bucketlist; this is the hash of
     // the concatenation of each level's hash, each of which in turn is the hash
@@ -302,7 +347,7 @@ class BucketList
     // merging buckets between levels. This needs to be called after forcing a
     // BucketList to adopt a new state, either at application restart or when
     // catching up from buckets loaded over the network.
-    void restartMerges(Application& app, uint32_t currLedger);
+    void restartMerges(Application& app);
 
     // Add a batch of live and dead entries to the bucketlist, representing the
     // entries effected by closing `currLedger`. The bucketlist will incorporate

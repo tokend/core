@@ -231,8 +231,8 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
         return false;
     }
     if (mEnvelope.tx.timeBounds.maxTime < closeTime ||
-            (!isLicenseOp() && mEnvelope.tx.timeBounds.maxTime - closeTime >
-            lm.getTxExpirationPeriod())
+            (!isLicenseOp() && ((mEnvelope.tx.timeBounds.maxTime - closeTime) >
+            lm.getTxExpirationPeriod()))
             )
     {
         app.getMetrics()

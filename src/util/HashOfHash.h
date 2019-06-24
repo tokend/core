@@ -1,5 +1,5 @@
 #pragma once
-#include <xdr/Stellar-types.h>
+#include <xdr/types.h>
 
 namespace std
 {

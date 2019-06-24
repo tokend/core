@@ -8,217 +8,232 @@
 #include "Application.h"
 #include "main/Config.h"
 #include "main/PersistentState.h"
+#include "util/MetricResetter.h"
 #include <thread>
 #include "medida/timer_context.h"
 
-namespace medida {
-    class Counter;
-
-    class Timer;
+namespace medida
+{
+class Counter;
+class Timer;
 }
 
-namespace stellar {
-    class TmpDirManager;
+namespace stellar
+{
+class TmpDirManager;
 
-    class LedgerManager;
+class LedgerManager;
 
-    class Herder;
+class Herder;
+class HerderPersistence;
+class BucketManager;
 
-    class BucketManager;
+class HistoryManager;
 
-    class HistoryManager;
+class Invariant;
 
-    class Invariant;
+class ProcessManager;
 
-    class ProcessManager;
+class CommandHandler;
 
-    class CommandHandler;
+class Database;
 
-    class Database;
+class ApplicationImpl : public Application
+{
+public:
+    ApplicationImpl(VirtualClock &clock, Config cfg);
 
-    class LoadGenerator;
+    virtual ~ApplicationImpl() override;
 
-    class NtpSynchronizationChecker;
+    virtual void initialize() override;
 
-    class ApplicationImpl : public Application {
-    public:
-        ApplicationImpl(VirtualClock &clock, Config cfg);
+    virtual uint64_t timeNow() override;
 
-        virtual ~ApplicationImpl() override;
+    virtual Config const &getConfig() override;
 
-        virtual uint64_t timeNow() override;
+    virtual State getState() const override;
 
-        virtual Config const &getConfig() override;
+    virtual std::string getStateHuman() const override;
 
-        virtual State getState() const override;
+    virtual bool isStopping() const override;
 
-        virtual std::string getStateHuman() const override;
+    virtual VirtualClock &getClock() override;
 
-        virtual bool isStopping() const override;
+    virtual medida::MetricsRegistry &getMetrics() override;
 
-        virtual VirtualClock &getClock() override;
+    virtual void syncOwnMetrics() override;
 
-        virtual medida::MetricsRegistry &getMetrics() override;
+    virtual void syncAllMetrics() override;
+    virtual void clearMetrics(std::string const& domain) override;
+    virtual TmpDirManager &getTmpDirManager() override;
 
-        virtual void syncOwnMetrics() override;
+    virtual LedgerManager &getLedgerManager() override;
 
-        virtual void syncAllMetrics() override;
+    virtual BucketManager &getBucketManager() override;
+    virtual CatchupManager& getCatchupManager() override;
+    virtual HistoryArchiveManager& getHistoryArchiveManager() override;
+    virtual HistoryManager &getHistoryManager() override;
+    virtual Maintainer& getMaintainer() override;
+    virtual ProcessManager &getProcessManager() override;
 
-        virtual TmpDirManager &getTmpDirManager() override;
+    virtual Herder &getHerder() override;
+    virtual HerderPersistence& getHerderPersistence() override;
+    virtual InvariantManager& getInvariantManager() override;
 
-        virtual LedgerManager &getLedgerManager() override;
+    virtual OverlayManager &getOverlayManager() override;
 
-        virtual BucketManager &getBucketManager() override;
+    virtual Database &getDatabase() const override;
 
-        virtual HistoryManager &getHistoryManager() override;
+    virtual PersistentState &getPersistentState() override;
 
-        virtual ProcessManager &getProcessManager() override;
+    virtual CommandHandler &getCommandHandler() override;
 
-        virtual Herder &getHerder() override;
+    virtual WorkManager &getWorkManager() override;
 
-        virtual Invariants& getInvariants() override;
+    virtual BanManager &getBanManager() override;
 
-        virtual OverlayManager &getOverlayManager() override;
+    virtual StatusManager &getStatusManager() override;
 
-        virtual Database &getDatabase() override;
+    virtual asio::io_service &getWorkerIOService() override;
+    virtual void postOnMainThread(std::function<void()>&& f,
+                                  std::string jobName) override;
+    virtual void postOnMainThreadWithDelay(std::function<void()>&& f,
+                                           std::string jobName) override;
+    virtual void postOnBackgroundThread(std::function<void()>&& f,
+                                        std::string jobName) override;
 
-        virtual PersistentState &getPersistentState() override;
+    void newDB() override;
 
-        virtual CommandHandler &getCommandHandler() override;
+    virtual void start() override;
 
-        virtual WorkManager &getWorkManager() override;
+    // Stops the worker io_service, which should cause the threads to exit once
+    // they finish running any work-in-progress. If you want a more abrupt exit
+    // than this, call exit() and hope for the best.
+    virtual void gracefulStop() override;
 
-        virtual BanManager &getBanManager() override;
+    // Wait-on and join all the threads this application started; should only
+    // return when there is no more work to do or someone has force-stopped the
+    // worker io_service. Application can be safely destroyed after this
+    // returns.
+    virtual void joinAllThreads() override;
 
-        virtual StatusManager &getStatusManager() override;
+    virtual bool manualClose() override;
 
-        virtual asio::io_service &getWorkerIOService() override;
+#ifdef BUILD_TESTS
+    virtual void generateLoad(bool isCreate, uint32_t nAccounts,
+                              uint32_t offset, uint32_t nTxs, uint32_t txRate,
+                              uint32_t batchSize, bool autoRate) override;
 
-        void newDB() override;
+    virtual LoadGenerator &getLoadGenerator() override;
+#endif
 
-        virtual void start() override;
+    virtual void applyCfgCommands() override;
 
-        // Stops the worker io_service, which should cause the threads to exit once
-        // they finish running any work-in-progress. If you want a more abrupt exit
-        // than this, call exit() and hope for the best.
-        virtual void gracefulStop() override;
+    virtual void reportCfgMetrics() override;
 
-        // Wait-on and join all the threads this application started; should only
-        // return when there is no more work to do or someone has force-stopped the
-        // worker io_service. Application can be safely destroyed after this
-        // returns.
-        virtual void joinAllThreads() override;
+    virtual Json::Value getJsonInfo() override;
 
-        virtual bool manualClose() override;
+    virtual void reportInfo() override;
 
-        virtual void generateLoad(uint32_t nAccounts, uint32_t nTxs,
-                                  uint32_t txRate, bool autoRate) override;
+    virtual Hash const &getNetworkID() const override;
 
-        virtual LoadGenerator &getLoadGenerator() override;
+    virtual AccountID getAdminID() const override;
 
-        virtual void checkDB() override;
+    virtual std::string getBaseExchangeName() const override;
 
-        virtual void checkDBSync() override;
+    virtual uint64 getTxExpirationPeriod() const override;
 
-        virtual void maintenance() override;
+    virtual uint64 getWithdrawalDetailsMaxLength() const override;
 
-        virtual void applyCfgCommands() override;
+    virtual uint64 getIssuanceDetailsMaxLength() const override;
 
-        virtual void reportCfgMetrics() override;
+    virtual uint64 getRejectReasonMaxLength() const override;
 
-        virtual void reportInfo() override;
+    virtual int64 getMaxInvoicesForReceiverAccount() const override;
 
-        virtual Hash const &getNetworkID() const override;
+    virtual uint64 getMaxInvoiceDetailLength() const override;
 
-        virtual AccountID getAdminID() const override;
+    virtual uint64 getMaxContractsForContractor() const override;
 
-        virtual std::string getBaseExchangeName() const override;
+    virtual uint64 getMaxContractDetailLength() const override;
 
-        virtual uint64 getTxExpirationPeriod() const override;
+    virtual uint64 getMaxContractInitialDetailLength() const override;
 
-        virtual uint64 getWithdrawalDetailsMaxLength() const override;
+    virtual int32 getKYCSuperAdminMask() const override;
 
-		virtual uint64 getIssuanceDetailsMaxLength() const override;
+    virtual size_t getSignerRuleIDsMaxCount() const override;
 
-		virtual uint64 getRejectReasonMaxLength() const override;
+    uint32_t getMaxSaleRulesLength() const override;
 
-        virtual int64 getMaxInvoicesForReceiverAccount() const override;
+protected:
+    std::unique_ptr<LedgerManager> mLedgerManager; // allow to change that for tests
+    std::unique_ptr<Herder> mHerder; // allow to change that for tests
 
-        virtual uint64 getMaxInvoiceDetailLength() const override;
+private:
+    VirtualClock &mVirtualClock;
+    Config mConfig;
 
-        virtual uint64 getMaxContractsForContractor() const override;
+    // NB: The io_service should come first, then the 'manager' sub-objects,
+    // then the threads. Do not reorder these fields.
+    //
+    // The fields must be constructed in this order, because the subsystem
+    // objects need to be fully instantiated before any workers acquire
+    // references to them.
+    //
+    // The fields must be destructed in the reverse order because all worker
+    // threads must be joined and destroyed before we start tearing down
+    // subsystems.
 
-        virtual uint64 getMaxContractDetailLength() const override;
+    asio::io_service mWorkerIOService;
+    std::unique_ptr<asio::io_service::work> mWork;
 
-        virtual uint64 getMaxContractInitialDetailLength() const override;
+    std::unique_ptr<Database> mDatabase;
+    std::unique_ptr<OverlayManager> mOverlayManager;
+    std::unique_ptr<BucketManager> mBucketManager;
+    std::unique_ptr<CatchupManager> mCatchupManager;
+    std::unique_ptr<HerderPersistence> mHerderPersistence;
+    std::unique_ptr<HistoryArchiveManager> mHistoryArchiveManager;
+    std::unique_ptr<HistoryManager> mHistoryManager;
+    std::unique_ptr<InvariantManager> mInvariantManager;
+    std::unique_ptr<Maintainer> mMaintainer;
+    std::shared_ptr<ProcessManager> mProcessManager;
+    std::unique_ptr<CommandHandler> mCommandHandler;
+    std::shared_ptr<WorkManager> mWorkManager;
+    std::unique_ptr<PersistentState> mPersistentState;
+    std::unique_ptr<BanManager> mBanManager;
+    std::unique_ptr<StatusManager> mStatusManager;
 
-        virtual int32 getKYCSuperAdminMask() const override;
-
-        virtual size_t getSignerRuleIDsMaxCount() const override;
-
-        bool isCheckingPolicies() const override;
-        void stopCheckingPolicies() override;
-        void resumeCheckingPolicies() override;
-
-    private:
-        VirtualClock &mVirtualClock;
-        Config mConfig;
-
-        // NB: The io_service should come first, then the 'manager' sub-objects,
-        // then the threads. Do not reorder these fields.
-        //
-        // The fields must be constructed in this order, because the subsystem
-        // objects need to be fully instantiated before any workers acquire
-        // references to them.
-        //
-        // The fields must be destructed in the reverse order because all worker
-        // threads must be joined and destroyed before we start tearing down
-        // subsystems.
-
-        asio::io_service mWorkerIOService;
-        std::unique_ptr<asio::io_service::work> mWork;
-
-        std::unique_ptr<Database> mDatabase;
-        std::unique_ptr<TmpDirManager> mTmpDirManager;
-        std::unique_ptr<OverlayManager> mOverlayManager;
-        std::unique_ptr<LedgerManager> mLedgerManager;
-        std::unique_ptr<Herder> mHerder;
-        std::unique_ptr<BucketManager> mBucketManager;
-        std::unique_ptr<HistoryManager> mHistoryManager;
-        std::shared_ptr<ProcessManager> mProcessManager;
-        std::unique_ptr<CommandHandler> mCommandHandler;
-        std::shared_ptr<WorkManager> mWorkManager;
-        std::unique_ptr<PersistentState> mPersistentState;
+#ifdef BUILD_TESTS
         std::unique_ptr<LoadGenerator> mLoadGenerator;
-        std::unique_ptr<BanManager> mBanManager;
-        std::shared_ptr<NtpSynchronizationChecker> mNtpSynchronizationChecker;
-        std::unique_ptr<StatusManager> mStatusManager;
-        std::unique_ptr<Invariants> mInvariants;
+#endif
 
-        std::vector<std::thread> mWorkerThreads;
+    std::vector<std::thread> mWorkerThreads;
 
-        asio::signal_set mStopSignals;
+    asio::signal_set mStopSignals;
 
-        bool mStopping;
+    bool mStarted;
+    bool mStopping;
 
-        VirtualTimer mStoppingTimer;
+    VirtualTimer mStoppingTimer;
 
-        std::unique_ptr<medida::MetricsRegistry> mMetrics;
-        medida::Counter &mAppStateCurrent;
-        medida::Timer &mAppStateChanges;
-        VirtualClock::time_point mLastStateChange;
+    std::unique_ptr<medida::MetricsRegistry> mMetrics;
+    medida::Counter &mAppStateCurrent;
+    medida::Timer& mPostOnMainThreadDelay;
+    medida::Timer& mPostOnMainThreadWithDelayDelay;
+    medida::Timer& mPostOnBackgroundThreadDelay;
+    VirtualClock::time_point mStartedOn;
 
-        Hash mNetworkID;
+    Hash mNetworkID;
 
-        AccountID masterID;
-        AccountID commissionID;
+    void shutdownMainIOService();
 
-        bool mIsCheckingPolicies{ true };
+    void runWorkerThread(unsigned i);
 
-        void shutdownMainIOService();
+    void enableInvariantsFromConfig();
 
-        void runWorkerThread(unsigned i);
-
-        std::vector<std::unique_ptr<Invariant>> enabledInvariants();
-    };
+    virtual std::unique_ptr<Herder> createHerder();
+    virtual std::unique_ptr<InvariantManager> createInvariantManager();
+    virtual std::unique_ptr<OverlayManager> createOverlayManager();
+    virtual std::unique_ptr<LedgerManager> createLedgerManager();
+};
 }

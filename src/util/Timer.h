@@ -11,11 +11,12 @@
 #include "util/NonCopyable.h"
 
 #include <chrono>
-#include <queue>
+#include <ctime>
+#include <functional>
 #include <map>
 #include <memory>
-#include <functional>
-#include <ctime>
+#include <mutex>
+#include <queue>
 
 namespace stellar
 {
@@ -96,6 +97,7 @@ class VirtualClock
     static std::tm pointToTm(time_point);
     static VirtualClock::time_point tmToPoint(tm t);
 
+    static std::tm isoStringToTm(std::string const& iso);
     static std::string tmToISOString(std::tm const& tm);
     static std::string pointToISOString(time_point point);
 
@@ -107,14 +109,17 @@ class VirtualClock
 
   private:
     asio::io_service mIOService;
-    asio::basic_waitable_timer<std::chrono::system_clock> mRealTimer;
     Mode mMode;
 
     uint32_t mRecentCrankCount;
     uint32_t mRecentIdleCrankCount;
 
     size_t nRealTimerCancelEvents;
-    time_point mNow;
+    time_point mVirtualNow;
+
+    bool mDelayExecution{true};
+    std::recursive_mutex mDelayExecutionMutex;
+    std::vector<std::function<void()>> mDelayedExecutionQueue;
 
     using PrQueue =
         std::priority_queue<std::shared_ptr<VirtualClockEvent>,
@@ -125,11 +130,12 @@ class VirtualClock
 
     bool mDestructing{false};
 
-    time_point next();
     void maybeSetRealtimer();
-    size_t advanceTo(time_point n);
     size_t advanceToNext();
     size_t advanceToNow();
+
+    // timer should be last to ensure it gets destroyed first
+    asio::basic_waitable_timer<std::chrono::system_clock> mRealTimer;
 
 	// returns number of days passed
 	static int getDaysPassed(tm& from, tm& to);
@@ -145,6 +151,7 @@ class VirtualClock
     size_t crank(bool block = true);
     void noteCrankOccurred(bool hadIdle);
     uint32_t recentIdleCrankPercent() const;
+    void resetIdleCrankPercent();
     asio::io_service& getIOService();
 
     // Note: this is not a static method, which means that VirtualClock is
@@ -158,7 +165,13 @@ class VirtualClock
 
     // only valid with VIRTUAL_TIME: sets the current value
     // of the clock
-    void setCurrentTime(time_point t);
+    void setCurrentVirtualTime(time_point t);
+
+    // returns the time of the next scheduled event
+    time_point next();
+
+    void postToCurrentCrank(std::function<void()>&& f);
+    void postToNextCrank(std::function<void()>&& f);
 };
 
 class VirtualClockEvent : public NonMovableOrCopyable
@@ -169,8 +182,7 @@ class VirtualClockEvent : public NonMovableOrCopyable
   public:
     VirtualClock::time_point mWhen;
     size_t mSeq;
-    VirtualClockEvent(VirtualClock::time_point when,
-                      size_t seq,
+    VirtualClockEvent(VirtualClock::time_point when, size_t seq,
                       std::function<void(asio::error_code)> callback);
     bool getTriggered();
     void trigger();

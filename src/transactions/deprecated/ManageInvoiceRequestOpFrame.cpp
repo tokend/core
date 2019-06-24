@@ -165,9 +165,9 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
         contractHelper->storeChange(*delta, db, contractFrame->mEntry);
     }
 
-
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks, mManageInvoiceRequest.details.invoiceRequest().allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()},
+                                  invoiceCreationRequest.allTasks.get()))
     {
         innerResult().code(ManageInvoiceRequestResultCode::INVOICE_TASKS_NOT_FOUND);
         return false;
@@ -287,11 +287,5 @@ ManageInvoiceRequestOpFrame::doCheckValid(Application& app)
     }
 
     return true;
-}
-
-std::vector<longstring> ManageInvoiceRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper) {
-    return std::vector<longstring> {
-        ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()
-    };
 }
 }

@@ -29,6 +29,7 @@ class LoopbackPeer : public Peer
     std::queue<xdr::msg_ptr> mInQueue;  // receiving queue
 
     bool mCorked{false};
+    bool mStraggling{false};
     size_t mMaxQueueDepth{0};
 
     bool mDamageCert{false};
@@ -52,18 +53,21 @@ class LoopbackPeer : public Peer
 
     Stats mStats;
 
-    void sendMessage(xdr::msg_ptr&& xdrBytes);
-    AuthCert getAuthCert();
+    void sendMessage(xdr::msg_ptr&& xdrBytes) override;
+    AuthCert getAuthCert() override;
 
     void processInQueue();
+
+    std::string mDropReason;
 
   public:
     virtual ~LoopbackPeer()
     {
     }
     LoopbackPeer(Application& app, PeerRole role);
-    void drop();
-    std::string getIP();
+    void drop(ErrorCode err, std::string const& msg,
+              DropMode dropMode) override;
+    void drop(DropMode dropMode) override;
 
     void deliverOne();
     void deliverAll();
@@ -72,11 +76,12 @@ class LoopbackPeer : public Peer
     size_t getMessagesQueued() const;
 
     Stats const& getStats() const;
-    std::deque<xdr::msg_ptr>& getQueue();
-    std::shared_ptr<LoopbackPeer> const& getTarget() const;
 
     bool getCorked() const;
     void setCorked(bool c);
+
+    bool getStraggling() const;
+    void setStraggling(bool s);
 
     size_t getMaxQueueDepth() const;
     void setMaxQueueDepth(size_t sz);
@@ -99,13 +104,23 @@ class LoopbackPeer : public Peer
     double getReorderProbability() const;
     void setReorderProbability(double d);
 
+    std::string
+    getDropReason() const
+    {
+        return mDropReason;
+    }
+
+    std::string getIP() const override;
+
+    using Peer::sendAuth;
+
     friend class LoopbackPeerConnection;
 };
 
 /**
-* Testing class for managing a simulated network connection between two
-* LoopbackPeers.
-*/
+ * Testing class for managing a simulated network connection between two
+ * LoopbackPeers.
+ */
 class LoopbackPeerConnection
 {
     std::shared_ptr<LoopbackPeer> mInitiator;

@@ -145,6 +145,30 @@
     <Filter Include="transactions\test\unit">
       <UniqueIdentifier>{8562597a-bb6a-4e1c-b47d-460d44f9c53a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tests">
+      <UniqueIdentifier>{3a480e4c-7f9c-4fe7-bf75-16b8b0384112}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="historywork">
+      <UniqueIdentifier>{aba497cd-ee79-45e8-a9d5-f3ca688193c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="catchup">
+      <UniqueIdentifier>{34b2390d-d604-4384-9445-08b8f044d162}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="catchup\test">
+      <UniqueIdentifier>{2ae33323-2199-481b-b7ad-946a3ee5c979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="invariant\test">
+      <UniqueIdentifier>{dbb4a08f-a8e5-49c3-9b51-b97d6d5235a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="transactions\voting">
+      <UniqueIdentifier>{ddc591b5-1c0a-462b-b4a4-8bd8f745500a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lib\crow">
+      <UniqueIdentifier>{d9fec4df-6a8b-4d72-b062-489f34dc69b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="transactions\manage_specific_rule">
+      <UniqueIdentifier>{3332a440-0476-4e59-9e3e-c721a001adf4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\main\Application.cpp">
@@ -210,9 +234,6 @@
     <ClCompile Include="..\..\src\process\ProcessManagerImpl.cpp">
       <Filter>process</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\process\ProcessTests.cpp">
-      <Filter>process</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\types.cpp">
       <Filter>util</Filter>
     </ClCompile>
@@ -228,13 +249,7 @@
     <ClCompile Include="..\..\src\history\HistoryArchive.cpp">
       <Filter>history</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\crypto\CryptoTests.cpp">
-      <Filter>crypto</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\database\Database.cpp">
-      <Filter>database</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\database\DatabaseTests.cpp">
       <Filter>database</Filter>
     </ClCompile>
     <ClCompile Include="..\..\lib\xdrpp\tests\marshal.cc">
@@ -285,18 +300,6 @@
     <ClCompile Include="..\..\lib\util\uint128_t.cpp">
       <Filter>lib\util</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\util\Uint128Tests.cpp">
-      <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\history\HistoryTests.cpp">
-      <Filter>history\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\test.cpp">
-      <Filter>main\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerHeaderTests.cpp">
-      <Filter>ledger\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\TmpDir.cpp">
       <Filter>util</Filter>
     </ClCompile>
@@ -309,9 +312,6 @@
     <ClCompile Include="..\..\src\herder\TxSetFrame.cpp">
       <Filter>herder</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\util\TimerTests.cpp">
-      <Filter>util</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\simulation\Simulation.cpp">
       <Filter>simulation</Filter>
     </ClCompile>
@@ -321,20 +321,8 @@
     <ClCompile Include="..\..\src\bucket\Bucket.cpp">
       <Filter>bucket</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\bucket\BucketTests.cpp">
-      <Filter>bucket\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\simulation\CoreTests.cpp">
       <Filter>simulation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\herder\HerderTests.cpp">
-      <Filter>herder\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\overlay\PeerRecord.cpp">
-      <Filter>overlay</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerTests.cpp">
-      <Filter>ledger\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\ApplicationImpl.cpp">
       <Filter>main</Filter>
@@ -360,14 +348,8 @@
     <ClCompile Include="..\..\src\util\Fs.cpp">
       <Filter>util</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerPerformanceTests.cpp">
-      <Filter>ledger\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\GlobalChecks.cpp">
       <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\fuzz.cpp">
-      <Filter>main\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\herder\Herder.cpp">
       <Filter>herder</Filter>
@@ -399,9 +381,6 @@
     <ClCompile Include="..\..\src\herder\LedgerCloseData.cpp">
       <Filter>herder</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\scp\SCPUnitTests.cpp">
-      <Filter>scp</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\lib\util\crc16.cpp">
       <Filter>util</Filter>
     </ClCompile>
@@ -414,37 +393,16 @@
     <ClCompile Include="..\..\src\main\ExternalQueue.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerEntryTests.cpp">
-      <Filter>ledger\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerTestUtils.cpp">
-      <Filter>ledger\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\overlay\PeerAuth.cpp">
       <Filter>overlay</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\crypto\ECDH.cpp">
       <Filter>crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\scp\SCPTests.cpp">
-      <Filter>scp\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\overlay\LoadManager.cpp">
       <Filter>overlay</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\overlay\ItemFetcherTests.cpp">
-      <Filter>overlay\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\overlay\OverlayManagerTests.cpp">
-      <Filter>overlay\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\overlay\PeerRecordTests.cpp">
-      <Filter>overlay\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\overlay\OverlayTests.cpp">
-      <Filter>overlay\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\overlay\TCPPeerTests.cpp">
       <Filter>overlay\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\overlay\FloodTests.cpp">
@@ -465,46 +423,22 @@
     <ClCompile Include="..\..\src\work\WorkParent.cpp">
       <Filter>work</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\work\WorkTests.cpp">
-      <Filter>work</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\history\HistoryWork.cpp">
-      <Filter>history</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\bucket\BucketApplicator.cpp">
       <Filter>bucket</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\history\InferredQuorum.cpp">
       <Filter>history</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\history\InferredQuorumTests.cpp">
-      <Filter>history\tests</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\BitsetEnumerator.cpp">
-      <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\util\BitsetEnumeratorTests.cpp">
       <Filter>util</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\overlay\BanManagerImpl.cpp">
       <Filter>overlay</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\NtpSynchronizationChecker.cpp">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\util\NtpClient.cpp">
-      <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\util\NtpWork.cpp">
-      <Filter>util</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\StatusManager.cpp">
       <Filter>util</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\invariant\CacheIsConsistentWithDatabase.cpp">
-      <Filter>invariant</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\invariant\Invariant.cpp">
       <Filter>invariant</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\invariant\InvariantDoesNotHold.cpp">
@@ -669,9 +603,6 @@
     <ClCompile Include="..\..\src\ledger\LedgerDeltaImpl.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LedgerHeaderFrame.cpp">
-      <Filter>ledger</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\ledger\LedgerHeaderFrameImpl.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
@@ -732,13 +663,13 @@
     <ClCompile Include="..\..\src\ledger\StorageHelperImpl.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CancelAtomicSwapAskOpFrame.cpp">
       <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapAskRequestOpFrame.cpp">
       <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateASwapRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapBidRequestOpFrame.cpp">
       <Filter>transactions\atomic_swap</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\AccountHelperImpl.cpp">
@@ -828,10 +759,10 @@
     <ClCompile Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapBidCreationRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapAskRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.cpp">
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewASwapBidRequestOpFrame.cpp">
       <Filter>transactions\review_request</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.cpp">
@@ -996,7 +927,7 @@
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapBidCreationRequestTestHelper.cpp">
       <Filter>transactions\test\test_helper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.cpp">
+    <ClCompile Include="..\..\src\transactions\test\test_helper\CreateASwapBidRequestTestHelper.cpp">
       <Filter>transactions\test\test_helper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\transactions\test\test_helper\CreateChangeRoleRequestTestHelper.cpp">
@@ -1224,6 +1155,354 @@
     <ClCompile Include="..\..\src\bucket\LedgerCmp.cpp">
       <Filter>bucket</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\main\ApplicationUtils.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bucket\BucketInputIterator.cpp">
+      <Filter>bucket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bucket\BucketOutputIterator.cpp">
+      <Filter>bucket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bucket\PublishQueueBuckets.cpp">
+      <Filter>bucket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\bucket\test\BucketTests.cpp">
+      <Filter>bucket\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\test\LedgerHeaderTests.cpp">
+      <Filter>ledger\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\test\LedgerManagerTests.cpp">
+      <Filter>ledger\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\test\LedgerTests.cpp">
+      <Filter>ledger\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\test\LedgerTestUtils.cpp">
+      <Filter>ledger\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\test\LedgerTxnTests.cpp">
+      <Filter>ledger\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\test\SyncingLedgerChainTests.cpp">
+      <Filter>ledger\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\test\ApplicationTests.cpp">
+      <Filter>main\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\test\ConfigTests.cpp">
+      <Filter>main\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\test\ExternalQueueTests.cpp">
+      <Filter>main\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\test\LruCacheTests.cpp">
+      <Filter>main\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\fuzz.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\test.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\TestAccount.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\TestExceptions.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\TestPrinter.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\TestUtils.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\database\DatabaseConnectionString.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\database\DatabaseUtils.cpp">
+      <Filter>database</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\herder\HerderPersistenceImpl.cpp">
+      <Filter>herder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\herder\HerderSCPDriver.cpp">
+      <Filter>herder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\herder\HerderUtils.cpp">
+      <Filter>herder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\herder\Upgrades.cpp">
+      <Filter>herder</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\CheckpointRange.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerHeaderUtils.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\LedgerRange.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\PollFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\PollHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\SyncingLedgerChain.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\VoteFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\VoteHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\scp\QuorumSetUtils.cpp">
+      <Filter>scp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\scp\test\QuorumSetTests.cpp">
+      <Filter>scp\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\scp\test\SCPTests.cpp">
+      <Filter>scp\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\scp\test\SCPUnitTests.cpp">
+      <Filter>scp\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\CommandLine.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\DeprecatedCommandLine.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\Maintainer.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\StellarCoreVersionWin.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\history\HistoryArchiveManager.cpp">
+      <Filter>history</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\history\InferredQuorumUtils.cpp">
+      <Filter>history</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\history\test\HistoryTests.cpp">
+      <Filter>history\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\history\test\HistoryTestsUtils.cpp">
+      <Filter>history\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\history\test\InferredQuorumTests.cpp">
+      <Filter>history\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\history\test\SerializeTests.cpp">
+      <Filter>history\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\BatchDownloadWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\BatchWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\BucketDownloadWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\DownloadBucketsWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\FetchRecentQsetsWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\GetAndUnzipRemoteFileWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\GetHistoryArchiveStateWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\GetRemoteFileWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\GunzipFileWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\GzipFileWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\MakeRemoteDirWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\Progress.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\PublishWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\PutHistoryArchiveStateWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\PutRemoteFileWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\PutSnapshotFilesWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\RepairMissingBucketsWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\ResolveSnapshotWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\RunCommandWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\VerifyBucketWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\historywork\WriteSnapshotWork.cpp">
+      <Filter>historywork</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\ApplyBucketsWork.cpp">
+      <Filter>catchup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\ApplyLedgerChainWork.cpp">
+      <Filter>catchup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\CatchupConfiguration.cpp">
+      <Filter>catchup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\CatchupManagerImpl.cpp">
+      <Filter>catchup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\CatchupWork.cpp">
+      <Filter>catchup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\VerifyLedgerChainWork.cpp">
+      <Filter>catchup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\catchup\test\CatchupWorkTests.cpp">
+      <Filter>catchup\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\util\MetricResetter.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\util\SecretValue.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\util\ValidJsonTests.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\invariant\BucketListIsConsistentWithDatabase.cpp">
+      <Filter>invariant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\invariant\InvariantManagerImpl.cpp">
+      <Filter>invariant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\invariant\test\BucketListIsConsistentWithDatabaseTests.cpp">
+      <Filter>invariant\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\invariant\test\InvariantTests.cpp">
+      <Filter>invariant\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\invariant\test\InvariantTestUtils.cpp">
+      <Filter>invariant\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\overlay\PeerBareAddress.cpp">
+      <Filter>overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\overlay\PeerManager.cpp">
+      <Filter>overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\overlay\PeerSharedKeyId.cpp">
+      <Filter>overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\overlay\RandomPeerSource.cpp">
+      <Filter>overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\overlay\Tracker.cpp">
+      <Filter>overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\CancelPollRequestOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\CreatePollRequestOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_create_poll_request\ManageCreatePollRequestOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\ClosePollOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\ManagePollOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_vote\CreateVoteOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_vote\DeleteVoteOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_vote\ManageVoteOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\review_request\ReviewCreatePollRequestOpFrame.cpp">
+      <Filter>transactions\review_request</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\crypto\ByteSliceHasher.cpp">
+      <Filter>crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\crow\src\crow.cpp">
+      <Filter>lib\crow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\lib\crow\src\crow_utilities.cpp">
+      <Filter>lib\crow</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\CancelPollOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.cpp">
+      <Filter>transactions\voting</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\LicenseTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\PollTests.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\SaleAndIssuanceTest.cpp">
+      <Filter>transactions\test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\LicenseTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManagePollTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\ManageVoteTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\test\test_helper\StampTestHelper.cpp">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountSpecificRuleFrame.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ledger\AccountSpecificRuleHelperImpl.cpp">
+      <Filter>ledger</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\CreateAccountSpecificRuleOpFrame.cpp">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\ManageAccountSpecificRuleOpFrame.cpp">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transactions\manage_specific_rule\RemoveAccountSpecificRuleOpFrame.cpp">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\main\Application.h">
@@ -1346,9 +1625,6 @@
     <ClInclude Include="..\..\src\util\must_use.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\test.h">
-      <Filter>main\tests</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\TmpDir.h">
       <Filter>util</Filter>
     </ClInclude>
@@ -1378,9 +1654,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\bucket\Bucket.h">
       <Filter>bucket</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\overlay\PeerRecord.h">
-      <Filter>overlay</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\bucket\BucketManager.h">
       <Filter>bucket</Filter>
@@ -1427,9 +1700,6 @@
     <ClInclude Include="..\..\src\util\GlobalChecks.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\fuzz.h">
-      <Filter>main\tests</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\lib\util\lrucache.hpp">
       <Filter>lib\util</Filter>
     </ClInclude>
@@ -1472,22 +1742,22 @@
     <ClInclude Include="..\..\src\main\dumpxdr.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger.h">
+    <ClInclude Include="src\generated\xdr\ledger.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-overlay.h">
+    <ClInclude Include="src\generated\xdr\overlay.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-SCP.h">
+    <ClInclude Include="src\generated\xdr\SCP.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-transaction.h">
+    <ClInclude Include="src\generated\xdr\transaction.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-types.h">
+    <ClInclude Include="src\generated\xdr\types.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\ExternalQueue.h">
@@ -1495,9 +1765,6 @@
     </ClInclude>
     <ClInclude Include="..\..\lib\catch.hpp">
       <Filter>lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\ledger\LedgerTestUtils.h">
-      <Filter>ledger\tests</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\overlay\PeerAuth.h">
       <Filter>overlay</Filter>
@@ -1526,9 +1793,6 @@
     <ClInclude Include="..\..\src\work\WorkParent.h">
       <Filter>work</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\history\HistoryWork.h">
-      <Filter>history</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\bucket\BucketApplicator.h">
       <Filter>bucket</Filter>
     </ClInclude>
@@ -1544,142 +1808,130 @@
     <ClInclude Include="..\..\src\overlay\BanManagerImpl.h">
       <Filter>overlay</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\NtpSynchronizationChecker.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\util\NtpClient.h">
-      <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\util\NtpWork.h">
-      <Filter>util</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\StatusManager.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-asset.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-asset.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-account.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-account.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-offer.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-offer.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-trustline.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-trustline.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-account-merge.h">
+    <ClInclude Include="src\generated\xdr\operation-account-merge.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-allow-trust.h">
+    <ClInclude Include="src\generated\xdr\operation-allow-trust.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-change-trust.h">
+    <ClInclude Include="src\generated\xdr\operation-change-trust.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-create-account.h">
+    <ClInclude Include="src\generated\xdr\operation-create-account.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-create-passive-offer.h">
+    <ClInclude Include="src\generated\xdr\operation-create-passive-offer.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-inflation.h">
+    <ClInclude Include="src\generated\xdr\operation-inflation.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-path-payment.h">
+    <ClInclude Include="src\generated\xdr\operation-path-payment.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-payment.h">
+    <ClInclude Include="src\generated\xdr\operation-payment.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-set-options.h">
+    <ClInclude Include="src\generated\xdr\operation-set-options.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-coins-emission-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-coins-emission-request.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-account-type-limits.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-account-type-limits.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-balance.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-balance.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-exchange.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-exchange.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-fee.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-fee.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-forfeit-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-forfeit-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-reference.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-reference.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-payment-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-payment-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-recovery-request.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-recovery-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-ledger-entries-statistics.h">
+    <ClInclude Include="src\generated\xdr\ledger-entries-statistics.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-demurrage.h">
+    <ClInclude Include="src\generated\xdr\operation-demurrage.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-emit-coins.h">
+    <ClInclude Include="src\generated\xdr\operation-emit-coins.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-forfeit.h">
+    <ClInclude Include="src\generated\xdr\operation-forfeit.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-account.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-account.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-asset.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-asset.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-balance.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-balance.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-forfeit-request.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-forfeit-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-manage-recovery-request.h">
+    <ClInclude Include="src\generated\xdr\operation-manage-recovery-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-recover.h">
+    <ClInclude Include="src\generated\xdr\operation-recover.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-coins-emission-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-coins-emission-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-forfeit-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-forfeit-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-payment-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-payment-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-review-recovery-request.h">
+    <ClInclude Include="src\generated\xdr\operation-review-recovery-request.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-set-fees.h">
+    <ClInclude Include="src\generated\xdr\operation-set-fees.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
-    <ClInclude Include="src\generated\xdr\Stellar-operation-upload-preemissions.h">
+    <ClInclude Include="src\generated\xdr\operation-upload-preemissions.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
     <ClInclude Include="src\generated\StellarCoreVersion.h">
       <Filter>xdr\generated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\invariant\CacheIsConsistentWithDatabase.h">
-      <Filter>invariant</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\invariant\Invariant.h">
       <Filter>invariant</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\invariant\InvariantDoesNotHold.h">
@@ -1869,9 +2121,6 @@
     <ClInclude Include="..\..\src\ledger\LedgerDeltaImpl.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\LedgerHeaderFrame.h">
-      <Filter>ledger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\ledger\LedgerHeaderFrameImpl.h">
       <Filter>ledger</Filter>
     </ClInclude>
@@ -1938,13 +2187,13 @@
     <ClInclude Include="..\..\src\ledger\StorageHelperImpl.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\atomic_swap\CancelASwapBidOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CancelAtomicSwapAskOpFrame.h">
       <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapBidCreationRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapAskRequestOpFrame.h">
       <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateASwapRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\atomic_swap\CreateAtomicSwapBidRequestOpFrame.h">
       <Filter>transactions\atomic_swap</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\AccountHelper.h">
@@ -2046,10 +2295,10 @@
     <ClInclude Include="..\..\src\transactions\review_request\ReviewAssetUpdateRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapBidCreationRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapAskRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapRequestOpFrame.h">
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewASwapBidRequestOpFrame.h">
       <Filter>transactions\review_request</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\review_request\ReviewChangeRoleRequestOpFrame.h">
@@ -2196,7 +2445,7 @@
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapBidCreationRequestTestHelper.h">
       <Filter>transactions\test\test_helper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapReviewableRequestTestHelper.h">
+    <ClInclude Include="..\..\src\transactions\test\test_helper\CreateASwapBidRequestTestHelper.h">
       <Filter>transactions\test\test_helper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\transactions\test\test_helper\CreateChangeRoleRequestTestHelper.h">
@@ -2418,6 +2667,345 @@
     <ClInclude Include="..\..\src\transactions\StampOpFrame.h">
       <Filter>transactions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\main\ApplicationUtils.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bucket\BucketInputIterator.h">
+      <Filter>bucket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bucket\BucketOutputIterator.h">
+      <Filter>bucket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bucket\PublishQueueBuckets.h">
+      <Filter>bucket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\test\LedgerTestUtils.h">
+      <Filter>ledger\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\clara.hpp">
+      <Filter>lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\fuzz.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\SimpleTestReporter.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\test.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\test_marshaler.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\TestAccount.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\TestExceptions.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\TestPrinter.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\test\TestUtils.h">
+      <Filter>tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\database\DatabaseConnectionString.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\database\DatabaseTypeSpecificOperation.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\database\DatabaseUtils.h">
+      <Filter>database</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\herder\HerderPersistence.h">
+      <Filter>herder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\herder\HerderPersistenceImpl.h">
+      <Filter>herder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\herder\HerderSCPDriver.h">
+      <Filter>herder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\herder\HerderUtils.h">
+      <Filter>herder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\herder\Upgrades.h">
+      <Filter>herder</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\CheckpointRange.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerHashUtils.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerHeaderFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerHeaderUtils.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\LedgerRange.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\PollFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\PollHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\PollHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\SyncingLedgerChain.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\VoteFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\VoteHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\VoteHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\scp\QuorumSetUtils.h">
+      <Filter>scp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\CommandLine.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\DeprecatedCommandLine.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\Maintainer.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\StellarCoreVersion.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\history\HistoryArchiveManager.h">
+      <Filter>history</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\history\InferredQuorumUtils.h">
+      <Filter>history</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\history\test\HistoryTestsUtils.h">
+      <Filter>history\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\BatchDownloadWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\BatchWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\BucketDownloadWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\DownloadBucketsWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\FetchRecentQsetsWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\GetAndUnzipRemoteFileWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\GetHistoryArchiveStateWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\GetRemoteFileWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\GunzipFileWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\GzipFileWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\MakeRemoteDirWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\Progress.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\PublishWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\PutHistoryArchiveStateWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\PutRemoteFileWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\PutSnapshotFilesWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\RepairMissingBucketsWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\ResolveSnapshotWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\RunCommandWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\VerifyBucketWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\historywork\WriteSnapshotWork.h">
+      <Filter>historywork</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\ApplyBucketsWork.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\ApplyLedgerChainWork.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\CatchupConfiguration.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\CatchupManager.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\CatchupManagerImpl.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\CatchupWork.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\VerifyLedgerChainWork.h">
+      <Filter>catchup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\catchup\test\CatchupWorkTests.h">
+      <Filter>catchup\test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\Algoritm.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\crow.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\Decoder.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\LogSlowExecution.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\MetricResetter.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\SecretValue.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\util\XDROperators.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\invariant\BucketListIsConsistentWithDatabase.h">
+      <Filter>invariant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\invariant\Invariant.h">
+      <Filter>invariant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\invariant\InvariantManager.h">
+      <Filter>invariant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\invariant\InvariantManagerImpl.h">
+      <Filter>invariant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\invariant\test\InvariantTestUtils.h">
+      <Filter>invariant\test</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\overlay\PeerBareAddress.h">
+      <Filter>overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\overlay\PeerManager.h">
+      <Filter>overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\overlay\PeerSharedKeyId.h">
+      <Filter>overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\overlay\RandomPeerSource.h">
+      <Filter>overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\overlay\Tracker.h">
+      <Filter>overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\CancelPollRequestOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\CreatePollRequestOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_create_poll_request\ManageCreatePollRequestOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\ClosePollOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\ManagePollOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_vote\CreateVoteOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_vote\DeleteVoteOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_vote\ManageVoteOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\review_request\ReviewCreatePollRequestOpFrame.h">
+      <Filter>transactions\review_request</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\crypto\ByteSliceHasher.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\crow\src\crow_config.hpp">
+      <Filter>lib\crow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\crow\src\crow_utilities.hpp">
+      <Filter>lib\crow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\lib\crow\src\crow_config_win.hpp">
+      <Filter>lib\crow</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\CancelPollOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\voting\manage_poll\UpdatePollEndTimeOpFrame.h">
+      <Filter>transactions\voting</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\LicenseTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManagePollTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\ManageVoteTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\test\test_helper\StampTestHelper.h">
+      <Filter>transactions\test\test_helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleFrame.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleHelper.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ledger\AccountSpecificRuleHelperImpl.h">
+      <Filter>ledger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\CreateAccountSpecificRuleOpFrame.h">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\ManageAccountSpecificRuleOpFrame.h">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transactions\manage_specific_rule\RemoveAccountSpecificRuleOpFrame.h">
+      <Filter>transactions\manage_specific_rule</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\AUTHORS" />
@@ -2471,13 +3059,13 @@
     <None Include="..\..\docs\readme.md">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\docs\stellar-core_example.cfg">
+    <None Include="..\..\docs\core_example.cfg">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\docs\stellar-core_standalone.cfg">
+    <None Include="..\..\docs\core_standalone.cfg">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\..\docs\stellar-core_testnet.cfg">
+    <None Include="..\..\docs\core_testnet.cfg">
       <Filter>docs</Filter>
     </None>
     <None Include="..\..\docs\transaction.md">
@@ -2503,6 +3091,449 @@
     <Text Include="..\..\INSTALL-Windows.txt" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
+    <CustomBuild Include="..\..\src\xdr\*.x" />
     <CustomBuild Include="..\..\src\xdr\*.x" />
     <CustomBuild Include="..\..\src\xdr\*.x" />
     <CustomBuild Include="..\..\src\xdr\*.x" />

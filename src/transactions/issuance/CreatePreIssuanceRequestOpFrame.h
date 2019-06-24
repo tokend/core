@@ -21,7 +21,8 @@ class CreatePreIssuanceRequestOpFrame : public OperationFrame
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
+                              std::vector<OperationCondition>& result,
+                              LedgerManager& ledgerManager) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -50,6 +51,6 @@ public:
 
 	static Hash getSignatureData(stellar::string64 const& reference, uint64_t const& amount, AssetCode const& assetCode);
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector();
 };
 }

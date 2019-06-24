@@ -6,11 +6,13 @@
 #include "lib/util/uint128_t.h"
 #include <locale>
 #include <algorithm>
+#include "util/XDROperators.h"
+#include <locale>
+#include "lib/json/json.h"
+#include "lib/util/format.h"
 
 namespace stellar
 {
-
-using xdr::operator==;
 
 bool
 isZero(uint256 const& b)
@@ -22,13 +24,11 @@ isZero(uint256 const& b)
     return true;
 }
 
-Hash& operator^=(Hash& l, Hash const& r)
+Hash&
+operator^=(Hash& l, Hash const& r)
 {
     std::transform(l.begin(), l.end(), r.begin(), l.begin(),
-                   [](uint8_t a, uint8_t b)
-                   {
-                       return a ^ b;
-                   });
+                   [](uint8_t a, uint8_t b) -> uint8_t { return a ^ b; });
     return l;
 }
 
@@ -45,23 +45,13 @@ lessThanXored(Hash const& l, Hash const& r, Hash const& x)
     return v1 < v2;
 }
 
-uint256
-makePublicKey(uint256 const& b)
-{
-    // SANITY pub from private
-    uint256 ret;
-    ret[0] = b[0];
-    ret[1] = b[1];
-    ret[2] = b[2];
-    return (ret);
-}
-
 bool
 isString32Valid(std::string const& str)
 {
+    auto& loc = std::locale::classic();
     for (auto c : str)
     {
-        if (c < 0 || std::iscntrl(c, cLocale))
+        if (c < 0 || std::iscntrl(c, loc))
         {
             return false;
         }
@@ -71,7 +61,7 @@ isString32Valid(std::string const& str)
 
 bool isAlNum(std::string const& str) {
 	for (auto c : str) {
-		if (c < 0 || !std::isalnum(c, cLocale))
+		if (c < 0 || !std::isalnum(c, std::locale::classic()))
 			return false;
 	}
 
@@ -148,6 +138,38 @@ bool isFeeTypeValid(FeeType feeType)
 	}
 
 	return false;
+}
+
+int32_t
+unsignedToSigned(uint32_t v)
+{
+    if (v > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()))
+        throw std::runtime_error("unsigned-to-signed overflow");
+    return static_cast<int32_t>(v);
+}
+
+int64_t
+unsignedToSigned(uint64_t v)
+{
+    if (v > static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))
+        throw std::runtime_error("unsigned-to-signed overflow");
+    return static_cast<int64_t>(v);
+}
+
+std::string
+formatSize(size_t size)
+{
+    const std::vector<std::string> suffixes = {"B", "KB", "MB", "GB"};
+    double dsize = static_cast<double>(size);
+
+    auto i = 0;
+    while (dsize >= 1024 && i < suffixes.size() - 1)
+    {
+        dsize /= 1024;
+        i++;
+    }
+
+    return fmt::format("{:.2f}{}", dsize, suffixes[i]);
 }
 
 // calculates A*B/C when A*B overflows 64bits, with optional rounding step

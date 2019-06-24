@@ -4,6 +4,7 @@ namespace stellar {
 
 class MockStampHelper : public StampHelper {
  public:
+    MOCK_CONST_METHOD0(getTableName, const std::string());
   MOCK_METHOD0(clearAll,
       void());
   MOCK_METHOD0(dropAll,

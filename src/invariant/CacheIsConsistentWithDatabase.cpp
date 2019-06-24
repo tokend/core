@@ -8,11 +8,12 @@
 #include "lib/util/format.h"
 #include "xdrpp/printer.h"
 
-namespace stellar {
+namespace stellar
+{
 
     CacheIsConsistentWithDatabase::CacheIsConsistentWithDatabase(
-            Database &db)
-            : mDb{db} {
+            Database &db) : Invariant(true), mDb{db}
+    {
     }
 
     CacheIsConsistentWithDatabase::

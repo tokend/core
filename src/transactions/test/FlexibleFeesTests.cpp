@@ -4,8 +4,7 @@
 
 #include "main/Application.h"
 #include "overlay/LoopbackPeer.h"
-#include "util/make_unique.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "TxTests.h"
@@ -22,7 +21,7 @@ using namespace stellar::txtest;
 typedef std::unique_ptr<Application> appPtr;
 
 
-TEST_CASE("Flexible fees", "[dep_tx][flexible_fees]")
+TEST_CASE("Flexible fees", "[!hide][dep_tx][flexible_fees]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 

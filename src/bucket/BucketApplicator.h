@@ -4,7 +4,8 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "database/Database.h"
+#include "bucket/BucketInputIterator.h"
+#include "util/Timer.h"
 #include "bucket/Bucket.h"
 #include "util/XDRStream.h"
 #include <memory>
@@ -12,7 +13,7 @@
 namespace stellar
 {
 
-class Database;
+class Application;
 
 // Class that represents a single apply-bucket-to-database operation in
 // progress. Used during history catchup to split up the task of applying
@@ -20,14 +21,16 @@ class Database;
 
 class BucketApplicator
 {
-    Database& mDb;
-    std::shared_ptr<const Bucket> mBucket;
-    XDRInputFileStream mIn;
-    size_t mSize{0};
+    Application& mApp;
+    BucketInputIterator mBucketIter;
+    size_t mCount{0};
 
   public:
-    BucketApplicator(Database& db, std::shared_ptr<const Bucket> bucket);
+    BucketApplicator(Application& app, std::shared_ptr<const Bucket> bucket);
     operator bool() const;
-    void advance();
+    size_t advance();
+
+    size_t pos();
+    size_t size() const;
 };
 }

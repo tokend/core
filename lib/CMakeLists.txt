@@ -55,6 +55,8 @@ set(SOURCE_LIB3RDPARTY
         json/jsoncpp.cpp
         sqlite/sqlite3.c
         sqlite/sqlite3.h
+        catch.hpp
+        catcher.cpp
         )
 
 set(SOURCE_LIBMEDIDA

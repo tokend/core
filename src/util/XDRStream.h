@@ -4,13 +4,15 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <string>
-#include <fstream>
-#include <vector>
-#include "xdrpp/marshal.h"
-#include "crypto/SHA.h"
 #include "crypto/ByteSlice.h"
+#include "crypto/SHA.h"
+#include "util/Fs.h"
 #include "util/Logging.h"
+#include "xdrpp/marshal.h"
+
+#include <fstream>
+#include <string>
+#include <vector>
 
 namespace stellar
 {
@@ -23,8 +25,14 @@ class XDRInputFileStream
 {
     std::ifstream mIn;
     std::vector<char> mBuf;
+    size_t mSizeLimit;
+    size_t mSize;
 
   public:
+    XDRInputFileStream(unsigned int sizeLimit = 0) : mSizeLimit{sizeLimit}
+    {
+    }
+
     void
     close()
     {
@@ -44,11 +52,27 @@ class XDRInputFileStream
             CLOG(ERROR, "Fs") << msg;
             throw std::runtime_error(msg);
         }
+
+        mSize = fs::size(mIn);
     }
 
     operator bool() const
     {
         return mIn.good();
+    }
+
+    size_t
+    size() const
+    {
+        return mSize;
+    }
+
+    size_t
+    pos()
+    {
+        assert(!mIn.fail());
+
+        return mIn.tellg();
     }
 
     template <typename T>
@@ -72,6 +96,10 @@ class XDRInputFileStream
         sz <<= 8;
         sz |= static_cast<uint8_t>(szBuf[3]);
 
+        if (mSizeLimit != 0 && sz > mSizeLimit)
+        {
+            return false;
+        }
         if (sz > mBuf.size())
         {
             mBuf.resize(sz);
@@ -92,17 +120,35 @@ class XDROutputFileStream
     std::vector<char> mBuf;
 
   public:
+    XDROutputFileStream()
+    {
+        mOut.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    }
+
     void
     close()
     {
-        mOut.close();
+        try
+        {
+            mOut.close();
+        }
+        catch (std::ios_base::failure&)
+        {
+            std::string msg("failed to close XDR file");
+            msg += ", reason: ";
+            msg += std::to_string(errno);
+            throw std::runtime_error(msg);
+        }
     }
 
     void
     open(std::string const& filename)
     {
-        mOut.open(filename, std::ofstream::binary | std::ofstream::trunc);
-        if (!mOut)
+        try
+        {
+            mOut.open(filename, std::ofstream::binary | std::ofstream::trunc);
+        }
+        catch (std::ios_base::failure&)
         {
             std::string msg("failed to open XDR file: ");
             msg += filename;
@@ -119,7 +165,7 @@ class XDROutputFileStream
     }
 
     template <typename T>
-    bool
+    void
     writeOne(T const& t, SHA256* hasher = nullptr, size_t* bytesPut = nullptr)
     {
         uint32_t sz = (uint32_t)xdr::xdr_size(t);
@@ -140,10 +186,11 @@ class XDROutputFileStream
         xdr::xdr_put p(mBuf.data() + 4, mBuf.data() + 4 + sz);
         xdr_argpack_archive(p, t);
 
-        if (!mOut.write(mBuf.data(), sz + 4))
-        {
-            return false;
-        }
+        // Note: most libraries implement ofstream::write by calling C function
+        // `fwrite`, which does not set errno, so there isn't much info about
+        // why the write failed.
+        mOut.write(mBuf.data(), sz + 4);
+
         if (hasher)
         {
             hasher->add(ByteSlice(mBuf.data(), sz + 4));
@@ -152,7 +199,6 @@ class XDROutputFileStream
         {
             *bytesPut += (sz + 4);
         }
-        return true;
     }
 };
 }

@@ -25,6 +25,10 @@ public:
     virtual void
     loadKeyValues(StatementContext &prep,
                   std::function<void(LedgerEntry const &)> keyValueProcessor) = 0;
+
+    virtual bool
+    loadTasks(uint32_t &allTasks, std::vector<std::string> keys,
+              uint32_t* passedTasks = nullptr) = 0;
 };
 
 }

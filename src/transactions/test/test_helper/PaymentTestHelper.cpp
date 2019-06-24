@@ -103,9 +103,6 @@ namespace stellar {
 
             REQUIRE(actualResultCode == expectedResultCode);
 
-            auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
-            REQUIRE(txResult.feeCharged == txFee);
-
             auto actualPaymentResult = opResult.tr().paymentResult();
 
             if (expectedResultCode != PaymentResultCode::SUCCESS)

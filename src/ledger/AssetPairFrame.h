@@ -73,6 +73,7 @@ class AssetPairFrame : public EntryFrame
 
 	int64_t getMinAllowedPrice() const;
 	int64_t getMinPriceInTermsOfCurrent() const;
+	int64_t getMaxPriceInTermsOfCurrent() const;
 	int64_t getMinPriceInTermsOfPhysical() const;
 
 	bool checkPolicy(AssetPairPolicy policy) const

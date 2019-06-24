@@ -7,7 +7,7 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"

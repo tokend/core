@@ -4,7 +4,7 @@
 
 #include "util/asio.h"
 #include <main/Application.h>
-#include "main/test.h"
+#include "test/test.h"
 #include "overlay/ItemFetcher.h"
 #include "overlay/OverlayManager.h"
 #include "overlay/LoopbackPeer.h"

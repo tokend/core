@@ -37,6 +37,7 @@ public:
     MOCK_METHOD0(loadBaseAssets, std::vector<AssetFrame::pointer>());
     MOCK_METHOD0(addTrailingDigits, void());
     MOCK_METHOD2(doesAmountFitAssetPrecision, bool(const AssetCode& assetCode, uint64_t amount));
+    MOCK_CONST_METHOD0(getTableName, const std::string());
 };
 
 }  // namespace stellar

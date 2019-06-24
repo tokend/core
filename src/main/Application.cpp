@@ -4,18 +4,42 @@
 
 #include "Application.h"
 #include "ApplicationImpl.h"
+#include "util/format.h"
 
 namespace stellar
 {
 using namespace std;
 
-Application::pointer
-Application::create(VirtualClock& clock, Config const& cfg, bool newDB)
+void
+validateNetworkPassphrase(Application::pointer app)
 {
-    Application::pointer ret = make_shared<ApplicationImpl>(clock, cfg);
-    if (newDB || cfg.DATABASE == "sqlite3://:memory:")
-        ret->newDB();
+    std::string networkPassphrase = app->getConfig().NETWORK_PASSPHRASE;
+    if (networkPassphrase.empty())
+    {
+        throw std::invalid_argument("NETWORK_PASSPHRASE not configured");
+    }
 
-    return ret;
+    auto& persistentState = app->getPersistentState();
+    std::string prevNetworkPassphrase =
+        persistentState.getState(PersistentState::kNetworkPassphrase);
+    if (prevNetworkPassphrase.empty())
+    {
+        persistentState.setState(PersistentState::kNetworkPassphrase,
+                                 networkPassphrase);
+    }
+    else if (networkPassphrase != prevNetworkPassphrase)
+    {
+        throw std::invalid_argument(
+            fmt::format("NETWORK_PASSPHRASE \"{}\" does not match"
+                        " previous NETWORK_PASSPHRASE \"{}\"",
+                        networkPassphrase, prevNetworkPassphrase));
+    }
+}
+
+Application::pointer
+Application::create(VirtualClock& clock, Config const& cfg, bool newDB,
+                    bool validateNetworkPass)
+{
+    return create<ApplicationImpl>(clock, cfg, newDB, validateNetworkPass);
 }
 }

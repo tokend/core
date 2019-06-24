@@ -4,8 +4,10 @@ services:
 
 variables:
   IMAGE_NAME: registry.gitlab.com/tokend/core
-  BUILD_BASE_IMAGE: $IMAGE_NAME/buildbase:latest
-  BUILD_BASE_DOCKERFILE: buildbase.dockerfile
+  # buildbase tags are misleading, blame legacy for that
+  # * `latest` is old one
+  # * `2` is actual second version
+  BUILD_BASE_IMAGE: $IMAGE_NAME/buildbase:2
   BUILD_IMAGE: corebuild
   BUILD_DOCKERFILE: build.dockerfile
   LEGACY_IMAGE: $IMAGE_NAME:$CI_COMMIT_SHA
@@ -15,19 +17,24 @@ variables:
   DH_IMAGE: tokend/core
 
 stages:
+  - buildbase
   - build
   - publish
 
 build-base-image:
   image: docker:latest
-  stage: build
+  stage: buildbase
   only:
-    - buildbase
+    refs:
+      - master
+      - feature/docker-healthcheck
+    changes:
+      - buildbase.dockerfile
   tags:
     - tokend
   script:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker build --pull -t $BUILD_BASE_IMAGE -f $BUILD_BASE_DOCKERFILE .
+    - docker build --pull -t $BUILD_BASE_IMAGE -f buildbase.dockerfile .
     - docker push $BUILD_BASE_IMAGE
 
 build:
@@ -36,10 +43,11 @@ build:
   tags:
     - tokend
   script:
+    - version=$(test -z $CI_COMMIT_TAG && echo $CI_COMMIT_SHA || echo $CI_COMMIT_TAG)
     # login to docker registry
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
     # build intermediate binary base
-    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" -t $BUILD_IMAGE -f $BUILD_DOCKERFILE .
+    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" --build-arg VERSION="$version" -t $BUILD_IMAGE -f $BUILD_DOCKERFILE .
     # legacy container
     - docker build -t $LEGACY_IMAGE -f $LEGACY_DOCKERFILE .
     - docker push $LEGACY_IMAGE

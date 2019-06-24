@@ -8,7 +8,7 @@
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateAssetOpFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
@@ -80,7 +80,7 @@ ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewable
 bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper, LedgerManager & ledgerManager)
 {
 	auto & db = storageHelper.getDatabase();
-	auto delta = storageHelper.getLedgerDelta();
+	LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
 	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     if (mManageAsset.requestID == 0 && reviewableRequestHelper->exists(db, getSourceID(), mAssetCreationRequest.code)) {
@@ -102,22 +102,25 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         return false;
     }
 
-	auto request = getUpdatedOrCreateReviewableRequest(app, db, *delta);
+	auto request = getUpdatedOrCreateReviewableRequest(app, db, delta);
 	if (!request) {
         innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
 		return false;
 	}
 
 	bool autoreview = true;
-    if (mManageAsset.requestID == 0) {
+    if (mManageAsset.requestID == 0)
+    {
+        KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks, mManageAsset.request.createAssetCreationRequest().allTasks))
+        if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAssetCreateTasksKey()},
+                                      mManageAsset.request.createAssetCreationRequest().allTasks.get()))
         {
             innerResult().code(ManageAssetResultCode::ASSET_CREATE_TASKS_NOT_FOUND);
             return false;
         }
         request->setTasks(allTasks);
-        EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+        EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
         autoreview = allTasks == 0;
     }
     else {
@@ -127,12 +130,12 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         }
         updateRequest(request->getRequestEntry());
         request->recalculateHashRejectReason();
-        EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+        EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
     }
 
     bool fulfilled = false;
     if (autoreview) {
-        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, delta, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS) {
             throw std::runtime_error("Failed to review create asset request");
         }
@@ -194,12 +197,6 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
 string CreateAssetOpFrame::getAssetCode() const
 {
     return mAssetCreationRequest.code;
-}
-
-vector<longstring> CreateAssetOpFrame::makeTasksKeyVector(StorageHelper& storageHelper) {
-    return std::vector<longstring>{
-        ManageKeyValueOpFrame::makeAssetCreateTasksKey()
-    };
 }
 
 bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointer request)

@@ -23,6 +23,10 @@ enum class LedgerEntryType;
 class LicenseHelper;
 class LicenseSignatureHelper;
 class StampHelper;
+class VoteHelper;
+class PollHelper;
+class AccountSpecificRuleHelper;
+
 class StorageHelper
 {
   public:
@@ -63,5 +67,8 @@ class StorageHelper
     virtual LicenseHelper& getLicenseHelper() = 0;
     virtual LicenseSignatureHelper& getLicenseSignatureHelper() = 0;
     virtual StampHelper& getStampHelper() = 0;
+    virtual VoteHelper& getVoteHelper() = 0;
+    virtual PollHelper& getPollHelper() = 0;
+    virtual AccountSpecificRuleHelper& getAccountSpecificRuleHelper() = 0;
 };
 } // namespace stellar

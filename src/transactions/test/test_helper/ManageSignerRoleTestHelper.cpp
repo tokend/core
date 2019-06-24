@@ -86,9 +86,6 @@ ManageSignerRoleTestHelper::applyTx(Account &source, const ManageSignerRoleOp &o
 
     REQUIRE(actualResultCode == expectedResultCode);
 
-    auto txFee = mTestManager->getLedgerManager().getTxFee();
-    REQUIRE(txResult.feeCharged == txFee);
-
     return opResult.tr().manageSignerRoleResult();
 }
 

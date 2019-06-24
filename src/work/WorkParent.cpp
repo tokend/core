@@ -2,12 +2,11 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "work/Work.h"
 #include "work/WorkParent.h"
+#include "work/Work.h"
 
 #include "lib/util/format.h"
 #include "util/Logging.h"
-#include "util/make_unique.h"
 
 namespace stellar
 {
@@ -63,6 +62,19 @@ WorkParent::anyChildRaiseFailure() const
 }
 
 bool
+WorkParent::anyChildFatalFailure() const
+{
+    for (auto& c : mChildren)
+    {
+        if (c.second->getState() == Work::WORK_FAILURE_FATAL)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool
 WorkParent::allChildrenSuccessful() const
 {
     for (auto& c : mChildren)
@@ -81,7 +93,8 @@ WorkParent::allChildrenDone() const
     for (auto& c : mChildren)
     {
         if (c.second->getState() != Work::WORK_SUCCESS &&
-            c.second->getState() != Work::WORK_FAILURE_RAISE)
+            c.second->getState() != Work::WORK_FAILURE_RAISE &&
+            c.second->getState() != Work::WORK_FAILURE_FATAL)
         {
             return false;
         }
@@ -94,5 +107,4 @@ WorkParent::app() const
 {
     return mApp;
 }
-
 }

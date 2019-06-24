@@ -7,7 +7,7 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "main/test.h"
+#include "test/test.h"
 #include "TxTests.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
@@ -206,7 +206,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
     SECTION("Non zero balance on sale close"){
         auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
         EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
@@ -249,11 +249,8 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
     SECTION("Simple happy path for test fee")
     {
-        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 2 * ONE,
                 nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
-        setFeesTestHelper.applySetFeesTx(root, &fee, false);
-        fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 1 * ONE,
-                                               nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
         fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                                                nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
@@ -261,14 +258,9 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
         saleRequest.hardCap = 200 * ONE;
         saleRequest.softCap = 100 * ONE;
+        uint64_t feeToPayBySyndicate(2 * ONE);
+        uint64_t feeToPay(4 * ONE);
 
-        auto syndicateAccountFrame = std::make_shared<AccountFrame>(syndicatePubKey);
-        auto syndicateFee = FeeHelper::Instance()->loadForAccount(FeeType::CAPITAL_DEPLOYMENT_FEE,
-                quoteAsset, FeeFrame::SUBTYPE_ANY, syndicateAccountFrame, saleRequest.hardCap, db);
-        uint64_t feeToPayBySyndicate = 0;
-        REQUIRE(syndicateFee->calculatePercentFee(saleRequest.hardCap, feeToPayBySyndicate, ROUND_UP, 1));
-
-        uint64_t feeToPay(2 * ONE);
         auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
         auto saleID = result.success().typeExt.saleExtended().saleID;
         participationHelper.addNewParticipant(root, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, feeToPay);
@@ -353,6 +345,64 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
             saleRequest.startTime = 0;
             saleRequest.endTime = INT64_MAX;
             saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
+        }
+        SECTION("Global rule required")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_REQUIRED);
+        }
+        SECTION("EXCEEDED MAX RULES SIZE, using default max length")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    app.getMaxSaleRulesLength() + 1, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+        }
+        SECTION("EXCEEDED MAX RULES SIZE, using max length from key value")
+        {
+            uint32_t maxRuleLength(10);
+            longstring rulesKey = ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey();
+            manageKeyValueHelper.setKey(rulesKey)->setUi32Value(maxRuleLength);
+            manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    maxRuleLength + 1, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+        }
+        SECTION("GLOBAL SPECIFIC RULE DUPLICATION")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    2, CreateAccountSaleRuleData());
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_DUPLICATION);
+        }
+        SECTION("Account not found")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    2, CreateAccountSaleRuleData(new AccountID(), false, LedgerVersion::EMPTY_VERSION));;
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::ACCOUNT_NOT_FOUND);
+        }
+        SECTION("ACCOUNT SPECIFIC RULE DUPLICATION")
+        {
+            saleRequest.ext.v(LedgerVersion::ADD_SALE_WHITELISTS);
+            saleRequest.ext.saleRules() = xdr::xvector<CreateAccountSaleRuleData>(
+                    2, CreateAccountSaleRuleData(new AccountID(syndicatePubKey), false, LedgerVersion::EMPTY_VERSION));
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                    CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
+        }
+        SECTION("Trying to create sale for reversed pair")
+        {
+            auto assetPairTestHelper = ManageAssetPairTestHelper(testManager);
+            assetPairTestHelper.createAssetPair(root, saleRequest.defaultQuoteAsset, saleRequest.baseAsset, 2);
+            saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest, nullptr,
+                                                     CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
         }
     }
 

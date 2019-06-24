@@ -2,6 +2,9 @@
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "test/test_marshaler.h"
+#include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
+#include "ledger/KeyValueHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -69,9 +72,6 @@ namespace txtest
 
         REQUIRE(actualResultCode == expectedResultCode);
 
-        auto txFee = mTestManager->getApp().getLedgerManager().getTxFee();
-        REQUIRE(txResult.feeCharged == txFee);
-
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDsAfter;
         externalSystemAccountIDsAfter = externalSystemAccountIDHelper->loadAll(db);
 
@@ -98,7 +98,7 @@ namespace txtest
             REQUIRE(boundPoolEntry.data == boundPoolEntryData);
             REQUIRE(!!boundPoolEntry.accountID);
             REQUIRE(*boundPoolEntry.accountID == source.key.getPublicKey());
-            REQUIRE(boundPoolEntry.expiresAt == mTestManager->getLedgerManager().getCloseTime() + BindExternalSystemAccountIdOpFrame::dayInSeconds);
+            REQUIRE(boundPoolEntry.expiresAt == mTestManager->getLedgerManager().getCloseTime() + getExpireAt(externalSystemType));
 
             if (rebinding)
                 REQUIRE(!externalSystemAccountIDHelper->exists(db, externalSystemAccountIDBeforeTx->getExternalSystemAccountID().accountID,
@@ -115,6 +115,22 @@ namespace txtest
         }
 
         return innerResult;
+    }
+
+    int BindExternalSystemAccountIdTestHelper::getExpireAt(int32 externalSystemType)
+    {
+        auto key = ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(
+                externalSystemType);
+
+        KeyValueHelper& kvHelper = mTestManager->getStorageHelper().getKeyValueHelper();
+        auto kvEntry = kvHelper.loadKeyValue(key);
+
+        if (!kvEntry)
+        {
+            return BindExternalSystemAccountIdOpFrame::dayInSeconds;
+        }
+
+        return kvEntry.get()->getKeyValue().value.ui32Value();
     }
 }
 

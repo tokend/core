@@ -10,7 +10,7 @@
 #include "main/Config.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
-#include "xdr/Stellar-ledger.h"
+#include "xdr/ledger.h"
 #include "xdrpp/printer.h"
 
 namespace stellar
@@ -418,31 +418,6 @@ LedgerDeltaImpl::markMeters(Application& app) const
     }
 }
 
-void
-LedgerDeltaImpl::checkAgainstDatabase(Application& app) const
-{
-    if (!app.getConfig().PARANOID_MODE)
-    {
-        return;
-    }
-    auto& db = app.getDatabase();
-    auto live = getLiveEntries();
-    for (auto const& l : live)
-    {
-        EntryHelperProvider::checkAgainstDatabase(l, db);
-    }
-    auto dead = getDeadEntries();
-    for (auto const& d : dead)
-    {
-        if (EntryHelperProvider::existsEntry(db, d))
-        {
-            std::string s;
-            s = "Inconsistent state ; entry should not exist in database: ";
-            s += xdr::xdr_to_string(d);
-            throw std::runtime_error(s);
-        }
-    }
-}
 } // namespace stellar
 
 bool
