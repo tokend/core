@@ -12,8 +12,14 @@ xdr_to_string(const T &t, const char *name = nullptr, int indent = 0)
 {
     auto vec = xdr_to_opaque(t);
 
-    std::string result(vec.begin(), vec.end());
-    return result;
+    std::ostringstream os;
+
+    for (auto val : vec)
+    {
+        os << uint32_t(val) << " " ;
+    }
+
+    return os.str();
 }
 
 template <uint32_t N>

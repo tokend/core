@@ -10,14 +10,13 @@ namespace stellar {
 bool
 KeyValueEntryValue::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)KeyValueEntryType::UINT32:
 return u.from_bytes(ui32Value_);
   case (int32_t)KeyValueEntryType::STRING:
@@ -106,16 +105,16 @@ return false;
 bool
 KeyValueEntry::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }

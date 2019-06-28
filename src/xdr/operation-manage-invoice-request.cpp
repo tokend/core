@@ -10,16 +10,16 @@ namespace stellar {
 bool
 InvoiceCreationRequest::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -217,14 +217,13 @@ return false;
 }bool
 ManageInvoiceRequestOp::_details_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageInvoiceRequestAction::CREATE:
 return u.from_bytes(invoiceRequest_);
     case (int32_t)ManageInvoiceRequestAction::REMOVE:
@@ -303,16 +302,16 @@ return false;
 bool
 ManageInvoiceRequestOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -440,16 +439,16 @@ return false;
 }bool
 CreateInvoiceRequestResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -605,18 +604,18 @@ return false;
 }bool
 ManageInvoiceRequestResult::_success_t::_details_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
       case (int32_t)ManageInvoiceRequestAction::CREATE:
 return u.from_bytes(response_);
       case (int32_t)ManageInvoiceRequestAction::REMOVE:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -693,16 +692,16 @@ return false;
 bool
 ManageInvoiceRequestResult::_success_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -844,18 +843,18 @@ return false;
 }bool
 ManageInvoiceRequestResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ManageInvoiceRequestResultCode::SUCCESS:
 return u.from_bytes(success_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

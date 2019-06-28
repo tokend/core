@@ -69,14 +69,13 @@ return false;
 }bool
 VoteData::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(pollType_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (pollType_)
+_xdr_discriminant(disc, true);switch (pollType_)
 {
-
   case (int32_t)PollType::SINGLE_CHOICE:
 return u.from_bytes(single_);
 }

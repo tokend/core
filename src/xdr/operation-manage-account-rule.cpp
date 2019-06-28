@@ -10,16 +10,16 @@ namespace stellar {
 bool
 CreateAccountRuleData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -189,16 +189,16 @@ return false;
 }bool
 UpdateAccountRuleData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -382,16 +382,16 @@ return false;
 }bool
 RemoveAccountRuleData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -519,14 +519,13 @@ return false;
 }bool
 ManageAccountRuleOp::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageAccountRuleAction::CREATE:
 return u.from_bytes(createData_);
     case (int32_t)ManageAccountRuleAction::UPDATE:
@@ -615,16 +614,16 @@ return false;
 bool
 ManageAccountRuleOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -752,16 +751,16 @@ return false;
 }bool
 ManageAccountRuleResult::_success_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -889,20 +888,20 @@ return false;
 }bool
 ManageAccountRuleResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ManageAccountRuleResultCode::SUCCESS:
 return u.from_bytes(success_);
   case (int32_t)ManageAccountRuleResultCode::RULE_IS_USED:
 return u.from_bytes(roleIDs_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

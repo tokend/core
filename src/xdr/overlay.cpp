@@ -344,14 +344,13 @@ return false;
 }bool
 PeerAddress::_ip_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
     case (int32_t)IPAddrType::IPv4:
 return u.from_bytes(ipv4_);
     case (int32_t)IPAddrType::IPv6:
@@ -562,14 +561,13 @@ return false;
 }bool
 StellarMessage::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)MessageType::ERROR_MSG:
 return u.from_bytes(error_);
   case (int32_t)MessageType::HELLO:
@@ -579,7 +577,8 @@ return u.from_bytes(auth_);
   case (int32_t)MessageType::DONT_HAVE:
 return u.from_bytes(dontHave_);
   case (int32_t)MessageType::GET_PEERS:
-    return true;
+  
+  return true;
   case (int32_t)MessageType::PEERS:
 return u.from_bytes(peers_);
   case (int32_t)MessageType::GET_TX_SET:
@@ -833,14 +832,13 @@ return false;
 }bool
 AuthenticatedMessage::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
   case (int32_t)LedgerVersion::EMPTY_VERSION:
 return u.from_bytes(v0_);
 }

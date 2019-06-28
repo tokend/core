@@ -10,3 +10,14 @@ target_link_libraries(cpp_serialize xdrpp)
 set_target_properties(cpp_serialize PROPERTIES CXX_STANDARD 14)
 #add_executable(test test/main.cpp test/types.cpp test/types.h xdr/xdr_abstract.h  xd/unmarshaler.t.hpp src/unmarshaler.cpp src/marshaler.cpp src/marshaler.h test/CreateAccountOp.cpp test/CreateAccountOp.h test/ManageSignerOp.cpp test/ManageSignerOp.h src/types.h src/types.cpp)
 
+if((CMAKE_CXX_COMPILER_ID MATCHES "Clang") OR (${CMAKE_COMPILER_IS_GNUCXX}))
+    include (TestBigEndian)
+    TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
+    if(IS_BIG_ENDIAN)
+        set(WORDS_BIGENDIAN ON)
+    endif()
+
+    set(XDRPP_WORDS_BIGENDIAN ON)
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/xdrpp/build_endian.h.in ${CMAKE_CURRENT_SOURCE_DIR}/xdrpp/build_endian.h @ONLY)
+endif()

@@ -10,16 +10,16 @@ namespace stellar {
 bool
 PaymentFeeData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -175,14 +175,13 @@ return false;
 }bool
 PaymentOp::_destination_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
     case (int32_t)PaymentDestinationType::ACCOUNT:
 return u.from_bytes(accountID_);
     case (int32_t)PaymentDestinationType::BALANCE:
@@ -261,16 +260,16 @@ return false;
 bool
 PaymentOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -468,16 +467,16 @@ return false;
 }bool
 PaymentResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -689,18 +688,18 @@ return false;
 }bool
 PaymentResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)PaymentResultCode::SUCCESS:
 return u.from_bytes(paymentResponse_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

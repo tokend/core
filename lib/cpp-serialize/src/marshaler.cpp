@@ -1,17 +1,17 @@
 
+#include <iostream>
 #include "marshaler.h"
 #include "xdr_abstract.h"
 
 namespace xdr
 {
 
-marshaler::marshaler(const uint8_t * start, const uint8_t * end)
+marshaler::marshaler(uint8_t * start, uint8_t * end) : bytes(start), end(end)
 {
-    bytes.assign(start, end);
 }
 
 marshaler::marshaler(char *start, char *end)
-        : marshaler((const uint8_t*)start, (const uint8_t*)end)
+        : marshaler((uint8_t*)start, (uint8_t*)end)
 {
 }
 
@@ -21,20 +21,31 @@ marshaler::get_error()
     return error.str();
 }
 
+
+void
+marshaler::done()
+{
+    if (bytes != end)
+    {
+        throw std::runtime_error("Expected current to be equal end");
+    }
+}
+
+
 bool
 marshaler::to_bytes(uint64_t const value)
 {
-    uint8_t buf[8];
-    buf[0] = value >> 56;
-    buf[1] = value >> 48;
-    buf[2] = value >> 40;
-    buf[3] = value >> 32;
-    buf[4] = value >> 24;
-    buf[5] = value >> 16;
-    buf[6] = value >> 8;
-    buf[7] = value;
+    //uint8_t buf[8];
+    bytes[pos++] = value >> 56;
+    bytes[pos++] = value >> 48;
+    bytes[pos++] = value >> 40;
+    bytes[pos++] = value >> 32;
+    bytes[pos++] = value >> 24;
+    bytes[pos++] = value >> 16;
+    bytes[pos++] = value >> 8;
+    bytes[pos++] = value;
 
-    bytes.insert(bytes.end(), buf, buf + 8);
+    //bytes.insert(bytes.end(), buf, buf + 8);
 
     return true;
 }
@@ -42,17 +53,17 @@ marshaler::to_bytes(uint64_t const value)
 bool
 marshaler::to_bytes(int64_t value)
 {
-    uint8_t buf[8];
-    buf[0] = value >> 56;
-    buf[1] = value >> 48;
-    buf[2] = value >> 40;
-    buf[3] = value >> 32;
-    buf[4] = value >> 24;
-    buf[5] = value >> 16;
-    buf[6] = value >> 8;
-    buf[7] = value;
+    //uint8_t buf[8];
+    bytes[pos++] = value >> 56;
+    bytes[pos++] = value >> 48;
+    bytes[pos++] = value >> 40;
+    bytes[pos++] = value >> 32;
+    bytes[pos++] = value >> 24;
+    bytes[pos++] = value >> 16;
+    bytes[pos++] = value >> 8;
+    bytes[pos++] = value;
 
-    bytes.insert(bytes.end(), buf, buf + 8);
+    //bytes.insert(bytes.end(), buf, buf + 8);
 
     return true;
 }
@@ -60,13 +71,13 @@ marshaler::to_bytes(int64_t value)
 bool
 marshaler::to_bytes(uint32_t value)
 {
-    uint8_t buf[4];
-    buf[0] = value >> 24;
-    buf[1] = value >> 16;
-    buf[2] = value >> 8;
-    buf[3] = value;
+    //uint8_t buf[4];
+    bytes[pos++] = value >> 24;
+    bytes[pos++] = value >> 16;
+    bytes[pos++] = value >> 8;
+    bytes[pos++] = value;
 
-    bytes.insert(bytes.end(), buf, buf + 4);
+    //bytes.insert(bytes.end(), buf, buf + 4);
 
     return true;
 }
@@ -74,13 +85,13 @@ marshaler::to_bytes(uint32_t value)
 bool
 marshaler::to_bytes(int32_t value)
 {
-    uint8_t buf[4];
-    buf[0] = value >> 24;
-    buf[1] = value >> 16;
-    buf[2] = value >> 8;
-    buf[3] = value;
+    //uint8_t buf[4];
+    bytes[pos++] = value >> 24;
+    bytes[pos++] = value >> 16;
+    bytes[pos++] = value >> 8;
+    bytes[pos++] = value;
 
-    bytes.insert(bytes.end(), buf, buf + 4);
+    //bytes.insert(bytes.end(), buf, buf + 4);
 
     return true;
 }
@@ -100,7 +111,7 @@ marshaler::to_bytes(xdr::xdr_abstract const& value)
 bool
 marshaler::to_bytes(std::vector<uint8_t> const& value)
 {
-    uint64_t bytesNum  = value.size();
+    uint64_t bytesNum = value.size();
     if (bytesNum > INT32_MAX)
     {
         error << "bytes vector length overflow ";
@@ -112,13 +123,16 @@ marshaler::to_bytes(std::vector<uint8_t> const& value)
         return false;
     }
 
-    bytes.insert(bytes.end(), value.begin(), value.end());
+    for (auto const byte : value)
+    {
+        bytes[pos++] = byte;
+    }
 
     uint32_t extraBytes = (4 - (bytesNum % 4)) % 4;
 
     for (uint32_t i = 0; i < extraBytes; i++)
     {
-        bytes.emplace_back(0);
+        bytes[pos++] = 0;
     }
 
     return true;
@@ -128,9 +142,9 @@ marshaler::to_bytes(std::vector<uint8_t> const& value)
 bool
 marshaler::to_bytes(std::string const&value)
 {
-    bytes.insert(bytes.end(), value.begin(), value.end());
+    std::vector<uint8_t> vec(value.begin(), value.end());
 
-    return false;
+    return to_bytes(vec);
 }
 
 }

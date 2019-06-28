@@ -137,7 +137,7 @@ unmarshaler::from_bytes(xdr_abstract& value)
 {
     if (!value.from_bytes(*this))
     {
-        error << "failed to fill value ";
+        error << "failed to fill value " << typeid(value).name() << " : ";
         return false;
     }
 

@@ -10,16 +10,16 @@ namespace stellar {
 bool
 StellarValue::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -234,16 +234,16 @@ return false;
 }bool
 LedgerHeader::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -525,14 +525,13 @@ return false;
 }bool
 LedgerUpgrade::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)LedgerUpgradeType::VERSION:
 return u.from_bytes(newLedgerVersion_);
   case (int32_t)LedgerUpgradeType::MAX_TX_SET_SIZE:
@@ -621,14 +620,13 @@ return false;
 bool
 BucketEntry::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)BucketEntryType::LIVEENTRY:
 return u.from_bytes(liveEntry_);
   case (int32_t)BucketEntryType::DEADENTRY:
@@ -870,16 +868,16 @@ return false;
 }bool
 TransactionHistoryEntry::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1021,16 +1019,16 @@ return false;
 }bool
 TransactionHistoryResultEntry::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1172,16 +1170,16 @@ return false;
 }bool
 LedgerHeaderHistoryEntry::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1441,14 +1439,13 @@ return false;
 }bool
 SCPHistoryEntry::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
   case (int32_t)LedgerVersion::EMPTY_VERSION:
 return u.from_bytes(v0_);
 }
@@ -1517,14 +1514,13 @@ return false;
 bool
 LedgerEntryChange::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)LedgerEntryChangeType::CREATED:
 return u.from_bytes(created_);
   case (int32_t)LedgerEntryChangeType::UPDATED:
@@ -1668,14 +1664,13 @@ return false;
 }bool
 TransactionMeta::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
   case (int32_t)LedgerVersion::EMPTY_VERSION:
 return u.from_bytes(operations_);
 }

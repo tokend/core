@@ -46,7 +46,7 @@ xdr_to_opaque(const Args &...args)
     opaque_vec<> m (opaque_vec<>::size_type {xdr_argpack_size(args...)});
     xdr_put p (m.data(), m.data()+m.size());
     xdr_argpack_archive(p, args...);
-    //assert(p. == p.e_); use done
+    p.done();
     return m;
 }
 
@@ -96,7 +96,7 @@ xdr_to_msg(const Args &...args)
     msg_ptr m (message_t::alloc(xdr_argpack_size(args...)));
     xdr_put p (m->data(), m->end());
     xdr_argpack_archive(p, args...);
-    //assert(p.p_ == p.e_); use done
+    p.done();
     return m;
 }
 

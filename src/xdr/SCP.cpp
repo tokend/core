@@ -431,14 +431,13 @@ return false;
 }bool
 SCPStatement::_pledges_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
     case (int32_t)SCPStatementType::PREPARE:
 return u.from_bytes(prepare_);
     case (int32_t)SCPStatementType::CONFIRM:

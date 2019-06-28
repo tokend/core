@@ -31,7 +31,7 @@ template <uint32_t N>
 void
 measurer::count_size(xdr::xarray<uint8_t, N> const& value)
 {
-    uint32_t extraBytes = 4 - (N % 4);
+    uint32_t extraBytes = (4 - (N % 4)) % 4;
 
     current += N + extraBytes;
 }

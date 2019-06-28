@@ -25,6 +25,12 @@ struct xdr_abstract
 
     virtual bool
     operator<(xdr_abstract const& other) const = 0;
+
+// just not allow to build on big endian machines
+#if XDRPP_WORDS_BIGENDIAN
+    virtual bool
+    swap() = 0;
+#endif
 };
 
 }

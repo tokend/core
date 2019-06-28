@@ -10,16 +10,16 @@ namespace stellar {
 bool
 CreateAccountOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -189,16 +189,16 @@ return false;
 }bool
 CreateAccountSuccess::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -326,20 +326,20 @@ return false;
 }bool
 CreateAccountResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)CreateAccountResultCode::SUCCESS:
 return u.from_bytes(success_);
   case (int32_t)CreateAccountResultCode::INVALID_SIGNER_DATA:
 return u.from_bytes(createSignerErrorCode_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

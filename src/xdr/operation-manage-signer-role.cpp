@@ -10,16 +10,16 @@ namespace stellar {
 bool
 CreateSignerRoleData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -175,16 +175,16 @@ return false;
 }bool
 UpdateSignerRoleData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -340,16 +340,16 @@ return false;
 }bool
 RemoveSignerRoleData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -477,14 +477,13 @@ return false;
 }bool
 ManageSignerRoleOp::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageSignerRoleAction::CREATE:
 return u.from_bytes(createData_);
     case (int32_t)ManageSignerRoleAction::UPDATE:
@@ -573,16 +572,16 @@ return false;
 bool
 ManageSignerRoleOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -710,16 +709,16 @@ return false;
 }bool
 ManageSignerRoleResult::_success_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -847,14 +846,13 @@ return false;
 }bool
 ManageSignerRoleResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ManageSignerRoleResultCode::SUCCESS:
 return u.from_bytes(success_);
   case (int32_t)ManageSignerRoleResultCode::RULE_ID_DUPLICATION:
@@ -864,7 +862,8 @@ return u.from_bytes(ruleID_);
   case (int32_t)ManageSignerRoleResultCode::TOO_MANY_RULE_IDS:
 return u.from_bytes(maxRuleIDsCount_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

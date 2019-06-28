@@ -10,18 +10,18 @@ namespace stellar {
 bool
 ManageContractOp::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageContractAction::ADD_DETAILS:
 return u.from_bytes(details_);
     case (int32_t)ManageContractAction::CONFIRM_COMPLETED:
-      return true;
+    
+  return true;
     case (int32_t)ManageContractAction::START_DISPUTE:
 return u.from_bytes(disputeReason_);
     case (int32_t)ManageContractAction::RESOLVE_DISPUTE:
@@ -118,16 +118,16 @@ return false;
 bool
 ManageContractOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -269,18 +269,18 @@ return false;
 }bool
 ManageContractResponse::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageContractAction::CONFIRM_COMPLETED:
 return u.from_bytes(isCompleted_);
     default:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -357,16 +357,16 @@ return false;
 bool
 ManageContractResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -494,18 +494,18 @@ return false;
 }bool
 ManageContractResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ManageContractResultCode::SUCCESS:
 return u.from_bytes(response_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

@@ -6,4 +6,4 @@ set(CMAKE_CXX_STANDARD 14)
 
 #set_target_properties(xdrpp PROPERTIES LINKER_LANGUAGE CXX)
 
-add_library(xdrpp marshal.h printer.h message.h marshal.cpp)
+add_library(xdrpp marshal.h printer.h message.h marshal.cpp build_endian.h)

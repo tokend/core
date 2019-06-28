@@ -10,16 +10,16 @@ namespace stellar {
 bool
 LedgerKey::_account_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -147,16 +147,16 @@ return false;
 }bool
 LedgerKey::_signer_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -298,16 +298,16 @@ return false;
 }bool
 LedgerKey::_feeState_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -463,16 +463,16 @@ return false;
 }bool
 LedgerKey::_balance_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -600,16 +600,16 @@ return false;
 }bool
 LedgerKey::_asset_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -737,16 +737,16 @@ return false;
 }bool
 LedgerKey::_reference_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -888,16 +888,16 @@ return false;
 }bool
 LedgerKey::_stats_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1025,16 +1025,16 @@ return false;
 }bool
 LedgerKey::_accountLimits_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1162,16 +1162,16 @@ return false;
 }bool
 LedgerKey::_assetPair_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1372,16 +1372,16 @@ return false;
 }bool
 LedgerKey::_reviewableRequest_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1509,16 +1509,16 @@ return false;
 }bool
 LedgerKey::_externalSystemAccountID_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1660,16 +1660,16 @@ return false;
 }bool
 LedgerKey::_sale_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1797,16 +1797,16 @@ return false;
 }bool
 LedgerKey::_keyValue_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -1934,16 +1934,16 @@ return false;
 }bool
 LedgerKey::_accountKYC_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2071,16 +2071,16 @@ return false;
 }bool
 LedgerKey::_externalSystemAccountIDPoolEntry_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2208,16 +2208,16 @@ return false;
 }bool
 LedgerKey::_limitsV2_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2345,16 +2345,16 @@ return false;
 }bool
 LedgerKey::_statisticsV2_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2482,16 +2482,16 @@ return false;
 }bool
 LedgerKey::_pendingStatistics_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2633,16 +2633,16 @@ return false;
 }bool
 LedgerKey::_contract_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2770,16 +2770,16 @@ return false;
 }bool
 LedgerKey::_atomicSwapAsk_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -2907,16 +2907,16 @@ return false;
 }bool
 LedgerKey::_accountRole_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -3044,16 +3044,16 @@ return false;
 }bool
 LedgerKey::_accountRule_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -3181,16 +3181,16 @@ return false;
 }bool
 LedgerKey::_signerRole_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -3318,16 +3318,16 @@ return false;
 }bool
 LedgerKey::_signerRule_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -3455,16 +3455,16 @@ return false;
 }bool
 LedgerKey::_stamp_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -3606,16 +3606,16 @@ return false;
 }bool
 LedgerKey::_license_t::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
       case (int32_t)LedgerVersion::EMPTY_VERSION:
-        return true;
+      
+  return true;
 }
 return false;
 }
@@ -3934,14 +3934,13 @@ return false;
 }bool
 LedgerKey::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)LedgerEntryType::ACCOUNT:
 return u.from_bytes(account_);
   case (int32_t)LedgerEntryType::SIGNER:

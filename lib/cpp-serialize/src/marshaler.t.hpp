@@ -24,11 +24,14 @@ marshaler::to_bytes(xdr::xarray<uint8_t, bytesNum> const& value)
 {
     uint32_t extraBytes = (4 - (bytesNum % 4)) % 4;
 
-    bytes.insert(bytes.end(), value.begin(), value.end());
+    for (auto const byte : value)
+    {
+        bytes[pos++] = byte;
+    }
 
     for (uint32_t i = 0; i < extraBytes; i++)
     {
-        bytes.emplace_back(0);
+        bytes[pos++] = 0;
     }
 
     return true;

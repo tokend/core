@@ -42,6 +42,8 @@ struct xarray : std::array<T, size_t(N)>
     {
         array::fill(T{});
     }
+    xarray(const xarray &) = default;
+    xarray &operator=(const xarray &) = default;
 
     void resize(uint32_t n)
     {
@@ -53,6 +55,7 @@ template<uint32_t N = XDR_MAX_LEN>
 struct xstring : std::string
 {
     using string = std::string;
+    using string::operator=;
 
 #if !MSVC
     xstring() = default;
@@ -67,6 +70,21 @@ struct xstring : std::string
     {
         //validate();
     }
+
+#define ASSIGN_LIKE(method)					\
+  template<typename...Args> xstring &method(Args&&...args) {	\
+    string::method(std::forward<Args>(args)...);		\
+    return *this;						\
+  }
+    ASSIGN_LIKE(operator=)
+    ASSIGN_LIKE(operator+=)
+    ASSIGN_LIKE(append)
+    ASSIGN_LIKE(push_back)
+    ASSIGN_LIKE(assign)
+    ASSIGN_LIKE(insert)
+    ASSIGN_LIKE(replace)
+    ASSIGN_LIKE(swap)
+#undef ASSIGN_LIKE
 };
 
 template <uint32_t N>

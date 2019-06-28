@@ -12,17 +12,22 @@ class xdr_abstract;
 
 class marshaler
 {
-    std::vector<uint8_t> bytes;
+    uint8_t * bytes;
+    uint8_t * end;
     std::ostringstream error;
+    size_t pos{0};
 
 public:
     marshaler() = default;
 
-    marshaler(const uint8_t * start, const uint8_t * end);
+    marshaler(uint8_t * start, uint8_t * end);
     marshaler(char * start, char * end);
 
     std::string
     get_error();
+
+    void
+    done();
 
     bool
     to_bytes(uint64_t value);

@@ -945,16 +945,16 @@ return false;
 }bool
 SignerRuleResource::_accountSpecificRuleExt_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
     case (int32_t)LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
 return u.from_bytes(accountSpecificRule_);
 }
@@ -1033,20 +1033,20 @@ return false;
 bool
 SignerRuleResource::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)LedgerEntryType::REVIEWABLE_REQUEST:
 return u.from_bytes(reviewableRequest_);
   case (int32_t)LedgerEntryType::ASSET:
 return u.from_bytes(asset_);
   case (int32_t)LedgerEntryType::ANY:
-    return true;
+  
+  return true;
   case (int32_t)LedgerEntryType::OFFER_ENTRY:
 return u.from_bytes(offer_);
   case (int32_t)LedgerEntryType::SALE:

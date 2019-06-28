@@ -10,14 +10,13 @@ namespace stellar {
 bool
 Operation::_body_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
     case (int32_t)OperationType::CREATE_ACCOUNT:
 return u.from_bytes(createAccountOp_);
     case (int32_t)OperationType::CREATE_ISSUANCE_REQUEST:
@@ -575,16 +574,16 @@ return false;
 }bool
 Memo::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)MemoType::MEMO_NONE:
-    return true;
+  
+  return true;
   case (int32_t)MemoType::MEMO_TEXT:
 return u.from_bytes(text_);
   case (int32_t)MemoType::MEMO_ID:
@@ -752,16 +751,16 @@ return false;
 }bool
 Transaction::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1091,14 +1090,13 @@ return false;
 }bool
 OperationResult::_tr_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
     case (int32_t)OperationType::CREATE_ACCOUNT:
 return u.from_bytes(createAccountResult_);
     case (int32_t)OperationType::CREATE_ISSUANCE_REQUEST:
@@ -1597,14 +1595,13 @@ return false;
 bool
 OperationResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)OperationResultCode::opINNER:
 return u.from_bytes(tr_);
   case (int32_t)OperationResultCode::opNO_ENTRY:
@@ -1612,7 +1609,8 @@ return u.from_bytes(entryType_);
   case (int32_t)OperationResultCode::opNO_ROLE_PERMISSION:
 return u.from_bytes(requirement_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }
@@ -1705,16 +1703,16 @@ return false;
 bool
 OperationFee::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1856,21 +1854,21 @@ return false;
 }bool
 TransactionResult::_result_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
     case (int32_t)TransactionResultCode::txSUCCESS:
     case (int32_t)TransactionResultCode::txFAILED:
 return u.from_bytes(results_);
     case (int32_t)TransactionResultCode::txNO_ROLE_PERMISSION:
 return u.from_bytes(requirement_);
     default:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1959,16 +1957,16 @@ return false;
 bool
 TransactionResult::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }

@@ -288,16 +288,16 @@ return false;
 }bool
 ReviewableRequestResource::_createAtomicSwapAskExt_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
     case (int32_t)LedgerVersion::ATOMIC_SWAP_RETURNING:
 return u.from_bytes(createAtomicSwapAsk_);
 }
@@ -449,16 +449,16 @@ return false;
 }bool
 ReviewableRequestResource::_createAtomicSwapBidExt_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
     case (int32_t)LedgerVersion::ATOMIC_SWAP_RETURNING:
 return u.from_bytes(createAtomicSwapBid_);
 }
@@ -596,14 +596,13 @@ return false;
 }bool
 ReviewableRequestResource::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(requestType_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (requestType_)
+_xdr_discriminant(disc, true);switch (requestType_)
 {
-
   case (int32_t)ReviewableRequestType::CREATE_SALE:
 return u.from_bytes(createSale_);
   case (int32_t)ReviewableRequestType::CREATE_ISSUANCE:
@@ -1448,16 +1447,16 @@ return false;
 }bool
 AccountRuleResource::_accountSpecificRuleExt_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
     case (int32_t)LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
 return u.from_bytes(accountSpecificRule_);
 }
@@ -1536,20 +1535,20 @@ return false;
 bool
 AccountRuleResource::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(type_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (type_)
+_xdr_discriminant(disc, true);switch (type_)
 {
-
   case (int32_t)LedgerEntryType::ASSET:
 return u.from_bytes(asset_);
   case (int32_t)LedgerEntryType::REVIEWABLE_REQUEST:
 return u.from_bytes(reviewableRequest_);
   case (int32_t)LedgerEntryType::ANY:
-    return true;
+  
+  return true;
   case (int32_t)LedgerEntryType::OFFER_ENTRY:
 return u.from_bytes(offer_);
   case (int32_t)LedgerEntryType::SALE:

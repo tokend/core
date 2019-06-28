@@ -72,9 +72,15 @@ public:
     from_bytes(T& value)
     {
         int32_t raw;
-        from_bytes(raw);
+        if (!from_bytes(raw))
+        {
+            error << "failed to fill int32_t";
+            return false;
+        }
 
         value = static_cast<T>(value);
+
+        return true;
     }
 };
 

@@ -10,16 +10,16 @@ namespace stellar {
 bool
 ClosePollData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -161,16 +161,16 @@ return false;
 }bool
 UpdatePollEndTimeData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -298,14 +298,13 @@ return false;
 }bool
 ManagePollOp::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManagePollAction::CLOSE:
 return u.from_bytes(closePollData_);
     case (int32_t)ManagePollAction::UPDATE_END_TIME:
@@ -394,16 +393,16 @@ return false;
 bool
 ManagePollOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -545,18 +544,18 @@ return false;
 }bool
 ManagePollResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ManagePollResultCode::SUCCESS:
 return u.from_bytes(ext_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

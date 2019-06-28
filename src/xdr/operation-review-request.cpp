@@ -10,16 +10,16 @@ namespace stellar {
 bool
 LimitsUpdateDetails::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -147,16 +147,16 @@ return false;
 }bool
 WithdrawalDetails::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -284,16 +284,16 @@ return false;
 }bool
 AMLAlertDetails::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -421,16 +421,16 @@ return false;
 }bool
 ContractDetails::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -558,16 +558,16 @@ return false;
 }bool
 BillPayDetails::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -695,16 +695,16 @@ return false;
 }bool
 ReviewDetails::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -860,16 +860,16 @@ return false;
 }bool
 SaleExtended::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -997,16 +997,16 @@ return false;
 }bool
 AtomicSwapAskExtended::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1134,16 +1134,16 @@ return false;
 }bool
 CreatePollExtended::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1271,16 +1271,16 @@ return false;
 }bool
 AtomicSwapBidExtended::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1548,18 +1548,18 @@ return false;
 }bool
 ExtendedResult::_typeExt_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(requestType_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (requestType_)
+_xdr_discriminant(disc, true);switch (requestType_)
 {
-
     case (int32_t)ReviewableRequestType::CREATE_SALE:
 return u.from_bytes(saleExtended_);
     case (int32_t)ReviewableRequestType::NONE:
-      return true;
+    
+  return true;
     case (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
 return u.from_bytes(atomicSwapBidExtended_);
     case (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
@@ -1666,16 +1666,16 @@ return false;
 bool
 ExtendedResult::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1817,14 +1817,13 @@ return false;
 }bool
 ReviewRequestOp::_requestDetails_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(requestType_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (requestType_)
+_xdr_discriminant(disc, true);switch (requestType_)
 {
-
     case (int32_t)ReviewableRequestType::CREATE_WITHDRAW:
 return u.from_bytes(withdrawal_);
     case (int32_t)ReviewableRequestType::UPDATE_LIMITS:
@@ -1836,7 +1835,8 @@ return u.from_bytes(billPay_);
     case (int32_t)ReviewableRequestType::MANAGE_CONTRACT:
 return u.from_bytes(contract_);
     default:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -1945,16 +1945,16 @@ return false;
 bool
 ReviewRequestOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -2152,18 +2152,18 @@ return false;
 }bool
 ReviewRequestResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 return u.from_bytes(success_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }

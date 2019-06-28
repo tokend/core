@@ -10,16 +10,16 @@ namespace stellar {
 bool
 UpdateSaleDetailsData::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -175,18 +175,18 @@ return false;
 }bool
 ManageSaleOp::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return u.from_bytes(updateSaleDetailsData_);
     case (int32_t)ManageSaleAction::CANCEL:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -263,16 +263,16 @@ return false;
 bool
 ManageSaleOp::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -414,18 +414,18 @@ return false;
 }bool
 ManageSaleResultSuccess::_response_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(action_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (action_)
+_xdr_discriminant(disc, true);switch (action_)
 {
-
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return u.from_bytes(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -502,16 +502,16 @@ return false;
 bool
 ManageSaleResultSuccess::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(v_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (v_)
+_xdr_discriminant(disc, true);switch (v_)
 {
-
     case (int32_t)LedgerVersion::EMPTY_VERSION:
-      return true;
+    
+  return true;
 }
 return false;
 }
@@ -653,18 +653,18 @@ return false;
 }bool
 ManageSaleResult::from_bytes(xdr::unmarshaler& u) 
 {
-bool ok = u.from_bytes(code_);
+int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
 {
 return false;
 }
-switch (code_)
+_xdr_discriminant(disc, true);switch (code_)
 {
-
   case (int32_t)ManageSaleResultCode::SUCCESS:
 return u.from_bytes(success_);
   default:
-    return true;
+  
+  return true;
 }
 return false;
 }
