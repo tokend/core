@@ -85,3 +85,4 @@ Builds/VisualStudio2015/stellar-core.cfg
 /cmake-build-release
 src/core
 src/stellar-core.cfg
+.vscode
