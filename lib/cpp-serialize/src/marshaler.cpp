@@ -2,6 +2,7 @@
 #include <iostream>
 #include "marshaler.h"
 #include "xdr_abstract.h"
+#include "marshaler.t.hpp"
 
 namespace xdr
 {
@@ -25,9 +26,9 @@ marshaler::get_error()
 void
 marshaler::done()
 {
-    if (bytes != end)
+    if (bytes + pos != end)
     {
-        throw std::runtime_error("Expected current to be equal end");
+        throw std::runtime_error("Expected bytes to be equal end" + std::to_string(uint64_t(bytes+pos)) + std::to_string(uint64_t(end)));
     }
 }
 
@@ -109,40 +110,9 @@ marshaler::to_bytes(xdr::xdr_abstract const& value)
 }
 
 bool
-marshaler::to_bytes(std::vector<uint8_t> const& value)
-{
-    uint64_t bytesNum = value.size();
-    if (bytesNum > INT32_MAX)
-    {
-        error << "bytes vector length overflow ";
-        return false;
-    }
-
-    if (!to_bytes(uint32_t(bytesNum)))
-    {
-        return false;
-    }
-
-    for (auto const byte : value)
-    {
-        bytes[pos++] = byte;
-    }
-
-    uint32_t extraBytes = (4 - (bytesNum % 4)) % 4;
-
-    for (uint32_t i = 0; i < extraBytes; i++)
-    {
-        bytes[pos++] = 0;
-    }
-
-    return true;
-}
-
-
-bool
 marshaler::to_bytes(std::string const&value)
 {
-    std::vector<uint8_t> vec(value.begin(), value.end());
+    xdr::xvector<uint8_t> vec(value.begin(), value.end());
 
     return to_bytes(vec);
 }

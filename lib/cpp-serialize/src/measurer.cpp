@@ -50,13 +50,4 @@ measurer::count_size(std::string const& value)
 
     current += actualSize + extraSize + 4;
 }
-
-void
-measurer::count_size(std::vector<uint8_t> const& value)
-{
-    size_t actualSize = value.size();
-    uint32_t extraSize = (4 - (actualSize % 4)) % 4;
-
-    current += actualSize + extraSize + 4;
-}
 }

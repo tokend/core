@@ -46,8 +46,9 @@ public:
     void
     count_size(xdr::xvector<T, N> const& value);
 
+    template<uint32_t N = XDR_MAX_LEN>
     void
-    count_size(std::vector<uint8_t> const& value);
+    count_size(xdr::xvector<uint8_t, N> const& value);
 
     void
     count_size(std::string const& value);

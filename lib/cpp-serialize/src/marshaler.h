@@ -66,8 +66,9 @@ public:
     bool
     to_bytes(xdr::xvector<T, N> const& value);
 
+    template<uint32_t N = XDR_MAX_LEN>
     bool
-    to_bytes(std::vector<uint8_t> const& value);
+    to_bytes(xdr::xvector<uint8_t, N> const& value);
 
     bool
     to_bytes(std::string const& value);

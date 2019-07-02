@@ -78,7 +78,7 @@ public:
             return false;
         }
 
-        value = static_cast<T>(value);
+        value = static_cast<T>(raw);
 
         return true;
     }
