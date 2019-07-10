@@ -1,6 +1,5 @@
 #pragma once
 
-#include <transactions/AccountManager.h>
 #include "ledger/LimitsV2Frame.h"
 #include "ledger/StatisticsV2Frame.h"
 #include "ledger/StorageHelper.h"

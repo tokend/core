@@ -1,9 +1,4 @@
-//
-// Created by oleg on 02.03.18.
-//
-
 #include "ReviewAMLAlertRequestOpFrame.h"
-#include <transactions/manage_asset/ManageAssetHelper.h>
 #include "util/asio.h"
 
 #include "database/Database.h"

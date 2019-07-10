@@ -8,7 +8,6 @@
 #include "ledger/AssetPairFrame.h"
 #include <functional>
 #include <vector>
-#include "transactions/AccountManager.h"
 
 namespace stellar
 {

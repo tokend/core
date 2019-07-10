@@ -14,6 +14,7 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
+#include "transactions/managers/FeeManager.h"
 
 namespace stellar
 {
@@ -79,11 +80,15 @@ BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelp
     return balanceFrame;
 }
 
-bool CreateWithdrawalRequestOpFrame::isFeeMatches(
-    AccountManager& accountManager, BalanceFrame::pointer balance) const
+bool
+CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, BalanceFrame::pointer balance) const
 {
-    return accountManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee, FeeType::WITHDRAWAL_FEE,
-                                       FeeFrame::SUBTYPE_ANY, balance->getAsset(), mCreateWithdrawalRequest.request.amount);
+    Database& db = app.getDatabase();
+    FeeManager feeManager(app, db);
+
+    return feeManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee,
+                                   FeeType::WITHDRAWAL_FEE, FeeFrame::SUBTYPE_ANY, balance->getAsset(),
+                                   mCreateWithdrawalRequest.request.amount);
 }
 
 bool CreateWithdrawalRequestOpFrame::tryLockBalance(
@@ -151,8 +156,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
         return nullptr;
     }
 
-    AccountManager accountManager(app, db, delta, ledgerManager);
-    if (!isFeeMatches(accountManager, balanceFrame))
+    if (!isFeeMatches(app, balanceFrame))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
         return nullptr;
@@ -178,8 +182,9 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
     storageHelper.getBalanceHelper().storeChange(balanceFrame->mEntry);
 
-    if (!processStatistics(accountManager, db, delta, ledgerManager, balanceFrame,
-                           mCreateWithdrawalRequest.request.amount, universalAmount, request->getRequestID()))
+    if (!processStatistics(storageHelper, ledgerManager, balanceFrame,
+                           mCreateWithdrawalRequest.request.amount,
+                           universalAmount, request->getRequestID()))
     {
         return nullptr;
     }
@@ -279,21 +284,15 @@ bool CreateWithdrawalRequestOpFrame::isExternalDetailsValid(Application& app, co
     return externalDetails.size() <= app.getWithdrawalDetailsMaxLength();
 }
 
-bool CreateWithdrawalRequestOpFrame::processStatistics(AccountManager& accountManager, Database& db,
-                                                       LedgerDelta& delta, LedgerManager& ledgerManager,
-                                                       BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
-                                                       uint64_t& universalAmount, const uint64_t requestID)
+bool
+CreateWithdrawalRequestOpFrame::processStatistics(StorageHelper& storageHelper,
+                                                  LedgerManager& ledgerManager, BalanceFrame::pointer balanceFrame,
+                                                  const uint64_t amountToAdd, uint64_t& universalAmount, uint64_t requestID)
 {
-    StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-    return tryAddStatsV2(statisticsV2Processor, balanceFrame, amountToAdd, universalAmount, requestID);
-}
+    StatisticsV2Processor statisticsV2Processor(storageHelper, ledgerManager);
 
-bool CreateWithdrawalRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                                                   const BalanceFrame::pointer balance, const uint64_t amountToAdd,
-                                                   uint64_t& universalAmount, uint64_t requestID)
-{
-    const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::WITHDRAW, amountToAdd,
-                                                         universalAmount, mSourceAccount, balance, &requestID);
+    const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::WITHDRAW,
+                                                         amountToAdd, universalAmount, mSourceAccount, balanceFrame, &requestID);
     switch (result)
     {
         case StatisticsV2Processor::SUCCESS:
@@ -306,10 +305,9 @@ bool CreateWithdrawalRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statis
             return false;
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpeced result from statisticsV2Processor when updating statsV2:" << result;
+                << "Unexpected result from statisticsV2Processor when updating statsV2:" << result;
             throw std::runtime_error("Unexpected state from statisticsV2Processor when updating statsV2");
     }
-
 }
 
 bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& code)

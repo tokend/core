@@ -100,7 +100,7 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             break;
         }
         default:
-            throw std::runtime_error("Unexpected destination type on payment v2 when load account");
+            throw std::runtime_error("Unexpected destination type on payment when load account");
     }
 
     auto account = storageHelper.getAccountHelper().loadAccount(accountID);
@@ -114,127 +114,124 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
     return account;
 }
 
-    bool PaymentOpFrame::processTransfer(AccountManager &accountManager, AccountFrame::pointer payer,
-                                           BalanceFrame::pointer from, BalanceFrame::pointer to, uint64_t amount,
-                                           uint64_t &universalAmount, Database &db) {
-        auto transferResult = accountManager.processTransferV2(payer, from, to, amount);
-        if (transferResult.result != AccountManager::Result::SUCCESS) {
-            setErrorCode(transferResult.result);
-            return false;
-        }
+bool
+PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::pointer payer,
+                                BalanceFrame::pointer from, BalanceFrame::pointer to,
+                                uint64_t amount, uint64_t &universalAmount, LedgerManager& lm)
+{
+    auto transferResult = balanceManager.transfer(payer, from, to, amount);
+    if (transferResult != BalanceManager::Result::SUCCESS)
+    {
+        setErrorCode(transferResult);
+        return false;
+    }
 
-        if (!safeSum(universalAmount, transferResult.universalAmount, universalAmount)) {
+    if (!lm.shouldUse(LedgerVersion::FIX_PAYMENT_RESULT))
+    {
+        if (!safeSum(universalAmount, balanceManager.getUniversalAmount(), universalAmount))
+        {
             innerResult().code(PaymentResultCode::STATS_OVERFLOW);
             return false;
         }
+    }
 
+    return true;
+}
+
+bool
+PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
+        AccountFrame::pointer payer, BalanceFrame::pointer chargeFrom,
+        Fee expectedFee, Fee actualFee,uint64_t &universalAmount, LedgerManager& lm)
+{
+    if ((actualFee.fixed == 0) && (actualFee.percent == 0))
+    {
         return true;
     }
 
-    bool PaymentOpFrame::processTransferFee(AccountManager &accountManager, AccountFrame::pointer payer,
-                                              BalanceFrame::pointer chargeFrom, Fee expectedFee,
-                                              Fee actualFee, AccountID const &commissionID,
-                                              Database &db, LedgerDelta &delta, bool ignoreStats,
-                                              uint64_t &universalAmount) {
-        if (actualFee.fixed == 0 && actualFee.percent == 0) {
-            return true;
-        }
-
-        if (expectedFee.fixed < actualFee.fixed || expectedFee.percent < actualFee.percent) {
-            innerResult().code(PaymentResultCode::INSUFFICIENT_FEE_AMOUNT);
-            return false;
-        }
-
-        uint64_t totalFee;
-        if (!safeSum(actualFee.fixed, actualFee.percent, totalFee)) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
-            throw std::runtime_error("Total sum of fees to be charged overflows");
-        }
-
-        // load commission balance
-        auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(commissionID, chargeFrom->getAsset(), db,
-                                                                                  delta);
-        if (!commissionBalance) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected commission balance to exist";
-            throw std::runtime_error("Unexpected state. Expected commission balance to exist");
-        }
-
-        return processTransfer(accountManager, payer, chargeFrom, commissionBalance, totalFee, universalAmount, db);
-    }
-
-    void PaymentOpFrame::setErrorCode(AccountManager::Result transferResult) {
-        switch (transferResult) {
-            case AccountManager::Result::UNDERFUNDED: {
-                innerResult().code(PaymentResultCode::UNDERFUNDED);
-                return;
-            }
-            case AccountManager::Result::STATS_OVERFLOW: {
-                innerResult().code(PaymentResultCode::STATS_OVERFLOW);
-                return;
-            }
-            case AccountManager::Result::LIMITS_EXCEEDED: {
-                innerResult().code(PaymentResultCode::LIMITS_EXCEEDED);
-                return;
-            }
-            case AccountManager::Result::LINE_FULL: {
-                innerResult().code(PaymentResultCode::LINE_FULL);
-                return;
-            }
-            case AccountManager::Result::INCORRECT_PRECISION: {
-                innerResult().code(PaymentResultCode::INCORRECT_AMOUNT_PRECISION);
-                return;
-            }
-            default: {
-                CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from process transfer v2: "
-                                                       << transferResult;
-                throw std::runtime_error("Unexpected result code from process transfer v2");
-            }
-        }
-    }
-
-    BalanceFrame::pointer
-    PaymentOpFrame::tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper)
+    if ((expectedFee.fixed < actualFee.fixed) || (expectedFee.percent < actualFee.percent))
     {
-        switch (mPayment.destination.type())
-        {
-            case PaymentDestinationType::BALANCE:
-            {
-                auto dest = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
-                if (!dest) {
-                    innerResult().code(PaymentResultCode::DESTINATION_BALANCE_NOT_FOUND);
-                    return nullptr;
-                }
-
-                if (dest->getAsset() != asset) {
-                    innerResult().code(PaymentResultCode::BALANCE_ASSETS_MISMATCHED);
-                    return nullptr;
-                }
-
-                return dest;
-            }
-            case PaymentDestinationType::ACCOUNT: {
-                if (!storageHelper.getAccountHelper().exists(mPayment.destination.accountID())) {
-                    innerResult().code(PaymentResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
-                    return nullptr;
-                }
-
-                auto dest = AccountManager::loadOrCreateBalanceFrameForAsset(
-                        mPayment.destination.accountID(), asset, storageHelper.getDatabase(),
-                        storageHelper.mustGetLedgerDelta());
-                if (!dest) {
-                    CLOG(ERROR, Logging::OPERATION_LOGGER)
-                            << "Unexpected state: expected destination balance to exist, account id: "
-                            << PubKeyUtils::toStrKey(mPayment.destination.accountID());
-                    throw runtime_error("Unexpected state: expected destination balance to exist");
-                }
-
-                return dest;
-            }
-            default:
-                throw std::runtime_error("Unexpected destination type on payment v2");
-        }
+        innerResult().code(PaymentResultCode::INSUFFICIENT_FEE_AMOUNT);
+        return false;
     }
+
+    uint64_t totalFee;
+    if (!safeSum(actualFee.fixed, actualFee.percent, totalFee))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
+        throw std::runtime_error("Total sum of fees to be charged overflows");
+    }
+
+    auto adminBalance = balanceManager.loadOrCreateBalanceForAdmin(chargeFrom->getAsset());
+
+    return processTransfer(balanceManager, payer, chargeFrom, adminBalance, totalFee, universalAmount, lm);
+}
+
+void
+PaymentOpFrame::setErrorCode(BalanceManager::Result transferResult)
+{
+    switch (transferResult)
+    {
+        case BalanceManager::Result::UNDERFUNDED:
+            innerResult().code(PaymentResultCode::UNDERFUNDED);
+            return;
+        case BalanceManager::Result::STATS_OVERFLOW:
+            innerResult().code(PaymentResultCode::STATS_OVERFLOW);
+            return;
+        case BalanceManager::Result::LIMITS_EXCEEDED:
+            innerResult().code(PaymentResultCode::LIMITS_EXCEEDED);
+            return;
+        case BalanceManager::Result::LINE_FULL:
+            innerResult().code(PaymentResultCode::LINE_FULL);
+            return;
+        case BalanceManager::Result::INCORRECT_PRECISION:
+            innerResult().code(PaymentResultCode::INCORRECT_AMOUNT_PRECISION);
+            return;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from transfer: "
+                                                   << transferResult;
+            throw std::runtime_error("Unexpected result code from balance manager transfer");
+    }
+}
+
+BalanceFrame::pointer
+PaymentOpFrame::tryLoadDestinationBalance(AssetCode asset,
+        StorageHelper& storageHelper, Application& app)
+{
+    switch (mPayment.destination.type())
+    {
+        case PaymentDestinationType::BALANCE:
+        {
+            auto dest = storageHelper.getBalanceHelper().loadBalance(mPayment.destination.balanceID());
+            if (!dest)
+            {
+                innerResult().code(PaymentResultCode::DESTINATION_BALANCE_NOT_FOUND);
+                return nullptr;
+            }
+
+            if (dest->getAsset() != asset)
+            {
+                innerResult().code(PaymentResultCode::BALANCE_ASSETS_MISMATCHED);
+                return nullptr;
+            }
+
+            return dest;
+        }
+        case PaymentDestinationType::ACCOUNT:
+        {
+            if (!storageHelper.getAccountHelper().exists(mPayment.destination.accountID()))
+            {
+                innerResult().code(PaymentResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
+                return nullptr;
+            }
+
+            BalanceManager balanceManager(app, storageHelper);
+            return balanceManager.loadOrCreateBalance(mPayment.destination.accountID(), asset);
+        }
+        default:
+            throw std::runtime_error("Unexpected destination type on payment");
+    }
+}
 
     bool PaymentOpFrame::isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db) {
         if (from->getAsset() != to->getAsset())
@@ -298,7 +295,7 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
             return false;
         }
 
-        auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), storageHelper);
+        auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), storageHelper, app);
         if (!destBalance) {
             return false;
         }
@@ -317,17 +314,20 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
 
         uint64_t sourceSentUniversal = 0;
 
-        AccountManager accountManager(app, db, delta, app.getLedgerManager());
+        BalanceManager balanceManager(app, storageHelper);
 
-        if (!processTransfer(accountManager, mSourceAccount, sourceBalance, destBalance, mPayment.amount, sourceSentUniversal, db)) {
+        if (!processTransfer(balanceManager, mSourceAccount, sourceBalance, destBalance,
+                mPayment.amount, sourceSentUniversal, ledgerManager))
+        {
             return false;
         }
 
         auto sourceFee = getActualFee(mSourceAccount, sourceBalance->getAsset(), mPayment.amount,
                                       PaymentFeeType::OUTGOING, db, ledgerManager);
 
-        if (!processTransferFee(accountManager, mSourceAccount, sourceBalance, mPayment.feeData.sourceFee, sourceFee,
-                                app.getAdminID(), db, delta, false, sourceSentUniversal)) {
+        if (!processTransferFee(balanceManager, mSourceAccount, sourceBalance,
+                mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager))
+        {
             return false;
         }
 
@@ -345,8 +345,9 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
 
             uint64_t destFeeUniversalAmount = 0;
 
-            if (!processTransferFee(accountManager, destFeePayer, destFeePayerBalance, mPayment.feeData.destinationFee,
-                                    destFee, app.getAdminID(), db, delta, true, destFeeUniversalAmount)) {
+            if (!processTransferFee(balanceManager, destFeePayer, destFeePayerBalance,
+                    mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager))
+            {
                 return false;
             }
 

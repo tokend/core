@@ -1,5 +1,5 @@
 #include "CheckSaleStateTestHelper.h"
-#include <transactions/FeesManager.h>
+#include <transactions/managers/FeeManager.h>
 #include <ledger/AssetHelperLegacy.h>
 #include <ledger/AccountHelperLegacy.h>
 #include <ledger/BalanceHelperLegacy.h>

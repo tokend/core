@@ -1,6 +1,6 @@
 #include <ledger/OfferHelper.h>
 #include <ledger/AssetPairHelper.h>
-#include <transactions/FeesManager.h>
+#include <transactions/managers/FeeManager.h>
 #include <ledger/FeeHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>

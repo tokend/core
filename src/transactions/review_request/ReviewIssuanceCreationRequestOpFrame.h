@@ -16,12 +16,8 @@ protected:
 
     bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
-    bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
-                       AccountFrame::pointer accountFrame, BalanceFrame::pointer balance,
-                       uint64_t amountToAdd,
-                       uint64_t& universalAmount);
-    bool addStatistics(Database& db,
-                       LedgerDelta& delta, LedgerManager& ledgerManager,
+
+    bool addStatistics(StorageHelper& storageHelper, LedgerManager& ledgerManager,
                        AccountFrame::pointer accountFrame,
                        BalanceFrame::pointer balanceFrame,
                        uint64_t amountToAdd,

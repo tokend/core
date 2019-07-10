@@ -6,7 +6,7 @@
 
 #include "transactions/OperationFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
-#include "StatisticsV2Processor.h"
+#include "transactions/managers/StatisticsV2Processor.h"
 #include "ledger/KeyValueEntryFrame.h"
 
 namespace stellar
@@ -21,17 +21,14 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame {
 
     BalanceFrame::pointer tryLoadBalance(StorageHelper& storageHelper) const;
 
-    bool isFeeMatches(AccountManager& accountManager, BalanceFrame::pointer balance) const;
+    bool isFeeMatches(Application& app, BalanceFrame::pointer balance) const;
 
     bool tryLockBalance(BalanceFrame::pointer balance);
 
     bool
-    processStatistics(AccountManager& accountManager, Database& db, LedgerDelta& delta,
-                      LedgerManager& ledgerManager, BalanceFrame::pointer balanceFrame,
-                      const uint64_t amountToAdd, uint64_t& universalAmount, const uint64_t requestID);
-
-    bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor, const BalanceFrame::pointer balance,
-                       const uint64_t amountToAdd, uint64_t& universalAmount, uint64_t requestID);
+    processStatistics(StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                      BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
+                      uint64_t& universalAmount, uint64_t requestID);
 
     bool exceedsLowerBound(Database& db, AssetCode& code);
 

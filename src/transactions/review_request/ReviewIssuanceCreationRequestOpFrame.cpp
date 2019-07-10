@@ -1,4 +1,6 @@
 #include <transactions/issuance/CreateIssuanceRequestOpFrame.h>
+#include "transactions/managers/StatisticsV2Processor.h"
+#include "transactions/managers/BalanceManager.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include "ledger/LedgerDeltaImpl.h"
@@ -65,7 +67,7 @@ handleApprove(Application& app, StorageHelper& storageHelper,
 
     auto& requestEntry = request->getRequestEntry();
 
-    auto systemTasksToAdd = getSystemTasksToAdd(app, db, delta, ledgerManager, request);
+    auto systemTasksToAdd = getSystemTasksToAdd(app, storageHelper, ledgerManager, request);
     int32_t systemTasks = CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT |
                           CreateIssuanceRequestOpFrame::ISSUANCE_MANUAL_REVIEW_REQUIRED |
                           CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED;
@@ -118,9 +120,8 @@ handleApprove(Application& app, StorageHelper& storageHelper,
     }
 
     //transfer fee
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    AccountManager accountManager(app, db, delta, ledgerManager);
-    accountManager.transferFee(issuanceRequest.asset, totalFee);
+    BalanceManager balanceManager(app, storageHelper);
+    balanceManager.transferFee(issuanceRequest.asset, totalFee);
 
     const uint64_t destinationReceive = issuanceRequest.amount - totalFee;
     const BalanceFrame::Result fundResult = receiver->tryFundAccount(destinationReceive);
@@ -132,7 +133,7 @@ handleApprove(Application& app, StorageHelper& storageHelper,
         return false;
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, receiver->mEntry);
+    balanceHelper.storeChange(receiver->mEntry);
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
     innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
@@ -174,21 +175,12 @@ bool ReviewIssuanceCreationRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-bool ReviewIssuanceCreationRequestOpFrame::addStatistics(Database& db,
-                                                         LedgerDelta& delta, LedgerManager& ledgerManager,
-                                                         const AccountFrame::pointer accountFrame,
-                                                         const BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
-                                                         uint64_t& universalAmount)
-{
-    StatisticsV2Processor statisticsV2Processor(db, delta, ledgerManager);
-    return tryAddStatsV2(statisticsV2Processor, accountFrame, balanceFrame, amountToAdd, universalAmount);
-}
-
-bool ReviewIssuanceCreationRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
+bool ReviewIssuanceCreationRequestOpFrame::addStatistics(StorageHelper& storageHelper, LedgerManager& ledgerManager,
                                                          const AccountFrame::pointer account,
                                                          const BalanceFrame::pointer balance, const uint64_t amountToAdd,
                                                          uint64_t& universalAmount)
 {
+    StatisticsV2Processor statisticsV2Processor(storageHelper, ledgerManager);
     const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::DEPOSIT, amountToAdd,
                                                          universalAmount, account, balance, nullptr);
     switch (result)
@@ -244,12 +236,12 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd(Application& 
     auto& delta = innerHelper.mustGetLedgerDelta();
     if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
     {
-        balanceFrame = AccountManager::loadOrCreateBalanceFrameForAsset(requestEntry.requestor,
-                                                                        issuanceRequest.asset, db, delta);
+        BalanceManager balanceManager(app, innerHelper);
+        balanceFrame = balanceManager.loadOrCreateBalance(requestEntry.requestor, issuanceRequest.asset);
         accountFrame = mSourceAccount;
     }
 
-    if (!addStatistics(db, delta, ledgerManager,
+    if (!addStatistics(innerHelper, ledgerManager,
                        accountFrame,
                        balanceFrame, issuanceRequest.amount,
                        universalAmount))

@@ -1,8 +1,3 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
-#include <transactions/manage_asset/ManageAssetHelper.h>
 #include "util/asio.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
 #include "ledger/StorageHelper.h"
@@ -10,6 +5,7 @@
 #include "ledger/BalanceHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "main/Application.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -53,15 +49,15 @@ ReviewAssetCreationRequestOpFrame::handleApprove(Application& app, StorageHelper
     auto assetFrame = AssetFrame::create(assetCreationRequest, request->getRequestor());
     assetHelper.storeAdd(assetFrame->mEntry);
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
+    BalanceManager balanceManager(app, storageHelper);
+
     if (assetFrame->isPolicySet(AssetPolicy::BASE_ASSET))
     {
-        ManageAssetHelper::createSystemBalances(assetFrame->getCode(), app, delta);
+        balanceManager.loadOrCreateBalanceForAdmin(assetFrame->getCode());
     }
     else
     {
-        AccountManager::loadOrCreateBalanceForAsset(assetFrame->getOwner(), assetFrame->getCode(), db, delta);
+        balanceManager.loadOrCreateBalance(assetFrame->getOwner(), assetFrame->getCode());
     }
 
     requestHelper.storeDelete(request->getKey());
