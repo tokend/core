@@ -125,7 +125,7 @@ template <typename T>
 struct pointer : std::unique_ptr<T>
 {
     using std::unique_ptr<T>::unique_ptr;
-
+    using std::unique_ptr<T>::get;
     pointer() = default;
     pointer(const pointer &p) : std::unique_ptr<T>(p ? new T(*p) : nullptr) {}
     pointer &operator=(const pointer &up)
@@ -143,6 +143,8 @@ struct pointer : std::unique_ptr<T>
             this->reset();
         return *this;
     }
+
+    pointer &operator=(pointer &&) = default;
 
     T&
     activate()

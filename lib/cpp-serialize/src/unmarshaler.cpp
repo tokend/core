@@ -193,11 +193,15 @@ unmarshaler::from_bytes(std::vector<uint8_t>& value)
 
     value.clear();
 
-    for (uint32_t i = 0; i < totalBytes; i++)
+    for (uint32_t i = 0; i < bytesNum; i++)
     {
         value.emplace_back(*current);
+        current++;
+    }
 
-        if ((i >= bytesNum) && (*current != 0x00))
+    for (uint32_t i = 0; i < extraBytes; i++)
+    {
+        if (*current != 0x00)
         {
             error << "non zero extra byte ";
             return false;

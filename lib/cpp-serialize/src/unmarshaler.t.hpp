@@ -52,7 +52,7 @@ unmarshaler::from_bytes(xdr::xarray<uint8_t, bytesNum>& value)
 
     for (int i = 0; i < extraBytes; i++)
     {
-        if (extraBytes != 0x00)
+        if (*current != 0x00)
         {
             error << "non zero extra byte ";
             return false;
@@ -114,6 +114,7 @@ unmarshaler::from_bytes(std::unique_ptr<T>& value)
 
     if (!present)
     {
+        value = nullptr;
         return true;
     }
 
