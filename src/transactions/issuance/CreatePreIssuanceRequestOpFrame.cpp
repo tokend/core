@@ -29,7 +29,7 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
     auto& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 	if (reviewableRequestHelper->isReferenceExist(db, getSourceID(), mCreatePreIssuanceRequest.request.reference)) {
 		innerResult().code(CreatePreIssuanceRequestResultCode::REFERENCE_DUPLICATION);
 		return false;

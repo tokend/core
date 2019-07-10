@@ -34,7 +34,7 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
         return createManageContractRequest(app, storageHelper, ledgerManager);
     }
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageContractRequest.details.requestID(), db);
 
     if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
@@ -123,7 +123,7 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
     auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
-    auto allRequests = ReviewableRequestHelper::Instance()->
+    auto allRequests = ReviewableRequestHelperLegacy::Instance()->
             loadRequests(getSourceID(), ReviewableRequestType::MANAGE_CONTRACT, db);
 
     contractsCount += allRequests.size();

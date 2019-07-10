@@ -331,7 +331,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 requestID = manageSaleResult.success().response.requestID();
 
                 SECTION("reject and successful update") {
-                    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                     REQUIRE(!!request);
                     reviewUpdateSaleDetailsRequestTestHelper.applyReviewRequestTx(root, requestID,
                                                                                            request->getHash(),
@@ -344,7 +344,7 @@ TEST_CASE("Sale", "[tx][sale]")
                     manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
                 }
 
-                auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                 REQUIRE(!!request);
                 uint32_t toAdd = 0, toRemove = 1;
                 reviewUpdateSaleDetailsRequestTestHelper.applyReviewRequestTxWithTasks(root, requestID,

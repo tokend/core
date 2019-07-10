@@ -36,7 +36,7 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper &storageHel
 	    return createManageInvoiceRequest(app, storageHelper, ledgerManager);
 	}
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageInvoiceRequest.details.requestID(), db);
 	if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
 	{
@@ -200,7 +200,7 @@ ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app
 {
     auto maxInvoicesCount = obtainMaxInvoicesCount(app, keyValueHelper);
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::CREATE_INVOICE, db);
     if (allRequests.size() >= maxInvoicesCount)
     {

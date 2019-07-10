@@ -1,22 +1,21 @@
 #pragma once
 
-#include <ledger/AtomicSwapAskFrame.h>
+#include "ledger/AtomicSwapAskFrame.h"
 #include "ReviewRequestOpFrame.h"
 
 namespace stellar
 {
 
-class ReviewASwapAskRequestOpFrame : public ReviewRequestOpFrame
-{
+class ReviewASwapAskRequestOpFrame : public ReviewRequestOpFrame {
 public:
-    ReviewASwapAskRequestOpFrame(Operation const &op, OperationResult &res,
-                                     TransactionFrame &parentTx);
+    ReviewASwapAskRequestOpFrame(Operation const& op, OperationResult& res,
+                                 TransactionFrame& parentTx);
 
 protected:
 
     bool
-    handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
-                      ReviewableRequestFrame::pointer request) override;
+    handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                 ReviewableRequestFrame::pointer request) override;
 
     bool
     handleAllAssetsValidationResultCode(CreateAtomicSwapAskRequestResultCode code);
@@ -26,13 +25,13 @@ protected:
                 CreateAtomicSwapAskRequest request, LedgerDelta& delta);
 
     bool
-    handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-                       ReviewableRequestFrame::pointer request) override;
+    handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                  ReviewableRequestFrame::pointer request) override;
 
     bool
-    handlePermanentReject(Application& app, LedgerDelta& delta,
-                               LedgerManager& ledgerManager,
-                               ReviewableRequestFrame::pointer request) override;
+    handlePermanentReject(Application& app, StorageHelper& storageHelper,
+                          LedgerManager& ledgerManager,
+                          ReviewableRequestFrame::pointer request) override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,

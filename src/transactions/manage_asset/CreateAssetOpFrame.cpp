@@ -82,7 +82,7 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
 	auto & db = storageHelper.getDatabase();
 	LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     if (mManageAsset.requestID == 0 && reviewableRequestHelper->exists(db, getSourceID(), mAssetCreationRequest.code)) {
         innerResult().code(ManageAssetResultCode::REQUEST_ALREADY_EXISTS);
         return false;

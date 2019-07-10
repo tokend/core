@@ -32,7 +32,7 @@ void ManageAssetTestHelper::createApproveRequest(Account& root, Account& source,
     auto requestCreationResult = applyManageAssetTx(source, 0, request);
     if (requestCreationResult.success().fulfilled)
         return;
-    auto requestFrame = ReviewableRequestHelper::Instance()->
+    auto requestFrame = ReviewableRequestHelperLegacy::Instance()->
         loadRequest(requestCreationResult.success().requestID,
                     mTestManager->getDB());
     auto reviewHelper = ReviewAssetRequestHelper(mTestManager);
@@ -47,7 +47,7 @@ ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(
     Account& source, uint64_t requestID, ManageAssetOp::_request_t request,
     ManageAssetResultCode expectedResult, OperationResultCode expectedOpCode)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
         countObjects(mTestManager->getDB().getSession());
     auto requestBeforeTx = reviewableRequestHelper->loadRequest(requestID,
@@ -269,7 +269,7 @@ void ManageAssetTestHelper::createAsset(Account& assetOwner,
         && creationResult.success().fulfilled)
         return;
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto approvingRequest = reviewableRequestHelper->loadRequest(creationResult.
                                                                      success().
                                                                      requestID,
@@ -296,7 +296,7 @@ void ManageAssetTestHelper::updateAsset(Account& assetOwner,
     if (updateResult.success().fulfilled)
         return;
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto approvingRequest = reviewableRequestHelper->loadRequest(updateResult.
                                                                      success().
                                                                      requestID,

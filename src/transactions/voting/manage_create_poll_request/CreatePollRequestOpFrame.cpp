@@ -86,7 +86,7 @@ CreatePollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
     }
 
     Database& db = storageHelper.getDatabase();
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, requestFrame->mEntry);
 
     innerResult().success().details.action(ManageCreatePollRequestAction::CREATE);
     innerResult().success().details.response().fulfilled = false;

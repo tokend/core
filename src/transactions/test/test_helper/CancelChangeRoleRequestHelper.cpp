@@ -14,7 +14,7 @@ CancelChangeRoleRequestResult
 CancelChangeRoleRequestHelper::applyCancelChangeRoleRequest(txtest::Account &source, uint64_t requestID,
                                                                 CancelChangeRoleRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
             countObjects(mTestManager->getDB().getSession());
 

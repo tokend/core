@@ -239,7 +239,7 @@ CreateAtomicSwapAskRequestOpFrame::doApply(Application &app, StorageHelper& stor
     fillRequest(requestFrame->getRequestEntry(), requestBody, allTasks);
     requestFrame->recalculateHashRejectReason();
 
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, requestFrame->mEntry);
 
     innerResult().code(CreateAtomicSwapAskRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();

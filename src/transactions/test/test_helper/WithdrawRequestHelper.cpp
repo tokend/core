@@ -29,7 +29,7 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     OperationResultCode expectedOpResultCode)
 {
     Database& db = mTestManager->getDB();
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
     auto balanceBeforeRequest = BalanceHelperLegacy::Instance()->loadBalance(request.balance, db);
 
@@ -74,7 +74,7 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     }
 
     CreateWithdrawalRequestResult createRequestResult = opResult.tr().createWithdrawalRequestResult();
-    auto withdrawRequest = ReviewableRequestHelper::Instance()->loadRequest(createRequestResult.success().requestID, db);
+    auto withdrawRequest = ReviewableRequestHelperLegacy::Instance()->loadRequest(createRequestResult.success().requestID, db);
     REQUIRE(withdrawRequest);
 
     REQUIRE(!!balanceBeforeRequest);

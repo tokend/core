@@ -51,7 +51,7 @@ CreateASwapAskRequestHelper::applyCreateASwapAskCreationRequest(
         OperationResultCode expectedOpResCode)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 
     Database& db = mTestManager->getDB();
 

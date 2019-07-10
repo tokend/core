@@ -55,7 +55,7 @@ CreateASwapBidRequestTestHelper::applyCreateASwapRequest(
     auto bidFrameBeforeTx = aSwapBidHelper->loadAtomicSwapAsk(
             createASwapRequestOp.request.askID, db);
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     uint64 reviewableRequestCountBeforeTx =
             reviewableRequestHelper->countObjects(db.getSession());
 

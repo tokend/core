@@ -18,7 +18,7 @@ bool
 CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                             std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
             mCancelSaleCreationRequest.requestID, storageHelper.getDatabase());
     if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
     {
@@ -55,7 +55,7 @@ CancelSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 {
     auto const requestID = mCancelSaleCreationRequest.requestID;
     auto& db = ledgerManager.getDatabase();
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
 
     auto requestFrame = requestHelper->loadRequest(requestID, getSourceID(),
             ReviewableRequestType::CREATE_SALE, db, &delta);

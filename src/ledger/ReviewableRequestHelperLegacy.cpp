@@ -1,4 +1,4 @@
-#include "ReviewableRequestHelper.h"
+#include "ReviewableRequestHelperLegacy.h"
 #include "xdrpp/marshal.h"
 #include "xdrpp/printer.h"
 #include "LedgerDelta.h"
@@ -16,7 +16,7 @@ namespace stellar {
                                             "all_tasks, pending_tasks, external_details FROM reviewable_request";
 
 
-    void ReviewableRequestHelper::dropAll(Database &db) {
+    void ReviewableRequestHelperLegacy::dropAll(Database &db) {
         db.getSession() << "DROP TABLE IF EXISTS reviewable_request CASCADE;";
         db.getSession() << "CREATE TABLE reviewable_request"
                 "("
@@ -39,15 +39,15 @@ namespace stellar {
 
     }
 
-    void ReviewableRequestHelper::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
+    void ReviewableRequestHelperLegacy::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
         storeUpdateHelper(delta, db, true, entry);
     }
 
-    void ReviewableRequestHelper::storeChange(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
+    void ReviewableRequestHelperLegacy::storeChange(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
         storeUpdateHelper(delta, db, false, entry);
     }
 
-    void ReviewableRequestHelper::storeDelete(LedgerDelta &delta, Database &db, LedgerKey const &key) {
+    void ReviewableRequestHelperLegacy::storeDelete(LedgerDelta &delta, Database &db, LedgerKey const &key) {
         flushCachedEntry(key, db);
         auto timer = db.getDeleteTimer("reviewable_request");
         auto prep = db.getPreparedStatement("DELETE FROM reviewable_request WHERE id=:id");
@@ -58,7 +58,7 @@ namespace stellar {
         delta.deleteEntry(key);
     }
 
-    bool ReviewableRequestHelper::exists(Database &db, LedgerKey const &key) {
+    bool ReviewableRequestHelperLegacy::exists(Database &db, LedgerKey const &key) {
         if (cachedEntryExists(key, db) && getCachedEntry(key, db)) {
             return true;
         }
@@ -76,24 +76,24 @@ namespace stellar {
         return exists != 0;
     }
 
-    LedgerKey ReviewableRequestHelper::getLedgerKey(LedgerEntry const &from) {
+    LedgerKey ReviewableRequestHelperLegacy::getLedgerKey(LedgerEntry const &from) {
         LedgerKey ledgerKey;
         ledgerKey.type(from.data.type());
         ledgerKey.reviewableRequest().requestID = from.data.reviewableRequest().requestID;
         return ledgerKey;
     }
 
-    EntryFrame::pointer ReviewableRequestHelper::fromXDR(LedgerEntry const &from) {
+    EntryFrame::pointer ReviewableRequestHelperLegacy::fromXDR(LedgerEntry const &from) {
         return std::make_shared<ReviewableRequestFrame>(from);
     }
 
-    uint64_t ReviewableRequestHelper::countObjects(soci::session &sess) {
+    uint64_t ReviewableRequestHelperLegacy::countObjects(soci::session &sess) {
         uint64_t count = 0;
         sess << "SELECT COUNT(*) FROM reviewable_request;", into(count);
         return count;
     }
 
-    void ReviewableRequestHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert,
+    void ReviewableRequestHelperLegacy::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert,
                                                     const LedgerEntry &entry) 
 	{
         auto reviewableRequestFrame = make_shared<ReviewableRequestFrame>(entry);
@@ -170,7 +170,7 @@ namespace stellar {
         }
     }
 
-    void ReviewableRequestHelper::loadRequests(StatementContext &prep,
+    void ReviewableRequestHelperLegacy::loadRequests(StatementContext &prep,
                                                std::function<void(LedgerEntry const &)> requestsProcessor) {
         LedgerEntry le;
         le.data.type(LedgerEntryType::REVIEWABLE_REQUEST);
@@ -227,7 +227,7 @@ namespace stellar {
         }
     }
 
-    bool ReviewableRequestHelper::exists(Database &db, AccountID const &rawRequestor, stellar::string64 reference, uint64_t requestID) {
+    bool ReviewableRequestHelperLegacy::exists(Database &db, AccountID const &rawRequestor, stellar::string64 reference, uint64_t requestID) {
         auto timer = db.getSelectTimer("reviewable_request_exists_by_reference");
         auto prep =
                 db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM reviewable_request WHERE requestor=:requestor AND reference = :reference AND id <> :request_id)");
@@ -245,7 +245,7 @@ namespace stellar {
     }
 
     bool
-    ReviewableRequestHelper::isReferenceExist(Database &db, AccountID const &requestor, string64 reference, const uint64_t requestID) {
+    ReviewableRequestHelperLegacy::isReferenceExist(Database &db, AccountID const &requestor, string64 reference, const uint64_t requestID) {
         if (exists(db, requestor, reference, requestID))
             return true;
         LedgerKey key;
@@ -256,7 +256,7 @@ namespace stellar {
     }
 
     ReviewableRequestFrame::pointer
-    ReviewableRequestHelper::loadRequest(uint64 requestID, Database &db, LedgerDelta *delta) {
+    ReviewableRequestHelperLegacy::loadRequest(uint64 requestID, Database &db, LedgerDelta *delta) {
         LedgerKey key;
         key.type(LedgerEntryType::REVIEWABLE_REQUEST);
         key.reviewableRequest().requestID = requestID;
@@ -296,7 +296,7 @@ namespace stellar {
     }
 
     ReviewableRequestFrame::pointer
-    ReviewableRequestHelper::loadRequest(uint64 requestID, AccountID requestor, ReviewableRequestType requestType,
+    ReviewableRequestHelperLegacy::loadRequest(uint64 requestID, AccountID requestor, ReviewableRequestType requestType,
                                          Database &db, LedgerDelta *delta) {
         auto request = loadRequest(requestID, requestor, db, delta);
         if (!request) {
@@ -309,7 +309,7 @@ namespace stellar {
         return nullptr;
     }
 
-vector<ReviewableRequestFrame::pointer> ReviewableRequestHelper::
+vector<ReviewableRequestFrame::pointer> ReviewableRequestHelperLegacy::
 loadRequests(AccountID const& rawRequestor, ReviewableRequestType requestType,
     Database& db)
 {
@@ -334,7 +334,7 @@ loadRequests(AccountID const& rawRequestor, ReviewableRequestType requestType,
 }
 
 string
-ReviewableRequestHelper::obtainSqlRequestIDsString(std::vector<uint64_t> requestIDs)
+ReviewableRequestHelperLegacy::obtainSqlRequestIDsString(std::vector<uint64_t> requestIDs)
 {
     string result;
     for (auto requestID : requestIDs)
@@ -347,7 +347,7 @@ ReviewableRequestHelper::obtainSqlRequestIDsString(std::vector<uint64_t> request
 }
 
 vector<ReviewableRequestFrame::pointer>
-ReviewableRequestHelper::loadRequests(std::vector<uint64_t> requestIDs, Database& db)
+ReviewableRequestHelperLegacy::loadRequests(std::vector<uint64_t> requestIDs, Database& db)
 {
     if (requestIDs.size() == 0)
         return vector<ReviewableRequestFrame::pointer>{};
@@ -367,7 +367,7 @@ ReviewableRequestHelper::loadRequests(std::vector<uint64_t> requestIDs, Database
 }
 
 ReviewableRequestFrame::pointer
-    ReviewableRequestHelper::loadRequest(uint64 requestID, AccountID requestor, Database &db, LedgerDelta *delta) {
+    ReviewableRequestHelperLegacy::loadRequest(uint64 requestID, AccountID requestor, Database &db, LedgerDelta *delta) {
         auto request = loadRequest(requestID, db, delta);
         if (!request) {
             return nullptr;
@@ -379,12 +379,12 @@ ReviewableRequestFrame::pointer
         return nullptr;
     }
 
-    EntryFrame::pointer ReviewableRequestHelper::storeLoad(LedgerKey const &key, Database &db) {
+    EntryFrame::pointer ReviewableRequestHelperLegacy::storeLoad(LedgerKey const &key, Database &db) {
         return loadRequest(key.reviewableRequest().requestID, db);
     }
 
 ReviewableRequestFrame::pointer
-ReviewableRequestHelper::loadRequest(AccountID& rawRequestor, string64 reference, Database &db, LedgerDelta *delta) {
+ReviewableRequestHelperLegacy::loadRequest(AccountID& rawRequestor, string64 reference, Database &db, LedgerDelta *delta) {
 
     std::string sql = selectorReviewableRequest;
     sql += +" WHERE requestor = :requestor AND reference = :reference";

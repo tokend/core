@@ -28,7 +28,7 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
 {
     Database& db = mTestManager->getDB();
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     uint64 reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
 
     ReviewableRequestFrame::pointer limitsUpdateRequestBeforeTx;

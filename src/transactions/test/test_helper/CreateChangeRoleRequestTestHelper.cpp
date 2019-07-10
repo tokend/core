@@ -42,7 +42,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
                                                          uint32 *allTasks,
                                                          CreateChangeRoleRequestResultCode expectedResultCode) {
     auto accountHelper = AccountHelperLegacy::Instance();
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
 
     Database &db = mTestManager->getDB();
     auto accountBefore = accountHelper->loadAccount(accountToUpdateKYC, db);
@@ -72,7 +72,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
     if (actualResultCode != CreateChangeRoleRequestResultCode::SUCCESS) {
 
         if (requestBeforeTx) {
-            auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+            auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
             auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
             auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
 
@@ -101,7 +101,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
 
     REQUIRE_FALSE(opResult.success().fulfilled);
 
-    auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
     REQUIRE(requestAfterTx);
 
     auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
@@ -171,7 +171,7 @@ CreateChangeRoleTestHelper::checkApprovedCreation(CreateChangeRoleRequestResult 
     ReviewChangeRoleRequestChecker kycRequestChecker(mTestManager);
     kycRequestChecker.checkApprove(requestFrame);
 
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(opResult.success().requestID,
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(opResult.success().requestID,
                                                                     accountToUpdateKYC,
                                                                     ReviewableRequestType::CHANGE_ROLE,
                                                                     mTestManager->getDB());

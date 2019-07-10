@@ -9,37 +9,38 @@
 
 namespace stellar
 {
-class ReviewWithdrawalRequestOpFrame : public ReviewRequestOpFrame
-{
-bool
-tryGetSignerRequirements(StorageHelper& storageHelper,
-						 std::vector<SignerRequirement>& result) const override;
-	
+class ReviewWithdrawalRequestOpFrame : public ReviewRequestOpFrame {
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
+
 protected:
-	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
-	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
+    bool
+    handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
+    bool
+    handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
 
-	// returns total fee to pay, throws exception if overflow
-	uint64_t getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
-	// returns total amount to be charged, throws exception if overflow
-	uint64_t getTotalAmountToCharge(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
+    // returns total fee to pay, throws exception if overflow
+    uint64_t getTotalFee(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
+    // returns total amount to be charged, throws exception if overflow
+    uint64_t getTotalAmountToCharge(const uint64_t requestID, WithdrawalRequest& withdrawalRequest);
 
-    bool rejectWithdrawalRequest(Application& app, LedgerDelta& delta,
+    bool rejectWithdrawalRequest(Application& app, StorageHelper& storageHelper,
                                  LedgerManager& ledgerManager,
                                  ReviewableRequestFrame::pointer request,
                                  WithdrawalRequest& withdrawRequest);
 
 public:
 
-	  ReviewWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
-                       TransactionFrame& parentTx);
+    ReviewWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
+                                   TransactionFrame& parentTx);
 
-      bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 
 protected:
-    bool handlePermanentReject(Application& app, LedgerDelta& delta,
-        LedgerManager& ledgerManager,
-        ReviewableRequestFrame::pointer request) override;
+    bool handlePermanentReject(Application& app, StorageHelper& storageHelper,
+                               LedgerManager& ledgerManager,
+                               ReviewableRequestFrame::pointer request) override;
 
 };
 }

@@ -428,7 +428,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
 
         manageSignerTestHelper.applyCreateOperationalSigner(account, preissuedSigner.getPublicKey());
 
-		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+		auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 
         SECTION("Can cancel creation request")
         {
@@ -534,7 +534,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
 
         REQUIRE_FALSE(creationResult.success().fulfilled);
 
-        auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+        auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
         auto reviewAssetRequestHelper = ReviewAssetRequestHelper(testManager);
 
         SECTION("Can update rejected request")

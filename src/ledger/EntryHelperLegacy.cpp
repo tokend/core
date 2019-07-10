@@ -20,7 +20,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/OfferFrame.h"
 #include "ledger/OfferHelper.h"
@@ -40,163 +40,164 @@
 
 namespace stellar
 {
-	using xdr::operator==;
+using xdr::operator==;
 
-    LedgerKey LedgerEntryKey(LedgerEntry const &e)
+LedgerKey LedgerEntryKey(LedgerEntry const& e)
+{
+    EntryHelperLegacy *helper = EntryHelperProvider::getHelper(e.data.type());
+    return helper->getLedgerKey(e);
+}
+
+void EntryHelperLegacy::flushCachedEntry(LedgerKey const& key, Database& db)
+{
+    auto s = binToHex(xdr::xdr_to_opaque(key));
+    db.getEntryCache().erase_if_exists(s);
+}
+
+bool EntryHelperLegacy::cachedEntryExists(LedgerKey const& key, Database& db)
+{
+    auto s = binToHex(xdr::xdr_to_opaque(key));
+    return db.getEntryCache().exists(s);
+}
+
+std::shared_ptr<LedgerEntry const>
+EntryHelperLegacy::getCachedEntry(LedgerKey const& key, Database& db)
+{
+    auto s = binToHex(xdr::xdr_to_opaque(key));
+    return db.getEntryCache().get(s);
+}
+
+void EntryHelperLegacy::putCachedEntry(LedgerKey const& key,
+                                       std::shared_ptr<LedgerEntry const> p, Database& db, LedgerDelta *delta)
+{
+    // do not add to cache if there is no delta, because when we get from cache we do not record to delta
+    if (delta == nullptr)
     {
-		EntryHelperLegacy* helper = EntryHelperProvider::getHelper(e.data.type());
-		return helper->getLedgerKey(e);
-	}
-
-	void EntryHelperLegacy::flushCachedEntry(LedgerKey const &key, Database &db)
-	{
-		auto s = binToHex(xdr::xdr_to_opaque(key));
-		db.getEntryCache().erase_if_exists(s);
-	}
-
-	bool EntryHelperLegacy::cachedEntryExists(LedgerKey const &key, Database &db)
-	{
-		auto s = binToHex(xdr::xdr_to_opaque(key));
-		return db.getEntryCache().exists(s);
-	}
-
-	std::shared_ptr<LedgerEntry const>
-	EntryHelperLegacy::getCachedEntry(LedgerKey const &key, Database &db)
-	{
-		auto s = binToHex(xdr::xdr_to_opaque(key));
-		return db.getEntryCache().get(s);
-	}
-
-	void EntryHelperLegacy::putCachedEntry(LedgerKey const &key,
-	std::shared_ptr<LedgerEntry const> p, Database &db, LedgerDelta* delta)
-	{
-		// do not add to cache if there is no delta, because when we get from cache we do not record to delta
-		if (delta == nullptr)
-		{
-			return;
-		}
-
-		auto s = binToHex(xdr::xdr_to_opaque(key));
-		db.getEntryCache().put(s, p);
-	}
-
-	uint64_t
-    EntryHelperLegacy::countObjects(Database &db)
-    {
-        return countObjects(db.getSession());
+        return;
     }
 
-    void
-    EntryHelperProvider::checkAgainstDatabase(LedgerEntry const& entry, Database& db)
+    auto s = binToHex(xdr::xdr_to_opaque(key));
+    db.getEntryCache().put(s, p);
+}
+
+uint64_t
+EntryHelperLegacy::countObjects(Database& db)
+{
+    return countObjects(db.getSession());
+}
+
+void
+EntryHelperProvider::checkAgainstDatabase(LedgerEntry const& entry, Database& db)
+{
+    LedgerKey key = LedgerEntryKey(entry);
+    auto legacyHelper = getHelper(entry.data.type()); // helper existing handled above
+    legacyHelper->flushCachedEntry(key, db);
+    EntryFrame::pointer fromDb = legacyHelper->storeLoad(key, db);
+
+    if (!fromDb || !(fromDb->mEntry == entry))
     {
-		LedgerKey key = LedgerEntryKey(entry);
-		auto legacyHelper = getHelper(entry.data.type()); // helper existing handled above
-		legacyHelper->flushCachedEntry(key, db);
-		EntryFrame::pointer fromDb = legacyHelper->storeLoad(key, db);
-
-        if (!fromDb || !(fromDb->mEntry == entry))
-        {
-            std::string s;
-            s = "Inconsistent state between objects: ";
-            s += !!fromDb ? xdr::xdr_to_string(fromDb->mEntry, "db") : "db: nullptr\n";
-            s += xdr::xdr_to_string(entry, "live");
-            throw std::runtime_error(s);
-        }
+        std::string s;
+        s = "Inconsistent state between objects: ";
+        s += !!fromDb ? xdr::xdr_to_string(fromDb->mEntry, "db") : "db: nullptr\n";
+        s += xdr::xdr_to_string(entry, "live");
+        throw std::runtime_error(s);
     }
+}
 
-	void
-	EntryHelperProvider::storeAddEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
-	{
-		EntryHelperLegacy* helper = getHelper(entry.data.type());
-		return helper->storeAdd(delta, db, entry);
-	}
+void
+EntryHelperProvider::storeAddEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
+{
+    EntryHelperLegacy *helper = getHelper(entry.data.type());
+    return helper->storeAdd(delta, db, entry);
+}
 
-	void
-	EntryHelperProvider::storeChangeEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
-	{
-		EntryHelperLegacy* helper = getHelper(entry.data.type());
-		return helper->storeChange(delta, db, entry);
-	}
+void
+EntryHelperProvider::storeChangeEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
+{
+    EntryHelperLegacy *helper = getHelper(entry.data.type());
+    return helper->storeChange(delta, db, entry);
+}
 
-	void
-	EntryHelperProvider::storeAddOrChangeEntry(LedgerDelta &delta, Database &db, LedgerEntry const& entry)
-	{
-		auto key = LedgerEntryKey(entry);
-		if (existsEntry(db, key))
-		{
-			storeChangeEntry(delta, db, entry);
-		}
-		else
-		{
-			storeAddEntry(delta, db, entry);
-		}
-	}
-
-	void
-	EntryHelperProvider::storeDeleteEntry(LedgerDelta& delta, Database& db, LedgerKey const& key)
-	{
-		EntryHelperLegacy *helper = getHelper(key.type());
-		helper->storeDelete(delta, db, key);
-	}
-
-	bool
-	EntryHelperProvider::existsEntry(Database& db, LedgerKey const& key)
-	{
-		EntryHelperLegacy* helper = getHelper(key.type());
-		return helper->exists(db, key);
+void
+EntryHelperProvider::storeAddOrChangeEntry(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
+{
+    auto key = LedgerEntryKey(entry);
+    if (existsEntry(db, key))
+    {
+        storeChangeEntry(delta, db, entry);
     }
+    else
+    {
+        storeAddEntry(delta, db, entry);
+    }
+}
 
-	EntryFrame::pointer
-	EntryHelperProvider::storeLoadEntry(LedgerKey const& key, Database& db)
-	{
-		EntryHelperLegacy* helper = getHelper(key.type());
-		return helper->storeLoad(key, db);
-	}
+void
+EntryHelperProvider::storeDeleteEntry(LedgerDelta& delta, Database& db, LedgerKey const& key)
+{
+    EntryHelperLegacy *helper = getHelper(key.type());
+    helper->storeDelete(delta, db, key);
+}
 
-	uint64_t
-	EntryHelperProvider::countObjectsEntry(Database& db, LedgerEntryType const& type)
-	{
-		EntryHelperLegacy* helper = getHelper(type);
-		return helper->countObjects(db);
-	}
+bool
+EntryHelperProvider::existsEntry(Database& db, LedgerKey const& key)
+{
+    EntryHelperLegacy *helper = getHelper(key.type());
+    return helper->exists(db, key);
+}
 
-	void EntryHelperProvider::dropAll(Database& db)
-	{
-		for (auto &it : helpers) {
-			it.second->dropAll(db);
-		}
-	}
+EntryFrame::pointer
+EntryHelperProvider::storeLoadEntry(LedgerKey const& key, Database& db)
+{
+    EntryHelperLegacy *helper = getHelper(key.type());
+    return helper->storeLoad(key, db);
+}
 
-	EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
-		{ LedgerEntryType::ACCOUNT, AccountHelperLegacy::Instance() },
-		{ LedgerEntryType::ACCOUNT_LIMITS, AccountLimitsHelper::Instance() },
-		{ LedgerEntryType::ASSET, AssetHelperLegacy::Instance() },
-		{ LedgerEntryType::ASSET_PAIR, AssetPairHelper::Instance() },
-		{ LedgerEntryType::BALANCE, BalanceHelperLegacy::Instance() },
-		{ LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, ExternalSystemAccountIDHelperLegacy::Instance() },
-		{ LedgerEntryType::FEE, FeeHelper::Instance() },
-		{ LedgerEntryType::OFFER_ENTRY, OfferHelper::Instance() },
-		{ LedgerEntryType::REFERENCE_ENTRY, ReferenceHelper::Instance() },
-		{ LedgerEntryType::REVIEWABLE_REQUEST, ReviewableRequestHelper::Instance() },
-		{ LedgerEntryType::STATISTICS, StatisticsHelper::Instance() },
-		{ LedgerEntryType::KEY_VALUE, KeyValueHelperLegacy::Instance()},
-        { LedgerEntryType::ACCOUNT_KYC, AccountKYCHelper::Instance()},
-		{ LedgerEntryType::SALE, SaleHelper::Instance() },
-		{ LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, ExternalSystemAccountIDPoolEntryHelperLegacy::Instance() },
-        { LedgerEntryType::LIMITS_V2, LimitsV2Helper::Instance() },
-		{ LedgerEntryType::STATISTICS_V2, StatisticsV2Helper::Instance() },
-		{ LedgerEntryType::PENDING_STATISTICS, PendingStatisticsHelper::Instance() },
-		{ LedgerEntryType::CONTRACT, ContractHelper::Instance() },
-		{ LedgerEntryType::ATOMIC_SWAP_ASK, AtomicSwapAskHelper::Instance() },
-        { LedgerEntryType::SIGNER, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER) },
-        { LedgerEntryType::ACCOUNT_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_RULE) },
-        { LedgerEntryType::ACCOUNT_ROLE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_ROLE) },
-        { LedgerEntryType::SIGNER_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_RULE) },
-        { LedgerEntryType::SIGNER_ROLE, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_ROLE) },
-        { LedgerEntryType::STAMP, EntryHelperLegacyImpl::Instance(LedgerEntryType::STAMP) },
-        { LedgerEntryType::LICENSE, EntryHelperLegacyImpl::Instance(LedgerEntryType::LICENSE) },
-        { LedgerEntryType::VOTE, EntryHelperLegacyImpl::Instance(LedgerEntryType::VOTE) },
-        { LedgerEntryType::POLL, EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL) },
-		{ LedgerEntryType::ACCOUNT_SPECIFIC_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_SPECIFIC_RULE) }
-	};
+uint64_t
+EntryHelperProvider::countObjectsEntry(Database& db, LedgerEntryType const& type)
+{
+    EntryHelperLegacy *helper = getHelper(type);
+    return helper->countObjects(db);
+}
+
+void EntryHelperProvider::dropAll(Database& db)
+{
+    for (auto& it : helpers)
+    {
+        it.second->dropAll(db);
+    }
+}
+
+EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
+    {LedgerEntryType::ACCOUNT,                               AccountHelperLegacy::Instance()},
+    {LedgerEntryType::ACCOUNT_LIMITS,                        AccountLimitsHelper::Instance()},
+    {LedgerEntryType::ASSET,                                 AssetHelperLegacy::Instance()},
+    {LedgerEntryType::ASSET_PAIR,                            AssetPairHelper::Instance()},
+    {LedgerEntryType::BALANCE,                               BalanceHelperLegacy::Instance()},
+    {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            ExternalSystemAccountIDHelperLegacy::Instance()},
+    {LedgerEntryType::FEE,                                   FeeHelper::Instance()},
+    {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
+    {LedgerEntryType::REFERENCE_ENTRY,                       ReferenceHelper::Instance()},
+    {LedgerEntryType::REVIEWABLE_REQUEST,                    ReviewableRequestHelperLegacy::Instance()},
+    {LedgerEntryType::STATISTICS,                            StatisticsHelper::Instance()},
+    {LedgerEntryType::KEY_VALUE,                             KeyValueHelperLegacy::Instance()},
+    {LedgerEntryType::ACCOUNT_KYC,                           AccountKYCHelper::Instance()},
+    {LedgerEntryType::SALE,                                  SaleHelper::Instance()},
+    {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()},
+    {LedgerEntryType::LIMITS_V2,                             LimitsV2Helper::Instance()},
+    {LedgerEntryType::STATISTICS_V2,                         StatisticsV2Helper::Instance()},
+    {LedgerEntryType::PENDING_STATISTICS,                    PendingStatisticsHelper::Instance()},
+    {LedgerEntryType::CONTRACT,                              ContractHelper::Instance()},
+    {LedgerEntryType::ATOMIC_SWAP_ASK,                       AtomicSwapAskHelper::Instance()},
+    {LedgerEntryType::SIGNER,                                EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER)},
+    {LedgerEntryType::ACCOUNT_RULE,                          EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_RULE)},
+    {LedgerEntryType::ACCOUNT_ROLE,                          EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_ROLE)},
+    {LedgerEntryType::SIGNER_RULE,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_RULE)},
+    {LedgerEntryType::SIGNER_ROLE,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER_ROLE)},
+    {LedgerEntryType::STAMP,                                 EntryHelperLegacyImpl::Instance(LedgerEntryType::STAMP)},
+    {LedgerEntryType::LICENSE,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::LICENSE)},
+    {LedgerEntryType::VOTE,                                  EntryHelperLegacyImpl::Instance(LedgerEntryType::VOTE)},
+    {LedgerEntryType::POLL,                                  EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL)},
+    {LedgerEntryType::ACCOUNT_SPECIFIC_RULE,                 EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_SPECIFIC_RULE)}
+};
 }

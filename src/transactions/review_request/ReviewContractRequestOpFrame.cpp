@@ -9,9 +9,10 @@
 #include "ReviewContractRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ContractHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "main/Application.h"
 
@@ -22,33 +23,35 @@ using namespace std;
 using xdr::operator==;
 
 bool
-ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
-                                           LedgerManager& ledgerManager,
-                                           ReviewableRequestFrame::pointer request)
+ReviewContractRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
+                                            LedgerManager& ledgerManager,
+                                            ReviewableRequestFrame::pointer request)
 {
     if (request->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CONTRACT, but got "
-                         << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+                                               << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
         throw invalid_argument("Unexpected request type for review contract request");
     }
 
-    Database& db = ledgerManager.getDatabase();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
+    handleTasks(requestHelper, request);
 
-    handleTasks(db, delta, request);
-
-    if (!request->canBeFulfilled(ledgerManager)){
+    if (!request->canBeFulfilled(ledgerManager))
+    {
         innerResult().code(ReviewRequestResultCode::SUCCESS);
         innerResult().success().fulfilled = false;
         return true;
     }
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
 
     auto contractFrame = make_shared<ContractFrame>();
     auto& contractEntry = contractFrame->getContract();
     auto contractRequest = request->getRequestEntry().body.contractRequest();
+
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
     contractEntry.contractID = delta.getHeaderFrame().generateID(LedgerEntryType::CONTRACT);
     contractEntry.contractor = request->getRequestor();
@@ -59,6 +62,7 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta
     contractEntry.initialDetails = contractRequest.creatorDetails;
     contractEntry.state = static_cast<uint32_t>(ContractState::NO_CONFIRMATIONS);
 
+    auto& db = storageHelper.getDatabase();
     if (!checkCustomerDetailsLength(app, db, delta))
         return false;
 
@@ -85,16 +89,16 @@ ReviewContractRequestOpFrame::checkCustomerDetailsLength(Application& app, Datab
 }
 
 bool
-ReviewContractRequestOpFrame::handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+ReviewContractRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
     innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
     return false;
 }
 
-ReviewContractRequestOpFrame::ReviewContractRequestOpFrame(Operation const & op, OperationResult & res,
-                                                           TransactionFrame & parentTx)
-        : ReviewRequestOpFrame(op, res, parentTx)
+ReviewContractRequestOpFrame::ReviewContractRequestOpFrame(Operation const& op, OperationResult& res,
+                                                           TransactionFrame& parentTx)
+    : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 

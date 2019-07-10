@@ -84,7 +84,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         OperationResultCode opExpectedCode)
 {
     auto& db = mTestManager->getDB();
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto saleHelper = SaleHelper::Instance();
 
     auto saleBeforeOp = saleHelper->loadSale(saleID, db);

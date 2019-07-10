@@ -162,7 +162,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
             // sale request must endup with higher sequence
             saleRequest.sequenceNumber++;
             auto requestAfterUpdate =
-                ReviewableRequestHelper::Instance()->loadRequest(requestID, db,
+                ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db,
                                                                  nullptr);
             REQUIRE(requestAfterUpdate);
             REQUIRE(requestAfterUpdate->getRequestEntry()
@@ -492,7 +492,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
         auto assetReviewer = ReviewAssetRequestHelper(testManager);
 
         // Reviewer approves owner's asset creation request
-        auto request = ReviewableRequestHelper::Instance()->
+        auto request = ReviewableRequestHelperLegacy::Instance()->
                 loadRequest(ownerAssetRequestID,
                             testManager->getDB(), nullptr);
         REQUIRE(request);

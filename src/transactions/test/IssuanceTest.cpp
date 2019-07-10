@@ -42,7 +42,7 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
 	auto receiverBalance = balanceHelper->loadBalance(receiverKP.getPublicKey(), assetToBeIssued, testManager->getDB(), nullptr);
 	REQUIRE(receiverBalance);
 
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey(assetToBeIssued);
@@ -675,7 +675,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                 REQUIRE(!createIssuanceResult.success().fulfilled);
 
                 auto requestID = createIssuanceResult.success().requestID;
-                auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                 REQUIRE(request->getAllTasks() ==
                         CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT);
             }
@@ -734,7 +734,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                         REQUIRE_FALSE(createIssuanceResult.success().fulfilled);
 
                         auto requestID = createIssuanceResult.success().requestID;
-                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
 
                         uint32_t toAdd = 0, toRemove = issuanceTasks;
                         auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
@@ -749,7 +749,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                             &toAdd,
                             &toRemove);
 
-                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
 
                         REQUIRE(request->getAllTasks() == (issuanceTasks | CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED));
                     }
@@ -764,7 +764,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                         REQUIRE(createIssuanceResult.success().fulfilled);
 
                         auto requestID = createIssuanceResult.success().requestID;
-                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                         REQUIRE(!request);
 
                         manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
@@ -779,7 +779,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                         REQUIRE(!createIssuanceResult.success().fulfilled);
 
                         requestID = createIssuanceResult.success().requestID;
-                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                         REQUIRE(request->getAllTasks() ==
                                 CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED);
 
@@ -800,7 +800,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                     REQUIRE(createIssuanceResult.success().fulfilled);
 
                     auto requestID = createIssuanceResult.success().requestID;
-                    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                     REQUIRE(!request);
                 }
                 SECTION("Exceeded"){
@@ -817,7 +817,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                     REQUIRE(!createIssuanceResult.success().fulfilled);
 
                     auto requestID = createIssuanceResult.success().requestID;
-                    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                     REQUIRE(request->getAllTasks() ==
                             CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED);
                 }
@@ -836,7 +836,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                     REQUIRE(!createIssuanceResult.success().fulfilled);
 
                     auto requestID = createIssuanceResult.success().requestID;
-                    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
                     REQUIRE(request->getAllTasks() ==
                              CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT);
                 }

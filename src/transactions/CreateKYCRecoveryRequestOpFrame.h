@@ -27,7 +27,7 @@ class CreateKYCRecoveryRequestOpFrame : public OperationFrame {
     void createRequest(ReviewableRequestEntry& requestEntry, uint32 defaultMask);
 
     void
-    tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+    tryAutoApprove(StorageHelper& storageHelper, Application& app,
                    ReviewableRequestFrame::pointer requestFrame);
 
     bool

@@ -32,7 +32,7 @@ namespace txtest
                                                           CreatePreIssuanceRequestResultCode expectedResult,
                                                           uint32_t* allTasks, OperationResultCode expectedOpCode)
 	{
-		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+		auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 		auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
 
 		auto referenceHelper = ReferenceHelper::Instance();
@@ -121,7 +121,7 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode as
 												  OperationResultCode expectedOpCode)
 	{
 		auto &db = mTestManager->getDB();
-		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+		auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 		auto expectedReviewableRequestAfterTx = reviewableRequestHelper->countObjects(db.getSession());
 
 		auto referenceBeforeTx = ReferenceHelper::Instance()->loadReference(source.key.getPublicKey(), reference,
@@ -174,7 +174,7 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode as
 		}
 
 		auto requestID = result.success().requestID;
-		auto issuanceRequestFrameAfterTx = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+		auto issuanceRequestFrameAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
 		REQUIRE(!!issuanceRequestFrameAfterTx);
 
 		auto& issuanceRequestEntryAfterTx = issuanceRequestFrameAfterTx->getRequestEntry();

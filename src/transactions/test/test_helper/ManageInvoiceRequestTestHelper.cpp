@@ -63,7 +63,7 @@ ManageInvoiceRequestTestHelper::applyManageInvoiceRequest(Account& source,
 {
     Database& db = mTestManager->getDB();
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     uint64 reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
 
     auto txFrame = createManageInvoiceRequest(source, manageInvoiceRequestOp);

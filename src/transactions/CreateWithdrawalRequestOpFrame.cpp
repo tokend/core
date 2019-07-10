@@ -20,7 +20,7 @@ namespace stellar
 using xdr::operator==;
 
 bool
-CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
+CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                                           std::vector<OperationCondition>& result) const
 {
     auto balance = storageHelper.getBalanceHelper().loadBalance(mCreateWithdrawalRequest.request.balance);
@@ -44,10 +44,10 @@ CreateWithdrawalRequestOpFrame::tryGetOperationConditions(StorageHelper &storage
 
 bool
 CreateWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                        std::vector<SignerRequirement>& result) const
+                                                         std::vector<SignerRequirement>& result) const
 {
     auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
-            mCreateWithdrawalRequest.request.balance);
+        mCreateWithdrawalRequest.request.balance);
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
@@ -67,7 +67,7 @@ CreateWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     return true;
 }
 
-BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelper &storageHelper) const
+BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelper& storageHelper) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto balanceFrame = balanceHelper.loadBalance(mCreateWithdrawalRequest.request.balance);
@@ -83,7 +83,7 @@ bool CreateWithdrawalRequestOpFrame::isFeeMatches(
     AccountManager& accountManager, BalanceFrame::pointer balance) const
 {
     return accountManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee, FeeType::WITHDRAWAL_FEE,
-        FeeFrame::SUBTYPE_ANY, balance->getAsset(), mCreateWithdrawalRequest.request.amount);
+                                       FeeFrame::SUBTYPE_ANY, balance->getAsset(), mCreateWithdrawalRequest.request.amount);
 }
 
 bool CreateWithdrawalRequestOpFrame::tryLockBalance(
@@ -91,7 +91,7 @@ bool CreateWithdrawalRequestOpFrame::tryLockBalance(
 {
     uint64_t totalAmountToBeLocked = 0;
     auto& request = mCreateWithdrawalRequest.request;
-    if (!safeSum(totalAmountToBeLocked, { request.amount, request.fee.fixed, request.fee.percent }))
+    if (!safeSum(totalAmountToBeLocked, {request.amount, request.fee.fixed, request.fee.percent}))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_LOCK_OVERFLOW);
         return false;
@@ -100,21 +100,22 @@ bool CreateWithdrawalRequestOpFrame::tryLockBalance(
     const auto balanceLockResult = balance->tryLock(totalAmountToBeLocked);
     switch (balanceLockResult)
     {
-    case BalanceFrame::Result::SUCCESS:
-        return true;
-    case BalanceFrame::Result::LINE_FULL:
+        case BalanceFrame::Result::SUCCESS:
+            return true;
+        case BalanceFrame::Result::LINE_FULL:
         {
-        innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_LOCK_OVERFLOW);
-        return false;
+            innerResult().code(CreateWithdrawalRequestResultCode::BALANCE_LOCK_OVERFLOW);
+            return false;
         }
-    case BalanceFrame::Result::UNDERFUNDED:
+        case BalanceFrame::Result::UNDERFUNDED:
         {
-        innerResult().code(CreateWithdrawalRequestResultCode::UNDERFUNDED);
-        return false;
+            innerResult().code(CreateWithdrawalRequestResultCode::UNDERFUNDED);
+            return false;
         }
-    default:
+        default:
         {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected balance lock result for create withdrawal request: " << balanceLockResult;
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected balance lock result for create withdrawal request: "
+                                                   << balanceLockResult;
             throw std::runtime_error("Unexpected result on balance lock");
         }
     }
@@ -123,17 +124,16 @@ bool CreateWithdrawalRequestOpFrame::tryLockBalance(
 CreateWithdrawalRequestOpFrame::CreateWithdrawalRequestOpFrame(
     Operation const& op, OperationResult& res,
     TransactionFrame& parentTx)
-    : OperationFrame(op, res, parentTx)
-    , mCreateWithdrawalRequest(mOperation.body.createWithdrawalRequestOp())
+    : OperationFrame(op, res, parentTx), mCreateWithdrawalRequest(mOperation.body.createWithdrawalRequestOp())
 {
 }
 
 ReviewableRequestFrame::pointer
 CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
-                                                            StorageHelper &storageHelper,
-                                                            LedgerManager& ledgerManager,
-                                                            BalanceFrame::pointer balanceFrame,
-                                                            AssetFrame::pointer assetFrame)
+                                                           StorageHelper& storageHelper,
+                                                           LedgerManager& ledgerManager,
+                                                           BalanceFrame::pointer balanceFrame,
+                                                           AssetFrame::pointer assetFrame)
 {
     auto& db = app.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
@@ -168,7 +168,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     uint64_t universalAmount = 0;
     auto request = ReviewableRequestFrame::createNew(delta, getSourceID(), assetFrame->getOwner(), nullptr,
                                                      ledgerManager.getCloseTime());
-    ReviewableRequestEntry &requestEntry = request->getRequestEntry();
+    ReviewableRequestEntry& requestEntry = request->getRequestEntry();
 
     requestEntry.body.type(ReviewableRequestType::CREATE_WITHDRAW);
     requestEntry.body.withdrawalRequest() = mCreateWithdrawalRequest.request;
@@ -183,24 +183,24 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     {
         return nullptr;
     }
-    storeChangeRequest(delta, request, db, universalAmount);
+    storeChangeRequest(storageHelper, request, universalAmount);
 
     return request;
 
 }
 
 void
-CreateWithdrawalRequestOpFrame::storeChangeRequest(LedgerDelta& delta, ReviewableRequestFrame::pointer request,
-                                                   Database& db, const uint64_t universalAmount)
+CreateWithdrawalRequestOpFrame::storeChangeRequest(StorageHelper& storageHelper, ReviewableRequestFrame::pointer request,
+                                                   const uint64_t universalAmount)
 {
     request->getRequestEntry().body.withdrawalRequest().universalAmount = universalAmount;
 
     request->recalculateHashRejectReason();
-    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+    storageHelper.getReviewableRequestHelper().storeChange(request->mEntry);
 }
 
-bool CreateWithdrawalRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper,
-                                             LedgerManager &ledgerManager)
+bool CreateWithdrawalRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                             LedgerManager& ledgerManager)
 {
     auto& db = storageHelper.getDatabase();
     auto balanceFrame = tryLoadBalance(storageHelper);
@@ -262,7 +262,8 @@ bool CreateWithdrawalRequestOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    if (!isExternalDetailsValid(app, mCreateWithdrawalRequest.request.creatorDetails)) {
+    if (!isExternalDetailsValid(app, mCreateWithdrawalRequest.request.creatorDetails))
+    {
         innerResult().code(CreateWithdrawalRequestResultCode::INVALID_CREATOR_DETAILS);
         return false;
     }
@@ -270,7 +271,8 @@ bool CreateWithdrawalRequestOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-bool CreateWithdrawalRequestOpFrame::isExternalDetailsValid(Application &app, const std::string &externalDetails) {
+bool CreateWithdrawalRequestOpFrame::isExternalDetailsValid(Application& app, const std::string& externalDetails)
+{
     if (!isValidJson(externalDetails))
         return false;
 
@@ -304,7 +306,7 @@ bool CreateWithdrawalRequestOpFrame::tryAddStatsV2(StatisticsV2Processor& statis
             return false;
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Unexpeced result from statisticsV2Processor when updating statsV2:" << result;
+                << "Unexpeced result from statisticsV2Processor when updating statsV2:" << result;
             throw std::runtime_error("Unexpected state from statisticsV2Processor when updating statsV2");
     }
 
@@ -314,21 +316,23 @@ bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& 
 {
     xdr::xstring<256> key = ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(code);
     auto lowerBound = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
-    if (!lowerBound) {
+    if (!lowerBound)
+    {
         return true;
     }
 
-    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64) {
+    if (lowerBound.get()->getKeyValue().value.type() != KeyValueEntryType::UINT64)
+    {
         CLOG(WARNING, Logging::OPERATION_LOGGER)
-                << "AssetCode: " << code
-                << "KeyValueEntryType: "
-                << "Key: " << key.c_str()
-                << std::to_string(
-                        static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
+            << "AssetCode: " << code
+            << "KeyValueEntryType: "
+            << "Key: " << key.c_str()
+            << std::to_string(
+                static_cast<int32>(lowerBound.get()->getKeyValue().value.type()));
         return true;
     }
 
-    auto &request = mCreateWithdrawalRequest.request;
+    auto& request = mCreateWithdrawalRequest.request;
     return lowerBound.get()->getKeyValue().value.ui64Value() <= request.amount;
 }
 
@@ -336,10 +340,10 @@ std::vector<std::string>
 CreateWithdrawalRequestOpFrame::makeTasksKeyVector(AssetCode const& code)
 {
     return
-    {
-        ManageKeyValueOpFrame::makeWithdrawalTasksKey(code),
-        ManageKeyValueOpFrame::makeWithdrawalTasksKey("*")
-    };
+        {
+            ManageKeyValueOpFrame::makeWithdrawalTasksKey(code),
+            ManageKeyValueOpFrame::makeWithdrawalTasksKey("*")
+        };
 }
 
 }

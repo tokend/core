@@ -73,7 +73,8 @@ CreateKYCRecoveryRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
         if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
             action = SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
     }
-    else {
+    else
+    {
         action = SignerRuleAction::CREATE;
         if (!(getSourceID() == mCreateKYCRecoveryRequestOp.targetAccount))
             action = SignerRuleAction::CREATE_FOR_OTHER;
@@ -142,7 +143,6 @@ CreateKYCRecoveryRequestOpFrame::doCheckValid(Application& app)
 bool
 CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto targetAccountID = mCreateKYCRecoveryRequestOp.targetAccount;
@@ -170,8 +170,8 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
                                                           targetAccountID, app.getAdminID(),
                                                           referencePtr, ledgerManager.getCloseTime());
 
-    auto requestHelper = ReviewableRequestHelper::Instance();
-    if (requestHelper->isReferenceExist(db, targetAccountID, reference, requestFrame->getRequestID()))
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    if (requestHelper.isReferenceExist(targetAccountID, reference, requestFrame->getRequestID()))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
@@ -180,8 +180,8 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
     uint32 allTasks = 0;
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
     if (!keyValueHelper.loadTasks(allTasks,
-        {ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()},
-        mCreateKYCRecoveryRequestOp.allTasks.get()))
+                                  {ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()},
+                                  mCreateKYCRecoveryRequestOp.allTasks.get()))
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::KYC_RECOVERY_TASKS_NOT_FOUND);
         return false;
@@ -194,7 +194,7 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
 
     requestFrame->recalculateHashRejectReason();
 
-    requestHelper->storeAdd(delta, db, requestFrame->mEntry);
+    requestHelper.storeAdd(requestFrame->mEntry);
 
     innerResult().code(CreateKYCRecoveryRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
@@ -202,7 +202,7 @@ CreateKYCRecoveryRequestOpFrame::doApply(Application& app, StorageHelper& storag
 
     if (requestFrame->canBeFulfilled(ledgerManager))
     {
-        tryAutoApprove(db, delta, app, requestFrame);
+        tryAutoApprove(storageHelper, app, requestFrame);
     }
 
     return true;
@@ -230,11 +230,11 @@ CreateKYCRecoveryRequestOpFrame::getReference()
 }
 
 void
-CreateKYCRecoveryRequestOpFrame::tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+CreateKYCRecoveryRequestOpFrame::tryAutoApprove(StorageHelper& storageHelper, Application& app,
                                                 ReviewableRequestFrame::pointer requestFrame)
 {
     auto& ledgerManager = app.getLedgerManager();
-    auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, delta, requestFrame);
+    auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, storageHelper, requestFrame);
     if (result != ReviewRequestResultCode::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -259,9 +259,8 @@ CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHel
         innerResult().code(CreateKYCRecoveryRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST);
         return false;
     }
-
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-        mCreateKYCRecoveryRequestOp.requestID, db, &delta);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto request = requestHelper.loadRequest(mCreateKYCRecoveryRequestOp.requestID);
     if (!request)
     {
         innerResult().code(CreateKYCRecoveryRequestResultCode::REQUEST_NOT_FOUND);
@@ -279,7 +278,7 @@ CreateKYCRecoveryRequestOpFrame::updateRecoveryRequest(StorageHelper& storageHel
 
     request->recalculateHashRejectReason();
 
-    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+    requestHelper.storeChange(request->mEntry);
 
     innerResult().code(CreateKYCRecoveryRequestResultCode::SUCCESS);
     innerResult().success().requestID = mCreateKYCRecoveryRequestOp.requestID;

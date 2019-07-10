@@ -16,7 +16,7 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 {
     Database& db = mTestManager->getDB();
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, db);
     if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
     {

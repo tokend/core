@@ -35,7 +35,7 @@ bool
 CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 							std::vector<stellar::SignerRequirement> &result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
             mManageAsset.requestID, storageHelper.getDatabase());
     if (!request || ((request->getType() != ReviewableRequestType::CREATE_ASSET) &&
                      (request->getType() != ReviewableRequestType::UPDATE_ASSET)))
@@ -79,7 +79,7 @@ CancelAssetRequestOpFrame::doApply(Application& app,
 {
     Database& db = ledgerManager.getDatabase();
 	
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 	auto request = reviewableRequestHelper->loadRequest(mManageAsset.requestID, getSourceID(), db, &delta);
 	if (!request) {
 		innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);

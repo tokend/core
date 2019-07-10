@@ -12,9 +12,9 @@ namespace stellar
 class ReviewPreIssuanceCreationRequestOpFrame : public ReviewRequestOpFrame
 {
 protected:
-	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+	bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
 					   ReviewableRequestFrame::pointer request) override;
-	bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+	bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
 					  ReviewableRequestFrame::pointer request) override;
 
 public:

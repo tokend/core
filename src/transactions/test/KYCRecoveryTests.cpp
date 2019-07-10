@@ -211,7 +211,7 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
             SECTION("Initiate another kyc recovery and create another request")
             {
                 initKycRecoveryTestHelper.applyTx(initKYCRecovery);
-                auto req = ReviewableRequestHelper::Instance()->loadRequest(requestID, testManager->getDB());
+                auto req = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
                 REQUIRE_FALSE(req);
                 auto createRecoveryResult = createKycRecoveryRequestTestHelper.applyTx(createKYCRecoveryReqBuilder);
                 REQUIRE_FALSE(createRecoveryResult.success().fulfilled);
@@ -220,14 +220,14 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
             SECTION("Review")
             {
                 uint32_t tasksToAdd = 2, tasksToRemove = 1;
-                auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, testManager->getDB());
+                auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
                 REQUIRE(request);
                 reviewKycRecoveryHelper.applyReviewRequestTxWithTasks(master, requestID, request->getHash(),
                     ReviewableRequestType::KYC_RECOVERY, ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS,
                     &tasksToAdd, &tasksToRemove);
                 tasksToAdd = 0;
                 tasksToRemove = 2;
-                request = ReviewableRequestHelper::Instance()->loadRequest(requestID, testManager->getDB());
+                request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
                 REQUIRE(request);
                 auto reviewResult = reviewKycRecoveryHelper.applyReviewRequestTxWithTasks(master, requestID, request->getHash(),
                     ReviewableRequestType::KYC_RECOVERY, ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS,

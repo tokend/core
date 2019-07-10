@@ -4,14 +4,15 @@
 
 #include <transactions/manage_asset/ManageAssetHelper.h>
 #include <transactions/payment/PaymentOpFrame.h>
-#include <ledger/StorageHelperImpl.h>
+#include "ledger/StorageHelper.h"
 #include "util/asio.h"
 #include "ReviewInvoiceRequestOpFrame.h"
 #include "database/Database.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/ContractHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -21,14 +22,14 @@ using namespace std;
 using xdr::operator==;
 
 bool
-ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
+ReviewInvoiceRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
                                            LedgerManager& ledgerManager,
                                            ReviewableRequestFrame::pointer request)
 {
     if (request->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected INVOICE, but got "
-                               << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+                                               << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
         throw invalid_argument("Unexpected request type for review invoice request");
     }
 
@@ -41,32 +42,35 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
         return false;
     }
 
-    Database& db = ledgerManager.getDatabase();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    handleTasks(db, delta, request);
+    handleTasks(requestHelper, request);
 
-    if (!request->canBeFulfilled(ledgerManager)){
+    if (!request->canBeFulfilled(ledgerManager))
+    {
         innerResult().code(ReviewRequestResultCode::SUCCESS);
         innerResult().success().fulfilled = false;
         return true;
     }
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto senderBalance = balanceHelper->mustLoadBalance(invoiceRequest.senderBalance, db, &delta);
-    auto receiverBalance = balanceHelper->mustLoadBalance(invoiceRequest.receiverBalance, db, &delta);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto senderBalance = balanceHelper.mustLoadBalance(invoiceRequest.senderBalance);
+    auto receiverBalance = balanceHelper.mustLoadBalance(invoiceRequest.receiverBalance);
 
     if (!checkPaymentDetails(requestEntry, receiverBalance->getBalanceID(), senderBalance->getBalanceID()))
         return false;
 
-    if (!processPaymentV2(app, delta, ledgerManager))
+    if (!processPaymentV2(app, storageHelper, ledgerManager))
         return false;
 
     if (!invoiceRequest.contractID)
     {
-        EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+        requestHelper.storeDelete(request->getKey());
         return true;
     }
 
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& db = storageHelper.getDatabase();
     auto contractHelper = ContractHelper::Instance();
     auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, &delta);
 
@@ -79,14 +83,14 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
 
     invoiceRequest.isApproved = true;
     request->recalculateHashRejectReason();
-    EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
+    requestHelper.storeChange(request->mEntry);
 
-    receiverBalance = balanceHelper->mustLoadBalance(receiverBalance->getBalanceID(), db, &delta);
+    receiverBalance = balanceHelper.mustLoadBalance(receiverBalance->getBalanceID());
 
     if (!tryLockAmount(receiverBalance, invoiceRequest.amount))
         return false;
 
-    balanceHelper->storeChange(delta, db, receiverBalance->mEntry);
+    balanceHelper.storeChange(receiverBalance->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
@@ -130,10 +134,9 @@ ReviewInvoiceRequestOpFrame::tryLockAmount(BalanceFrame::pointer balance, uint64
     }
 }
 
-
 bool
 ReviewInvoiceRequestOpFrame::checkPaymentDetails(ReviewableRequestEntry& requestEntry,
-                                    BalanceID receiverBalance, BalanceID senderBalance)
+                                                 BalanceID receiverBalance, BalanceID senderBalance)
 {
     auto invoiceRequest = requestEntry.body.invoiceRequest();
     auto paymentDetails = mReviewRequest.requestDetails.billPay().paymentDetails;
@@ -180,7 +183,7 @@ ReviewInvoiceRequestOpFrame::checkPaymentDetails(ReviewableRequestEntry& request
 }
 
 bool
-ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager)
+ReviewInvoiceRequestOpFrame::processPaymentV2(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
     Operation op;
     op.body.type(OperationType::PAYMENT);
@@ -193,7 +196,6 @@ ReviewInvoiceRequestOpFrame::processPaymentV2(Application &app, LedgerDelta &del
 
     paymentOpV2Frame.setSourceAccountPtr(mSourceAccount);
 
-    StorageHelperImpl storageHelper(app.getDatabase(), &delta);
     if (!paymentOpV2Frame.doCheckValid(app) || !paymentOpV2Frame.doApply(app, storageHelper, ledgerManager))
     {
         auto resultCode = PaymentOpFrame::getInnerCode(opRes);
@@ -211,7 +213,7 @@ ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentResultCode paymentResult)
     {
         innerResult().code(paymentCodeToReviewRequestCode[paymentResult]);
     }
-    catch(...)
+    catch (...)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from payment v2 operation: "
                                                << xdr::xdr_traits<PaymentResultCode>::enum_name(paymentResult);
@@ -219,9 +221,8 @@ ReviewInvoiceRequestOpFrame::trySetErrorCode(PaymentResultCode paymentResult)
     }
 }
 
-
 bool
-ReviewInvoiceRequestOpFrame::handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+ReviewInvoiceRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                                           ReviewableRequestFrame::pointer request)
 {
     innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
@@ -230,8 +231,8 @@ ReviewInvoiceRequestOpFrame::handleReject(Application& app, LedgerDelta& delta, 
 
 bool
 ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
-                               LedgerDelta& delta, LedgerManager& ledgerManager,
-                               ReviewableRequestFrame::pointer request)
+                                                   StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                                                   ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::CREATE_INVOICE);
 
@@ -241,13 +242,13 @@ ReviewInvoiceRequestOpFrame::handlePermanentReject(Application& app,
         return false;
     }
 
-    return ReviewRequestOpFrame::handlePermanentReject(app, delta,
+    return ReviewRequestOpFrame::handlePermanentReject(app, storageHelper,
                                                        ledgerManager, request);
 }
 
-ReviewInvoiceRequestOpFrame::ReviewInvoiceRequestOpFrame(Operation const & op, OperationResult & res,
-                                                         TransactionFrame & parentTx) :
-        ReviewRequestOpFrame(op, res, parentTx)
+ReviewInvoiceRequestOpFrame::ReviewInvoiceRequestOpFrame(Operation const& op, OperationResult& res,
+                                                         TransactionFrame& parentTx) :
+    ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 

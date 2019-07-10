@@ -253,7 +253,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             auto opRes = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
             uint64_t requestID = opRes.success().requestID;
 
-            auto requestFrame = ReviewableRequestHelper::Instance()->loadRequest(requestID, testManager->getDB());
+            auto requestFrame = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
             REQUIRE(!!requestFrame);
 
             Operation op;

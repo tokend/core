@@ -129,7 +129,7 @@ ManageContractOpFrame::tryConfirmCompleted(ContractFrame::pointer contractFrame,
 
     innerResult().response().data.action(ManageContractAction::CONFIRM_COMPLETED);
 
-    auto invoiceRequests = ReviewableRequestHelper::Instance()->loadRequests(
+    auto invoiceRequests = ReviewableRequestHelperLegacy::Instance()->loadRequests(
             contractFrame->getInvoiceRequestIDs(), db);
 
     if (!checkIsInvoicesApproved(invoiceRequests))
@@ -166,7 +166,7 @@ ManageContractOpFrame::tryCompleted(ContractFrame::pointer contractFrame,
 
     innerResult().response().data.isCompleted() = true;
 
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
 
     for (ReviewableRequestFrame::pointer invoiceRequest : invoiceRequests)
     {
@@ -260,7 +260,7 @@ ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFram
                                              Database& db, LedgerDelta& delta)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
     auto invoiceRequests = requestHelper->loadRequests(contractFrame->getInvoiceRequestIDs(), db);
 
     for (ReviewableRequestFrame::pointer invoiceRequest : invoiceRequests)
@@ -304,7 +304,7 @@ ManageContractOpFrame::unlockApprovedInvoicesAmounts(ContractFrame::pointer cont
                                                      Database& db, LedgerDelta & delta)
 {
     auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
     auto invoiceRequests = requestHelper->loadRequests(contractFrame->getInvoiceRequestIDs(), db);
 
     for (ReviewableRequestFrame::pointer invoiceRequest : invoiceRequests)

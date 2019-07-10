@@ -43,7 +43,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto limitsUpdateRequestHelper = LimitsUpdateRequestHelper(testManager);
     auto reviewLimitsUpdateHelper = ReviewLimitsUpdateRequestHelper(testManager);
-    auto reviewRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto manageLimitsTestHelper = ManageLimitsTestHelper(testManager);
 
     // create requestor

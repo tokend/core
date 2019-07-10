@@ -203,7 +203,7 @@ CreateAtomicSwapBidRequestOpFrame::doApply(Application& app, StorageHelper& stor
     requestFrame->recalculateHashRejectReason();
 
     AtomicSwapAskHelper::Instance()->storeChange(delta, db, bid->mEntry);
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, requestFrame->mEntry);
 
     innerResult().success().requestID = requestFrame->getRequestID();
     innerResult().success().askOwnerID = bid->getOwnerID();

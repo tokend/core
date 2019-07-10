@@ -56,7 +56,7 @@ ReviewableRequestFrame::pointer ManageAssetOpFrame::getOrCreateReviewableRequest
                                                  app.getLedgerManager().getCloseTime());
 	}
 
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 	return reviewableRequestHelper->loadRequest(mManageAsset.requestID, getSourceID(), requestType, db, &delta);
 }
 }

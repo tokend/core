@@ -3,6 +3,7 @@
 #include <transactions/AccountManager.h>
 #include "ledger/LimitsV2Frame.h"
 #include "ledger/StatisticsV2Frame.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -10,12 +11,11 @@ namespace stellar
 class StatisticsV2Processor
 {
 
-    Database& mDb;
-    LedgerDelta& mDelta;
+    StorageHelper& mStorageHelper;
     LedgerManager& mLm;
 
 public:
-    StatisticsV2Processor(Database& db, LedgerDelta& delta, LedgerManager& lm);
+    StatisticsV2Processor(StorageHelper& storageHelper, LedgerManager& lm);
 
     enum Result
     {

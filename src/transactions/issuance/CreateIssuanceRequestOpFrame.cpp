@@ -243,7 +243,7 @@ CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application& app, LedgerD
 {
 	Database& db = ledgerManager.getDatabase();
 
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
 	if (reviewableRequestHelper->isReferenceExist(db, getSourceID(), mCreateIssuanceRequest.reference)) {
 		innerResult().code(CreateIssuanceRequestResultCode::REFERENCE_DUPLICATION);
 		return nullptr;

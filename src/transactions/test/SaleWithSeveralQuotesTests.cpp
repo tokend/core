@@ -283,7 +283,7 @@ TEST_CASE("Sale creation while base asset is on review", "[tx][sale]")
             maxIssuanceAmount, saleType, saleTypeInt);
 
     auto saleCreationResult = saleRequestHelper.applyCreateSaleRequest(syndicate, 0, saleRequest);
-    auto request = ReviewableRequestHelper::Instance()->
+    auto request = ReviewableRequestHelperLegacy::Instance()->
             loadRequest(assetResult.success().requestID,
                         testManager->getDB(), nullptr);
     REQUIRE(request);

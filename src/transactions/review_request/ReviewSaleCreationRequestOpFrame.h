@@ -8,38 +8,39 @@
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/SaleFrame.h"
 
-namespace stellar {
-    class ReviewSaleCreationRequestOpFrame : public ReviewRequestOpFrame {
+namespace stellar
+{
+class ReviewSaleCreationRequestOpFrame : public ReviewRequestOpFrame {
 
-        bool
-        tryGetSignerRequirements(StorageHelper& storageHelper,
-                                 std::vector<SignerRequirement>& result) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
-    public:
+public:
 
-        ReviewSaleCreationRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+    ReviewSaleCreationRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-        static uint64 getRequiredBaseAssetForHardCap(SaleCreationRequest const &saleCreationRequest);
+    static uint64 getRequiredBaseAssetForHardCap(SaleCreationRequest const& saleCreationRequest);
 
-    protected:
-        bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-                           ReviewableRequestFrame::pointer request) override;
+protected:
+    bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                       ReviewableRequestFrame::pointer request) override;
 
-        ReviewRequestResultCode tryCreateSale(Application &app, Database &db, LedgerDelta &delta,
-                                              LedgerManager &ledgerManager,
-                                              ReviewableRequestFrame::pointer request, uint64_t saleID);
+    ReviewRequestResultCode tryCreateSale(Application& app, StorageHelper& storageHelper,
+                                          LedgerManager& ledgerManager,
+                                          ReviewableRequestFrame::pointer request, uint64_t saleID);
 
-        void
-        createSaleRules(Application& app, StorageHelper& sh, LedgerManager &lm,
-                SaleCreationRequest const& request, SaleFrame::pointer const& sale);
+    void
+    createSaleRules(Application& app, StorageHelper& sh, LedgerManager& lm,
+                    SaleCreationRequest const& request, SaleFrame::pointer const& sale);
 
-        SaleCreationRequest &getSaleCreationRequestFromBody(ReviewableRequestFrame::pointer request);
+    SaleCreationRequest& getSaleCreationRequestFromBody(ReviewableRequestFrame::pointer request);
 
-        void createAssetPair(SaleFrame::pointer sale, Application &app, LedgerManager &ledgerManager,
-                             LedgerDelta &delta) const;
+    void createAssetPair(SaleFrame::pointer sale, Application& app, LedgerManager& ledgerManager,
+                         LedgerDelta& delta) const;
 
-        std::map<AssetCode, BalanceID>
-        loadBalances(AccountManager &accountManager, ReviewableRequestFrame::pointer request,
-                     SaleCreationRequest const &sale);
-    };
+    std::map<AssetCode, BalanceID>
+    loadBalances(AccountManager& accountManager, ReviewableRequestFrame::pointer request,
+                 SaleCreationRequest const& sale);
+};
 }

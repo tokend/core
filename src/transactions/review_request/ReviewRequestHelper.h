@@ -9,32 +9,32 @@
 #include <lib/soci/src/core/transaction.h>
 #include <lib/xdrpp/xdrpp/printer.h>
 
-namespace stellar {
-
-class ReviewRequestHelper
+namespace stellar
 {
+
+class ReviewRequestHelper {
 private:
     Application& mApp;
-    LedgerDelta& mDelta;
+    StorageHelper& mStorageHelper;
     LedgerManager& mLedgerManager;
     ReviewableRequestFrame::pointer mRequest;
 
-    std::pair<bool, ReviewRequestResult> tryReviewRequest(TransactionFrame &parentTx);
+    std::pair<bool, ReviewRequestResult> tryReviewRequest(TransactionFrame& parentTx);
 
-    ReviewRequestHelper(Application &app, LedgerManager &ledgerManager, LedgerDelta &delta,
+    ReviewRequestHelper(Application& app, LedgerManager& ledgerManager, StorageHelper& storageHelper,
                         ReviewableRequestFrame::pointer reviewableRequest);
 
-    ReviewRequestResult tryApproveRequest(TransactionFrame &parentTx);
+    ReviewRequestResult tryApproveRequest(TransactionFrame& parentTx);
 
 public:
 
-    static ReviewRequestResultCode tryApproveRequest(TransactionFrame &parentTx, Application &app,
-                                                     LedgerManager &ledgerManager, LedgerDelta &delta,
+    static ReviewRequestResultCode tryApproveRequest(TransactionFrame& parentTx, Application& app,
+                                                     LedgerManager& ledgerManager, StorageHelper& storageHelper,
                                                      ReviewableRequestFrame::pointer reviewableRequest);
 
-    static ReviewRequestResult tryApproveRequestWithResult(TransactionFrame &parentTx, Application &app,
-                                                 LedgerManager &ledgerManager, LedgerDelta &delta,
-                                                 ReviewableRequestFrame::pointer reviewableRequest);
+    static ReviewRequestResult tryApproveRequestWithResult(TransactionFrame& parentTx, Application& app,
+                                                           LedgerManager& ledgerManager, StorageHelper& storageHelper,
+                                                           ReviewableRequestFrame::pointer reviewableRequest);
 };
 
 }

@@ -100,7 +100,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                     master, requestID, account.key.getPublicKey(), tokenOwnerRoleID, kycData);
 
             requestID = createUpdateKYCRequestResult.success().requestID;
-            auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
                     requestID, account.key.getPublicKey(),
                     ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
 
@@ -120,7 +120,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                     account, 0, account.key.getPublicKey(), tokenOwnerRoleID, kycData);
 
             requestID = createUpdateKYCRequestResult.success().requestID;
-            auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID,
+            auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID,
                     account.key.getPublicKey(), ReviewableRequestType::CHANGE_ROLE,
                     testManager->getDB());
 
@@ -128,7 +128,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                                                             "Not enough docs for third kyc level");
             reviewChangeRoleRequestHelper.applyReviewRequestTx(master, requestID, ReviewRequestOpAction::REJECT,
                                                             "One more reject, just for fun");
-            auto requestAfter = ReviewableRequestHelper::Instance()->loadRequest(
+            auto requestAfter = ReviewableRequestHelperLegacy::Instance()->loadRequest(
                 requestID, account.key.getPublicKey(),
                 ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
             REQUIRE(requestAfter);
@@ -237,14 +237,14 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                     account, 0, account.key.getPublicKey(), tokenOwnerRoleID, kycData);
             requestID = createUpdateKYCRequestResult.success().requestID;
             auto requesBefore =
-                ReviewableRequestHelper::Instance()->loadRequest(
+                ReviewableRequestHelperLegacy::Instance()->loadRequest(
                     requestID, account.key.getPublicKey(),
                     ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
             REQUIRE(requesBefore);
             changeRoleRequestHelper.applyCreateChangeRoleRequest(account, requestID,
                   account.key.getPublicKey(), tokenOwnerRoleID, kycData, nullptr);
             auto requesAfter =
-                ReviewableRequestHelper::Instance()->loadRequest(
+                ReviewableRequestHelperLegacy::Instance()->loadRequest(
                     requestID, account.key.getPublicKey(),
                     ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
             REQUIRE(requesAfter);
@@ -288,7 +288,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
             manageAccountRoleTestHelper.applyTx(master, removeAccountRoleOp);
 
             requestID = createUpdateKYCRequestResult.success().requestID;
-            auto request = ReviewableRequestHelper::Instance()->loadRequest(
+            auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
                 requestID, account.key.getPublicKey(),
                 ReviewableRequestType::CHANGE_ROLE, testManager->getDB());
 

@@ -67,7 +67,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         auto& db = storageHelper.getDatabase();
         auto delta = storageHelper.getLedgerDelta();
 
-        auto requestFrame = ReviewableRequestHelper::Instance()->loadRequest(
+        auto requestFrame = ReviewableRequestHelperLegacy::Instance()->loadRequest(
                 mManageSaleOp.data.updateSaleDetailsData().requestID, getSourceID(),
                 ReviewableRequestType::UPDATE_SALE_DETAILS, db, delta);
 
@@ -86,7 +86,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
         requestFrame->setTasks(requestEntry.tasks.allTasks);
 
         requestFrame->recalculateHashRejectReason();
-        ReviewableRequestHelper::Instance()->storeChange(*delta, db, requestFrame->mEntry);
+        ReviewableRequestHelperLegacy::Instance()->storeChange(*delta, db, requestFrame->mEntry);
 
         bool fulfilled = false;
         if (getSourceID() == app.getAdminID()) {
@@ -113,7 +113,7 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 
         auto reference = getUpdateSaleDetailsRequestReference();
         auto const referencePtr = xdr::pointer<string64>(new string64(reference));
-        auto requestHelper = ReviewableRequestHelper::Instance();
+        auto requestHelper = ReviewableRequestHelperLegacy::Instance();
         if (requestHelper->isReferenceExist(db, getSourceID(), reference)) {
             innerResult().code(ManageSaleResultCode::UPDATE_DETAILS_REQUEST_ALREADY_EXISTS);
             return false;

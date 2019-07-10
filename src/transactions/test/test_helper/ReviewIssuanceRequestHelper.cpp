@@ -24,7 +24,7 @@ namespace txtest
 ReviewIssuanceChecker::ReviewIssuanceChecker(
     const TestManager::pointer& testManager, const uint64_t requestID) : ReviewChecker(testManager)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     if (!request || request->getType() != ReviewableRequestType::CREATE_ISSUANCE) {
         return;
@@ -130,7 +130,7 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t req
 
     ReviewRequestResult ReviewIssuanceRequestHelper::applyReviewRequestTx(Account & source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     REQUIRE(request);
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);

@@ -11,10 +11,10 @@ class ReviewIssuanceCreationRequestOpFrame : public ReviewRequestOpFrame {
                              std::vector<SignerRequirement>& result) const override;
 
 protected:
-    bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                        ReviewableRequestFrame::pointer request) override;
 
-    bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
     bool tryAddStatsV2(StatisticsV2Processor& statisticsV2Processor,
                        AccountFrame::pointer accountFrame, BalanceFrame::pointer balance,
@@ -27,7 +27,7 @@ protected:
                        uint64_t amountToAdd,
                        uint64_t& universalAmount);
 
-    uint32_t getSystemTasksToAdd(Application& app, Database& db, LedgerDelta& delta, LedgerManager& ledgerManager,
+    uint32_t getSystemTasksToAdd(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                                  ReviewableRequestFrame::pointer request);
 
 public:

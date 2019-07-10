@@ -71,7 +71,7 @@ CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest 
         return assetFrame;
     }
 
-    auto assetCreationRequests = ReviewableRequestHelper::Instance()->loadRequests(source, ReviewableRequestType::CREATE_ASSET, db);
+    auto assetCreationRequests = ReviewableRequestHelperLegacy::Instance()->loadRequests(source, ReviewableRequestType::CREATE_ASSET, db);
     for (auto assetCreationRequestFrame : assetCreationRequests)
     {
         auto& assetCreationRequest = assetCreationRequestFrame->getRequestEntry().body.assetCreationRequest();
@@ -268,7 +268,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     }
 
     auto& db = storageHelper.getDatabase();
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, request->mEntry);
+    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, request->mEntry);
 
     bool fulfilled = false;
     uint64 saleID = 0;
@@ -303,7 +303,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto requestFrame = ReviewableRequestHelper::Instance()->loadRequest(mCreateSaleCreationRequest.requestID, getSourceID(), db, &delta);
+    const auto requestFrame = ReviewableRequestHelperLegacy::Instance()->loadRequest(mCreateSaleCreationRequest.requestID, getSourceID(), db, &delta);
     if (!requestFrame || requestFrame->getType() != ReviewableRequestType::CREATE_SALE)
     {
         innerResult().code(
@@ -324,7 +324,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
         return false;
     }
 
-    ReviewableRequestHelper::Instance()->storeChange(delta, db, requestFrame->mEntry);
+    ReviewableRequestHelperLegacy::Instance()->storeChange(delta, db, requestFrame->mEntry);
 
     innerResult().code(CreateSaleCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();

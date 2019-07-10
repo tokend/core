@@ -24,7 +24,7 @@ bool
 CancelPollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                    std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
             mCancelPollRequestData.requestID, storageHelper.getDatabase());
     if (!request || (request->getType() != ReviewableRequestType::CREATE_POLL))
     {
@@ -55,7 +55,7 @@ CancelPollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     Database& db = storageHelper.getDatabase();
 
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
     auto requestFrame = requestHelper->loadRequest(mCancelPollRequestData.requestID,
             getSourceID(), ReviewableRequestType::CREATE_POLL, db, &delta);
     if (!requestFrame)
@@ -64,7 +64,7 @@ CancelPollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
         return false;
     }
 
-    ReviewableRequestHelper::Instance()->storeDelete(delta, db, requestFrame->getKey());
+    ReviewableRequestHelperLegacy::Instance()->storeDelete(delta, db, requestFrame->getKey());
 
     return true;
 }

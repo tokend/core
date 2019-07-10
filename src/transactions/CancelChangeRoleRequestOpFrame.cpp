@@ -7,25 +7,25 @@ namespace stellar
 using xdr::operator==;
 
 CancelChangeRoleRequestOpFrame::CancelChangeRoleRequestOpFrame(
-        const stellar::Operation &op,
-        stellar::OperationResult &res,
-        stellar::TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx),
-        mCancelChangeRoleRequest(mOperation.body.cancelChangeRoleRequestOp())
+    const stellar::Operation& op,
+    stellar::OperationResult& res,
+    stellar::TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx),
+      mCancelChangeRoleRequest(mOperation.body.cancelChangeRoleRequestOp())
 {
 }
 
 bool
-CancelChangeRoleRequestOpFrame::tryGetOperationConditions(stellar::StorageHelper &storageHelper,
-                                                          std::vector<stellar::OperationCondition> &result) const
+CancelChangeRoleRequestOpFrame::tryGetOperationConditions(stellar::StorageHelper& storageHelper,
+                                                          std::vector<stellar::OperationCondition>& result) const
 {
     // only request creator can remove it
     return true;
 }
 
 bool
-CancelChangeRoleRequestOpFrame::tryGetSignerRequirements(stellar::StorageHelper &storageHelper,
-                                                         std::vector<stellar::SignerRequirement> &result) const
+CancelChangeRoleRequestOpFrame::tryGetSignerRequirements(stellar::StorageHelper& storageHelper,
+                                                         std::vector<stellar::SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CHANGE_ROLE);
@@ -39,22 +39,21 @@ CancelChangeRoleRequestOpFrame::tryGetSignerRequirements(stellar::StorageHelper 
 }
 
 bool
-CancelChangeRoleRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+CancelChangeRoleRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                         LedgerManager& ledgerManager)
 {
     auto const requestID = mCancelChangeRoleRequest.requestID;
-    auto& db = ledgerManager.getDatabase();
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    auto requestFrame = requestHelper->loadRequest(requestID, getSourceID(),
-                                                   ReviewableRequestType::CHANGE_ROLE, db, &delta);
+    auto requestFrame = requestHelper.loadRequest(requestID, getSourceID(),
+                                                  ReviewableRequestType::CHANGE_ROLE);
     if (!requestFrame)
     {
         innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
         return false;
     }
 
-    requestHelper->storeDelete(delta, db, requestFrame->getKey());
+    requestHelper.storeDelete(requestFrame->getKey());
 
     innerResult().code(CancelChangeRoleRequestResultCode::SUCCESS);
     return true;
@@ -63,7 +62,8 @@ CancelChangeRoleRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 bool
 CancelChangeRoleRequestOpFrame::doCheckValid(Application& app)
 {
-    if (mCancelChangeRoleRequest.requestID == 0) {
+    if (mCancelChangeRoleRequest.requestID == 0)
+    {
         innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_ID_INVALID);
         return false;
     }
