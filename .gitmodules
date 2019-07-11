@@ -7,3 +7,6 @@
 [submodule "lib/libmedida"]
 	path = lib/libmedida
 	url = https://gitlab.com/tokend/medida.git
+[submodule "lib/cpp-serialize"]
+	path = lib/cpp-serialize
+	url = git@gitlab.com:distributed_lab/cpp-serialize
