@@ -8,7 +8,6 @@
 #include <xdrpp/types.h>
 
 #include "xdr/ledger-keys.h"
-#include "xdr/ledger-entries-reviewable-request.h"
 
 namespace stellar {
 

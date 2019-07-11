@@ -58,13 +58,5 @@ file(GLOB STELLAR_CORE_SOURCE_FILES **/*.cpp **/**/*.cpp **/**/**/*.cpp)
 #create executeble file "core"
 add_executable(core ${STELLAR_CORE_SOURCE_FILES} ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES} ${MOCKS_FILES})
 
-# just build xdr files before build core
-file(GLOB xdrs_files
-        "${CMAKE_CURRENT_SOURCE_DIR}/xdr/*.h"
-        "${CMAKE_CURRENT_SOURCE_DIR}/xdr/*.cpp"
-        )
-add_custom_target(xdrs ${xdrs_files})
-add_dependencies(core xdrs)
-
 #link libs
 include(platform_libs.cmake)

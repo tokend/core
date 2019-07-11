@@ -30,6 +30,7 @@ enum class LedgerVersion : std::int32_t {
   FIX_SIGNER_CHANGES_REMOVE = 17,
   FIX_DEPOSIT_STATS = 18,
   FIX_CREATE_KYC_RECOVERY_PERMISSIONS = 19,
+  CLEAR_DATABASE_CACHE = 20,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerVersion>
@@ -79,6 +80,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       return "FIX_DEPOSIT_STATS";
     case ::stellar::LedgerVersion::FIX_CREATE_KYC_RECOVERY_PERMISSIONS:
       return "FIX_CREATE_KYC_RECOVERY_PERMISSIONS";
+    case ::stellar::LedgerVersion::CLEAR_DATABASE_CACHE:
+      return "CLEAR_DATABASE_CACHE";
     default:
       return nullptr;
     }
@@ -104,7 +107,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       (int32_t)::stellar::LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE,
       (int32_t)::stellar::LedgerVersion::FIX_SIGNER_CHANGES_REMOVE,
       (int32_t)::stellar::LedgerVersion::FIX_DEPOSIT_STATS,
-      (int32_t)::stellar::LedgerVersion::FIX_CREATE_KYC_RECOVERY_PERMISSIONS
+      (int32_t)::stellar::LedgerVersion::FIX_CREATE_KYC_RECOVERY_PERMISSIONS,
+      (int32_t)::stellar::LedgerVersion::CLEAR_DATABASE_CACHE
     };
     return _xdr_enum_vec;
   }

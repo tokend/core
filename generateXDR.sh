@@ -18,5 +18,5 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-#docker pull registry.gitlab.com/tokend/xdrgen-docker
-docker run --rm -v $PWD/src/xdr:/opt/generated xdrgen-docker-local c++ $1
+docker pull registry.gitlab.com/tokend/xdrgen-docker:ee57633df7911b7ecfba99c96326ddff81a30d63
+docker run --rm -v $PWD/src/xdr:/opt/generated registry.gitlab.com/tokend/xdrgen-docker:ee57633df7911b7ecfba99c96326ddff81a30d63 c++ $1
