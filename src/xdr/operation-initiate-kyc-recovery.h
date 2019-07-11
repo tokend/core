@@ -7,6 +7,8 @@
 
 #include <xdrpp/types.h>
 
+#include "xdr/types.h"
+
 namespace stellar {
 
 struct InitiateKYCRecoveryOp  : xdr::xdr_abstract {

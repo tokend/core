@@ -8,6 +8,7 @@
 #include <xdrpp/types.h>
 
 #include "xdr/types.h"
+#include "xdr/resource-account-rule.h"
 
 namespace stellar {
 

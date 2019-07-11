@@ -369,7 +369,7 @@ struct CancelChangeRoleRequestResult : xdr::xdr_abstract {
 private:
   _xdr_case_type code_;
   union {
-    CancelSaleCreationSuccess success_;
+    CancelChangeRoleSuccess success_;
   };
 
 public:
@@ -403,7 +403,7 @@ public:
       code_ = which;switch (code_)
 {
       case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-new(&success_) CancelSaleCreationSuccess{};
+new(&success_) CancelChangeRoleSuccess{};
 break;
       default:
         break;
@@ -417,7 +417,7 @@ break;
     switch (code_)
 {
     case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-new(&success_) CancelSaleCreationSuccess{};
+new(&success_) CancelChangeRoleSuccess{};
 break;
     default:
       break;
@@ -428,7 +428,7 @@ break;
     switch (code_)
 {
     case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-new(&success_) CancelSaleCreationSuccess(source.success_);
+new(&success_) CancelChangeRoleSuccess(source.success_);
 break;
     default:
       break;
@@ -439,7 +439,7 @@ break;
     switch (code_)
 {
     case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-new(&success_) CancelSaleCreationSuccess(std::move(source.success_));
+new(&success_) CancelChangeRoleSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -450,7 +450,7 @@ break;
 switch (code_)
 {
   case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-success_.~CancelSaleCreationSuccess();
+success_.~CancelChangeRoleSuccess();
 break;
   default:
     break;
@@ -474,7 +474,7 @@ else {this->~CancelChangeRoleRequestResult();
 switch (code_)
 {
     case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-new(&success_) CancelSaleCreationSuccess(source.success_);
+new(&success_) CancelChangeRoleSuccess(source.success_);
 break;
     default:
       break;
@@ -499,7 +499,7 @@ else {this->~CancelChangeRoleRequestResult();
 switch (code_)
 {
     case (int32_t)CancelChangeRoleRequestResultCode::SUCCESS:
-new(&success_) CancelSaleCreationSuccess(std::move(source.success_));
+new(&success_) CancelChangeRoleSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -514,12 +514,12 @@ break;
     return *this;
   }
 
-  CancelSaleCreationSuccess &success() {
+  CancelChangeRoleSuccess &success() {
     if (_xdr_field_number(code_) == 1)
       return success_;
     throw xdr::xdr_wrong_union("CancelChangeRoleRequestResult: success accessed when not selected");
   }
-  const CancelSaleCreationSuccess &success() const {
+  const CancelChangeRoleSuccess &success() const {
     if (_xdr_field_number(code_) == 1)
       return success_;
     throw xdr::xdr_wrong_union("CancelChangeRoleRequestResult: success accessed when not selected");
