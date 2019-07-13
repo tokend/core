@@ -15,6 +15,7 @@
 * Ledger changes after removing signer and signer role
 * Statistics calculation for deposit stats op type
 * Create KYC recovery request permissions
+* Panic on horizon (not found reviewable request in ledger changes)
 
 ## 3.5.0
 
