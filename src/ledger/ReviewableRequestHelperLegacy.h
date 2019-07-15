@@ -39,7 +39,6 @@ namespace stellar
         EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
         uint64_t countObjects(soci::session& sess) override;
 
-        void loadRequests(StatementContext & prep, std::function<void(LedgerEntry const&)> requestsProcessor);
 
         ReviewableRequestFrame::pointer loadRequest(uint64 requestID, Database& db, LedgerDelta* delta = nullptr);
         ReviewableRequestFrame::pointer loadRequest(AccountID& requestor, string64 reference,
@@ -62,9 +61,5 @@ namespace stellar
     private:
         ReviewableRequestHelperLegacy() { ; }
         ~ReviewableRequestHelperLegacy() { ; }
-
-        void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert, LedgerEntry const& entry);
-
-        std::string obtainSqlRequestIDsString(std::vector<uint64_t> requestIDs);
     };
 }
