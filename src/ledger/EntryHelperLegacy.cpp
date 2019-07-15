@@ -4,7 +4,7 @@
 
 #include "ledger/EntryHelper.h"
 #include "LedgerManager.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/AccountHelper.h"
 #include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
@@ -20,7 +20,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/OfferFrame.h"
 #include "ledger/OfferHelper.h"
@@ -169,7 +169,7 @@ void EntryHelperProvider::dropAll(Database& db)
 }
 
 EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
-    {LedgerEntryType::ACCOUNT,                               AccountHelperLegacy::Instance()},
+    {LedgerEntryType::ACCOUNT,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT)},
     {LedgerEntryType::ACCOUNT_LIMITS,                        AccountLimitsHelper::Instance()},
     {LedgerEntryType::ASSET,                                 AssetHelperLegacy::Instance()},
     {LedgerEntryType::ASSET_PAIR,                            AssetPairHelper::Instance()},
@@ -178,7 +178,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::FEE,                                   FeeHelper::Instance()},
     {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
     {LedgerEntryType::REFERENCE_ENTRY,                       ReferenceHelper::Instance()},
-    {LedgerEntryType::REVIEWABLE_REQUEST,                    ReviewableRequestHelperLegacy::Instance()},
+    {LedgerEntryType::REVIEWABLE_REQUEST,                    EntryHelperLegacyImpl::Instance(LedgerEntryType::REVIEWABLE_REQUEST)},
     {LedgerEntryType::STATISTICS,                            StatisticsHelper::Instance()},
     {LedgerEntryType::KEY_VALUE,                             KeyValueHelperLegacy::Instance()},
     {LedgerEntryType::ACCOUNT_KYC,                           AccountKYCHelper::Instance()},

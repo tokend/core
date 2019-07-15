@@ -10,31 +10,32 @@
 namespace stellar
 {
 
-class CreateAssetOpFrame : public ManageAssetOpFrame
-{
+class CreateAssetOpFrame : public ManageAssetOpFrame {
 
-	AssetCreationRequest const& mAssetCreationRequest;
+    AssetCreationRequest const& mAssetCreationRequest;
 
-	// Returns update already existing request from db
-	// if fails to load request, returns nullptr
-	ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta) const;
+    // Returns update already existing request from db
+    // if fails to load request, returns nullptr
+    ReviewableRequestFrame::pointer
+    getUpdatedOrCreateReviewableRequest(Application& app, StorageHelper& storageHelper) const;
 
-	bool
-	tryGetOperationConditions(StorageHelper& storageHelper,
-							  std::vector<OperationCondition>& result) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
-	bool
-	tryGetSignerRequirements(StorageHelper& storageHelper,
-							 std::vector<SignerRequirement>& result) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
-	bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
-	void updateRequest(ReviewableRequestEntry &requestEntry);
+    bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
+
+    void updateRequest(ReviewableRequestEntry& requestEntry);
 
 public:
     CreateAssetOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
+                       TransactionFrame& parentTx);
 
-    bool doApply(Application& app, StorageHelper &storageHelper,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;

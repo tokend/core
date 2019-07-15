@@ -5,7 +5,7 @@
 #include "ReviewPreIssuanceRequestHelper.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 
 

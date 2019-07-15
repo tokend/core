@@ -10,7 +10,7 @@
 #include "main/Application.h"
 #include "xdrpp/printer.h"
 #include "ReviewRequestHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
@@ -205,9 +205,13 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd(Application& 
 {
     // shield outer scope of any side effects by using
     // a sql transaction for ledger state and LedgerDelta
-    auto& innerHelper = *storageHelper.startNestedTransaction();
-    innerHelper.begin();
-    auto& assetHelper = innerHelper.getAssetHelper();
+    LedgerDeltaImpl localDeltaImpl(storageHelper.mustGetLedgerDelta());
+    LedgerDelta& localDelta = localDeltaImpl;
+    StorageHelperImpl storageHelperImpl(storageHelper.getDatabase(), &localDelta);
+    StorageHelper& localHelper = storageHelperImpl;
+    localHelper.begin();
+
+    auto& assetHelper = localHelper.getAssetHelper();
 
     request->checkRequestType(ReviewableRequestType::CREATE_ISSUANCE);
     auto& requestEntry = request->getRequestEntry();
@@ -217,8 +221,8 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd(Application& 
     uint32_t allTasks = 0;
 
     uint64_t universalAmount = 0;
-    auto& balanceHelper = innerHelper.getBalanceHelper();
-    auto& accountHelper = innerHelper.getAccountHelper();
+    auto& balanceHelper = localHelper.getBalanceHelper();
+    auto& accountHelper = localHelper.getAccountHelper();
 
     auto balanceFrame = balanceHelper.mustLoadBalance(issuanceRequest.receiver);
     auto accountFrame = accountHelper.mustLoadAccount(balanceFrame->getAccountID());
@@ -232,16 +236,15 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd(Application& 
         requestEntry.tasks.pendingTasks &= ~CreateIssuanceRequestOpFrame::INSUFFICIENT_AVAILABLE_FOR_ISSUANCE_AMOUNT;
     }
 
-    auto& db = innerHelper.getDatabase();
-    auto& delta = innerHelper.mustGetLedgerDelta();
+    auto& db = localHelper.getDatabase();
     if (!ledgerManager.shouldUse(LedgerVersion::FIX_DEPOSIT_STATS))
     {
-        BalanceManager balanceManager(app, innerHelper);
+        BalanceManager balanceManager(app, localHelper);
         balanceFrame = balanceManager.loadOrCreateBalance(requestEntry.requestor, issuanceRequest.asset);
         accountFrame = mSourceAccount;
     }
 
-    if (!addStatistics(innerHelper, ledgerManager,
+    if (!addStatistics(localHelper, ledgerManager,
                        accountFrame,
                        balanceFrame, issuanceRequest.amount,
                        universalAmount))
@@ -255,10 +258,10 @@ uint32_t ReviewIssuanceCreationRequestOpFrame::getSystemTasksToAdd(Application& 
 
     if (allTasks == 0)
     {
-        innerHelper.commit();
+        localHelper.commit();
         return allTasks;
     }
-    innerHelper.rollback();
+
     return allTasks;
 }
 }

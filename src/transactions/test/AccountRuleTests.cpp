@@ -1,6 +1,5 @@
 #include "TxTests.h"
 #include "crypto/SHA.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -43,9 +42,9 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Successful creation")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
+            0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
         auto createRuleResult = manageAccountRuleTestHelper.applyTx(
-                master, ruleEntry, ManageAccountRuleAction::CREATE);
+            master, ruleEntry, ManageAccountRuleAction::CREATE);
 
         ruleEntry.id = createRuleResult.success().ruleID;
 
@@ -64,13 +63,13 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
         SECTION("cannot delete cause of role use rule")
         {
             auto creationRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
-                    "{}", {ruleEntry.id});
+                "{}", {ruleEntry.id});
             manageAccountRoleTestHelper.applyTx(master, creationRoleOp);
 
             auto result = manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                                ManageAccountRuleAction::REMOVE,
-                                                ManageAccountRuleResultCode::RULE_IS_USED,
-                                                TransactionResultCode::txFAILED);
+                                                              ManageAccountRuleAction::REMOVE,
+                                                              ManageAccountRuleResultCode::RULE_IS_USED,
+                                                              TransactionResultCode::txFAILED);
 
             REQUIRE(result.roleIDs().size() == 1);
             REQUIRE(result.roleIDs()[0] == ruleEntry.id);
@@ -80,17 +79,17 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Rule not found when trying to delete it")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
+            228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
         manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                        ManageAccountRuleAction::REMOVE,
-                                        ManageAccountRuleResultCode::NOT_FOUND,
-                                        TransactionResultCode::txFAILED);
+                                            ManageAccountRuleAction::REMOVE,
+                                            ManageAccountRuleResultCode::NOT_FOUND,
+                                            TransactionResultCode::txFAILED);
     }
 
     SECTION("Rule not found for update")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-                228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
+            228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
         manageAccountRuleTestHelper.applyTx(master, ruleEntry,
                                             ManageAccountRuleAction::UPDATE,
                                             ManageAccountRuleResultCode::NOT_FOUND,

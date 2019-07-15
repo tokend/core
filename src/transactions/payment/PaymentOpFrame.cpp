@@ -2,31 +2,29 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
-#include <ledger/AccountHelperLegacy.h>
-#include <ledger/AssetHelperLegacy.h>
-#include <ledger/AssetPairHelper.h>
-#include <ledger/BalanceHelperLegacy.h>
-#include <ledger/FeeHelper.h>
-#include <ledger/LedgerHeaderFrame.h>
-#include <ledger/ReferenceHelper.h>
-#include <ledger/BalanceHelper.h>
-#include <ledger/AssetHelper.h>
-#include <ledger/AccountHelper.h>
+#include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/AssetPairHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/FeeHelper.h"
+#include "ledger/LedgerHeaderFrame.h"
+#include "ledger/ReferenceHelper.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
 using namespace std;
 using xdr::operator==;
 
-PaymentOpFrame::PaymentOpFrame(const stellar::Operation &op, OperationResult &res,
-                               TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx), mPayment(mOperation.body.paymentOp())
+PaymentOpFrame::PaymentOpFrame(const stellar::Operation& op, OperationResult& res,
+                               TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mPayment(mOperation.body.paymentOp())
 {
 }
 
 bool
 PaymentOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                    std::vector<OperationCondition>& result) const
+                                          std::vector<OperationCondition>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto senderBalanceFrame = balanceHelper.loadBalance(mPayment.sourceBalanceID);
@@ -57,8 +55,8 @@ PaymentOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 }
 
 bool
-PaymentOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                    std::vector<SignerRequirement> &result) const
+PaymentOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto balanceFrame = balanceHelper.mustLoadBalance(mPayment.sourceBalanceID);
@@ -76,7 +74,7 @@ PaymentOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 }
 
 AccountFrame::pointer
-PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
+PaymentOpFrame::tryLoadDestinationAccount(StorageHelper& storageHelper) const
 {
     AccountID accountID;
     switch (mPayment.destination.type())
@@ -117,7 +115,7 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper &storageHelper) const
 bool
 PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::pointer payer,
                                 BalanceFrame::pointer from, BalanceFrame::pointer to,
-                                uint64_t amount, uint64_t &universalAmount, LedgerManager& lm)
+                                uint64_t amount, uint64_t& universalAmount, LedgerManager& lm)
 {
     auto transferResult = balanceManager.transfer(payer, from, to, amount);
     if (transferResult != BalanceManager::Result::SUCCESS)
@@ -126,7 +124,7 @@ PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::po
         return false;
     }
 
-    if (!lm.shouldUse(LedgerVersion::FIX_PAYMENT_RESULT))
+    if (!lm.shouldUse(LedgerVersion::FIX_PAYMENT_STATS))
     {
         if (!safeSum(universalAmount, balanceManager.getUniversalAmount(), universalAmount))
         {
@@ -140,8 +138,8 @@ PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::po
 
 bool
 PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
-        AccountFrame::pointer payer, BalanceFrame::pointer chargeFrom,
-        Fee expectedFee, Fee actualFee,uint64_t &universalAmount, LedgerManager& lm)
+                                   AccountFrame::pointer payer, BalanceFrame::pointer chargeFrom,
+                                   Fee expectedFee, Fee actualFee, uint64_t& universalAmount, LedgerManager& lm)
 {
     if ((actualFee.fixed == 0) && (actualFee.percent == 0))
     {
@@ -158,7 +156,7 @@ PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
     if (!safeSum(actualFee.fixed, actualFee.percent, totalFee))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
+            << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
         throw std::runtime_error("Total sum of fees to be charged overflows");
     }
 
@@ -196,7 +194,7 @@ PaymentOpFrame::setErrorCode(BalanceManager::Result transferResult)
 
 BalanceFrame::pointer
 PaymentOpFrame::tryLoadDestinationBalance(AssetCode asset,
-        StorageHelper& storageHelper, Application& app)
+                                          StorageHelper& storageHelper, Application& app)
 {
     switch (mPayment.destination.type())
     {
@@ -233,190 +231,216 @@ PaymentOpFrame::tryLoadDestinationBalance(AssetCode asset,
     }
 }
 
-    bool PaymentOpFrame::isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db) {
-        if (from->getAsset() != to->getAsset())
-        {
-            innerResult().code(PaymentResultCode::BALANCE_ASSETS_MISMATCHED);
-            return false;
-        }
-
-        // is transfer allowed by asset policy
-        auto asset = AssetHelperLegacy::Instance()->mustLoadAsset(from->getAsset(), db);
-        if (!asset->isPolicySet(AssetPolicy::TRANSFERABLE)) {
-            innerResult().code(PaymentResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
-            return false;
-        }
-
-        return true;
+bool
+PaymentOpFrame::isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, StorageHelper& storageHelper)
+{
+    if (from->getAsset() != to->getAsset())
+    {
+        innerResult().code(PaymentResultCode::BALANCE_ASSETS_MISMATCHED);
+        return false;
     }
 
-    Fee
-    PaymentOpFrame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
-                                   PaymentFeeType feeType, Database &db, LedgerManager& lm) {
-        Fee actualFee;
-        actualFee.percent = 0;
-        actualFee.fixed = 0;
-        auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
-                                                              static_cast<int64_t>(feeType),
-                                                              accountFrame, amount, db);
-        // if we do not have any fee frame - any fee is valid
-        if (!feeFrame) {
-            return actualFee;
-        }
+    // is transfer allowed by asset policy
+    auto asset = storageHelper.
+        getAssetHelper().
+        mustLoadAsset(from->getAsset());
+    if (!asset->isPolicySet(AssetPolicy::TRANSFERABLE))
+    {
+        innerResult().code(PaymentResultCode::NOT_ALLOWED_BY_ASSET_POLICY);
+        return false;
+    }
 
-        const uint64_t feeMinimumAmount = AssetHelperLegacy::Instance()->mustLoadAsset(transferAsset, db)->getMinimumAmount();
-        if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP, feeMinimumAmount)) {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
-                                                   << feeFrame->getFeeAsset();
-            throw std::runtime_error("Failed to calculate actual payment fee - overflow");
-        }
+    return true;
+}
 
-        actualFee.fixed = static_cast<uint64>(feeFrame->getFee().fixedFee);
+Fee
+PaymentOpFrame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const& transferAsset, uint64_t amount,
+                             PaymentFeeType feeType, StorageHelper& storageHelper, LedgerManager& lm)
+{
+    Fee actualFee;
+    actualFee.percent = 0;
+    actualFee.fixed = 0;
+    auto& db = storageHelper.getDatabase();
+    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
+                                                          static_cast<int64_t>(feeType),
+                                                          accountFrame, amount, db);
+    // if we do not have any fee frame - any fee is valid
+    if (!feeFrame)
+    {
         return actualFee;
     }
 
-    bool
-    PaymentOpFrame::isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID)
+    const uint64_t feeMinimumAmount = storageHelper.
+            getAssetHelper().
+            mustLoadAsset(transferAsset)
+        ->getMinimumAmount();
+    if (!feeFrame->calculatePercentFee(amount, actualFee.percent, ROUND_UP, feeMinimumAmount))
     {
-        return sourceBalanceID == destBalanceID;
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate actual payment fee - overflow, asset code: "
+                                               << feeFrame->getFeeAsset();
+        throw std::runtime_error("Failed to calculate actual payment fee - overflow");
     }
 
-    bool
-    PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
-                            LedgerManager& ledgerManager)
+    actualFee.fixed = static_cast<uint64>(feeFrame->getFee().fixedFee);
+    return actualFee;
+}
+
+bool
+PaymentOpFrame::isSendToSelf(LedgerManager& lm, BalanceID sourceBalanceID, BalanceID destBalanceID)
+{
+    return sourceBalanceID == destBalanceID;
+}
+
+bool
+PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                        LedgerManager& ledgerManager)
+{
+    Database& db = storageHelper.getDatabase();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto sourceBalance = balanceHelper.loadBalance(mPayment.sourceBalanceID, getSourceID());
+    if (!sourceBalance)
     {
-        Database& db = storageHelper.getDatabase();
-        LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-        auto sourceBalance = BalanceHelperLegacy::Instance()->loadBalance(
-            getSourceID(), mPayment.sourceBalanceID, db, &delta);
-        if (!sourceBalance)
-        {
-            innerResult().code(PaymentResultCode::SRC_BALANCE_NOT_FOUND);
-            return false;
-        }
-
-        auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), storageHelper, app);
-        if (!destBalance) {
-            return false;
-        }
-
-        BalanceID destBalanceID = destBalance->getBalanceID();
-
-        if (isSendToSelf(ledgerManager, mPayment.sourceBalanceID, destBalanceID))
-        {
-            innerResult().code(PaymentResultCode::MALFORMED);
-            return false;
-        }
-
-        if (!isTransferAllowed(sourceBalance, destBalance, db)) {
-            return false;
-        }
-
-        uint64_t sourceSentUniversal = 0;
-
-        BalanceManager balanceManager(app, storageHelper);
-
-        if (!processTransfer(balanceManager, mSourceAccount, sourceBalance, destBalance,
-                mPayment.amount, sourceSentUniversal, ledgerManager))
-        {
-            return false;
-        }
-
-        auto sourceFee = getActualFee(mSourceAccount, sourceBalance->getAsset(), mPayment.amount,
-                                      PaymentFeeType::OUTGOING, db, ledgerManager);
-
-        if (!processTransferFee(balanceManager, mSourceAccount, sourceBalance,
-                mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager))
-        {
-            return false;
-        }
-
-        auto destAccount = AccountHelperLegacy::Instance()->mustLoadAccount(destBalance->getAccountID(), db);
-        auto destFee = getActualFee(destAccount, destBalance->getAsset(), mPayment.amount, PaymentFeeType::INCOMING,
-                                    db, ledgerManager);
-
-        if (!(app.getAdminID() == getSourceID())) {
-            auto destFeePayer = destAccount;
-            auto destFeePayerBalance = destBalance;
-            if (mPayment.feeData.sourcePaysForDest) {
-                destFeePayer = mSourceAccount;
-                destFeePayerBalance = sourceBalance;
-            }
-
-            uint64_t destFeeUniversalAmount = 0;
-
-            if (!processTransferFee(balanceManager, destFeePayer, destFeePayerBalance,
-                    mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager))
-            {
-                return false;
-            }
-
-            if (mPayment.feeData.sourcePaysForDest)
-                sourceSentUniversal += destFeeUniversalAmount;
-        }
-
-        uint64 paymentID = delta.getHeaderFrame().generateID(LedgerEntryType::PAYMENT_REQUEST);
-
-        if (!mPayment.reference.empty()) {
-            AccountID sourceAccountID = mSourceAccount->getID();
-
-            if (ReferenceHelper::Instance()->exists(db, mPayment.reference, sourceAccountID)) {
-                innerResult().code(PaymentResultCode::REFERENCE_DUPLICATION);
-                return false;
-            }
-        createReferenceEntry(mPayment.reference, sourceAccountID, storageHelper);
-        }
-
-        innerResult().code(PaymentResultCode::SUCCESS);
-        innerResult().paymentResponse().destination = destAccount->getID();
-        innerResult().paymentResponse().destinationBalanceID = destBalance->getBalanceID();
-        innerResult().paymentResponse().asset = destBalance->getAsset();
-        innerResult().paymentResponse().sourceSentUniversal = sourceSentUniversal;
-        innerResult().paymentResponse().paymentID = paymentID;
-        innerResult().paymentResponse().actualSourcePaymentFee = sourceFee;
-        innerResult().paymentResponse().actualDestinationPaymentFee = destFee;
-
-        return true;
+        innerResult().code(PaymentResultCode::SRC_BALANCE_NOT_FOUND);
+        return false;
     }
 
-    bool PaymentOpFrame::isDestinationFeeValid() {
-        uint64_t totalDestinationFee;
-        if (!safeSum(mPayment.feeData.destinationFee.fixed, mPayment.feeData.destinationFee.percent,
-                     totalDestinationFee)) {
-            innerResult().code(PaymentResultCode::INVALID_DESTINATION_FEE);
+    auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), storageHelper, app);
+    if (!destBalance)
+    {
+        return false;
+    }
+
+    BalanceID destBalanceID = destBalance->getBalanceID();
+
+    if (isSendToSelf(ledgerManager, mPayment.sourceBalanceID, destBalanceID))
+    {
+        innerResult().code(PaymentResultCode::MALFORMED);
+        return false;
+    }
+
+    if (!isTransferAllowed(sourceBalance, destBalance, storageHelper))
+    {
+        return false;
+    }
+
+    uint64_t sourceSentUniversal = 0;
+
+    BalanceManager balanceManager(app, storageHelper);
+
+    if (!processTransfer(balanceManager, mSourceAccount, sourceBalance, destBalance,
+                         mPayment.amount, sourceSentUniversal, ledgerManager))
+    {
+        return false;
+    }
+
+    auto sourceFee = getActualFee(mSourceAccount, sourceBalance->getAsset(), mPayment.amount,
+                                  PaymentFeeType::OUTGOING, storageHelper, ledgerManager);
+
+    if (!processTransferFee(balanceManager, mSourceAccount, sourceBalance,
+                            mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager))
+    {
+        return false;
+    }
+
+    auto destAccount = storageHelper.getAccountHelper().mustLoadAccount(destBalance->getAccountID());
+    auto destFee = getActualFee(destAccount, destBalance->getAsset(), mPayment.amount, PaymentFeeType::INCOMING,
+                                storageHelper, ledgerManager);
+
+    if (!(app.getAdminID() == getSourceID()))
+    {
+        auto destFeePayer = destAccount;
+        auto destFeePayerBalance = destBalance;
+        if (mPayment.feeData.sourcePaysForDest)
+        {
+            destFeePayer = mSourceAccount;
+            destFeePayerBalance = sourceBalance;
+        }
+
+        uint64_t destFeeUniversalAmount = 0;
+
+        if (!processTransferFee(balanceManager, destFeePayer, destFeePayerBalance,
+                                mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager))
+        {
             return false;
         }
 
         if (mPayment.feeData.sourcePaysForDest)
-            return true;
+            sourceSentUniversal += destFeeUniversalAmount;
+    }
 
-        if (mPayment.amount < totalDestinationFee) {
-            innerResult().code(PaymentResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE);
+    uint64 paymentID = delta.getHeaderFrame().generateID(LedgerEntryType::PAYMENT_REQUEST);
+
+    if (!mPayment.reference.empty())
+    {
+        AccountID sourceAccountID = mSourceAccount->getID();
+
+        if (ReferenceHelper::Instance()->exists(db, mPayment.reference, sourceAccountID))
+        {
+            innerResult().code(PaymentResultCode::REFERENCE_DUPLICATION);
             return false;
         }
+        createReferenceEntry(mPayment.reference, sourceAccountID, storageHelper);
+    }
 
+    innerResult().code(PaymentResultCode::SUCCESS);
+    innerResult().paymentResponse().destination = destAccount->getID();
+    innerResult().paymentResponse().destinationBalanceID = destBalance->getBalanceID();
+    innerResult().paymentResponse().asset = destBalance->getAsset();
+    innerResult().paymentResponse().sourceSentUniversal = sourceSentUniversal;
+    innerResult().paymentResponse().paymentID = paymentID;
+    innerResult().paymentResponse().actualSourcePaymentFee = sourceFee;
+    innerResult().paymentResponse().actualDestinationPaymentFee = destFee;
+
+    return true;
+}
+
+bool PaymentOpFrame::isDestinationFeeValid()
+{
+    uint64_t totalDestinationFee;
+    if (!safeSum(mPayment.feeData.destinationFee.fixed, mPayment.feeData.destinationFee.percent,
+                 totalDestinationFee))
+    {
+        innerResult().code(PaymentResultCode::INVALID_DESTINATION_FEE);
+        return false;
+    }
+
+    if (mPayment.feeData.sourcePaysForDest)
+        return true;
+
+    if (mPayment.amount < totalDestinationFee)
+    {
+        innerResult().code(PaymentResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE);
+        return false;
+    }
+
+    return true;
+}
+
+bool PaymentOpFrame::doCheckValid(Application& app)
+{
+    if (mPayment.reference.length() > 64)
+    {
+        innerResult().code(PaymentResultCode::MALFORMED);
+        return false;
+    }
+
+    if (!isDestinationFeeValid())
+    {
+        return false;
+    }
+
+    if (mPayment.destination.type() != PaymentDestinationType::BALANCE)
+    {
         return true;
     }
 
-    bool PaymentOpFrame::doCheckValid(Application &app) {
-        if (mPayment.reference.length() > 64) {
-            innerResult().code(PaymentResultCode::MALFORMED);
-            return false;
-        }
-
-        if (!isDestinationFeeValid()) {
-            return false;
-        }
-
-        if (mPayment.destination.type() != PaymentDestinationType::BALANCE) {
-            return true;
-        }
-
-        if (mPayment.sourceBalanceID == mPayment.destination.balanceID()) {
-            innerResult().code(PaymentResultCode::MALFORMED);
-            return false;
-        }
-
-        return true;
+    if (mPayment.sourceBalanceID == mPayment.destination.balanceID())
+    {
+        innerResult().code(PaymentResultCode::MALFORMED);
+        return false;
     }
+
+    return true;
+}
 }

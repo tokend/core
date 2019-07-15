@@ -24,7 +24,7 @@ public:
     CancelAssetRequestOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 

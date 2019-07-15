@@ -9,22 +9,21 @@
 
 namespace stellar
 {
-class DeleteSaleParticipationOpFrame : public DeleteOfferOpFrame
-{
+class DeleteSaleParticipationOpFrame : public DeleteOfferOpFrame {
 
     bool mCheckSaleState;
 public:
 
     DeleteSaleParticipationOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
+                                   TransactionFrame& parentTx);
 
     bool doCheckValid(Application& app) override;
 
-    bool doApply(Application& app, LedgerDelta& delta,
-        LedgerManager& ledgerManager) override;
+    bool doApply(Application& app, StorageHelper& storageHelper,
+                 LedgerManager& ledgerManager) override;
 
-    static void deleteSaleParticipation(Application& app, LedgerDelta& delta,
-        LedgerManager& ledgerManager, OfferFrame::pointer offer, TransactionFrame& parentTx);
+    static void deleteSaleParticipation(Application& app, StorageHelper& storageHelper,
+                                        LedgerManager& ledgerManager, OfferFrame::pointer offer, TransactionFrame& parentTx);
 
     void doNotCheckSaleState();
 

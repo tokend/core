@@ -10,23 +10,19 @@
 
 namespace stellar
 {
-class CheckSaleStateOpFrame : public OperationFrame
-{
-    enum SaleState
-    {
+class CheckSaleStateOpFrame : public OperationFrame {
+    enum SaleState {
         CLOSE = 1,
         CANCEL = 2,
         NOT_READY = 3
     };
-
-    enum TokenAction
-    {
+    enum TokenAction {
         NOTHING,
         DESTROY,
         RESTRICT
     };
 
-    static SaleState getSaleState(SaleFrame::pointer sale, Database& db, LedgerManager& lm);
+    static SaleState getSaleState(SaleFrame::pointer sale, StorageHelper& storageHelper, LedgerManager& lm);
 
     CheckSaleStateResult& innerResult()
     {
@@ -44,40 +40,46 @@ class CheckSaleStateOpFrame : public OperationFrame
                              std::vector<SignerRequirement>& result) const override;
 
     void issueBaseTokens(SaleFrame::pointer sale, AccountFrame::pointer saleOwnerAccount, Application& app,
-                        LedgerDelta& delta, Database& db, LedgerManager& lm) const;
+                         StorageHelper& storageHelper, LedgerManager& lm) const;
 
-    bool handleCancel(SaleFrame::pointer sale, LedgerManager& lm, LedgerDelta& delta, Database& db);
-    bool handleClose(SaleFrame::pointer sale, Application& app, LedgerManager& lm, LedgerDelta& delta, Database& db);
+    bool handleCancel(SaleFrame::pointer sale, StorageHelper& storageHelper, LedgerManager& lm);
 
-    CreateIssuanceRequestResult applyCreateIssuanceRequest(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,
-        LedgerDelta& delta, LedgerManager& lm) const;
+    bool handleClose(SaleFrame::pointer sale, Application& app, StorageHelper& storageHelper, LedgerManager& lm);
+
+    CreateIssuanceRequestResult
+    applyCreateIssuanceRequest(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,
+                               StorageHelper& storageHelper, LedgerManager& lm) const;
 
     FeeManager::FeeResult obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
                                                         AssetCode const& asset, int64_t amount,
                                                         LedgerManager& lm, Database& db) const;
 
-    ManageOfferSuccessResult applySaleOffer(AccountFrame::pointer saleOwner, SaleFrame::pointer sale, SaleQuoteAsset const& saleQuoteAsset, Application& app, LedgerManager& lm, LedgerDelta& delta) const;
+    ManageOfferSuccessResult
+    applySaleOffer(AccountFrame::pointer saleOwner, SaleFrame::pointer sale, SaleQuoteAsset const& saleQuoteAsset, Application& app, LedgerManager& lm, StorageHelper& storageHelper) const;
 
     // Returns true if sale was updated due to cleanup
-    bool cleanSale(SaleFrame::pointer sale, Application& app, LedgerDelta& delta, LedgerManager& ledgerManager) const;
+    bool cleanSale(SaleFrame::pointer sale, Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager) const;
 
-    void updateOfferPrices(SaleFrame::pointer sale, LedgerDelta& delta, Database& db) const;
+    void updateOfferPrices(SaleFrame::pointer sale, StorageHelper& storageHelper) const;
 
-    static int64_t getSaleCurrentPriceInDefaultQuote(SaleFrame::pointer sale, LedgerDelta& delta, Database& db);
+    static int64_t getSaleCurrentPriceInDefaultQuote(SaleFrame::pointer sale, StorageHelper& storageHelper);
 
-    void cleanupIssuerBalance(SaleFrame::pointer sale, LedgerManager& lm,  Database& db, LedgerDelta& delta, BalanceFrame::pointer balanceBefore);
+    void
+    cleanupIssuerBalance(SaleFrame::pointer sale, StorageHelper& storageHelper, LedgerManager& lm, BalanceFrame::pointer balanceBefore);
 
 public:
-
     CheckSaleStateOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
+                          TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 
     static int64_t getSalePriceForCap(int64_t const cap, SaleFrame::pointer sale);
-    static int64_t getPriceInQuoteAsset(int64_t const salePriceInDefaultQuote, SaleFrame::pointer sale, AssetCode const quoteAsset, Database& db);
+
+    static int64_t
+    getPriceInQuoteAsset(int64_t const salePriceInDefaultQuote, SaleFrame::pointer sale, AssetCode const quoteAsset, Database& db);
 
     static CheckSaleStateResultCode getInnerCode(OperationResult const& res)
     {
@@ -87,6 +89,6 @@ public:
     std::string getInnerResultCodeAsStr() override;
 
 private:
-    static uint64 getMinimumAssetAmount(const AssetCode& balance, Database& db, LedgerDelta* delta);
+    static uint64 getMinimumAssetAmount(const AssetCode& balance, StorageHelper& storageHelper);
 };
 }

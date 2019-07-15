@@ -14,6 +14,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -106,8 +107,8 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     balanceHelper.storeChange(balance->mEntry);
 
     const uint64_t totalFee = getTotalFee(request->getRequestID(), withdrawRequest);
-    AccountManager accountManager(app, db, delta, ledgerManager);
-    accountManager.transferFee(balance->getAsset(), totalFee);
+    BalanceManager balanceManager(app, storageHelper);
+    balanceManager.transferFee(balance->getAsset(), totalFee);
 
     auto& assetHelper = storageHelper.getAssetHelper();
     auto assetFrame = assetHelper.loadAsset(balance->getAsset());
@@ -206,7 +207,7 @@ ReviewWithdrawalRequestOpFrame::rejectWithdrawalRequest(Application& app, Storag
     const uint64_t universalAmount = withdrawRequest.universalAmount;
     if (universalAmount > 0)
     {
-        StatisticsV2Processor statisticsV2Processor(storageHelper.getDatabase(), storageHelper.mustGetLedgerDelta(), ledgerManager);
+        StatisticsV2Processor statisticsV2Processor(storageHelper, ledgerManager);
         statisticsV2Processor.revertStatsV2(request->getRequestID());
     }
 

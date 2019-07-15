@@ -1,11 +1,12 @@
 #include <transactions/CreateChangeRoleRequestOpFrame.h>
 #include <transactions/ManageKeyValueOpFrame.h>
-#include <ledger/KeyValueHelperLegacy.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/KeyValueHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "CreateChangeRoleRequestTestHelper.h"
 #include "ReviewChangeRoleRequestHelper.h"
 #include "test/test_marshaler.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "bucket/BucketApplicator.h"
 
 
@@ -17,12 +18,13 @@ using xdr::operator==;
 namespace txtest
 {
 CreateChangeRoleTestHelper::CreateChangeRoleTestHelper(const TestManager::pointer testManager)
-        : TxHelper(testManager)
+    : TxHelper(testManager)
 {
 }
 
 ReviewableRequestFrame::pointer
-CreateChangeRoleTestHelper::createReviewableChangeKYCRequest(ChangeRoleRequest request, uint64 requestID) {
+CreateChangeRoleTestHelper::createReviewableChangeKYCRequest(ChangeRoleRequest request, uint64 requestID)
+{
     auto referencePtr = getReference();
     auto frame = ReviewableRequestFrame::createNew(requestID, request.destinationAccount,
                                                    mTestManager->getApp().getAdminID(),
@@ -34,28 +36,32 @@ CreateChangeRoleTestHelper::createReviewableChangeKYCRequest(ChangeRoleRequest r
 }
 
 CreateChangeRoleRequestResult
-CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
+CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account& source,
                                                          uint64_t requestID,
                                                          AccountID accountToUpdateKYC,
                                                          uint64_t roleIDToSet,
                                                          longstring kycData,
                                                          uint32 *allTasks,
-                                                         CreateChangeRoleRequestResultCode expectedResultCode) {
-    auto accountHelper = AccountHelperLegacy::Instance();
-    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
+                                                         CreateChangeRoleRequestResultCode expectedResultCode)
+{
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& accountHelper = storageHelper.getAccountHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
 
-    Database &db = mTestManager->getDB();
-    auto accountBefore = accountHelper->loadAccount(accountToUpdateKYC, db);
-    auto sourceAccount = accountHelper->loadAccount(source.key.getPublicKey(), db);
+    Database& db = mTestManager->getDB();
+    auto accountBefore = accountHelper.loadAccount(accountToUpdateKYC);
+    auto sourceAccount = accountHelper.loadAccount(source.key.getPublicKey());
 
     ReviewableRequestFrame::pointer requestBeforeTx;
 
-    if (requestID != 0) {
-        requestBeforeTx = requestHelper->loadRequest(requestID, db);
+    if (requestID != 0)
+    {
+        requestBeforeTx = requestHelper.loadRequest(requestID);
     }
 
     auto txFrame = createUpdateKYCRequestTx(source, requestID,
-            accountToUpdateKYC, roleIDToSet, kycData, allTasks);
+                                            accountToUpdateKYC, roleIDToSet, kycData, allTasks);
 
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOps;
     mTestManager->applyCheck(txFrame, stateBeforeOps);
@@ -65,14 +71,16 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
 
     REQUIRE(actualResultCode == expectedResultCode);
 
-    auto accountAfter = accountHelper->loadAccount(accountToUpdateKYC, db);
+    auto accountAfter = accountHelper.loadAccount(accountToUpdateKYC);
 
     auto opResult = txResult.result.results()[0].tr().createChangeRoleRequestResult();
 
-    if (actualResultCode != CreateChangeRoleRequestResultCode::SUCCESS) {
+    if (actualResultCode != CreateChangeRoleRequestResultCode::SUCCESS)
+    {
 
-        if (requestBeforeTx) {
-            auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
+        if (requestBeforeTx)
+        {
+            auto requestAfterTx = requestHelper.loadRequest(requestID);
             auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
             auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
 
@@ -81,7 +89,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
             REQUIRE(requestAfterTxEntry.body.changeRoleRequest().accountRoleToSet ==
                     requestBeforeTxEntry.body.changeRoleRequest().accountRoleToSet);
             REQUIRE(requestAfterTxEntry.body.changeRoleRequest().creatorDetails ==
-                requestBeforeTxEntry.body.changeRoleRequest().creatorDetails);
+                    requestBeforeTxEntry.body.changeRoleRequest().creatorDetails);
             REQUIRE(requestAfterTxEntry.tasks.allTasks ==
                     requestBeforeTxEntry.tasks.allTasks);
             REQUIRE(requestAfterTxEntry.tasks.pendingTasks ==
@@ -95,13 +103,14 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
 
     requestID = opResult.success().requestID;
 
-    if (allTasks != nullptr && *allTasks == 0) {
+    if (allTasks != nullptr && *allTasks == 0)
+    {
         return checkApprovedCreation(opResult, accountToUpdateKYC, stateBeforeOps[0]);
     }
 
     REQUIRE_FALSE(opResult.success().fulfilled);
 
-    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
+    auto requestAfterTx = requestHelper.loadRequest(requestID);
     REQUIRE(requestAfterTx);
 
     auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
@@ -113,12 +122,15 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
     REQUIRE(requestAfterTxEntry.body.changeRoleRequest().accountRoleToSet == roleIDToSet);
     REQUIRE(requestAfterTxEntry.body.changeRoleRequest().creatorDetails == kycData);
 
-    if (!!allTasks) {
+    if (!!allTasks)
+    {
         REQUIRE(requestAfterTxEntry.tasks.allTasks == *allTasks);
-    } else {
+    }
+    else
+    {
         auto key = ManageKeyValueOpFrame::makeChangeRoleKey(
-                std::to_string(accountBefore->getAccountRole()), std::to_string(roleIDToSet));
-        auto kvEntry = KeyValueHelperLegacy::Instance()->loadKeyValue(key,db);
+            std::to_string(accountBefore->getAccountRole()), std::to_string(roleIDToSet));
+        auto kvEntry = keyValueHelper.loadKeyValue(key);
         REQUIRE(kvEntry);
 
         REQUIRE (kvEntry.get()->getKeyValue().value.type() == KeyValueEntryType::UINT32);
@@ -130,11 +142,14 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
     REQUIRE(requestAfterTxEntry.tasks.pendingTasks ==
             requestAfterTxEntry.tasks.allTasks);
 
-    if (requestBeforeTx) {
+    if (requestBeforeTx)
+    {
         auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
         REQUIRE(requestAfterTxEntry.body.changeRoleRequest().sequenceNumber ==
                 requestBeforeTxEntry.body.changeRoleRequest().sequenceNumber + 1);
-    } else {
+    }
+    else
+    {
         REQUIRE(requestAfterTxEntry.body.changeRoleRequest().sequenceNumber == 0);
     }
 
@@ -142,17 +157,19 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account &source,
 }
 
 TransactionFramePtr
-CreateChangeRoleTestHelper::createUpdateKYCRequestTx(Account &source, uint64_t requestID,
+CreateChangeRoleTestHelper::createUpdateKYCRequestTx(Account& source, uint64_t requestID,
                                                      AccountID accountToUpdateKYC, uint64_t roleIDToSet,
-                                                     longstring kycData, uint32 *allTasks) {
+                                                     longstring kycData, uint32 *allTasks)
+{
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_CHANGE_ROLE_REQUEST);
-    auto &op = baseOp.body.createChangeRoleRequestOp();
+    auto& op = baseOp.body.createChangeRoleRequestOp();
     op.requestID = requestID;
     op.destinationAccount = accountToUpdateKYC;
     op.accountRoleToSet = roleIDToSet;
     op.creatorDetails = kycData;
-    if (allTasks != nullptr) {
+    if (allTasks != nullptr)
+    {
         op.allTasks.activate() = *allTasks;
     }
 
@@ -162,7 +179,10 @@ CreateChangeRoleTestHelper::createUpdateKYCRequestTx(Account &source, uint64_t r
 CreateChangeRoleRequestResult
 CreateChangeRoleTestHelper::checkApprovedCreation(CreateChangeRoleRequestResult opResult,
                                                   AccountID accountToUpdateKYC,
-                                                  LedgerDelta::KeyEntryMap stateBeforeOp) {
+                                                  LedgerDelta::KeyEntryMap stateBeforeOp)
+{
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
     REQUIRE(opResult.success().fulfilled);
 
     auto stateHelper = StateBeforeTxHelper(stateBeforeOp);
@@ -171,16 +191,16 @@ CreateChangeRoleTestHelper::checkApprovedCreation(CreateChangeRoleRequestResult 
     ReviewChangeRoleRequestChecker kycRequestChecker(mTestManager);
     kycRequestChecker.checkApprove(requestFrame);
 
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(opResult.success().requestID,
-                                                                    accountToUpdateKYC,
-                                                                    ReviewableRequestType::CHANGE_ROLE,
-                                                                    mTestManager->getDB());
+    auto request = requestHelper.loadRequest(opResult.success().requestID,
+                                             accountToUpdateKYC,
+                                             ReviewableRequestType::CHANGE_ROLE);
     REQUIRE_FALSE(request);
 
     return opResult;
 }
 
-xdr::pointer<string64> CreateChangeRoleTestHelper::getReference() {
+xdr::pointer<string64> CreateChangeRoleTestHelper::getReference()
+{
     const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::CHANGE_ROLE));
     auto reference = binToHex(hash);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));

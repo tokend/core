@@ -1,6 +1,6 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ReviewRequestHelper.h"
 #include "ReviewRequestOpFrame.h"
 
@@ -28,18 +28,20 @@ ReviewRequestResult ReviewRequestHelper::tryApproveRequestWithResult(Transaction
 {
     // shield outer scope of any side effects by using
     // a StorageHelper and LedgerDelta
-    auto& innerStorageHelper = *storageHelper.startNestedTransaction();
-    innerStorageHelper.begin();
+    LedgerDeltaImpl reviewRequestDeltaImpl(storageHelper.mustGetLedgerDelta());
+    LedgerDelta& reviewRequestDelta = reviewRequestDeltaImpl;
+    StorageHelperImpl storageHelperImpl(storageHelper.getDatabase(), &reviewRequestDelta);
+    StorageHelper& localHelper = storageHelperImpl;
+    localHelper.begin();
 
-    auto helper = ReviewRequestHelper(app, ledgerManager, storageHelper, reviewableRequest);
+    auto helper = ReviewRequestHelper(app, ledgerManager, localHelper, reviewableRequest);
     auto result = helper.tryApproveRequest(parentTx);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
-        innerStorageHelper.rollback();
         return result;
     }
 
-    innerStorageHelper.commit();
+    localHelper.commit();
 
     return result;
 }

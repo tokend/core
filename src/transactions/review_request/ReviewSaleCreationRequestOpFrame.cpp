@@ -12,12 +12,12 @@
 #include "main/Application.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "xdrpp/printer.h"
-#include <ledger/AccountHelperLegacy.h>
 #include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
 #include <transactions/manage_specific_rule/CreateAccountSpecificRuleOpFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -80,9 +80,8 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
 {
     auto saleCreationRequest = getSaleCreationRequestFromBody(request);
 
-    auto& db = storageHelper.getDatabase();
     if (!CreateSaleCreationRequestOpFrame::areQuoteAssetsValid(
-        db, saleCreationRequest.quoteAssets,
+        storageHelper, saleCreationRequest.quoteAssets,
         saleCreationRequest.defaultQuoteAsset))
     {
         if (ledgerManager.shouldUse(LedgerVersion::FIX_INVEST_FEE))
@@ -113,15 +112,17 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
 
     assetHelper.storeChange(baseAsset->mEntry);
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    AccountManager accountManager(app, db, delta, ledgerManager);
+    BalanceManager balanceManager(app, storageHelper);
     const auto balances =
-        loadBalances(accountManager, request, saleCreationRequest);
+        loadBalances(balanceManager, request, saleCreationRequest);
+
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& db = storageHelper.getDatabase();
     const auto saleFrame =
         SaleFrame::createNew(saleID, baseAsset->getOwner(), saleCreationRequest,
                              balances, requiredBaseAssetForHardCap);
     SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
-    createAssetPair(saleFrame, app, ledgerManager, delta);
+    createAssetPair(saleFrame, app, ledgerManager, storageHelper);
 
     createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest, saleFrame);
 
@@ -237,7 +238,7 @@ void
 ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
                                                   Application& app,
                                                   LedgerManager& ledgerManager,
-                                                  LedgerDelta& delta) const
+                                                  StorageHelper& storageHelper) const
 {
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
@@ -267,7 +268,7 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
         assetPairOpFrame.setSourceAccountPtr(mSourceAccount);
         const auto applied =
             assetPairOpFrame.doCheckValid(app) &&
-            assetPairOpFrame.doApply(app, delta, ledgerManager);
+            assetPairOpFrame.doApply(app, storageHelper, ledgerManager);
         if (!applied)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -281,19 +282,19 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
 
 std::map<AssetCode, BalanceID>
 ReviewSaleCreationRequestOpFrame::loadBalances(
-    AccountManager& accountManager,
+    BalanceManager& balanceManager,
     const ReviewableRequestFrame::pointer request,
     SaleCreationRequest const& saleCreationRequest)
 {
     map<AssetCode, BalanceID> result;
-    const auto baseBalanceID = accountManager.loadOrCreateBalanceForAsset(
+    const auto baseBalance = balanceManager.loadOrCreateBalance(
         request->getRequestor(), saleCreationRequest.baseAsset);
-    result.insert(make_pair(saleCreationRequest.baseAsset, baseBalanceID));
+    result.insert(make_pair(saleCreationRequest.baseAsset, baseBalance->getBalanceID()));
     for (auto quoteAsset : saleCreationRequest.quoteAssets)
     {
-        const auto quoteBalanceID = accountManager.loadOrCreateBalanceForAsset(
+        const auto quoteBalance = balanceManager.loadOrCreateBalance(
             request->getRequestor(), quoteAsset.quoteAsset);
-        result.insert(make_pair(quoteAsset.quoteAsset, quoteBalanceID));
+        result.insert(make_pair(quoteAsset.quoteAsset, quoteBalance->getBalanceID()));
     }
     return result;
 }

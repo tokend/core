@@ -1,5 +1,5 @@
 #include "ReviewASwapBidRequestTestHelper.h"
-#include <ledger/ReviewableRequestHelper.h>
+#include <ledger/ReviewableRequestHelperLegacy.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include "test/test_marshaler.h"
 

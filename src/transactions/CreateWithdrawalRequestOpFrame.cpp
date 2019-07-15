@@ -4,7 +4,6 @@
 
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
@@ -140,7 +139,6 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
                                                            BalanceFrame::pointer balanceFrame,
                                                            AssetFrame::pointer assetFrame)
 {
-    auto& db = app.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
     if (!assetFrame->isPolicySet(AssetPolicy::WITHDRAWABLE))
@@ -150,7 +148,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     }
 
     auto code = assetFrame->getAsset().code;
-    if (!exceedsLowerBound(db, code))
+    if (!exceedsLowerBound(storageHelper, code))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::LOWER_BOUND_NOT_EXCEEDED);
         return nullptr;
@@ -179,7 +177,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
     requestEntry.body.withdrawalRequest().universalAmount = universalAmount;
 
     request->recalculateHashRejectReason();
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+    storageHelper.getReviewableRequestHelper().storeAdd(request->mEntry);
     storageHelper.getBalanceHelper().storeChange(balanceFrame->mEntry);
 
     if (!processStatistics(storageHelper, ledgerManager, balanceFrame,
@@ -238,7 +236,7 @@ bool CreateWithdrawalRequestOpFrame::doApply(Application& app, StorageHelper& st
     }
 
     request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(storageHelper.mustGetLedgerDelta(), db, request->mEntry);
+    storageHelper.getReviewableRequestHelper().storeChange(request->mEntry);
 
     innerResult().code(CreateWithdrawalRequestResultCode::SUCCESS);
     innerResult().success().requestID = request->getRequestID();
@@ -310,10 +308,10 @@ CreateWithdrawalRequestOpFrame::processStatistics(StorageHelper& storageHelper,
     }
 }
 
-bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(Database& db, AssetCode& code)
+bool CreateWithdrawalRequestOpFrame::exceedsLowerBound(StorageHelper& storageHelper, AssetCode& code)
 {
     xdr::xstring<256> key = ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(code);
-    auto lowerBound = KeyValueHelperLegacy::Instance()->loadKeyValue(key, db);
+    auto lowerBound = storageHelper.getKeyValueHelper().loadKeyValue(key);
     if (!lowerBound)
     {
         return true;

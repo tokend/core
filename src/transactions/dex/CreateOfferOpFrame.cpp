@@ -6,7 +6,6 @@
 #include "CreateOfferOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
@@ -32,8 +31,8 @@ CreateOfferOpFrame::CreateOfferOpFrame(Operation const& op,
 }
 
 bool
-CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                              std::vector<OperationCondition> &result) const
+CreateOfferOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                              std::vector<OperationCondition>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
@@ -71,7 +70,7 @@ CreateOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
 
 bool
 CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                 std::vector<SignerRequirement>& result) const
+                                             std::vector<SignerRequirement>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
@@ -94,12 +93,11 @@ CreateOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return true;
 };
 
-BalanceFrame::pointer CreateOfferOpFrame::loadBalanceValidForTrading(
-    BalanceID const& balanceID, Database& db,
-    LedgerDelta& delta)
+BalanceFrame::pointer
+CreateOfferOpFrame::loadBalanceValidForTrading(StorageHelper& storageHelper, BalanceID const& balanceID)
 {
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto balance = balanceHelper->loadBalance(balanceID, db, &delta);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto balance = balanceHelper.loadBalance(balanceID);
     if (!balance || !(balance->getAccountID() == getSourceID()))
     {
         innerResult().code(ManageOfferResultCode::BALANCE_NOT_FOUND);
@@ -109,9 +107,10 @@ BalanceFrame::pointer CreateOfferOpFrame::loadBalanceValidForTrading(
     return balance;
 }
 
-AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(
-    Database& db, LedgerDelta& delta)
+AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(StorageHelper& storageHelper)
 {
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto assetPairHelper = AssetPairHelper::Instance();
     AssetPairFrame::pointer assetPair = assetPairHelper->
         loadAssetPair(mBaseBalance->getAsset(), mQuoteBalance->getAsset(), db,
@@ -130,17 +129,17 @@ AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(
     return nullptr;
 }
 
-bool CreateOfferOpFrame::checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta)
+bool CreateOfferOpFrame::checkOfferValid(LedgerManager& lm, StorageHelper& storageHelper)
 {
     assert(mManageOffer.amount != 0);
 
     mBaseBalance =
-        loadBalanceValidForTrading(mManageOffer.baseBalance, db, delta);
+        loadBalanceValidForTrading(storageHelper, mManageOffer.baseBalance);
     if (!mBaseBalance)
         return false;
 
     mQuoteBalance =
-        loadBalanceValidForTrading(mManageOffer.quoteBalance, db, delta);
+        loadBalanceValidForTrading(storageHelper, mManageOffer.quoteBalance);
     if (!mQuoteBalance)
         return false;
 
@@ -162,26 +161,26 @@ bool CreateOfferOpFrame::checkOfferValid(LedgerManager& lm, Database& db, Ledger
     else
         receivingBalance = mManageOffer.quoteBalance;
 
-    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(receivingBalance, db);
+    auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(receivingBalance);
     if (!balanceFrame)
     {
         innerResult().code(ManageOfferResultCode::BALANCE_NOT_FOUND);
         return false;
     }
 
-    mAssetPair = loadTradableAssetPair(db, delta);
+    mAssetPair = loadTradableAssetPair(storageHelper);
     if (!mAssetPair)
     {
         innerResult().code(ManageOfferResultCode::ASSET_PAIR_NOT_TRADABLE);
         return false;
     }
 
-    if(!currentPriceRestrictionsMet(lm))
+    if (!currentPriceRestrictionsMet(lm))
     {
         innerResult().code(ManageOfferResultCode::CURRENT_PRICE_RESTRICTION);
         return false;
     }
-    if(!physicalPriceRestrictionsMet(lm))
+    if (!physicalPriceRestrictionsMet(lm))
     {
         innerResult().code(ManageOfferResultCode::PHYSICAL_PRICE_RESTRICTION);
         return false;
@@ -191,11 +190,11 @@ bool CreateOfferOpFrame::checkOfferValid(LedgerManager& lm, Database& db, Ledger
 }
 
 OfferExchange::OfferFilterResult CreateOfferOpFrame::filterOffer(const uint64_t price,
-                                             OfferFrame const& o)
+                                                                 OfferFrame const& o)
 {
     const auto isPriceBetter = o.getOffer().isBuy
-                                   ? o.getPrice() >= price
-                                   : o.getPrice() <= price;
+                               ? o.getPrice() >= price
+                               : o.getPrice() <= price;
     if (!isPriceBetter)
     {
         return OfferExchange::eStop;
@@ -229,7 +228,7 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
     if (sellingAmount <= 0)
         return false;
     return sellingBalance->tryLock(sellingAmount) == BalanceFrame::Result::
-           SUCCESS;
+    SUCCESS;
 }
 
 FeeManager::FeeResult
@@ -246,23 +245,23 @@ CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager&
 }
 
 bool
-CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
+CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                             LedgerManager& ledgerManager)
 {
-    Database& db = app.getDatabase();
-    if (!checkOfferValid(ledgerManager, db, delta))
+    if (!checkOfferValid(ledgerManager, storageHelper))
     {
         return false;
     }
 
     auto offerFrame = OfferManager::buildOffer(getSourceID(), mManageOffer, mBaseBalance->getAsset(),
-        mQuoteBalance->getAsset(), mQuoteBalance->getMinimumAmount());
+                                               mQuoteBalance->getAsset(), mQuoteBalance->getMinimumAmount());
     if (!offerFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: quote amount overflows";
         throw std::runtime_error("Unexpected state: quote amount overflows");
     }
 
+    auto& db = storageHelper.getDatabase();
     auto& offer = offerFrame->getOffer();
     offer.createdAt = ledgerManager.getCloseTime();
     auto const feeResult = obtainCalculatedFeeForAccount(offer.quoteAmount, ledgerManager, db);
@@ -299,40 +298,41 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     innerResult().code(ManageOfferResultCode::SUCCESS);
 
-    StorageHelperImpl storageHelper(db, &delta);
     BalanceManager balanceManager(app, storageHelper);
     const auto commissionBalance = balanceManager.loadOrCreateBalanceForAdmin(
-            mAssetPair->getQuoteAsset());
+        mAssetPair->getQuoteAsset());
+
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
     OfferExchange oe(delta, ledgerManager, mAssetPair, commissionBalance,
                      mManageOffer.orderBookID);
 
     int64_t price = offer.price;
     const OfferExchange::ConvertResult r = oe.convertWithOffers(offer,
-        mBaseBalance,
-        mQuoteBalance,
-        [this, &price](
-            OfferFrame const
-            & o)
-    {
-        return
-            filterOffer(price,
-                o);
-    });
+                                                                mBaseBalance,
+                                                                mQuoteBalance,
+                                                                [this, &price](
+                                                                    OfferFrame const
+                                                                    & o)
+                                                                {
+                                                                    return
+                                                                        filterOffer(price,
+                                                                                    o);
+                                                                });
 
     switch (r)
     {
-    case OfferExchange::eOK:
-    case OfferExchange::ePartial:
-        break;
-    case OfferExchange::eFilterStop:
-        if (innerResult().code() != ManageOfferResultCode::SUCCESS)
-        {
-            return false;
-        }
-        break;
-    default:
-        throw std::runtime_error("Unexpected offer exchange result");
+        case OfferExchange::eOK:
+        case OfferExchange::ePartial:
+            break;
+        case OfferExchange::eFilterStop:
+            if (innerResult().code() != ManageOfferResultCode::SUCCESS)
+            {
+                return false;
+            }
+            break;
+        default:
+            throw std::runtime_error("Unexpected offer exchange result");
     }
 
     // updates the result with the offers that got taken on the way
@@ -350,15 +350,15 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
         EntryHelperProvider::storeChangeEntry(delta, db, mAssetPair->mEntry);
 
         EntryHelperProvider::storeChangeEntry(delta, db,
-            commissionBalance->mEntry);
+                                              commissionBalance->mEntry);
     }
 
     if (oe.offerNeedsMore(offer, mQuoteBalance->getMinimumAmount()))
     {
         offerFrame->mEntry.data.offer().offerID = delta.getHeaderFrame().
             generateID(LedgerEntryType
-                ::
-                OFFER_ENTRY);
+                       ::
+                       OFFER_ENTRY);
         innerResult().success().offer.effect(ManageOfferEffect::CREATED);
         EntryHelperProvider::storeAddEntry(delta, db, offerFrame->mEntry);
         innerResult().success().offer.offer() = offer;
@@ -366,15 +366,16 @@ CreateOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
     else
     {
         OfferExchange::unlockBalancesForTakenOffer(*offerFrame, mBaseBalance,
-            mQuoteBalance);
+                                                   mQuoteBalance);
         innerResult().success().offer.effect(ManageOfferEffect::DELETED);
     }
 
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
     innerResult().success().baseAsset = mAssetPair->getBaseAsset();
     innerResult().success().quoteAsset = mAssetPair->getQuoteAsset();
-    EntryHelperProvider::storeChangeEntry(delta, db, mBaseBalance->mEntry);
-    EntryHelperProvider::storeChangeEntry(delta, db, mQuoteBalance->mEntry);
-
+    balanceHelper.storeChange(mBaseBalance->mEntry);
+    balanceHelper.storeChange(mQuoteBalance->mEntry);
     return true;
 }
 
@@ -416,14 +417,14 @@ bool CreateOfferOpFrame::doCheckValid(Application& app)
 }
 
 bool
-CreateOfferOpFrame::currentPriceRestrictionsMet(LedgerManager &lm)
+CreateOfferOpFrame::currentPriceRestrictionsMet(LedgerManager& lm)
 {
-    if(!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
+    if (!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
     {
         return true;
     }
 
-    if(!mAssetPair->checkPolicy(AssetPairPolicy::CURRENT_PRICE_RESTRICTION))
+    if (!mAssetPair->checkPolicy(AssetPairPolicy::CURRENT_PRICE_RESTRICTION))
     {
         return true;
     }
@@ -442,14 +443,14 @@ CreateOfferOpFrame::currentPriceRestrictionsMet(LedgerManager &lm)
 }
 
 bool
-CreateOfferOpFrame::physicalPriceRestrictionsMet(LedgerManager &lm)
+CreateOfferOpFrame::physicalPriceRestrictionsMet(LedgerManager& lm)
 {
-    if(!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
+    if (!lm.shouldUse(LedgerVersion::ASSET_PAIR_RESTRICTIONS))
     {
         return true;
     }
 
-    if(!mAssetPair->checkPolicy(AssetPairPolicy::PHYSICAL_PRICE_RESTRICTION))
+    if (!mAssetPair->checkPolicy(AssetPairPolicy::PHYSICAL_PRICE_RESTRICTION))
     {
         return true;
     }

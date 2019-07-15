@@ -8,8 +8,7 @@
 
 namespace stellar
 {
-class ReviewContractRequestOpFrame : public ReviewRequestOpFrame
-{
+class ReviewContractRequestOpFrame : public ReviewRequestOpFrame {
 
 protected:
     bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
@@ -18,7 +17,7 @@ protected:
     bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
 
-    bool checkCustomerDetailsLength(Application& app, Database& db, LedgerDelta& delta);
+    bool checkCustomerDetailsLength(Application& app, StorageHelper& storageHelper);
 
 public:
     ReviewContractRequestOpFrame(Operation const& op, OperationResult& res,

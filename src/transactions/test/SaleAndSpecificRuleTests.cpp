@@ -174,7 +174,7 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
                 checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
                 auto sale = SaleHelper::Instance()->loadSale(saleID, testManager->getDB());
                 uint64_t currentCap(0);
-                REQUIRE(CreateSaleParticipationOpFrame::getSaleCurrentCap(sale, testManager->getDB(), currentCap));
+                REQUIRE(CreateSaleParticipationOpFrame::getSaleCurrentCap(testManager->getStorageHelper(), sale, currentCap));
                 REQUIRE(currentCap == 0);
                 REQUIRE(sale->getCurrentCapInBase() == 0);
 

@@ -9,15 +9,14 @@
 
 namespace stellar
 {
-class CreateSaleParticipationOpFrame : public CreateOfferOpFrame
-{
-    SaleFrame::pointer loadSaleForOffer(Database& db, LedgerDelta& delta);
+class CreateSaleParticipationOpFrame : public CreateOfferOpFrame {
+    SaleFrame::pointer loadSaleForOffer(StorageHelper& storageHelper);
 
-    bool isPriceValid(SaleFrame::pointer sale, BalanceFrame::pointer balance, Database& db) const;
+    bool isPriceValid(StorageHelper& storageHelper, SaleFrame::pointer sale, BalanceFrame::pointer balance) const;
 
     bool
-    tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const override;
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -29,15 +28,18 @@ class CreateSaleParticipationOpFrame : public CreateOfferOpFrame
 public:
 
     CreateSaleParticipationOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
+                                   TransactionFrame& parentTx);
 
     bool doCheckValid(Application& app) override;
-    bool doApply(Application& app, LedgerDelta& delta,
-        LedgerManager& ledgerManager) override;
-    bool isSaleActive(Database& db,LedgerManager& ledgerManager, SaleFrame::pointer sale);
-    static SaleFrame::State getSaleState(const SaleFrame::pointer sale, Database& db, const uint64_t currentTime);
-    static bool getSaleCurrentCap(SaleFrame::pointer const sale, Database& db, uint64_t& currentCapInDefaultQuote);
+    bool doApply(Application& app, StorageHelper& storageHelper,
+                 LedgerManager& ledgerManager) override;
+    bool isSaleActive(StorageHelper& storageHelper, LedgerManager& ledgerManager, SaleFrame::pointer sale);
+    static SaleFrame::State
+    getSaleState(StorageHelper& storageHelper, const SaleFrame::pointer sale, const uint64_t currentTime);
+    static bool
+    getSaleCurrentCap(StorageHelper& storageHelper, SaleFrame::pointer const sale, uint64_t& currentCapInDefaultQuote);
 
-    static bool tryAddSaleCap(Database& db, uint64_t const& amount, AssetCode const& asset, SaleFrame::pointer sale);
+    static bool
+    tryAddSaleCap(StorageHelper& storageHelper, uint64_t const& amount, AssetCode const& asset, SaleFrame::pointer sale);
 };
 }

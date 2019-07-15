@@ -3,14 +3,13 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "DeleteSaleParticipationOpFrame.h"
-#include "ledger/LedgerDelta.h"
-#include "database/Database.h"
 #include "ledger/SaleHelper.h"
 #include "main/Application.h"
 #include "ledger/OfferHelper.h"
 #include "CreateSaleParticipationOpFrame.h"
-#include "ledger/BalanceHelperLegacy.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -40,11 +39,12 @@ bool DeleteSaleParticipationOpFrame::doCheckValid(Application& app)
 }
 
 bool DeleteSaleParticipationOpFrame::doApply(Application& app,
-    LedgerDelta& delta, LedgerManager& ledgerManager)
+                                             StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = app.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto offer = OfferHelper::Instance()->loadOffer(getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID, db,
-        &delta);
+                                                    &delta);
     if (!offer)
     {
         innerResult().code(ManageOfferResultCode::NOT_FOUND);
@@ -58,25 +58,26 @@ bool DeleteSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
-    if (mCheckSaleState && CreateSaleParticipationOpFrame::getSaleState(sale, db, ledgerManager.getCloseTime()) != SaleFrame::State::ACTIVE)
+    if (mCheckSaleState
+        && CreateSaleParticipationOpFrame::getSaleState(storageHelper, sale, ledgerManager.getCloseTime())
+           != SaleFrame::State::ACTIVE)
     {
         innerResult().code(ManageOfferResultCode::SALE_IS_NOT_ACTIVE);
         return false;
     }
 
     auto quoteBalanceID = getQuoteBalanceID(offer, ledgerManager);
-    auto balance = BalanceHelperLegacy::Instance()->mustLoadBalance(quoteBalanceID, db);
+    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(quoteBalanceID);
     sale->subCurrentCap(balance->getAsset(), offer->getOffer().quoteAmount);
     sale->unlockBaseAsset(offer->getOffer().baseAmount);
     SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
-    return DeleteOfferOpFrame::doApply(app, delta, ledgerManager);
+    return DeleteOfferOpFrame::doApply(app, storageHelper, ledgerManager);
 }
 
 void DeleteSaleParticipationOpFrame::deleteSaleParticipation(
-    Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
     OfferFrame::pointer offer, TransactionFrame& parentTx)
 {
-    Database& db = app.getDatabase();
     Operation op;
     auto& offerEntry = offer->getOffer();
     op.sourceAccount.activate() = offerEntry.ownerID;
@@ -96,11 +97,12 @@ void DeleteSaleParticipationOpFrame::deleteSaleParticipation(
     opRes.tr().type(OperationType::MANAGE_OFFER);
     DeleteSaleParticipationOpFrame opFrame(op, opRes, parentTx);
     opFrame.doNotCheckSaleState();
-    const auto offerOwner = AccountHelperLegacy::Instance()->mustLoadAccount(offerEntry.ownerID, db);
+    const auto offerOwner = storageHelper.getAccountHelper().mustLoadAccount(offerEntry.ownerID);
     opFrame.setSourceAccountPtr(offerOwner);
-    if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, delta, ledgerManager))
+    if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, storageHelper, ledgerManager))
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply delete sale participation: offerID" << offer->getOfferID();
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply delete sale participation: offerID"
+                                               << offer->getOfferID();
         throw runtime_error("Unexpected state: failed to apply delete sale participation");
     }
 }

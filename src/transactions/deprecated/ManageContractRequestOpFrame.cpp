@@ -16,17 +16,15 @@ namespace stellar
 using xdr::operator==;
 
 ManageContractRequestOpFrame::ManageContractRequestOpFrame(Operation const& op, OperationResult& res,
-        TransactionFrame& parentTx) : OperationFrame(op, res, parentTx),
-        mManageContractRequest(mOperation.body.manageContractRequestOp())
+                                                           TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx),
+      mManageContractRequest(mOperation.body.manageContractRequestOp())
 {
 }
 
 bool
-ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
+ManageContractRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
-
     innerResult().code(ManageContractRequestResultCode::SUCCESS);
 
     if (mManageContractRequest.details.action() == ManageContractRequestAction::CREATE)
@@ -34,8 +32,8 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
         return createManageContractRequest(app, storageHelper, ledgerManager);
     }
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageContractRequest.details.requestID(), db);
+    auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
+    auto reviewableRequest = reviewableRequestHelper.loadRequest(mManageContractRequest.details.requestID());
 
     if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::MANAGE_CONTRACT)
     {
@@ -53,7 +51,7 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     LedgerKey requestKey;
     requestKey.type(LedgerEntryType::REVIEWABLE_REQUEST);
     requestKey.reviewableRequest().requestID = mManageContractRequest.details.requestID();
-    reviewableRequestHelper->storeDelete(*delta, db, requestKey);
+    reviewableRequestHelper.storeDelete(requestKey);
 
     innerResult().success().details.action(ManageContractRequestAction::REMOVE);
 
@@ -61,10 +59,9 @@ ManageContractRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
 }
 
 bool
-ManageContractRequestOpFrame::createManageContractRequest(Application& app, StorageHelper &storageHelper,
+ManageContractRequestOpFrame::createManageContractRequest(Application& app, StorageHelper& storageHelper,
                                                           LedgerManager& ledgerManager)
 {
-    Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
     auto& contractRequest = mManageContractRequest.details.createContractRequest();
@@ -85,7 +82,9 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
                                                              nullptr, body,
                                                              ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+
+    requestHelper.storeAdd(request->mEntry);
 
     uint32_t allTasks = 0;
     if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeContractCreateTasksKey()},
@@ -96,13 +95,15 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
     }
 
     request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
+    requestHelper.storeChange(request->mEntry);
 
     bool fulfilled = false;
 
-    if (allTasks == 0) {
-        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, delta, request);
-        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+    if (allTasks == 0)
+    {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, storageHelper, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS)
+        {
             throw std::runtime_error("Failed to review manage contract request");
         }
         fulfilled = result.success().fulfilled;
@@ -116,15 +117,16 @@ ManageContractRequestOpFrame::createManageContractRequest(Application& app, Stor
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, StorageHelper &storageHelper,
-        LedgerManager& ledgerManager)
+ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, StorageHelper& storageHelper,
+                                                             LedgerManager& ledgerManager)
 {
     auto& db = storageHelper.getDatabase();
     auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
     auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
 
-    auto allRequests = ReviewableRequestHelperLegacy::Instance()->
-            loadRequests(getSourceID(), ReviewableRequestType::MANAGE_CONTRACT, db);
+    auto allRequests = storageHelper.
+        getReviewableRequestHelper().
+        loadRequests(getSourceID(), ReviewableRequestType::MANAGE_CONTRACT);
 
     contractsCount += allRequests.size();
 
@@ -138,7 +140,7 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
 }
 
 uint64_t
-ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, StorageHelper &storageHelper)
+ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, StorageHelper& storageHelper)
 {
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
     auto maxContractsCountKey = ManageKeyValueOpFrame::makeMaxContractsCountKey();
@@ -152,8 +154,8 @@ ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, 
     if (maxContractsCountKeyValue->getKeyValueEntryType() != KeyValueEntryType::UINT32)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
-             << "Expected max contracts count key value to be UINT32. Actual: "
-             << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxContractsCountKeyValue->getKeyValueEntryType());
+                                               << "Expected max contracts count key value to be UINT32. Actual: "
+                                               << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxContractsCountKeyValue->getKeyValueEntryType());
         throw std::runtime_error("Unexpected database state, expected max contracts count key value to be UINT32");
     }
 
@@ -161,11 +163,12 @@ ManageContractRequestOpFrame::obtainMaxContractsForContractor(Application& app, 
 }
 
 bool
-ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, KeyValueHelper &keyValueHelper)
+ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, KeyValueHelper& keyValueHelper)
 {
     auto maxContractInitialDetailLength = obtainMaxContractInitialDetailLength(app, keyValueHelper);
 
-    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.size() > maxContractInitialDetailLength)
+    if (mManageContractRequest.details.createContractRequest().contractRequest.creatorDetails.size()
+        > maxContractInitialDetailLength)
     {
         innerResult().code(ManageContractRequestResultCode::DETAILS_TOO_LONG);
         return false;
@@ -175,7 +178,7 @@ ManageContractRequestOpFrame::checkMaxContractDetailLength(Application& app, Key
 }
 
 uint64_t
-ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& app, KeyValueHelper &keyValueHelper)
+ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& app, KeyValueHelper& keyValueHelper)
 {
     auto maxContractInitialDetailLengthKey = ManageKeyValueOpFrame::makeMaxContractInitialDetailLengthKey();
     auto maxContractInitialDetailLengthKeyValue = keyValueHelper.loadKeyValue(maxContractInitialDetailLengthKey);
@@ -188,8 +191,8 @@ ManageContractRequestOpFrame::obtainMaxContractInitialDetailLength(Application& 
     if (maxContractInitialDetailLengthKeyValue->getKeyValueEntryType() != KeyValueEntryType::UINT32)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
-             << "Expected max contracts initial detail length key value to be UINT32. Actual: "
-             << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxContractInitialDetailLengthKeyValue->getKeyValueEntryType());
+                                               << "Expected max contracts initial detail length key value to be UINT32. Actual: "
+                                               << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxContractInitialDetailLengthKeyValue->getKeyValueEntryType());
         throw std::runtime_error("Unexpected database state, expected max contracts initial detail length key value to be UINT32");
     }
 

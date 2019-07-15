@@ -11,14 +11,14 @@
 
 namespace stellar
 {
-BalanceManager::BalanceManager(Application &app, StorageHelper &sh)
+BalanceManager::BalanceManager(Application& app, StorageHelper& sh)
     : mApp(app), mLm(app.getLedgerManager()), mSh(sh)
 {
     mUniversalAmount = 0;
 }
 
 BalanceFrame::pointer
-BalanceManager::loadOrCreateBalance(const AccountID &account, const AssetCode &asset)
+BalanceManager::loadOrCreateBalance(const AccountID& account, const AssetCode& asset)
 {
     auto balance = mSh.getBalanceHelper().loadBalance(account, asset);
     if (balance)
@@ -34,7 +34,7 @@ BalanceManager::loadOrCreateBalance(const AccountID &account, const AssetCode &a
     }
 
     auto sequentialID = mSh.mustGetLedgerDelta().getHeaderFrame()
-            .generateID(LedgerEntryType::BALANCE);
+        .generateID(LedgerEntryType::BALANCE);
     auto balanceID = BalanceKeyUtils::forAccount(account, sequentialID);
     balance = BalanceFrame::createNew(balanceID, account, asset, sequentialID);
 
@@ -44,7 +44,7 @@ BalanceManager::loadOrCreateBalance(const AccountID &account, const AssetCode &a
 }
 
 BalanceFrame::pointer
-BalanceManager::loadOrCreateBalanceForAdmin(const AssetCode &assetCode)
+BalanceManager::loadOrCreateBalanceForAdmin(const AssetCode& assetCode)
 {
     return loadOrCreateBalance(mApp.getAdminID(), assetCode);
 }
@@ -65,8 +65,8 @@ BalanceManager::transferFee(AssetCode const& assetCode, uint64_t totalFee)
     {
         std::string strBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Failed to fund commission balance with fee, reason " << result
-                << ". balanceID: " << strBalanceID;
+            << "Failed to fund commission balance with fee, reason " << result
+            << ". balanceID: " << strBalanceID;
         throw std::runtime_error("Failed to fund commission balance with fee");
     }
 
@@ -120,10 +120,10 @@ BalanceManager::transfer(AccountFrame::pointer from,
 
 BalanceManager::Result
 BalanceManager::processStatistics(AccountFrame::pointer from,
-        BalanceFrame::pointer fromBalance, uint64_t amount)
+                                  BalanceFrame::pointer fromBalance, uint64_t amount)
 {
     mUniversalAmount = 0;
-    StatisticsV2Processor statisticsV2Processor(mSh.getDatabase(), mSh.mustGetLedgerDelta(), mLm);
+    StatisticsV2Processor statisticsV2Processor(mSh, mLm);
 
     const auto result = statisticsV2Processor.addStatsV2(StatisticsV2Processor::SpendType::PAYMENT, amount,
                                                          mUniversalAmount, from, fromBalance);
@@ -137,7 +137,7 @@ BalanceManager::processStatistics(AccountFrame::pointer from,
             return BalanceManager::LIMITS_EXCEEDED;
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result from "
-                    << "statisticsV2Processor when updating statsV2:" << result;
+                                                   << "statisticsV2Processor when updating statsV2:" << result;
             throw std::runtime_error("Unexpected state from statisticsV2Processor when updating statsV2");
     }
 }
@@ -179,14 +179,14 @@ BalanceManager::calculateUniversalAmount(AssetCode transferAsset, uint64_t amoun
     }
 
     auto assetPairFrame = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
-            transferAsset, statsAssetFrame->getCode(), db, mSh.getLedgerDelta());
+        transferAsset, statsAssetFrame->getCode(), db, mSh.getLedgerDelta());
     if (!assetPairFrame)
     {
         return true;
     }
 
     return AssetPairHelper::Instance()->convertAmount(assetPairFrame, transferAsset,
-            amount, Rounding::ROUND_UP, db, mUniversalAmount);
+                                                      amount, Rounding::ROUND_UP, db, mUniversalAmount);
 }
 
 }

@@ -3,8 +3,8 @@
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "CreateExternalSystemAccountIDPoolEntryOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 
 namespace stellar
@@ -12,22 +12,24 @@ namespace stellar
 using namespace std;
 using xdr::operator==;
 
-CreateExternalSystemAccountIDPoolEntryOpFrame::CreateExternalSystemAccountIDPoolEntryOpFrame(Operation const &op,
-                                                                                             OperationResult &res,
-                                                                                             TransactionFrame &parentTx)
+CreateExternalSystemAccountIDPoolEntryOpFrame::CreateExternalSystemAccountIDPoolEntryOpFrame(Operation const& op,
+                                                                                             OperationResult& res,
+                                                                                             TransactionFrame& parentTx)
     : ManageExternalSystemAccountIdPoolEntryOpFrame(op, res, parentTx),
       mInput(mManageExternalSystemAccountIdPoolEntryOp.actionInput.createExternalSystemAccountIdPoolEntryActionInput())
 {
 }
 
 bool
-CreateExternalSystemAccountIDPoolEntryOpFrame::doApply(Application &app, LedgerDelta &delta,
-                                                       LedgerManager &ledgerManager)
+CreateExternalSystemAccountIDPoolEntryOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                                       LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
-    auto poolEntryFrame = ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->load(mInput.externalSystemType,
-                                                                                   mInput.data, db, nullptr);
+    auto& externalSystemAccountIDPoolEntryHelper = storageHelper.getExternalSystemAccountIDPoolEntryHelper();
+
+    auto poolEntryFrame = externalSystemAccountIDPoolEntryHelper.load(mInput.externalSystemType,
+                                                                      mInput.data);
 
     if (!!poolEntryFrame)
     {
@@ -39,14 +41,14 @@ CreateExternalSystemAccountIDPoolEntryOpFrame::doApply(Application &app, LedgerD
     poolEntryFrame = ExternalSystemAccountIDPoolEntryFrame::createNew(newPoolEntryID, mInput.externalSystemType,
                                                                       mInput.data, mInput.parent);
 
-    ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->storeAdd(delta, db, poolEntryFrame->mEntry);
+    externalSystemAccountIDPoolEntryHelper.storeAdd(poolEntryFrame->mEntry);
     innerResult().code(ManageExternalSystemAccountIdPoolEntryResultCode::SUCCESS);
     innerResult().success().poolEntryID = newPoolEntryID;
     return true;
 }
 
 bool
-CreateExternalSystemAccountIDPoolEntryOpFrame::doCheckValid(Application &app)
+CreateExternalSystemAccountIDPoolEntryOpFrame::doCheckValid(Application& app)
 {
     if (mInput.data.empty())
     {

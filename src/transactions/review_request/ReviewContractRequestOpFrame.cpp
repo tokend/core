@@ -2,7 +2,6 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <transactions/managers/ManageAssetHelper.h>
 #include <transactions/payment/PaymentOpFrame.h>
 #include <transactions/deprecated/ManageContractOpFrame.h>
 #include "util/asio.h"
@@ -13,6 +12,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/ContractHelper.h"
 #include "ledger/BalanceHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "main/Application.h"
 
@@ -62,12 +62,12 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
     contractEntry.initialDetails = contractRequest.creatorDetails;
     contractEntry.state = static_cast<uint32_t>(ContractState::NO_CONFIRMATIONS);
 
-    auto& db = storageHelper.getDatabase();
-    if (!checkCustomerDetailsLength(app, db, delta))
+    if (!checkCustomerDetailsLength(app, storageHelper))
         return false;
 
     contractEntry.customerDetails = mReviewRequest.requestDetails.contract().details;
 
+    auto& db = storageHelper.getDatabase();
     EntryHelperProvider::storeAddEntry(delta, db, contractFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
@@ -76,9 +76,9 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
 }
 
 bool
-ReviewContractRequestOpFrame::checkCustomerDetailsLength(Application& app, Database& db, LedgerDelta& delta)
+ReviewContractRequestOpFrame::checkCustomerDetailsLength(Application& app, StorageHelper& storageHelper)
 {
-    auto maxCustomerDetailsLength = ManageContractOpFrame::obtainMaxContractDetailLength(app, db, delta);
+    auto maxCustomerDetailsLength = ManageContractOpFrame::obtainMaxContractDetailLength(app, storageHelper);
     if (mReviewRequest.requestDetails.contract().details.size() > maxCustomerDetailsLength)
     {
         innerResult().code(ReviewRequestResultCode::CONTRACT_DETAILS_TOO_LONG);

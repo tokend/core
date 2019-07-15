@@ -20,15 +20,14 @@ using namespace std;
 using xdr::operator==;
 
 CreateAssetOpFrame::CreateAssetOpFrame(Operation const& op,
-        OperationResult& res, TransactionFrame& parentTx)
-        : ManageAssetOpFrame(op, res, parentTx)
-        , mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
+                                       OperationResult& res, TransactionFrame& parentTx)
+    : ManageAssetOpFrame(op, res, parentTx), mAssetCreationRequest(mManageAsset.request.createAssetCreationRequest().createAsset)
 {
 }
 
 bool
 CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                          std::vector<OperationCondition>& result) const
+                                              std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetType = mAssetCreationRequest.type;
@@ -47,7 +46,7 @@ CreateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 bool
 CreateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                 std::vector<SignerRequirement>& result) const
+                                             std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetType = mAssetCreationRequest.type;
@@ -57,16 +56,19 @@ CreateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return true;
 }
 
-ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, Database & db, LedgerDelta & delta) const
+ReviewableRequestFrame::pointer
+CreateAssetOpFrame::getUpdatedOrCreateReviewableRequest(Application& app, StorageHelper& storageHelper) const
 {
-    ReviewableRequestFrame::pointer request = getOrCreateReviewableRequest(app, db, delta, ReviewableRequestType::CREATE_ASSET);
-	if (!request) {
+    ReviewableRequestFrame::pointer request =
+        getOrCreateReviewableRequest(app, storageHelper, ReviewableRequestType::CREATE_ASSET);
+    if (!request)
+    {
         return nullptr;
     }
 
     ReviewableRequestEntry& requestEntry = request->getRequestEntry();
-	requestEntry.body.type(ReviewableRequestType::CREATE_ASSET);
-	requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
+    requestEntry.body.type(ReviewableRequestType::CREATE_ASSET);
+    requestEntry.body.assetCreationRequest() = mAssetCreationRequest;
     if (mManageAsset.requestID == 0)
     {
         requestEntry.body.assetCreationRequest().sequenceNumber = 0;
@@ -74,41 +76,43 @@ ReviewableRequestFrame::pointer CreateAssetOpFrame::getUpdatedOrCreateReviewable
     }
     const auto hash = ReviewableRequestFrame::calculateHash(requestEntry.body);
     requestEntry.hash = hash;
-	return request;
+    return request;
 }
 
-bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper, LedgerManager & ledgerManager)
+bool CreateAssetOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-	auto & db = storageHelper.getDatabase();
-	LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
-	auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    if (mManageAsset.requestID == 0 && reviewableRequestHelper->exists(db, getSourceID(), mAssetCreationRequest.code)) {
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    if (mManageAsset.requestID == 0 && requestHelper.exists(getSourceID(), mAssetCreationRequest.code))
+    {
         innerResult().code(ManageAssetResultCode::REQUEST_ALREADY_EXISTS);
         return false;
     }
 
-	auto& assetHelper = storageHelper.getAssetHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
 
     auto isAssetExist = assetHelper.exists(mAssetCreationRequest.code);
-    if (isAssetExist) {
+    if (isAssetExist)
+    {
         innerResult().code(ManageAssetResultCode::ASSET_ALREADY_EXISTS);
         return false;
     }
 
     bool isStats = isSetFlag(mAssetCreationRequest.policies, AssetPolicy::STATS_QUOTE_ASSET);
-    if (isStats && !!assetHelper.loadStatsAsset()) {
+    if (isStats && !!assetHelper.loadStatsAsset())
+    {
         innerResult().code(ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
         return false;
     }
 
-	auto request = getUpdatedOrCreateReviewableRequest(app, db, delta);
-	if (!request) {
+    auto request = getUpdatedOrCreateReviewableRequest(app, storageHelper);
+    if (!request)
+    {
         innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
-		return false;
-	}
+        return false;
+    }
 
-	bool autoreview = true;
+    bool autoreview = true;
     if (mManageAsset.requestID == 0)
     {
         KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
@@ -120,45 +124,51 @@ bool CreateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
             return false;
         }
         request->setTasks(allTasks);
-        EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+        requestHelper.storeAdd(request->mEntry);
         autoreview = allTasks == 0;
     }
-    else {
+    else
+    {
         if (!ensureUpdateRequestValid(request))
         {
             return false;
         }
         updateRequest(request->getRequestEntry());
         request->recalculateHashRejectReason();
-        EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
+        requestHelper.storeChange(request->mEntry);
     }
 
     bool fulfilled = false;
-    if (autoreview) {
-        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, delta, request);
-        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+    if (autoreview)
+    {
+        auto result =
+            ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, storageHelper, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS)
+        {
             throw std::runtime_error("Failed to review create asset request");
         }
         fulfilled = result.success().fulfilled;
     }
 
     innerResult().code(ManageAssetResultCode::SUCCESS);
-	innerResult().success().requestID = request->getRequestID();
+    innerResult().success().requestID = request->getRequestID();
     innerResult().success().fulfilled = fulfilled;
-	return true;
+    return true;
 }
 
-bool CreateAssetOpFrame::doCheckValid(Application & app)
+bool CreateAssetOpFrame::doCheckValid(Application& app)
 {
-	if (!AssetFrame::isAssetCodeValid(mAssetCreationRequest.code)) {
-		innerResult().code(ManageAssetResultCode::INVALID_CODE);
-		return false;
-	}
+    if (!AssetFrame::isAssetCodeValid(mAssetCreationRequest.code))
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_CODE);
+        return false;
+    }
 
-	if (!isValidXDRFlag<AssetPolicy>(mAssetCreationRequest.policies)) {
-		innerResult().code(ManageAssetResultCode::INVALID_POLICIES);
-		return false;
-	}
+    if (!isValidXDRFlag<AssetPolicy>(mAssetCreationRequest.policies))
+    {
+        innerResult().code(ManageAssetResultCode::INVALID_POLICIES);
+        return false;
+    }
 
     if (mAssetCreationRequest.maxIssuanceAmount < mAssetCreationRequest.initialPreissuedAmount)
     {
@@ -179,7 +189,7 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
     }
 
     const uint64 precision = AssetFrame::getMinimumAmountFromTrailingDigits(
-            mAssetCreationRequest.trailingDigitsCount);
+        mAssetCreationRequest.trailingDigitsCount);
     if (mAssetCreationRequest.initialPreissuedAmount % precision != 0)
     {
         innerResult().code(ManageAssetResultCode::INVALID_PREISSUED_AMOUNT_PRECISION);
@@ -191,7 +201,7 @@ bool CreateAssetOpFrame::doCheckValid(Application & app)
         return false;
     }
 
-	return true;
+    return true;
 }
 
 string CreateAssetOpFrame::getAssetCode() const
@@ -209,9 +219,10 @@ bool CreateAssetOpFrame::ensureUpdateRequestValid(ReviewableRequestFrame::pointe
     return true;
 }
 
-void CreateAssetOpFrame::updateRequest(ReviewableRequestEntry &requestEntry) {
+void CreateAssetOpFrame::updateRequest(ReviewableRequestEntry& requestEntry)
+{
     requestEntry.body.assetCreationRequest().code = mManageAsset.request.createAssetCreationRequest().createAsset.code;
-    requestEntry.body.assetCreationRequest().creatorDetails= mManageAsset.request.createAssetCreationRequest().createAsset.creatorDetails;
+    requestEntry.body.assetCreationRequest().creatorDetails = mManageAsset.request.createAssetCreationRequest().createAsset.creatorDetails;
     requestEntry.body.assetCreationRequest().policies = mManageAsset.request.createAssetCreationRequest().createAsset.policies;
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
     requestEntry.body.assetCreationRequest().sequenceNumber++;

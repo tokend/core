@@ -6,8 +6,7 @@
 #include "ReviewLimitsUpdateRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/AccountHelperLegacy.h"
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountHelper.h"
 #include <ledger/StorageHelperImpl.h>
 #include "transactions/ManageLimitsOpFrame.h"
@@ -89,8 +88,7 @@ ReviewLimitsUpdateRequestOpFrame::tryCallManageLimits(Application& app,
     auto master = accountHelper.mustLoadAccount(app.getAdminID());
     manageLimitsOpFrame.setSourceAccountPtr(master);
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    if (!manageLimitsOpFrame.doCheckValid(app) || !manageLimitsOpFrame.doApply(app, delta, ledgerManager))
+    if (!manageLimitsOpFrame.doCheckValid(app) || !manageLimitsOpFrame.doApply(app, storageHelper, ledgerManager))
     {
         OperationResult& manageLimitsResult = manageLimitsOpFrame.getResult();
         auto manageLimitsResultCode = ManageLimitsOpFrame::getInnerCode(manageLimitsResult);

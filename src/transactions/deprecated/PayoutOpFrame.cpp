@@ -346,7 +346,7 @@ PayoutOpFrame::doApply(Application &app, StorageHelper &storageHelper,
 
     balanceHelper.storeChange(sourceBalance->mEntry);
 
-    StatisticsV2Processor statsProcessor(db, *delta, ledgerManager);
+    StatisticsV2Processor statsProcessor(storageHelper, ledgerManager);
     return processStatistics(statsProcessor, sourceBalance, actualTotalAmount);
 }
 

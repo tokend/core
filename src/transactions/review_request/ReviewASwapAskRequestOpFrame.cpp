@@ -144,7 +144,7 @@ ReviewASwapAskRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
 
     auto& db = storageHelper.getDatabase();
     auto validationResultCode = CreateAtomicSwapAskRequestOpFrame::areAllAssetsValid(
-        db, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
+        storageHelper, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
     if (validationResultCode != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
         return handleAllAssetsValidationResultCode(validationResultCode);
@@ -158,7 +158,7 @@ ReviewASwapAskRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
                                 ledgerManager.getCloseTime(), requestBody,
                                 delta);
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
     EntryHelperProvider::storeAddEntry(delta, db, askFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);

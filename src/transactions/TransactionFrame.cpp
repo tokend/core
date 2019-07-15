@@ -10,7 +10,6 @@
 #include "crypto/SecretKey.h"
 #include "database/Database.h"
 #include "herder/TxSetFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/LedgerHeaderUtils.h"

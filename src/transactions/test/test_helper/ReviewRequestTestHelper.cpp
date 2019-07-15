@@ -4,7 +4,7 @@
 
 #include "ReviewRequestTestHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "transactions/review_request/ReviewRequestOpFrame.h"
 #include <functional>
 #include "test/test_marshaler.h"

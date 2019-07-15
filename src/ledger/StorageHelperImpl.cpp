@@ -380,6 +380,8 @@ StorageHelperImpl::getReviewableRequestHelper()
     {
         mReviewableRequestHelper = std::make_unique<ReviewableRequestHelperImpl>(*this);
     }
+
+    return *mReviewableRequestHelper;
 }
 
 } // namespace stellar

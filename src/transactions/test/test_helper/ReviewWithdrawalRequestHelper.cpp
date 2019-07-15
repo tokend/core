@@ -8,7 +8,7 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 #include "ReviewRequestTestHelper.h"
 
@@ -16,11 +16,13 @@ namespace stellar
 {
 namespace txtest
 {
-WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, const uint64_t requestID) : ReviewChecker(testManager)
+WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, const uint64_t requestID)
+    : ReviewChecker(testManager)
 {
     auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::CREATE_WITHDRAW) {
+    if (!request || request->getType() != ReviewableRequestType::CREATE_WITHDRAW)
+    {
         return;
     }
     withdrawalRequest = std::make_shared<WithdrawalRequest>(request->getRequestEntry().body.withdrawalRequest());
@@ -39,18 +41,19 @@ void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
     REQUIRE(!!balanceBeforeTx);
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto balanceAfterTx = balanceHelper->loadBalance(withdrawalRequest->balance,
-        mTestManager->getDB());
+                                                     mTestManager->getDB());
     REQUIRE(!!balanceAfterTx);
     REQUIRE(balanceAfterTx->getAmount() == balanceBeforeTx->getAmount());
     REQUIRE(balanceBeforeTx->getLocked() == balanceAfterTx->getLocked() +
-        withdrawalRequest->amount + withdrawalRequest->fee.fixed +
-        withdrawalRequest->fee.percent);
+                                            withdrawalRequest->amount + withdrawalRequest->fee.fixed +
+                                            withdrawalRequest->fee.percent);
 
     // check commission
     REQUIRE(!!commissionBalanceBeforeTx);
     auto commissionBalanceAfterTx = balanceHelper->loadBalance(commissionBalanceBeforeTx->getBalanceID(), mTestManager->getDB());
     REQUIRE(!!commissionBalanceAfterTx);
-    REQUIRE(commissionBalanceAfterTx->getAmount() == commissionBalanceBeforeTx->getAmount() + withdrawalRequest->fee.fixed + withdrawalRequest->fee.percent);
+    REQUIRE(commissionBalanceAfterTx->getAmount()
+            == commissionBalanceBeforeTx->getAmount() + withdrawalRequest->fee.fixed + withdrawalRequest->fee.percent);
 
     // check asset
     REQUIRE(!!assetBeforeTx);
@@ -78,7 +81,7 @@ TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTx(
     return txFromOperation(source, op, nullptr);
 }
 
-TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTxWithTasks(txtest::Account &source,
+TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTxWithTasks(txtest::Account& source,
                                                                                 uint64_t requestID, Hash requestHash,
                                                                                 ReviewableRequestType requestType,
                                                                                 ReviewRequestOpAction action,
@@ -96,10 +99,12 @@ TransactionFramePtr ReviewWithdrawRequestHelper::createReviewRequestTxWithTasks(
     reviewRequestOp.requestDetails.requestType(requestType);
     reviewRequestOp.requestDetails.withdrawal().externalDetails = "{}";
     reviewRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
-    if ( tasksToAdd != nullptr) {
+    if (tasksToAdd != nullptr)
+    {
         reviewRequestOp.reviewDetails.tasksToAdd = *tasksToAdd;
     }
-    if ( tasksToRemove != nullptr) {
+    if (tasksToRemove != nullptr)
+    {
         reviewRequestOp.reviewDetails.tasksToRemove = *tasksToRemove;
     }
     return txFromOperation(source, op, nullptr);
@@ -122,10 +127,10 @@ ReviewRequestResult ReviewWithdrawRequestHelper::applyReviewRequestTx(
                                                      action, rejectReason,
                                                      expectedResult,
                                                      checker
-                                                    );
+    );
 }
 
-ReviewRequestResult ReviewWithdrawRequestHelper::applyReviewRequestTxWithTasks(txtest::Account &source,
+ReviewRequestResult ReviewWithdrawRequestHelper::applyReviewRequestTxWithTasks(txtest::Account& source,
                                                                                uint64_t requestID, Hash requestHash,
                                                                                ReviewableRequestType requestType,
                                                                                ReviewRequestOpAction action,
@@ -136,13 +141,13 @@ ReviewRequestResult ReviewWithdrawRequestHelper::applyReviewRequestTxWithTasks(t
 {
     auto checker = WithdrawReviewChecker(mTestManager, requestID);
     return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
-                                                     requestHash, requestType,
-                                                     action, rejectReason,
-                                                     expectedResult,
-                                                     checker,
-                                                     tasksToAdd,
-                                                     tasksToRemove
-                                                    );
+                                                              requestHash, requestType,
+                                                              action, rejectReason,
+                                                              expectedResult,
+                                                              checker,
+                                                              tasksToAdd,
+                                                              tasksToRemove
+    );
 }
 }
 }

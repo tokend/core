@@ -3,9 +3,7 @@
 #include "main/Application.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/KeyValueHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/AssetHelper.h"
@@ -16,6 +14,7 @@
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/SaleFrame.h"
 
 namespace stellar
 {
@@ -23,7 +22,7 @@ using xdr::operator==;
 
 bool
 CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                            std::vector<OperationCondition>& result) const
+                                                            std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
@@ -43,7 +42,7 @@ CreateSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
 
 bool
 CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                            std::vector<SignerRequirement>& result) const
+                                                           std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
@@ -63,15 +62,17 @@ CreateSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
 
 AssetFrame::pointer
 CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest const& request,
-                                                            Database& db, AccountID const& source)
+                                                            StorageHelper& storageHelper, AccountID const& source)
 {
-    const auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(request.baseAsset, source, db);
+    const auto assetFrame = storageHelper.getAssetHelper().loadAsset(request.baseAsset, source);
     if (!!assetFrame)
     {
         return assetFrame;
     }
 
-    auto assetCreationRequests = ReviewableRequestHelperLegacy::Instance()->loadRequests(source, ReviewableRequestType::CREATE_ASSET, db);
+    auto assetCreationRequests = storageHelper.
+        getReviewableRequestHelper().
+        loadRequests(source, ReviewableRequestType::CREATE_ASSET);
     for (auto assetCreationRequestFrame : assetCreationRequests)
     {
         auto& assetCreationRequest = assetCreationRequestFrame->getRequestEntry().body.assetCreationRequest();
@@ -84,16 +85,20 @@ CreateSaleCreationRequestOpFrame::tryLoadBaseAssetOrRequest(SaleCreationRequest 
     return nullptr;
 }
 
-bool CreateSaleCreationRequestOpFrame::areQuoteAssetsValid(Database& db, xdr::xvector<SaleCreationRequestQuoteAsset, 100> quoteAssets, AssetCode defaultQuoteAsset)
+bool
+CreateSaleCreationRequestOpFrame::
+areQuoteAssetsValid(StorageHelper& storageHelper,
+                    xdr::xvector<SaleCreationRequestQuoteAsset, 100> quoteAssets, AssetCode defaultQuoteAsset)
 {
-    if (!AssetHelperLegacy::Instance()->exists(db, defaultQuoteAsset))
+    auto& assetHelper = storageHelper.getAssetHelper();
+    if (!assetHelper.exists(defaultQuoteAsset))
     {
         return false;
     }
-
+    auto& db = storageHelper.getDatabase();
     for (auto const& quoteAsset : quoteAssets)
     {
-        if (!AssetHelperLegacy::Instance()->exists(db, quoteAsset.quoteAsset))
+        if (!assetHelper.exists(quoteAsset.quoteAsset))
         {
             return false;
         }
@@ -102,8 +107,8 @@ bool CreateSaleCreationRequestOpFrame::areQuoteAssetsValid(Database& db, xdr::xv
             continue;
 
         const auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(defaultQuoteAsset,
-            quoteAsset.quoteAsset,
-            db);
+                                                                                      quoteAsset.quoteAsset,
+                                                                                      db);
         if (!assetPair)
         {
             return false;
@@ -137,14 +142,13 @@ bool CreateSaleCreationRequestOpFrame::isPriceValid(SaleCreationRequestQuoteAsse
 CreateSaleCreationRequestOpFrame::CreateSaleCreationRequestOpFrame(
     Operation const& op, OperationResult& res,
     TransactionFrame& parentTx)
-    : OperationFrame(op, res, parentTx)
-    , mCreateSaleCreationRequest(mOperation.body.createSaleCreationRequestOp())
+    : OperationFrame(op, res, parentTx), mCreateSaleCreationRequest(mOperation.body.createSaleCreationRequestOp())
 {
 }
 
 bool
-CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
-                                        LedgerManager& ledgerManager)
+CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                          LedgerManager& ledgerManager)
 {
     if (mCreateSaleCreationRequest.requestID == 0)
     {
@@ -168,12 +172,13 @@ bool CreateSaleCreationRequestOpFrame::doCheckValid(Application& app)
     if (mCreateSaleCreationRequest.requestID != 0 && mCreateSaleCreationRequest.allTasks)
     {
         innerResult().code(CreateSaleCreationRequestResultCode::
-                               NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
+                           NOT_ALLOWED_TO_SET_TASKS_ON_UPDATE);
         return false;
     }
 
     auto checkValidResult = doCheckValid(app, mCreateSaleCreationRequest.request, getSourceID());
-    if (checkValidResult == CreateSaleCreationRequestResultCode::SUCCESS) {
+    if (checkValidResult == CreateSaleCreationRequestResultCode::SUCCESS)
+    {
         return true;
     }
 
@@ -182,7 +187,7 @@ bool CreateSaleCreationRequestOpFrame::doCheckValid(Application& app)
 }
 
 CreateSaleCreationRequestResultCode
-CreateSaleCreationRequestOpFrame::doCheckValid(Application &app, const SaleCreationRequest &saleCreationRequest,
+CreateSaleCreationRequestOpFrame::doCheckValid(Application& app, const SaleCreationRequest& saleCreationRequest,
                                                AccountID const& source)
 {
     if (!AssetFrame::isAssetCodeValid(saleCreationRequest.baseAsset) ||
@@ -267,8 +272,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
         return false;
     }
 
-    auto& db = storageHelper.getDatabase();
-    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, request->mEntry);
+    storageHelper.getReviewableRequestHelper().storeAdd(request->mEntry);
 
     bool fulfilled = false;
     uint64 saleID = 0;
@@ -276,7 +280,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     {
         // It's possible for sale creation request to fail on review due to various reasons
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(
-            mParentTx, app, ledgerManager, delta, request);
+            mParentTx, app, ledgerManager, storageHelper, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS)
         {
             innerResult().code(CreateSaleCreationRequestResultCode::AUTO_REVIEW_FAILED);
@@ -301,9 +305,9 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
                                                 LedgerManager& ledgerManager)
 {
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto requestFrame = ReviewableRequestHelperLegacy::Instance()->loadRequest(mCreateSaleCreationRequest.requestID, getSourceID(), db, &delta);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    const auto requestFrame = requestHelper.
+        loadRequest(mCreateSaleCreationRequest.requestID, getSourceID());
     if (!requestFrame || requestFrame->getType() != ReviewableRequestType::CREATE_SALE)
     {
         innerResult().code(
@@ -324,7 +328,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
         return false;
     }
 
-    ReviewableRequestHelperLegacy::Instance()->storeChange(delta, db, requestFrame->mEntry);
+    requestHelper.storeChange(requestFrame->mEntry);
 
     innerResult().code(CreateSaleCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
@@ -335,7 +339,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 
 bool
 CreateSaleCreationRequestOpFrame::checkRulesDuplication(StorageHelper& storageHelper,
-        xdr::xvector<CreateAccountSaleRuleData> const& rules)
+                                                        xdr::xvector<CreateAccountSaleRuleData> const& rules)
 {
     std::unordered_set<AccountID> accountIDs;
     bool hasGlobal = false;
@@ -380,7 +384,7 @@ CreateSaleCreationRequestOpFrame::checkRulesDuplication(StorageHelper& storageHe
 
 bool
 CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
-        StorageHelper& storageHelper, SaleCreationRequest const& request)
+                                                   StorageHelper& storageHelper, SaleCreationRequest const& request)
 {
     switch (request.ext.v())
     {
@@ -392,7 +396,7 @@ CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
 
             uint32_t maxRulesLength = app.getMaxSaleRulesLength();
             auto keyValue = storageHelper.getKeyValueHelper().loadKeyValue(
-                    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey());
+                ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey());
 
             if (keyValue)
             {
@@ -416,8 +420,8 @@ CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
 
 bool
 CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
-    StorageHelper& storageHelper, LedgerManager& ledgerManager,
-    ReviewableRequestFrame::pointer request)
+                                                 StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                                                 ReviewableRequestFrame::pointer request)
 {
     auto& sale = request->getRequestEntry().body.saleCreationRequest();
     auto saleVersion = sale.ext.v();
@@ -439,10 +443,9 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
         return false;
     }
 
-    auto& db = ledgerManager.getDatabase();
     if (!areQuoteAssetsValid(
-            db, sale.quoteAssets,
-            sale.defaultQuoteAsset))
+        storageHelper, sale.quoteAssets,
+        sale.defaultQuoteAsset))
     {
         innerResult().code(
             CreateSaleCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND);
@@ -451,6 +454,7 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
 
     if (ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR))
     {
+        auto& db = storageHelper.getDatabase();
         for (auto const& quoteAsset : sale.quoteAssets)
         {
             if (AssetPairHelper::Instance()->exists(db, quoteAsset.quoteAsset, sale.baseAsset))
@@ -461,11 +465,11 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
         }
     }
 
-    const auto baseAsset = tryLoadBaseAssetOrRequest(sale, db, getSourceID());
+    const auto baseAsset = tryLoadBaseAssetOrRequest(sale, storageHelper, getSourceID());
     if (!baseAsset)
     {
         innerResult().code(CreateSaleCreationRequestResultCode::
-                               BASE_ASSET_OR_ASSET_REQUEST_NOT_FOUND);
+                           BASE_ASSET_OR_ASSET_REQUEST_NOT_FOUND);
         return false;
     }
     if (!ensureEnoughAvailable(sale, baseAsset))
@@ -480,17 +484,17 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
         return false;
     }
 
-   return true;
+    return true;
 }
 
 std::vector<std::string>
 CreateSaleCreationRequestOpFrame::makeTasksKeyVector()
 {
     return
-    {
-        ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset),
-        ManageKeyValueOpFrame::makeSaleCreateTasksKey("*")
-    };
+        {
+            ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset),
+            ManageKeyValueOpFrame::makeSaleCreateTasksKey("*")
+        };
 }
 
 }

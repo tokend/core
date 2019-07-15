@@ -65,7 +65,7 @@ namespace stellar {
 
             ManageKeyValueTestBuilder builder(key, mTestManager, action, value, type);
 
-            bool isApplied = builder.kvManager->doApply(app, delta, mTestManager->getLedgerManager());
+            bool isApplied = builder.kvManager->doApply(app, mTestManager->getStorageHelper(), mTestManager->getLedgerManager());
             bool isValid = builder.kvManager->doCheckValid(app);
 
             REQUIRE((isApplied && isValid) == require);

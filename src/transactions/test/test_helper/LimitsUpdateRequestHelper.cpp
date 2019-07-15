@@ -6,8 +6,9 @@
 #include <ledger/AssetPairHelper.h>
 #include <transactions/CreateManageLimitsRequestOpFrame.h>
 #include "LimitsUpdateRequestHelper.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountLimitsHelper.h"
 #include "test/test_marshaler.h"
@@ -22,19 +23,20 @@ LimitsUpdateRequestHelper(TestManager::pointer testManager) : TxHelper(testManag
 }
 
 CreateManageLimitsRequestResult
-LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, LimitsUpdateRequest request, uint32_t *allTasks, uint64_t *requestID,
+LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account& source, LimitsUpdateRequest request, uint32_t *allTasks, uint64_t *requestID,
                                                           CreateManageLimitsRequestResultCode expectedResult,
                                                           OperationResultCode expectedOpResultCode)
 {
     Database& db = mTestManager->getDB();
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    uint64 reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
+    uint64 reviewableRequestCountBeforeTx = requestHelper.countObjects();
 
     ReviewableRequestFrame::pointer limitsUpdateRequestBeforeTx;
     if (requestID != nullptr)
     {
-        limitsUpdateRequestBeforeTx = reviewableRequestHelper->loadRequest(*requestID, source.key.getPublicKey(), db);
+        limitsUpdateRequestBeforeTx = requestHelper.loadRequest(*requestID, source.key.getPublicKey());
     }
 
     auto txFrame = createLimitsUpdateRequestTx(source, request, allTasks, requestID);
@@ -50,7 +52,7 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
     auto actualResultCode = CreateManageLimitsRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
-    uint64 reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(db.getSession());
+    uint64 reviewableRequestCountAfterTx = requestHelper.countObjects();
     if (expectedResult != CreateManageLimitsRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
@@ -58,8 +60,8 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
     }
 
     CreateManageLimitsRequestResult createManageLimitsRequestResult = opResult.tr().createManageLimitsRequestResult();
-    auto limitsUpdateRequestAfterTx = reviewableRequestHelper->loadRequest(
-            createManageLimitsRequestResult.success().manageLimitsRequestID, db);
+    auto limitsUpdateRequestAfterTx = requestHelper.loadRequest(
+        createManageLimitsRequestResult.success().manageLimitsRequestID);
     REQUIRE(!!limitsUpdateRequestAfterTx);
 
     if (limitsUpdateRequestBeforeTx == nullptr)
@@ -71,7 +73,7 @@ LimitsUpdateRequestHelper::applyCreateLimitsUpdateRequest(Account &source, Limit
     REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestID() == limitsUpdateRequestAfterTx->getRequestID());
     REQUIRE(limitsUpdateRequestBeforeTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails !=
-    limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails);
+            limitsUpdateRequestAfterTx->getRequestEntry().body.limitsUpdateRequest().creatorDetails);
 
     return createManageLimitsRequestResult;
 }
@@ -86,8 +88,8 @@ LimitsUpdateRequestHelper::createLimitsUpdateRequest(longstring creatorDetails)
 
 TransactionFramePtr
 LimitsUpdateRequestHelper::createLimitsUpdateRequestTx(Account& source, LimitsUpdateRequest request,
-                                                       uint32_t* allTasks,
-                                                       uint64_t* requestID)
+                                                       uint32_t *allTasks,
+                                                       uint64_t *requestID)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_MANAGE_LIMITS_REQUEST);

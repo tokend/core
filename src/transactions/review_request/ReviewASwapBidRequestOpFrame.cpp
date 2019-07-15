@@ -4,7 +4,8 @@
 #include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
-#include <transactions/dex/OfferManager.h>
+#include "transactions/dex/OfferManager.h"
+#include "transactions/managers/BalanceManager.h"
 #include "ReviewASwapBidRequestOpFrame.h"
 
 using namespace std;
@@ -202,10 +203,10 @@ bool ReviewASwapBidRequestOpFrame::handleApprove(Application& app, StorageHelper
 
     EntryHelperProvider::storeChangeEntry(delta, db, askFrame->mEntry);
 
-    AccountManager accountManager(app, db, delta, ledgerManager);
+    BalanceManager balanceManager(app, storageHelper);
     BalanceFrame::pointer purchaserBalanceFrame =
-        accountManager.loadOrCreateBalanceFrameForAsset(
-            request->getRequestor(), askFrame->getBaseAsset(), db, delta);
+        balanceManager.loadOrCreateBalance(
+            request->getRequestor(), askFrame->getBaseAsset());
 
     if (purchaserBalanceFrame == nullptr)
     {

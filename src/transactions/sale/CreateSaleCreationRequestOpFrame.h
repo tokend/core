@@ -9,8 +9,7 @@
 
 namespace stellar
 {
-class CreateSaleCreationRequestOpFrame : public OperationFrame
-{
+class CreateSaleCreationRequestOpFrame : public OperationFrame {
     CreateSaleCreationRequestResult& innerResult()
     {
         return mResult.tr().createSaleCreationRequestResult();
@@ -27,14 +26,15 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
                              std::vector<SignerRequirement>& result) const override;
 
     // tryLoadAssetOrRequest - tries to load base asset or request. If fails returns nullptr. If request exists - creates asset frame wrapper for it
-    static AssetFrame::pointer tryLoadBaseAssetOrRequest(SaleCreationRequest const& request, Database& db, AccountID const& source);
+    static AssetFrame::pointer
+    tryLoadBaseAssetOrRequest(SaleCreationRequest const& request, StorageHelper& storageHelper, AccountID const& source);
 
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
 
     bool
     checkRulesDuplication(StorageHelper& storageHelper,
-            xdr::xvector<CreateAccountSaleRuleData> const& rules);
+                          xdr::xvector<CreateAccountSaleRuleData> const& rules);
 
     bool
     isSaleRulesValid(Application& app, StorageHelper& storageHelper, SaleCreationRequest const& request);
@@ -42,19 +42,21 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
 public:
 
     CreateSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,
-                                   TransactionFrame& parentTx);
-    bool doApply(Application& app, StorageHelper &storageHelper,
+                                     TransactionFrame& parentTx);
+
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
 
     static bool ensureEnoughAvailable(const SaleCreationRequest& saleCreationRequest,
-            const AssetFrame::pointer baseAsset);
+                                      const AssetFrame::pointer baseAsset);
 
     static CreateSaleCreationRequestResultCode doCheckValid(Application& app,
                                                             SaleCreationRequest const& saleCreationRequest, AccountID const& source);
 
-    static bool areQuoteAssetsValid(Database& db, xdr::xvector<SaleCreationRequestQuoteAsset, 100> quoteAssets, AssetCode defaultQuoteAsset);
+    static bool
+    areQuoteAssetsValid(StorageHelper& storageHelper, xdr::xvector<SaleCreationRequestQuoteAsset, 100> quoteAssets, AssetCode defaultQuoteAsset);
 
     static CreateSaleCreationRequestResultCode getInnerCode(
         OperationResult const& res)
@@ -62,17 +64,19 @@ public:
         return res.tr().createSaleCreationRequestResult().code();
     }
 
-    std::string getInnerResultCodeAsStr() override {
+    std::string getInnerResultCodeAsStr() override
+    {
         return xdr::xdr_traits<CreateSaleCreationRequestResultCode>::enum_name(innerResult().code());
     }
 
     bool createRequest(Application& app, StorageHelper& storageHelper,
                        LedgerManager& ledgerManager);
+
     bool updateRequest(Application& app, StorageHelper& storageHelper,
                        LedgerManager& ledgerManager);
 
     bool isRequestValid(Application& app, StorageHelper& storageHelper,
-            LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
+                        LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 
     std::vector<std::string> makeTasksKeyVector();
 

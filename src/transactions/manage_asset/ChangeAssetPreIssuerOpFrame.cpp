@@ -9,8 +9,9 @@
 #include <crypto/SHA.h>
 #include <transactions/SignatureValidatorImpl.h>
 #include "ChangeAssetPreIssuerOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
 
 namespace stellar
 {
@@ -21,14 +22,13 @@ ChangeAssetPreIssuerOpFrame::ChangeAssetPreIssuerOpFrame(Operation const& op,
                                                          OperationResult& res,
                                                          TransactionFrame&
                                                          parentTx)
-    : ManageAssetOpFrame(op, res, parentTx)
-    , mAssetChangePreissuedSigner(mManageAsset.request.changePreissuedSigner())
+    : ManageAssetOpFrame(op, res, parentTx), mAssetChangePreissuedSigner(mManageAsset.request.changePreissuedSigner())
 {
 }
 
 bool
 ChangeAssetPreIssuerOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                          std::vector<OperationCondition>& result) const
+                                                       std::vector<OperationCondition>& result) const
 {
     // will be handled on signer level
     return true;
@@ -36,18 +36,17 @@ ChangeAssetPreIssuerOpFrame::tryGetOperationConditions(StorageHelper& storageHel
 
 bool
 ChangeAssetPreIssuerOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                        std::vector<SignerRequirement>& result) const
+                                                      std::vector<SignerRequirement>& result) const
 {
     // only asset pre issuer can change asset pre issuer
     return true;
 }
 
-bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, LedgerDelta& delta,
+bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                           LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto assetFrame = AssetHelperLegacy::Instance()->
-        loadAsset(mAssetChangePreissuedSigner.code, db, &delta);
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto assetFrame = assetHelper.loadAsset(mAssetChangePreissuedSigner.code);
     if (!assetFrame)
     {
         innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);
@@ -68,7 +67,7 @@ bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, LedgerDelta& delta,
 
     auto& assetEntry = assetFrame->getAsset();
     assetEntry.preissuedAssetSigner = mAssetChangePreissuedSigner.accountID;
-    AssetHelperLegacy::Instance()->storeChange(delta, db, assetFrame->mEntry);
+    assetHelper.storeChange(assetFrame->mEntry);
     innerResult().code(ManageAssetResultCode::SUCCESS);
     innerResult().success().requestID = 0;
     innerResult().success().fulfilled = true;
@@ -86,7 +85,7 @@ string ChangeAssetPreIssuerOpFrame::getAssetCode() const
 }
 
 Hash
-ChangeAssetPreIssuerOpFrame::getSignatureData(AssetCode const & assetCode,
+ChangeAssetPreIssuerOpFrame::getSignatureData(AssetCode const& assetCode,
                                               AccountID const& newPreIssuer)
 {
     std::string rawSignatureData = assetCode + ":" + PubKeyUtils::toStrKey(newPreIssuer);
@@ -98,11 +97,11 @@ ChangeAssetPreIssuerOpFrame::isSignatureValid(AssetFrame::pointer asset,
                                               LedgerVersion version)
 {
     auto signatureData = getSignatureData(mAssetChangePreissuedSigner.code,
-            mAssetChangePreissuedSigner.accountID);
+                                          mAssetChangePreissuedSigner.accountID);
     auto signatureValidator = SignatureValidatorImpl(signatureData, {mAssetChangePreissuedSigner.signature});
 
     const int VALID_SIGNATURES_REQUIRED = 1;
-    SignatureValidator::Result result = signatureValidator.check({ asset->getPreIssuedAssetSigner() }, VALID_SIGNATURES_REQUIRED, version);
+    SignatureValidator::Result result = signatureValidator.check({asset->getPreIssuedAssetSigner()}, VALID_SIGNATURES_REQUIRED, version);
     return result == SignatureValidator::Result::SUCCESS;
 }
 }

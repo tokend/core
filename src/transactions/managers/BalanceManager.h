@@ -9,11 +9,9 @@ class Application;
 class StorageHelper;
 class LedgerManager;
 
-class BalanceManager
-{
+class BalanceManager {
 public:
-    enum Result
-    {
+    enum Result {
         SUCCESS,
         LINE_FULL,
         UNDERFUNDED,
@@ -59,7 +57,7 @@ private:
 
     Result
     processStatistics(AccountFrame::pointer from, BalanceFrame::pointer fromBalance,
-            uint64_t amount);
+                      uint64_t amount);
 
     [[deprecated]]
     bool

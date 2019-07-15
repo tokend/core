@@ -2,13 +2,13 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/StatisticsHelper.h>
-#include <ledger/AssetPairHelper.h>
-#include <ledger/LimitsV2Helper.h>
-#include <ledger/StatisticsV2Helper.h>
+#include "ledger/StatisticsHelper.h"
+#include "ledger/AssetPairHelper.h"
+#include "ledger/LimitsV2Helper.h"
+#include "ledger/StatisticsV2Helper.h"
 #include "WithdrawRequestHelper.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "test/test_marshaler.h"
@@ -29,9 +29,11 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     OperationResultCode expectedOpResultCode)
 {
     Database& db = mTestManager->getDB();
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
-    auto balanceBeforeRequest = BalanceHelperLegacy::Instance()->loadBalance(request.balance, db);
+    auto& requestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
+
+    auto reviewableRequestCountBeforeTx = requestHelper.countObjects();
+    auto balanceBeforeRequest = balanceHelper.loadBalance(request.balance);
 
     xdr::pointer<AccountID> accountID = nullptr;
     accountID.activate() = source.key.getPublicKey();
@@ -66,7 +68,7 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     auto actualResultCode = CreateWithdrawalRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
-    uint64 reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(db.getSession());
+    uint64 reviewableRequestCountAfterTx = requestHelper.countObjects();
     if (expectedResult != CreateWithdrawalRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
@@ -74,16 +76,18 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     }
 
     CreateWithdrawalRequestResult createRequestResult = opResult.tr().createWithdrawalRequestResult();
-    auto withdrawRequest = ReviewableRequestHelperLegacy::Instance()->loadRequest(createRequestResult.success().requestID, db);
+    auto withdrawRequest = requestHelper.loadRequest(createRequestResult.success().requestID);
     REQUIRE(withdrawRequest);
 
     REQUIRE(!!balanceBeforeRequest);
     REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
 
-    auto balanceAfterRequest = BalanceHelperLegacy::Instance()->loadBalance(request.balance, db);
+    auto balanceAfterRequest = balanceHelper.loadBalance(request.balance);
     REQUIRE(!!balanceAfterRequest);
-    REQUIRE(balanceBeforeRequest->getAmount() == balanceAfterRequest->getAmount() + request.amount + request.fee.fixed + request.fee.percent);
-    REQUIRE(balanceAfterRequest->getLocked() == balanceBeforeRequest->getLocked() + request.amount + request.fee.fixed + request.fee.percent);
+    REQUIRE(balanceBeforeRequest->getAmount()
+            == balanceAfterRequest->getAmount() + request.amount + request.fee.fixed + request.fee.percent);
+    REQUIRE(balanceAfterRequest->getLocked()
+            == balanceBeforeRequest->getLocked() + request.amount + request.fee.fixed + request.fee.percent);
 
     unsigned long iterator = 0;
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
@@ -134,11 +138,11 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
     uint64_t universalAmount = 0;
     switch (withdrawRequest->getRequestType())
     {
-    case ReviewableRequestType::CREATE_WITHDRAW:
-        universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
-        break;
-    default:
-        throw std::runtime_error("Unexpected reviewable request type");
+        case ReviewableRequestType::CREATE_WITHDRAW:
+            universalAmount = withdrawRequest->getRequestEntry().body.withdrawalRequest().universalAmount;
+            break;
+        default:
+            throw std::runtime_error("Unexpected reviewable request type");
     }
     REQUIRE(universalAmount != 0);
 
@@ -163,7 +167,10 @@ void WithdrawRequestHelper::validateStatsChange(StatisticsV2Frame::pointer stats
 
 bool WithdrawRequestHelper::canCalculateStats(AssetCode baseAsset)
 {
-    auto statsAsset = AssetHelperLegacy::Instance()->loadStatsAsset(mTestManager->getDB());
+    auto statsAsset = mTestManager->
+        getStorageHelper().
+        getAssetHelper().
+        loadStatsAsset();
     if (!statsAsset)
         return false;
 

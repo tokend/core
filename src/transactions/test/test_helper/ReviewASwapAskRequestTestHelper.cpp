@@ -1,6 +1,6 @@
 #include <ledger/BalanceHelperLegacy.h>
 #include <ledger/AtomicSwapAskHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include <ledger/ReviewableRequestHelperLegacy.h>
 #include "ReviewRequestTestHelper.h"
 #include "ReviewASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"

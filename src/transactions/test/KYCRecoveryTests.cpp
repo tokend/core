@@ -1,11 +1,11 @@
-#include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
-#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
-#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "transactions/test/test_helper/CreateChangeRoleRequestTestHelper.h"
 #include "test/test_marshaler.h"
 #include "test/test.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/AccountKYCHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "bucket/BucketApplicator.h"
@@ -29,6 +29,9 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
     TestManager::upgradeToCurrentLedgerVersion(app);
 
     auto testManager = TestManager::make(app);
+
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
     auto randomSecretKey = SecretKey::random();
     auto account = Account{randomSecretKey, Salt(1)};
@@ -211,7 +214,7 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
             SECTION("Initiate another kyc recovery and create another request")
             {
                 initKycRecoveryTestHelper.applyTx(initKYCRecovery);
-                auto req = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
+                auto req = requestHelper.loadRequest(requestID);
                 REQUIRE_FALSE(req);
                 auto createRecoveryResult = createKycRecoveryRequestTestHelper.applyTx(createKYCRecoveryReqBuilder);
                 REQUIRE_FALSE(createRecoveryResult.success().fulfilled);
@@ -220,22 +223,21 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
             SECTION("Review")
             {
                 uint32_t tasksToAdd = 2, tasksToRemove = 1;
-                auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
+                auto request = requestHelper.loadRequest(requestID);
                 REQUIRE(request);
                 reviewKycRecoveryHelper.applyReviewRequestTxWithTasks(master, requestID, request->getHash(),
-                    ReviewableRequestType::KYC_RECOVERY, ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                    &tasksToAdd, &tasksToRemove);
+                                                                      ReviewableRequestType::KYC_RECOVERY, ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS,
+                                                                      &tasksToAdd, &tasksToRemove);
                 tasksToAdd = 0;
                 tasksToRemove = 2;
-                request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
+                request = requestHelper.loadRequest(requestID);
                 REQUIRE(request);
                 auto reviewResult = reviewKycRecoveryHelper.applyReviewRequestTxWithTasks(master, requestID, request->getHash(),
-                    ReviewableRequestType::KYC_RECOVERY, ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                    &tasksToAdd, &tasksToRemove);
+                                                                                          ReviewableRequestType::KYC_RECOVERY, ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS,
+                                                                                          &tasksToAdd, &tasksToRemove);
 
                 REQUIRE(reviewResult.success().fulfilled);
             }
-
 
         }
 

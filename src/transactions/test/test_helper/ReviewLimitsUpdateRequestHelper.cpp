@@ -4,7 +4,7 @@
 
 #include <ledger/LimitsV2Helper.h>
 #include "ReviewLimitsUpdateRequestHelper.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 
 namespace stellar

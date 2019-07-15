@@ -1,6 +1,7 @@
-#include <ledger/ReviewableRequestHelper.h>
 #include <transactions/atomic_swap/CreateAtomicSwapAskRequestOpFrame.h>
-#include <ledger/BalanceHelperLegacy.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "CreateASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -13,14 +14,14 @@ namespace txtest
 {
 
 CreateASwapAskRequestHelper::CreateASwapAskRequestHelper(
-        TestManager::pointer testManager) : TxHelper(testManager)
+    TestManager::pointer testManager) : TxHelper(testManager)
 {
 }
 
 CreateAtomicSwapAskRequest
 CreateASwapAskRequestHelper::createASwapAskCreationRequest(
-        BalanceID baseBalance, uint64_t amount, std::string details,
-        std::vector<AtomicSwapAskQuoteAsset> quoteAssets)
+    BalanceID baseBalance, uint64_t amount, std::string details,
+    std::vector<AtomicSwapAskQuoteAsset> quoteAssets)
 {
     CreateAtomicSwapAskRequest request;
     request.baseBalance = baseBalance;
@@ -34,7 +35,7 @@ CreateASwapAskRequestHelper::createASwapAskCreationRequest(
 
 TransactionFramePtr
 CreateASwapAskRequestHelper::createCreateASwapAskCreationRequestTx(
-        Account &source, CreateAtomicSwapAskRequest request)
+    Account& source, CreateAtomicSwapAskRequest request)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST);
@@ -46,19 +47,20 @@ CreateASwapAskRequestHelper::createCreateASwapAskCreationRequestTx(
 
 CreateAtomicSwapAskRequestResult
 CreateASwapAskRequestHelper::applyCreateASwapAskCreationRequest(
-        Account &source, CreateAtomicSwapAskRequest request,
-        CreateAtomicSwapAskRequestResultCode expectedResult,
-        OperationResultCode expectedOpResCode)
+    Account& source, CreateAtomicSwapAskRequest request,
+    CreateAtomicSwapAskRequestResultCode expectedResult,
+    OperationResultCode expectedOpResCode)
 {
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
 
     Database& db = mTestManager->getDB();
 
     auto reviewableRequestCountBeforeTx =
-            reviewableRequestHelper->countObjects(db.getSession());
+        reviewableRequestHelper.countObjects();
 
-    auto baseBalanceBeforeTx = balanceHelper->loadBalance(request.baseBalance, db);
+    auto baseBalanceBeforeTx = balanceHelper.loadBalance(request.baseBalance);
 
     auto txFrame = createCreateASwapAskCreationRequestTx(source, request);
     mTestManager->applyCheck(txFrame);
@@ -77,10 +79,10 @@ CreateASwapAskRequestHelper::applyCreateASwapAskCreationRequest(
     REQUIRE(actualResultCode == expectedResult);
 
     auto createAskCreationRequestResult =
-            opResult.tr().createAtomicSwapAskRequestResult();
+        opResult.tr().createAtomicSwapAskRequestResult();
 
     auto reviewableRequestCountAfterTx =
-            reviewableRequestHelper->countObjects(db.getSession());
+        reviewableRequestHelper.countObjects();
 
     if (expectedResult != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
@@ -88,7 +90,7 @@ CreateASwapAskRequestHelper::applyCreateASwapAskCreationRequest(
         return createAskCreationRequestResult;
     }
 
-    auto baseBalanceAfterTx = balanceHelper->loadBalance(request.baseBalance, db);
+    auto baseBalanceAfterTx = balanceHelper.loadBalance(request.baseBalance);
 
     if (baseBalanceBeforeTx != nullptr)
     {

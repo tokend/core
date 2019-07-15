@@ -30,7 +30,7 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame {
                       BalanceFrame::pointer balanceFrame, const uint64_t amountToAdd,
                       uint64_t& universalAmount, uint64_t requestID);
 
-    bool exceedsLowerBound(Database& db, AssetCode& code);
+    bool exceedsLowerBound(StorageHelper& storageHelper, AssetCode& code);
 
     ReviewableRequestFrame::pointer
     tryCreateWithdrawalRequest(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
@@ -53,6 +53,7 @@ public:
 
     CreateWithdrawalRequestOpFrame(Operation const& op, OperationResult& res,
                                    TransactionFrame& parentTx);
+
     bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
 

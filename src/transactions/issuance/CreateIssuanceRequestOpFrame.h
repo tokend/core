@@ -11,8 +11,7 @@
 
 namespace stellar
 {
-class CreateIssuanceRequestOpFrame : public OperationFrame
-{
+class CreateIssuanceRequestOpFrame : public OperationFrame {
     bool mIsFeeRequired;
 
     CreateIssuanceRequestResult&
@@ -21,13 +20,13 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
         return mResult.tr().createIssuanceRequestResult();
     }
 
-	CreateIssuanceRequestOp const& mCreateIssuanceRequest;
+    CreateIssuanceRequestOp const& mCreateIssuanceRequest;
 
-	bool isAuthorizedToRequestIssuance(AssetFrame::pointer assetFrame);
+    bool isAuthorizedToRequestIssuance(AssetFrame::pointer assetFrame);
 
-	// returns nullptr and sets error code if failed to create request
-	ReviewableRequestFrame::pointer tryCreateIssuanceRequest(Application& app, LedgerDelta& delta,
-		LedgerManager& ledgerManager);
+    // returns nullptr and sets error code if failed to create request
+    ReviewableRequestFrame::pointer tryCreateIssuanceRequest(Application& app, StorageHelper& storageHelper,
+                                                             LedgerManager& ledgerManager);
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
@@ -41,9 +40,9 @@ class CreateIssuanceRequestOpFrame : public OperationFrame
 public:
 
     CreateIssuanceRequestOpFrame(Operation const& op, OperationResult& res,
-                       TransactionFrame& parentTx);
+                                 TransactionFrame& parentTx);
 
-    bool doApply(Application& app, StorageHelper &storageHelper,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
@@ -54,12 +53,13 @@ public:
         return res.tr().createIssuanceRequestResult().code();
     }
 
-	std::string getInnerResultCodeAsStr() override {
-		return xdr::xdr_traits<CreateIssuanceRequestResultCode>::enum_name(innerResult().code());
-	}
+    std::string getInnerResultCodeAsStr() override
+    {
+        return xdr::xdr_traits<CreateIssuanceRequestResultCode>::enum_name(innerResult().code());
+    }
 
     bool
-    calculateFee(Application& app, AccountID receiver, Database &db, Fee &fee);
+    calculateFee(Application& app, StorageHelper& storageHelper, AccountID receiver, Fee& fee);
 
     static CreateIssuanceRequestOp build(AssetCode const& asset, uint64_t amount, BalanceID const& receiver,
                                          LedgerManager& lm, uint32_t allTasks);

@@ -4,16 +4,17 @@
 
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAssetPairTestHelper.h>
-#include <ledger/AccountHelperLegacy.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include <ledger/FeeHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include "test/test.h"
 #include "crypto/SHA.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "test_helper/WithdrawRequestHelper.h"
 #include "test_helper/ReviewWithdrawalRequestHelper.h"
 #include "test/test_marshaler.h"
@@ -34,7 +35,11 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
 
-    auto root = Account{ getRoot(), Salt(0) };
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
+    auto root = Account{getRoot(), Salt(0)};
     auto issuanceHelper = IssuanceRequestHelper(testManager);
     auto assetHelper = ManageAssetTestHelper(testManager);
     auto assetPairHelper = ManageAssetPairTestHelper(testManager);
@@ -62,7 +67,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     const AssetCode asset = "USD";
     const uint64_t preIssuedAmount = 10000 * ONE;
     issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount, root);
-    assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
+    assetHelper.updateAsset(root, asset, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
+                                               | static_cast<uint32_t>(AssetPolicy::WITHDRAWABLE));
 
     //create stats asset and stats asset pair
     const AssetCode statsAsset = "UAH";
@@ -74,8 +80,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
     // create account which will withdraw
     auto withdrawerKP = SecretKey::random();
     createAccountTestHelper.applyCreateAccountTx(root, withdrawerKP.getPublicKey(), 1);
-    auto withdrawer = Account{ withdrawerKP, Salt(0) };
-    auto withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
+    auto withdrawer = Account{withdrawerKP, Salt(0)};
+    auto withdrawerBalance = balanceHelper.loadBalance(withdrawerKP.getPublicKey(), asset);
     REQUIRE(!!withdrawerBalance);
     issuanceHelper.applyCreateIssuanceRequest(root, asset, preIssuedAmount, withdrawerBalance->getBalanceID(),
                                               "RANDOM ISSUANCE REFERENCE");
@@ -103,7 +109,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
         //create withdraw request
         uint64_t amountToWithdraw = 1000 * ONE;
-        withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
+        withdrawerBalance = balanceHelper.loadBalance(withdrawerKP.getPublicKey(), asset);
         REQUIRE(withdrawerBalance->getAmount() >= amountToWithdraw);
         const uint64_t expectedAmountInDestAsset = 0.5 * ONE;
 
@@ -112,7 +118,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         zeroFee.percent = 0;
 
 
-        SECTION("Default tasks") {
+        SECTION("Default tasks")
+        {
             longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
             manageKeyValueHelper.setKey(key)->setUi32Value(2048);
             manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
@@ -136,7 +143,8 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             REQUIRE(reviewResult.success().fulfilled);
         }
 
-        SECTION("Set tasks on request creation") {
+        SECTION("Set tasks on request creation")
+        {
             longstring key = ManageKeyValueOpFrame::makeWithdrawalTasksKey("*");
             manageKeyValueHelper.setKey(key)->setUi32Value(2048);
             manageKeyValueHelper.doApply(app, ManageKVAction::PUT, true);
@@ -188,7 +196,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
 
         //create withdraw request
         uint64_t amountToWithdraw = 1000 * ONE;
-        withdrawerBalance = BalanceHelperLegacy::Instance()->loadBalance(withdrawerKP.getPublicKey(), asset, testManager->getDB(), nullptr);
+        withdrawerBalance = balanceHelper.loadBalance(withdrawerKP.getPublicKey(), asset);
         REQUIRE(withdrawerBalance->getAmount() >= amountToWithdraw);
         const uint64_t expectedAmountInDestAsset = pricePerUnit * amountToWithdraw;
 
@@ -253,7 +261,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
             auto opRes = withdrawRequestHelper.applyCreateWithdrawRequest(withdrawer, withdrawRequest, nullptr);
             uint64_t requestID = opRes.success().requestID;
 
-            auto requestFrame = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, testManager->getDB());
+            auto requestFrame = requestHelper.loadRequest(requestID);
             REQUIRE(!!requestFrame);
 
             Operation op;
@@ -323,7 +331,7 @@ TEST_CASE("Withdraw", "[tx][withdraw]")
         {
             uint32_t allTasks = 0;
             //issue some amount to withdrawer
-            uint64_t enoughToOverflow = UINT64_MAX/pricePerUnit - 1;
+            uint64_t enoughToOverflow = UINT64_MAX / pricePerUnit - 1;
             REQUIRE(statsPricePerUnit > pricePerUnit);
             issuanceHelper.authorizePreIssuedAmount(root, root.key, asset, enoughToOverflow, root);
             issuanceHelper.applyCreateIssuanceRequest(root, asset, enoughToOverflow, withdrawerBalance->getBalanceID(),

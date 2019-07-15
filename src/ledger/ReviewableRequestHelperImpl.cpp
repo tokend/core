@@ -15,14 +15,12 @@ namespace stellar
 {
 using xdr::operator<;
 
-const char *selectorReviewableRequest = "SELECT id, hash, body, requestor, reviewer, reference, "
-                                        "reject_reason, created_at, version, lastmodified, "
-                                        "all_tasks, pending_tasks, external_details FROM reviewable_request";
-
 ReviewableRequestHelperImpl::ReviewableRequestHelperImpl(stellar::StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
-
+    mSelectorReviewableRequest = "SELECT id, hash, body, requestor, reviewer, reference, "
+                                 "reject_reason, created_at, version, lastmodified, "
+                                 "all_tasks, pending_tasks, external_details FROM reviewable_request";
 }
 
 void ReviewableRequestHelperImpl::dropAll()
@@ -182,12 +180,50 @@ ReviewableRequestHelperImpl::loadRequests(StatementContext& prep, function<void(
 
 ReviewableRequestFrame::pointer ReviewableRequestHelperImpl::loadRequest(uint64 requestID)
 {
-    return stellar::ReviewableRequestFrame::pointer();
+    LedgerKey key;
+    key.type(LedgerEntryType::REVIEWABLE_REQUEST);
+    key.reviewableRequest().requestID = requestID;
+    if (cachedEntryExists(key))
+    {
+        auto p = getCachedEntry(key);
+        return p ? std::make_shared<ReviewableRequestFrame>(*p) : nullptr;
+    }
+
+    auto& db = getDatabase();
+
+    std::string sql = mSelectorReviewableRequest;
+    sql += +" WHERE id = :id";
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(requestID));
+
+    ReviewableRequestFrame::pointer retReviewableRequest;
+    auto timer = db.getSelectTimer("reviewable_request");
+    loadRequests(prep, [&retReviewableRequest](LedgerEntry const& entry)
+    {
+        retReviewableRequest = make_shared<ReviewableRequestFrame>(entry);
+    });
+
+    if (!retReviewableRequest)
+    {
+        putCachedEntry(key, nullptr);
+        return nullptr;
+    }
+
+    auto delta = getLedgerDelta();
+    if (delta)
+    {
+        delta->recordEntry(*retReviewableRequest);
+    }
+
+    auto pEntry = std::make_shared<LedgerEntry>(retReviewableRequest->mEntry);
+    putCachedEntry(key, pEntry);
+    return retReviewableRequest;
 }
 
 ReviewableRequestFrame::pointer ReviewableRequestHelperImpl::loadRequest(AccountID& rawRequestor, string64 reference)
 {
-    std::string sql = selectorReviewableRequest;
+    std::string sql = mSelectorReviewableRequest;
     sql += +" WHERE requestor = :requestor AND reference = :reference";
 
     auto& db = getDatabase();
@@ -254,7 +290,7 @@ ReviewableRequestHelperImpl::loadRequest(uint64 requestID, AccountID requestor, 
 vector<ReviewableRequestFrame::pointer>
 ReviewableRequestHelperImpl::loadRequests(AccountID const& rawRequestor, ReviewableRequestType requestType)
 {
-    std::string sql = selectorReviewableRequest;
+    std::string sql = mSelectorReviewableRequest;
     sql += +" WHERE requestor = :requstor";
 
     auto& db = getDatabase();
@@ -283,7 +319,7 @@ vector<ReviewableRequestFrame::pointer> ReviewableRequestHelperImpl::loadRequest
     if (requestIDs.size() == 0)
         return vector<ReviewableRequestFrame::pointer>{};
 
-    string sql = selectorReviewableRequest;
+    string sql = mSelectorReviewableRequest;
     sql += " WHERE id IN (" + obtainSqlRequestIDsString(requestIDs) + ")";
 
     auto& db = getDatabase();

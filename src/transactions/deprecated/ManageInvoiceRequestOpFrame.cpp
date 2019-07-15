@@ -18,93 +18,91 @@ using xdr::operator==;
 
 
 ManageInvoiceRequestOpFrame::ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res,
-                                     TransactionFrame& parentTx)
-    : OperationFrame(op, res, parentTx)
-    , mManageInvoiceRequest(mOperation.body.manageInvoiceRequestOp())
+                                                         TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mManageInvoiceRequest(mOperation.body.manageInvoiceRequestOp())
 {
 }
 
 bool
-ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
+ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
+    innerResult().code(ManageInvoiceRequestResultCode::SUCCESS);
 
-	innerResult().code(ManageInvoiceRequestResultCode::SUCCESS);
+    if (mManageInvoiceRequest.details.action() == ManageInvoiceRequestAction::CREATE)
+    {
+        return createManageInvoiceRequest(app, storageHelper, ledgerManager);
+    }
 
-	if (mManageInvoiceRequest.details.action() == ManageInvoiceRequestAction::CREATE)
-	{
-	    return createManageInvoiceRequest(app, storageHelper, ledgerManager);
-	}
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto reviewableRequest = requestHelper.loadRequest(mManageInvoiceRequest.details.requestID());
+    if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
+    {
+        innerResult().code(ManageInvoiceRequestResultCode::NOT_FOUND);
+        return false;
+    }
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto reviewableRequest = reviewableRequestHelper->loadRequest(mManageInvoiceRequest.details.requestID(), db);
-	if (!reviewableRequest || reviewableRequest->getRequestType() != ReviewableRequestType::CREATE_INVOICE)
-	{
-	    innerResult().code(ManageInvoiceRequestResultCode::NOT_FOUND);
-	    return false;
-	}
-
-	if (!(reviewableRequest->getRequestor() == getSourceID()))
-	{
+    if (!(reviewableRequest->getRequestor() == getSourceID()))
+    {
         innerResult().code(ManageInvoiceRequestResultCode::NOT_ALLOWED_TO_REMOVE);
         return false;
-	}
+    }
 
-	auto invoiceRequest = reviewableRequest->getRequestEntry().body.invoiceRequest();
+    auto invoiceRequest = reviewableRequest->getRequestEntry().body.invoiceRequest();
 
-	if (invoiceRequest.isApproved)
-	{
-	    innerResult().code(ManageInvoiceRequestResultCode::INVOICE_IS_APPROVED);
-	    return false;
-	}
+    if (invoiceRequest.isApproved)
+    {
+        innerResult().code(ManageInvoiceRequestResultCode::INVOICE_IS_APPROVED);
+        return false;
+    }
 
-	if (!!invoiceRequest.contractID)
-	{
-	    auto contractHelper = ContractHelper::Instance();
-	    auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, delta);
 
-	    if (!contractFrame)
-	    {
-	        innerResult().code(ManageInvoiceRequestResultCode::CONTRACT_NOT_FOUND);
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+
+    if (!!invoiceRequest.contractID)
+    {
+        auto contractHelper = ContractHelper::Instance();
+        auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, &delta);
+
+        if (!contractFrame)
+        {
+            innerResult().code(ManageInvoiceRequestResultCode::CONTRACT_NOT_FOUND);
             return false;
-	    }
+        }
 
-	    auto requestID = reviewableRequest->getRequestID();
-	    auto& invoices = contractFrame->getInvoiceRequestIDs();
+        auto requestID = reviewableRequest->getRequestID();
+        auto& invoices = contractFrame->getInvoiceRequestIDs();
 
         auto invoicePos = std::find(invoices.begin(), invoices.end(), requestID);
-	    if (invoicePos == invoices.end())
-	    {
+        if (invoicePos == invoices.end())
+        {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected contract state. "
                                                    << "Expected invoice to be attached to contract. "
                                                    << "contractID: " + std::to_string(*invoiceRequest.contractID)
                                                    << "invoice requestID: " +
                                                       std::to_string(requestID);
             throw std::runtime_error("Unexpected contract state. Expected invoice to be attached to contract.");
-	    }
+        }
 
-	    invoices.erase(invoicePos);
-	    contractHelper->storeChange(*delta, db, contractFrame->mEntry);
-	}
+        invoices.erase(invoicePos);
+        contractHelper->storeChange(delta, db, contractFrame->mEntry);
+    }
 
-	reviewableRequestHelper->storeDelete(*delta, db, reviewableRequest->getKey());
+    requestHelper.storeDelete(reviewableRequest->getKey());
 
-	innerResult().success().details.action(ManageInvoiceRequestAction::REMOVE);
+    innerResult().success().details.action(ManageInvoiceRequestAction::REMOVE);
 
-	return true;
+    return true;
 }
 
 bool
-ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, StorageHelper &storageHelper,
+ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, StorageHelper& storageHelper,
                                                         LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
     auto& invoiceCreationRequest = mManageInvoiceRequest.details.invoiceRequest();
 
     auto senderBalance = storageHelper.getBalanceHelper().loadBalance(invoiceCreationRequest.sender,
-                                                                invoiceCreationRequest.asset);
+                                                                      invoiceCreationRequest.asset);
     if (!senderBalance)
     {
         innerResult().code(ManageInvoiceRequestResultCode::BALANCE_NOT_FOUND);
@@ -112,7 +110,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     }
 
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    if (!checkMaxInvoicesForReceiverAccount(app, db, keyValueHelper))
+    if (!checkMaxInvoicesForReceiverAccount(app, storageHelper))
         return false;
 
     if (!checkMaxInvoiceDetailsLength(app, keyValueHelper))
@@ -135,15 +133,18 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     body.type(ReviewableRequestType::CREATE_INVOICE);
     body.invoiceRequest() = invoiceRequest;
 
-    auto request = ReviewableRequestFrame::createNewWithHash(*delta, getSourceID(), invoiceCreationRequest.sender,
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), invoiceCreationRequest.sender,
                                                              nullptr, body, ledgerManager.getCloseTime());
 
-    EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    requestHelper.storeAdd(request->mEntry);
 
     if (invoiceCreationRequest.contractID)
     {
         auto contractHelper = ContractHelper::Instance();
-        auto contractFrame = contractHelper->loadContract(*invoiceCreationRequest.contractID, db, delta);
+        auto contractFrame = contractHelper->loadContract(*invoiceCreationRequest.contractID, db, &delta);
 
         if (!contractFrame)
         {
@@ -164,7 +165,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
         }
 
         contractFrame->addInvoice(request->getRequestID());
-        contractHelper->storeChange(*delta, db, contractFrame->mEntry);
+        contractHelper->storeChange(delta, db, contractFrame->mEntry);
     }
 
     uint32_t allTasks = 0;
@@ -176,13 +177,15 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     }
 
     request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+    requestHelper.storeChange(request->mEntry);
 
     bool fulfilled = false;
 
-    if (allTasks == 0) {
-        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
-        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+    if (allTasks == 0)
+    {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, storageHelper, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS)
+        {
             throw std::runtime_error("Failed to review manage invoice request");
         }
         fulfilled = result.success().fulfilled;
@@ -198,12 +201,13 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
 }
 
 bool
-ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app, Database& db, KeyValueHelper &keyValueHelper)
+ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app, StorageHelper& storageHelper)
 {
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
     auto maxInvoicesCount = obtainMaxInvoicesCount(app, keyValueHelper);
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto allRequests = reviewableRequestHelper->loadRequests(getSourceID(), ReviewableRequestType::CREATE_INVOICE, db);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto allRequests = requestHelper.loadRequests(getSourceID(), ReviewableRequestType::CREATE_INVOICE);
     if (allRequests.size() >= maxInvoicesCount)
     {
         innerResult().code(ManageInvoiceRequestResultCode::TOO_MANY_INVOICES);
@@ -214,7 +218,7 @@ ManageInvoiceRequestOpFrame::checkMaxInvoicesForReceiverAccount(Application& app
 }
 
 bool
-ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper)
+ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, KeyValueHelper& keyValueHelper)
 {
     auto maxInvoiceDetailsLength = obtainMaxInvoiceDetailsLength(app, keyValueHelper);
 
@@ -228,7 +232,7 @@ ManageInvoiceRequestOpFrame::checkMaxInvoiceDetailsLength(Application& app, KeyV
 }
 
 int64_t
-ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, KeyValueHelper &keyValueHelper)
+ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, KeyValueHelper& keyValueHelper)
 {
     auto maxInvoicesCountKey = ManageKeyValueOpFrame::makeMaxInvoicesCountKey();
     auto maxInvoicesCountKeyValue = keyValueHelper.loadKeyValue(maxInvoicesCountKey);
@@ -241,8 +245,8 @@ ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, KeyValueHe
     if (maxInvoicesCountKeyValue->getKeyValueEntryType() != KeyValueEntryType::UINT32)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
-             << "Expected max invoices count key value to be UINT32. Actual: "
-             << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxInvoicesCountKeyValue->getKeyValueEntryType());
+                                               << "Expected max invoices count key value to be UINT32. Actual: "
+                                               << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxInvoicesCountKeyValue->getKeyValueEntryType());
         throw std::runtime_error("Unexpected database state, expected max invoices count key value to be UINT32");
     }
 
@@ -250,7 +254,7 @@ ManageInvoiceRequestOpFrame::obtainMaxInvoicesCount(Application& app, KeyValueHe
 }
 
 uint64_t
-ManageInvoiceRequestOpFrame::obtainMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper)
+ManageInvoiceRequestOpFrame::obtainMaxInvoiceDetailsLength(Application& app, KeyValueHelper& keyValueHelper)
 {
     auto maxInvoicesDetailsLengthKey = ManageKeyValueOpFrame::makeMaxInvoiceDetailLengthKey();
     auto maxInvoicesDetailsLengthKeyValue = keyValueHelper.loadKeyValue(maxInvoicesDetailsLengthKey);
@@ -263,8 +267,8 @@ ManageInvoiceRequestOpFrame::obtainMaxInvoiceDetailsLength(Application& app, Key
     if (maxInvoicesDetailsLengthKeyValue->getKeyValueEntryType() != KeyValueEntryType::UINT32)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
-             << "Expected max invoices detail length key value to be UINT32. Actual: "
-             << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxInvoicesDetailsLengthKeyValue->getKeyValueEntryType());
+                                               << "Expected max invoices detail length key value to be UINT32. Actual: "
+                                               << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxInvoicesDetailsLengthKeyValue->getKeyValueEntryType());
         throw std::runtime_error("Unexpected database state, expected max invoices details length key value to be UINT32");
     }
 

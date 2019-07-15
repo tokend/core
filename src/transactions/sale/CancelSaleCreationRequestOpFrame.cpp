@@ -8,7 +8,7 @@ using xdr::operator==;
 
 bool
 CancelSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                            std::vector<OperationCondition>& result) const
+                                                            std::vector<OperationCondition>& result) const
 {
     // only request creator can remove it
     return true;
@@ -16,10 +16,11 @@ CancelSaleCreationRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
 
 bool
 CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                            std::vector<SignerRequirement>& result) const
+                                                           std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            mCancelSaleCreationRequest.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.
+        getReviewableRequestHelper().
+        loadRequest(mCancelSaleCreationRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -31,7 +32,7 @@ CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
 
     resource.reviewableRequest().details.createSale().type =
-            request->getRequestEntry().body.saleCreationRequest().saleType;
+        request->getRequestEntry().body.saleCreationRequest().saleType;
     resource.reviewableRequest().allTasks = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().tasksToRemove = 0;
@@ -42,30 +43,29 @@ CancelSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
 }
 
 CancelSaleCreationRequestOpFrame::CancelSaleCreationRequestOpFrame(
-        Operation const& op, OperationResult& res,
-        TransactionFrame& parentTx)
-        : OperationFrame(op, res, parentTx),
-        mCancelSaleCreationRequest(mOperation.body.cancelSaleCreationRequestOp())
+    Operation const& op, OperationResult& res,
+    TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx),
+      mCancelSaleCreationRequest(mOperation.body.cancelSaleCreationRequestOp())
 {
 }
 
 bool
-CancelSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
+CancelSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                           LedgerManager& ledgerManager)
 {
     auto const requestID = mCancelSaleCreationRequest.requestID;
-    auto& db = ledgerManager.getDatabase();
-    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    auto requestFrame = requestHelper->loadRequest(requestID, getSourceID(),
-            ReviewableRequestType::CREATE_SALE, db, &delta);
+    auto requestFrame = requestHelper.loadRequest(requestID, getSourceID(),
+                                                  ReviewableRequestType::CREATE_SALE);
     if (!requestFrame)
     {
         innerResult().code(CancelSaleCreationRequestResultCode::REQUEST_NOT_FOUND);
         return false;
     }
 
-    requestHelper->storeDelete(delta, db, requestFrame->getKey());
+    requestHelper.storeDelete(requestFrame->getKey());
 
     innerResult().code(CancelSaleCreationRequestResultCode::SUCCESS);
     return true;
@@ -74,7 +74,8 @@ CancelSaleCreationRequestOpFrame::doApply(Application& app, LedgerDelta& delta,
 bool
 CancelSaleCreationRequestOpFrame::doCheckValid(Application& app)
 {
-    if (mCancelSaleCreationRequest.requestID == 0) {
+    if (mCancelSaleCreationRequest.requestID == 0)
+    {
         innerResult().code(CancelSaleCreationRequestResultCode::REQUEST_ID_INVALID);
         return false;
     }

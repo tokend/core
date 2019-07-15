@@ -10,6 +10,8 @@
 
 namespace stellar
 {
+class BalanceManager;
+
 class ReviewSaleCreationRequestOpFrame : public ReviewRequestOpFrame {
 
     bool
@@ -37,10 +39,10 @@ protected:
     SaleCreationRequest& getSaleCreationRequestFromBody(ReviewableRequestFrame::pointer request);
 
     void createAssetPair(SaleFrame::pointer sale, Application& app, LedgerManager& ledgerManager,
-                         LedgerDelta& delta) const;
+                         StorageHelper& storageHelper) const;
 
     std::map<AssetCode, BalanceID>
-    loadBalances(AccountManager& accountManager, ReviewableRequestFrame::pointer request,
+    loadBalances(BalanceManager& balanceManager, ReviewableRequestFrame::pointer request,
                  SaleCreationRequest const& sale);
 };
 }

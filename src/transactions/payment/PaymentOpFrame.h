@@ -6,23 +6,23 @@
 namespace stellar
 {
 
-class PaymentOpFrame : public OperationFrame
-{
-    PaymentResult &innerResult() {
+class PaymentOpFrame : public OperationFrame {
+    PaymentResult& innerResult()
+    {
         return mResult.tr().paymentResult();
     }
 
-    PaymentOp const &mPayment;
+    PaymentOp const& mPayment;
 
     bool isDestinationFeeValid();
 
     BalanceFrame::pointer
     tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper, Application& app);
 
-    bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, Database &db);
+    bool isTransferAllowed(BalanceFrame::pointer from, BalanceFrame::pointer to, StorageHelper& storageHelper);
 
-    Fee getActualFee(AccountFrame::pointer accountFrame, AssetCode const &transferAsset, uint64_t amount,
-                           PaymentFeeType feeType, Database &db, LedgerManager& lm);
+    Fee getActualFee(AccountFrame::pointer accountFrame, AssetCode const& transferAsset, uint64_t amount,
+                     PaymentFeeType feeType, StorageHelper& storageHelper, LedgerManager& lm);
 
     bool
     processTransfer(BalanceManager& balanceManager, AccountFrame::pointer payer,
@@ -51,17 +51,19 @@ class PaymentOpFrame : public OperationFrame
     tryLoadDestinationAccount(StorageHelper& storageHelper) const;
 
 public:
-    PaymentOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+    PaymentOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager) override;
+    bool doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager) override;
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 
-    static PaymentResultCode getInnerCode(OperationResult const &res) {
+    static PaymentResultCode getInnerCode(OperationResult const& res)
+    {
         return res.tr().paymentResult().code();
     }
 
-    std::string getInnerResultCodeAsStr() override {
+    std::string getInnerResultCodeAsStr() override
+    {
         return xdr::xdr_traits<PaymentResultCode>::enum_name(innerResult().code());
     }
 };

@@ -15,12 +15,12 @@
 #include "transactions/payment/PaymentOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
 #include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/StatisticsHelper.h"
 #include "crypto/SHA.h"
 #include "test_helper/TestManager.h"
+#include "ledger/AccountFrame.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -32,42 +32,46 @@ using xdr::operator==;
 
 namespace txtest
 {
-	auto accountHelper = AccountHelperLegacy::Instance();
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto balanceHelper = BalanceHelperLegacy::Instance();
-	auto feeHelper = FeeHelper::Instance();
-	auto statisticsHelper = StatisticsHelper::Instance();
+auto accountHelper = EntryHelperProvider::getHelper(LedgerEntryType::ACCOUNT);
+auto assetHelper = EntryHelperProvider::getHelper(LedgerEntryType::ASSET);
+auto balanceHelper = BalanceHelperLegacy::Instance();
+auto feeHelper = FeeHelper::Instance();
+auto statisticsHelper = StatisticsHelper::Instance();
 
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
-    AssetCode asset, AccountID* accountID, uint64_t* accountType, int64_t subtype,
-    int64_t lowerBound, int64_t upperBound)
+                        AssetCode asset, AccountID *accountID, uint64_t *accountType, int64_t subtype,
+                        int64_t lowerBound, int64_t upperBound)
 {
-	FeeEntry fee;
-	fee.feeType = type;
-	fee.fixedFee = fixed;
-	fee.percentFee = percent;
-	fee.asset = asset;
+    FeeEntry fee;
+    fee.feeType = type;
+    fee.fixedFee = fixed;
+    fee.percentFee = percent;
+    fee.asset = asset;
     fee.subtype = subtype;
-    if (accountID) {
+    if (accountID)
+    {
         fee.accountID.activate() = *accountID;
     }
-    if (accountType) {
+    if (accountType)
+    {
         fee.accountRole.activate() = *accountType;
     }
     fee.lowerBound = lowerBound;
     fee.upperBound = upperBound;
 
     fee.hash = FeeFrame::calcHash(type, asset, accountID, accountType, subtype);
-    
-	return fee;
+
+    return fee;
 }
 
-PaymentFeeData getNoPaymentFee() {
+PaymentFeeData getNoPaymentFee()
+{
     return getGeneralPaymentFee(0, 0);
 }
 
-PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
+PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee)
+{
     PaymentFeeData paymentFeeData;
     Fee generalFeeData;
     generalFeeData.fixed = fixedFee;
@@ -75,7 +79,7 @@ PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
     paymentFeeData.sourceFee = generalFeeData;
     paymentFeeData.destinationFee = generalFeeData;
     paymentFeeData.sourcePaysForDest = true;
-    
+
     return paymentFeeData;
 }
 
@@ -83,14 +87,14 @@ PaymentFeeData getGeneralPaymentFee(uint64 fixedFee, uint64 paymentFee) {
 bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app)
 {
     auto txSet = std::make_shared<TxSetFrame>(
-            app.getLedgerManager().getLastClosedLedgerHeader().hash);
+        app.getLedgerManager().getLastClosedLedgerHeader().hash);
     txSet->add(tx);
 
-	tx->clearCached();
+    tx->clearCached();
     bool check = tx->checkValid(app);
     TransactionResult checkResult = tx->getResult();
     REQUIRE((!check || checkResult.result.code() == TransactionResultCode::txSUCCESS));
-    
+
     bool res;
     auto code = checkResult.result.code();
 
@@ -113,10 +117,10 @@ bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app)
             REQUIRE(checkResult == tx->getResult());
         }
 
-		if (res)
-		{
-			delta.commit();
-		}
+        if (res)
+        {
+            delta.commit();
+        }
     }
     else
     {
@@ -129,14 +133,14 @@ bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app)
     {
         switch (c.type())
         {
-        case LedgerEntryChangeType::CREATED:
-            checkEntry(c.created(), app);
-            break;
-        case LedgerEntryChangeType::UPDATED:
-            checkEntry(c.updated(), app);
-            break;
-        default:
-            break;
+            case LedgerEntryChangeType::CREATED:
+                checkEntry(c.created(), app);
+                break;
+            case LedgerEntryChangeType::UPDATED:
+                checkEntry(c.updated(), app);
+                break;
+            default:
+                break;
         }
     }
 
@@ -149,11 +153,11 @@ checkEntry(LedgerEntry const& le, Application& app)
     auto& d = le.data;
     switch (d.type())
     {
-    case LedgerEntryType::ACCOUNT:
-        checkAccount(d.account().accountID, app);
-        break;
-    default:
-        break;
+        case LedgerEntryType::ACCOUNT:
+            checkAccount(d.account().accountID, app);
+            break;
+        default:
+            break;
     }
 }
 
@@ -161,9 +165,11 @@ checkEntry(LedgerEntry const& le, Application& app)
 void
 checkAccount(AccountID const& id, Application& app)
 {
-    AccountFrame::pointer res =
-        accountHelper->loadAccount(id, app.getDatabase());
-    REQUIRE(!!res);
+    LedgerKey key(LedgerEntryType::ACCOUNT);
+    key.account().accountID = id;
+    auto entry =
+        accountHelper->storeLoad(key, app.getDatabase());
+    REQUIRE(entry);
 }
 
 time_t
@@ -186,9 +192,9 @@ getTestDate(int day, int month, int year)
 TxSetResultMeta closeLedgerOn(Application& app, uint32 ledgerSeq, time_t closeTime)
 {
 
-	TxSetFramePtr txSet = std::make_shared<TxSetFrame>(
-		app.getLedgerManager().getLastClosedLedgerHeader().hash);
-	return closeLedgerOn(app, ledgerSeq, closeTime, txSet);
+    TxSetFramePtr txSet = std::make_shared<TxSetFrame>(
+        app.getLedgerManager().getLastClosedLedgerHeader().hash);
+    return closeLedgerOn(app, ledgerSeq, closeTime, txSet);
 }
 
 TxSetResultMeta
@@ -209,93 +215,99 @@ closeLedgerOn(Application& app, uint32 ledgerSeq, int day, int month, int year,
 
 TxSetResultMeta closeLedgerOn(Application& app, uint32 ledgerSeq, time_t closeTime, TxSetFramePtr txSet)
 {
-	StellarValue sv(txSet->getContentsHash(), closeTime,
-		emptyUpgradeSteps, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
-	LedgerCloseData ledgerData(ledgerSeq, txSet, sv);
-	app.getLedgerManager().closeLedger(ledgerData);
+    StellarValue sv(txSet->getContentsHash(), closeTime,
+                    emptyUpgradeSteps, StellarValue::_ext_t(LedgerVersion::EMPTY_VERSION));
+    LedgerCloseData ledgerData(ledgerSeq, txSet, sv);
+    app.getLedgerManager().closeLedger(ledgerData);
 
-	auto z1 = TransactionFrame::getTransactionHistoryResults(app.getDatabase(),
-		ledgerSeq);
-	auto z2 =
-		TransactionFrame::getTransactionFeeMeta(app.getDatabase(), ledgerSeq);
+    auto z1 = TransactionFrame::getTransactionHistoryResults(app.getDatabase(),
+                                                             ledgerSeq);
+    auto z2 =
+        TransactionFrame::getTransactionFeeMeta(app.getDatabase(), ledgerSeq);
 
-	TxSetResultMeta res;
-	std::transform(z1.results.begin(), z1.results.end(), z2.begin(),
-		std::back_inserter(res), [](TransactionResultPair const& r1,
-			LedgerEntryChanges const& r2)
-	{
-		return std::make_pair(r1, r2);
-	});
+    TxSetResultMeta res;
+    std::transform(z1.results.begin(), z1.results.end(), z2.begin(),
+                   std::back_inserter(res), [](TransactionResultPair const& r1,
+                                               LedgerEntryChanges const& r2)
+                   {
+                       return std::make_pair(r1, r2);
+                   });
 
-	return res;
+    return res;
 }
 
 TxSetResultMeta
 closeLedgerOn(Application& app, uint32 ledgerSeq, int day, int month, int year,
               TxSetFramePtr txSet)
 {
-	return closeLedgerOn(app, ledgerSeq, getTestDate(day, month, year), txSet);
-    
+    return closeLedgerOn(app, ledgerSeq, getTestDate(day, month, year), txSet);
+
 }
 
 [[deprecated("Use TestManager")]]
 void upgradeToCurrentLedgerVersion(Application& app)
 {
-	TestManager::upgradeToCurrentLedgerVersion(app);
+    TestManager::upgradeToCurrentLedgerVersion(app);
 }
 
 SecretKey
 getRoot()
 {
-	return getMasterKP();
+    return getMasterKP();
 }
 
 SecretKey
 getIssuanceKey()
 {
-	return getIssuanceKP();
+    return getIssuanceKP();
 }
 
 SecretKey
-getAccount(const char* n)
+getAccount(const char *n)
 {
-	return getAccountSecret(n);
+    return getAccountSecret(n);
 }
 
 
 AccountFrame::pointer
 loadAccount(SecretKey const& k, Application& app, bool mustExist)
 {
-	return loadAccount(k.getPublicKey(), app, mustExist);
+    return loadAccount(k.getPublicKey(), app, mustExist);
 }
 
 AccountFrame::pointer
 loadAccount(PublicKey const& k, Application& app, bool mustExist)
 {
-	AccountFrame::pointer res = accountHelper->loadAccount(k, app.getDatabase());
-	if (mustExist)
-	{
-		REQUIRE(res);
-	}
-	return res;
+
+    LedgerKey key(LedgerEntryType::ACCOUNT);
+    key.account().accountID = k;
+    auto entry =
+        accountHelper->storeLoad(key, app.getDatabase());
+    if (mustExist)
+    {
+        REQUIRE(entry);
+        return std::make_shared<AccountFrame>(entry->mEntry);
+    }
+
+    return nullptr;
 }
 
 BalanceFrame::pointer
 loadBalance(BalanceID bid, Application& app, bool mustExist)
 {
-	BalanceFrame::pointer res =
-		balanceHelper->loadBalance(bid, app.getDatabase());
-	if (mustExist)
-	{
-		REQUIRE(res);
-	}
-	return res;
+    BalanceFrame::pointer res =
+        balanceHelper->loadBalance(bid, app.getDatabase());
+    if (mustExist)
+    {
+        REQUIRE(res);
+    }
+    return res;
 }
 
 int64_t
 getBalance(BalanceID const& k, Application& app)
 {
-    
+
     auto balance = balanceHelper->loadBalance(k, app.getDatabase());
     assert(balance);
     return balance->getAmount();
@@ -311,7 +323,7 @@ checkTransaction(TransactionFrame& txFrame)
 
 [[deprecated("Use txHelper")]]
 TransactionFramePtr transactionFromOperation(Hash const& networkID, SecretKey& from,
-                         Salt salt, Operation const& op, SecretKey* signer = nullptr, TimeBounds* timeBounds = nullptr)
+                                             Salt salt, Operation const& op, SecretKey *signer = nullptr, TimeBounds *timeBounds = nullptr)
 {
     if (!signer)
         signer = &from;
@@ -323,10 +335,10 @@ TransactionFramePtr transactionFromOperation(Hash const& networkID, SecretKey& f
 
     e.tx.timeBounds.minTime = 0;
     e.tx.timeBounds.maxTime = INT64_MAX / 2;
-	if (timeBounds)
-	{
-		e.tx.timeBounds = *timeBounds;
-	}
+    if (timeBounds)
+    {
+        e.tx.timeBounds = *timeBounds;
+    }
 
     TransactionFramePtr res =
         TransactionFrame::makeTransactionFromWire(networkID, e);
@@ -339,8 +351,8 @@ TransactionFramePtr transactionFromOperation(Hash const& networkID, SecretKey& f
 
 TransactionFramePtr
 createCreateAccountTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-                      Salt seq, AccountID* referrer,
-					  TimeBounds* timeBounds, int32 policies)
+                      Salt seq, AccountID *referrer,
+                      TimeBounds *timeBounds, int32 policies)
 {
     Operation op;
     op.body.type(OperationType::CREATE_ACCOUNT);
@@ -352,8 +364,8 @@ createCreateAccountTx(Hash const& networkID, SecretKey& from, SecretKey& to,
 
 void
 applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
-                     Salt seq, SecretKey* signer,
-                     AccountID* referrer, CreateAccountResultCode result, int32 policies)
+                     Salt seq, SecretKey *signer,
+                     AccountID *referrer, CreateAccountResultCode result, int32 policies)
 {
     TransactionFramePtr txFrame;
 
@@ -363,12 +375,12 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     fromAccount = loadAccount(from, app);
 
     txFrame = createCreateAccountTx(app.getNetworkID(), from, to, seq,
-            referrer, nullptr, policies);
-	if (signer)
-	{
-		txFrame->getEnvelope().signatures.clear();
-		txFrame->addSignature(*signer);
-	}
+                                    referrer, nullptr, policies);
+    if (signer)
+    {
+        txFrame->getEnvelope().signatures.clear();
+        txFrame->addSignature(*signer);
+    }
 
     LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                           app.getDatabase());
@@ -395,7 +407,7 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     else
     {
         REQUIRE(toAccountAfter);
-        
+
         auto statisticsFrame = statisticsHelper->loadStatistics(to.getPublicKey(), app.getDatabase());
         REQUIRE(statisticsFrame);
         auto statistics = statisticsFrame->getStatistics();
@@ -403,41 +415,43 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
         REQUIRE(statistics.weeklyOutcome == 0);
         REQUIRE(statistics.monthlyOutcome == 0);
         REQUIRE(statistics.annualOutcome == 0);
-        
-        if (!toAccount) {
+
+        if (!toAccount)
+        {
             std::vector<BalanceFrame::pointer> balances;
             balanceHelper->loadBalances(toAccountAfter->getAccount().accountID, balances, app.getDatabase());
-			for (BalanceFrame::pointer balance : balances)
-			{
-				REQUIRE(balance->getBalance().amount == 0);
-				REQUIRE(balance->getAccountID() == toAccountAfter->getAccount().accountID);
-			}
+            for (BalanceFrame::pointer balance : balances)
+            {
+                REQUIRE(balance->getBalance().amount == 0);
+                REQUIRE(balance->getAccountID() == toAccountAfter->getAccount().accountID);
+            }
         }
     }
 }
 
-void applyManageAssetTx(Application & app, SecretKey & source, Salt seq, AssetCode asset, int32 policies, ManageAssetAction action, ManageAssetResultCode result)
+void
+applyManageAssetTx(Application& app, SecretKey& source, Salt seq, AssetCode asset, int32 policies, ManageAssetAction action, ManageAssetResultCode result)
 {
-	throw std::runtime_error("use manageAssetHelper");
+    throw std::runtime_error("use manageAssetHelper");
 }
 
 // For base balance
 TransactionFramePtr
 createPaymentTx(Hash const& networkID, SecretKey& from, SecretKey& to,
-                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
+                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds *timeBounds)
 {
-    return createPaymentTx(networkID, from, from.getPublicKey(), to.getPublicKey(), seq, amount,paymentFee,
-        isSourceFee, subject, reference, timeBounds);
+    return createPaymentTx(networkID, from, from.getPublicKey(), to.getPublicKey(), seq, amount, paymentFee,
+                           isSourceFee, subject, reference, timeBounds);
 }
 
 TransactionFramePtr
 createPaymentTx(Hash const& networkID, SecretKey& from, BalanceID fromBalanceID, BalanceID toBalanceID,
-                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds* timeBounds)
+                Salt seq, int64_t amount, PaymentFeeData paymentFee, bool isSourceFee, std::string subject, std::string reference, TimeBounds *timeBounds)
 {
     Operation op;
     op.body.type(OperationType::PAYMENT);
     op.body.paymentOp().amount = amount;
-	op.body.paymentOp().feeData = paymentFee;
+    op.body.paymentOp().feeData = paymentFee;
     op.body.paymentOp().subject = subject;
     op.body.paymentOp().sourceBalanceID = fromBalanceID;
     op.body.paymentOp().reference = reference;
@@ -445,58 +459,62 @@ createPaymentTx(Hash const& networkID, SecretKey& from, BalanceID fromBalanceID,
     return transactionFromOperation(networkID, from, seq, op, nullptr, timeBounds);
 }
 
-TransactionFramePtr createSetFees(Hash const& networkID, SecretKey& source, Salt seq, FeeEntry* fee, bool isDelete)
+TransactionFramePtr createSetFees(Hash const& networkID, SecretKey& source, Salt seq, FeeEntry *fee, bool isDelete)
 {
-	Operation op;
-	op.body.type(OperationType::SET_FEES);
-	auto& opBody = op.body.setFeesOp();
-	if (fee)
-		opBody.fee.activate() = *fee;
-	opBody.isDelete = isDelete;
+    Operation op;
+    op.body.type(OperationType::SET_FEES);
+    auto& opBody = op.body.setFeesOp();
+    if (fee)
+        opBody.fee.activate() = *fee;
+    opBody.isDelete = isDelete;
 
-	return transactionFromOperation(networkID, source, seq, op);
+    return transactionFromOperation(networkID, source, seq, op);
 }
 
-void applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry* fee, bool isDelete, SecretKey* signer, SetFeesResultCode targetResult)
+void
+applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry *fee, bool isDelete, SecretKey *signer, SetFeesResultCode targetResult)
 {
-	auto txFrame = createSetFees(app.getNetworkID(), source, seq, fee, isDelete);
-	if (signer)
-	{
-		txFrame->getEnvelope().signatures.clear();
-		txFrame->addSignature(*signer);
-	}
+    auto txFrame = createSetFees(app.getNetworkID(), source, seq, fee, isDelete);
+    if (signer)
+    {
+        txFrame->getEnvelope().signatures.clear();
+        txFrame->addSignature(*signer);
+    }
 
-	LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-		app.getDatabase());
+    LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
+                          app.getDatabase());
 
-	applyCheck(txFrame, delta, app);
+    applyCheck(txFrame, delta, app);
 
-	auto result = txFrame->getResult().result.results()[0].tr().setFeesResult();
-	REQUIRE(result.code() == targetResult);
-	if (result.code() == SetFeesResultCode::SUCCESS)
-	{
-		if (fee)
-		{
-			auto storedFee = feeHelper->loadFee(fee->feeType, fee->asset,
-				fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound, app.getDatabase(), nullptr);
-			if (isDelete)
-				REQUIRE(!storedFee);
-			else {
-				REQUIRE(storedFee);
-				REQUIRE(storedFee->getFee() == *fee);
-			}
-		}
-	}
+    auto result = txFrame->getResult().result.results()[0].tr().setFeesResult();
+    REQUIRE(result.code() == targetResult);
+    if (result.code() == SetFeesResultCode::SUCCESS)
+    {
+        if (fee)
+        {
+            auto storedFee = feeHelper->loadFee(fee->feeType, fee->asset,
+                                                fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound, app.getDatabase(), nullptr);
+            if (isDelete)
+                REQUIRE(!storedFee);
+            else
+            {
+                REQUIRE(storedFee);
+                REQUIRE(storedFee->getFee() == *fee);
+            }
+        }
+    }
 }
 
 void fundAccount(Application& app, SecretKey& source, SecretKey& issuance,
-    Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset)
+                 Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset)
 {
 }
 
 [[deprecated]]
-TransactionFramePtr createFundAccount(Hash const& networkID, SecretKey& source, SecretKey& issuance, Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset, uint32_t preemissionsPerOp, uint32_t emissionUnit, TimeBounds* timeBounds) {
-	return nullptr;
+TransactionFramePtr
+createFundAccount(Hash const& networkID, SecretKey& source, SecretKey& issuance, Salt& sourceSeq, BalanceID to, int64 amount, AssetCode asset, uint32_t preemissionsPerOp, uint32_t emissionUnit, TimeBounds *timeBounds)
+{
+    return nullptr;
 }
 
 

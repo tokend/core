@@ -1,314 +1,297 @@
 #include "ManageKeyValueOpFrame.h"
-#include "ledger/LedgerDelta.h"
-#include "ledger/KeyValueHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "main/Application.h"
-#include <ledger/AccountHelperLegacy.h>
 #include "xdrpp/printer.h"
 
 namespace stellar
 {
-    using namespace std;
-    using xdr::operator==;
+using namespace std;
+using xdr::operator==;
+char const *ManageKeyValueOpFrame::changeRoleTasks = "change_role_tasks";
+char const *ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
+char const *ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
+char const *ManageKeyValueOpFrame::withdrawalTasksPrefix = "withdrawal_tasks";
+char const *ManageKeyValueOpFrame::preIssuanceTasksPrefix = "preissuance_tasks";
+char const *ManageKeyValueOpFrame::assetCreateTasks = "asset_create_tasks";
+char const *ManageKeyValueOpFrame::assetUpdateTasks = "asset_update_tasks";
+char const *ManageKeyValueOpFrame::saleUpdateDetailsTasksPrefix = "sale_update_tasks";
+char const *ManageKeyValueOpFrame::saleCreateTasksPrefix = "sale_create_tasks";
+char const *ManageKeyValueOpFrame::invoiceCreateTasks = "invoice_create_tasks";
+char const *ManageKeyValueOpFrame::contractCreateTasks = "contract_create_tasks";
+char const *ManageKeyValueOpFrame::amlAlertCreateTasks = "aml_alert_create";
+char const *ManageKeyValueOpFrame::maxContractDetailLengthPrefix = "max_contract_detail_length";
+char const *ManageKeyValueOpFrame::maxContractInitialDetailLengthPrefix = "max_contract_initial_detail_length";
+char const *ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
+char const *ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
+char const *ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
+char const *ManageKeyValueOpFrame::limitsUpdateTasks = "limits_update_tasks";
+char const *ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_bid_tasks";
+char const *ManageKeyValueOpFrame::atomicSwapAskTasks = "atomic_swap_ask_tasks";
+char const *ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
+char const *ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
+char const *ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
+char const *ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
+char const *ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
+char const *ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_signer_role";
 
-    char const * ManageKeyValueOpFrame::changeRoleTasks = "change_role_tasks";
-    char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
-    char const * ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
-    char const * ManageKeyValueOpFrame::withdrawalTasksPrefix = "withdrawal_tasks";
-    char const * ManageKeyValueOpFrame::preIssuanceTasksPrefix = "preissuance_tasks";
-    char const * ManageKeyValueOpFrame::assetCreateTasks = "asset_create_tasks";
-    char const * ManageKeyValueOpFrame::assetUpdateTasks = "asset_update_tasks";
-    char const * ManageKeyValueOpFrame::saleUpdateDetailsTasksPrefix = "sale_update_tasks";
-    char const * ManageKeyValueOpFrame::saleCreateTasksPrefix = "sale_create_tasks";
-    char const * ManageKeyValueOpFrame::invoiceCreateTasks = "invoice_create_tasks";
-    char const * ManageKeyValueOpFrame::contractCreateTasks = "contract_create_tasks";
-    char const * ManageKeyValueOpFrame::amlAlertCreateTasks = "aml_alert_create";
-    char const * ManageKeyValueOpFrame::maxContractDetailLengthPrefix = "max_contract_detail_length";
-    char const * ManageKeyValueOpFrame::maxContractInitialDetailLengthPrefix = "max_contract_initial_detail_length";
-    char const * ManageKeyValueOpFrame::maxContractsCountPrefix = "max_contracts_count";
-    char const * ManageKeyValueOpFrame::maxInvoicesCountPrefix = "max_invoices_count";
-    char const * ManageKeyValueOpFrame::maxInvoiceDetailLengthPrefix = "max_invoice_detail_length";
-    char const* ManageKeyValueOpFrame::limitsUpdateTasks = "limits_update_tasks";
-    char const* ManageKeyValueOpFrame::atomicSwapTasksPrefix = "atomic_swap_bid_tasks";
-    char const* ManageKeyValueOpFrame::atomicSwapAskTasks = "atomic_swap_ask_tasks";
-    char const* ManageKeyValueOpFrame::withdrawLowerBoundPrefix = "withdraw_lower_bound";
-    char const* ManageKeyValueOpFrame::maxSaleRulesNumbersKey = "max_sale_rules_number";
-    char const* ManageKeyValueOpFrame::createPollTasks = "create_poll_tasks";
-    char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
-    char const* ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
-    char const* ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_signer_role";
-
-ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
-                                             stellar::TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx),
-          mManageKeyValue(mOperation.body.manageKeyValueOp())
+ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation& op, stellar::OperationResult& res,
+                                             stellar::TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx),
+      mManageKeyValue(mOperation.body.manageKeyValueOp())
 {
     // is used for validation type
     mValueTypes =
-    {
-        {changeRoleTasks, KeyValueEntryType::UINT32},
-        {externalSystemPrefix, KeyValueEntryType::UINT32},
-        {issuanceTasksPrefix, KeyValueEntryType::UINT32},
-        {maxContractDetailLengthPrefix, KeyValueEntryType::UINT32},
-        {maxContractInitialDetailLengthPrefix, KeyValueEntryType::UINT32},
-        {maxContractsCountPrefix, KeyValueEntryType::UINT32},
-        {maxInvoiceDetailLengthPrefix, KeyValueEntryType::UINT32},
-        {maxInvoicesCountPrefix, KeyValueEntryType::UINT32},
-        {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
-        {withdrawLowerBoundPrefix, KeyValueEntryType::UINT64},
-        {limitsUpdateTasks, KeyValueEntryType::UINT32},
-        {withdrawalTasksPrefix, KeyValueEntryType::UINT32},
-        {assetCreateTasks, KeyValueEntryType::UINT32},
-        {assetUpdateTasks, KeyValueEntryType::UINT32},
-        {preIssuanceTasksPrefix, KeyValueEntryType::UINT32},
-        {atomicSwapAskTasks, KeyValueEntryType::UINT32},
-        {atomicSwapTasksPrefix, KeyValueEntryType::UINT32},
-        {createPollTasks, KeyValueEntryType::UINT32},
-        {createKycRecoveryTasks, KeyValueEntryType::UINT32},
-        {kycRecoverySignerRole, KeyValueEntryType::UINT64},
-        {kycRecoveryEnabled, KeyValueEntryType::UINT32},
-    };
+        {
+            {changeRoleTasks,                      KeyValueEntryType::UINT32},
+            {externalSystemPrefix,                 KeyValueEntryType::UINT32},
+            {issuanceTasksPrefix,                  KeyValueEntryType::UINT32},
+            {maxContractDetailLengthPrefix,        KeyValueEntryType::UINT32},
+            {maxContractInitialDetailLengthPrefix, KeyValueEntryType::UINT32},
+            {maxContractsCountPrefix,              KeyValueEntryType::UINT32},
+            {maxInvoiceDetailLengthPrefix,         KeyValueEntryType::UINT32},
+            {maxInvoicesCountPrefix,               KeyValueEntryType::UINT32},
+            {atomicSwapTasksPrefix,                KeyValueEntryType::UINT32},
+            {withdrawLowerBoundPrefix,             KeyValueEntryType::UINT64},
+            {limitsUpdateTasks,                    KeyValueEntryType::UINT32},
+            {withdrawalTasksPrefix,                KeyValueEntryType::UINT32},
+            {assetCreateTasks,                     KeyValueEntryType::UINT32},
+            {assetUpdateTasks,                     KeyValueEntryType::UINT32},
+            {preIssuanceTasksPrefix,               KeyValueEntryType::UINT32},
+            {atomicSwapAskTasks,                   KeyValueEntryType::UINT32},
+            {atomicSwapTasksPrefix,                KeyValueEntryType::UINT32},
+            {createPollTasks,                      KeyValueEntryType::UINT32},
+            {createKycRecoveryTasks,               KeyValueEntryType::UINT32},
+            {kycRecoverySignerRole,                KeyValueEntryType::UINT64},
+            {kycRecoveryEnabled,                   KeyValueEntryType::UINT32},
+        };
 }
 
 bool
 ManageKeyValueOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                 std::vector<OperationCondition>& result) const
+                                                 std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::KEY_VALUE);
     resource.keyValue().keyPrefix = getPrefix();
-
     result.emplace_back(resource, AccountRuleAction::MANAGE, mSourceAccount);
-
     return true;
 }
 
 bool
-ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                std::vector<SignerRequirement> &result) const
+ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::KEY_VALUE);
     resource.keyValue().keyPrefix = getPrefix();
-
     result.emplace_back(resource, SignerRuleAction::MANAGE);
-
     return true;
 }
 
-    bool ManageKeyValueOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) {
-        innerResult().code(ManageKeyValueResultCode::SUCCESS);
-
-        Database &db = ledgerManager.getDatabase();
-        auto keyValueHelper = KeyValueHelperLegacy::Instance();
-        auto keyValueFrame = keyValueHelper->loadKeyValue(this->mManageKeyValue.key, db, &delta);
-
-        if (mManageKeyValue.action.action() == ManageKVAction::REMOVE) {
-            if (!keyValueFrame) {
-                innerResult().code(ManageKeyValueResultCode::NOT_FOUND);
-                return false;
-            }
-
-            auto ledgerKey = keyValueFrame->getKey();
-            keyValueHelper->storeDelete(delta, db, ledgerKey);
-
-            return true;
-        }
-
-        if (!keyValueFrame) {
-            LedgerEntry mEntry;
-            mEntry.data.type(LedgerEntryType::KEY_VALUE);
-            mEntry.data.keyValue().key = mManageKeyValue.key;
-            mEntry.data.keyValue().value = mManageKeyValue.action.value();
-            keyValueHelper->storeAdd(delta, db, mEntry);
-
-            return true;
-        }
-
-        keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
-        keyValueHelper->storeChange(delta, db, keyValueFrame->mEntry);
-
-        return true;
-
-    }
-
-    bool ManageKeyValueOpFrame::doCheckValid(Application &app)
+bool ManageKeyValueOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
+{
+    innerResult().code(ManageKeyValueResultCode::SUCCESS);
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
+    auto keyValueFrame = keyValueHelper.loadKeyValue(this->mManageKeyValue.key);
+    if (mManageKeyValue.action.action() == ManageKVAction::REMOVE)
     {
-        if (mManageKeyValue.action.action() != ManageKVAction::PUT)
+        if (!keyValueFrame)
         {
-            return true;
+            innerResult().code(ManageKeyValueResultCode::NOT_FOUND);
+            return false;
         }
-
-        auto prefix = getPrefix();
-        auto valueTypesIter = mValueTypes.find(prefix);
-        if (valueTypesIter != mValueTypes.end())
-        {
-            if (mManageKeyValue.action.value().type() != mValueTypes[prefix])
-            {
-                innerResult().code(ManageKeyValueResultCode::INVALID_TYPE);
-                return false;
-            }
-
-            if ((prefix == withdrawalTasksPrefix) &&
-                (mManageKeyValue.action.value().ui32Value() == 0))
-            {
-                innerResult().code(ManageKeyValueResultCode::ZERO_VALUE_NOT_ALLOWED);
-                return false;
-            }
-        }
-
+        auto ledgerKey = keyValueFrame->getKey();
+        keyValueHelper.storeDelete(ledgerKey);
         return true;
     }
-
-    longstring
-    ManageKeyValueOpFrame::makeChangeRoleKey(string currentRoleID, string roleIDToSet)
+    if (!keyValueFrame)
     {
-        return string(changeRoleTasks) + ":" + currentRoleID + ":" + roleIDToSet;
+        LedgerEntry mEntry;
+        mEntry.data.type(LedgerEntryType::KEY_VALUE);
+        mEntry.data.keyValue().key = mManageKeyValue.key;
+        mEntry.data.keyValue().value = mManageKeyValue.action.value();
+        keyValueHelper.storeAdd(mEntry);
+        return true;
     }
+    keyValueFrame->mEntry.data.keyValue().value = mManageKeyValue.action.value();
+    keyValueHelper.storeChange(keyValueFrame->mEntry);
+    return true;
 
-    longstring
-    ManageKeyValueOpFrame::makeLimitsUpdateTasksKey()
+}
+
+bool ManageKeyValueOpFrame::doCheckValid(Application& app)
+{
+    if (mManageKeyValue.action.action() != ManageKVAction::PUT)
     {
-        return limitsUpdateTasks;
+        return true;
     }
-
-    longstring
-    ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(int32 externalSystemType)
+    auto prefix = getPrefix();
+    auto valueTypesIter = mValueTypes.find(prefix);
+    if (valueTypesIter != mValueTypes.end())
     {
-        return string(externalSystemPrefix) + ":" + to_string(externalSystemType);
+        if (mManageKeyValue.action.value().type() != mValueTypes[prefix])
+        {
+            innerResult().code(ManageKeyValueResultCode::INVALID_TYPE);
+            return false;
+        }
+        if ((prefix == withdrawalTasksPrefix) &&
+            (mManageKeyValue.action.value().ui32Value() == 0))
+        {
+            innerResult().code(ManageKeyValueResultCode::ZERO_VALUE_NOT_ALLOWED);
+            return false;
+        }
     }
+    return true;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeMaxContractDetailLengthKey()
-    {
-        return maxContractDetailLengthPrefix;
-    }
+longstring
+ManageKeyValueOpFrame::makeChangeRoleKey(string currentRoleID, string roleIDToSet)
+{
+    return string(changeRoleTasks) + ":" + currentRoleID + ":" + roleIDToSet;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeMaxContractsCountKey()
-    {
-        return maxContractsCountPrefix;
-    }
+longstring
+ManageKeyValueOpFrame::makeLimitsUpdateTasksKey()
+{
+    return limitsUpdateTasks;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeMaxInvoicesCountKey()
-    {
-        return maxInvoicesCountPrefix;
-    }
+longstring
+ManageKeyValueOpFrame::makeExternalSystemExpirationPeriodKey(int32 externalSystemType)
+{
+    return string(externalSystemPrefix) + ":" + to_string(externalSystemType);
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeMaxInvoiceDetailLengthKey()
-    {
-        return maxInvoiceDetailLengthPrefix;
-    }
+longstring
+ManageKeyValueOpFrame::makeMaxContractDetailLengthKey()
+{
+    return maxContractDetailLengthPrefix;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeMaxContractInitialDetailLengthKey()
-    {
-        return maxContractInitialDetailLengthPrefix;
-    }
+longstring
+ManageKeyValueOpFrame::makeMaxContractsCountKey()
+{
+    return maxContractsCountPrefix;
+}
 
-    longstring ManageKeyValueOpFrame::makeIssuanceTasksKey(AssetCode assetCode)
-    {
-        return string(issuanceTasksPrefix) + ":" + assetCode;
-    }
+longstring
+ManageKeyValueOpFrame::makeMaxInvoicesCountKey()
+{
+    return maxInvoicesCountPrefix;
+}
 
-    longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey(AssetCode assetCode)
-    {
-        return string(atomicSwapTasksPrefix) + ":" + assetCode;
-    }
+longstring
+ManageKeyValueOpFrame::makeMaxInvoiceDetailLengthKey()
+{
+    return maxInvoiceDetailLengthPrefix;
+}
 
-    longstring ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(AssetCode assetCode)
-    {
-        return string(withdrawLowerBoundPrefix) + ":" + assetCode;
-    }
+longstring
+ManageKeyValueOpFrame::makeMaxContractInitialDetailLengthKey()
+{
+    return maxContractInitialDetailLengthPrefix;
+}
 
-    longstring ManageKeyValueOpFrame::makeWithdrawalTasksKey(AssetCode assetCode)
-    {
-        longstring key;
-        key = key + withdrawalTasksPrefix + ":" + assetCode;
+longstring ManageKeyValueOpFrame::makeIssuanceTasksKey(AssetCode assetCode)
+{
+    return string(issuanceTasksPrefix) + ":" + assetCode;
+}
 
-        return key;
-    }
+longstring ManageKeyValueOpFrame::makeAtomicSwapBidTasksKey(AssetCode assetCode)
+{
+    return string(atomicSwapTasksPrefix) + ":" + assetCode;
+}
 
-    longstring ManageKeyValueOpFrame::makePreIssuanceTasksKey(AssetCode assetCode)
-    {
-        longstring key;
-        key = key + preIssuanceTasksPrefix + ":" + assetCode;
+longstring ManageKeyValueOpFrame::makeWithdrawLowerBoundKey(AssetCode assetCode)
+{
+    return string(withdrawLowerBoundPrefix) + ":" + assetCode;
+}
 
-        return key;
-    }
+longstring ManageKeyValueOpFrame::makeWithdrawalTasksKey(AssetCode assetCode)
+{
+    longstring key;
+    key = key + withdrawalTasksPrefix + ":" + assetCode;
+    return key;
+}
 
-    longstring ManageKeyValueOpFrame::makeAssetCreateTasksKey()
-    {
-        return assetCreateTasks;
-    }
+longstring ManageKeyValueOpFrame::makePreIssuanceTasksKey(AssetCode assetCode)
+{
+    longstring key;
+    key = key + preIssuanceTasksPrefix + ":" + assetCode;
+    return key;
+}
 
-    longstring ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
-    {
-        return assetUpdateTasks;
-    }
+longstring ManageKeyValueOpFrame::makeAssetCreateTasksKey()
+{
+    return assetCreateTasks;
+}
 
-    longstring ManageKeyValueOpFrame::makeSaleUpdateTasksKey(longstring ID)
-    {
-        longstring key;
+longstring ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
+{
+    return assetUpdateTasks;
+}
 
-        key = key + saleUpdateDetailsTasksPrefix + ":" + ID;
-        return key;
-    }
+longstring ManageKeyValueOpFrame::makeSaleUpdateTasksKey(longstring ID)
+{
+    longstring key;
+    key = key + saleUpdateDetailsTasksPrefix + ":" + ID;
+    return key;
+}
 
-    longstring ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()
-    {
-        return invoiceCreateTasks;
-    }
+longstring ManageKeyValueOpFrame::makeInvoiceCreateTasksKey()
+{
+    return invoiceCreateTasks;
+}
 
-    longstring ManageKeyValueOpFrame::makeContractCreateTasksKey()
-    {
-        return contractCreateTasks;
-    }
+longstring ManageKeyValueOpFrame::makeContractCreateTasksKey()
+{
+    return contractCreateTasks;
+}
 
-    longstring ManageKeyValueOpFrame::makeSaleCreateTasksKey(AssetCode assetCode)
-    {
-        longstring key;
-        key = key + saleCreateTasksPrefix + ":" + assetCode;
+longstring ManageKeyValueOpFrame::makeSaleCreateTasksKey(AssetCode assetCode)
+{
+    longstring key;
+    key = key + saleCreateTasksPrefix + ":" + assetCode;
+    return key;
+}
 
-        return key;
-    }
+longstring ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()
+{
+    return amlAlertCreateTasks;
+}
 
-    longstring ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()
-    {
-        return amlAlertCreateTasks;
-    }
+longstring ManageKeyValueOpFrame::makeAtomicSwapAskTasksKey()
+{
+    return atomicSwapAskTasks;
+}
 
-    longstring ManageKeyValueOpFrame::makeAtomicSwapAskTasksKey()
-    {
-        return atomicSwapAskTasks;
-    }
+longstring
+ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey()
+{
+    return maxSaleRulesNumbersKey;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey()
-    {
-        return maxSaleRulesNumbersKey;
-    }
+longstring
+ManageKeyValueOpFrame::makeCreatePollKey(std::string type)
+{
+    return string(createPollTasks) + ":" + type;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeCreatePollKey(std::string type)
-    {
-        return string(createPollTasks) + ":" + type;
-    }
+longstring
+ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()
+{
+    return createKycRecoveryTasks;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeCreateKYCRecoveryTasksKey()
-    {
-        return createKycRecoveryTasks;
-    }
+longstring
+ManageKeyValueOpFrame::makeKYCRecoveryKey()
+{
+    return kycRecoveryEnabled;
+}
 
-    longstring
-    ManageKeyValueOpFrame::makeKYCRecoveryKey()
-    {
-        return kycRecoveryEnabled;
-    }
-
-    longstring
-    ManageKeyValueOpFrame::makeKYCRecoverySignerRoleKey()
-    {
-        return kycRecoverySignerRole;
-    }
+longstring
+ManageKeyValueOpFrame::makeKYCRecoverySignerRoleKey()
+{
+    return kycRecoverySignerRole;
+}
 }

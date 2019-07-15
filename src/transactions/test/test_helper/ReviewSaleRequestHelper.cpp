@@ -5,7 +5,7 @@
 #include <ledger/AssetPairHelper.h>
 #include "ReviewSaleRequestHelper.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "ledger/SaleFrame.h"
 #include "test/test_marshaler.h"
 #include "transactions/review_request/ReviewSaleCreationRequestOpFrame.h"
