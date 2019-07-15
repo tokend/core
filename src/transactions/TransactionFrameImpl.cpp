@@ -119,8 +119,11 @@ TransactionFrameImpl::loadAccount(StorageHelper& storageHelper,
     {
         res = mSigningAccount;
     }
+    else
+    {
+        res = accountHelper.loadAccount(accountID);
 
-    res = accountHelper.loadAccount(accountID);
+    }
 
     return res;
 }
