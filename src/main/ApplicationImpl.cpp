@@ -219,6 +219,9 @@ ApplicationImpl::getJsonInfo()
 #ifdef CORE_REVISION
     info["core_revision"] = CORE_REVISION;
 #endif
+#ifdef DISABLE_CONSESUS
+    info["performance_improvement"] = true;
+#endif
     info["protocol_version"] = getConfig().LEDGER_PROTOCOL_VERSION;
     info["ledger_version"] = lm.getLastClosedLedgerHeader().header.ledgerVersion;
     info["tx_expiration_period"] = Json::UInt64(lm.getTxExpirationPeriod() - getConfig().TX_EXPIRATION_PERIOD_WINDOW);
