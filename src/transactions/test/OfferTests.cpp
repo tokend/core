@@ -222,8 +222,8 @@ TEST_CASE("manage offer", "[tx][offer]")
 
             SECTION("Try to delete assets")
             {
-                assetTestHelper.applyRemoveAssetTx(rootAccount, quote, nullptr, RemoveAssetResultCode::HAS_OFFERS);
-                assetTestHelper.applyRemoveAssetTx(rootAccount, base, nullptr, RemoveAssetResultCode::HAS_OFFERS);
+                assetTestHelper.applyRemoveAssetTx(rootAccount, quote, nullptr, RemoveAssetResultCode::HAS_ACTIVE_OFFERS);
+                assetTestHelper.applyRemoveAssetTx(rootAccount, base, nullptr, RemoveAssetResultCode::HAS_ACTIVE_OFFERS);
             }
         }
         SECTION("Current price restrictions not met")
