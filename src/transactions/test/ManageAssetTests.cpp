@@ -616,6 +616,12 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 REQUIRE(updateReviewResult.success().fulfilled);
             }
 
+            SECTION("Remove asset")
+            {
+                manageAssetHelper.applyRemoveAssetTx(root, assetCode,
+                                                   nullptr);
+            }
+
         }
 
 

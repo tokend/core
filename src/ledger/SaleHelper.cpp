@@ -128,6 +128,28 @@ bool SaleHelper::exists(Database &db, AssetCode const &base, AssetCode const &qu
     return exists != 0;
 }
 
+bool SaleHelper::exists(Database &db, AssetCode const &code)
+{
+    auto timer = db.getSelectTimer("sale_exists");
+    auto prep = db.getPreparedStatement(
+            "SELECT EXISTS "
+                "(SELECT NULL FROM sale "
+                    "INNER JOIN sale_quote_asset ON sale.id = sale_quote_asset.sale_id "
+                    "WHERE sale.base_asset = :code "
+                        "or sale_quote_asset.quote_asset = :code)");
+    auto& st = prep.statement();
+
+    string assetCode = code;
+    st.exchange(use(assetCode, "code"));
+
+    auto exists = 0;
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 LedgerKey SaleHelper::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey;

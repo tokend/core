@@ -250,6 +250,7 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
                                                            ::UPDATE_PRICE);
             }
         }
+
         SECTION("Remove asset pair")
         {
             uint32_t zeroTasks = 0;
@@ -259,6 +260,13 @@ TEST_CASE("manage asset pair", "[tx][manage_asset_pair]")
 
             assetPairTestHelper.createAssetPair(root, base, quote, physicalPrice, physicalPriceCorrection,
                     maxPriceStep, policies);
+
+            SECTION("Try to delete assets")
+            {
+                auto assetTestHelper = ManageAssetTestHelper(testManager);
+                assetTestHelper.applyRemoveAssetTx(root, quote, nullptr, RemoveAssetResultCode::HAS_PAIR);
+                assetTestHelper.applyRemoveAssetTx(root, base, nullptr, RemoveAssetResultCode::HAS_PAIR);
+            }
 
             SECTION("Invalid asset code")
             {

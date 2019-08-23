@@ -13,6 +13,7 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "transactions/manage_asset/ManageAssetOpFrame.h"
+#include "transactions/manage_asset/RemoveAssetOpFrame.h"
 #include "ReviewAssetRequestHelper.h"
 #include "test/test_marshaler.h"
 
@@ -41,6 +42,61 @@ void ManageAssetTestHelper::createApproveRequest(Account& root, Account& source,
                                       requestFrame->getHash(),
                                       requestFrame->getRequestType(),
                                       ReviewRequestOpAction::APPROVE, "");
+}
+
+
+TransactionFramePtr
+ManageAssetTestHelper::
+createRemoveAssetTx
+(txtest::Account &source, AssetCode code, txtest::Account *signer)
+{
+    Operation op;
+    op.body.type(OperationType::REMOVE_ASSET);
+    auto& body = op.body.removeAssetOp();
+    body.code = code;
+
+    return TxHelper::txFromOperation(source, op, signer);
+}
+
+
+
+RemoveAssetResult ManageAssetTestHelper::applyRemoveAssetTx(txtest::Account &source,
+                                                                        AssetCode code, txtest::Account *signer,
+                                                                        RemoveAssetResultCode expectedResult,
+                                                                        OperationResultCode expectedOpResult)
+{
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+    Database& db = mTestManager->getDB();
+    auto countBefore = assetHelper.countObjects();
+
+    TransactionFramePtr txFrame;
+    txFrame = createRemoveAssetTx(source, code, signer);
+
+    mTestManager->applyCheck(txFrame);
+    auto txResult = txFrame->getResult();
+    auto opResult = txResult.result.results()[0];
+    REQUIRE(opResult.code() == expectedOpResult);
+    if (opResult.code() != OperationResultCode::opINNER)
+    {
+        return RemoveAssetResult();
+    }
+
+    auto actualResultCode = RemoveAssetOpFrame::getInnerCode(opResult);
+
+    REQUIRE(expectedResult == actualResultCode);
+
+    auto countAfter = assetHelper.countObjects();
+    auto assetFrameAfter = assetHelper.loadAsset(code);
+    if (actualResultCode != RemoveAssetResultCode::SUCCESS)
+    {
+        REQUIRE(countBefore == countAfter);
+    }
+    else
+    {
+        REQUIRE(countBefore == countAfter + 1);
+    }
+
+    return opResult.tr().removeAssetResult();
 }
 
 ManageAssetResult ManageAssetTestHelper::applyManageAssetTx(

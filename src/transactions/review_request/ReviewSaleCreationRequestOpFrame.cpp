@@ -95,8 +95,8 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
             << request->getRequestID();
         throw runtime_error("Quote asset does not exist");
     }
-
-    auto baseAsset = AssetHelperLegacy::Instance()->loadAsset(
+    auto assetHelper = AssetHelperLegacy::Instance();
+    auto baseAsset = assetHelper->loadAsset(
             saleCreationRequest.baseAsset, request->getRequestor(), db, &delta);
     if (!baseAsset)
     {
@@ -111,7 +111,7 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
         return ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP;
     }
 
-    AssetHelperLegacy::Instance()->storeChange(delta, db, baseAsset->mEntry);
+    assetHelper->storeChange(delta, db, baseAsset->mEntry);
 
     AccountManager accountManager(app, db, delta, ledgerManager);
     const auto balances =
