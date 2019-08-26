@@ -76,6 +76,8 @@ private:
     std::vector<BalanceFrame::pointer>
     loadAssetHolders(AssetCode assetCode, AccountID owner,
                      uint64_t minTotalAmount) override;
+    std::vector<BalanceFrame::pointer>
+    loadBalancesForAsset(AssetCode assetCode) override;
 
     void
     loadBalances(StatementContext& prep,

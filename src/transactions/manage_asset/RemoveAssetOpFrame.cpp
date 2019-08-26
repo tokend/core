@@ -1,6 +1,7 @@
 #include "RemoveAssetOpFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
@@ -97,6 +98,8 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
         return false;
     }
 
+    deleteBalances(storageHelper);
+
     assetHelper.storeDelete(asset->getKey());
 
     innerResult().code(RemoveAssetResultCode::SUCCESS);
@@ -107,6 +110,19 @@ bool
 RemoveAssetOpFrame::doCheckValid(stellar::Application& app)
 {
     return true;
+}
+
+void
+RemoveAssetOpFrame::deleteBalances(StorageHelper& storageHelper)
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
+    auto holders = balanceHelper.loadBalancesForAsset(mRemoveAsset.code);
+
+    for (auto& holder : holders)
+    {
+        balanceHelper.storeDelete(holder->getKey());
+    }
 }
 
 }

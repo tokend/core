@@ -506,6 +506,29 @@ BalanceHelperImpl::loadAssetHolders(AssetCode assetCode, AccountID owner,
     return holders;
 }
 
+vector<BalanceFrame::pointer>
+BalanceHelperImpl::loadBalancesForAsset(AssetCode assetCode)
+{
+    Database& db = getDatabase();
+
+    std::string sql = balanceColumnSelector;
+    sql += " WHERE asset = :asset";
+
+    auto prep = db.getPreparedStatement(sql);
+    auto &st = prep.statement();
+    st.exchange(use(assetCode, "asset"));
+
+    auto timer = db.getSelectTimer("balance");
+
+    std::vector<BalanceFrame::pointer> holders;
+    loadBalances(prep, [&holders](BalanceFrame::pointer const& framePtr)
+    {
+            holders.push_back(framePtr);
+    });
+
+    return holders;
+}
+
 Database&
 BalanceHelperImpl::getDatabase()
 {
