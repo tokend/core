@@ -39,7 +39,18 @@ RemoveAssetOpFrame::tryGetOperationConditions(
     AccountRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetCode = asset->getCode();
     resource.asset().assetType = asset->getType();
-    result.emplace_back(resource, AccountRuleAction::REMOVE, mSourceAccount);
+    AccountRuleAction action;
+
+    if (asset->getOwner() == mSourceAccount->getID())
+    {
+        action = AccountRuleAction::REMOVE;
+    }
+    else
+    {
+        action = AccountRuleAction::REMOVE_FOR_OTHER;
+    }
+
+    result.emplace_back(resource, action, mSourceAccount);
 
     return true;
 }
