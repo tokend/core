@@ -39,5 +39,14 @@ public:
     static ManageOfferOpFrame* make(Operation const& op, OperationResult& res,
         TransactionFrame& parentTx);
     std::string getInnerResultCodeAsStr() override;
+
+    virtual bool
+    doCheckValid(Application& app) = 0;
+
+    ManageOfferResultCode 
+    getInnerCode() 
+    {
+        return getInnerCode(mResult);
+    }
 };
 }
