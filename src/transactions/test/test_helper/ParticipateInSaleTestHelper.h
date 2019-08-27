@@ -12,12 +12,13 @@ namespace txtest
     {
     public:
         explicit ParticipateInSaleTestHelper(TestManager::pointer testManager);
-        uint64_t
+        ManageOfferResult
         addNewParticipant(Account &root, Account &participant, const uint64_t saleID, const AssetCode baseAsset,
                           const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price,
                           const uint64_t fee);
 
-        uint64_t addNewParticipant(Account &root, const uint64_t saleID, const AssetCode baseAsset,
+        ManageOfferResult
+        addNewParticipant(Account &root, const uint64_t saleID, const AssetCode baseAsset,
                                           const AssetCode quoteAsset, const uint64_t quoteAssetAmount,
                                           const uint64_t price, const uint64_t fee);
 
