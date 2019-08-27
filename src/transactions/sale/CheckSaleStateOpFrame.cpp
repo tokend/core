@@ -43,6 +43,10 @@ CheckSaleStateOpFrame::SaleState CheckSaleStateOpFrame::getSaleState(
         return CLOSE;
     }
 
+    // `IMMEDIATE` sale is considered to be successful even if soft cap
+    // was not reached
+    // For `IMMEDIATE` sale soft cap is redundant as it matches offers
+    // immediately
     const auto currentTime = lm.getCloseTime();
     const auto expired = sale->getEndTime() <= currentTime;
     if (expired)
@@ -174,6 +178,11 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     }
 
     innerResult().code(CheckSaleStateResultCode::SUCCESS);
+    /*
+     * There is no need to do anything except sale and sale rules deletion
+     * for `IMMEDIATE` sale.
+     * Issuance, rounding, fees and
+     * */
     switch (sale->getSaleType())
     {
     case SaleType::BASIC_SALE:
@@ -187,6 +196,7 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
         applyOffers(app, delta, lm, sale, saleOwnerAccount);
 
         cleanupIssuerBalance(sale, lm, db, delta, balanceBefore);
+        break;
     }
     case SaleType::IMMEDIATE:
     {
@@ -261,39 +271,6 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
 
     return createIssuanceRequestOpFrame.getResult().tr().createIssuanceRequestResult();
 }
-
-void
-CheckSaleStateOpFrame::issueTokens(
-    stellar::TransactionFrame& parentTx, stellar::Application& app,
-    stellar::LedgerDelta& delta, stellar::LedgerManager& lm,
-    stellar::AccountFrame::pointer source, const stellar::AssetCode& asset,
-    uint64_t amount, const stellar::BalanceID& receiver)
-    {
-
-    auto& db = app.getDatabase();
-    const auto issuanceRequestOp = CreateIssuanceRequestOpFrame::build(asset, amount,
-                                                                       receiver, lm, 0);
-
-    Operation op;
-    op.sourceAccount.activate() = source->getID();
-    op.body.type(OperationType::CREATE_ISSUANCE_REQUEST);
-    op.body.createIssuanceRequestOp() = issuanceRequestOp;
-
-    OperationResult opRes;
-    opRes.code(OperationResultCode::opINNER);
-    opRes.tr().type(OperationType::CREATE_ISSUANCE_REQUEST);
-    CreateIssuanceRequestOpFrame createIssuanceRequestOpFrame(op, opRes, parentTx);
-    createIssuanceRequestOpFrame.doNotRequireFee();
-    createIssuanceRequestOpFrame.setSourceAccountPtr(source);
-
-    StorageHelperImpl storageHelper(db, &delta);
-    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply create issuance request ";
-        throw runtime_error("Unexpected state: failed to create issuance request");
-    }
-}
-
 
 FeeManager::FeeResult
 CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
@@ -453,9 +430,22 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale,
     LedgerDelta& delta, Database& db) const
 {
     auto saleType = sale->getSaleType();
-    if (saleType == SaleType::BASIC_SALE)
+    /*
+     * There are two types of sales for which offer prices update is not needed
+     * For basic sale this step is skipped
+     * For immediate sale update of offer prices is erroneous and
+     * unexpected flow
+     * */
+
+    switch(saleType)
     {
+    case SaleType::BASIC_SALE:
         return;
+    case SaleType::IMMEDIATE:
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: cannot update offer prices for immediate sale";
+        throw runtime_error("Unexpected state: cannot update offer prices for immediate sale");
+    }
     }
 
     auto& saleEntry = sale->getSaleEntry();

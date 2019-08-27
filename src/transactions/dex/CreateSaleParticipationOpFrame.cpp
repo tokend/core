@@ -264,17 +264,12 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         innerResult().code(ManageOfferResultCode::ORDER_VIOLATES_HARD_CAP);
         return false;
     }
-    switch (sale->getSaleType())
-    {
-    case SaleType::BASIC_SALE:
-    case SaleType::CROWD_FUNDING:
-    case SaleType::FIXED_PRICE:
-        break;
-    case SaleType::IMMEDIATE:
+
+    // Only for `IMMEDIATE` sale we create counter offer immediately
+    if (sale->getSaleType() == SaleType::IMMEDIATE)
     {
         createImmediateSaleCounterOffer(app, storageHelper, ledgerManager, sale,
                                         quoteAmount);
-    }
     }
 
     const auto isApplied = CreateOfferOpFrame::doApply(app, delta, ledgerManager);
@@ -292,23 +287,16 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
             runtime_error("Unexpected state: expected success for manage offer on create sale participation");
     }
 
-    switch (sale->getSaleType())
-    {
-    case SaleType::BASIC_SALE:
-    case SaleType::CROWD_FUNDING:
-    case SaleType::FIXED_PRICE:
+    // For all sale types except `IMMEDIATE` offer claim is erroneous
+    if (sale->getSaleType() != SaleType::IMMEDIATE)
     {
         if (!innerResult().success().offersClaimed.empty())
         {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) <<
-                                                   "Unexpected state. Order match on sale participation: " <<
-                                                   mManageOffer.orderBookID;
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state. Order match on sale participation: "
+                << mManageOffer.orderBookID;
             throw runtime_error("Order match on sale participation");
         }
-        break;
-    }
-    case SaleType::IMMEDIATE:
-        break;
     }
 
     SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
