@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+## Added
+
+* `RemoveAssetOp` operation to remove asset
+
 ## 3.5.1-x.0
 
 ### Fixed
