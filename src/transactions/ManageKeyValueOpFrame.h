@@ -107,6 +107,8 @@ public:
     static longstring makeCreateSaleParticipationKey(AssetCode const& base, AssetCode const& quote);
     static longstring makeDeleteSaleParticipationKey(AssetCode const& base, AssetCode const& quote);
 
+    static longstring makePaymentTasksKey(AssetCode const& code);
+
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
     static const char * issuanceTasksPrefix;
@@ -137,5 +139,6 @@ public:
     static char const * removeOfferTasks;
     static char const * createSaleParticipationTasks;
     static char const * removeSaleParticipationTasks;
+    static char const * paymentTasks;
 };
 }

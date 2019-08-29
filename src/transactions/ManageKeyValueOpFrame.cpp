@@ -40,6 +40,7 @@ namespace stellar
     char const* ManageKeyValueOpFrame::removeOfferTasks = "remove_offer_tasks";
     char const* ManageKeyValueOpFrame::createSaleParticipationTasks = "create_sale_participation_tasks";
     char const* ManageKeyValueOpFrame::removeSaleParticipationTasks = "remove_sale_participation_tasks";
+    char const* ManageKeyValueOpFrame::paymentTasks = "payment_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -338,5 +339,11 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     ManageKeyValueOpFrame::makeDeleteSaleParticipationKey(AssetCode const& base, AssetCode const& quote)
     {
         return string(removeSaleParticipationTasks) + ":" + base + ":" + quote;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makePaymentTasksKey(AssetCode const& code) 
+    {
+        return string(paymentTasks) + ":" + code;
     }
 }

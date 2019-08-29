@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transactions/OperationFrame.h"
+#include "ledger/ReviewableRequestFrame.h"
 
 namespace stellar 
 {
@@ -18,6 +19,7 @@ enum class ManageOfferAction
 class CreateManageOfferRequestOpFrame : public OperationFrame 
 {
     CreateManageOfferRequestOp const& mCreateManageOfferRequest;
+    ManageOfferOp const& mManageOffer;
 
     OfferValidator const& mValidator;   
 
@@ -42,7 +44,11 @@ class CreateManageOfferRequestOpFrame : public OperationFrame
     tryGetSignerRequirements(StorageHelper& sh, std::vector<SignerRequirement>& result) const override;
 
     std::vector<std::string>
-    makeTasksKeyVector();
+    makeTasksKeyVector(AssetCode const& base, AssetCode const& quote);
+
+    void
+    tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+                   ReviewableRequestFrame::pointer request);
 
 public:
     CreateManageOfferRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& tx);

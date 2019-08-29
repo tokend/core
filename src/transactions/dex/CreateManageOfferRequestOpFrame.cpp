@@ -3,6 +3,13 @@
 #include "OfferValidator.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/KeyValueHelper.h"
+#include "main/Application.h"
+#include "transactions/review_request/ReviewRequestHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 
 namespace stellar 
 {
@@ -10,7 +17,8 @@ CreateManageOfferRequestOpFrame::CreateManageOfferRequestOpFrame(
         Operation const& op, OperationResult& res, TransactionFrame& tx)
         : OperationFrame(op, res, tx)
         , mCreateManageOfferRequest(op.body.createManageOfferRequestOp())
-        , mValidator(OfferValidator(mCreateManageOfferRequest.request.op, tx))
+        , mManageOffer(mCreateManageOfferRequest.request.op)
+        , mValidator(OfferValidator(mManageOffer, tx))
 {
     //mValidator = OfferValidator(mCreateManageOfferRequest.request.op, tx)
     const auto manageOffer = mCreateManageOfferRequest.request.op;
@@ -96,7 +104,7 @@ CreateManageOfferRequestOpFrame::tryGetSignerRequirements(
     auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
     auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
 
-    AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::MANAGE_OFFER);
     auto& details = resource.reviewableRequest().details.manageOffer();
     details.baseAssetCode = baseAsset->getCode();
@@ -105,8 +113,15 @@ CreateManageOfferRequestOpFrame::tryGetSignerRequirements(
     details.quoteAssetType = quoteAsset->getType();
     details.isBuy = mManageOffer.isBuy;
     details.manageAction = static_cast<uint64_t>(mManageAction);
+    resource.reviewableRequest().tasksToRemove = 0;
+	resource.reviewableRequest().tasksToAdd = 0;
+	resource.reviewableRequest().allTasks = 0;
+	if (mCreateManageOfferRequest.allTasks)
+	{
+		resource.reviewableRequest().allTasks = *mCreateManageOfferRequest.allTasks;
+	}
 
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    result.emplace_back(resource, SignerRuleAction::CREATE);
 
     return true;
 }
@@ -116,7 +131,7 @@ CreateManageOfferRequestOpFrame::doApply(Application& app, StorageHelper& sh, Le
 {
     innerResult().code(CreateManageOfferRequestResultCode::SUCCESS);
 
-    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& balanceHelper = sh.getBalanceHelper();
 
     auto baseBalance = balanceHelper.mustLoadBalance(mManageOffer.baseBalance);
     auto quoteBalance = balanceHelper.mustLoadBalance(mManageOffer.quoteBalance);
@@ -126,7 +141,7 @@ CreateManageOfferRequestOpFrame::doApply(Application& app, StorageHelper& sh, Le
     if (!keyValueHelper.loadTasks(allTasks, makeTasksKeyVector(baseBalance->getAsset(), quoteBalance->getAsset()),
                                   mCreateManageOfferRequest.allTasks.get()))
     {
-        innerResult().code(CreateAtomicSwapAskRequestResultCode::ATOMIC_SWAP_ASK_TASKS_NOT_FOUND);
+        innerResult().code(CreateManageOfferRequestResultCode::MANAGE_OFFER_TASKS_NOT_FOUND);
         return false;
     }
 
@@ -137,9 +152,11 @@ CreateManageOfferRequestOpFrame::doApply(Application& app, StorageHelper& sh, Le
     request->setTasks(allTasks);
 
     auto requestHelper = ReviewableRequestHelper::Instance();
-    if (!request.canBeFulfilled(lm)) 
+    Database& db = sh.getDatabase();
+    LedgerDelta& delta = sh.mustGetLedgerDelta();
+    if (!request->canBeFulfilled(lm)) 
     {
-        requestHelper->storeAdd(request->mEntry);
+        requestHelper->storeAdd(delta, db, request->mEntry);
         return true;
     }
 
@@ -157,7 +174,7 @@ CreateManageOfferRequestOpFrame::doCheckValid(Application& app)
     }
 
     innerResult().code(CreateManageOfferRequestResultCode::INVALID_OFFER);
-    innerResult().validationCode() = res;
+    innerResult().manageOfferCode() = res;
     return false;
 }
 
@@ -180,7 +197,6 @@ CreateManageOfferRequestOpFrame::tryAutoApprove(
     }
 
     innerResult().success().fulfilled = true;
-    innerResult().success().askID = result.success().typeExt.atomicSwapAskExtended().askID;
 }
 
 std::vector<std::string>
