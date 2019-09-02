@@ -43,6 +43,9 @@ public:
     virtual bool
     doCheckValid(Application& app) = 0;
 
+    virtual bool
+    doApply(Application& app, LedgerDelta& delta, LedgerManager& lm) = 0;
+
     ManageOfferResultCode 
     getInnerCode() 
     {
