@@ -3,19 +3,22 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "CreateSaleParticipationOpFrame.h"
-#include "ledger/LedgerDelta.h"
+#include "OfferManager.h"
 #include "database/Database.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AccountSpecificRuleHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetPairHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/LedgerDelta.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
-#include "OfferManager.h"
-#include "ledger/AccountHelperLegacy.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/AssetPairHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/printer.h"
-#include "ledger/AccountSpecificRuleHelper.h"
+#include "xdrpp/marshal.h"
 
 namespace stellar
 {
@@ -29,17 +32,17 @@ CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storage
 {
     auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
             storageHelper.getDatabase());
-    if (!sale) 
+    if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::SALE;
         return false;
     }
-    
+
     AccountRuleResource resource(LedgerEntryType::SALE);
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
-    
+
     result.emplace_back(resource, AccountRuleAction::PARTICIPATE, mSourceAccount);
 
     return CreateOfferOpFrame::tryGetOperationConditions(storageHelper, result);
@@ -262,6 +265,13 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
+    // Only for `IMMEDIATE` sale we create counter offer immediately
+    if (sale->getSaleType() == SaleType::IMMEDIATE)
+    {
+        createImmediateSaleCounterOffer(app, storageHelper, ledgerManager, sale,
+                                        quoteAmount);
+    }
+
     const auto isApplied = CreateOfferOpFrame::doApply(app, delta, ledgerManager);
     if (!isApplied)
     {
@@ -277,12 +287,16 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
             runtime_error("Unexpected state: expected success for manage offer on create sale participation");
     }
 
-    if (!innerResult().success().offersClaimed.empty())
+    // For all sale types except `IMMEDIATE` offer claim is erroneous
+    if (sale->getSaleType() != SaleType::IMMEDIATE)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) <<
-            "Unexpected state. Order match on sale participation: " <<
-            mManageOffer.orderBookID;
-        throw runtime_error("Order match on sale participation");
+        if (!innerResult().success().offersClaimed.empty())
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state. Order match on sale participation: "
+                << mManageOffer.orderBookID;
+            throw runtime_error("Order match on sale participation");
+        }
     }
 
     SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
@@ -377,5 +391,58 @@ bool CreateSaleParticipationOpFrame::tryAddSaleCap(Database& db, uint64_t const&
 
     return true;
 
+}
+
+void
+CreateSaleParticipationOpFrame::createImmediateSaleCounterOffer(
+    Application& app, StorageHelper& storageHelper, LedgerManager& lm,
+    SaleFrame::pointer sale, uint64_t quoteAmount)
+{
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto baseAsset = assetHelper.mustLoadAsset(sale->getBaseAsset());
+    baseAsset->mustUnlockIssuedAmount(mManageOffer.amount);
+    assetHelper.storeChange(baseAsset->mEntry);
+
+    auto saleOwner =
+        storageHelper.getAccountHelper().loadAccount(sale->getOwnerID());
+
+    auto reference = binToHex(sha256(xdr::xdr_to_opaque(
+        mSourceAccount->getID(), sale->getBaseBalanceID(), baseAsset->getCode(),
+        mManageOffer.amount, lm.getCloseTime())));
+
+    const auto issuanceRequestOp = CreateIssuanceRequestOpFrame::build(
+        baseAsset->getCode(), mManageOffer.amount, sale->getBaseBalanceID(), lm,
+        0, &reference);
+
+    Operation op;
+    op.sourceAccount.activate() = sale->getOwnerID();
+    op.body.type(OperationType::CREATE_ISSUANCE_REQUEST);
+    op.body.createIssuanceRequestOp() = issuanceRequestOp;
+
+    OperationResult opRes;
+    opRes.code(OperationResultCode::opINNER);
+    opRes.tr().type(OperationType::CREATE_ISSUANCE_REQUEST);
+    CreateIssuanceRequestOpFrame createIssuanceRequestOpFrame(op, opRes, mParentTx);
+    createIssuanceRequestOpFrame.doNotRequireFee();
+    createIssuanceRequestOpFrame.setSourceAccountPtr(saleOwner);
+
+    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply create issuance request ";
+        throw runtime_error("Unexpected state: failed to create issuance request");
+    }
+
+    auto quoteBalance =
+        storageHelper.getBalanceHelper().loadBalance(mManageOffer.quoteBalance);
+    auto& saleQuoteAsset = sale->getSaleQuoteAsset(quoteBalance->getAsset());
+
+    auto& db = storageHelper.getDatabase();
+    auto const feeResult = FeeManager::calculateFeeForAccount(
+        saleOwner, FeeType::CAPITAL_DEPLOYMENT_FEE, saleQuoteAsset.quoteAsset,
+        FeeFrame::SUBTYPE_ANY, quoteAmount, db);
+
+    CheckSaleStateOpFrame::createCounterOffer(
+        app, storageHelper.mustGetLedgerDelta(), lm, mParentTx, sale, saleOwner,
+        saleQuoteAsset, mManageOffer.amount, mManageOffer.price, feeResult);
 }
 }
