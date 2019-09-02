@@ -181,7 +181,8 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     /*
      * There is no need to do anything except sale and sale rules deletion
      * for `IMMEDIATE` sale.
-     * Issuance, rounding, fees and
+     * Issuance, rounding, fees calculation are already permormed on counter
+     * offers creation
      * */
     switch (sale->getSaleType())
     {
@@ -546,7 +547,6 @@ bool CheckSaleStateOpFrame::doApply(Application& app, StorageHelper& storageHelp
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-
     const auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, db, &delta);
     if (!sale)
     {
