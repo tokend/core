@@ -14,7 +14,7 @@
 #include <cstdio>
 #include <fstream>
 #include <random>
-#include <xdrpp/autocheck.h>
+//#include <xdrpp/autocheck.h>
 
 using namespace stellar;
 

@@ -29,7 +29,7 @@
 #include "util/Timer.h"
 #include "util/TmpDir.h"
 #include "util/types.h"
-#include "xdrpp/autocheck.h"
+//#include "xdrpp/autocheck.h"
 #include <algorithm>
 #include <future>
 
@@ -242,6 +242,7 @@ TEST_CASE("skip list", "[bucket]")
     btest.test();
 }
 
+/*
 TEST_CASE("bucket list", "[bucket]")
 {
     VirtualClock clock;
@@ -515,7 +516,8 @@ TEST_CASE("merging bucket entries", "[!hide][bucket]")
         CHECK(countEntries(b1) == 1);
     }
 
-    /*SECTION("dead offer entry annihilates live offer entry")
+    */
+/*SECTION("dead offer entry annihilates live offer entry")
     {
         liveEntry.data.type(OFFER);
         liveEntry.data.offer() = LedgerTestUtils::generateValidOfferEntry(10);
@@ -527,7 +529,8 @@ TEST_CASE("merging bucket entries", "[!hide][bucket]")
         std::shared_ptr<Bucket> b1 =
             Bucket::fresh(app->getBucketManager(), live, dead);
         CHECK(countEntries(b1) == 1);
-    }*/
+    }*//*
+
 
     SECTION("random dead entries annihilates live entries")
     {
@@ -577,6 +580,7 @@ TEST_CASE("merging bucket entries", "[!hide][bucket]")
         CHECK(countEntries(b3) == liveCount);
     }
 }
+*/
 
 static void
 clearFutures(Application::pointer app, BucketList& bl)

@@ -7,6 +7,6 @@
 [submodule "lib/libmedida"]
 	path = lib/libmedida
 	url = https://gitlab.com/tokend/medida.git
-[submodule "src/xdr"]
-	path = src/xdr
-	url = https://github.com/tokend/xdr.git
+[submodule "lib/cpp-serialize"]
+	path = lib/cpp-serialize
+	url = https://gitlab.com/distributed_lab/cpp-serialize

@@ -4,7 +4,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AccountRoleHelper.h"
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include "xdrpp/printer.h"
 #include "ledger/LedgerDelta.h"
 #include "transactions/review_request/ReviewRequestHelper.h"

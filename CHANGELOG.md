@@ -2,6 +2,14 @@
 
 ## 3.5.1-x.0
 
+### Removed
+
+* xdr submodule
+
+### Added
+
+* script for xdr generation
+
 ### Fixed
 
 * Ledger changes after removing signer and signer role

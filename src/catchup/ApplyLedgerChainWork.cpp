@@ -9,7 +9,7 @@
 #include "historywork/Progress.h"
 #include "ledger/CheckpointRange.h"
 #include "ledger/LedgerManager.h"
-#include "lib/xdrpp/xdrpp/printer.h"
+#include "xdrpp/printer.h"
 #include "main/Application.h"
 #include "util/format.h"
 #include <medida/meter.h>
