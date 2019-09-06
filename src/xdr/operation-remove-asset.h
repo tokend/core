@@ -175,9 +175,10 @@ count_size(xdr::measurer& m) const override;
 
 enum class RemoveAssetResultCode : std::int32_t {
   SUCCESS = 0,
-  HAS_PAIR = -1,
-  HAS_ACTIVE_OFFERS = -2,
-  HAS_ACTIVE_SALES = -3,
+  INVALID_ASSET_CODE = -1,
+  HAS_PAIR = -2,
+  HAS_ACTIVE_OFFERS = -3,
+  HAS_ACTIVE_SALES = -4,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::RemoveAssetResultCode>
@@ -189,6 +190,8 @@ template<> struct xdr_traits<::stellar::RemoveAssetResultCode>
     switch (val) {
     case ::stellar::RemoveAssetResultCode::SUCCESS:
       return "SUCCESS";
+    case ::stellar::RemoveAssetResultCode::INVALID_ASSET_CODE:
+      return "INVALID_ASSET_CODE";
     case ::stellar::RemoveAssetResultCode::HAS_PAIR:
       return "HAS_PAIR";
     case ::stellar::RemoveAssetResultCode::HAS_ACTIVE_OFFERS:
@@ -202,6 +205,7 @@ template<> struct xdr_traits<::stellar::RemoveAssetResultCode>
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::RemoveAssetResultCode::SUCCESS,
+      (int32_t)::stellar::RemoveAssetResultCode::INVALID_ASSET_CODE,
       (int32_t)::stellar::RemoveAssetResultCode::HAS_PAIR,
       (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_OFFERS,
       (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_SALES

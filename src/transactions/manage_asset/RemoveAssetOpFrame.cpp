@@ -39,15 +39,11 @@ RemoveAssetOpFrame::tryGetOperationConditions(
     AccountRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetCode = asset->getCode();
     resource.asset().assetType = asset->getType();
-    AccountRuleAction action;
+    AccountRuleAction action = AccountRuleAction::REMOVE_FOR_OTHER;
 
     if (asset->getOwner() == mSourceAccount->getID())
     {
         action = AccountRuleAction::REMOVE;
-    }
-    else
-    {
-        action = AccountRuleAction::REMOVE_FOR_OTHER;
     }
 
     result.emplace_back(resource, action, mSourceAccount);
@@ -71,6 +67,11 @@ RemoveAssetOpFrame::tryGetSignerRequirements(
     SignerRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetCode = asset->getCode();
     resource.asset().assetType = asset->getType();
+    SignerRuleAction action = SignerRuleAction::REMOVE_FOR_OTHER;
+    if (getSourceID() == asset->getOwner())
+    {
+        action = SignerRuleAction::REMOVE;
+    }
 
     result.emplace_back(resource, SignerRuleAction::REMOVE);
 
@@ -87,7 +88,7 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
     auto& assetHelper = storageHelper.getAssetHelper();
 
     // Asset existence was checked previously
-    auto asset = assetHelper.loadAsset(mRemoveAsset.code);
+    auto asset = assetHelper.mustLoadAsset(mRemoveAsset.code);
 
     auto saleHelper = SaleHelper::Instance();
     if (saleHelper->exists(db, mRemoveAsset.code))
@@ -120,6 +121,12 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
 bool
 RemoveAssetOpFrame::doCheckValid(stellar::Application& app)
 {
+    if (!AssetFrame::isAssetCodeValid(mRemoveAsset.code))
+    {
+        innerResult().code(RemoveAssetResultCode::INVALID_ASSET_CODE);
+        return false;
+    }
+
     return true;
 }
 
