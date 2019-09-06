@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+* Partially migrated to new helpers
+* Refactored all OpFrames to use StorageHelper
+
+### Added
+* BalanceManager
+
+### Removed
+* AccountManager
+
 ## 3.5.2-x.0
 
 ### Changed
