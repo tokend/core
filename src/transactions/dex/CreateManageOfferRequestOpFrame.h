@@ -2,11 +2,11 @@
 
 #include "transactions/OperationFrame.h"
 #include "ledger/ReviewableRequestFrame.h"
+#include "OfferValidator.h"
 
 namespace stellar 
 {
 class ManageOfferOpFrame;
-class OfferValidator;
 
 enum class ManageOfferAction 
 {
@@ -21,7 +21,7 @@ class CreateManageOfferRequestOpFrame : public OperationFrame
     CreateManageOfferRequestOp const& mCreateManageOfferRequest;
     ManageOfferOp const& mManageOffer;
 
-    OfferValidator const& mValidator;   
+    std::unique_ptr<OfferValidator> mValidator;   
 
     ManageOfferAction mManageAction;
     std::function<std::string(AssetCode const& base, AssetCode const& quote)> mKeyMaker;
@@ -46,7 +46,7 @@ class CreateManageOfferRequestOpFrame : public OperationFrame
     std::vector<std::string>
     makeTasksKeyVector(AssetCode const& base, AssetCode const& quote);
 
-    void
+    bool
     tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
                    ReviewableRequestFrame::pointer request);
 

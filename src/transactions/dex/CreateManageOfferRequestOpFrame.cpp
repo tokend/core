@@ -1,6 +1,5 @@
 #include "CreateManageOfferRequestOpFrame.h"
 #include "ManageOfferOpFrame.h"
-#include "OfferValidator.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/StorageHelper.h"
@@ -18,13 +17,11 @@ CreateManageOfferRequestOpFrame::CreateManageOfferRequestOpFrame(
         : OperationFrame(op, res, tx)
         , mCreateManageOfferRequest(op.body.createManageOfferRequestOp())
         , mManageOffer(mCreateManageOfferRequest.request.op)
-        , mValidator(OfferValidator(mManageOffer, tx))
+        , mValidator(std::make_unique<OfferValidator>(mManageOffer, tx))
 {
-    //mValidator = OfferValidator(mCreateManageOfferRequest.request.op, tx)
-    const auto manageOffer = mCreateManageOfferRequest.request.op;
-    if (manageOffer.orderBookID == ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID)
+    if (mManageOffer.orderBookID == ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID)
     {
-        if (manageOffer.amount == 0)
+        if (mManageOffer.amount == 0)
         {
             mManageAction = ManageOfferAction::REMOVE;
             mKeyMaker = ManageKeyValueOpFrame::makeDeleteOfferKey;
@@ -37,7 +34,7 @@ CreateManageOfferRequestOpFrame::CreateManageOfferRequestOpFrame(
     }
     else 
     {
-        if (manageOffer.amount == 0)
+        if (mManageOffer.amount == 0)
         {
             mManageAction = ManageOfferAction::REMOVE_PARTICIPATION;
             mKeyMaker = ManageKeyValueOpFrame::makeDeleteSaleParticipationKey;
@@ -154,21 +151,20 @@ CreateManageOfferRequestOpFrame::doApply(Application& app, StorageHelper& sh, Le
     auto requestHelper = ReviewableRequestHelper::Instance();
     Database& db = sh.getDatabase();
     LedgerDelta& delta = sh.mustGetLedgerDelta();
+    requestHelper->storeAdd(delta, db, request->mEntry);
+    
     if (!request->canBeFulfilled(lm)) 
     {
-        requestHelper->storeAdd(delta, db, request->mEntry);
         return true;
     }
 
-    tryAutoApprove(db, delta, app, request);
-
-    return true;
+    return tryAutoApprove(db, delta, app, request);
 }
 
 bool
 CreateManageOfferRequestOpFrame::doCheckValid(Application& app) 
 {
-    auto res = mValidator.validate(app);
+    auto res = mValidator->validate(app);
     if (res == ManageOfferResultCode::SUCCESS) {
         return true;
     }
@@ -178,7 +174,7 @@ CreateManageOfferRequestOpFrame::doCheckValid(Application& app)
     return false;
 }
 
-void
+bool
 CreateManageOfferRequestOpFrame::tryAutoApprove(
         Database& db, LedgerDelta& delta, Application& app,
         ReviewableRequestFrame::pointer request)
@@ -188,15 +184,17 @@ CreateManageOfferRequestOpFrame::tryAutoApprove(
             app, ledgerManager, delta, request);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
+        CLOG(DEBUG, Logging::OPERATION_LOGGER)
                 << "Unexpected state: "
                    "tryApproveRequest expected to be success, but was: "
                 << xdr::xdr_to_string(result);
-        throw std::runtime_error("Unexpected state: "
-                                 "tryApproveRequest expected to be success");
+        innerResult().code(CreateManageOfferRequestResultCode::INVALID_OFFER);
+        innerResult().manageOfferCode() = result.manageOfferCode();
+        return false;
     }
 
     innerResult().success().fulfilled = true;
+    return true;
 }
 
 std::vector<std::string>

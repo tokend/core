@@ -6,11 +6,13 @@ namespace stellar
 {
 class OfferValidator
 {
-    ManageOfferOpFrame* mManageOfferOpFrame;
+    std::shared_ptr<ManageOfferOpFrame> mManageOfferOpFrame;
+    OperationResult mRes;
+    Operation mOp;
 
 public:
     ManageOfferResultCode 
-    validate(Application& app) const
+    validate(Application& app)
     {
         mManageOfferOpFrame->doCheckValid(app);
         return mManageOfferOpFrame->getInnerCode();
@@ -18,11 +20,13 @@ public:
 
     OfferValidator(ManageOfferOp const& manageOfferOp, TransactionFrame& tx) 
     {
-        OperationResult res;
-        Operation op;
-        op.body.type(OperationType::MANAGE_OFFER);
-        op.body.manageOfferOp() = manageOfferOp;
-        mManageOfferOpFrame = ManageOfferOpFrame::make(op, res, tx);
+        mRes.code(OperationResultCode::opINNER);
+        mRes.tr().type(OperationType::MANAGE_OFFER);
+
+        
+        mOp.body.type(OperationType::MANAGE_OFFER);
+        mOp.body.manageOfferOp() = manageOfferOp;
+        mManageOfferOpFrame = std::shared_ptr<ManageOfferOpFrame>(ManageOfferOpFrame::make(mOp, mRes, tx));
     }
 };
 }

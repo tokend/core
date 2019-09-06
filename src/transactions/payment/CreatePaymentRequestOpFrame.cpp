@@ -141,7 +141,7 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh, Ledger
         return false;
     }
 
-    ReviewableRequestEntry::_body_t body(ReviewableRequestType::MANAGE_OFFER);
+    ReviewableRequestEntry::_body_t body(ReviewableRequestType::CREATE_PAYMENT);
     body.createPaymentRequest() = mCreatePaymentRequest.request;
     auto request = ReviewableRequestFrame::createNewWithHash(sh.mustGetLedgerDelta(), getSourceID(),
                                               app.getAdminID(), nullptr, body, lm.getCloseTime());
@@ -150,18 +150,16 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh, Ledger
     auto requestHelper = ReviewableRequestHelper::Instance();
     Database& db = sh.getDatabase();
     LedgerDelta& delta = sh.mustGetLedgerDelta();
+    requestHelper->storeAdd(delta, db, request->mEntry);
     if (!request->canBeFulfilled(lm)) 
     {
-        requestHelper->storeAdd(delta, db, request->mEntry);
         return true;
     }
 
-    tryAutoApprove(db, delta, app, request);
-
-    return true;
+    return tryAutoApprove(db, delta, app, request);
 }
 
-void
+bool
 CreatePaymentRequestOpFrame::tryAutoApprove(
         Database& db, LedgerDelta& delta, Application& app,
         ReviewableRequestFrame::pointer request)
@@ -171,15 +169,17 @@ CreatePaymentRequestOpFrame::tryAutoApprove(
             app, ledgerManager, delta, request);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
+        CLOG(DEBUG, Logging::OPERATION_LOGGER)
                 << "Unexpected state: "
                    "tryApproveRequest expected to be success, but was: "
                 << xdr::xdr_to_string(result);
-        throw std::runtime_error("Unexpected state: "
-                                 "tryApproveRequest expected to be success");
+        innerResult().code(CreatePaymentRequestResultCode::INVALID_PAYMENT);
+        innerResult().paymentCode() = result.paymentCode();
+        return false;
     }
 
     innerResult().success().fulfilled = true;
+    return true;
 }
 
 std::vector<std::string>

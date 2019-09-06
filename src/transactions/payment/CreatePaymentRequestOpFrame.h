@@ -34,7 +34,7 @@ class CreatePaymentRequestOpFrame : public OperationFrame
         return mResult.tr().createPaymentRequestResult();
     }
 
-    void
+    bool
     tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
         ReviewableRequestFrame::pointer request);
 
