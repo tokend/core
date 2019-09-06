@@ -7,7 +7,7 @@
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestFrame.h>
 #include <ledger/SaleFrame.h>
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include <transactions/OperationFrame.h>
 
 namespace stellar

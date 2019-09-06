@@ -18,7 +18,7 @@ target_link_libraries(core soci)
 target_link_libraries(core 3rdparty -lpthread)
 target_link_libraries(core crow)
 target_link_libraries(core medida)
-target_link_libraries(core xdrpp)
+target_link_libraries(core cpp_serialize)
 target_link_libraries(core sodium)
 target_link_libraries(core gmock)
 

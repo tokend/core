@@ -7,7 +7,7 @@
 #include "ledger/LedgerManager.h"
 #include "database/Database.h"
 #include <lib/soci/src/core/transaction.h>
-#include <lib/xdrpp/xdrpp/printer.h>
+#include <xdrpp/printer.h>
 
 namespace stellar
 {
