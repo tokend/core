@@ -6,7 +6,7 @@
 #include "ledger/SignerRoleHelper.h"
 #include "ledger/AccountRoleHelper.h"
 #include "ledger/KeyValueHelper.h"
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include <crypto/SHA.h>
 #include "xdrpp/printer.h"
 #include "ledger/LedgerDelta.h"

@@ -31,7 +31,6 @@
 /INSTALL
 
 /src/main/StellarCoreVersion.cpp
-/src/xdr/*.h
 /Makefile
 /Makefile.in
 /aclocal.m4

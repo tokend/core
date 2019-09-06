@@ -1,6 +1,6 @@
 #include "AccountRuleHelperImpl.h"
 #include "LedgerDelta.h"
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include "util/basen.h"
 #include "database/Database.h"
 

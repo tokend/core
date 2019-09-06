@@ -11,9 +11,6 @@ include(platform_include.cmake)
 #path to .x
 set(XDRS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/xdr)
 
-#generate xdr files in path XDRS_PATH
-include(gen_xdr.cmake)
-
 #include generated files .h from .x
 include_directories(${XDRS_PATH})
 
@@ -53,6 +50,7 @@ set(NOT_COMMON_SOURCE_FILES
 
 # mocks
 set(MOCKS_FILES transactions/test/mocks/)
+
 
 #find source files
 file(GLOB STELLAR_CORE_SOURCE_FILES **/*.cpp **/**/*.cpp **/**/**/*.cpp)

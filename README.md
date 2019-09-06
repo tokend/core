@@ -7,7 +7,7 @@ Learn more by reading the [overview document](https://gitlab.com/tokend/core/blo
 
 ## Changelog
 
-All notable changes to this project will be documented in [this file](https://gitlab.com/tokend/core/blob/master/docs/changelog.md). This project adheres to Semantic Versioning.
+All notable changes to this project will be documented in [this file](https://gitlab.com/tokend/core/blob/master/docs/CHANGELOG.md). This project adheres to Semantic Versioning.
 
 ## Documentation
 
@@ -15,7 +15,15 @@ Documentation of the code's layout and abstractions, as well as for the
 functionality available, can be found in
 [`./docs`](https://gitlab.com/tokend/core/tree/master/docs).
 
-## Builiding 
+## Builiding
+
+### Generate xdr
+
+To update xdr-generated files:
+
+```bash
+./generateXDR.sh master
+```
 
 ### On newer distributions with OpenSSL 1.1:
 
