@@ -41,7 +41,7 @@ RemoveAssetOpFrame::tryGetOperationConditions(
     resource.asset().assetType = asset->getType();
     AccountRuleAction action = AccountRuleAction::REMOVE_FOR_OTHER;
 
-    if (asset->getOwner() == mSourceAccount->getID())
+    if (getSourceID() == asset->getOwner())
     {
         action = AccountRuleAction::REMOVE;
     }
@@ -73,7 +73,7 @@ RemoveAssetOpFrame::tryGetSignerRequirements(
         action = SignerRuleAction::REMOVE;
     }
 
-    result.emplace_back(resource, SignerRuleAction::REMOVE);
+    result.emplace_back(resource, action);
 
     return true;
 }
