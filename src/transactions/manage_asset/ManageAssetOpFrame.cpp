@@ -30,20 +30,20 @@ ManageAssetOpFrame::ManageAssetOpFrame(Operation const& op,
 
 ManageAssetOpFrame* ManageAssetOpFrame::makeHelper(Operation const & op, OperationResult & res, TransactionFrame & parentTx)
 {
-	switch (op.body.manageAssetOp().request.action()) {
-	case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
-		return new CreateAssetOpFrame(op, res, parentTx);
-	case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
-		return new UpdateAssetOpFrame(op, res, parentTx);
-	case ManageAssetAction::CANCEL_ASSET_REQUEST:
-		return new CancelAssetRequestOpFrame(op, res, parentTx);
-        case ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER:
-            return new ChangeAssetPreIssuerOpFrame(op, res, parentTx);
-        case ManageAssetAction::UPDATE_MAX_ISSUANCE:
-            return new ChangeAssetMaxIssuanceOpFrame(op, res, parentTx);
-	default:
-		throw runtime_error("Unexpected action in manage asset op");
-	}
+    switch (op.body.manageAssetOp().request.action()) {
+    case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
+        return new CreateAssetOpFrame(op, res, parentTx);
+    case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
+        return new UpdateAssetOpFrame(op, res, parentTx);
+    case ManageAssetAction::CANCEL_ASSET_REQUEST:
+        return new CancelAssetRequestOpFrame(op, res, parentTx);
+    case ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER:
+        return new ChangeAssetPreIssuerOpFrame(op, res, parentTx);
+    case ManageAssetAction::UPDATE_MAX_ISSUANCE:
+        return new ChangeAssetMaxIssuanceOpFrame(op, res, parentTx);
+    default:
+        throw runtime_error("Unexpected action in manage asset op");
+    }
 }	
 
 ReviewableRequestFrame::pointer ManageAssetOpFrame::getOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta, const ReviewableRequestType requestType) const

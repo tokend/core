@@ -2,6 +2,111 @@
 
 ## Unreleased
 
+### Fixed
+
+* long serialization on OS X 64-bit
+
+## 3.5.2-x.0
+
+### Changed
+
+* XDR marshaling/unmarshaling
+
+## 3.5.1
+
+### Removed
+
+* xdr submodule
+
+### Added
+
+* script for xdr generation
+
+### Fixed
+
+* Ledger changes after removing signer and signer role
+* Statistics calculation for deposit stats op type
+* Create KYC recovery request permissions
+* Panic on horizon (not found reviewable request in ledger changes)
+
+## 3.5.0
+
+### Added
+
+* Rules for `AccountSpecificRule`
+* `RemoveAssetPairOp` operation to remove asset pair
+* `InitiateKYCRecoveryOpFrame`
+* `CreateKYCRecoveryRequestOpFrame`
+* `ReviewKYCRecoveryOpFrame`
+* `atomic_swap_bid_tasks` and `atomic_swap_ask_tasks` reserved keys
+
+### Fixed
+
+* unsuccessful test passing by (--test)
+* exception on drop and ban peer command
+* Tasks handling on `ChangeRoleRequest` reject
+* Ability to set fixed fee for `INVEST_FEE` type
+* Ability to create asset pair for the same asset, i.e. `A/A`
+* atomic swaps, enable them
+
+## 3.4.1
+
+### Fixed
+
+* exception on ledger version upgrade
+
+## 3.4.0
+
+### Added
+
+* Unlimited (`UINT_64MAX`) signers amount in free license
+* New CreateAMLAlert error codes
+
+### Fixed
+
+* Added checking permission for setting `allTasks` in operations: `CreateAMLAlertRequestOp`, `CreateManageLimitsRequestOp`, `CreateIssuanceRequestOp`, `CreatePreIssuanceRequestOp`, `UpdateAssetOp`, `ManageSaleOp`
+* Exception on check sale state op because of wrong removing sale specific rules
+
+## 3.3.1
+
+### Fixed
+
+* curl now added in containers
+
+## 3.3.0
+
+### Added
+
+* Manage account specific rule op frame
+* Cancel change role reviewable request
+
+### Fixed
+
+* Create and approve change role request for role that does  not exist
+* Removed ability to create sale for reversed pair
+
+## 3.2.1
+
+### Fixed 
+* Fail of histexists command if db has not been initialized
+
+
+### Fixed 
+* Manage asset tests
+
+###Fixed
+
+* Delete vote after poll ended
+
+## 3.2.0
+
+### Added
+
+* Close poll op frame
+* Update poll end time op frame
+* Invest fee
+* Voting tests
+
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar
@@ -10,7 +115,7 @@
 ### Fixed
 
 * exception on poll migration
-* long serialization on OS X 64-bit
+* Current and physical price restrictions
 
 ## 3.1.3
 

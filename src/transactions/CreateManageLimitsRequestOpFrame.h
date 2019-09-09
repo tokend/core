@@ -16,7 +16,8 @@ class CreateManageLimitsRequestOpFrame : public OperationFrame
 
     bool
     tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
+                              std::vector<OperationCondition>& result,
+                              LedgerManager& ledgerManager) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -49,7 +50,7 @@ public:
         return xdr::xdr_traits<CreateManageLimitsRequestResultCode>::enum_name(innerResult().code());
     }
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper& storageHelper) override;
+    std::vector<longstring> makeTasksKeyVector(StorageHelper& storageHelper);
 };
 
 }

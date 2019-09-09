@@ -31,6 +31,14 @@ class CreateSaleCreationRequestOpFrame : public OperationFrame
 
     static bool isPriceValid(SaleCreationRequestQuoteAsset const& quoteAsset,
                              SaleCreationRequest const& saleCreationRequest);
+
+    bool
+    checkRulesDuplication(StorageHelper& storageHelper,
+            xdr::xvector<CreateAccountSaleRuleData> const& rules);
+
+    bool
+    isSaleRulesValid(Application& app, StorageHelper& storageHelper, SaleCreationRequest const& request);
+
 public:
 
     CreateSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,
@@ -63,10 +71,10 @@ public:
     bool updateRequest(Application& app, StorageHelper& storageHelper,
                        LedgerManager& ledgerManager);
 
-    bool isRequestValid(StorageHelper& storageHelper, LedgerManager& ledgerManager,
-                        ReviewableRequestFrame::pointer request);
+    bool isRequestValid(Application& app, StorageHelper& storageHelper,
+            LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
 
-    std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+    std::vector<std::string> makeTasksKeyVector();
 
 };
 }

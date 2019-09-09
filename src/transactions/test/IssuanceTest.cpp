@@ -18,6 +18,9 @@
 #include "test/test_marshaler.h"
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
+#include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
+#include "transactions/test/test_helper/ManageAccountRoleTestHelper.h"
+#include <transactions/test/test_helper/ManageBalanceTestHelper.h>
 
 using namespace std;
 using namespace stellar;
@@ -569,6 +572,99 @@ TEST_CASE("Issuance", "[tx][issuance]")
                                                                  issuerBalanceID, reference, &systemTask,
                                                                  CreateIssuanceRequestResultCode::SYSTEM_TASKS_NOT_ALLOWED);
             }
+            SECTION("Tasks permissions")
+            {
+                ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+                ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+                ManageAssetTestHelper manageAssetHelper(testManager);
+                const AssetCode assetCode = "AST";
+                uint32_t zeroTasks = 0;
+
+                longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey(assetCode);
+                manageKeyValueHelper.setKey(key)->setUi32Value(0);
+                manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+                AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+                auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                        txResource, AccountRuleAction::SEND, false);
+                auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
+                        txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                AccountRuleResource assetResource(LedgerEntryType::ASSET);
+                assetResource.asset().assetType = 0;
+                assetResource.asset().assetCode = "*";
+                auto assetRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                        assetResource, AccountRuleAction::ANY, false);
+                auto assetRuleId = manageAccountRuleTestHelper.applyTx(root,
+                        assetRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+                reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
+                auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                        reviewableRequestResource, AccountRuleAction::CREATE, false);
+                auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
+                        revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
+                        {assetRuleId, revReqRuleId, txRuleId});
+                auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
+
+                auto createAccountBuilder = CreateAccountTestBuilder()
+                        .setSource(root);
+
+                auto syndicate = Account{ SecretKey::random(), 0 };
+                auto syndicatePubKey = syndicate.key.getPublicKey();
+                createAccountTestHelper.applyTx(createAccountBuilder
+                                                        .setToPublicKey(syndicatePubKey)
+                                                        .addBasicSigner()
+                                                        .setRoleID(syndicateRoleID));
+
+                auto createRequest = manageAssetHelper.createAssetCreationRequest(assetCode,
+                                                                                  syndicatePubKey, "{}", UINT64_MAX, 0, &zeroTasks);
+                auto creationResult = manageAssetHelper.applyManageAssetTx(syndicate, 0, createRequest,
+                                                                           ManageAssetResultCode::SUCCESS);
+                auto balanceId = BalanceHelperLegacy::Instance()->loadBalance(syndicatePubKey, assetCode, db, nullptr)
+                        ->getBalanceID();
+
+                SECTION("Preissuance")
+                {
+                    SECTION("Set tasks without permission")
+                    {
+                        issuanceRequestHelper.applyCreatePreIssuanceRequest(syndicate, syndicate.key, assetCode,
+                                preIssuedAmount, reference,
+                                CreatePreIssuanceRequestResultCode::SUCCESS, // no need to check inner code
+                                &zeroTasks,
+                                OperationResultCode::opNO_ROLE_PERMISSION);
+                    }
+                    SECTION("Without setting tasks")
+                    {
+                        issuanceRequestHelper.applyCreatePreIssuanceRequest(syndicate, syndicate.key, assetCode,
+                                                                            preIssuedAmount, reference,
+                                                                            CreatePreIssuanceRequestResultCode::SUCCESS);
+                    }
+                }
+
+                issuanceRequestHelper.authorizePreIssuedAmount(syndicate, syndicate.key, assetCode,
+                                                               preIssuedAmount, root);
+
+                SECTION("Issuance")
+                {
+                    SECTION("Set tasks without permission")
+                    {
+                        issuanceRequestHelper.applyCreateIssuanceRequest(syndicate, assetCode, preIssuedAmount,
+                                                                         balanceId, reference, &zeroTasks,
+                                                                         CreateIssuanceRequestResultCode::SUCCESS, // no need to check inner code
+                                                                         "{}",
+                                                                         OperationResultCode::opNO_ROLE_PERMISSION);
+                    }
+                    SECTION("Without setting tasks")
+                    {
+                        issuanceRequestHelper.applyCreateIssuanceRequest(syndicate, assetCode, preIssuedAmount,
+                                                                         balanceId, reference, nullptr,
+                                                                         CreateIssuanceRequestResultCode::SUCCESS);
+                    }
+                }
+            }
             SECTION("Insufficient amount to be issued")
             {
                 issuanceTasks = 0;
@@ -592,6 +688,103 @@ TEST_CASE("Issuance", "[tx][issuance]")
                 manageLimitsOp.details.limitsCreateDetails().assetCode = "EUR";
                 manageLimitsOp.details.limitsCreateDetails().statsOpType = StatsOpType::DEPOSIT;
                 manageLimitsOp.details.limitsCreateDetails().isConvertNeeded = false;
+
+                SECTION("Issue to someone else")
+                {
+                    auto balanceHelper = BalanceHelperLegacy::Instance();
+                    ManageBalanceTestHelper manageBalanceTestHelper(testManager);
+
+                    auto account = Account{SecretKey::random() , 0};
+                    CreateAccountTestHelper createAccountTestHelper(testManager);
+                    createAccountTestHelper.
+                        applyCreateAccountTx(root, account.key.getPublicKey(), 1);
+
+                    auto accountID = account.key.getPublicKey();
+
+                    manageLimitsOp.details.limitsCreateDetails().accountID.activate() = account.key.getPublicKey();
+                    manageLimitsOp.details.limitsCreateDetails().dailyOut = preIssuedAmount/3;
+                    manageLimitsOp.details.limitsCreateDetails().weeklyOut = preIssuedAmount*6;
+                    manageLimitsOp.details.limitsCreateDetails().monthlyOut = preIssuedAmount*12;
+                    manageLimitsOp.details.limitsCreateDetails().annualOut = preIssuedAmount*15;
+                    manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp);
+
+                    SECTION("With tasks")
+                    {
+                        issuanceTasks = 8;
+                        uint32_t zeroTasks = 0;
+
+                        auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
+
+                        auto createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued,
+                                                                             preIssuedAmount / 2,
+                                                                             issuerBalanceID, anotherReference, &zeroTasks);
+                        REQUIRE(createIssuanceResult.success().fulfilled);
+
+                        manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
+
+                        auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
+
+                        REQUIRE(receiverBalance);
+
+                        createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued,
+                                                                             preIssuedAmount / 2,
+                                                                             receiverBalance->getBalanceID(), reference, &issuanceTasks);
+                        REQUIRE_FALSE(createIssuanceResult.success().fulfilled);
+
+                        auto requestID = createIssuanceResult.success().requestID;
+                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+
+                        uint32_t toAdd = 0, toRemove = issuanceTasks;
+                        auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
+                        reviewRequestHelper.applyReviewRequestTxWithTasks(
+                            issuer,
+                            requestID,
+                            request->getHash(),
+                            ReviewableRequestType::CREATE_ISSUANCE,
+                            ReviewRequestOpAction::APPROVE,
+                            "",
+                            ReviewRequestResultCode::SUCCESS,
+                            &toAdd,
+                            &toRemove);
+
+                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+
+                        REQUIRE(request->getAllTasks() == (issuanceTasks | CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED));
+                    }
+                    SECTION("with autoapprove")
+                    {
+                        issuanceTasks = 0;
+                        auto anotherReference = "5146ccf6a66d994f7c363db875e31ca35581450a4bf6d3be6cc9ac79233a69d0";
+
+                        auto createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             issuerBalanceID, anotherReference, &issuanceTasks);
+                        REQUIRE(createIssuanceResult.success().fulfilled);
+
+                        auto requestID = createIssuanceResult.success().requestID;
+                        auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(!request);
+
+                        manageBalanceTestHelper.createBalance(account, accountID, assetToBeIssued);
+
+                        auto receiverBalance = balanceHelper->loadBalance(accountID, assetToBeIssued, db);
+
+                        REQUIRE(receiverBalance);
+
+                        createIssuanceResult =
+                            issuanceRequestHelper.applyCreateIssuanceRequest(issuer, assetToBeIssued, preIssuedAmount/2,
+                                                                             receiverBalance->getBalanceID(), reference, &issuanceTasks);
+                        REQUIRE(!createIssuanceResult.success().fulfilled);
+
+                        requestID = createIssuanceResult.success().requestID;
+                        request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+                        REQUIRE(request->getAllTasks() ==
+                                CreateIssuanceRequestOpFrame::DEPOSIT_LIMIT_EXCEEDED);
+
+                    }
+                }
 
                 SECTION("Not exceeded"){
                     manageLimitsOp.details.limitsCreateDetails().dailyOut = preIssuedAmount*3;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transactions/OperationFrame.h"
+#include "ledger/PollFrame.h"
 
 namespace stellar
 {
@@ -15,6 +16,11 @@ protected:
     {
         return mResult.tr().managePollResult();
     }
+    bool doCheckValid(Application& app);
+
+    bool
+    isAuthorized (AccountID adminID, PollFrame::pointer poll);
+
 
 public:
     ManagePollOpFrame(Operation const& op, OperationResult& res,

@@ -3,6 +3,7 @@
 #include "ReviewRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AccountRoleHelper.h"
 #include "ledger/AccountKYCHelper.h"
 
 namespace stellar
@@ -22,6 +23,20 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     request->checkRequestType(ReviewableRequestType::CHANGE_ROLE);
 
     Database &db = ledgerManager.getDatabase();
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
+    {
+        auto roleID = request->getRequestEntry().body.changeRoleRequest().accountRoleToSet;
+        auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+        if(!accountRole)
+        {
+            innerResult().code(ReviewRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+            return false;
+        }
+
+    }
 
     auto& requestEntry = request->getRequestEntry();
     handleTasks(db, delta, request);
@@ -38,8 +53,6 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     auto& changeRoleRequest = requestEntry.body.changeRoleRequest();
     auto destinationAccount = changeRoleRequest.destinationAccount;
 
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
     auto& accountHelper = storageHelper.getAccountHelper();
 
     auto destinationAccountFrame = accountHelper.mustLoadAccount(destinationAccount);
@@ -83,7 +96,11 @@ ReviewChangeRoleRequestOpFrame::handleReject(Application &app, LedgerDelta &delt
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
-    requestEntry.tasks.pendingTasks = mReviewRequest.reviewDetails.tasksToAdd;
+    requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REJECT_TASKS))
+    {
+        requestEntry.tasks.pendingTasks = mReviewRequest.reviewDetails.tasksToAdd;
+    }
     requestEntry.tasks.externalDetails.emplace_back(mReviewRequest.reviewDetails.externalDetails);
 
     request->setRejectReason(mReviewRequest.reason);

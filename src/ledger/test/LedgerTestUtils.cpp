@@ -11,8 +11,8 @@
 #include "util/types.h"
 #include <locale>
 #include <string>
-#include <xdrpp/autocheck.h>
-#include <xdrpp/xdrpp/marshal.h>
+//#include <xdrpp/autocheck.h>
+#include <xdrpp/marshal.h>
 
 namespace stellar
 {
@@ -55,8 +55,8 @@ replaceControlCharacters(T& s, int minSize)
         char c = static_cast<char>(*it);
         if (c < 0 || std::iscntrl(c, loc))
         {
-            auto b = autocheck::generator<char>{}(autocheck::detail::nalnums);
-            *it = b;
+            /*auto b = autocheck::generator<char>{}(autocheck::detail::nalnums);
+            *it = b;*/
         }
     }
 }
@@ -111,9 +111,9 @@ makeValid(std::vector<LedgerHeaderHistoryEntry>& lhv,
             }
         }
         // On a coin flip, corrupt header content rather than previous link
-        autocheck::generator<bool> flip;
-        if (i == randomIndex &&
-            state == HistoryManager::VERIFY_STATUS_ERR_BAD_HASH && flip())
+        //autocheck::generator<bool> flip;
+        if (i == randomIndex /*&&
+            state == HistoryManager::VERIFY_STATUS_ERR_BAD_HASH && flip()*/)
         {
             lh.hash = HashUtils::random();
         }
@@ -161,11 +161,11 @@ generateLedgerHeadersForCheckpoint(
     LedgerHeaderHistoryEntry firstLedger, uint32_t freq,
     HistoryManager::LedgerVerificationStatus state)
 {
-    static auto vecgen =
+    /*static auto vecgen =
         autocheck::list_of(autocheck::generator<LedgerHeaderHistoryEntry>());
     auto res = vecgen(freq);
-    makeValid(res, firstLedger, state);
-    return res;
+    makeValid(res, firstLedger, state);*/
+    return {};
 }
 }
 }

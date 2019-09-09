@@ -200,6 +200,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
 {
     auto& ledgerHeader = storageHelper.mustGetLedgerDelta().getHeaderFrame();
 
+    // restrict any operations with default signer rule
     LedgerEntry firstSignerRuleEntry;
     firstSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& firstSignerRule = firstSignerRuleEntry.data.signerRule();
@@ -216,6 +217,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
     auto& helper = storageHelper.getSignerRuleHelper();
     helper.storeAdd(firstSignerRuleEntry);
 
+    // restric any operations with default role
     LedgerEntry secondSignerRuleEntry;
     secondSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& secondSignerRule = secondSignerRuleEntry.data.signerRule();
@@ -231,6 +233,7 @@ LedgerManagerImpl::createDefaultSignerRules(StorageHelper &storageHelper,
 
     helper.storeAdd(secondSignerRuleEntry);
 
+    // restric any operations with recovery signer
     LedgerEntry thirdSignerRuleEntry;
     thirdSignerRuleEntry.data.type(LedgerEntryType::SIGNER_RULE);
     auto& thirdSignerRule = thirdSignerRuleEntry.data.signerRule();
@@ -539,7 +542,7 @@ LedgerManagerImpl::valueExternalized(LedgerCloseData const& ledgerData)
         << "[seq=" << ledgerData.getLedgerSeq()
         << ", prev=" << hexAbbrev(ledgerData.getTxSet()->previousLedgerHash())
         << ", tx_count=" << ledgerData.getTxSet()->size()
-        << ", sv: " << stellarValueToString(ledgerData.getValue()) << "]";
+        << ", sv: " << StellarValueToString(ledgerData.getValue()) << "]";
 
     auto st = getState();
     switch (st)
@@ -858,7 +861,7 @@ LedgerManagerImpl::applyBufferedLedgers()
                         << "[seq=" << lcd.getLedgerSeq()
                         << ", prev=" << hexAbbrev(lcd.getTxSet()->previousLedgerHash())
                         << ", tx_count=" << lcd.getTxSet()->size()
-                        << ", sv: " << stellarValueToString(lcd.getValue()) << "]";
+                        << ", sv: " << StellarValueToString(lcd.getValue()) << "]";
                 closeLedger(lcd);
 
                 applyBufferedLedgers();

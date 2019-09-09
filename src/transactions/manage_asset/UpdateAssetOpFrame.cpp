@@ -4,18 +4,12 @@
 
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include "UpdateAssetOpFrame.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/AccountHelperLegacy.h"
-#include "ledger/AssetHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-
-#include "database/Database.h"
-
-#include "main/Application.h"
 
 namespace stellar
 {
@@ -25,8 +19,24 @@ using xdr::operator==;
 
 bool
 UpdateAssetOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                          std::vector<OperationCondition>& result) const
+                          std::vector<OperationCondition>& result,
+                          LedgerManager& ledgerManager) const
 {
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS))
+    {
+        AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+        resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_ASSET);
+
+        if (mManageAsset.request.createAssetUpdateRequest().allTasks)
+        {
+            result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+        }
+        else
+        {
+            result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+        }
+    }
+
     // only asset owner can update asset
     return true;
 }
@@ -110,15 +120,19 @@ bool UpdateAssetOpFrame::doApply(Application & app, StorageHelper &storageHelper
         }
     }
     bool autoreview = true;
-	if (mManageAsset.requestID == 0) {
+    if (mManageAsset.requestID == 0)
+    {
+        KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
         uint32_t allTasks = 0;
-        if (!loadTasks(storageHelper, allTasks, mManageAsset.request.createAssetUpdateRequest().allTasks)){
+        if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAssetUpdateTasksKey()},
+                                      mManageAsset.request.createAssetUpdateRequest().allTasks.get()))
+        {
             innerResult().code(ManageAssetResultCode::ASSET_UPDATE_TASKS_NOT_FOUND);
             return false;
         }
 
         request->setTasks(allTasks);
-		EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
+        EntryHelperProvider::storeAddEntry(*delta, db, request->mEntry);
 		autoreview = allTasks == 0;
 	}
 	else {
@@ -175,12 +189,6 @@ bool UpdateAssetOpFrame::doCheckValid(Application & app)
 string UpdateAssetOpFrame::getAssetCode() const
 {
     return mAssetUpdateRequest.code;
-}
-
-vector<longstring> UpdateAssetOpFrame::makeTasksKeyVector(StorageHelper& storageHelper) {
-    return std::vector<longstring>{
-        ManageKeyValueOpFrame::makeAssetUpdateTasksKey()
-    };
 }
 
 

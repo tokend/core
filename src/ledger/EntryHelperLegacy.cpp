@@ -15,7 +15,7 @@
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/AtomicSwapBidHelper.h"
+#include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
@@ -187,7 +187,7 @@ namespace stellar
 		{ LedgerEntryType::STATISTICS_V2, StatisticsV2Helper::Instance() },
 		{ LedgerEntryType::PENDING_STATISTICS, PendingStatisticsHelper::Instance() },
 		{ LedgerEntryType::CONTRACT, ContractHelper::Instance() },
-		{ LedgerEntryType::ATOMIC_SWAP_BID, AtomicSwapBidHelper::Instance() },
+		{ LedgerEntryType::ATOMIC_SWAP_ASK, AtomicSwapAskHelper::Instance() },
         { LedgerEntryType::SIGNER, EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER) },
         { LedgerEntryType::ACCOUNT_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_RULE) },
         { LedgerEntryType::ACCOUNT_ROLE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_ROLE) },
@@ -196,6 +196,7 @@ namespace stellar
         { LedgerEntryType::STAMP, EntryHelperLegacyImpl::Instance(LedgerEntryType::STAMP) },
         { LedgerEntryType::LICENSE, EntryHelperLegacyImpl::Instance(LedgerEntryType::LICENSE) },
         { LedgerEntryType::VOTE, EntryHelperLegacyImpl::Instance(LedgerEntryType::VOTE) },
-        { LedgerEntryType::POLL, EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL) }
+        { LedgerEntryType::POLL, EntryHelperLegacyImpl::Instance(LedgerEntryType::POLL) },
+		{ LedgerEntryType::ACCOUNT_SPECIFIC_RULE, EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_SPECIFIC_RULE) }
 	};
 }

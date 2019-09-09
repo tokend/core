@@ -5,7 +5,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "database/Database.h"
-#include "xdr/Stellar-ledger.h"
+#include "xdr/ledger.h"
 
 namespace stellar
 {

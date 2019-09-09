@@ -29,7 +29,7 @@
 #include "util/Timer.h"
 #include "util/TmpDir.h"
 #include "util/types.h"
-#include "xdrpp/autocheck.h"
+//#include "xdrpp/autocheck.h"
 #include <algorithm>
 #include <future>
 
@@ -242,6 +242,7 @@ TEST_CASE("skip list", "[bucket]")
     btest.test();
 }
 
+/*
 TEST_CASE("bucket list", "[bucket]")
 {
     VirtualClock clock;
@@ -456,7 +457,7 @@ TEST_CASE("bucket tombstones expire at bottom level", "[bucket][tombstones]")
     REQUIRE(pair2.second == 0);
 }
 
-TEST_CASE("file backed buckets", "[bucket][bucketbench]")
+TEST_CASE("file backed buckets", "[!hide][bucket][bucketbench]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -490,7 +491,7 @@ TEST_CASE("file backed buckets", "[bucket][bucketbench]")
     CLOG(DEBUG, "Bucket") << "Spill file size: " << fileSize(b1->getFilename());
 }
 
-TEST_CASE("merging bucket entries", "[bucket]")
+TEST_CASE("merging bucket entries", "[!hide][bucket]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -515,22 +516,8 @@ TEST_CASE("merging bucket entries", "[bucket]")
         CHECK(countEntries(b1) == 1);
     }
 
-    /*SECTION("dead trustline entry annihilates live trustline entry")
-    {
-        liveEntry.data.type(TRUSTLINE);
-        liveEntry.data.trustLine() =
-            LedgerTestUtils::generateValidTrustLineEntry(10);
-        deadEntry.type(TRUSTLINE);
-        deadEntry.trustLine().accountID = liveEntry.data.trustLine().accountID;
-        deadEntry.trustLine().asset = liveEntry.data.trustLine().asset;
-        std::vector<LedgerEntry> live{liveEntry};
-        std::vector<LedgerKey> dead{deadEntry};
-        std::shared_ptr<Bucket> b1 =
-            Bucket::fresh(app->getBucketManager(), live, dead);
-        CHECK(countEntries(b1) == 1);
-    }*/
-
-    /*SECTION("dead offer entry annihilates live offer entry")
+    */
+/*SECTION("dead offer entry annihilates live offer entry")
     {
         liveEntry.data.type(OFFER);
         liveEntry.data.offer() = LedgerTestUtils::generateValidOfferEntry(10);
@@ -542,7 +529,8 @@ TEST_CASE("merging bucket entries", "[bucket]")
         std::shared_ptr<Bucket> b1 =
             Bucket::fresh(app->getBucketManager(), live, dead);
         CHECK(countEntries(b1) == 1);
-    }*/
+    }*//*
+
 
     SECTION("random dead entries annihilates live entries")
     {
@@ -592,6 +580,7 @@ TEST_CASE("merging bucket entries", "[bucket]")
         CHECK(countEntries(b3) == liveCount);
     }
 }
+*/
 
 static void
 clearFutures(Application::pointer app, BucketList& bl)
@@ -634,7 +623,7 @@ clearFutures(Application::pointer app, BucketList& bl)
     }
 }
 
-TEST_CASE("bucketmanager ownership", "[bucket]")
+TEST_CASE("bucketmanager ownership", "[!hide][bucket]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -701,7 +690,7 @@ TEST_CASE("bucketmanager ownership", "[bucket]")
     CHECK(!fs::exists(filename));
 }
 
-TEST_CASE("single entry bubbling up", "[bucket][bucketbubble]")
+TEST_CASE("single entry bubbling up", "[!hide][bucket][bucketbubble]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -778,14 +767,14 @@ closeLedger(Application& app)
     return lm.getLastClosedLedgerHeader().hash;
 }
 
-TEST_CASE("bucket persistence over app restart", "[bucket][bucketpersist]")
+TEST_CASE("bucket persistence over app restart", "[!hide][bucket][bucketpersist]")
 {
     std::vector<stellar::LedgerKey> emptySet;
     std::vector<stellar::LedgerEntry> emptySetEntry;
 
     VirtualClock clock;
-    Config cfg0(getTestConfig(0, Config::TESTDB_ON_DISK_SQLITE));
-    Config cfg1(getTestConfig(1, Config::TESTDB_ON_DISK_SQLITE));
+    Config cfg0(getTestConfig(0, Config::TESTDB_POSTGRESQL));
+    Config cfg1(getTestConfig(1, Config::TESTDB_POSTGRESQL));
 
     cfg1.ARTIFICIALLY_PESSIMIZE_MERGES_FOR_TESTING = true;
 
@@ -1003,7 +992,7 @@ TEST_CASE("BucketList sizes at ledger 1", "[bucket][count]")
     }
 }
 
-TEST_CASE("BucketList check bucket sizes", "[bucket][count]")
+TEST_CASE("BucketList check bucket sizes", "[!hide][bucket][count]")
 {
     VirtualClock clock;
     Config cfg(getTestConfig());

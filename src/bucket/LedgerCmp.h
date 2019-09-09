@@ -200,11 +200,11 @@ struct LedgerEntryIdCmp
             auto const& bcon = b.contract();
             return acon.contractID < bcon.contractID;
         }
-        case LedgerEntryType::ATOMIC_SWAP_BID:
+            case LedgerEntryType::ATOMIC_SWAP_ASK:
         {
-            auto const& abid = a.atomicSwapBid();
-            auto const& bbid = b.atomicSwapBid();
-            return abid.bidID < bbid.bidID;
+            auto const& abid = a.atomicSwapAsk();
+            auto const& bbid = b.atomicSwapAsk();
+            return abid.id < bbid.id;
         }
         case LedgerEntryType::ACCOUNT_ROLE:
         {
@@ -263,6 +263,13 @@ struct LedgerEntryIdCmp
             if (bp.pollID < ap.pollID)
                 return false;
             return ap.voterID < bp.voterID;
+        }
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            auto const& ar = a.accountSpecificRule();
+            auto const& br = b.accountSpecificRule();
+
+            return ar.id < br.id;
         }
         default:
         {

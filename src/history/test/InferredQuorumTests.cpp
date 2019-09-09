@@ -10,7 +10,7 @@
 #include "test/test.h"
 #include "util/Logging.h"
 #include "xdrpp/marshal.h"
-#include <xdrpp/autocheck.h>
+//#include <xdrpp/autocheck.h>
 
 using namespace stellar;
 

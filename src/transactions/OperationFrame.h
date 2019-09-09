@@ -57,7 +57,8 @@ struct SignerRequirement
 class OperationFrame
 {
 private:
-	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier);
+	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier,
+	                          LedgerManager& ledgerManager);
 
 	bool canBeApplied(Application& app, StorageHelper& storageHelper);
     bool checkOp(Application& app, StorageHelper& storageHelper);
@@ -84,22 +85,28 @@ protected:
 
     virtual bool
     tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const = 0;
+                              std::vector<OperationCondition> &result,
+                              LedgerManager& ledgerManager) const;
+
+    virtual bool
+    tryGetOperationConditions(StorageHelper &storageHelper,
+                              std::vector<OperationCondition> &result) const;
 
     virtual bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const = 0;
+                             std::vector<SignerRequirement>& result) const;
+
+    virtual bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result,
+                             LedgerManager& ledgerManager) const;
 
 	// returns true if operation is allowed in the system
-	virtual bool isSupported() const;
+	virtual bool isSupported(LedgerManager& lm) const;
 
 	// returns fee paid for operation.
 	// default fee for all operations is 0, finantial operations must override this function
     virtual int64_t getPaidFee() const;
-
-    virtual bool loadTasks(StorageHelper &storageHelper, uint32_t &allTasks, xdr::pointer<uint32> tasks);
-
-    virtual std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper);
 
     static std::shared_ptr<OperationFrame>
     makeHelper(Operation const& op, OperationResult& res,

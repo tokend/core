@@ -15,7 +15,9 @@ class AccountRuleFrame : public EntryFrame
 
     typedef std::shared_ptr<AccountRuleFrame> pointer;
 
-    AccountRuleEntry&
+    AccountRuleFrame& operator=(AccountRuleFrame const& other);
+
+    AccountRuleEntry const&
     getRuleEntry() const
     {
         return mAccountRuleEntry;

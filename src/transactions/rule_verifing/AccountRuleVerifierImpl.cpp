@@ -91,11 +91,11 @@ AccountRuleVerifierImpl::isResourceMatches(
                                  actualResource.asset().assetType) &&
                    isStringMatches(conditionResource.asset().assetCode,
                                    actualResource.asset().assetCode);
-        case LedgerEntryType::ATOMIC_SWAP_BID:
-            return isTypeMatches(conditionResource.atomicSwapBid().assetType,
-                                 actualResource.atomicSwapBid().assetType) &&
-                   isStringMatches(conditionResource.atomicSwapBid().assetCode,
-                                   actualResource.atomicSwapBid().assetCode);
+        case LedgerEntryType::ATOMIC_SWAP_ASK:
+            return isTypeMatches(conditionResource.atomicSwapAsk().assetType,
+                                 actualResource.atomicSwapAsk().assetType) &&
+                   isStringMatches(conditionResource.atomicSwapAsk().assetCode,
+                                   actualResource.atomicSwapAsk().assetCode);
         case LedgerEntryType::REVIEWABLE_REQUEST:
         {
             auto expectedDetails = conditionResource.reviewableRequest().details;
@@ -159,6 +159,42 @@ AccountRuleVerifierImpl::isResourceMatches(
                                  actualResource.vote().permissionType) &&
                    isIDMatches(conditionResource.vote().pollID,
                                actualResource.vote().pollID);
+        case LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
+        {
+            switch (conditionResource.accountSpecificRuleExt().v())
+            {
+                case LedgerVersion::EMPTY_VERSION:
+                    return true;
+                case LedgerVersion::ADD_ACC_SPECIFIC_RULE_RESOURCE:
+                {
+                    if (conditionResource.accountSpecificRuleExt().v() != actualResource.accountSpecificRuleExt().v())
+                    {
+                        return false;
+                    }
+
+                    if (conditionResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type() == LedgerEntryType::ANY)
+                    {
+                        return true;
+                    }
+
+                    if (conditionResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type()
+                        != actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey.type())
+                    {
+                        return false;
+                    }
+
+                    auto conditionLedgerKey = conditionResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    auto actualLedgerKey = actualResource.accountSpecificRuleExt().accountSpecificRule().ledgerKey;
+                    switch (conditionLedgerKey.type())
+                    {
+                        case LedgerEntryType::SALE:
+                            return isIDMatches(conditionLedgerKey.sale().saleID, actualLedgerKey.sale().saleID);
+                        default:
+                            return false;
+                    }
+                }
+            }
+        }
         case LedgerEntryType::ACCOUNT_KYC:
         case LedgerEntryType::ACCOUNT:
         case LedgerEntryType::ACCOUNT_RULE:
@@ -181,5 +217,7 @@ AccountRuleVerifierImpl::isResourceMatches(
     }
 
 }
+
+
 
 }

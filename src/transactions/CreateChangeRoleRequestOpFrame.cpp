@@ -1,15 +1,14 @@
 #include "CreateChangeRoleRequestOpFrame.h"
 #include <ledger/ReviewableRequestHelper.h>
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/StorageHelperImpl.h"
-#include <lib/xdrpp/xdrpp/marshal.h>
-#include <crypto/SHA.h>
+#include "ledger/AccountRoleHelper.h"
+#include <xdrpp/marshal.h>
 #include "xdrpp/printer.h"
 #include "ledger/LedgerDelta.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
-#include "ledger/KeyValueHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "ManageKeyValueOpFrame.h"
 
 namespace stellar
@@ -116,18 +115,30 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(Database &db, LedgerDelt
 }
 
 bool
-CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager)
+CreateChangeRoleRequestOpFrame::doApply(Application &app, StorageHelper& storageHelper,
+                                        LedgerManager &ledgerManager)
 {
-    Database &db = ledgerManager.getDatabase();
+    Database &db = storageHelper.getDatabase();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
+    {
+        auto roleID = mCreateChangeRoleRequestOp.accountRoleToSet;
+        auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
+        if(!accountRole)
+        {
+            innerResult().code(CreateChangeRoleRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
+            return false;
+        }
+    }
 
     if (mCreateChangeRoleRequestOp.requestID != 0)
     {
         return updateChangeRoleRequest(db, delta, app);
     }
 
-    auto accountHelper = AccountHelperLegacy::Instance();
-    auto accountFrame = accountHelper->loadAccount(delta,
-            mCreateChangeRoleRequestOp.destinationAccount, db);
+    auto accountFrame = storageHelper.getAccountHelper().loadAccount(
+            mCreateChangeRoleRequestOp.destinationAccount);
     if (!accountFrame)
     {
         innerResult().code(CreateChangeRoleRequestResultCode::ACC_TO_UPDATE_DOES_NOT_EXIST);
@@ -148,10 +159,10 @@ CreateChangeRoleRequestOpFrame::doApply(Application &app, LedgerDelta &delta, Le
         return false;
     }
 
-    StorageHelperImpl storageHelper(db, &delta);
-
+    auto& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32 defaultMask;
-    if(!loadTasks(storageHelper, defaultMask, mCreateChangeRoleRequestOp.allTasks))
+    if(!keyValueHelper.loadTasks(defaultMask, makeTasksKeyVector(accountFrame->getAccountRole()),
+                                 mCreateChangeRoleRequestOp.allTasks.get()))
     {
         innerResult().code(CreateChangeRoleRequestResultCode::CHANGE_ROLE_TASKS_NOT_FOUND);
         return false;
@@ -226,19 +237,16 @@ CreateChangeRoleRequestOpFrame::createRequest(ReviewableRequestEntry &requestEnt
     requestEntry.tasks.pendingTasks = requestEntry.tasks.allTasks;
 }
 
-std::vector<longstring>
-CreateChangeRoleRequestOpFrame::makeTasksKeyVector(StorageHelper &storageHelper)
+std::vector<std::string>
+CreateChangeRoleRequestOpFrame::makeTasksKeyVector(uint64_t currentRole)
 {
-    auto account = storageHelper.getAccountHelper().mustLoadAccount(
-            mCreateChangeRoleRequestOp.destinationAccount);
-
-    return std::vector<longstring>
+    return
     {
-        ManageKeyValueOpFrame::makeChangeRoleKey(to_string(account->getAccountRole()),
+        ManageKeyValueOpFrame::makeChangeRoleKey(to_string(currentRole),
                                                  to_string(mCreateChangeRoleRequestOp.accountRoleToSet)),
         ManageKeyValueOpFrame::makeChangeRoleKey("*",
                                                  to_string(mCreateChangeRoleRequestOp.accountRoleToSet)),
-        ManageKeyValueOpFrame::makeChangeRoleKey(to_string(account->getAccountRole()),
+        ManageKeyValueOpFrame::makeChangeRoleKey(to_string(currentRole),
                                                  "*"),
         ManageKeyValueOpFrame::makeChangeRoleKey("*", "*"),
     };

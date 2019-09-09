@@ -1,13 +1,9 @@
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
 #include "CreateSaleCreationRequestOpFrame.h"
 #include "database/Database.h"
 #include "main/Application.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/AssetHelperLegacy.h"
 #include "ledger/StorageHelper.h"
@@ -18,6 +14,8 @@
 #include "bucket/BucketApplicator.h"
 #include "ledger/AssetPairHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
+#include "ledger/KeyValueHelper.h"
+#include "ledger/AccountHelper.h"
 
 namespace stellar
 {
@@ -240,9 +238,9 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
                                                 StorageHelper& storageHelper,
                                                 LedgerManager& ledgerManager)
 {
-    LedgerDelta* delta = storageHelper.getLedgerDelta();
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto request = ReviewableRequestFrame::createNew(
-        delta->getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST),
+        delta.getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST),
         getSourceID(), app.getAdminID(), nullptr, ledgerManager.getCloseTime());
 
     auto& requestEntry = request->getRequestEntry();
@@ -251,9 +249,10 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     requestEntry.body.saleCreationRequest().sequenceNumber = 0;
     request->recalculateHashRejectReason();
 
+    KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks = 0;
-    if (!loadTasks(storageHelper, allTasks,
-                   mCreateSaleCreationRequest.allTasks))
+    if (!keyValueHelper.loadTasks(allTasks, makeTasksKeyVector(),
+                                  mCreateSaleCreationRequest.allTasks.get()))
     {
         innerResult().code(
             CreateSaleCreationRequestResultCode::SALE_CREATE_TASKS_NOT_FOUND);
@@ -261,16 +260,15 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     }
 
     request->setTasks(allTasks);
-    
 
-    if (!isRequestValid(storageHelper, ledgerManager, request))
+    if (!isRequestValid(app, storageHelper, ledgerManager, request))
     {
         // corresponding result code is set in the called method
         return false;
     }
 
     auto& db = storageHelper.getDatabase();
-    ReviewableRequestHelper::Instance()->storeAdd(*delta, db, request->mEntry);
+    ReviewableRequestHelper::Instance()->storeAdd(delta, db, request->mEntry);
 
     bool fulfilled = false;
     uint64 saleID = 0;
@@ -278,7 +276,7 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
     {
         // It's possible for sale creation request to fail on review due to various reasons
         auto result = ReviewRequestHelper::tryApproveRequestWithResult(
-            mParentTx, app, ledgerManager, *delta, request);
+            mParentTx, app, ledgerManager, delta, request);
         if (result.code() != ReviewRequestResultCode::SUCCESS)
         {
             innerResult().code(CreateSaleCreationRequestResultCode::AUTO_REVIEW_FAILED);
@@ -320,7 +318,7 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
     request.body.saleCreationRequest().sequenceNumber = sequence + 1;
     requestFrame->recalculateHashRejectReason();
 
-    if (!isRequestValid(storageHelper, ledgerManager, requestFrame))
+    if (!isRequestValid(app, storageHelper, ledgerManager, requestFrame))
     {
         // corresponding result code is set
         return false;
@@ -336,7 +334,88 @@ CreateSaleCreationRequestOpFrame::updateRequest(Application& app,
 }
 
 bool
-CreateSaleCreationRequestOpFrame::isRequestValid(
+CreateSaleCreationRequestOpFrame::checkRulesDuplication(StorageHelper& storageHelper,
+        xdr::xvector<CreateAccountSaleRuleData> const& rules)
+{
+    std::unordered_set<AccountID> accountIDs;
+    bool hasGlobal = false;
+
+    for (auto const& rule : rules)
+    {
+        if (rule.accountID)
+        {
+            auto isInserted = accountIDs.insert(*rule.accountID).second;
+            if (!isInserted)
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_SPECIFIC_RULE_DUPLICATION);
+                return false;
+            }
+
+            if (!storageHelper.getAccountHelper().exists(*rule.accountID))
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::ACCOUNT_NOT_FOUND);
+                return false;
+            }
+        }
+        else
+        {
+            if (hasGlobal) // only one global is allowed
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_DUPLICATION);
+                return false;
+            }
+            hasGlobal = true;
+        }
+    }
+
+    if (!hasGlobal)
+    {
+        innerResult().code(CreateSaleCreationRequestResultCode::GLOBAL_SPECIFIC_RULE_REQUIRED);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool
+CreateSaleCreationRequestOpFrame::isSaleRulesValid(Application& app,
+        StorageHelper& storageHelper, SaleCreationRequest const& request)
+{
+    switch (request.ext.v())
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            return true;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+        {
+            auto const& rules = request.ext.saleRules();
+
+            uint32_t maxRulesLength = app.getMaxSaleRulesLength();
+            auto keyValue = storageHelper.getKeyValueHelper().loadKeyValue(
+                    ManageKeyValueOpFrame::makeMaxSaleRulesNumberKey());
+
+            if (keyValue)
+            {
+                maxRulesLength = keyValue->mustGetUint32Value();
+            }
+
+            if (rules.size() > maxRulesLength)
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::EXCEEDED_MAX_RULES_SIZE);
+                return false;
+            }
+
+            return checkRulesDuplication(storageHelper, rules);
+        }
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale creation request version"
+                                                   << static_cast<int32_t>(request.ext.v());
+            throw std::runtime_error("Unexpected sale creation request version");
+    }
+}
+
+bool
+CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
     StorageHelper& storageHelper, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
@@ -349,6 +428,11 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
         return false;
     }
 
+    if (!isSaleRulesValid(app, storageHelper, sale))
+    {
+        return false;
+    }
+
     if (sale.endTime <= ledgerManager.getCloseTime())
     {
         innerResult().code(CreateSaleCreationRequestResultCode::INVALID_END);
@@ -356,7 +440,6 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
     }
 
     auto& db = ledgerManager.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
     if (!areQuoteAssetsValid(
             db, sale.quoteAssets,
             sale.defaultQuoteAsset))
@@ -364,6 +447,18 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
         innerResult().code(
             CreateSaleCreationRequestResultCode::QUOTE_ASSET_NOT_FOUND);
         return false;
+    }
+
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR))
+    {
+        for (auto const& quoteAsset : sale.quoteAssets)
+        {
+            if (AssetPairHelper::Instance()->exists(db, quoteAsset.quoteAsset, sale.baseAsset))
+            {
+                innerResult().code(CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
+                return false;
+            }
+        }
     }
 
     const auto baseAsset = tryLoadBaseAssetOrRequest(sale, db, getSourceID());
@@ -388,11 +483,11 @@ CreateSaleCreationRequestOpFrame::isRequestValid(
    return true;
 }
 
-std::vector<longstring>
-CreateSaleCreationRequestOpFrame::makeTasksKeyVector(
-    StorageHelper& storageHelper)
+std::vector<std::string>
+CreateSaleCreationRequestOpFrame::makeTasksKeyVector()
 {
-    return std::vector<longstring>{
+    return
+    {
         ManageKeyValueOpFrame::makeSaleCreateTasksKey(mCreateSaleCreationRequest.request.baseAsset),
         ManageKeyValueOpFrame::makeSaleCreateTasksKey("*")
     };

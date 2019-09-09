@@ -3,7 +3,7 @@
 #include "ledger/EntryFrame.h"
 #include <functional>
 #include <unordered_map>
-#include <xdr/Stellar-ledger-entries-statistics-v2.h>
+#include <xdr/ledger-entries-statistics-v2.h>
 
 namespace soci
 {

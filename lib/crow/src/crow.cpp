@@ -117,8 +117,28 @@ void crow::capture_message(const std::string& message,
             m_payload["logger"] = *logger;
         }
 
-        // level
-        m_payload["level"] = attributes.value("level", "error");
+        // fingerprint for grouping purposes
+        std::string rawFingerprint = attributes.value("level", "error");
+
+        auto logger_id = attributes.find("logger_id");
+        if (logger_id != attributes.end())
+        {
+            // Type cast will not work on OS X
+            // TODO: Find better way
+            std::string id = *logger_id;
+            rawFingerprint += ": " + id;
+        }
+
+        auto message_line = attributes.find("message_text");
+        if (message_line != attributes.end())
+        {
+            // Type cast will not work on OS X
+            // TODO: Find better way
+            std::string line = *message_line;
+            rawFingerprint += ": " + line;
+        }
+
+        m_payload["fingerprint"] = std::vector<char>(rawFingerprint.begin(), rawFingerprint.end());
 
         // context
         auto context = attributes.find("context");

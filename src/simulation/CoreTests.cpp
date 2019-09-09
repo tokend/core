@@ -24,7 +24,7 @@
 #include "util/Math.h"
 #include "util/format.h"
 #include "util/types.h"
-#include "xdrpp/autocheck.h"
+//#include "xdrpp/autocheck.h"
 #include <sstream>
 
 using namespace stellar;
@@ -207,7 +207,7 @@ TEST_CASE("resilience tests", "[resilience][simulation][long][!hide]")
 
     auto confGen = [](int configNum) -> Config {
         // we have to have persistent nodes as we want to simulate a restart
-        auto c = getTestConfig(configNum, Config::TESTDB_ON_DISK_SQLITE);
+        auto c = getTestConfig(configNum, Config::TESTDB_POSTGRESQL);
         return c;
     };
 
@@ -631,7 +631,7 @@ TEST_CASE("Branched cycle nodes vs network traffic", "[scalability][!hide]")
     });
 }
 
-TEST_CASE("Bucket list entries vs write throughput", "[scalability][!hide]")
+/*TEST_CASE("Bucket list entries vs write throughput", "[scalability][!hide]")
 {
     VirtualClock clock;
     Config const& cfg = getTestConfig();
@@ -668,5 +668,5 @@ TEST_CASE("Bucket list entries vs write throughput", "[scalability][!hide]")
             app->getBucketManager().forgetUnreferencedBuckets();
         }
     }
-}
+}*/
 #endif

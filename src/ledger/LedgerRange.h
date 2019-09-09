@@ -5,7 +5,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "util/optional.h"
-#include "xdr/Stellar-types.h"
+#include "xdr/types.h"
 #include <cstdint>
 
 namespace stellar

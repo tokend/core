@@ -448,6 +448,10 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
             meta.operations().emplace_back(opDelta.getAllChanges());
 
             storageHelper.commit();
+            if (app.getLedgerManager().shouldUse(LedgerVersion::CLEAR_DATABASE_CACHE)) 
+            {
+                app.getDatabase().getEntryCache().clear();
+            }
         }
 
         if (!errorEncountered)

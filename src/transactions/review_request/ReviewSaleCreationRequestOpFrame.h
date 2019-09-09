@@ -29,6 +29,10 @@ namespace stellar {
                                               LedgerManager &ledgerManager,
                                               ReviewableRequestFrame::pointer request, uint64_t saleID);
 
+        void
+        createSaleRules(Application& app, StorageHelper& sh, LedgerManager &lm,
+                SaleCreationRequest const& request, SaleFrame::pointer const& sale);
+
         SaleCreationRequest &getSaleCreationRequestFromBody(ReviewableRequestFrame::pointer request);
 
         void createAssetPair(SaleFrame::pointer sale, Application &app, LedgerManager &ledgerManager,

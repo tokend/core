@@ -13,7 +13,7 @@
 #include "overlay/OverlayManager.h"
 #include "test/TestUtils.h"
 #include "test/test.h"
-#include "xdr/Stellar-types.h"
+#include "xdr/types.h"
 
 namespace stellar
 {

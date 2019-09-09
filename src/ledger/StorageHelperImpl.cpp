@@ -18,6 +18,7 @@
 #include "PollHelperImpl.h"
 #include "LicenseHelperImpl.h"
 #include "StampHelperImpl.h"
+#include "AccountSpecificRuleHelperImpl.h"
 
 namespace stellar
 {
@@ -44,7 +45,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::STAMP, &getStampHelper()},
         {LedgerEntryType::LICENSE, &getLicenseHelper()},
         {LedgerEntryType::VOTE, &getVoteHelper()},
-        {LedgerEntryType::POLL, &getPollHelper()}
+        {LedgerEntryType::POLL, &getPollHelper()},
+        {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()}
     };
 }
 
@@ -341,6 +343,16 @@ StorageHelperImpl::getPollHelper()
         mPollHelper = std::make_unique<PollHelperImpl>(*this);
     }
     return *mPollHelper;
+}
+
+AccountSpecificRuleHelper&
+StorageHelperImpl::getAccountSpecificRuleHelper()
+{
+    if (!mAccountSpecificRuleHelper)
+    {
+        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelperImpl>(*this);
+    }
+    return *mAccountSpecificRuleHelper;
 }
 
 } // namespace stellar

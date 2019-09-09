@@ -17,7 +17,9 @@ namespace stellar
 class CreateOfferOpFrame : public ManageOfferOpFrame
 {
 
-    bool checkOfferValid(Database& db, LedgerDelta& delta);
+    FeeType feeType;
+
+    bool checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta);
 
     OfferExchange::OfferFilterResult filterOffer(uint64_t price, OfferFrame const& o);
 
@@ -26,6 +28,10 @@ class CreateOfferOpFrame : public ManageOfferOpFrame
     bool lockSellingAmount(OfferEntry const& offer);
 
     FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
+
+    bool currentPriceRestrictionsMet(LedgerManager &lm);
+
+    bool physicalPriceRestrictionsMet(LedgerManager &lm);
 
 protected:
 
@@ -42,10 +48,8 @@ protected:
                              std::vector<SignerRequirement>& result) const override;
 
 public:
-    bool isCapitalDeployment = false;
-
     CreateOfferOpFrame(Operation const& op, OperationResult& res,
-                       TransactionFrame& parentTx);
+                       TransactionFrame& parentTx, FeeType feeType);
 
     bool doApply(Application& app, LedgerDelta& delta,
                  LedgerManager& ledgerManager) override;

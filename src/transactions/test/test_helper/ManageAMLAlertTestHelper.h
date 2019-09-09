@@ -4,7 +4,7 @@
 #include "TxHelper.h"
 #include <ledger/AssetPairFrame.h>
 #include <ledger/AssetPairHelper.h>
-#include <transactions/ManageAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
 
 namespace stellar
 {
@@ -20,7 +20,9 @@ namespace txtest
                 std::string reason, std::string reference, uint32_t *allTasks = nullptr);
 
         CreateAMLAlertRequestResult applyCreateAmlAlert(Account &source, BalanceID balance, uint64 amount, std::string reason,
-            std::string reference, uint32_t *allTasks = nullptr, CreateAMLAlertRequestResultCode expectedResultCode = CreateAMLAlertRequestResultCode::SUCCESS);
+            std::string reference, uint32_t *allTasks = nullptr,
+            CreateAMLAlertRequestResultCode expectedResultCode = CreateAMLAlertRequestResultCode::SUCCESS,
+            OperationResultCode expectedOpResult = OperationResultCode::opINNER);
 
     };
 }

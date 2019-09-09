@@ -2,7 +2,7 @@
 #include "StorageHelper.h"
 #include "LedgerDelta.h"
 #include "database/Database.h"
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include <lib/util/basen.h>
 
 using namespace soci;

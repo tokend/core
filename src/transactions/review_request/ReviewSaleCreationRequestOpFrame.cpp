@@ -13,7 +13,9 @@
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "xdrpp/printer.h"
 #include <ledger/AccountHelperLegacy.h>
-#include <transactions/ManageAssetPairOpFrame.h>
+#include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
+#include <transactions/manage_specific_rule/CreateAccountSpecificRuleOpFrame.h>
+#include <ledger/StorageHelperImpl.h>
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 
@@ -83,6 +85,11 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
             db, saleCreationRequest.quoteAssets,
             saleCreationRequest.defaultQuoteAsset))
     {
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_INVEST_FEE))
+        {
+            return ReviewRequestResultCode::ASSET_PAIR_NOT_FOUND;
+        }
+
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state, quote asset does not exist: "
             << request->getRequestID();
@@ -114,7 +121,63 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
                              balances, requiredBaseAssetForHardCap);
     SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
     createAssetPair(saleFrame, app, ledgerManager, delta);
+
+    StorageHelperImpl storageHelper(db, &delta);
+    createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest, saleFrame);
+
     return ReviewRequestResultCode::SUCCESS;
+}
+
+void
+ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
+        StorageHelper& storageHelper, LedgerManager& ledgerManager,
+        SaleCreationRequest const& request, SaleFrame::pointer const& sale)
+{
+    switch (request.ext.v())
+    {
+        case LedgerVersion::EMPTY_VERSION:
+            return;
+        case LedgerVersion::ADD_SALE_WHITELISTS:
+            break;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale request version"
+                                                << static_cast<int32_t>(request.ext.v());
+            throw std::runtime_error("Unexpected sale request version");
+    }
+
+    auto createRulesData = request.ext.saleRules();
+
+    Operation op;
+    op.sourceAccount.activate() = getSourceID();
+    op.body.type(OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE);
+    ManageAccountSpecificRuleOp& manageRuleOp = op.body.manageAccountSpecificRuleOp();
+    manageRuleOp.data.action(ManageAccountSpecificRuleAction::CREATE);
+
+    OperationResult opRes;
+    opRes.code(OperationResultCode::opINNER);
+    opRes.tr().type(OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE);
+
+    CreateAccountSpecificRuleData createData;
+    createData.ledgerKey = sale->getKey();
+
+    for (auto const& createRuleData : createRulesData)
+    {
+        createData.accountID = createRuleData.accountID;
+        createData.forbids = createRuleData.forbids;
+        manageRuleOp.data.createData() = createData;
+
+        CreateAccountSpecificRuleOpFrame opFrame(op, opRes, mParentTx);
+        opFrame.setSale(sale);
+        opFrame.setSourceAccountPtr(mSourceAccount);
+
+        if (!opFrame.doApply(app, storageHelper, ledgerManager))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to create sale rule "
+                                    << xdr::xdr_to_string(createData, "createData")
+                                    << opFrame.getInnerResultCodeAsStr();
+            throw std::runtime_error("Failed to create sale rule");
+        }
+    }
 }
 
 bool
@@ -178,10 +241,11 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
 {
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
-        const auto assetPair =
-            AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
-                sale->getBaseAsset(), quoteAsset.quoteAsset,
-                ledgerManager.getDatabase());
+        const auto assetPair = ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR)
+                ? AssetPairHelper::Instance()->loadAssetPair(sale->getBaseAsset(), quoteAsset.quoteAsset,
+                    ledgerManager.getDatabase())
+                : AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getBaseAsset(), quoteAsset.quoteAsset,
+                    ledgerManager.getDatabase());
         if (!!assetPair)
         {
             continue;

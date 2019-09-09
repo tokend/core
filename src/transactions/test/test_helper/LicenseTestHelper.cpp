@@ -75,6 +75,8 @@ LicenseTestHelper::applyLicenseOp(Account& source, SecretKey& wiredKey, Hash led
     REQUIRE(newLicenseFrame->getLicenseEntry().dueDate == dueDate);
     REQUIRE(newLicenseFrame->getLicenseEntry().ledgerHash == ledgerHash);
     REQUIRE(newLicenseFrame->getLicenseEntry().prevLicenseHash == prevLicenseHash);
+
+    return licenseResult;
 }
 
 

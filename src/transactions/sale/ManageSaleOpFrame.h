@@ -2,12 +2,12 @@
 
 #include "main/Application.h"
 #include "medida/metrics_registry.h"
-#include "xdr/Stellar-operation-manage-sale.h"
+#include "xdr/operation-manage-sale.h"
 #include "xdrpp/printer.h"
 #include <crypto/SHA.h>
 #include <ledger/ReviewableRequestFrame.h>
 #include <ledger/SaleFrame.h>
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include <transactions/OperationFrame.h>
 
 namespace stellar {
@@ -21,7 +21,8 @@ namespace stellar {
 
         bool
         tryGetOperationConditions(StorageHelper& storageHelper,
-                                  std::vector<OperationCondition>& result) const override;
+                                  std::vector<OperationCondition>& result,
+                                  LedgerManager& ledgerManager) const override;
 
         bool
         tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -43,6 +44,9 @@ namespace stellar {
 
         static void cancelSale(SaleFrame::pointer sale, LedgerDelta &delta, Database &db, LedgerManager &lm);
 
+        static void
+        removeSaleRules(StorageHelper& sh, LedgerKey const& saleKey);
+
         static void cancelAllOffersForQuoteAsset(SaleFrame::pointer sale, SaleQuoteAsset const &saleQuoteAsset,
                                      LedgerDelta &delta, Database &db);
 
@@ -60,7 +64,7 @@ namespace stellar {
             return xdr::xdr_traits<ManageSaleResultCode>::enum_name(innerResult().code());
         }
 
-        std::vector<longstring> makeTasksKeyVector(StorageHelper &storageHelper) override;
+        std::vector<std::string> makeTasksKeyVector();
 
     };
 }

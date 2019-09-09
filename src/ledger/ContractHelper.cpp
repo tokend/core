@@ -1,4 +1,4 @@
-#include <lib/xdrpp/xdrpp/marshal.h>
+#include <xdrpp/marshal.h>
 #include <lib/util/basen.h>
 #include "ContractHelper.h"
 #include "LedgerDelta.h"

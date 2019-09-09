@@ -20,9 +20,11 @@ typedef std::unique_ptr<Application> appPtr;
 TEST_CASE("license", "[tx][license]")
 {
     auto wiredKey = SecretKey::random();
+    auto devWiredKey = SecretKey::random();
 
     Config cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
     cfg.WIRED_KEYS.emplace_back(wiredKey.getPublicKey());
+    cfg.DEV_LICENSE_KEYS.emplace_back(devWiredKey.getPublicKey());
     VirtualClock clock;
     auto const appPtr = Application::create(clock, cfg);
     auto& app = *appPtr;
@@ -58,6 +60,36 @@ TEST_CASE("license", "[tx][license]")
             auto stampSuccess = stampResult.success();
             licenseTestHelper.applyLicenseOp(root,
                                              wiredKey,
+                                             stampSuccess.ledgerHash,
+                                             stampSuccess.licenseHash,
+                                             adminCount,
+                                             dueDate
+            );
+        }
+    }
+
+    SECTION("With dev keys")
+    {
+        uint64_t adminCount = 10;
+        uint64_t dueDate = 1000;
+        auto stampResult = stampTestHelper.applyStamp(root);
+        auto stampSuccess = stampResult.success();
+        auto licenseResult = licenseTestHelper.applyLicenseOp(root,
+                                                              devWiredKey,
+                                                              stampSuccess.ledgerHash,
+                                                              stampSuccess.licenseHash,
+                                                              adminCount,
+                                                              dueDate
+        );
+
+        SECTION("prolongation")
+        {
+            uint64_t adminCount = 12;
+            uint64_t dueDate = 2000;
+            auto stampResult = stampTestHelper.applyStamp(root);
+            auto stampSuccess = stampResult.success();
+            licenseTestHelper.applyLicenseOp(root,
+                                             devWiredKey,
                                              stampSuccess.ledgerHash,
                                              stampSuccess.licenseHash,
                                              adminCount,

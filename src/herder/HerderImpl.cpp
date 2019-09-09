@@ -67,6 +67,7 @@ HerderImpl::SCPMetrics::SCPMetrics(Application& app)
 HerderImpl::HerderImpl(Application& app)
     : mPendingTransactions(4)
     , mPendingEnvelopes(app, *this)
+    , mUpgrades(app.getConfig())
     , mHerderSCPDriver(app, *this, mUpgrades, mPendingEnvelopes)
     , mLastSlotSaved(0)
     , mTrackingTimer(app)
@@ -706,10 +707,12 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
 
     proposedSet->surgePricingFilter(mApp.getLedgerManager());
 
+#ifndef DISABLE_CONSESUS
     if (!proposedSet->checkValid(mApp))
     {
         throw std::runtime_error("wanting to emit an invalid txSet");
     }
+#endif
 
     auto txSetHash = proposedSet->getContentsHash();
 
@@ -758,9 +761,15 @@ HerderImpl::triggerNextLedger(uint32_t ledgerSeqToTrigger)
         }
     }
 
+#ifndef DISABLE_CONSESUS
     getHerderSCPDriver().recordSCPEvent(slotIndex, true);
     mHerderSCPDriver.nominate(slotIndex, newProposedValue, proposedSet,
                               lcl.header.scpValue);
+#else
+    getHerderSCPDriver().recordSCPEvent(slotIndex, false);
+    auto currentValue = xdr::xdr_to_opaque(newProposedValue);
+    mHerderSCPDriver.valueExternalized(slotIndex, currentValue);
+#endif
 }
 
 void

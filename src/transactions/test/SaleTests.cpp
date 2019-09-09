@@ -154,10 +154,8 @@ TEST_CASE("Sale", "[tx][sale]")
     {
         //set offer fee for sale owner and participants
         // TODO: use set fees
-        auto sellerFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(2 * ONE), quoteAsset, &syndicatePubKey, precision);
-        auto participantsFeeFrame = FeeFrame::create(FeeType::OFFER_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
+        auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
         EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                 nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
@@ -355,6 +353,76 @@ TEST_CASE("Sale", "[tx][sale]")
                                                                               ReviewRequestOpAction::APPROVE, "",
                                                                               ReviewRequestResultCode::SUCCESS,
                                                                               &toAdd, &toRemove);
+            }
+
+            SECTION("Tasks permissions")
+            {
+                AssetCode assetCode = "AST";
+                AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+                auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                      txResource, AccountRuleAction::SEND, false);
+                auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                    txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                AccountRuleResource assetResource(LedgerEntryType::ASSET);
+                assetResource.asset().assetType = 0;
+                assetResource.asset().assetCode = "*";
+                auto assetRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                         assetResource, AccountRuleAction::ANY, false);
+                auto assetRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                       assetRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+                reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
+                auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
+                                                                                          reviewableRequestResource, AccountRuleAction::CREATE, false);
+                auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
+                                                                        revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+                auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
+                                                                                           {assetRuleId, revReqRuleId, txRuleId});
+                auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
+
+                auto createAccountBuilder = CreateAccountTestBuilder()
+                        .setSource(root);
+
+                auto syndicate = Account{ SecretKey::random(), 0 };
+                auto syndicatePubKey = syndicate.key.getPublicKey();
+                createAccountTestHelper.applyTx(createAccountBuilder
+                                                        .setToPublicKey(syndicatePubKey)
+                                                        .addBasicSigner()
+                                                        .setRoleID(syndicateRoleID));
+
+                assetCreationRequest = assetTestHelper.createAssetCreationRequest(assetCode,
+                                                                                  syndicate.key.getPublicKey(), "{}", maxIssuanceAmount, 0, nullptr,
+                                                                                  preIssuedAmount, testSet.trailingDigitsCount);
+                assetTestHelper.createApproveRequest(root, syndicate, assetCreationRequest);
+
+                auto saleRequest = SaleRequestHelper::createSaleRequest(assetCode, quoteAsset, currentTime,
+                                                                        endTime, softCap, hardCap, "{}", {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
+                                                                        requiredBaseAssetForHardCap);
+                saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
+                auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+                REQUIRE(sales.size() == 1);
+                const auto saleId = sales[0]->getID();
+
+                uint64_t requestId = 0;
+                std::string details = "{}";
+
+                SECTION("Set tasks without permission")
+                {
+                    auto data = manageSaleTestHelper.createDataForAction(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST,
+                                                                         &zeroTasks, &requestId, &details);
+                    manageSaleTestHelper.applyManageSaleTx(syndicate, saleId, data,
+                                                           ManageSaleResultCode::SUCCESS, // No check of inner permission
+                                                           OperationResultCode::opNO_ROLE_PERMISSION);
+                }
+                SECTION("Without setting tasks")
+                {
+                    auto data = manageSaleTestHelper.createDataForAction(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST,
+                                                                         nullptr, &requestId, &details);
+                    manageSaleTestHelper.applyManageSaleTx(syndicate, saleId, data, ManageSaleResultCode::SUCCESS);
+                }
             }
         }
     }
@@ -606,6 +674,43 @@ TEST_CASE("Sale", "[tx][sale]")
                     participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION);
                 }
             }
+        }
+
+        SECTION("invest fee")
+        {
+            auto offerFee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 2 * ONE,
+                                                             nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
+            setFeesTestHelper.applySetFeesTx(participant, &offerFee, false);
+            auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, quoteAsset, 0, 1 * ONE,
+                                                        nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
+            setFeesTestHelper.applySetFeesTx(participant, &fee, false);
+
+            // create sale to participate in:
+            uint64_t startTime = testManager->getLedgerManager().getCloseTime() + 1000;
+            uint64_t endTime = startTime + 1000;
+            uint64_t price = 2 * ONE;
+            int64_t hardCap = bigDivide(maxIssuanceAmount, price, ONE, ROUND_UP);
+            auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, startTime, endTime,
+                                                                   hardCap/2, hardCap, "{}",
+                                                                   { saleRequestHelper.createSaleQuoteAsset(quoteAsset, price) },
+                                                                   maxIssuanceAmount);
+            saleRequestHelper.createApprovedSale(root, owner, saleRequest);
+            auto sales = SaleHelper::Instance()->loadSalesForOwner(owner.key.getPublicKey(), db);
+            uint64_t saleID = sales[0]->getID();
+
+            // fund participant with quote asset
+            uint64_t quoteBalanceAmount = saleRequest.hardCap;
+            issuanceHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteBalanceAmount, quoteBalance,
+                                                      SecretKey::random().getStrKeyPublic(), &issuanceTasks);
+
+            testManager->advanceToTime(startTime);
+
+            auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(quoteAsset, db);
+            const uint64_t feeAssetPrecision = feeAssetFrame->getMinimumAmount();
+            auto manageOfferFee = bigDivide(price, 1 * ONE, 100 * ONE, ROUND_UP, feeAssetPrecision);
+            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, ONE,
+                                                                saleRequest.quoteAssets[0].price, manageOfferFee, 0, saleID);
+            participateHelper.applyManageOffer(participant, manageOffer);
         }
 
         SECTION("With tasks")

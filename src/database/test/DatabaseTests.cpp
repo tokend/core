@@ -63,7 +63,7 @@ transactionTest(Application::pointer app)
 
 TEST_CASE("database smoketest", "[db]")
 {
-    Config const& cfg = getTestConfig(0, Config::TESTDB_IN_MEMORY_SQLITE);
+    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
     VirtualClock clock;
     Application::pointer app = createTestApplication(clock, cfg);
@@ -179,7 +179,7 @@ checkMVCCIsolation(Application::pointer app)
     CHECK(s1r3 == tx1v2);
 }
 
-TEST_CASE("sqlite MVCC test", "[db]")
+TEST_CASE("sqlite MVCC test", "[!hide][db]")
 {
     Config const& cfg = getTestConfig(0, Config::TESTDB_ON_DISK_SQLITE);
     VirtualClock clock;
@@ -326,7 +326,7 @@ TEST_CASE("postgres performance", "[db][pgperf][!hide]")
 
 TEST_CASE("schema test", "[db]")
 {
-    Config const& cfg = getTestConfig(0, Config::TESTDB_IN_MEMORY_SQLITE);
+    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
     VirtualClock clock;
     Application::pointer app = createTestApplication(clock, cfg);

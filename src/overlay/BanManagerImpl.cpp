@@ -37,7 +37,7 @@ BanManagerImpl::banNode(NodeID nodeID)
         "INSERT INTO ban (nodeid) "
         "SELECT :n WHERE NOT EXISTS (SELECT 1 FROM ban WHERE nodeid = :n)");
     auto& st = prep.statement();
-    st.exchange(soci::use(nodeIDString));
+    st.exchange(soci::use(nodeIDString, "n"));
     st.define_and_bind();
     st.execute(true);
 }

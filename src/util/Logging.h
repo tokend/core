@@ -52,15 +52,16 @@ class SentryClient {
 public:
     SentryClient(const std::string &dsn) {
         mCrowClient = new crow(dsn);
-        json attributes = {
-#ifdef CORE_REVISION
-            {"revision", CORE_REVISION},
+#ifndef CORE_REVISION
+#define CORE_REVISION "core_revision_was_not_provided"
 #endif
+        json attributes = {
+            {"release", CORE_REVISION},
         };
         mCrowClient->add_tags_context(attributes);
     }
 
-    void send(const std::string &msg);
+    void send(const std::string &msg, const json& attributes);
 private:
     crow* mCrowClient;
 };
@@ -75,6 +76,6 @@ private:
     const el::LogDispatchData* mData;
     el::Level mMinimalLevelToSend;
 
-    void dispatch(el::base::type::string_t&& logLine);
+    void dispatch(el::base::type::string_t&& logLine, const json& attrs);
 };
 }

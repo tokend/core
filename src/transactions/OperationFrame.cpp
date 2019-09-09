@@ -12,7 +12,6 @@
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/KeyValueHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/LicenseHelper.h"
 #include "transactions/TransactionFrame.h"
@@ -25,7 +24,7 @@
 #include "transactions/issuance/CreatePreIssuanceRequestOpFrame.h"
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/ManageLimitsOpFrame.h"
-#include "transactions/ManageAssetPairOpFrame.h"
+#include "transactions/manage_asset_pair/ManageAssetPairOpFrame.h"
 #include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "transactions/deprecated/PayoutOpFrame.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
@@ -42,9 +41,9 @@
 #include "CreateManageLimitsRequestOpFrame.h"
 #include "transactions/deprecated/ManageContractRequestOpFrame.h"
 #include "transactions/deprecated/ManageContractOpFrame.h"
-#include "atomic_swap/CreateASwapBidCreationRequestOpFrame.h"
-#include "atomic_swap/CancelASwapBidOpFrame.h"
-#include "atomic_swap/CreateASwapRequestOpFrame.h"
+#include "transactions/atomic_swap/CreateAtomicSwapAskRequestOpFrame.h"
+#include "transactions/atomic_swap/CancelAtomicSwapAskOpFrame.h"
+#include "transactions/atomic_swap/CreateAtomicSwapBidRequestOpFrame.h"
 #include "transactions/rule_verifing/AccountRuleVerifierImpl.h"
 #include "ManageSignerOpFrame.h"
 #include "LicenseOpFrame.h"
@@ -52,7 +51,12 @@
 #include "voting/manage_poll/ManagePollOpFrame.h"
 #include "voting/manage_create_poll_request/ManageCreatePollRequestOpFrame.h"
 #include "voting/manage_vote/ManageVoteOpFrame.h"
+#include "manage_specific_rule/ManageAccountSpecificRuleOpFrame.h"
+#include "CreateKYCRecoveryRequestOpFrame.h"
+#include "InitiateKYCRecoveryOpFrame.h"
 #include "ledger/SignerHelper.h"
+#include "transactions/CancelChangeRoleRequestOpFrame.h"
+#include "transactions/manage_asset_pair/RemoveAssetPairOpFrame.h"
 
 namespace stellar
 {
@@ -117,12 +121,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
         case OperationType::CANCEL_SALE_REQUEST:
             return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
-        case OperationType::CREATE_ASWAP_BID_REQUEST:
-            return shared_ptr<OperationFrame>(new CreateASwapBidCreationRequestOpFrame(op, res, tx));
-        case OperationType::CANCEL_ASWAP_BID:
-            return shared_ptr<OperationFrame>(new CancelASwapBidOpFrame(op, res, tx));
-        case OperationType::CREATE_ASWAP_REQUEST:
-            return shared_ptr<OperationFrame>(new CreateASwapRequestOpFrame(op, res, tx));
+        case OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST:
+            return make_shared<CreateAtomicSwapAskRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_ATOMIC_SWAP_ASK:
+            return make_shared<CancelAtomicSwapAskOpFrame>(op, res, tx);
+        case OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST:
+            return make_shared<CreateAtomicSwapBidRequestOpFrame>(op, res, tx);
         case OperationType::MANAGE_ACCOUNT_ROLE:
             return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
         case OperationType::MANAGE_ACCOUNT_RULE:
@@ -143,6 +147,16 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return ManagePollOpFrame::makeHelper(op, res, tx);
         case OperationType::MANAGE_VOTE:
             return shared_ptr<OperationFrame>(ManageVoteOpFrame::make(op, res, tx));
+        case OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE:
+            return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
+        case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
+            return shared_ptr<OperationFrame>(new CancelChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::REMOVE_ASSET_PAIR:
+            return make_shared<RemoveAssetPairOpFrame>(op, res, tx);
+        case OperationType::INITIATE_KYC_RECOVERY:
+            return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
+        case OperationType::CREATE_KYC_RECOVERY_REQUEST:
+            return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
@@ -218,7 +232,8 @@ std::string OperationFrame::getInnerResultCodeAsStr()
     return "not_implemented";
 }
 
-bool OperationFrame::isSupported() const
+bool
+OperationFrame::isSupported(LedgerManager& lm) const
 {
     // by default all operations are supported
     return true;
@@ -240,6 +255,13 @@ OperationFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return false;
 }
 
+bool
+OperationFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                         std::vector<SignerRequirement>& result, LedgerManager& lm) const
+{
+    return tryGetSignerRequirements(storageHelper, result);
+}
+
 int64_t OperationFrame::getPaidFee() const
 {
     // default fee for all operations is 0, finantial operations must override this function
@@ -250,7 +272,8 @@ bool
 OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
 {
     std::vector<SignerRequirement> signerRequirements;
-    if (!tryGetSignerRequirements(storageHelper, signerRequirements))
+    LedgerManager& lm = app.getLedgerManager();
+    if (!tryGetSignerRequirements(storageHelper, signerRequirements, lm))
     {
         return false;
     }
@@ -323,6 +346,15 @@ bool OperationFrame::doApply(Application& app, StorageHelper& storageHelper,
     return doApply(app, *storageHelper.getLedgerDelta(), ledgerManager);
 }
 
+// Wraper to make it work for old operations
+// This method should be implemented by inheritors
+bool OperationFrame::tryGetOperationConditions(stellar::StorageHelper &storageHelper,
+                                               std::vector<stellar::OperationCondition> &result,
+                                               stellar::LedgerManager &ledgerManager) const
+{
+    return tryGetOperationConditions(storageHelper, result);
+}
+
 AccountID const&
 OperationFrame::getSourceID() const
 {
@@ -368,7 +400,7 @@ OperationFrame::checkValid(Application& app,
                            AccountRuleVerifier& accountRuleVerifier,
                            LedgerDelta *delta)
 {
-    if (!isSupported())
+    if (!isSupported(app.getLedgerManager()))
     {
         app.getMetrics().NewMeter({"operation", "invalid", "not-allowed"}, "operation").Mark();
         mResult.code(OperationResultCode::opNOT_SUPPORTED);
@@ -404,7 +436,7 @@ OperationFrame::checkValid(Application& app,
     }
 
     StorageHelperImpl storageHelper(db, delta);
-    if (!checkRolePermissions(storageHelper, accountRuleVerifier))
+    if (!checkRolePermissions(storageHelper, accountRuleVerifier, app.getLedgerManager()))
     {
         return false;
     }
@@ -426,10 +458,11 @@ OperationFrame::checkValid(Application& app,
 
 bool
 OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
-                                     AccountRuleVerifier& accountRuleVerifier)
+                                     AccountRuleVerifier& accountRuleVerifier,
+                                     LedgerManager& ledgerManager)
 {
     std::vector<OperationCondition> operationConditions;
-    if (!tryGetOperationConditions(storageHelper, operationConditions))
+    if (!tryGetOperationConditions(storageHelper, operationConditions, ledgerManager))
     {
         return false;
     }
@@ -455,35 +488,5 @@ OperationFrame::checkRolePermissions(StorageHelper& storageHelper,
 
     return true;
 }
-
-bool
-OperationFrame::loadTasks(StorageHelper& storageHelper, uint32_t& allTasks, xdr::pointer<uint32> tasks)
-{
-    if (tasks)
-    {
-        allTasks = *tasks;
-        return true;
-    }
-
-    auto& keyValueHelper = storageHelper.getKeyValueHelper();
-    auto keys = makeTasksKeyVector(storageHelper);
-    for (auto& key : keys)
-    {
-        auto keyValueFrame = keyValueHelper.loadKeyValue(key);
-        if (keyValueFrame)
-        {
-            allTasks = keyValueFrame->mustGetUint32Value();
-            return true;
-        }
-    }
-
-    return false;
-}
-
-std::vector<longstring>
-OperationFrame::makeTasksKeyVector(StorageHelper& storageHelper)
-{
-    return std::vector<longstring>{};
-};
 
 }
