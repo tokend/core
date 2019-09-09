@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* long serialization on OS X 64-bit
+
 ## 3.5.2-x.0
 
 ### Changed
@@ -104,6 +110,7 @@
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar
+* Updated Cereal serialization library version 
 
 ### Fixed
 
