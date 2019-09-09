@@ -20,7 +20,7 @@
 #include "test/fuzz.h"
 
 #include <signal.h>
-#include <xdrpp/autocheck.h>
+//#include <xdrpp/autocheck.h>
 #include <xdrpp/printer.h>
 
 /**
@@ -67,9 +67,9 @@ struct CfgDirGuard
 std::string
 msgSummary(StellarMessage const& m)
 {
-    xdr::detail::Printer p(0);
-    xdr::archive(p, m.type(), nullptr);
-    return p.buf_.str() + ":" + hexAbbrev(sha256(xdr::xdr_to_msg(m)));
+    /*xdr::detail::Printer p(0);
+    xdr::archive(p, m.type(), nullptr);*/
+    return /*p.buf_.str() + ":" +*/ hexAbbrev(sha256(xdr::xdr_to_msg(m)));
 }
 
 bool
@@ -176,12 +176,12 @@ genfuzz(std::string const& filename)
     LOG(INFO) << "Writing " << n << "-message random fuzz file " << filename;
     XDROutputFileStream out;
     out.open(filename);
-    autocheck::generator<StellarMessage> gen;
+    //autocheck::generator<StellarMessage> gen;
     for (size_t i = 0; i < n; ++i)
     {
         try
         {
-            StellarMessage m(gen(10));
+            StellarMessage m/*(gen(10))*/;
             out.writeOne(m);
             LOG(INFO) << "Message " << i << ": " << msgSummary(m);
         }

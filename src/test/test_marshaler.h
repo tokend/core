@@ -3,11 +3,11 @@
 
 #include <xdrpp/printer.h>
 namespace stellar {
-    template<typename T>
+    /*template<typename T>
     inline typename std::enable_if<xdr::xdr_traits<T>::valid, std::ostream &>::type
     operator<<(std::ostream &os, const T &t) {
         return os << xdr::xdr_to_string(t);
-    }
+    }*/
 }
 
 #include "catch.hpp"

@@ -4,7 +4,7 @@
 
 #include "StatisticsHelper.h"
 #include "LedgerDelta.h"
-#include <lib/xdrpp/xdrpp/printer.h>
+#include <xdrpp/printer.h>
 
 using namespace std;
 using namespace soci;

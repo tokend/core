@@ -1,6 +1,20 @@
 # Changelog
 
-## 3.5.1-x.0
+## 3.5.2-x.0
+
+### Changed
+
+* XDR marshaling/unmarshaling
+
+## 3.5.1
+
+### Removed
+
+* xdr submodule
+
+### Added
+
+* script for xdr generation
 
 ### Fixed
 
