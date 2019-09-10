@@ -135,43 +135,6 @@ TEST_CASE("manage offer", "[tx][offer]")
     auto balanceHelper = BalanceHelperLegacy::Instance();
     auto offerHelper = OfferHelper::Instance();
 
-    // TODO implement when new flow of blocking account will work
-    /*SECTION("Can cancel order even if blocked, but can not create")
-    {
-        auto quoteAssetAmount = 1000 * ONE;
-        for (auto blockReason : xdr::xdr_traits<BlockReasons>::enum_values())
-        {
-            auto buyer = Account{ SecretKey::random(), 0 };
-            createAccountTestHelper.applyTx(createAccountBuilder
-                                    .setToPublicKey(buyer.key.getPublicKey()));
-            auto quoteBuyerBalance = balanceHelper->
-                loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
-            fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
-            auto baseBuyerBalance = balanceHelper->
-                loadBalance(buyer.key.getPublicKey(), base, db, &delta);
-            auto orderResult = offerTestHelper.applyManageOffer(buyer, 0,
-                                                  baseBuyerBalance->
-                                                  getBalanceID(),
-                                                  quoteBuyerBalance->
-                                                  getBalanceID(), 2, ONE, true, 0);
-
-            // block account
-            applyManageAccountTx(app, root, buyer.key, 0, blockReason);
-            // can delete order
-            offerTestHelper.applyManageOffer(buyer,
-                               orderResult.success().offer.offer().offerID,
-                               baseBuyerBalance->getBalanceID(),
-                               quoteBuyerBalance->getBalanceID(), 0, ONE, true, 0);
-            // can't create new one
-            auto orderTx = offerTestHelper.creatManageOfferTx(buyer, 0,
-                                             baseBuyerBalance->getBalanceID(),
-                                             quoteBuyerBalance->getBalanceID(),
-                                             2, ONE, true, 0);
-            REQUIRE(!applyCheck(orderTx, delta, app));
-            auto opResult = getFirstResultCode(*orderTx);
-            REQUIRE(opResult == OperationResultCode::opACCOUNT_BLOCKED);
-        }
-    }*/
     SECTION("basics")
     {
         auto buyer = Account{ SecretKey::random() , 0};
