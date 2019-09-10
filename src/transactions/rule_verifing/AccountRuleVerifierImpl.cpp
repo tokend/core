@@ -116,6 +116,32 @@ AccountRuleVerifierImpl::isResourceMatches(
                 case ReviewableRequestType::CREATE_POLL:
                     return isType32Matches(expectedDetails.createPoll().permissionType,
                                          actualDetails.createPoll().permissionType);
+            case ReviewableRequestType::MANAGE_OFFER:
+            {
+                auto expected = expectedDetails.manageOffer();
+                auto actual = actualDetails.manageOffer();
+
+                return isTypeMatches(expected.baseAssetType,
+                                     actual.baseAssetType) &&
+                       isStringMatches(expected.baseAssetCode,
+                                       actual.baseAssetCode) &&
+                       isTypeMatches(expected.quoteAssetType,
+                                     actual.quoteAssetType) &&
+                       isStringMatches(expected.quoteAssetCode,
+                                       actual.quoteAssetCode) &&
+                       isType32Matches(expected.manageAction,
+                                       actual.manageAction) &&
+                       isBoolMatches(expected.isBuy, actual.isBuy);
+            }
+
+            case ReviewableRequestType::CREATE_PAYMENT:
+            {
+                auto expected = expectedDetails.createPayment();
+                auto actual = actualDetails.createPayment();
+
+                return isTypeMatches(expected.assetType, actual.assetType) &&
+                       isStringMatches(expected.assetCode, actual.assetCode);
+            }
                 default:
                     return true;
             }
