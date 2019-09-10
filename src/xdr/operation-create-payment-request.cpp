@@ -93,6 +93,11 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okpaymentResult = u.from_bytes(paymentResult);
+if (!okpaymentResult)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -113,6 +118,11 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okpaymentResult = m.to_bytes(paymentResult);
+if (!okpaymentResult)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -125,6 +135,7 @@ CreatePaymentRequestSuccessResult::count_size(xdr::measurer& m) const
 {
 m.count_size(requestID);
 m.count_size(fulfilled);
+m.count_size(paymentResult);
 m.count_size(ext);
 }
 bool
@@ -136,6 +147,7 @@ return false;
 }auto& other = dynamic_cast<CreatePaymentRequestSuccessResult const&>(other_abstract);return true
 && (requestID== other.requestID)
 && (fulfilled== other.fulfilled)
+&& (paymentResult== other.paymentResult)
 && (ext== other.ext)
 ;}
 bool
@@ -150,6 +162,8 @@ if (requestID < other.requestID) return true;
 if (other.requestID < requestID) return false;
 if (fulfilled < other.fulfilled) return true;
 if (other.fulfilled < fulfilled) return false;
+if (paymentResult < other.paymentResult) return true;
+if (other.paymentResult < paymentResult) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

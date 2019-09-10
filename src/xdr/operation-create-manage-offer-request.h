@@ -8,6 +8,7 @@
 #include <xdrpp/types.h>
 
 #include "xdr/reviewable-request-manage-offer.h"
+#include "xdr/operation-manage-offer.h"
 
 namespace stellar {
 
@@ -80,22 +81,27 @@ template<> struct xdr_traits<::stellar::CreateManageOfferRequestResultCode>
 struct CreateManagerOfferRequestSuccessResult  : xdr::xdr_abstract {
   uint64 requestID{};
   bool fulfilled{};
+  xdr::pointer<ManageOfferResult> manageOfferResult{};
   EmptyExt ext{};
 
   CreateManagerOfferRequestSuccessResult() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
+           typename _manageOfferResult_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _requestID_T>::value
                           && std::is_constructible<bool, _fulfilled_T>::value
+                          && std::is_constructible<xdr::pointer<ManageOfferResult>, _manageOfferResult_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit CreateManagerOfferRequestSuccessResult(_requestID_T &&_requestID,
                                                   _fulfilled_T &&_fulfilled,
+                                                  _manageOfferResult_T &&_manageOfferResult,
                                                   _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
+      manageOfferResult(std::forward<_manageOfferResult_T>(_manageOfferResult)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool

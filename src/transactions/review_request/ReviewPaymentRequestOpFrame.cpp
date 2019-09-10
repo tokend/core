@@ -93,6 +93,8 @@ ReviewPaymentRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_PAYMENT);
+    innerResult().success().typeExt.paymentResult().paymentResponse() = res.tr().paymentResult().paymentResponse();
     return true;
 }
 

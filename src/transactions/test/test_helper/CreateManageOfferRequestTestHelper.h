@@ -24,7 +24,7 @@ public:
 protected:
     CreateManageOfferRequestResult
     checkApprovedCreation(Account& source, CreateManageOfferRequestResult opResult,
-                          ManageOfferOp const& op, LedgerDelta::KeyEntryMap stateBeforeOp);
+                           ManageOfferOp const& op, LedgerDelta::KeyEntryMap stateBeforeOp);
 
 };
 }

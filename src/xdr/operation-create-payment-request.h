@@ -8,6 +8,7 @@
 #include <xdrpp/types.h>
 
 #include "xdr/types.h"
+#include "xdr/operation-payment.h"
 
 namespace stellar {
 
@@ -80,22 +81,27 @@ template<> struct xdr_traits<::stellar::CreatePaymentRequestResultCode>
 struct CreatePaymentRequestSuccessResult  : xdr::xdr_abstract {
   uint64 requestID{};
   bool fulfilled{};
+  xdr::pointer<PaymentResult> paymentResult{};
   EmptyExt ext{};
 
   CreatePaymentRequestSuccessResult() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
+           typename _paymentResult_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _requestID_T>::value
                           && std::is_constructible<bool, _fulfilled_T>::value
+                          && std::is_constructible<xdr::pointer<PaymentResult>, _paymentResult_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit CreatePaymentRequestSuccessResult(_requestID_T &&_requestID,
                                              _fulfilled_T &&_fulfilled,
+                                             _paymentResult_T &&_paymentResult,
                                              _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
+      paymentResult(std::forward<_paymentResult_T>(_paymentResult)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool

@@ -93,6 +93,11 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okmanageOfferResult = u.from_bytes(manageOfferResult);
+if (!okmanageOfferResult)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -113,6 +118,11 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okmanageOfferResult = m.to_bytes(manageOfferResult);
+if (!okmanageOfferResult)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -125,6 +135,7 @@ CreateManagerOfferRequestSuccessResult::count_size(xdr::measurer& m) const
 {
 m.count_size(requestID);
 m.count_size(fulfilled);
+m.count_size(manageOfferResult);
 m.count_size(ext);
 }
 bool
@@ -136,6 +147,7 @@ return false;
 }auto& other = dynamic_cast<CreateManagerOfferRequestSuccessResult const&>(other_abstract);return true
 && (requestID== other.requestID)
 && (fulfilled== other.fulfilled)
+&& (manageOfferResult== other.manageOfferResult)
 && (ext== other.ext)
 ;}
 bool
@@ -150,6 +162,8 @@ if (requestID < other.requestID) return true;
 if (other.requestID < requestID) return false;
 if (fulfilled < other.fulfilled) return true;
 if (other.fulfilled < fulfilled) return false;
+if (manageOfferResult < other.manageOfferResult) return true;
+if (other.manageOfferResult < manageOfferResult) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

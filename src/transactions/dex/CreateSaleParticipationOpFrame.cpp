@@ -272,6 +272,7 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
                                         quoteAmount);
     }
 
+
     const auto isApplied = CreateOfferOpFrame::doApply(app, delta, ledgerManager);
     if (!isApplied)
     {

@@ -1,35 +1,36 @@
 #include "ReviewManageOfferRequestOpFrame.h"
-#include "transactions/dex/CreateManageOfferRequestOpFrame.h"
-#include "transactions/dex/ManageOfferOpFrame.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelperImpl.h"
-#include "ledger/BalanceHelper.h"
-#include "ledger/AssetHelper.h"
 #include "main/Application.h"
-#include "ledger/AccountHelper.h"
+#include "transactions/dex/CreateManageOfferRequestOpFrame.h"
+#include "transactions/dex/ManageOfferOpFrame.h"
 
-namespace stellar 
+namespace stellar
 {
 ReviewManageOfferRequestOpFrame::ReviewManageOfferRequestOpFrame(
-        Operation const& op, OperationResult& res, TransactionFrame& tx)
-        : ReviewRequestOpFrame(op, res, tx) 
+    Operation const& op, OperationResult& res, TransactionFrame& tx)
+    : ReviewRequestOpFrame(op, res, tx)
 {
 }
 
 bool
-ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper, 
-                                            std::vector<SignerRequirement>& result) const
+ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
     auto request = ReviewableRequestHelper::Instance()->loadRequest(
-			mReviewRequest.requestID, storageHelper.getDatabase());
-	if (!request || (request->getType() != ReviewableRequestType::MANAGE_OFFER))
-	{
-		mResult.code(OperationResultCode::opNO_ENTRY);
-		mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
-		return false;
-	}
+        mReviewRequest.requestID, storageHelper.getDatabase());
+    if (!request || (request->getType() != ReviewableRequestType::MANAGE_OFFER))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
 
-    auto const& manageOffer = request->getRequestEntry().body.manageOfferRequest().op;
+    auto const& manageOffer =
+        request->getRequestEntry().body.manageOfferRequest().op;
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
@@ -41,25 +42,30 @@ ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(StorageHelper& storage
     auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::MANAGE_OFFER);
+    resource.reviewableRequest().details.requestType(
+        ReviewableRequestType::MANAGE_OFFER);
     auto& details = resource.reviewableRequest().details.manageOffer();
     details.baseAssetCode = baseAsset->getCode();
     details.quoteAssetCode = quoteAsset->getCode();
     details.baseAssetType = baseAsset->getType();
     details.quoteAssetType = quoteAsset->getType();
     details.isBuy = manageOffer.isBuy;
-    details.manageAction = static_cast<uint64_t>(getManageOfferAction(manageOffer));
-	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
-	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
-	resource.reviewableRequest().allTasks = 0;
+    details.manageAction =
+        static_cast<uint64_t>(getManageOfferAction(manageOffer));
+    resource.reviewableRequest().tasksToAdd =
+        mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove =
+        mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
 
-	result.emplace_back(resource, SignerRuleAction::REVIEW);
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
 
-	return true;
+    return true;
 }
 
 ManageOfferAction
-ReviewManageOfferRequestOpFrame::getManageOfferAction(ManageOfferOp const& op) const
+ReviewManageOfferRequestOpFrame::getManageOfferAction(
+    ManageOfferOp const& op) const
 {
     if (op.orderBookID == ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID)
     {
@@ -79,9 +85,10 @@ ReviewManageOfferRequestOpFrame::getManageOfferAction(ManageOfferOp const& op) c
     return ManageOfferAction::CREATE_PARTICIPATION;
 }
 
-bool 
-ReviewManageOfferRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
-        LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) 
+bool
+ReviewManageOfferRequestOpFrame::handleApprove(
+    Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::MANAGE_OFFER);
 
@@ -110,10 +117,12 @@ ReviewManageOfferRequestOpFrame::handleApprove(Application& app, LedgerDelta& de
 
     StorageHelperImpl storageHelperImpl(db, &delta);
     StorageHelper& storageHelper = storageHelperImpl;
-    auto requestor = storageHelper.getAccountHelper().mustLoadAccount(request->getRequestor());
+    auto requestor = storageHelper.getAccountHelper().mustLoadAccount(
+        request->getRequestor());
     opFrame.setSourceAccountPtr(requestor);
 
-    if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, delta, ledgerManager)) 
+    if (!opFrame.doCheckValid(app) ||
+        !opFrame.doApply(app, delta, ledgerManager))
     {
         innerResult().code(ReviewRequestResultCode::MANAGE_OFFER_FAILED);
         innerResult().manageOfferCode() = opFrame.getInnerCode();
@@ -122,10 +131,12 @@ ReviewManageOfferRequestOpFrame::handleApprove(Application& app, LedgerDelta& de
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.manageOfferResult() =
+        res.tr().manageOfferResult();
     return true;
 }
 
-bool 
+bool
 ReviewManageOfferRequestOpFrame::handleReject(
     Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
