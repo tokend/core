@@ -9,6 +9,7 @@
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/BalanceFrame.h"
+#include "PaymentTestHelper.h"
 
 namespace stellar
 {
@@ -19,8 +20,14 @@ class PaymentReviewChecker : public ReviewChecker
 {
     std::shared_ptr<CreatePaymentRequest> paymentRequest;
     BalanceFrame::pointer sourceBalanceBefore;
-public:
-    PaymentReviewChecker(TestManager::pointer testManager, uint64_t requestID);
+    BalanceFrame::pointer destBalanceBefore;
+    std::vector<BalanceFrame::pointer> commissionBalancesBefore;
+    std::unordered_map<std::string, BalanceFrame::pointer>
+        commissionBalancesBeforeTxByAsset;
+
+    PaymentDelta* delta;
+  public:
+    PaymentReviewChecker(TestManager::pointer testManager, uint64_t requestID, PaymentDelta *delta = nullptr);
     void checkApprove(ReviewableRequestFrame::pointer) override;
 };
 

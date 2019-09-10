@@ -7,15 +7,15 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
-#include <ledger/AssetPairHelper.h>
 
 namespace stellar
 {
 namespace txtest
 {
 PaymentReviewChecker::PaymentReviewChecker(
-    const TestManager::pointer testManager, const uint64_t requestID)
-    : ReviewChecker(testManager)
+    const TestManager::pointer testManager, const uint64_t requestID,
+    PaymentDelta* delta)
+    : ReviewChecker(testManager), delta(delta)
 {
     auto request = ReviewableRequestHelper::Instance()->loadRequest(
         requestID, mTestManager->getDB());
@@ -32,9 +32,26 @@ PaymentReviewChecker::PaymentReviewChecker(
         balanceHelper.loadBalance(request->getRequestEntry()
                                       .body.createPaymentRequest()
                                       .paymentOp.sourceBalanceID);
+
+    auto destination = request->getRequestEntry()
+                           .body.createPaymentRequest()
+                           .paymentOp.destination;
+    if (destination.type() == PaymentDestinationType::BALANCE)
+    {
+        destBalanceBefore = balanceHelper.loadBalance(destination.balanceID());
+    }
+
+    balanceHelper.loadBalances(mTestManager->getApp().getAdminID(),
+                               commissionBalancesBefore);
+    for (auto& balanceFrame : commissionBalancesBefore)
+    {
+        commissionBalancesBeforeTxByAsset[balanceFrame->getAsset()] =
+            balanceFrame;
+    }
 }
 
-void PaymentReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
+void
+PaymentReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
 {
     REQUIRE(!!paymentRequest);
     REQUIRE(!!sourceBalanceBefore);
@@ -44,28 +61,81 @@ void PaymentReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
     auto sourceBalanceAfter =
         balanceHelper.loadBalance(paymentRequest->paymentOp.sourceBalanceID);
 
-    auto amount = paymentRequest->paymentOp.amount;
-    uint64_t totalFee = 0;
-    if (paymentRequest->paymentOp.feeData.sourcePaysForDest)
+    if (!delta)
+        return;
+
+    REQUIRE(delta->source.size() < 3);
+    REQUIRE(delta->destination.size() < 2);
+    REQUIRE(delta->commission.size() < 3);
+
+    auto sourceDelta = delta->source;
+    auto destDelta = delta->destination;
+    auto commissionDelta = delta->commission;
+
+    auto destination = paymentRequest->paymentOp.destination;
+
+    for (auto& item : sourceDelta)
     {
-        if (!safeSum(paymentRequest->paymentOp.feeData.sourceFee.fixed,
-                     paymentRequest->paymentOp.feeData.sourceFee.percent,
-                     totalFee))
+        if (item.asset == sourceBalanceBefore->getAsset())
         {
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: failed to calculate total sum of fees to "
-                   "be charged - overflow";
-            throw std::runtime_error(
-                "Total sum of fees to be charged overflows");
+            auto sourceBalanceAfterTx =
+                balanceHelper.loadBalance(sourceBalanceBefore->getBalanceID());
+            REQUIRE(sourceBalanceAfterTx->getAmount() ==
+                    sourceBalanceBefore->getAmount() + item.amountDelta);
+            continue;
         }
 
-        amount += totalFee;
+        throw std::runtime_error("Unexpected asset code");
     }
 
-    REQUIRE(sourceBalanceBefore->getAmount() ==
-            sourceBalanceAfter->getAmount() + totalFee);
-    REQUIRE(sourceBalanceBefore->getAmount() ==
-                sourceBalanceAfter->getAmount() + amount);
+    for (auto& item : destDelta)
+    {
+        BalanceFrame::pointer destBalanceAfterTx;
+
+        switch (destination.type())
+        {
+        case PaymentDestinationType::ACCOUNT:
+        {
+            destBalanceAfterTx =
+                balanceHelper.loadBalance(destination.accountID(), item.asset);
+            break;
+        }
+        case PaymentDestinationType::BALANCE:
+        {
+            destBalanceAfterTx =
+                balanceHelper.loadBalance(destination.balanceID());
+            break;
+        }
+        }
+
+        REQUIRE(!!destBalanceAfterTx);
+        if (!destBalanceBefore)
+        {
+            REQUIRE(destBalanceAfterTx->getAmount() == item.amountDelta);
+            continue;
+        }
+        REQUIRE(destBalanceAfterTx->getAmount() ==
+                destBalanceBefore->getAmount() + item.amountDelta);
+    }
+
+    for (auto& item : commissionDelta)
+    {
+        BalanceFrame::pointer commissionBalanceBeforeTx;
+
+        if (commissionBalancesBeforeTxByAsset.count(item.asset) > 0)
+            commissionBalanceBeforeTx =
+                commissionBalancesBeforeTxByAsset[item.asset];
+
+        auto commissionBalanceAfterTx = balanceHelper.loadBalance(
+            mTestManager->getApp().getAdminID(), item.asset);
+        if (!commissionBalanceBeforeTx)
+        {
+            REQUIRE(commissionBalanceAfterTx->getAmount() == item.amountDelta);
+            continue;
+        }
+        REQUIRE(commissionBalanceAfterTx->getAmount() ==
+                commissionBalanceBeforeTx->getAmount() + item.amountDelta);
+    }
 }
 
 ReviewPaymentRequestHelper::ReviewPaymentRequestHelper(

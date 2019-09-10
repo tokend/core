@@ -168,6 +168,8 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh,
     requestHelper->storeAdd(delta, db, request->mEntry);
     if (!request->canBeFulfilled(lm))
     {
+        innerResult().success().requestID = request->getRequestEntry().requestID;
+        innerResult().success().fulfilled = false;
         return true;
     }
 

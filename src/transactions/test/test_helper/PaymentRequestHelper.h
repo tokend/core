@@ -21,14 +21,14 @@ class PaymentRequestHelper : TxHelper
 
     CreatePaymentRequestResult applyCreatePaymentRequest(
         Account& source, const CreatePaymentRequest request, uint32_t* allTasks,
+        OperationResultCode operationResultCode = OperationResultCode ::opINNER,
         CreatePaymentRequestResultCode expectedResult =
-            CreatePaymentRequestResultCode::SUCCESS);
+            CreatePaymentRequestResultCode::SUCCESS,
+        PaymentResultCode paymentResultCode = PaymentResultCode::SUCCESS);
 
-    static CreatePaymentRequest
-    createPaymentRequest(BalanceID source, int64_t amount,
-                         PaymentDestinationType destinationType,
-                         std::string receiver, std::string reference,
-                         std::string subject, PaymentFeeData feeData);
+    CreatePaymentRequest createPaymentRequest(
+        BalanceID source, PaymentOp::_destination_t destination, int64_t amount,
+        PaymentFeeData feeData, std::string reference, std::string subject);
 
     TransactionFramePtr createPaymentRequestTx(Account& source,
                                                CreatePaymentRequest request,

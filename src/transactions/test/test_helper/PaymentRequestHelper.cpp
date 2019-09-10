@@ -40,6 +40,7 @@ PaymentRequestHelper::createApprovedPayment(Account& root, Account& source,
         return result;
     }
 
+
     auto reviewer = ReviewPaymentRequestHelper(mTestManager);
     return reviewer.applyReviewRequestTx(
         root, requestCreationResult.success().requestID,
@@ -49,7 +50,9 @@ PaymentRequestHelper::createApprovedPayment(Account& root, Account& source,
 CreatePaymentRequestResult
 PaymentRequestHelper::applyCreatePaymentRequest(
     Account& source, const CreatePaymentRequest request, uint32_t* allTasks,
-    CreatePaymentRequestResultCode expectedResult)
+    OperationResultCode operationResultCode,
+    CreatePaymentRequestResultCode expectedResult,
+    PaymentResultCode paymentResultCode)
 {
     auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(
@@ -59,6 +62,12 @@ PaymentRequestHelper::applyCreatePaymentRequest(
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
+    REQUIRE(opResult.code() == operationResultCode);
+    if (operationResultCode != OperationResultCode::opINNER)
+    {
+        return CreatePaymentRequestResult{};
+    }
+
     auto actualResultCode = CreatePaymentRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
@@ -68,6 +77,12 @@ PaymentRequestHelper::applyCreatePaymentRequest(
     {
         REQUIRE(reviewableRequestCountBeforeTx ==
                 reviewableRequestCountAfterTx);
+
+        if (expectedResult == CreatePaymentRequestResultCode::INVALID_PAYMENT)
+        {
+            REQUIRE(opResult.tr().createPaymentRequestResult().paymentCode() ==
+                    paymentResultCode);
+        }
         return opResult.tr().createPaymentRequestResult();
     }
 
@@ -75,9 +90,9 @@ PaymentRequestHelper::applyCreatePaymentRequest(
 }
 CreatePaymentRequest
 PaymentRequestHelper::createPaymentRequest(
-    BalanceID source, int64_t amount, PaymentDestinationType destinationType,
-    std::string receiver, std::string reference, std::string subject,
-    PaymentFeeData feeData)
+    BalanceID source, PaymentOp::_destination_t destination, int64_t amount,
+    PaymentFeeData feeData, std::string reference,
+    std::string subject)
 {
 
     PaymentOp payment;
@@ -86,21 +101,7 @@ PaymentRequestHelper::createPaymentRequest(
     payment.feeData = feeData;
     payment.sourceBalanceID = source;
     payment.subject = subject;
-    payment.destination.type(destinationType);
-
-    switch (destinationType)
-    {
-    case PaymentDestinationType::BALANCE:
-    {
-        payment.destination.balanceID() = BalanceKeyUtils::fromStrKey(receiver);
-        break;
-    }
-    case PaymentDestinationType::ACCOUNT:
-    {
-        payment.destination.accountID() = PubKeyUtils::fromStrKey(receiver);
-        break;
-    }
-    }
+    payment.destination = destination;
 
     CreatePaymentRequest request;
     request.paymentOp = payment;
@@ -114,11 +115,10 @@ PaymentRequestHelper::createPaymentRequestTx(Account& source,
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_PAYMENT_REQUEST);
-    auto& op = baseOp.body.createPaymentRequestOp();
-    op.request = request;
+    baseOp.body.createPaymentRequestOp().request = request;
     if (allTasks)
-        op.allTasks.activate() = *allTasks;
-    op.ext.v(LedgerVersion::EMPTY_VERSION);
+        baseOp.body.createPaymentRequestOp().allTasks.activate() = *allTasks;
+    baseOp.body.createPaymentRequestOp().ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);
 }
 }
