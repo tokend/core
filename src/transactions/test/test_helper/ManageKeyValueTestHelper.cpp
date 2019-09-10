@@ -105,6 +105,10 @@ namespace stellar {
             setKey(assetUpdateKey)->setUi32Value(0);
             doApply(mTestManager->getApp(),
                                          ManageKVAction::PUT, true);
+
+            longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey("*");
+            setKey(key)->setUi32Value(0);
+            doApply(mTestManager->getApp(), ManageKVAction::PUT, true);
         }
 
         void
