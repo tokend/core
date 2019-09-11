@@ -1,6 +1,8 @@
+#include "ledger/BalanceHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/OfferHelper.h"
+#include "ledger/StorageHelper.h"
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
@@ -278,6 +280,47 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             REQUIRE(baseBuyerBalance->getAmount() == baseAssetAmount);
         }
 
+        SECTION("Delete offer")
+        {
+            quoteBuyerBalance =
+                loadBalance(quoteBuyerBalance->getBalanceID(), app);
+            REQUIRE(quoteBuyerBalance->getLocked() == 0);
+            REQUIRE(quoteBuyerBalance->getAmount() == quoteAssetAmount);
+
+            auto reviewResult =
+                reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
+                    rootAccount, buyerRequestID, ReviewRequestOpAction::APPROVE,
+                    "", ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
+
+            auto offerID = reviewResult.success()
+                               .typeExt.manageOfferResult()
+                               .success()
+                               .offer.offer()
+                               .offerID;
+
+            auto offer = OfferHelper::Instance()->loadOffer(
+                buyer.key.getPublicKey(), offerID,
+                ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID, db, &delta);
+            REQUIRE(offer->getOffer().baseAmount == baseAssetAmount);
+
+            buyOp.offerID = offerID;
+            buyOp.amount = 0;
+
+            result =
+                manageOfferRequestTestHelper.applyTx(buyer, buyOp, &allTasks);
+            buyerRequestID = result.success().requestID;
+
+            reviewResult =
+                reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
+                    rootAccount, buyerRequestID, ReviewRequestOpAction::APPROVE,
+                    "", ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
+
+            REQUIRE(reviewResult.success()
+                        .typeExt.manageOfferResult()
+                        .success()
+                        .offer.effect() == ManageOfferEffect::DELETED);
+        }
+
         SECTION("One of the requests is invalid")
         {
 
@@ -292,7 +335,8 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
 
             auto lockResult = baseSellerBalance->tryLock(baseAssetAmount);
             REQUIRE(lockResult == BalanceFrame::Result::SUCCESS);
-            balanceHelper->storeChange(delta, db, baseSellerBalance->mEntry);
+            testManager->getStorageHelper().getBalanceHelper().storeChange(
+                baseSellerBalance->mEntry);
 
             reviewResult =
                 reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(

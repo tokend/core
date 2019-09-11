@@ -244,7 +244,7 @@ void ReviewableRequestFrame::ensurePollCreationValid(CreatePollRequest const& re
 void
 ReviewableRequestFrame::ensureManageOfferValid(ManageOfferRequest const& request) 
 {
-    if (request.op.amount <= 0) 
+    if (request.op.amount < 0)
     {
         throw runtime_error("invalid offer amount");
     }
