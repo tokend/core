@@ -426,13 +426,12 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
             {
                 auto requestID = result.success().requestID;
                 uint32_t toAdd = 0, toRemove = 1;
-                auto reviewSaleRequestResult =
+                auto reviewRequestResult =
                     reviewPaymentTestHelper.applyReviewRequestTxWithTasks(
                         root, requestID, ReviewRequestOpAction::APPROVE, "",
                         ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
-                REQUIRE(reviewSaleRequestResult.success().fulfilled);
-                REQUIRE(
-                    reviewSaleRequestResult.success().typeExt.requestType() ==
+                REQUIRE(reviewRequestResult.success().fulfilled);
+                REQUIRE(reviewRequestResult.success().typeExt.requestType() ==
                     ReviewableRequestType::CREATE_PAYMENT);
             }
         }

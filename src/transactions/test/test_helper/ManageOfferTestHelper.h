@@ -42,6 +42,13 @@ class ManageOfferTestHelper : public TxHelper
 
     TransactionFramePtr createManageOfferTx(Account& source,
                                             ManageOfferOp& manageOfferOp);
+
+
+    ManageOfferOp
+    manageOfferOp(
+        const uint64_t offerID, BalanceID const& baseBalance,
+        BalanceID const& quoteBalance, const int64_t amount, const int64_t price,
+        const bool isBuy, const int64_t fee);
 };
 }
 

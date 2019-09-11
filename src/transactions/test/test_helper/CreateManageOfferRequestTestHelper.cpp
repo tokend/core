@@ -77,7 +77,9 @@ CreateManageOfferRequestTestHelper::checkApprovedCreation(
         source, op, opResult.success().manageOfferResult->success(),
         stateBeforeOp);
 
-        return opResult;
+    return opResult;
 }
+
+
 }
 }

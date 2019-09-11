@@ -166,6 +166,8 @@ CreateManageOfferRequestOpFrame::doApply(Application& app, StorageHelper& sh,
 
     if (!request->canBeFulfilled(lm))
     {
+        innerResult().success().fulfilled = false;
+        innerResult().success().requestID = request->getRequestID();
         return true;
     }
 
@@ -205,6 +207,7 @@ CreateManageOfferRequestOpFrame::tryAutoApprove(
         return false;
     }
 
+    innerResult().success().requestID = request->getRequestID();
     innerResult().success().fulfilled = true;
     innerResult().success().manageOfferResult.activate() =
         result.success().typeExt.manageOfferResult();

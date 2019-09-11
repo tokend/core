@@ -1,20 +1,20 @@
-#include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/OfferHelper.h"
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
+#include "test_helper/CreateAccountTestHelper.h"
+#include "test_helper/CreateManageOfferRequestTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
+#include "test_helper/ManageAccountRoleTestHelper.h"
+#include "test_helper/ManageAccountRuleTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/ManageOfferTestHelper.h"
+#include "test_helper/ReviewManageOfferTestHelper.h"
 #include "transactions/dex/OfferExchange.h"
-#include <transactions/test/test_helper/CreateAccountTestHelper.h>
-#include <transactions/test/test_helper/CreateManageOfferRequestTestHelper.h>
-#include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
-#include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -54,6 +54,7 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     CreateManageOfferRequestTestHelper manageOfferRequestTestHelper(
         testManager);
+    ReviewManageOfferRequestHelper reviewManageOfferRequestHelper(testManager);
 
     manageKeyValueHelper.assetOpWithoutReview();
 
@@ -72,6 +73,80 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
         rootAccount, base, quote, 1, 0, 0,
         int32(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET));
 
+    AccountRuleResource requestResource(LedgerEntryType::REVIEWABLE_REQUEST);
+    requestResource.reviewableRequest().details.requestType(
+        ReviewableRequestType::MANAGE_OFFER);
+    requestResource.reviewableRequest().details.manageOffer().baseAssetCode =
+        base;
+    requestResource.reviewableRequest().details.manageOffer().baseAssetType =
+        baseType;
+    requestResource.reviewableRequest().details.manageOffer().quoteAssetCode =
+        quote;
+    requestResource.reviewableRequest().details.manageOffer().quoteAssetType =
+        quoteType;
+    requestResource.reviewableRequest().details.manageOffer().manageAction =
+        UINT32_MAX;
+    requestResource.reviewableRequest().details.manageOffer().isBuy = true;
+
+    // buyer
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+        0, requestResource, AccountRuleAction::ANY, false);
+    auto buyerRuleID =
+        manageAccountRuleTestHelper
+            .applyTx(rootAccount, ruleEntry, ManageAccountRuleAction::CREATE)
+            .success()
+            .ruleID;
+
+    // seller
+    requestResource.reviewableRequest().details.manageOffer().isBuy = false;
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+        0, requestResource, AccountRuleAction::ANY, false);
+    auto sellerRuleID =
+        manageAccountRuleTestHelper
+            .applyTx(rootAccount, ruleEntry, ManageAccountRuleAction::CREATE)
+            .success()
+            .ruleID;
+
+    AccountRuleResource baseAssetResource(LedgerEntryType::ASSET);
+    baseAssetResource.asset().assetType = baseType;
+    baseAssetResource.asset().assetCode = base;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+        0, baseAssetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
+    auto baseRuleID =
+        manageAccountRuleTestHelper
+            .applyTx(rootAccount, ruleEntry, ManageAccountRuleAction::CREATE)
+            .success()
+            .ruleID;
+
+    AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+        0, txResource, AccountRuleAction::ANY, false);
+    auto txRuleID =
+        manageAccountRuleTestHelper
+            .applyTx(rootAccount, ruleEntry, ManageAccountRuleAction::CREATE)
+            .success()
+            .ruleID;
+
+    AccountRuleResource quoteAssetResource(LedgerEntryType::ASSET);
+    quoteAssetResource.asset().assetType = quoteType;
+    quoteAssetResource.asset().assetCode = quote;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+        0, quoteAssetResource, AccountRuleAction::RECEIVE_ISSUANCE, false);
+    auto quoteRuleID =
+        manageAccountRuleTestHelper
+            .applyTx(rootAccount, ruleEntry, ManageAccountRuleAction::CREATE)
+            .success()
+            .ruleID;
+
+    auto createExchangeRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+        "{}", {txRuleID, buyerRuleID, sellerRuleID, baseRuleID, quoteRuleID});
+    auto exchangeRoleID =
+        manageAccountRoleTestHelper.applyTx(rootAccount, createExchangeRoleOp)
+            .success()
+            .roleID;
     // basic create account builder
     auto createAccountBuilder =
         CreateAccountTestBuilder().setSource(rootAccount).setRoleID(1);
@@ -82,17 +157,152 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     auto buyer = Account{SecretKey::random(), 0};
     createAccountTestHelper.applyTx(
         createAccountBuilder.setToPublicKey(buyer.key.getPublicKey())
-            .addBasicSigner());
+            .addBasicSigner()
+            .setRoleID(exchangeRoleID));
     auto baseBuyerBalance =
         balanceHelper->loadBalance(buyer.key.getPublicKey(), base, db, &delta);
     REQUIRE(baseBuyerBalance);
     auto quoteBuyerBalance =
         balanceHelper->loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
     REQUIRE(quoteBuyerBalance);
+
     auto quoteAssetAmount = 1000 * ONE;
+
+    auto baseAssetAmount = 100 * ONE;
+
+    auto price = bigDivide(quoteAssetAmount, ONE, baseAssetAmount, ROUND_UP);
+
     issuanceHelper.authorizePreIssuedAmount(rootAccount, rootAccount.key, quote,
                                             quoteAssetAmount, rootAccount);
     issuanceHelper.applyCreateIssuanceRequest(
         rootAccount, quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID(),
         SecretKey::random().getStrKeyPublic());
+
+    auto seller = Account{SecretKey::random(), 0};
+    createAccountTestHelper.applyTx(
+        createAccountBuilder.setToPublicKey(seller.key.getPublicKey())
+            .addBasicSigner()
+            .setRoleID(exchangeRoleID));
+    auto baseSellerBalance =
+        balanceHelper->loadBalance(seller.key.getPublicKey(), base, db, &delta);
+    REQUIRE(baseSellerBalance);
+    auto quoteSellerBalance = balanceHelper->loadBalance(
+        seller.key.getPublicKey(), quote, db, &delta);
+    REQUIRE(quoteSellerBalance);
+
+    issuanceHelper.authorizePreIssuedAmount(rootAccount, rootAccount.key, base,
+                                            baseAssetAmount, rootAccount);
+    issuanceHelper.applyCreateIssuanceRequest(
+        rootAccount, base, baseAssetAmount, baseSellerBalance->getBalanceID(),
+        SecretKey::random().getStrKeyPublic());
+
+    auto buyOp = offerTestHelper.manageOfferOp(
+        0, baseBuyerBalance->getBalanceID(), quoteBuyerBalance->getBalanceID(),
+        baseAssetAmount, price, true, 0);
+    auto sellOp = offerTestHelper.manageOfferOp(
+        0, baseSellerBalance->getBalanceID(),
+        quoteSellerBalance->getBalanceID(), baseAssetAmount, price, false, 0);
+
+    SECTION("Zero tasks")
+    {
+        uint32_t allTasks = 0;
+        SECTION("All ok")
+        {
+            manageOfferRequestTestHelper.applyTx(buyer, buyOp, &allTasks);
+            quoteBuyerBalance =
+                loadBalance(quoteBuyerBalance->getBalanceID(), app);
+            REQUIRE(quoteBuyerBalance->getLocked() == quoteAssetAmount);
+            REQUIRE(quoteBuyerBalance->getAmount() == 0);
+
+            baseBuyerBalance =
+                loadBalance(baseBuyerBalance->getBalanceID(), app);
+            REQUIRE(baseBuyerBalance->getLocked() == 0);
+            REQUIRE(baseBuyerBalance->getAmount() == 0);
+
+            manageOfferRequestTestHelper.applyTx(seller, sellOp, &allTasks);
+
+            baseBuyerBalance =
+                loadBalance(baseBuyerBalance->getBalanceID(), app);
+            REQUIRE(baseBuyerBalance->getLocked() == 0);
+            REQUIRE(baseBuyerBalance->getAmount() == baseAssetAmount);
+        }
+    }
+
+    SECTION("With tasks")
+    {
+        uint32_t allTasks = 1;
+        uint32_t toAdd = 0, toRemove = 1;
+
+        auto result =
+            manageOfferRequestTestHelper.applyTx(buyer, buyOp, &allTasks);
+        auto buyerRequestID = result.success().requestID;
+
+        quoteBuyerBalance = loadBalance(quoteBuyerBalance->getBalanceID(), app);
+        REQUIRE(quoteBuyerBalance->getLocked() == 0);
+        REQUIRE(quoteBuyerBalance->getAmount() == quoteAssetAmount);
+
+        result =
+            manageOfferRequestTestHelper.applyTx(seller, sellOp, &allTasks);
+        auto sellerRequestID = result.success().requestID;
+
+        baseSellerBalance = loadBalance(baseSellerBalance->getBalanceID(), app);
+        REQUIRE(baseSellerBalance->getLocked() == 0);
+        REQUIRE(baseSellerBalance->getAmount() == baseAssetAmount);
+
+        SECTION("All ok")
+        {
+
+            auto reviewResult =
+                reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
+                    rootAccount, buyerRequestID, ReviewRequestOpAction::APPROVE,
+                    "", ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
+
+            REQUIRE(reviewResult.success().fulfilled);
+            REQUIRE(reviewResult.success().typeExt.requestType() ==
+                    ReviewableRequestType::MANAGE_OFFER);
+
+            reviewResult =
+                reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
+                    rootAccount, sellerRequestID,
+                    ReviewRequestOpAction::APPROVE, "",
+                    ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
+
+            REQUIRE(reviewResult.success().fulfilled);
+            REQUIRE(reviewResult.success().typeExt.requestType() ==
+                    ReviewableRequestType::MANAGE_OFFER);
+
+            //
+            baseBuyerBalance =
+                loadBalance(baseBuyerBalance->getBalanceID(), app);
+            REQUIRE(baseBuyerBalance->getLocked() == 0);
+            REQUIRE(baseBuyerBalance->getAmount() == baseAssetAmount);
+        }
+
+        SECTION("One of the requests is invalid")
+        {
+
+            auto reviewResult =
+                reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
+                    rootAccount, buyerRequestID, ReviewRequestOpAction::APPROVE,
+                    "", ReviewRequestResultCode::SUCCESS, &toAdd, &toRemove);
+
+            REQUIRE(reviewResult.success().fulfilled);
+            REQUIRE(reviewResult.success().typeExt.requestType() ==
+                    ReviewableRequestType::MANAGE_OFFER);
+
+            auto lockResult = baseSellerBalance->tryLock(baseAssetAmount);
+            REQUIRE(lockResult == BalanceFrame::Result::SUCCESS);
+            balanceHelper->storeChange(delta, db, baseSellerBalance->mEntry);
+
+            reviewResult =
+                reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
+                    rootAccount, sellerRequestID,
+                    ReviewRequestOpAction::APPROVE, "",
+                    ReviewRequestResultCode::MANAGE_OFFER_FAILED, &toAdd,
+                    &toRemove);
+
+            REQUIRE(reviewResult.manageOfferCode() ==
+                    ManageOfferResultCode::UNDERFUNDED);
+        }
+    }
 }

@@ -131,6 +131,7 @@ ReviewManageOfferRequestOpFrame::handleApprove(
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::MANAGE_OFFER);
     innerResult().success().typeExt.manageOfferResult() =
         res.tr().manageOfferResult();
     return true;

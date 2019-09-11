@@ -9,23 +9,24 @@ namespace txtest
 {
 class CreateManageOfferRequestTestHelper : TxHelper
 {
-public:
-    explicit CreateManageOfferRequestTestHelper(TestManager::pointer testManager);
+  public:
+    explicit CreateManageOfferRequestTestHelper(
+        TestManager::pointer testManager);
 
-    TransactionFramePtr
-    createManageOfferRequestTx(Account &source, ManageOfferOp const& op, uint32 *allTasks);
-
+    TransactionFramePtr createManageOfferRequestTx(Account& source,
+                                                   ManageOfferOp const& op,
+                                                   uint32* allTasks);
 
     CreateManageOfferRequestResult
-    applyTx(Account &source, ManageOfferOp const& op, uint32 *allTasks = nullptr,
+    applyTx(Account& source, ManageOfferOp const& op,
+            uint32* allTasks = nullptr,
             CreateManageOfferRequestResultCode expectedResultCode =
-            CreateManageOfferRequestResultCode::SUCCESS);
+                CreateManageOfferRequestResultCode::SUCCESS);
 
-protected:
-    CreateManageOfferRequestResult
-    checkApprovedCreation(Account& source, CreateManageOfferRequestResult opResult,
-                           ManageOfferOp const& op, LedgerDelta::KeyEntryMap stateBeforeOp);
-
+  protected:
+    CreateManageOfferRequestResult checkApprovedCreation(
+        Account& source, CreateManageOfferRequestResult opResult,
+        ManageOfferOp const& op, LedgerDelta::KeyEntryMap stateBeforeOp);
 };
 }
 }
