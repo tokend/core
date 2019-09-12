@@ -85,7 +85,13 @@ CreateManageOfferRequestOpFrame::tryGetOperationConditions(
     details.isBuy = mManageOffer.isBuy;
     details.manageAction = static_cast<uint64_t>(mManageAction);
 
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    AccountRuleAction action = AccountRuleAction::CREATE;
+    if (mCreateManageOfferRequest.allTasks)
+    {
+        action = AccountRuleAction::CREATE_WITH_TASKS;
+    }
+
+    result.emplace_back(resource, action, mSourceAccount);
 
     return true;
 }
@@ -117,13 +123,16 @@ CreateManageOfferRequestOpFrame::tryGetSignerRequirements(
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().allTasks = 0;
+
+    SignerRuleAction action = SignerRuleAction::CREATE;
     if (mCreateManageOfferRequest.allTasks)
     {
+        action = SignerRuleAction::CREATE_WITH_TASKS;
         resource.reviewableRequest().allTasks =
             *mCreateManageOfferRequest.allTasks;
     }
 
-    result.emplace_back(resource, SignerRuleAction::CREATE);
+    result.emplace_back(resource, action);
 
     return true;
 }

@@ -55,7 +55,13 @@ CreatePaymentRequestOpFrame::tryGetOperationConditions(
     auto& details = resource.reviewableRequest().details.createPayment();
     details.assetType = assetFrame->getType();
     details.assetCode = assetFrame->getCode();
-    result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+    AccountRuleAction action = AccountRuleAction::CREATE;
+    if (mCreatePaymentRequest.allTasks)
+    {
+        action = AccountRuleAction::CREATE_WITH_TASKS;
+    }
+
+    result.emplace_back(resource, action, mSourceAccount);
 
     return true;
 }
@@ -80,12 +86,14 @@ CreatePaymentRequestOpFrame::tryGetSignerRequirements(
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().allTasks = 0;
+    SignerRuleAction action = SignerRuleAction::CREATE;
     if (mCreatePaymentRequest.allTasks)
     {
+        action = SignerRuleAction::CREATE_WITH_TASKS;
         resource.reviewableRequest().allTasks = *mCreatePaymentRequest.allTasks;
     }
 
-    result.emplace_back(resource, SignerRuleAction::CREATE);
+    result.emplace_back(resource, action);
 
     return true;
 }
@@ -168,7 +176,8 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh,
     requestHelper->storeAdd(delta, db, request->mEntry);
     if (!request->canBeFulfilled(lm))
     {
-        innerResult().success().requestID = request->getRequestEntry().requestID;
+        innerResult().success().requestID =
+            request->getRequestEntry().requestID;
         innerResult().success().fulfilled = false;
         return true;
     }
