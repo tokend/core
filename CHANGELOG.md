@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added 
+
+* `CreatePaymentRequestOpFrame`
+* `CreateManageOfferRequestOpFrame`
+* Account rule resources for `ManageOffer` and `CreatePayment` reviewable requests
+* Signer rule resources for `ManageOffer` and `CreatePayment` reviewable requests
+
 ## 3.5.2-x.0
 
 ### Changed
