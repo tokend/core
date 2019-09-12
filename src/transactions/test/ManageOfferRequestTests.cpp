@@ -89,6 +89,7 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     requestResource.reviewableRequest().details.manageOffer().manageAction =
         UINT32_MAX;
     requestResource.reviewableRequest().details.manageOffer().isBuy = true;
+    requestResource.reviewableRequest().details.manageOffer().orderBookID = 0;
 
     // buyer
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
