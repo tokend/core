@@ -83,6 +83,7 @@ CreateManageOfferRequestOpFrame::tryGetOperationConditions(
     details.baseAssetType = baseAsset->getType();
     details.quoteAssetType = quoteAsset->getType();
     details.isBuy = mManageOffer.isBuy;
+    details.orderBookID = mManageOffer.orderBookID;
     details.manageAction = static_cast<uint64_t>(mManageAction);
 
     AccountRuleAction action = AccountRuleAction::CREATE;
@@ -120,6 +121,7 @@ CreateManageOfferRequestOpFrame::tryGetSignerRequirements(
     details.quoteAssetType = quoteAsset->getType();
     details.isBuy = mManageOffer.isBuy;
     details.manageAction = static_cast<uint64_t>(mManageAction);
+    details.orderBookID = mManageOffer.orderBookID;
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().allTasks = 0;

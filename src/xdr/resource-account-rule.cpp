@@ -626,6 +626,11 @@ if (!okmanageAction)
 {
 return false;
 }
+bool okorderBookID = u.from_bytes(orderBookID);
+if (!okorderBookID)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -666,6 +671,11 @@ if (!okmanageAction)
 {
 return false;
 }
+bool okorderBookID = m.to_bytes(orderBookID);
+if (!okorderBookID)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -682,6 +692,7 @@ m.count_size(baseAssetCode);
 m.count_size(quoteAssetCode);
 m.count_size(isBuy);
 m.count_size(manageAction);
+m.count_size(orderBookID);
 m.count_size(ext);
 }
 bool
@@ -697,6 +708,7 @@ return false;
 && (quoteAssetCode== other.quoteAssetCode)
 && (isBuy== other.isBuy)
 && (manageAction== other.manageAction)
+&& (orderBookID== other.orderBookID)
 && (ext== other.ext)
 ;}
 bool
@@ -719,6 +731,8 @@ if (isBuy < other.isBuy) return true;
 if (other.isBuy < isBuy) return false;
 if (manageAction < other.manageAction) return true;
 if (other.manageAction < manageAction) return false;
+if (orderBookID < other.orderBookID) return true;
+if (other.orderBookID < orderBookID) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

@@ -202,17 +202,23 @@ SignerRuleVerifierImpl::isResourceMatches(
             auto expected = expectedDetails.manageOffer();
             auto actual = actualDetails.manageOffer();
 
-            return isTypeMatches(expected.baseAssetType,
-                                 actual.baseAssetType) &&
-                   isStringMatches(expected.baseAssetCode,
-                                   actual.baseAssetCode) &&
-                   isTypeMatches(expected.quoteAssetType,
-                                 actual.quoteAssetType) &&
-                   isStringMatches(expected.quoteAssetCode,
-                                   actual.quoteAssetCode) &&
+            AssetFields expectedBase{expected.baseAssetCode,
+                                     expected.baseAssetType};
+            AssetFields expectedQuote{expected.quoteAssetCode,
+                                      expected.quoteAssetType};
+            AssetFields actualBase{actual.baseAssetCode,
+                                   actual.baseAssetType};
+            AssetFields actualQuote{actual.quoteAssetCode,
+                                    actual.quoteAssetType};
+
+            return ((isAssetMatches(expectedBase, actualBase) &&
+                    isAssetMatches(expectedQuote, actualQuote)) ||
+                   (isAssetMatches(expectedBase, actualQuote) &&
+                    isAssetMatches(expectedQuote, actualBase))) &&
                    isType32Matches(expected.manageAction,
                                    actual.manageAction) &&
-                   isBoolMatches(expected.isBuy, actual.isBuy);
+                   isBoolMatches(expected.isBuy, actual.isBuy) &&
+                   isTypeMatches(expected.orderBookID, actual.orderBookID);
         }
 
         case ReviewableRequestType::CREATE_PAYMENT:

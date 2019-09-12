@@ -552,6 +552,7 @@ count_size(xdr::measurer& m) const override;
     AssetCode quoteAssetCode{};
     bool isBuy{};
     uint32 manageAction{};
+    uint64 orderBookID{};
     EmptyExt ext{};
 
     _manageOffer_t() = default;
@@ -561,6 +562,7 @@ count_size(xdr::measurer& m) const override;
              typename _quoteAssetCode_T,
              typename _isBuy_T,
              typename _manageAction_T,
+             typename _orderBookID_T,
              typename _ext_T,
              typename = typename
              std::enable_if<std::is_constructible<uint64, _baseAssetType_T>::value
@@ -569,6 +571,7 @@ count_size(xdr::measurer& m) const override;
                             && std::is_constructible<AssetCode, _quoteAssetCode_T>::value
                             && std::is_constructible<bool, _isBuy_T>::value
                             && std::is_constructible<uint32, _manageAction_T>::value
+                            && std::is_constructible<uint64, _orderBookID_T>::value
                             && std::is_constructible<EmptyExt, _ext_T>::value
                            >::type>
     explicit _manageOffer_t(_baseAssetType_T &&_baseAssetType,
@@ -577,6 +580,7 @@ count_size(xdr::measurer& m) const override;
                             _quoteAssetCode_T &&_quoteAssetCode,
                             _isBuy_T &&_isBuy,
                             _manageAction_T &&_manageAction,
+                            _orderBookID_T &&_orderBookID,
                             _ext_T &&_ext)
       : baseAssetType(std::forward<_baseAssetType_T>(_baseAssetType)),
         quoteAssetType(std::forward<_quoteAssetType_T>(_quoteAssetType)),
@@ -584,6 +588,7 @@ count_size(xdr::measurer& m) const override;
         quoteAssetCode(std::forward<_quoteAssetCode_T>(_quoteAssetCode)),
         isBuy(std::forward<_isBuy_T>(_isBuy)),
         manageAction(std::forward<_manageAction_T>(_manageAction)),
+        orderBookID(std::forward<_orderBookID_T>(_orderBookID)),
         ext(std::forward<_ext_T>(_ext)) {}
     bool
 operator==(xdr::xdr_abstract const& other) const override;bool
