@@ -214,6 +214,10 @@ return u.from_bytes(createAtomicSwapBidRequest_);
 return u.from_bytes(createPollRequest_);
     case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 return u.from_bytes(kycRecoveryRequest_);
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return u.from_bytes(manageOfferRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return u.from_bytes(createPaymentRequest_);
 }
 return false;
 }
@@ -260,6 +264,10 @@ return m.to_bytes(createAtomicSwapBidRequest_);
 return m.to_bytes(createPollRequest_);
     case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 return m.to_bytes(kycRecoveryRequest_);
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return m.to_bytes(manageOfferRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return m.to_bytes(createPaymentRequest_);
 }
 return false;
 }
@@ -302,6 +310,10 @@ return m.count_size(createAtomicSwapBidRequest_);
 return m.count_size(createPollRequest_);
     case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 return m.count_size(kycRecoveryRequest_);
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return m.count_size(manageOfferRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return m.count_size(createPaymentRequest_);
 }
 }
 bool
@@ -347,6 +359,10 @@ return createAtomicSwapBidRequest_ == other.createAtomicSwapBidRequest_;
 return createPollRequest_ == other.createPollRequest_;
     case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 return kycRecoveryRequest_ == other.kycRecoveryRequest_;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return manageOfferRequest_ == other.manageOfferRequest_;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return createPaymentRequest_ == other.createPaymentRequest_;
 }
 return false;
 }
@@ -394,6 +410,10 @@ return createAtomicSwapBidRequest_ < other.createAtomicSwapBidRequest_;
 return createPollRequest_ < other.createPollRequest_;
     case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 return kycRecoveryRequest_ < other.kycRecoveryRequest_;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return manageOfferRequest_ < other.manageOfferRequest_;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return createPaymentRequest_ < other.createPaymentRequest_;
 }
 return false;
 }

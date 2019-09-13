@@ -36,6 +36,11 @@ namespace stellar
     char const* ManageKeyValueOpFrame::createKycRecoveryTasks = "create_kyc_recovery_tasks";
     char const* ManageKeyValueOpFrame::kycRecoveryEnabled = "kyc_recovery_enabled";
     char const* ManageKeyValueOpFrame::kycRecoverySignerRole = "kyc_recovery_signer_role";
+    char const* ManageKeyValueOpFrame::createOfferTasks = "create_offer_tasks";
+    char const* ManageKeyValueOpFrame::removeOfferTasks = "remove_offer_tasks";
+    char const* ManageKeyValueOpFrame::createSaleParticipationTasks = "create_sale_participation_tasks";
+    char const* ManageKeyValueOpFrame::removeSaleParticipationTasks = "remove_sale_participation_tasks";
+    char const* ManageKeyValueOpFrame::paymentTasks = "payment_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -310,5 +315,35 @@ ManageKeyValueOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
     ManageKeyValueOpFrame::makeKYCRecoverySignerRoleKey()
     {
         return kycRecoverySignerRole;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateOfferKey(AssetCode const& base, AssetCode const& quote)
+    {
+        return string(createOfferTasks) + ":" + base + ":" + quote;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeDeleteOfferKey(AssetCode const& base, AssetCode const& quote)
+    {
+        return string(removeOfferTasks) + ":" + base + ":" + quote;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateSaleParticipationKey(AssetCode const& base, AssetCode const& quote)
+    {
+        return string(createSaleParticipationTasks) + ":" + base + ":" + quote;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeDeleteSaleParticipationKey(AssetCode const& base, AssetCode const& quote)
+    {
+        return string(removeSaleParticipationTasks) + ":" + base + ":" + quote;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makePaymentTasksKey(AssetCode const& code) 
+    {
+        return string(paymentTasks) + ":" + code;
     }
 }

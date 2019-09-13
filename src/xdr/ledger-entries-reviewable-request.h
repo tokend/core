@@ -22,6 +22,8 @@
 #include "xdr/reviewable-request-atomic-swap-bid.h"
 #include "xdr/reviewable-request-create-poll.h"
 #include "xdr/reviewable-request-kyc-recovery.h"
+#include "xdr/reviewable-request-manage-offer.h"
+#include "xdr/reviewable-request-payment.h"
 
 namespace stellar {
 
@@ -44,6 +46,8 @@ enum class ReviewableRequestType : std::int32_t {
   CREATE_ATOMIC_SWAP_ASK = 16,
   CREATE_ATOMIC_SWAP_BID = 17,
   KYC_RECOVERY = 18,
+  MANAGE_OFFER = 19,
+  CREATE_PAYMENT = 20,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ReviewableRequestType>
@@ -89,6 +93,10 @@ template<> struct xdr_traits<::stellar::ReviewableRequestType>
       return "CREATE_ATOMIC_SWAP_BID";
     case ::stellar::ReviewableRequestType::KYC_RECOVERY:
       return "KYC_RECOVERY";
+    case ::stellar::ReviewableRequestType::MANAGE_OFFER:
+      return "MANAGE_OFFER";
+    case ::stellar::ReviewableRequestType::CREATE_PAYMENT:
+      return "CREATE_PAYMENT";
     default:
       return nullptr;
     }
@@ -112,7 +120,9 @@ template<> struct xdr_traits<::stellar::ReviewableRequestType>
       (int32_t)::stellar::ReviewableRequestType::CREATE_POLL,
       (int32_t)::stellar::ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK,
       (int32_t)::stellar::ReviewableRequestType::CREATE_ATOMIC_SWAP_BID,
-      (int32_t)::stellar::ReviewableRequestType::KYC_RECOVERY
+      (int32_t)::stellar::ReviewableRequestType::KYC_RECOVERY,
+      (int32_t)::stellar::ReviewableRequestType::MANAGE_OFFER,
+      (int32_t)::stellar::ReviewableRequestType::CREATE_PAYMENT
     };
     return _xdr_enum_vec;
   }
@@ -313,6 +323,8 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
       CreateAtomicSwapBidRequest createAtomicSwapBidRequest_;
       CreatePollRequest createPollRequest_;
       KYCRecoveryRequest kycRecoveryRequest_;
+      ManageOfferRequest manageOfferRequest_;
+      CreatePaymentRequest createPaymentRequest_;
     };
 
   public:
@@ -334,7 +346,9 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK,
         ReviewableRequestType::CREATE_ATOMIC_SWAP_BID,
         ReviewableRequestType::CREATE_POLL,
-        ReviewableRequestType::KYC_RECOVERY
+        ReviewableRequestType::KYC_RECOVERY,
+        ReviewableRequestType::MANAGE_OFFER,
+        ReviewableRequestType::CREATE_PAYMENT
       };
       return _xdr_disc_vec;
     }
@@ -355,6 +369,8 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_BID ? 14
         : which == (int32_t)ReviewableRequestType::CREATE_POLL ? 15
         : which == (int32_t)ReviewableRequestType::KYC_RECOVERY ? 16
+        : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 17
+        : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 18
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -407,6 +423,12 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
         _f(&_body_t::kycRecoveryRequest_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+        _f(&_body_t::manageOfferRequest_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+        _f(&_body_t::createPaymentRequest_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -469,6 +491,12 @@ break;
         case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 new(&kycRecoveryRequest_) KYCRecoveryRequest{};
 break;
+        case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferRequest_) ManageOfferRequest{};
+break;
+        case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPaymentRequest_) CreatePaymentRequest{};
+break;
 }
 
       }
@@ -526,6 +554,12 @@ break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 new(&kycRecoveryRequest_) KYCRecoveryRequest{};
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferRequest_) ManageOfferRequest{};
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPaymentRequest_) CreatePaymentRequest{};
+break;
 }
 
     }
@@ -579,6 +613,12 @@ new(&createPollRequest_) CreatePollRequest(source.createPollRequest_);
 break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 new(&kycRecoveryRequest_) KYCRecoveryRequest(source.kycRecoveryRequest_);
+break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferRequest_) ManageOfferRequest(source.manageOfferRequest_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPaymentRequest_) CreatePaymentRequest(source.createPaymentRequest_);
 break;
 }
 
@@ -634,6 +674,12 @@ break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 new(&kycRecoveryRequest_) KYCRecoveryRequest(std::move(source.kycRecoveryRequest_));
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferRequest_) ManageOfferRequest(std::move(source.manageOfferRequest_));
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPaymentRequest_) CreatePaymentRequest(std::move(source.createPaymentRequest_));
+break;
 }
 
     }
@@ -687,6 +733,12 @@ createPollRequest_.~CreatePollRequest();
 break;
     case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 kycRecoveryRequest_.~KYCRecoveryRequest();
+break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOfferRequest_.~ManageOfferRequest();
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+createPaymentRequest_.~CreatePaymentRequest();
 break;
 }
 }
@@ -744,6 +796,12 @@ break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 kycRecoveryRequest_ = source.kycRecoveryRequest_;
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOfferRequest_ = source.manageOfferRequest_;
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+createPaymentRequest_ = source.createPaymentRequest_;
+break;
 }
 }
 else {this->~_body_t();
@@ -797,6 +855,12 @@ new(&createPollRequest_) CreatePollRequest(source.createPollRequest_);
 break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 new(&kycRecoveryRequest_) KYCRecoveryRequest(source.kycRecoveryRequest_);
+break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferRequest_) ManageOfferRequest(source.manageOfferRequest_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPaymentRequest_) CreatePaymentRequest(source.createPaymentRequest_);
 break;
 }
 }
@@ -855,6 +919,12 @@ break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 kycRecoveryRequest_ = std::move(source.kycRecoveryRequest_);
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOfferRequest_ = std::move(source.manageOfferRequest_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+createPaymentRequest_ = std::move(source.createPaymentRequest_);
+break;
 }
 }
 else {this->~_body_t();
@@ -908,6 +978,12 @@ new(&createPollRequest_) CreatePollRequest(std::move(source.createPollRequest_))
 break;
       case (int32_t)ReviewableRequestType::KYC_RECOVERY:
 new(&kycRecoveryRequest_) KYCRecoveryRequest(std::move(source.kycRecoveryRequest_));
+break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferRequest_) ManageOfferRequest(std::move(source.manageOfferRequest_));
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPaymentRequest_) CreatePaymentRequest(std::move(source.createPaymentRequest_));
 break;
 }
 }
@@ -1079,6 +1155,26 @@ break;
       if (_xdr_field_number(type_) == 16)
         return kycRecoveryRequest_;
       throw xdr::xdr_wrong_union("_body_t: kycRecoveryRequest accessed when not selected");
+    }
+    ManageOfferRequest &manageOfferRequest() {
+      if (_xdr_field_number(type_) == 17)
+        return manageOfferRequest_;
+      throw xdr::xdr_wrong_union("_body_t: manageOfferRequest accessed when not selected");
+    }
+    const ManageOfferRequest &manageOfferRequest() const {
+      if (_xdr_field_number(type_) == 17)
+        return manageOfferRequest_;
+      throw xdr::xdr_wrong_union("_body_t: manageOfferRequest accessed when not selected");
+    }
+    CreatePaymentRequest &createPaymentRequest() {
+      if (_xdr_field_number(type_) == 18)
+        return createPaymentRequest_;
+      throw xdr::xdr_wrong_union("_body_t: createPaymentRequest accessed when not selected");
+    }
+    const CreatePaymentRequest &createPaymentRequest() const {
+      if (_xdr_field_number(type_) == 18)
+        return createPaymentRequest_;
+      throw xdr::xdr_wrong_union("_body_t: createPaymentRequest accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

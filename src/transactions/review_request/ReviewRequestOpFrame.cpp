@@ -30,6 +30,8 @@
 #include "ReviewASwapBidRequestOpFrame.h"
 #include "ReviewCreatePollRequestOpFrame.h"
 #include "ReviewKYCRecoveryRequestOpFrame.h"
+#include "ReviewManageOfferRequestOpFrame.h"
+#include "ReviewPaymentRequestOpFrame.h"
 
 namespace stellar
 {
@@ -140,6 +142,10 @@ ReviewRequestOpFrame* ReviewRequestOpFrame::makeHelper(Operation const & op, Ope
 		return new ReviewCreatePollRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType::KYC_RECOVERY:
 		return new ReviewKYCRecoveryRequestOpFrame(op, res, parentTx);
+	case ReviewableRequestType::MANAGE_OFFER:
+		return new ReviewManageOfferRequestOpFrame(op, res, parentTx);
+	case ReviewableRequestType::CREATE_PAYMENT:
+		return new ReviewPaymentRequestOpFrame(op, res, parentTx);
 	default:
 		throw std::runtime_error("Unexpected request type for review request op");
 	}

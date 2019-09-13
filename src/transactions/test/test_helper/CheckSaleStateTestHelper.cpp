@@ -50,7 +50,13 @@ CheckSubSaleClosedResult getOfferResultForQuoteBalance(const CheckSaleStateSucce
 }
 void CheckSaleStateHelper::ensureClose(const CheckSaleStateSuccess result, StateBeforeTxHelper& stateBeforeTx) const
 {
+
     auto sale = stateBeforeTx.getSale(result.saleID);
+    if (sale->getSaleType() == SaleType::IMMEDIATE)
+    {
+        return;
+    }
+
     auto baseAssetBeforeTx = stateBeforeTx.getAssetEntry(sale->getBaseAsset());
     auto baseAssetAfterTx = AssetHelperLegacy::Instance()->loadAsset(sale->getBaseAsset(), mTestManager->getDB());
 

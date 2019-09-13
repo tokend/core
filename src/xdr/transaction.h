@@ -52,6 +52,8 @@
 #include "xdr/operation-create-kyc-recovery-request.h"
 #include "xdr/operation-initiate-kyc-recovery.h"
 #include "xdr/operation-remove-asset-pair.h"
+#include "xdr/operation-create-manage-offer-request.h"
+#include "xdr/operation-create-payment-request.h"
 
 namespace stellar {
 
@@ -105,6 +107,8 @@ struct Operation  : xdr::xdr_abstract {
       RemoveAssetPairOp removeAssetPairOp_;
       InitiateKYCRecoveryOp initiateKYCRecoveryOp_;
       CreateKYCRecoveryRequestOp createKYCRecoveryRequestOp_;
+      CreateManageOfferRequestOp createManageOfferRequestOp_;
+      CreatePaymentRequestOp createPaymentRequestOp_;
     };
 
   public:
@@ -154,7 +158,9 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::CANCEL_CHANGE_ROLE_REQUEST,
         OperationType::REMOVE_ASSET_PAIR,
         OperationType::INITIATE_KYC_RECOVERY,
-        OperationType::CREATE_KYC_RECOVERY_REQUEST
+        OperationType::CREATE_KYC_RECOVERY_REQUEST,
+        OperationType::CREATE_MANAGE_OFFER_REQUEST,
+        OperationType::CREATE_PAYMENT_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -203,6 +209,8 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET_PAIR ? 42
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 43
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 44
+        : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
+        : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -339,6 +347,12 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
         _f(&_body_t::createKYCRecoveryRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+        _f(&_body_t::createManageOfferRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+        _f(&_body_t::createPaymentRequestOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -485,6 +499,12 @@ break;
         case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp{};
 break;
+        case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp{};
+break;
+        case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp{};
+break;
 }
 
       }
@@ -626,6 +646,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp{};
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp{};
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp{};
+break;
 }
 
     }
@@ -763,6 +789,12 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(source.initiateKYCRecoveryOp_
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(source.createKYCRecoveryRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(source.createManageOfferRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequestOp_);
 break;
 }
 
@@ -902,6 +934,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(std::move(source.createKYCRecoveryRequestOp_));
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(std::move(source.createManageOfferRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaymentRequestOp_));
+break;
 }
 
     }
@@ -1039,6 +1077,12 @@ initiateKYCRecoveryOp_.~InitiateKYCRecoveryOp();
 break;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_.~CreateKYCRecoveryRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestOp_.~CreateManageOfferRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestOp_.~CreatePaymentRequestOp();
 break;
 }
 }
@@ -1180,6 +1224,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_ = source.createKYCRecoveryRequestOp_;
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestOp_ = source.createManageOfferRequestOp_;
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestOp_ = source.createPaymentRequestOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1317,6 +1367,12 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(source.initiateKYCRecoveryOp_
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(source.createKYCRecoveryRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(source.createManageOfferRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequestOp_);
 break;
 }
 }
@@ -1459,6 +1515,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_ = std::move(source.createKYCRecoveryRequestOp_);
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestOp_ = std::move(source.createManageOfferRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestOp_ = std::move(source.createPaymentRequestOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -1596,6 +1658,12 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(std::move(source.initiateKYCR
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(std::move(source.createKYCRecoveryRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(std::move(source.createManageOfferRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaymentRequestOp_));
 break;
 }
 }
@@ -2047,6 +2115,26 @@ break;
       if (_xdr_field_number(type_) == 44)
         return createKYCRecoveryRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: createKYCRecoveryRequestOp accessed when not selected");
+    }
+    CreateManageOfferRequestOp &createManageOfferRequestOp() {
+      if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createManageOfferRequestOp accessed when not selected");
+    }
+    const CreateManageOfferRequestOp &createManageOfferRequestOp() const {
+      if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createManageOfferRequestOp accessed when not selected");
+    }
+    CreatePaymentRequestOp &createPaymentRequestOp() {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createPaymentRequestOp accessed when not selected");
+    }
+    const CreatePaymentRequestOp &createPaymentRequestOp() const {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createPaymentRequestOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -2837,6 +2925,8 @@ struct OperationResult : xdr::xdr_abstract {
       RemoveAssetPairResult removeAssetPairResult_;
       CreateKYCRecoveryRequestResult createKYCRecoveryRequestResult_;
       InitiateKYCRecoveryResult initiateKYCRecoveryResult_;
+      CreateManageOfferRequestResult createManageOfferRequestResult_;
+      CreatePaymentRequestResult createPaymentRequestResult_;
     };
 
   public:
@@ -2886,7 +2976,9 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CANCEL_CHANGE_ROLE_REQUEST,
         OperationType::REMOVE_ASSET_PAIR,
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
-        OperationType::INITIATE_KYC_RECOVERY
+        OperationType::INITIATE_KYC_RECOVERY,
+        OperationType::CREATE_MANAGE_OFFER_REQUEST,
+        OperationType::CREATE_PAYMENT_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -2935,6 +3027,8 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET_PAIR ? 42
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 43
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 44
+        : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
+        : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3071,6 +3165,12 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
         _f(&_tr_t::initiateKYCRecoveryResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+        _f(&_tr_t::createManageOfferRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+        _f(&_tr_t::createPaymentRequestResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -3217,6 +3317,12 @@ break;
         case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult{};
 break;
+        case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult{};
+break;
+        case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult{};
+break;
 }
 
       }
@@ -3358,6 +3464,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult{};
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult{};
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult{};
+break;
 }
 
     }
@@ -3495,6 +3607,12 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(source.crea
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(source.initiateKYCRecoveryResult_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(source.createManageOfferRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymentRequestResult_);
 break;
 }
 
@@ -3634,6 +3752,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(std::move(source.initiateKYCRecoveryResult_));
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(std::move(source.createManageOfferRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.createPaymentRequestResult_));
+break;
 }
 
     }
@@ -3771,6 +3895,12 @@ createKYCRecoveryRequestResult_.~CreateKYCRecoveryRequestResult();
 break;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_.~InitiateKYCRecoveryResult();
+break;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestResult_.~CreateManageOfferRequestResult();
+break;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestResult_.~CreatePaymentRequestResult();
 break;
 }
 }
@@ -3912,6 +4042,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_ = source.initiateKYCRecoveryResult_;
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestResult_ = source.createManageOfferRequestResult_;
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestResult_ = source.createPaymentRequestResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -4049,6 +4185,12 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(source.crea
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(source.initiateKYCRecoveryResult_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(source.createManageOfferRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymentRequestResult_);
 break;
 }
 }
@@ -4191,6 +4333,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_ = std::move(source.initiateKYCRecoveryResult_);
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestResult_ = std::move(source.createManageOfferRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestResult_ = std::move(source.createPaymentRequestResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -4328,6 +4476,12 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(std::move(s
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(std::move(source.initiateKYCRecoveryResult_));
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(std::move(source.createManageOfferRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.createPaymentRequestResult_));
 break;
 }
 }
@@ -4779,6 +4933,26 @@ break;
       if (_xdr_field_number(type_) == 44)
         return initiateKYCRecoveryResult_;
       throw xdr::xdr_wrong_union("_tr_t: initiateKYCRecoveryResult accessed when not selected");
+    }
+    CreateManageOfferRequestResult &createManageOfferRequestResult() {
+      if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createManageOfferRequestResult accessed when not selected");
+    }
+    const CreateManageOfferRequestResult &createManageOfferRequestResult() const {
+      if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createManageOfferRequestResult accessed when not selected");
+    }
+    CreatePaymentRequestResult &createPaymentRequestResult() {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createPaymentRequestResult accessed when not selected");
+    }
+    const CreatePaymentRequestResult &createPaymentRequestResult() const {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createPaymentRequestResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

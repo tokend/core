@@ -942,6 +942,8 @@ enum class OperationType : std::int32_t {
   INITIATE_KYC_RECOVERY = 48,
   CREATE_KYC_RECOVERY_REQUEST = 49,
   REMOVE_ASSET_PAIR = 50,
+  CREATE_MANAGE_OFFER_REQUEST = 51,
+  CREATE_PAYMENT_REQUEST = 52,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1039,6 +1041,10 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CREATE_KYC_RECOVERY_REQUEST";
     case ::stellar::OperationType::REMOVE_ASSET_PAIR:
       return "REMOVE_ASSET_PAIR";
+    case ::stellar::OperationType::CREATE_MANAGE_OFFER_REQUEST:
+      return "CREATE_MANAGE_OFFER_REQUEST";
+    case ::stellar::OperationType::CREATE_PAYMENT_REQUEST:
+      return "CREATE_PAYMENT_REQUEST";
     default:
       return nullptr;
     }
@@ -1088,7 +1094,9 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CANCEL_CHANGE_ROLE_REQUEST,
       (int32_t)::stellar::OperationType::INITIATE_KYC_RECOVERY,
       (int32_t)::stellar::OperationType::CREATE_KYC_RECOVERY_REQUEST,
-      (int32_t)::stellar::OperationType::REMOVE_ASSET_PAIR
+      (int32_t)::stellar::OperationType::REMOVE_ASSET_PAIR,
+      (int32_t)::stellar::OperationType::CREATE_MANAGE_OFFER_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_PAYMENT_REQUEST
     };
     return _xdr_enum_vec;
   }
