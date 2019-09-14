@@ -5,9 +5,9 @@
 #include "transactions/ManageBalanceOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AccountHelperLegacy.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
 
@@ -19,7 +19,7 @@ using xdr::operator==;
 
 bool
 ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const
+                                                std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::BALANCE);
 
@@ -34,8 +34,8 @@ ManageBalanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 }
 
 bool
-ManageBalanceOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                std::vector<SignerRequirement> &result) const
+ManageBalanceOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                               std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::BALANCE);
 
@@ -52,19 +52,19 @@ ManageBalanceOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 ManageBalanceOpFrame::ManageBalanceOpFrame(Operation const& op,
                                            OperationResult& res,
                                            TransactionFrame& parentTx)
-    : OperationFrame(op, res, parentTx)
-    , mManageBalance(mOperation.body.manageBalanceOp())
+    : OperationFrame(op, res, parentTx), mManageBalance(mOperation.body.manageBalanceOp())
 {
 }
 
 bool
 ManageBalanceOpFrame::doApply(Application& app,
-                              LedgerDelta& delta, LedgerManager& ledgerManager)
+                              StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
     if (mManageBalance.action == ManageBalanceAction::CREATE_UNIQUE)
     {
-        const auto balance = BalanceHelperLegacy::Instance()->loadBalance(mManageBalance.destination, mManageBalance.asset, db, nullptr);
+        const auto balance = balanceHelper.loadBalance(mManageBalance.destination, mManageBalance.asset);
         if (!!balance)
         {
             innerResult().code(ManageBalanceResultCode::BALANCE_ALREADY_EXISTS);
@@ -72,36 +72,33 @@ ManageBalanceOpFrame::doApply(Application& app,
         }
     }
 
-    auto accountHelper = AccountHelperLegacy::Instance();
-    const AccountFrame::pointer destAccountFrame = accountHelper->
-        loadAccount(delta, mManageBalance.destination, db);
+    auto& accountHelper = storageHelper.getAccountHelper();
+    const AccountFrame::pointer destAccountFrame = accountHelper.loadAccount(mManageBalance.destination);
     if (!destAccountFrame)
     {
         innerResult().code(ManageBalanceResultCode::DESTINATION_NOT_FOUND);
         return false;
     }
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto balanceFrame = balanceHelper->loadBalance(mManageBalance.destination,
-                                                   mManageBalance.asset, db,
-                                                   &delta);
+    auto balanceFrame = balanceHelper.loadBalance(mManageBalance.destination,
+                                                  mManageBalance.asset);
 
-    auto assetHelper = AssetHelperLegacy::Instance();
-    const auto assetFrame = assetHelper->loadAsset(mManageBalance.asset, db);
+    auto& assetHelper = storageHelper.getAssetHelper();
+    const auto assetFrame = assetHelper.loadAsset(mManageBalance.asset);
     if (!assetFrame)
     {
         innerResult().code(ManageBalanceResultCode::ASSET_NOT_FOUND);
         return false;
     }
-
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto sequentialID =
-        delta.getHeaderFrame().generateID(LedgerEntryType ::BALANCE);
+        delta.getHeaderFrame().generateID(LedgerEntryType::BALANCE);
     const BalanceID newBalanceID = BalanceKeyUtils::forAccount(mManageBalance.
-                                                               destination, sequentialID);
+        destination, sequentialID);
     balanceFrame = BalanceFrame::createNew(newBalanceID,
                                            mManageBalance.destination,
-                                mManageBalance.asset, sequentialID);
-    EntryHelperProvider::storeAddEntry(delta, db, balanceFrame->mEntry);
+                                           mManageBalance.asset, sequentialID);
+    balanceHelper.storeAdd(balanceFrame->mEntry);
     innerResult().success().balanceID = newBalanceID;
     innerResult().code(ManageBalanceResultCode::SUCCESS);
     return true;

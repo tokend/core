@@ -54,6 +54,7 @@
 #include "xdr/operation-remove-asset-pair.h"
 #include "xdr/operation-create-manage-offer-request.h"
 #include "xdr/operation-create-payment-request.h"
+#include "xdr/operation-remove-asset.h"
 
 namespace stellar {
 
@@ -109,6 +110,7 @@ struct Operation  : xdr::xdr_abstract {
       CreateKYCRecoveryRequestOp createKYCRecoveryRequestOp_;
       CreateManageOfferRequestOp createManageOfferRequestOp_;
       CreatePaymentRequestOp createPaymentRequestOp_;
+      RemoveAssetOp removeAssetOp_;
     };
 
   public:
@@ -160,7 +162,8 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::INITIATE_KYC_RECOVERY,
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
         OperationType::CREATE_MANAGE_OFFER_REQUEST,
-        OperationType::CREATE_PAYMENT_REQUEST
+        OperationType::CREATE_PAYMENT_REQUEST,
+        OperationType::REMOVE_ASSET
       };
       return _xdr_disc_vec;
     }
@@ -211,6 +214,7 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 44
         : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
         : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
+        : which == (int32_t)OperationType::REMOVE_ASSET ? 47
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -353,6 +357,9 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
         _f(&_body_t::createPaymentRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::REMOVE_ASSET:
+        _f(&_body_t::removeAssetOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -505,6 +512,9 @@ break;
         case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestOp_) CreatePaymentRequestOp{};
 break;
+        case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp{};
+break;
 }
 
       }
@@ -652,6 +662,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestOp_) CreatePaymentRequestOp{};
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp{};
+break;
 }
 
     }
@@ -795,6 +808,9 @@ new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(source.createManage
 break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(source.removeAssetOp_);
 break;
 }
 
@@ -940,6 +956,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaymentRequestOp_));
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(std::move(source.removeAssetOp_));
+break;
 }
 
     }
@@ -1083,6 +1102,9 @@ createManageOfferRequestOp_.~CreateManageOfferRequestOp();
 break;
     case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 createPaymentRequestOp_.~CreatePaymentRequestOp();
+break;
+    case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetOp_.~RemoveAssetOp();
 break;
 }
 }
@@ -1230,6 +1252,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 createPaymentRequestOp_ = source.createPaymentRequestOp_;
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetOp_ = source.removeAssetOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1373,6 +1398,9 @@ new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(source.createManage
 break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(source.removeAssetOp_);
 break;
 }
 }
@@ -1521,6 +1549,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 createPaymentRequestOp_ = std::move(source.createPaymentRequestOp_);
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetOp_ = std::move(source.removeAssetOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -1664,6 +1695,9 @@ new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(std::move(source.cr
 break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaymentRequestOp_));
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(std::move(source.removeAssetOp_));
 break;
 }
 }
@@ -2135,6 +2169,16 @@ break;
       if (_xdr_field_number(type_) == 46)
         return createPaymentRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: createPaymentRequestOp accessed when not selected");
+    }
+    RemoveAssetOp &removeAssetOp() {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetOp_;
+      throw xdr::xdr_wrong_union("_body_t: removeAssetOp accessed when not selected");
+    }
+    const RemoveAssetOp &removeAssetOp() const {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetOp_;
+      throw xdr::xdr_wrong_union("_body_t: removeAssetOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -2927,6 +2971,7 @@ struct OperationResult : xdr::xdr_abstract {
       InitiateKYCRecoveryResult initiateKYCRecoveryResult_;
       CreateManageOfferRequestResult createManageOfferRequestResult_;
       CreatePaymentRequestResult createPaymentRequestResult_;
+      RemoveAssetResult removeAssetResult_;
     };
 
   public:
@@ -2978,7 +3023,8 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
         OperationType::INITIATE_KYC_RECOVERY,
         OperationType::CREATE_MANAGE_OFFER_REQUEST,
-        OperationType::CREATE_PAYMENT_REQUEST
+        OperationType::CREATE_PAYMENT_REQUEST,
+        OperationType::REMOVE_ASSET
       };
       return _xdr_disc_vec;
     }
@@ -3029,6 +3075,7 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 44
         : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
         : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
+        : which == (int32_t)OperationType::REMOVE_ASSET ? 47
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3171,6 +3218,9 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
         _f(&_tr_t::createPaymentRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::REMOVE_ASSET:
+        _f(&_tr_t::removeAssetResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -3323,6 +3373,9 @@ break;
         case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestResult_) CreatePaymentRequestResult{};
 break;
+        case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult{};
+break;
 }
 
       }
@@ -3470,6 +3523,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestResult_) CreatePaymentRequestResult{};
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult{};
+break;
 }
 
     }
@@ -3613,6 +3669,9 @@ new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(source.crea
 break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(source.removeAssetResult_);
 break;
 }
 
@@ -3758,6 +3817,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.createPaymentRequestResult_));
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(std::move(source.removeAssetResult_));
+break;
 }
 
     }
@@ -3901,6 +3963,9 @@ createManageOfferRequestResult_.~CreateManageOfferRequestResult();
 break;
     case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 createPaymentRequestResult_.~CreatePaymentRequestResult();
+break;
+    case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetResult_.~RemoveAssetResult();
 break;
 }
 }
@@ -4048,6 +4113,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 createPaymentRequestResult_ = source.createPaymentRequestResult_;
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetResult_ = source.removeAssetResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -4191,6 +4259,9 @@ new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(source.crea
 break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(source.removeAssetResult_);
 break;
 }
 }
@@ -4339,6 +4410,9 @@ break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 createPaymentRequestResult_ = std::move(source.createPaymentRequestResult_);
 break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetResult_ = std::move(source.removeAssetResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -4482,6 +4556,9 @@ new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(std::move(s
 break;
       case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
 new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.createPaymentRequestResult_));
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(std::move(source.removeAssetResult_));
 break;
 }
 }
@@ -4953,6 +5030,16 @@ break;
       if (_xdr_field_number(type_) == 46)
         return createPaymentRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: createPaymentRequestResult accessed when not selected");
+    }
+    RemoveAssetResult &removeAssetResult() {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetResult_;
+      throw xdr::xdr_wrong_union("_tr_t: removeAssetResult accessed when not selected");
+    }
+    const RemoveAssetResult &removeAssetResult() const {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetResult_;
+      throw xdr::xdr_wrong_union("_tr_t: removeAssetResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

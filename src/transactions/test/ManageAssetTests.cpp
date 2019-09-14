@@ -1,11 +1,12 @@
 // Copyright 2014 Stellar Development Foundation and contributors. Licensed
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-#include <transactions/test/test_helper/IssuanceRequestHelper.h>
-#include <transactions/test/test_helper/CreateAccountTestHelper.h>
-#include <transactions/test/test_helper/ManageSignerTestHelper.h>
+#include "transactions/test/test_helper/IssuanceRequestHelper.h"
+#include "transactions/test/test_helper/CreateAccountTestHelper.h"
+#include "transactions/test/test_helper/ManageSignerTestHelper.h"
 #include "test/test.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/test/test_helper/ManageAssetTestHelper.h"
@@ -35,6 +36,10 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
     TestManager::upgradeToCurrentLedgerVersion(app);
 
 
+    //Helpers
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
     ManageKeyValueTestHelper manageKeyValueHelper(testManager);
     longstring preissuanceKey = ManageKeyValueOpFrame::makePreIssuanceTasksKey("*");
     manageKeyValueHelper.setKey(preissuanceKey)->setUi32Value(0);
@@ -49,22 +54,22 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
 
     auto root = Account{getRoot(), Salt(0)};
 
-	auto assetHelper = AssetHelperLegacy::Instance();
     CreateAccountTestHelper createAccountTestHelper(testManager);
 
-    SECTION("Given valid asset") 
+    SECTION("Given valid asset")
     {
         auto manageAssetHelper = ManageAssetTestHelper(testManager);
         auto assetCode = "USD681";
         auto request = manageAssetHelper.createAssetCreationRequest(assetCode, root.key.getPublicKey(), "{}", UINT64_MAX, 0, &zeroTasks);
         auto creationResult = manageAssetHelper.applyManageAssetTx(root, 0, request,
-                ManageAssetResultCode::SUCCESS);
+                                                                   ManageAssetResultCode::SUCCESS);
         REQUIRE(creationResult.success().fulfilled);
 
-        auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(assetCode, testManager->getDB());
+        auto assetFrame = assetHelper.loadAsset(assetCode);
         REQUIRE(!!assetFrame);
 
-        SECTION("Able to change max issuance with fork") {
+        SECTION("Able to change max issuance with fork")
+        {
             auto maxIssuanceAmount = 0;
             auto updateIssuanceRequest = manageAssetHelper.updateMaxAmount(assetCode, maxIssuanceAmount);
             auto txFrame = manageAssetHelper.createManageAssetTx(root, 0, updateIssuanceRequest);
@@ -73,10 +78,10 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             CLOG(INFO, Logging::OPERATION_LOGGER) << "tx must go throug even with invalid sigs: " << txIDString;
             REQUIRE(updateMaxIssuanceTxHash == txIDString);
             LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-                app.getDatabase());
+                                  app.getDatabase());
             applyCheck(txFrame, delta, app);
 
-            assetFrame = AssetHelperLegacy::Instance()->loadAsset(assetCode, testManager->getDB());
+            assetFrame = assetHelper.loadAsset(assetCode);
             REQUIRE(!!assetFrame);
             REQUIRE(assetFrame->getMaxIssuanceAmount() == maxIssuanceAmount);
         }
@@ -94,7 +99,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             manageAssetHelper.applyManageAssetTx(root, 0,
                                                  manageAssetHelper.
-                                                 createCancelRequest(),
+                                                     createCancelRequest(),
                                                  ManageAssetResultCode::
                                                  REQUEST_NOT_FOUND);
         }
@@ -102,7 +107,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             manageAssetHelper.applyManageAssetTx(root, 12,
                                                  manageAssetHelper.
-                                                 createCancelRequest(),
+                                                     createCancelRequest(),
                                                  ManageAssetResultCode::
                                                  REQUEST_NOT_FOUND,
                                                  OperationResultCode::opNO_ENTRY);
@@ -118,7 +123,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             auto requestResult = issuanceHelper.
                 applyCreatePreIssuanceRequest(root, root.key, asset, 10000,
                                               SecretKey::random().
-                                              getStrKeyPublic());
+                                                  getStrKeyPublic());
             const auto cancelRequest = manageAssetHelper.createCancelRequest();
             manageAssetHelper.
                 applyManageAssetTx(root, requestResult.success().requestID,
@@ -134,7 +139,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             const auto request = manageAssetHelper.
                 createAssetCreationRequest("USD S",
-                                           root.key.getPublicKey(), "{}",100,
+                                           root.key.getPublicKey(), "{}", 100,
                                            0);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
                                                  ManageAssetResultCode::
@@ -154,17 +159,17 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             const uint64_t maxIssuanceAmount = 100;
             const auto request = manageAssetHelper.
-                createAssetCreationRequest("USDS", 
-                    root.key.getPublicKey(), "{}", maxIssuanceAmount,
-                    0, &zeroTasks, maxIssuanceAmount + 1);
+                createAssetCreationRequest("USDS",
+                                           root.key.getPublicKey(), "{}", maxIssuanceAmount,
+                                           0, &zeroTasks, maxIssuanceAmount + 1);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
-                ManageAssetResultCode::INITIAL_PREISSUED_EXCEEDS_MAX_ISSUANCE);
+                                                 ManageAssetResultCode::INITIAL_PREISSUED_EXCEEDS_MAX_ISSUANCE);
         }
         SECTION("Trying to update non existing request")
         {
             const auto request = manageAssetHelper.
                 createAssetCreationRequest("USDS",
-                                           root.key.getPublicKey(), "{}",100,
+                                           root.key.getPublicKey(), "{}", 100,
                                            0);
             manageAssetHelper.applyManageAssetTx(root, 1, request,
                                                  ManageAssetResultCode::
@@ -175,7 +180,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             const AssetCode assetCode = "EURT";
             const auto request = manageAssetHelper.
                 createAssetCreationRequest(assetCode,
-                                           root.key.getPublicKey(), "{}",100,
+                                           root.key.getPublicKey(), "{}", 100,
                                            0, &zeroTasks);
             manageAssetHelper.applyManageAssetTx(root, 0, request);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
@@ -188,7 +193,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             manageAssetHelper.createAsset(root, root.key, assetCode, root, 0, &zeroTasks);
             const auto request = manageAssetHelper.
                 createAssetCreationRequest(assetCode,
-                                           root.key.getPublicKey(), "{}",100,
+                                           root.key.getPublicKey(), "{}", 100,
                                            0, &zeroTasks);
             manageAssetHelper.applyManageAssetTx(root, 0, request,
                                                  ManageAssetResultCode::
@@ -278,44 +283,45 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
 
             AccountRuleResource txResource(LedgerEntryType::TRANSACTION);
             auto txRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-                    txResource, AccountRuleAction::SEND, false);
+                                                                                  txResource, AccountRuleAction::SEND, false);
             auto txRuleId = manageAccountRuleTestHelper.applyTx(root,
-                    txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+                                                                txRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
             AccountRuleResource assetResource(LedgerEntryType::ASSET);
             assetResource.asset().assetType = 0;
             assetResource.asset().assetCode = "*";
             auto assetRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-                    assetResource, AccountRuleAction::ANY, false);
+                                                                                     assetResource, AccountRuleAction::ANY, false);
             auto assetRuleId = manageAccountRuleTestHelper.applyTx(root,
-                    assetRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+                                                                   assetRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
             AccountRuleResource reviewableRequestResource(LedgerEntryType::REVIEWABLE_REQUEST);
             reviewableRequestResource.reviewableRequest().details.requestType(ReviewableRequestType::ANY);
             auto revReqRuleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(0,
-                    reviewableRequestResource, AccountRuleAction::CREATE, false);
+                                                                                      reviewableRequestResource, AccountRuleAction::CREATE, false);
             auto revReqRuleId = manageAccountRuleTestHelper.applyTx(root,
-                    revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+                                                                    revReqRuleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
 
             auto createSyndicateRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp("{}",
-                    {assetRuleId, revReqRuleId, txRuleId});
+                                                                                       {assetRuleId, revReqRuleId,
+                                                                                        txRuleId});
             auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
 
             auto createAccountBuilder = CreateAccountTestBuilder()
-                    .setSource(root);
+                .setSource(root);
 
-            auto syndicate = Account{ SecretKey::random(), 0 };
+            auto syndicate = Account{SecretKey::random(), 0};
             auto syndicatePubKey = syndicate.key.getPublicKey();
             createAccountTestHelper.applyTx(createAccountBuilder
-                                                    .setToPublicKey(syndicatePubKey)
-                                                    .addBasicSigner()
-                                                    .setRoleID(syndicateRoleID));
+                                                .setToPublicKey(syndicatePubKey)
+                                                .addBasicSigner()
+                                                .setRoleID(syndicateRoleID));
 
             const AssetCode assetCode = "AST";
             auto createRequest = manageAssetHelper.createAssetCreationRequest(assetCode,
-                    syndicatePubKey, "{}", UINT64_MAX, 0, &zeroTasks);
+                                                                              syndicatePubKey, "{}", UINT64_MAX, 0, &zeroTasks);
             auto creationResult = manageAssetHelper.applyManageAssetTx(syndicate, 0, createRequest,
-                    ManageAssetResultCode::SUCCESS);
+                                                                       ManageAssetResultCode::SUCCESS);
 
             SECTION("Set tasks without permission")
             {
@@ -341,9 +347,9 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             AssetCode baseAsset = "ILS";
             auto assetCreationRequest = manageAssetHelper.
-                    createAssetCreationRequest(baseAsset, SecretKey::random().getPublicKey(),
-                                               "{}",
-                                               UINT64_MAX, baseAssetPolicy, &zeroTasks, 10203);
+                createAssetCreationRequest(baseAsset, SecretKey::random().getPublicKey(),
+                                           "{}",
+                                           UINT64_MAX, baseAssetPolicy, &zeroTasks, 10203);
             auto creationResult = manageAssetHelper.applyManageAssetTx(root, 0, assetCreationRequest);
         }
 
@@ -353,7 +359,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             manageAssetHelper.createAsset(root, preissuedSigner, assetCode, root, 0, &zeroTasks);
 
             auto assetUpdateRequest = manageAssetHelper.
-                    createAssetUpdateRequest(assetCode, "{}", baseAssetPolicy, &zeroTasks);
+                createAssetUpdateRequest(assetCode, "{}", baseAssetPolicy, &zeroTasks);
             manageAssetHelper.applyManageAssetTx(root, 0, assetUpdateRequest);
         }
 
@@ -361,13 +367,12 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
         {
             AssetCode assetCode = "ILS";
             manageAssetHelper.createAsset(root, preissuedSigner, assetCode, root,
-                    static_cast<uint32_t>(AssetPolicy::BASE_ASSET), &zeroTasks);
+                                          static_cast<uint32_t>(AssetPolicy::BASE_ASSET), &zeroTasks);
 
             auto assetUpdateRequest = manageAssetHelper.
-                    createAssetUpdateRequest(assetCode, "{}", 0, &zeroTasks);
+                createAssetUpdateRequest(assetCode, "{}", 0, &zeroTasks);
             manageAssetHelper.applyManageAssetTx(root, 0, assetUpdateRequest);
-            std::vector<AssetFrame::pointer> baseAssets;
-			assetHelper->loadBaseAssets(baseAssets, testManager->getDB());
+            auto baseAssets = assetHelper.loadBaseAssets();
             REQUIRE(baseAssets.empty());
         }
     }
@@ -381,8 +386,8 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             AssetCode statsAsset = "BYN";
             SecretKey preissuedSigner = SecretKey::random();
             auto createAssetRequest = manageAssetHelper.
-                    createAssetCreationRequest(statsAsset, preissuedSigner.getPublicKey(), "{}",
-                            UINT64_MAX, statsPolicy, &zeroTasks);
+                createAssetCreationRequest(statsAsset, preissuedSigner.getPublicKey(), "{}",
+                                           UINT64_MAX, statsPolicy, &zeroTasks);
             manageAssetHelper.applyManageAssetTx(root, 0, createAssetRequest);
         }
 
@@ -391,14 +396,14 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
             AssetCode statsAsset = "BYN";
             SecretKey preissuedSigner = SecretKey::random();
             auto createFirst = manageAssetHelper.
-                    createAssetCreationRequest(statsAsset, preissuedSigner.getPublicKey(), "{}",
-                            UINT64_MAX, statsPolicy, &zeroTasks);
+                createAssetCreationRequest(statsAsset, preissuedSigner.getPublicKey(), "{}",
+                                           UINT64_MAX, statsPolicy, &zeroTasks);
             manageAssetHelper.applyManageAssetTx(root, 0, createFirst);
 
             auto createSecond = manageAssetHelper.
                 createAssetCreationRequest("CZK", preissuedSigner.getPublicKey(), "{}", UINT64_MAX, statsPolicy);
             manageAssetHelper.applyManageAssetTx(root, 0, createSecond,
-                                                ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
+                                                 ManageAssetResultCode::STATS_ASSET_ALREADY_EXISTS);
         }
     }
 }
@@ -428,63 +433,64 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
 
         manageSignerTestHelper.applyCreateOperationalSigner(account, preissuedSigner.getPublicKey());
 
-		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+        auto& storageHelper = testManager->getStorageHelper();
+        auto& requestHelper = storageHelper.getReviewableRequestHelper();
+        auto& assetHelper = storageHelper.getAssetHelper();
 
         SECTION("Can cancel creation request")
         {
             manageAssetHelper.applyManageAssetTx(account,
                                                  creationResult.success().
-                                                                requestID,
+                                                     requestID,
                                                  manageAssetHelper.
-                                                 createCancelRequest());
+                                                     createCancelRequest());
         }
         SECTION("Can update pending request")
         {
             creationRequest.createAssetCreationRequest().createAsset.code = "USDT";
             auto requestID = creationResult.success().requestID;
-            auto requestBefore = reviewableRequestHelper->loadRequest(
+            auto requestBefore = requestHelper.loadRequest(
                 requestID, account.key.getPublicKey(),
-                ReviewableRequestType::CREATE_ASSET, testManager->getDB());
+                ReviewableRequestType::CREATE_ASSET);
             REQUIRE(requestBefore);
             creationRequest.createAssetCreationRequest().allTasks = nullptr;
             manageAssetHelper.applyManageAssetTx(account,
-                                                   requestID,
-                                                   creationRequest);
-            auto requestAfter = reviewableRequestHelper->loadRequest(
+                                                 requestID,
+                                                 creationRequest);
+            auto requestAfter = requestHelper.loadRequest(
                 requestID, account.key.getPublicKey(),
-                ReviewableRequestType::CREATE_ASSET, testManager->getDB());
+                ReviewableRequestType::CREATE_ASSET);
             REQUIRE(requestAfter);
             auto seqBefore = requestBefore->getRequestEntry()
-                                 .body.assetCreationRequest()
-                                 .sequenceNumber;
+                .body.assetCreationRequest()
+                .sequenceNumber;
             auto seqAfter = requestAfter->getRequestEntry()
-                                .body.assetCreationRequest()
-                                .sequenceNumber;
+                .body.assetCreationRequest()
+                .sequenceNumber;
             REQUIRE(seqBefore + 1 == seqAfter);
 
         }
         SECTION("Given approved asset")
         {
-            auto approvingRequest = reviewableRequestHelper->
-				loadRequest(creationResult.success().requestID,
-                            testManager->getDB(), nullptr);
+            auto approvingRequest = requestHelper.
+                loadRequest(creationResult.success().requestID);
             REQUIRE(approvingRequest);
             auto reviewRequetHelper = ReviewAssetRequestHelper(testManager);
             reviewRequetHelper.applyReviewRequestTxWithTasks(root, approvingRequest->
-                                                    getRequestID(),
-                                                    approvingRequest->getHash(),
-                                                    approvingRequest->getType(),
-                                                    ReviewRequestOpAction::
-                                                    APPROVE, "",
-                                                    ReviewRequestResultCode::SUCCESS,
-                                                    &zeroTasks, &tasks);
+                                                                 getRequestID(),
+                                                             approvingRequest->getHash(),
+                                                             approvingRequest->getType(),
+                                                             ReviewRequestOpAction::
+                                                             APPROVE, "",
+                                                             ReviewRequestResultCode::SUCCESS,
+                                                             &zeroTasks, &tasks);
 
             SECTION("Can change asset pre issuance signer")
             {
                 auto newPreIssuanceSigner = SecretKey::random();
-                auto preissuedSignerAccount = Account{ preissuedSigner, 0 };
+                auto preissuedSignerAccount = Account{preissuedSigner, 0};
                 auto changePreIssuanceSigner = manageAssetHelper.createChangeSignerRequest(
-                        preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());
+                    preissuedSignerAccount, assetCode, newPreIssuanceSigner.getPublicKey());
                 auto txFrame = manageAssetHelper.createManageAssetTx(account, 0, changePreIssuanceSigner);
                 txFrame->getEnvelope().signatures.clear();
                 txFrame->addSignature(preissuedSigner);
@@ -493,7 +499,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 const auto opResult = txResult.result.results()[0];
                 auto actualResultCode = ManageAssetOpFrame::getInnerCode(opResult);
                 REQUIRE(actualResultCode == ManageAssetResultCode::SUCCESS);
-                auto assetFrame = AssetHelperLegacy::Instance()->loadAsset(assetCode, testManager->getDB());
+                auto assetFrame = assetHelper.loadAsset(assetCode);
                 REQUIRE(assetFrame->getPreIssuedAssetSigner() == newPreIssuanceSigner.getPublicKey());
                 SECTION("Owner is not able to change signer")
                 {
@@ -525,23 +531,22 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
         uint32_t tasksToAdd = 0, tasksToRemove = 2;
 
         auto creationRequest = manageAssetHelper.
-                createAssetCreationRequest(assetCode,
-                                           preissuedSigner.getPublicKey(),
-                                           "{}", maxIssuance, 0, &allTasks, initialPreIssuedAmount);
+            createAssetCreationRequest(assetCode,
+                                       preissuedSigner.getPublicKey(),
+                                       "{}", maxIssuance, 0, &allTasks, initialPreIssuedAmount);
         auto creationResult = manageAssetHelper.applyManageAssetTx(account, 0,
                                                                    creationRequest);
 
 
         REQUIRE_FALSE(creationResult.success().fulfilled);
 
-        auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+        auto& requestHelper = testManager->getStorageHelper().getReviewableRequestHelper();
         auto reviewAssetRequestHelper = ReviewAssetRequestHelper(testManager);
 
         SECTION("Can update rejected request")
         {
-            auto request = reviewableRequestHelper->
-                loadRequest(creationResult.success().requestID,
-                            testManager->getDB(), nullptr);
+            auto request = requestHelper.
+                loadRequest(creationResult.success().requestID);
             REQUIRE(request);
             auto reviewResult = reviewAssetRequestHelper.applyReviewRequestTxWithTasks(root, request->
                                                                                            getRequestID(),
@@ -554,70 +559,72 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             auto secondCreationRequest = manageAssetHelper.
                 createAssetCreationRequest(assetCode,
                                            preissuedSigner.getPublicKey(),
-                                           "{}", maxIssuance*2, 0, nullptr, initialPreIssuedAmount);
+                                           "{}", maxIssuance * 2, 0, nullptr, initialPreIssuedAmount);
 
             auto secondCreationResult = manageAssetHelper.applyManageAssetTx(account, request->getRequestID(),
-                                                                       secondCreationRequest);
+                                                                             secondCreationRequest);
             REQUIRE_FALSE(secondCreationResult.success().fulfilled);
-            request = reviewableRequestHelper->
-                loadRequest(creationResult.success().requestID,
-                            testManager->getDB(), nullptr);
+            request = requestHelper.
+                loadRequest(creationResult.success().requestID);
             REQUIRE(request);
             auto secondReviewResult = reviewAssetRequestHelper.applyReviewRequestTxWithTasks(root, request->
-                                                                                           getRequestID(),
-                                                                                       request->getHash(),
-                                                                                       request->getRequestType(),
-                                                                                       ReviewRequestOpAction::
-                                                                                       APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                                                                                       &zeroTasks,
-                                                                                       &tasksToRemove);
+                                                                                                 getRequestID(),
+                                                                                             request->getHash(),
+                                                                                             request->getRequestType(),
+                                                                                             ReviewRequestOpAction::
+                                                                                             APPROVE, "", ReviewRequestResultCode::SUCCESS,
+                                                                                             &zeroTasks,
+                                                                                             &tasksToRemove);
 
         }
         SECTION("Valid")
         {
 
-            auto request = reviewableRequestHelper->
-                    loadRequest(creationResult.success().requestID,
-                                testManager->getDB(), nullptr);
+            auto request = requestHelper.
+                loadRequest(creationResult.success().requestID);
             REQUIRE(request);
             auto reviewResult = reviewAssetRequestHelper.applyReviewRequestTxWithTasks(root, request->
-                                                            getRequestID(),
-                                                    request->getHash(),
-                                                    request->getRequestType(),
-                                                    ReviewRequestOpAction::
-                                                    APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                                                    &tasksToAdd,
-                                                    &tasksToRemove);
+                                                                                           getRequestID(),
+                                                                                       request->getHash(),
+                                                                                       request->getRequestType(),
+                                                                                       ReviewRequestOpAction::
+                                                                                       APPROVE, "", ReviewRequestResultCode::SUCCESS,
+                                                                                       &tasksToAdd,
+                                                                                       &tasksToRemove);
             REQUIRE(reviewResult.success().fulfilled);
 
             SECTION("Update")
             {
                 const auto updateRequestBody = manageAssetHelper.
-                        createAssetUpdateRequest(assetCode,
-                                                 "{}", 0, &allTasks);
+                    createAssetUpdateRequest(assetCode,
+                                             "{}", 0, &allTasks);
                 auto updateResult = manageAssetHelper.
-                        applyManageAssetTx(account, 0, updateRequestBody);
+                    applyManageAssetTx(account, 0, updateRequestBody);
 
                 REQUIRE_FALSE(updateResult.success().fulfilled);
 
-                auto request = reviewableRequestHelper->
-                        loadRequest(updateResult.success().requestID,
-                                    testManager->getDB(), nullptr);
+                auto request = requestHelper.
+                    loadRequest(updateResult.success().requestID);
                 REQUIRE(request);
                 auto updateReviewResult = reviewAssetRequestHelper.
-                        applyReviewRequestTxWithTasks(root, request->
-                                                              getRequestID(),
-                                                      request->getHash(),
-                                                      request->getRequestType(),
-                                                      ReviewRequestOpAction::
-                                                      APPROVE, "", ReviewRequestResultCode::SUCCESS,
-                                                      &tasksToAdd,
-                                                      &tasksToRemove);
+                    applyReviewRequestTxWithTasks(root, request->
+                                                      getRequestID(),
+                                                  request->getHash(),
+                                                  request->getRequestType(),
+                                                  ReviewRequestOpAction::
+                                                  APPROVE, "", ReviewRequestResultCode::SUCCESS,
+                                                  &tasksToAdd,
+                                                  &tasksToRemove);
                 REQUIRE(updateReviewResult.success().fulfilled);
             }
 
-        }
+            SECTION("Remove asset")
+            {
+                manageAssetHelper.applyRemoveAssetTx(root, assetCode,
+                                                   nullptr);
+            }
 
+        }
 
     }
 }

@@ -1,4 +1,5 @@
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include <transactions/deprecated/ManageInvoiceRequestOpFrame.h>
 #include <lib/catch.hpp>
 #include "ManageInvoiceRequestTestHelper.h"
@@ -10,13 +11,13 @@ namespace txtest
 {
 
 ManageInvoiceRequestTestHelper::ManageInvoiceRequestTestHelper(TestManager::pointer testManager)
-        : TxHelper(testManager)
+    : TxHelper(testManager)
 {
 }
 
 ManageInvoiceRequestOp
 ManageInvoiceRequestTestHelper::createInvoiceRequest(AssetCode asset, AccountID sender,
-                                                     uint64_t amount, longstring details, uint64_t* contractID)
+                                                     uint64_t amount, longstring details, uint64_t *contractID)
 {
     ManageInvoiceRequestOp result;
     result.details.action(ManageInvoiceRequestAction::CREATE);
@@ -42,7 +43,7 @@ ManageInvoiceRequestTestHelper::createRemoveInvoiceRequest(uint64_t& requestID)
     result.details.requestID() = requestID;
     result.ext.v(LedgerVersion::EMPTY_VERSION);
 
-    return  result;
+    return result;
 }
 
 TransactionFramePtr
@@ -63,8 +64,9 @@ ManageInvoiceRequestTestHelper::applyManageInvoiceRequest(Account& source,
 {
     Database& db = mTestManager->getDB();
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    uint64 reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    uint64 reviewableRequestCountBeforeTx = requestHelper.countObjects();
 
     auto txFrame = createManageInvoiceRequest(source, manageInvoiceRequestOp);
     mTestManager->applyCheck(txFrame);
@@ -74,7 +76,7 @@ ManageInvoiceRequestTestHelper::applyManageInvoiceRequest(Account& source,
     auto actualResult = ManageInvoiceRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResult == expectedResult);
 
-    uint64 reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(db.getSession());
+    uint64 reviewableRequestCountAfterTx = requestHelper.countObjects();
     if (expectedResult != ManageInvoiceRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
@@ -86,15 +88,15 @@ ManageInvoiceRequestTestHelper::applyManageInvoiceRequest(Account& source,
     {
         case ManageInvoiceRequestAction::CREATE:
         {
-            auto invoiceRequest = reviewableRequestHelper->loadRequest(
-                    manageInvoiceRequestResult.success().details.response().requestID, db);
+            auto invoiceRequest = requestHelper.loadRequest(
+                manageInvoiceRequestResult.success().details.response().requestID);
             REQUIRE(!!invoiceRequest);
             REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
             break;
         }
         case ManageInvoiceRequestAction::REMOVE:
         {
-            REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx +1);
+            REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx + 1);
             break;
         }
         default:

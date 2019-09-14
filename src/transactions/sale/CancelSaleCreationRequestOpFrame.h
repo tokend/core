@@ -5,8 +5,7 @@
 
 namespace stellar
 {
-class CancelSaleCreationRequestOpFrame : public OperationFrame
-{
+class CancelSaleCreationRequestOpFrame : public OperationFrame {
     CancelSaleCreationRequestResult& innerResult()
     {
         return mResult.tr().cancelSaleCreationRequestResult();
@@ -26,13 +25,14 @@ public:
 
     CancelSaleCreationRequestOpFrame(Operation const& op, OperationResult& res,
                                      TransactionFrame& parentTx);
-    bool doApply(Application& app, LedgerDelta& delta,
+
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
 
     static CancelSaleCreationRequestResultCode getInnerCode(
-            OperationResult const& res)
+        OperationResult const& res)
     {
         return res.tr().cancelSaleCreationRequestResult().code();
     }
@@ -40,7 +40,7 @@ public:
     std::string getInnerResultCodeAsStr() override
     {
         return xdr::xdr_traits<CancelSaleCreationRequestResultCode>::
-                enum_name(innerResult().code());
+        enum_name(innerResult().code());
     }
 };
 }

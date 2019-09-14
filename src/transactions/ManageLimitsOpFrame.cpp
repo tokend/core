@@ -47,20 +47,19 @@ ManageLimitsOpFrame::getInnerResultCodeAsStr()
 }
 
 bool
-ManageLimitsOpFrame::doApply(Application& app, LedgerDelta& delta,
+ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                              LedgerManager& ledgerManager)
 {
     innerResult().code(ManageLimitsResultCode::SUCCESS);
 
-    Database& db = ledgerManager.getDatabase();
     auto limitsV2Helper = LimitsV2Helper::Instance();
-
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     switch (mManageLimits.details.action())
     {
     case ManageLimitsAction::CREATE:
     {
-        StorageHelperImpl storageHelperImpl(db, &delta);
-        if (!checkAccountRoleExisting(storageHelperImpl, ledgerManager))
+        if (!checkAccountRoleExisting(storageHelper, ledgerManager))
         {
             return false;
         }

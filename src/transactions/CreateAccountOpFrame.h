@@ -37,7 +37,7 @@ private:
     createAccount(Application &app, StorageHelper& storageHelper);
 
     void
-    createBalances(StorageHelper& storageHelper);
+    createBalances(Application& app, StorageHelper& storageHelper);
 
     bool
     createSigners(Application &app, StorageHelper& storageHelper);

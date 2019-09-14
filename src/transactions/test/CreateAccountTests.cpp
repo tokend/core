@@ -8,9 +8,9 @@
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ExternalSystemAccountID.h"
-#include "ledger/ExternalSystemAccountIDHelperLegacy.h"
+#include "ledger/ExternalSystemAccountIDHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace stellar;
@@ -18,52 +18,58 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("create account", "[tx][create_account]") {
-    Config const &cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
+TEST_CASE("create account", "[tx][create_account]")
+{
+    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
     VirtualClock clock;
     Application::pointer appPtr = Application::create(clock, cfg);
-    Application &app = *appPtr;
+    Application& app = *appPtr;
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
 
     auto testManager = TestManager::make(app);
+
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& externalIDHelper = storageHelper.getExternalSystemAccountIDHelper();
+
     auto root = Account{getRoot(), Salt(1)};
 
     auto createAccountHelper = CreateAccountTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
 
     auto createReceiverAccountRoleOp = manageAccountRoleTestHelper.
-            buildCreateRoleOp(R"({"name":"empty_role"})", {});
+        buildCreateRoleOp(R"({"name":"empty_role"})", {});
 
     auto emptyAccountRoleID = manageAccountRoleTestHelper.applyTx(
-            root, createReceiverAccountRoleOp).success().roleID;
+        root, createReceiverAccountRoleOp).success().roleID;
 
     auto randomAccount = SecretKey::random();
     auto createAccountTestBuilder = CreateAccountTestBuilder()
-            .setSource(root)
-            .setToPublicKey(randomAccount.getPublicKey())
-            .addBasicSigner()
-            .setRoleID(emptyAccountRoleID);
+        .setSource(root)
+        .setToPublicKey(randomAccount.getPublicKey())
+        .addBasicSigner()
+        .setRoleID(emptyAccountRoleID);
 
     int32 BitcoinExternalSystemType = 1;
     int32 EthereumExternalSystemType = 2;
 
-    SECTION("External system account id are not generated") {
-        auto externalSystemAccountIDHelper = ExternalSystemAccountIDHelperLegacy::Instance();
+    SECTION("External system account id are not generated")
+    {
         createAccountHelper.applyTx(createAccountTestBuilder);
-        const auto btcKey = externalSystemAccountIDHelper->load(randomAccount.getPublicKey(),
-                                                                BitcoinExternalSystemType, app.getDatabase());
+        const auto btcKey = externalIDHelper.load(randomAccount.getPublicKey(),
+                                                  BitcoinExternalSystemType);
         REQUIRE(!btcKey);
 
-        const auto ethKey = externalSystemAccountIDHelper->load(randomAccount.getPublicKey(),
-                                                                EthereumExternalSystemType, app.getDatabase());
+        const auto ethKey = externalIDHelper.load(randomAccount.getPublicKey(),
+                                                  EthereumExternalSystemType);
         REQUIRE(!ethKey);
 
-        SECTION("update account not allowed") {
+        SECTION("update account not allowed")
+        {
             createAccountHelper.applyTx(createAccountTestBuilder
-                                                .setResultCode(CreateAccountResultCode::ALREADY_EXISTS)
-                                                .setTxResultCode(TransactionResultCode::txFAILED));
+                                            .setResultCode(CreateAccountResultCode::ALREADY_EXISTS)
+                                            .setTxResultCode(TransactionResultCode::txFAILED));
         }
     }
 
@@ -73,28 +79,28 @@ TEST_CASE("create account", "[tx][create_account]") {
 
         AccountID validReferrer = root.key.getPublicKey();
         auto accountTestBuilder = createAccountTestBuilder
-                .setReferrer(&validReferrer)
-                .setToPublicKey(account.getPublicKey())
-                .addBasicSigner()
-                .setRoleID(emptyAccountRoleID);
+            .setReferrer(&validReferrer)
+            .setToPublicKey(account.getPublicKey())
+            .addBasicSigner()
+            .setRoleID(emptyAccountRoleID);
         createAccountHelper.applyTx(accountTestBuilder);
     }
 
     SECTION("Non root account can't create")
     {
-            auto emptyRoleID = manageAccountRoleTestHelper.createTxSenderRole(root);
-            auto accountCreator = SecretKey::random();
-            auto notAllowedBuilder = createAccountTestBuilder
-                    .setToPublicKey(accountCreator.getPublicKey())
-                    .addBasicSigner()
-                    .setRoleID(emptyRoleID);
-            createAccountHelper.applyTx(notAllowedBuilder);
-            auto notRoot = Account{accountCreator, Salt(1)};
-            auto toBeCreated = SecretKey::random();
-            auto toBeCreatedHelper = notAllowedBuilder.setToPublicKey(toBeCreated.getPublicKey())
-                    .setSource(notRoot)
-                    .setOperationResultCode(OperationResultCode::opNO_ROLE_PERMISSION)
-                    .setTxResultCode(TransactionResultCode::txFAILED);
-            createAccountHelper.applyTx(toBeCreatedHelper);
+        auto emptyRoleID = manageAccountRoleTestHelper.createTxSenderRole(root);
+        auto accountCreator = SecretKey::random();
+        auto notAllowedBuilder = createAccountTestBuilder
+            .setToPublicKey(accountCreator.getPublicKey())
+            .addBasicSigner()
+            .setRoleID(emptyRoleID);
+        createAccountHelper.applyTx(notAllowedBuilder);
+        auto notRoot = Account{accountCreator, Salt(1)};
+        auto toBeCreated = SecretKey::random();
+        auto toBeCreatedHelper = notAllowedBuilder.setToPublicKey(toBeCreated.getPublicKey())
+            .setSource(notRoot)
+            .setOperationResultCode(OperationResultCode::opNO_ROLE_PERMISSION)
+            .setTxResultCode(TransactionResultCode::txFAILED);
+        createAccountHelper.applyTx(toBeCreatedHelper);
     }
 }

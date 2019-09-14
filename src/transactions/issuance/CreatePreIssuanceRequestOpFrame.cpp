@@ -26,11 +26,8 @@ bool
 CreatePreIssuanceRequestOpFrame::doApply(Application& app,
                             StorageHelper &storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-	if (reviewableRequestHelper->isReferenceExist(db, getSourceID(), mCreatePreIssuanceRequest.request.reference)) {
+	auto& requestHelper = storageHelper.getReviewableRequestHelper();
+	if (requestHelper.isReferenceExist(getSourceID(), mCreatePreIssuanceRequest.request.reference)) {
 		innerResult().code(CreatePreIssuanceRequestResultCode::REFERENCE_DUPLICATION);
 		return false;
 	}
@@ -66,10 +63,14 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	ReviewableRequestEntry::_body_t requestBody;
 	requestBody.type(ReviewableRequestType::CREATE_PRE_ISSUANCE);
 	requestBody.preIssuanceRequest() = mCreatePreIssuanceRequest.request;
-	auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),
+
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
+
+    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(),
                                                              app.getAdminID(), reference,
                                                              requestBody, ledgerManager.getCloseTime());
-	EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+
+    requestHelper.storeAdd(request->mEntry);
 
 	auto& keyValueHelper = storageHelper.getKeyValueHelper();
 	uint32_t allTasks = 0;
@@ -81,11 +82,11 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	}
 
 	request->setTasks(allTasks);
-	EntryHelperProvider::storeChangeEntry(delta, db, request->mEntry);
+	requestHelper.storeChange(request->mEntry);
 
     bool fulfilled = false;
     if (allTasks == 0) {
-		auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, delta, request);
+		auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, storageHelper, request);
 		if (result.code() != ReviewRequestResultCode::SUCCESS) {
 			throw std::runtime_error("Failed to review preissuance request");
 		}

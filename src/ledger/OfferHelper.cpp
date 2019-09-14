@@ -289,6 +289,36 @@ namespace stellar {
         return retOffer;
     }
 
+bool OfferHelper::exists(Database &db, AssetCode const &code, uint64_t *orderBookIDPtr)
+{
+    auto timer = db.getSelectTimer("offer-for-asset-exists");
+    string sql = "SELECT NULL FROM offer "
+                 "WHERE base_asset_code = :code "
+                 "OR quote_asset_code = :code";
+    if (orderBookIDPtr != nullptr)
+    {
+        sql += " AND order_book_id = :order_book_id";
+    }
+    sql = "SELECT EXISTS (" + sql + ")";
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+
+    string assetCode = code;
+    st.exchange(use(assetCode, "code"));
+    if (orderBookIDPtr != nullptr)
+    {
+        uint64_t orderBookID = *orderBookIDPtr;
+        st.exchange(use(orderBookID, "order_book_id"));
+    }
+
+    auto exists = 0;
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 OfferFrame::pointer OfferHelper::loadOffer(AccountID const& accountID,
     uint64_t offerID, uint64_t orderBookID, Database& db, LedgerDelta* delta)
 {

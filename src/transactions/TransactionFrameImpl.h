@@ -21,14 +21,13 @@ class session;
 namespace stellar
 {
 
-class TransactionFrameImpl : public TransactionFrame
-{
-  private:
-	SignatureValidator::pointer mSignatureValidator;
+class TransactionFrameImpl : public TransactionFrame {
+private:
+    SignatureValidator::pointer mSignatureValidator;
 
-	bool isLicenseOp();
+    bool isLicenseOp();
 
-  protected:
+protected:
     TransactionEnvelope mEnvelope;
     TransactionResult mResult;
 
@@ -40,38 +39,48 @@ class TransactionFrameImpl : public TransactionFrame
 
     std::vector<std::shared_ptr<OperationFrame>> mOperations;
 
-    bool loadAccount(LedgerDelta* delta, Database& app);
-    bool commonValid(Application& app, LedgerDelta* delta);
+    bool loadAccount(StorageHelper& storageHelper);
+
+    bool commonValid(Application& app, LedgerDelta *delta);
+
     bool checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
                          StorageHelper& storageHelper);
 
-	bool checkAllSignaturesUsed();
-	void resetSignatureTracker();
+    bool checkAllSignaturesUsed();
+
+    void resetSignatureTracker();
+
     void resetResults();
+
     void markResultFailed();
 
-    bool applyTx(LedgerDelta& delta, TransactionMeta& meta, Application& app, std::vector<LedgerDelta::KeyEntryMap>& stateBeforeOp);
+    bool
+    applyTx(LedgerDelta& delta, TransactionMeta& meta, Application& app, std::vector<LedgerDelta::KeyEntryMap>& stateBeforeOp);
+
     static void unwrapNestedException(const std::exception& e, std::stringstream& str);
 
-  public:
+public:
     TransactionFrameImpl(Hash const& networkID,
                          TransactionEnvelope const& envelope);
+
     TransactionFrameImpl(TransactionFrameImpl const&) = delete;
+
     TransactionFrameImpl() = delete;
 
     Hash const& getFullHash() const;
+
     Hash const& getContentsHash() const;
 
-	SignatureValidator::pointer getSignatureValidator()
-	{
-		if (!mSignatureValidator)
-		{
-			mSignatureValidator = std::make_shared<SignatureValidatorImpl>(
-			        getContentsHash(), getEnvelope().signatures);
-		}
+    SignatureValidator::pointer getSignatureValidator()
+    {
+        if (!mSignatureValidator)
+        {
+            mSignatureValidator = std::make_shared<SignatureValidatorImpl>(
+                getContentsHash(), getEnvelope().signatures);
+        }
 
-		return mSignatureValidator;
-	}
+        return mSignatureValidator;
+    }
 
     AccountFrame::pointer
     getSourceAccountPtr() const
@@ -106,7 +115,9 @@ class TransactionFrameImpl : public TransactionFrame
     }
 
     TransactionResultPair getResultPair() const;
+
     TransactionEnvelope const& getEnvelope() const;
+
     TransactionEnvelope& getEnvelope();
 
     Salt
@@ -141,7 +152,7 @@ class TransactionFrameImpl : public TransactionFrame
 
     void addSignature(SecretKey const& secretKey);
 
-	// Checks signature, if not valid - returns false and sets valid error code
+    // Checks signature, if not valid - returns false and sets valid error code
     bool doCheckSignature(Application& app, StorageHelper& storageHelper,
                           AccountID const& accountID);
 
@@ -152,14 +163,15 @@ class TransactionFrameImpl : public TransactionFrame
 
     // apply this transaction to the current ledger
     // returns true if successfully applied
-    bool apply(LedgerDelta& delta, TransactionMeta& meta, Application& app, std::vector<LedgerDelta::KeyEntryMap>& stateBeforeOp);
+    bool
+    apply(LedgerDelta& delta, TransactionMeta& meta, Application& app, std::vector<LedgerDelta::KeyEntryMap>& stateBeforeOp);
 
     // version without meta
     bool apply(LedgerDelta& delta, Application& app);
 
     StellarMessage toStellarMessage() const;
 
-    AccountFrame::pointer loadAccount(LedgerDelta* delta, Database& app,
+    AccountFrame::pointer loadAccount(StorageHelper& storageHelper,
                                       AccountID const& accountID);
 
 
@@ -173,8 +185,8 @@ class TransactionFrameImpl : public TransactionFrame
                              int txindex) const;
 
     void storeTransactionTiming(LedgerManager& ledgerManager,
-                                      uint64 maxTime) const;
+                                uint64 maxTime) const;
 
-	void clearCached();
+    void clearCached();
 };
 }

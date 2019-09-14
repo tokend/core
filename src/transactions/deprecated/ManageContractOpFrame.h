@@ -6,8 +6,7 @@
 
 namespace stellar
 {
-class ManageContractOpFrame : public OperationFrame
-{
+class ManageContractOpFrame : public OperationFrame {
     bool
     isSupported(LedgerManager& lm) const override
     {
@@ -40,34 +39,36 @@ class ManageContractOpFrame : public OperationFrame
 
     bool ensureIsAllowed(std::vector<AccountID> validSources);
 
-    bool tryAddContractDetails(ContractFrame::pointer contractFrame, Application &app,
-                               Database &db, LedgerDelta &delta);
+    bool tryAddContractDetails(ContractFrame::pointer contractFrame, Application& app,
+                               StorageHelper& storageHelper);
 
-    bool tryConfirmCompleted(ContractFrame::pointer contractFrame, Database &db, LedgerDelta &delta);
+    bool tryConfirmCompleted(ContractFrame::pointer contractFrame, StorageHelper& storageHelper);
 
     bool tryCompleted(ContractFrame::pointer contractFrame,
                       std::vector<ReviewableRequestFrame::pointer> invoiceRequests,
-                      Database &db, LedgerDelta &delta);
+                      StorageHelper& storageHelper);
 
     bool checkIsInvoicesApproved(std::vector<ReviewableRequestFrame::pointer> invoiceRequests);
 
     bool tryStartDispute(ContractFrame::pointer contractFrame,
-                         Application &app, Database &db, LedgerDelta &delta);
+                         Application& app, StorageHelper& storageHelper);
 
-    bool tryResolveDispute(ContractFrame::pointer contractFrame, Database &db, LedgerDelta &delta);
+    bool tryResolveDispute(ContractFrame::pointer contractFrame, StorageHelper& storageHelper);
 
-    bool revertInvoicesAmounts(ContractFrame::pointer contractFrame, Database& db, LedgerDelta& delta);
+    bool revertInvoicesAmounts(ContractFrame::pointer contractFrame, StorageHelper& storageHelper);
 
-    void unlockApprovedInvoicesAmounts(ContractFrame::pointer contractFrame, Database& db, LedgerDelta & delta);
+    void unlockApprovedInvoicesAmounts(ContractFrame::pointer contractFrame, StorageHelper& storageHelper);
+
 public:
 
-    static uint64_t obtainMaxContractDetailLength(Application& app, Database& db, LedgerDelta& delta);
+    static uint64_t obtainMaxContractDetailLength(Application& app, StorageHelper& storageHelper);
 
     ManageContractOpFrame(Operation const& op, OperationResult& res,
-                           TransactionFrame& parentTx);
+                          TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 
     static ManageContractResultCode

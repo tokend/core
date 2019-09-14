@@ -37,7 +37,7 @@ static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {
 static const std::unordered_set<std::string> TESTING_SUGGESTED_OPTIONS = {
         "ALLOW_LOCALHOST_FOR_TESTING"};
 
-Config::Config() : NODE_SEED(SecretKey::random()), 
+Config::Config() : NODE_SEED(SecretKey::random()),
 masterID(PubKeyUtils::fromStrKey("GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"))
 {
     // fill in defaults

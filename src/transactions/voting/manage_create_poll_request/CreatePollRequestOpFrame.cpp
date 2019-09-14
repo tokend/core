@@ -3,7 +3,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/KeyValueHelper.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 
@@ -11,20 +11,19 @@ namespace stellar
 {
 
 CreatePollRequestOpFrame::CreatePollRequestOpFrame(Operation const& op,
-        OperationResult& res, TransactionFrame& parentTx)
-        : ManageCreatePollRequestOpFrame(op, res, parentTx)
-        , mCreatePollRequestData(mManageCreatePollRequest.data.createData())
+                                                   OperationResult& res, TransactionFrame& parentTx)
+    : ManageCreatePollRequestOpFrame(op, res, parentTx), mCreatePollRequestData(mManageCreatePollRequest.data.createData())
 {
 }
 
 bool
 CreatePollRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                              std::vector<OperationCondition>& result) const
+                                                    std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_POLL);
     resource.reviewableRequest().details.createPoll().permissionType =
-            mCreatePollRequestData.request.permissionType;
+        mCreatePollRequestData.request.permissionType;
 
     if (mCreatePollRequestData.allTasks)
     {
@@ -39,12 +38,12 @@ CreatePollRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper
 
 bool
 CreatePollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                             std::vector<SignerRequirement>& result) const
+                                                   std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_POLL);
     resource.reviewableRequest().details.createPoll().permissionType =
-            mCreatePollRequestData.request.permissionType;
+        mCreatePollRequestData.request.permissionType;
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
     resource.reviewableRequest().allTasks = 0;
@@ -59,8 +58,8 @@ CreatePollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 }
 
 bool
-CreatePollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper,
-                                  LedgerManager &ledgerManager)
+CreatePollRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                  LedgerManager& ledgerManager)
 {
     innerResult().code(ManageCreatePollRequestResultCode::SUCCESS);
 
@@ -78,7 +77,7 @@ CreatePollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
 
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-            app.getAdminID(), nullptr, ledgerManager.getCloseTime());
+                                                          app.getAdminID(), nullptr, ledgerManager.getCloseTime());
 
     if (!tryPopulateRequest(storageHelper, requestFrame->getRequestEntry()))
     {
@@ -86,7 +85,7 @@ CreatePollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
     }
 
     Database& db = storageHelper.getDatabase();
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, requestFrame->mEntry);
 
     innerResult().success().details.action(ManageCreatePollRequestAction::CREATE);
     innerResult().success().details.response().fulfilled = false;
@@ -102,8 +101,8 @@ CreatePollRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper
 }
 
 bool
-CreatePollRequestOpFrame::tryPopulateRequest(StorageHelper &storageHelper,
-                                             ReviewableRequestEntry &requestEntry)
+CreatePollRequestOpFrame::tryPopulateRequest(StorageHelper& storageHelper,
+                                             ReviewableRequestEntry& requestEntry)
 {
     requestEntry.body.type(ReviewableRequestType::CREATE_POLL);
     requestEntry.body.createPollRequest() = mCreatePollRequestData.request;
@@ -125,24 +124,24 @@ CreatePollRequestOpFrame::tryPopulateRequest(StorageHelper &storageHelper,
 
 void
 CreatePollRequestOpFrame::tryAutoApprove(Application& app, StorageHelper& storageHelper,
-        ReviewableRequestFrame::pointer request)
+                                         ReviewableRequestFrame::pointer request)
 {
     auto& ledgerManager = app.getLedgerManager();
     auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app,
-            ledgerManager, storageHelper.mustGetLedgerDelta(), request);
+                                                                   ledgerManager, storageHelper, request);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state on create poll request: "
-                << "tryApproveRequest expected to be success, but was: "
-                << xdr::xdr_to_string(result.code());
+            << "Unexpected state on create poll request: "
+            << "tryApproveRequest expected to be success, but was: "
+            << xdr::xdr_to_string(result.code());
         throw std::runtime_error("Unexpected state: "
                                  "tryApproveRequest expected to be success");
     }
 
     innerResult().success().details.response().fulfilled = true;
     innerResult().success().details.response().pollID.activate() =
-            result.success().typeExt.createPoll().pollID;
+        result.success().typeExt.createPoll().pollID;
 }
 
 bool
@@ -158,7 +157,7 @@ CreatePollRequestOpFrame::checkDates(LedgerManager& lm)
 }
 
 bool
-CreatePollRequestOpFrame::doCheckValid(Application &app)
+CreatePollRequestOpFrame::doCheckValid(Application& app)
 {
     if (!isValidJson(mCreatePollRequestData.request.creatorDetails))
     {
@@ -185,11 +184,11 @@ std::vector<std::string>
 CreatePollRequestOpFrame::makeTasksKeys() const
 {
     return
-    {
-        ManageKeyValueOpFrame::makeCreatePollKey(std::to_string(
+        {
+            ManageKeyValueOpFrame::makeCreatePollKey(std::to_string(
                 mCreatePollRequestData.request.permissionType)),
-        ManageKeyValueOpFrame::makeCreatePollKey("*")
-    };
+            ManageKeyValueOpFrame::makeCreatePollKey("*")
+        };
 }
 
 }

@@ -8,6 +8,8 @@
 #include <util/Timer.h>
 #include <main/Application.h>
 #include "ledger/LedgerDeltaImpl.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/StatisticsFrame.h"
 #include "ledger/EntryHelperLegacy.h"
@@ -19,8 +21,8 @@
 #include "transactions/test/test_helper/ManageLimitsTestHelper.h"
 #include "transactions/test/test_helper/IssuanceRequestHelper.h"
 #include "transactions/test/test_helper/ManageAssetTestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "transactions/test/test_helper/ManageAssetPairTestHelper.h"
+#include "ledger/StatisticsV2Frame.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -50,7 +52,7 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
     StatisticsV2Frame statisticsV2Frame(ledgerEntry);
 
     time_t startingPoint = txtest::getTestDate(1, 1, 2017);
-    uint64_t amount = UINT64_MAX/2;
+    uint64_t amount = UINT64_MAX / 2;
     statisticsV2Frame.add(amount, startingPoint);
 
     EntryHelperProvider::storeAddEntry(delta, db, statisticsV2Frame.mEntry);
@@ -170,7 +172,7 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
         ManageAssetPairTestHelper manageAssetPairTestHelper(testManager);
         ManageKeyValueTestHelper manageKeyValueHelper(testManager);
 
-        auto root = Account{ getRoot(), Salt(0) };
+        auto root = Account{getRoot(), Salt(0)};
         AssetCode assetCode("SCT");
 
         longstring assetKey = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
@@ -186,7 +188,7 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
         manageKeyValueHelper.setKey(key)->setUi32Value(0);
         manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
 
-        issuanceTestHelper.createAssetWithPreIssuedAmount(root, assetCode, 10*ONE, root);
+        issuanceTestHelper.createAssetWithPreIssuedAmount(root, assetCode, 10 * ONE, root);
         manageAssetTestHelper.updateAsset(root, assetCode, root, static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
                                                                  static_cast<uint32_t>(AssetPolicy::TRANSFERABLE));
 
@@ -199,25 +201,27 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
 
 
         auto op = manageLimitsTestHelper.createManageLimitsOp(
-                assetCode, StatsOpType::PAYMENT_OUT, false, 3*ONE, INT64_MAX, INT64_MAX, INT64_MAX, corporateKey);
+            assetCode, StatsOpType::PAYMENT_OUT, false, 3 * ONE, INT64_MAX, INT64_MAX, INT64_MAX, corporateKey);
 
         manageLimitsTestHelper.applyManageLimitsTx(root, op);
 
-        auto payerBalance = BalanceHelperLegacy::Instance()->loadBalance(*corporateKey, assetCode, db, nullptr);
+        auto payerBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(*corporateKey, assetCode);
         REQUIRE(payerBalance);
 
         uint32_t issuanceTasks = 0;
-        issuanceTestHelper.applyCreateIssuanceRequest(root, assetCode, 10*ONE, payerBalance->getBalanceID(),
+        issuanceTestHelper.applyCreateIssuanceRequest(root, assetCode, 10 * ONE, payerBalance->getBalanceID(),
                                                       SecretKey::random().getStrKeyPublic(), &issuanceTasks);
 
         auto feeData = paymentV2TestHelper.createFeeData(0, 0);
         paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(),
-                paymentV2TestHelper.createDestinationForAccount(receiver.getPublicKey()), 2*ONE,
-                paymentV2TestHelper.createPaymentFeeData(feeData, feeData, true), "sdd", "dlsd");
+                                           paymentV2TestHelper.createDestinationForAccount(receiver.getPublicKey()),
+                                           2 * ONE,
+                                           paymentV2TestHelper.createPaymentFeeData(feeData, feeData, true), "sdd", "dlsd");
 
         paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(),
-                paymentV2TestHelper.createDestinationForAccount(receiver.getPublicKey()), 2*ONE,
-                paymentV2TestHelper.createPaymentFeeData(feeData, feeData, true), "dasftd", "dgflsd",
-                nullptr, PaymentResultCode::LIMITS_EXCEEDED);
+                                           paymentV2TestHelper.createDestinationForAccount(receiver.getPublicKey()),
+                                           2 * ONE,
+                                           paymentV2TestHelper.createPaymentFeeData(feeData, feeData, true), "dasftd", "dgflsd",
+                                           nullptr, PaymentResultCode::LIMITS_EXCEEDED);
     }
 }

@@ -34,7 +34,7 @@ class CreatePaymentRequestOpFrame : public OperationFrame
         return mResult.tr().createPaymentRequestResult();
     }
 
-    bool tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+    bool tryAutoApprove(Application& app, StorageHelper& sh,
                         ReviewableRequestFrame::pointer request);
 
     std::vector<std::string> makeTasksKeyVector(AssetCode const& assetCode);

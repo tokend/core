@@ -10,7 +10,9 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReferenceFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
 #include "main/Application.h"
 
 namespace stellar
@@ -20,57 +22,64 @@ using namespace std;
 using xdr::operator==;
 
 bool
-ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application & app, LedgerDelta & delta,
-													   LedgerManager & ledgerManager,
-													   ReviewableRequestFrame::pointer request)
+ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
+                                                       LedgerManager& ledgerManager,
+                                                       ReviewableRequestFrame::pointer request)
 {
-	if (request->getRequestType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CREATE_PRE_ISSUANCE, but got " << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
-		throw std::invalid_argument("Unexpected request type for review preIssuance creation request");
-	}
+    if (request->getRequestType() != ReviewableRequestType::CREATE_PRE_ISSUANCE)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected request type. Expected CREATE_PRE_ISSUANCE, but got "
+                                               << xdr::xdr_traits<ReviewableRequestType>::enum_name(request->getRequestType());
+        throw std::invalid_argument("Unexpected request type for review preIssuance creation request");
+    }
 
-	auto preIssuanceCreationRequest = request->getRequestEntry().body.preIssuanceRequest();
-	Database& db = ledgerManager.getDatabase();
+    auto preIssuanceCreationRequest = request->getRequestEntry().body.preIssuanceRequest();
 
-	handleTasks(db, delta, request);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
-	if (!request->canBeFulfilled(ledgerManager)){
-		innerResult().code(ReviewRequestResultCode::SUCCESS);
-		innerResult().success().fulfilled = false;
-		return true;
-	}
+    if (!request->canBeFulfilled(ledgerManager))
+    {
+        innerResult().code(ReviewRequestResultCode::SUCCESS);
+        innerResult().success().fulfilled = false;
+        return true;
+    }
 
-	createReference(delta, db, request->getRequestor(), request->getReference());
+    createReference(storageHelper, request->getRequestor(), request->getReference());
 
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto asset = assetHelper->loadAsset(preIssuanceCreationRequest.asset, db, &delta);
-	if (!asset) {
-		CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state. Expected asset to exist for pre issuance request. RequestID: " << request->getRequestID();
-		throw std::runtime_error("Expected asset for pre issuance request to exist");
-	}
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto asset = assetHelper.loadAsset(preIssuanceCreationRequest.asset);
+    if (!asset)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected state. Expected asset to exist for pre issuance request. RequestID: "
+            << request->getRequestID();
+        throw std::runtime_error("Expected asset for pre issuance request to exist");
+    }
 
-	if (!asset->tryAddAvailableForIssuance(preIssuanceCreationRequest.amount))
-	{
-		innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
-		return false;
-	}
+    if (!asset->tryAddAvailableForIssuance(preIssuanceCreationRequest.amount))
+    {
+        innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);
+        return false;
+    }
 
-	EntryHelperProvider::storeChangeEntry(delta, db, asset->mEntry);
-	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
-	innerResult().code(ReviewRequestResultCode::SUCCESS);
-	innerResult().success().fulfilled = true;
-	return true;
+    assetHelper.storeChange(asset->mEntry);
+    requestHelper.storeDelete(request->getKey());
+    innerResult().code(ReviewRequestResultCode::SUCCESS);
+    innerResult().success().fulfilled = true;
+    return true;
 }
 
-bool ReviewPreIssuanceCreationRequestOpFrame::handleReject(Application & app, LedgerDelta & delta, LedgerManager & ledgerManager, ReviewableRequestFrame::pointer request)
+bool
+ReviewPreIssuanceCreationRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-	innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
-	return false;
+    innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
+    return false;
 }
 
 ReviewPreIssuanceCreationRequestOpFrame::ReviewPreIssuanceCreationRequestOpFrame(
-		Operation const & op, OperationResult & res, TransactionFrame & parentTx)
-		: ReviewRequestOpFrame(op, res, parentTx)
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 

@@ -6,11 +6,9 @@
 #include <transactions/review_request/ReviewIssuanceCreationRequestOpFrame.h>
 #include <main/Application.h>
 #include <transactions/review_request/ReviewRequestHelper.h>
-#include <ledger/StorageHelper.h>
+#include "ledger/StorageHelper.h"
 #include "ChangeAssetMaxIssuanceOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/AssetHelperLegacy.h"
 
 namespace stellar
 {
@@ -18,9 +16,9 @@ using namespace std;
 using xdr::operator==;
 
 ChangeAssetMaxIssuanceOpFrame::ChangeAssetMaxIssuanceOpFrame(Operation const& op,
-                                                         OperationResult& res,
-                                                         TransactionFrame&
-                                                         parentTx)
+                                                             OperationResult& res,
+                                                             TransactionFrame&
+                                                             parentTx)
     : ManageAssetOpFrame(op, res, parentTx)
 {
     mUpdateMaxIssuance = mManageAsset.request.updateMaxIssuance();
@@ -28,7 +26,7 @@ ChangeAssetMaxIssuanceOpFrame::ChangeAssetMaxIssuanceOpFrame(Operation const& op
 
 bool
 ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                          std::vector<OperationCondition>& result) const
+                                                         std::vector<OperationCondition>& result) const
 {
     auto asset = storageHelper.getAssetHelper().loadAsset(mUpdateMaxIssuance.assetCode);
     if (!asset)
@@ -50,7 +48,7 @@ ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageH
 
 bool
 ChangeAssetMaxIssuanceOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                        std::vector<SignerRequirement>& result) const
+                                                        std::vector<SignerRequirement>& result) const
 {
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(mUpdateMaxIssuance.assetCode);
 
@@ -63,12 +61,12 @@ ChangeAssetMaxIssuanceOpFrame::tryGetSignerRequirements(StorageHelper& storageHe
     return true;
 }
 
-bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta,
-                                          LedgerManager& ledgerManager)
+bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                            LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto assetFrame = AssetHelperLegacy::Instance()->
-        loadAsset(mUpdateMaxIssuance.assetCode, getSourceID(), db, &delta);
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    auto assetFrame = assetHelper.loadAsset(mUpdateMaxIssuance.assetCode, getSourceID());
     if (!assetFrame)
     {
         innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);
@@ -77,14 +75,16 @@ bool ChangeAssetMaxIssuanceOpFrame::doApply(Application& app, LedgerDelta& delta
 
     auto& assetEntry = assetFrame->getAsset();
     assetEntry.maxIssuanceAmount = mUpdateMaxIssuance.maxIssuanceAmount;
-    try {
+    try
+    {
         assetFrame->ensureValid();
     }
-    catch (...) {
+    catch (...)
+    {
         innerResult().code(ManageAssetResultCode::INVALID_MAX_ISSUANCE_AMOUNT);
         return false;
     }
-    AssetHelperLegacy::Instance()->storeChange(delta, db, assetFrame->mEntry);
+    assetHelper.storeChange(assetFrame->mEntry);
     innerResult().code(ManageAssetResultCode::SUCCESS);
     innerResult().success().requestID = 0;
     innerResult().success().fulfilled = true;

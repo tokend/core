@@ -31,7 +31,7 @@ class CreateAtomicSwapBidRequestOpFrame : public OperationFrame
     }
 
     AtomicSwapAskFrame::pointer
-    loadAtomicSwapAsk(CreateAtomicSwapBidRequest aSwapRequest, Database& db, LedgerDelta& delta);
+    loadAtomicSwapAsk(CreateAtomicSwapBidRequest aSwapRequest, StorageHelper& storageHelper);
 
     bool
     checkAmounts(StorageHelper& storageHelper, AtomicSwapAskFrame::pointer const& bidFrame);

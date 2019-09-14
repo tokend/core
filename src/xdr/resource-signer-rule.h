@@ -1327,6 +1327,7 @@ enum class SignerRuleAction : std::int32_t {
   UPDATE_END_TIME = 16,
   CREATE_WITH_TASKS = 17,
   CREATE_FOR_OTHER_WITH_TASKS = 18,
+  REMOVE_FOR_OTHER = 19,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SignerRuleAction>
@@ -1372,6 +1373,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       return "CREATE_WITH_TASKS";
     case ::stellar::SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS:
       return "CREATE_FOR_OTHER_WITH_TASKS";
+    case ::stellar::SignerRuleAction::REMOVE_FOR_OTHER:
+      return "REMOVE_FOR_OTHER";
     default:
       return nullptr;
     }
@@ -1395,7 +1398,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       (int32_t)::stellar::SignerRuleAction::CLOSE,
       (int32_t)::stellar::SignerRuleAction::UPDATE_END_TIME,
       (int32_t)::stellar::SignerRuleAction::CREATE_WITH_TASKS,
-      (int32_t)::stellar::SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS
+      (int32_t)::stellar::SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS,
+      (int32_t)::stellar::SignerRuleAction::REMOVE_FOR_OTHER
     };
     return _xdr_enum_vec;
   }

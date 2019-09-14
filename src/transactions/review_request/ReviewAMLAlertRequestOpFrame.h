@@ -14,15 +14,15 @@ public:
                                  TransactionFrame& parentTx);
 protected:
     bool
-    handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                   ReviewableRequestFrame::pointer request) override;
 
     bool
-    handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                  ReviewableRequestFrame::pointer request) override;
 
     bool
-    handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    handlePermanentReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                           ReviewableRequestFrame::pointer request) override;
 
 

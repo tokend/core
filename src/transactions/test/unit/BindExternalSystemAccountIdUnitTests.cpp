@@ -43,6 +43,7 @@
 #include "transactions/test/mocks/MockVoteHelper.h"
 #include "transactions/test/mocks/MockPollHelper.h"
 #include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
+#include "transactions/test/mocks/MockReviewableRequestHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
@@ -80,7 +81,7 @@ TEST_CASE("bind external system account_id - unit test",
     operation.sourceAccount =
         xdr::pointer<AccountID>(new AccountID(CryptoKeyType::KEY_TYPE_ED25519));
     operation.sourceAccount->ed25519() = hexToBin256(
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB");
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB");
     OperationResult operationResult;
 
     AccountFrame::pointer accountFrameFake =
@@ -107,24 +108,24 @@ TEST_CASE("bind external system account_id - unit test",
     ON_CALL(storageHelperMock, getKeyValueHelper())
         .WillByDefault(ReturnRef(keyValueHelperMock));
     ON_CALL(storageHelperMock, getSignerHelper())
-            .WillByDefault(ReturnRef(signerHelperMock));
+        .WillByDefault(ReturnRef(signerHelperMock));
     ON_CALL(storageHelperMock, getSignerRuleHelper())
-            .WillByDefault(ReturnRef(signerRuleHelperMock));
+        .WillByDefault(ReturnRef(signerRuleHelperMock));
     ON_CALL(storageHelperMock, getSignerRoleHelper())
-            .WillByDefault(ReturnRef(signerRoleHelperMock));
+        .WillByDefault(ReturnRef(signerRoleHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDPoolEntryHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDPoolEntryHelperMock));
     ON_CALL(accountRuleVerifierMock, isAllowed(_, _))
-            .WillByDefault(Return(true));
+        .WillByDefault(Return(true));
 
     BindExternalSystemAccountIdOpFrame opFrame(operation, operationResult,
                                                transactionFrameMock);
     SECTION("Check validity")
     {
         EXPECT_CALL(transactionFrameMock,
-                    loadAccount(&ledgerDeltaMock, Ref(dbMock),
+                    loadAccount(_,
                                 *operation.sourceAccount))
             .WillOnce(Return(accountFrameFake));
         REQUIRE(opFrame.checkValid(appMock, accountRuleVerifierMock, &ledgerDeltaMock));

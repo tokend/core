@@ -5,8 +5,7 @@
 namespace stellar
 {
 
-class CancelAtomicSwapAskOpFrame : public OperationFrame
-{
+class CancelAtomicSwapAskOpFrame : public OperationFrame {
 private:
     CancelAtomicSwapAskOp const& mCancelASwapBid;
 
@@ -30,13 +29,13 @@ private:
     }
 
 public:
-    CancelAtomicSwapAskOpFrame(Operation const &op, OperationResult &opRes,
-                          TransactionFrame &parentTx);
+    CancelAtomicSwapAskOpFrame(Operation const& op, OperationResult& opRes,
+                               TransactionFrame& parentTx);
 
-    bool doApply(Application &app, LedgerDelta &delta,
-                 LedgerManager &ledgerManager) override;
+    bool doApply(Application& app, StorageHelper& storageHelper,
+                 LedgerManager& ledgerManager) override;
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 
     static CancelAtomicSwapAskResultCode getInnerCode(OperationResult& res)
     {

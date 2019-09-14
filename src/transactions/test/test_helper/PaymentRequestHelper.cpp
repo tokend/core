@@ -5,6 +5,7 @@
 #include "PaymentRequestHelper.h"
 #include "ReviewPaymentRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/payment/CreatePaymentRequestOpFrame.h"
 
@@ -40,7 +41,6 @@ PaymentRequestHelper::createApprovedPayment(Account& root, Account& source,
         return result;
     }
 
-
     auto reviewer = ReviewPaymentRequestHelper(mTestManager);
     return reviewer.applyReviewRequestTx(
         root, requestCreationResult.success().requestID,
@@ -54,9 +54,9 @@ PaymentRequestHelper::applyCreatePaymentRequest(
     CreatePaymentRequestResultCode expectedResult,
     PaymentResultCode paymentResultCode)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(
-        mTestManager->getDB().getSession());
+    auto& reviewableRequestHelper =
+        mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto reviewableRequestCountBeforeTx = reviewableRequestHelper.countObjects();
 
     auto txFrame = createPaymentRequestTx(source, request, allTasks);
     mTestManager->applyCheck(txFrame);
@@ -71,8 +71,7 @@ PaymentRequestHelper::applyCreatePaymentRequest(
     auto actualResultCode = CreatePaymentRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
-    auto reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(
-        mTestManager->getDB().getSession());
+    auto reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
     if (expectedResult != CreatePaymentRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx ==
@@ -91,8 +90,7 @@ PaymentRequestHelper::applyCreatePaymentRequest(
 CreatePaymentRequest
 PaymentRequestHelper::createPaymentRequest(
     BalanceID source, PaymentOp::_destination_t destination, int64_t amount,
-    PaymentFeeData feeData, std::string reference,
-    std::string subject)
+    PaymentFeeData feeData, std::string reference, std::string subject)
 {
 
     PaymentOp payment;

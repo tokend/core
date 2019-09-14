@@ -4,15 +4,15 @@
 
 #include <transactions/review_request/ReviewRequestOpFrame.h>
 #include <ledger/FeeHelper.h>
-#include <ledger/AccountHelperLegacy.h>
+#include "ledger/AccountHelper.h"
 #include "ReviewIssuanceRequestHelper.h"
 #include "ledger/AssetFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/BalanceFrame.h"
-#include "ledger/BalanceHelperLegacy.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
-
 
 
 namespace stellar
@@ -24,33 +24,45 @@ namespace txtest
 ReviewIssuanceChecker::ReviewIssuanceChecker(
     const TestManager::pointer& testManager, const uint64_t requestID) : ReviewChecker(testManager)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
-    if (!request || request->getType() != ReviewableRequestType::CREATE_ISSUANCE) {
+    if (!request || request->getType() != ReviewableRequestType::CREATE_ISSUANCE)
+    {
         return;
     }
     issuanceRequest = std::make_shared<IssuanceRequest>(request->getRequestEntry().body.issuanceRequest());
-    assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
-    balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
-                                                                       issuanceRequest->asset, testManager->getDB(),
-                                                                       nullptr);    
+    assetFrameBeforeTx = assetHelper.loadAsset(issuanceRequest->asset);
+    balanceBeforeTx = balanceHelper.loadBalance(issuanceRequest->receiver);
+    commissionBalanceBeforeTx = balanceHelper.loadBalance(testManager->getApp().getAdminID(),
+                                                          issuanceRequest->asset);
 }
 
 ReviewIssuanceChecker::ReviewIssuanceChecker(
     const TestManager::pointer& testManager,
     std::shared_ptr<IssuanceRequest> request) : ReviewChecker(testManager)
 {
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
     issuanceRequest = request;
-    assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
-    balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
-                                                                       issuanceRequest->asset, testManager->getDB(),
-                                                                       nullptr);
+    assetFrameBeforeTx = assetHelper.loadAsset(issuanceRequest->asset);
+    balanceBeforeTx = balanceHelper.loadBalance(issuanceRequest->receiver);
+    commissionBalanceBeforeTx = balanceHelper.loadBalance(testManager->getApp().getAdminID(),
+                                                          issuanceRequest->asset);
 }
 
 void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request)
 {
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& accountHelper = storageHelper.getAccountHelper();
+
     // checkApprove can be called during auto approve, so the request can be nullptr
     if (request != nullptr)
     {
@@ -65,50 +77,53 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
     // check asset
     REQUIRE(!!issuanceRequest);
     REQUIRE(!!assetFrameBeforeTx);
-    auto assetFrameAfterTx = AssetHelperLegacy::Instance()->loadAsset(issuanceRequest->asset, mTestManager->getDB());
+    auto assetFrameAfterTx = assetHelper.loadAsset(issuanceRequest->asset);
     REQUIRE(!!assetFrameAfterTx);
-    REQUIRE(assetFrameAfterTx->getAvailableForIssuance() == assetFrameBeforeTx->getAvailableForIssuance() - issuanceRequest->amount);
+    REQUIRE(assetFrameAfterTx->getAvailableForIssuance()
+            == assetFrameBeforeTx->getAvailableForIssuance() - issuanceRequest->amount);
     REQUIRE(assetFrameAfterTx->getIssued() == assetFrameBeforeTx->getIssued() + issuanceRequest->amount);
     REQUIRE(!!balanceBeforeTx);
-    auto receiverFrame = AccountHelperLegacy::Instance()->loadAccount(balanceBeforeTx->getAccountID(), mTestManager->getDB());
+    auto receiverFrame = accountHelper.loadAccount(balanceBeforeTx->getAccountID());
     auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, issuanceRequest->asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame, issuanceRequest->amount,
                                                           mTestManager->getDB());
     uint64_t totalFee = 0;
-    if (feeFrame) {
+    if (feeFrame)
+    {
         REQUIRE(feeFrame->calculatePercentFee(issuanceRequest->amount, totalFee, ROUND_UP,
                                               assetFrameAfterTx->getMinimumAmount()));
         totalFee += feeFrame->getFee().fixedFee;
         REQUIRE(!!commissionBalanceBeforeTx);
-        auto commissionBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(mTestManager->getApp().getAdminID(),
-                                                                               issuanceRequest->asset, mTestManager->getDB(),
-                                                                               nullptr);
+        auto commissionBalanceAfterTx = balanceHelper.loadBalance(mTestManager->getApp().getAdminID(),
+                                                                  issuanceRequest->asset);
         REQUIRE(!!commissionBalanceAfterTx);
         //check commission balance change
         REQUIRE(commissionBalanceAfterTx->getAmount() == commissionBalanceBeforeTx->getAmount() + totalFee);
     }
 
     // check balance
-    auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(issuanceRequest->receiver, mTestManager->getDB());
+    auto balanceAfterTx = balanceHelper.loadBalance(issuanceRequest->receiver);
     REQUIRE(!!balanceAfterTx);
     uint64_t destinationReceive = issuanceRequest->amount - totalFee;
     REQUIRE(balanceAfterTx->getAmount() == balanceBeforeTx->getAmount() + destinationReceive);
 }
 
-ReviewIssuanceRequestHelper::ReviewIssuanceRequestHelper(TestManager::pointer testManager) : ReviewRequestHelper(testManager)
+ReviewIssuanceRequestHelper::ReviewIssuanceRequestHelper(TestManager::pointer testManager)
+    : ReviewRequestHelper(testManager)
 {
 }
 
-ReviewRequestResult ReviewIssuanceRequestHelper::applyReviewRequestTx(Account & source, uint64_t requestID, Hash requestHash,
-    ReviewableRequestType requestType, ReviewRequestOpAction action, std::string rejectReason, ReviewRequestResultCode expectedResult)
+ReviewRequestResult
+ReviewIssuanceRequestHelper::applyReviewRequestTx(Account& source, uint64_t requestID, Hash requestHash,
+                                                  ReviewableRequestType requestType, ReviewRequestOpAction action, std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-        auto issuanceChecker = ReviewIssuanceChecker(mTestManager, requestID);
+    auto issuanceChecker = ReviewIssuanceChecker(mTestManager, requestID);
     return ReviewRequestHelper::applyReviewRequestTx(source, requestID, requestHash, requestType, action, rejectReason, expectedResult,
-                issuanceChecker);
+                                                     issuanceChecker);
 }
 
 TransactionFramePtr
-ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t requestID, Hash requestHash,
+ReviewIssuanceRequestHelper::createReviewRequestTx(Account& source, uint64_t requestID, Hash requestHash,
                                                    ReviewableRequestType requestType, ReviewRequestOpAction action,
                                                    std::string rejectReason)
 {
@@ -128,30 +143,32 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account &source, uint64_t req
     return txFromOperation(source, op, nullptr);
 }
 
-    ReviewRequestResult ReviewIssuanceRequestHelper::applyReviewRequestTx(Account & source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason, ReviewRequestResultCode expectedResult)
+ReviewRequestResult
+ReviewIssuanceRequestHelper::applyReviewRequestTx(Account& source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     REQUIRE(request);
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);
 }
 
-    ReviewRequestResult
-    ReviewIssuanceRequestHelper::applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
-                                                               ReviewableRequestType requestType,
-                                                               ReviewRequestOpAction action, std::string rejectReason,
-                                                               ReviewRequestResultCode expectedResult,
-                                                               uint32_t *tasksToAdd, uint32_t *tasksToRemove) {
-        auto checker = ReviewIssuanceChecker(mTestManager, requestID);
-        return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
-                                                                  requestHash, requestType,
-                                                                  action, rejectReason,
-                                                                  expectedResult,
-                                                                  checker,
-                                                                  tasksToAdd,
-                                                                  tasksToRemove
-        );
-    }
+ReviewRequestResult
+ReviewIssuanceRequestHelper::applyReviewRequestTxWithTasks(Account& source, uint64_t requestID, Hash requestHash,
+                                                           ReviewableRequestType requestType,
+                                                           ReviewRequestOpAction action, std::string rejectReason,
+                                                           ReviewRequestResultCode expectedResult,
+                                                           uint32_t *tasksToAdd, uint32_t *tasksToRemove)
+{
+    auto checker = ReviewIssuanceChecker(mTestManager, requestID);
+    return ReviewRequestHelper::applyReviewRequestTxWithTasks(source, requestID,
+                                                              requestHash, requestType,
+                                                              action, rejectReason,
+                                                              expectedResult,
+                                                              checker,
+                                                              tasksToAdd,
+                                                              tasksToRemove
+    );
+}
 
 }
 

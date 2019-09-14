@@ -13,8 +13,8 @@ namespace stellar
 
 bool
 CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                        std::vector<OperationCondition>& result,
-                                        LedgerManager& ledgerManager) const
+                                                            std::vector<OperationCondition>& result,
+                                                            LedgerManager& ledgerManager) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
@@ -34,7 +34,7 @@ CreateManageLimitsRequestOpFrame::tryGetOperationConditions(StorageHelper& stora
 
 bool
 CreateManageLimitsRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                            std::vector<SignerRequirement>& result) const
+                                                           std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_LIMITS);
@@ -52,10 +52,9 @@ CreateManageLimitsRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
 }
 
 CreateManageLimitsRequestOpFrame::CreateManageLimitsRequestOpFrame(
-        Operation const& op, OperationResult& res,
-        TransactionFrame& parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mCreateManageLimitsRequest(mOperation.body.createManageLimitsRequestOp())
+    Operation const& op, OperationResult& res,
+    TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mCreateManageLimitsRequest(mOperation.body.createManageLimitsRequestOp())
 {
 }
 
@@ -67,15 +66,15 @@ CreateManageLimitsRequestOpFrame::getLimitsManageRequestDetailsReference(longstr
 }
 
 bool
-CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &app, StorageHelper &storageHelper, LedgerManager &lm)
+CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application& app, StorageHelper& storageHelper, LedgerManager& lm)
 {
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto& db = storageHelper.getDatabase();
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    auto requestFrame = reviewableRequestHelper->loadRequest(mCreateManageLimitsRequest.requestID, getSourceID(),
-                                                             ReviewableRequestType::UPDATE_LIMITS, db, &delta);
+    auto requestFrame = requestHelper.loadRequest(mCreateManageLimitsRequest.requestID, getSourceID(),
+                                                  ReviewableRequestType::UPDATE_LIMITS);
     if (!requestFrame)
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_NOT_FOUND);
@@ -93,7 +92,7 @@ CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &app, St
     limitsUpdateRequest.creatorDetails = mCreateManageLimitsRequest.manageLimitsRequest.creatorDetails;
 
     requestFrame->recalculateHashRejectReason();
-    reviewableRequestHelper->storeChange(delta, db, requestFrame->mEntry);
+    requestHelper.storeChange(requestFrame->mEntry);
 
     innerResult().success().fulfilled = false;
     innerResult().code(CreateManageLimitsRequestResultCode::SUCCESS);
@@ -103,8 +102,8 @@ CreateManageLimitsRequestOpFrame::updateManageLimitsRequest(Application &app, St
     return true;
 }
 
-bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &app, StorageHelper& storageHelper,
-                                                                 LedgerManager &ledgerManager)
+bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application& app, StorageHelper& storageHelper,
+                                                                 LedgerManager& ledgerManager)
 {
     Database& db = ledgerManager.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
@@ -115,8 +114,8 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
     longstring reference = getLimitsManageRequestDetailsReference(details);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    if (reviewableRequestHelper->isReferenceExist(db, getSourceID(), reference))
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    if (requestHelper.isReferenceExist(getSourceID(), reference, 0))
     {
         innerResult().code(CreateManageLimitsRequestResultCode::MANAGE_LIMITS_REQUEST_REFERENCE_DUPLICATION);
         return false;
@@ -145,7 +144,7 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
         return false;
     }
     request->setTasks(allTasks);
-    EntryHelperProvider::storeAddEntry(delta, db, request->mEntry);
+    requestHelper.storeAdd(request->mEntry);
 
     innerResult().code(CreateManageLimitsRequestResultCode::SUCCESS);
     innerResult().success().manageLimitsRequestID = request->getRequestID();
@@ -155,7 +154,7 @@ bool CreateManageLimitsRequestOpFrame::createManageLimitsRequest(Application &ap
 }
 
 bool
-CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager)
+CreateManageLimitsRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
     // required for the new flow, when source have to specify request id for creation or update of the request
     bool isUpdating = mCreateManageLimitsRequest.requestID != 0;

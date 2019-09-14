@@ -14,8 +14,8 @@ using xdr::operator==;
 
 bool
 CreateAMLAlertRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result,
-                              LedgerManager& ledgerManager) const
+                                                        std::vector<OperationCondition>& result,
+                                                        LedgerManager& ledgerManager) const
 {
     AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_AML_ALERT);
@@ -54,17 +54,16 @@ CreateAMLAlertRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 
 CreateAMLAlertRequestOpFrame::CreateAMLAlertRequestOpFrame(
     Operation const& op, OperationResult& res, TransactionFrame& parentTx)
-    : OperationFrame(op, res, parentTx)
-    , mCreateAMLAlertRequest(mOperation.body.createAMLAlertRequestOp())
+    : OperationFrame(op, res, parentTx), mCreateAMLAlertRequest(mOperation.body.createAMLAlertRequestOp())
 {
 }
 
 bool
-CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHelper,
+CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                       LedgerManager& ledgerManager)
 {
     auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
     const auto amlAlertRequest = mCreateAMLAlertRequest.amlAlertRequest;
@@ -78,53 +77,57 @@ CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper &storageHe
     if (result != BalanceFrame::Result::SUCCESS)
     {
         pickResultCode(app.getLedgerManager(), result == BalanceFrame::Result::NONMATCHING_PRECISION ?
-                           CreateAMLAlertRequestResultCode::INCORRECT_PRECISION :
-                           CreateAMLAlertRequestResultCode::UNDERFUNDED);
+                                               CreateAMLAlertRequestResultCode::INCORRECT_PRECISION :
+                                               CreateAMLAlertRequestResultCode::UNDERFUNDED);
         return false;
     }
 
-    const bool isReferenceExists = ReviewableRequestHelper::Instance()->isReferenceExist(db, getSourceID(), mCreateAMLAlertRequest.reference, 0);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+
+    const bool isReferenceExists = requestHelper.isReferenceExist(getSourceID(), mCreateAMLAlertRequest.reference, 0);
     if (isReferenceExists)
     {
         pickResultCode(app.getLedgerManager(), CreateAMLAlertRequestResultCode::REFERENCE_DUPLICATION);
         return false;
     }
 
-    const uint64 requestID = delta->getHeaderFrame().
-                             generateID(LedgerEntryType::REVIEWABLE_REQUEST);
+    const uint64 requestID = delta.
+        getHeaderFrame().
+        generateID(LedgerEntryType::REVIEWABLE_REQUEST);
     const auto referencePtr = xdr::pointer<string64>(new string64(mCreateAMLAlertRequest.reference));
     auto request = ReviewableRequestFrame::createNew(requestID,
-                                                          getSourceID(),
+                                                     getSourceID(),
                                                      app.getAdminID(),
-                                                          referencePtr,
-                                                          ledgerManager.
-                                                          getCloseTime());
+                                                     referencePtr,
+                                                     ledgerManager.
+                                                         getCloseTime());
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::CREATE_AML_ALERT);
     requestEntry.body.amlAlertRequest() = amlAlertRequest;
     request->recalculateHashRejectReason();
     balanceHelper.storeChange(balanceFrame->mEntry);
-    ReviewableRequestHelper::Instance()->storeAdd(*delta, db,
-                                                  request->mEntry);
+    requestHelper.storeAdd(request->mEntry);
 
     KeyValueHelper& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks = 0;
     if (!keyValueHelper.loadTasks(allTasks, {ManageKeyValueOpFrame::makeAmlAlertCreateTasksKey()},
-                   mCreateAMLAlertRequest.allTasks.get()))
+                                  mCreateAMLAlertRequest.allTasks.get()))
     {
         innerResult().code(CreateAMLAlertRequestResultCode::AML_ALERT_TASKS_NOT_FOUND);
         return false;
     }
 
     request->setTasks(allTasks);
-    EntryHelperProvider::storeChangeEntry(*delta, db, request->mEntry);
+    requestHelper.storeChange(request->mEntry);
 
     bool fulfilled = false;
 
-    if (allTasks == 0) {
-        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, *delta, request);
-        if (result.code() != ReviewRequestResultCode::SUCCESS) {
+    if (allTasks == 0)
+    {
+        auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx, app, ledgerManager, storageHelper, request);
+        if (result.code() != ReviewRequestResultCode::SUCCESS)
+        {
             throw std::runtime_error("Failed to review AML alert request");
         }
         fulfilled = result.success().fulfilled;

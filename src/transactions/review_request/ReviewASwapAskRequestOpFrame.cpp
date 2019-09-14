@@ -1,15 +1,15 @@
-#include <main/Application.h>
-#include <database/Database.h>
-#include <ledger/LedgerDelta.h>
+#include "main/Application.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include <ledger/BalanceHelperLegacy.h>
-#include <transactions/atomic_swap/CreateAtomicSwapAskRequestOpFrame.h>
-#include <ledger/AccountHelperLegacy.h>
+#include "ledger/LedgerDelta.h"
+#include "ledger/BalanceHelper.h"
+#include "transactions/atomic_swap/CreateAtomicSwapAskRequestOpFrame.h"
+#include "ledger/AccountHelper.h"
 #include "ReviewASwapAskRequestOpFrame.h"
-#include <ledger/BalanceHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
-#include <ledger/StorageHelper.h>
-#include <ledger/AssetHelper.h>
+#include "ledger/BalanceHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/EntryHelperLegacy.h"
 
 using namespace std;
 
@@ -17,17 +17,16 @@ namespace stellar
 {
 
 ReviewASwapAskRequestOpFrame::ReviewASwapAskRequestOpFrame(
-        Operation const &op, OperationResult &res, TransactionFrame &parentTx)
-        : ReviewRequestOpFrame(op, res, parentTx)
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 
 bool
 ReviewASwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                                    std::vector<SignerRequirement>& result) const
+                                                       std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-            mReviewRequest.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -36,7 +35,7 @@ ReviewASwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
     }
 
     auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
-            request->getRequestEntry().body.createAtomicSwapAskRequest().baseBalance);
+        request->getRequestEntry().body.createAtomicSwapAskRequest().baseBalance);
 
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
 
@@ -55,8 +54,8 @@ ReviewASwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHel
 }
 
 bool ReviewASwapAskRequestOpFrame::handleReject(
-        Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-        ReviewableRequestFrame::pointer request)
+    Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
+    ReviewableRequestFrame::pointer request)
 {
     innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
     return false;
@@ -64,20 +63,20 @@ bool ReviewASwapAskRequestOpFrame::handleReject(
 
 bool
 ReviewASwapAskRequestOpFrame::handleAllAssetsValidationResultCode(
-        CreateAtomicSwapAskRequestResultCode code)
+    CreateAtomicSwapAskRequestResultCode code)
 {
     switch (code)
     {
         case CreateAtomicSwapAskRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED:
         {
             innerResult().code(
-                    ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
+                ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED);
             return false;
         }
         case CreateAtomicSwapAskRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED:
         {
             innerResult().code(
-                    ReviewRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
+                ReviewRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED);
             return false;
         }
         default:
@@ -85,16 +84,16 @@ ReviewASwapAskRequestOpFrame::handleAllAssetsValidationResultCode(
             CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected error code from atomic swap bid assets validator: "
                 << xdr::xdr_traits<CreateAtomicSwapAskRequestResultCode>::enum_name(
-                        code);
+                    code);
             throw runtime_error(
-                    "Unexpected error code from atomic swap bid assets validator");
+                "Unexpected error code from atomic swap bid assets validator");
         }
     }
 }
 
 AtomicSwapAskFrame::pointer
 ReviewASwapAskRequestOpFrame::buildNewAsk(AccountID ownerID, AssetCode baseAsset,
-        uint64_t ledgerCloseTime, CreateAtomicSwapAskRequest request, LedgerDelta &delta)
+                                          uint64_t ledgerCloseTime, CreateAtomicSwapAskRequest request, LedgerDelta& delta)
 {
     AtomicSwapAskEntry entry;
     entry.id = delta.getHeaderFrame().generateID(LedgerEntryType::ATOMIC_SWAP_ASK);
@@ -114,16 +113,16 @@ ReviewASwapAskRequestOpFrame::buildNewAsk(AccountID ownerID, AssetCode baseAsset
     return make_shared<AtomicSwapAskFrame>(le);
 }
 
-bool ReviewASwapAskRequestOpFrame::handleApprove(
-        Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-        ReviewableRequestFrame::pointer request)
+bool
+ReviewASwapAskRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
+                                            LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
 
     auto requestBody = request->getRequestEntry().body.createAtomicSwapAskRequest();
 
-    Database& db = app.getDatabase();
-    handleTasks(db, delta, request);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
     if (!request->canBeFulfilled(ledgerManager))
     {
@@ -132,32 +131,34 @@ bool ReviewASwapAskRequestOpFrame::handleApprove(
         return true;
     }
 
-    auto baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
-            requestBody.baseBalance, db);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto baseBalanceFrame = balanceHelper.loadBalance(requestBody.baseBalance);
 
     if (baseBalanceFrame == nullptr)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: expected base balance to exist: "
-                << "atomic swap ask creation request ID: " << request->getRequestID();
+            << "Unexpected state: expected base balance to exist: "
+            << "atomic swap ask creation request ID: " << request->getRequestID();
         throw runtime_error("Unexpected state: expected base balance to exist");
     }
 
+    auto& db = storageHelper.getDatabase();
     auto validationResultCode = CreateAtomicSwapAskRequestOpFrame::areAllAssetsValid(
-            db, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
+        storageHelper, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
     if (validationResultCode != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
         return handleAllAssetsValidationResultCode(validationResultCode);
     }
 
-    auto requestor = AccountHelperLegacy::Instance()->mustLoadAccount(request->getRequestor(),
-                                                                db);
+    auto& accountHelper = storageHelper.getAccountHelper();
+    auto requestor = accountHelper.mustLoadAccount(request->getRequestor());
 
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto askFrame = buildNewAsk(requestor->getID(), baseBalanceFrame->getAsset(),
                                 ledgerManager.getCloseTime(), requestBody,
                                 delta);
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
     EntryHelperProvider::storeAddEntry(delta, db, askFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
@@ -169,36 +170,36 @@ bool ReviewASwapAskRequestOpFrame::handleApprove(
 }
 
 bool ReviewASwapAskRequestOpFrame::handlePermanentReject(
-        Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
-        ReviewableRequestFrame::pointer request)
+    Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
+    ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
 
     auto aSwapCreationRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
     auto& db = app.getDatabase();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
 
-    auto baseBalanceFrame = BalanceHelperLegacy::Instance()->loadBalance(
-            aSwapCreationRequest.baseBalance, db);
+    auto baseBalanceFrame = balanceHelper.loadBalance(aSwapCreationRequest.baseBalance);
 
     if (baseBalanceFrame == nullptr)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: expected base balance to exist: "
-                << "atomic swap bid creation request ID: " << request->getRequestID();
+            << "Unexpected state: expected base balance to exist: "
+            << "atomic swap bid creation request ID: " << request->getRequestID();
         throw runtime_error("Unexpected state: expected base balance to exist");
     }
 
     if (baseBalanceFrame->unlock(aSwapCreationRequest.amount) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: failed to unlock amount in bid creation requestor balance, "
-                   "request ID: " << request->getRequestID();
+            << "Unexpected state: failed to unlock amount in bid creation requestor balance, "
+               "request ID: " << request->getRequestID();
         throw runtime_error(
-                "Unexpected state: failed to unlock amount in bid creation requestor balance");
+            "Unexpected state: failed to unlock amount in bid creation requestor balance");
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, baseBalanceFrame->mEntry);
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    balanceHelper.storeChange(baseBalanceFrame->mEntry);
+    storageHelper.getReviewableRequestHelper().storeDelete(request->getKey());
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;
 }

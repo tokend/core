@@ -2217,6 +2217,7 @@ enum class AccountRuleAction : std::int32_t {
   REMOVE = 17,
   UPDATE_END_TIME = 18,
   CREATE_FOR_OTHER_WITH_TASKS = 19,
+  REMOVE_FOR_OTHER = 20,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::AccountRuleAction>
@@ -2264,6 +2265,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       return "UPDATE_END_TIME";
     case ::stellar::AccountRuleAction::CREATE_FOR_OTHER_WITH_TASKS:
       return "CREATE_FOR_OTHER_WITH_TASKS";
+    case ::stellar::AccountRuleAction::REMOVE_FOR_OTHER:
+      return "REMOVE_FOR_OTHER";
     default:
       return nullptr;
     }
@@ -2288,7 +2291,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       (int32_t)::stellar::AccountRuleAction::CLOSE,
       (int32_t)::stellar::AccountRuleAction::REMOVE,
       (int32_t)::stellar::AccountRuleAction::UPDATE_END_TIME,
-      (int32_t)::stellar::AccountRuleAction::CREATE_FOR_OTHER_WITH_TASKS
+      (int32_t)::stellar::AccountRuleAction::CREATE_FOR_OTHER_WITH_TASKS,
+      (int32_t)::stellar::AccountRuleAction::REMOVE_FOR_OTHER
     };
     return _xdr_enum_vec;
   }

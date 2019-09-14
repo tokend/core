@@ -9,13 +9,13 @@
 namespace stellar
 {
 
-class ManageBalanceOpFrame : public OperationFrame
-{
+class ManageBalanceOpFrame : public OperationFrame {
     ManageBalanceResult&
     innerResult()
     {
         return mResult.tr().manageBalanceResult();
     }
+
     ManageBalanceOp const& mManageBalance;
 
     bool
@@ -26,13 +26,14 @@ class ManageBalanceOpFrame : public OperationFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
-  public:
-    
+public:
+
     ManageBalanceOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 
     static ManageBalanceResultCode

@@ -7,12 +7,12 @@
 #include "crypto/SHA.h"
 #include "database/Database.h"
 #include "herder/TxSetFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/StorageHelperImpl.h"
+#include "ledger/AccountHelper.h"
 #include "main/Application.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "util/basen.h"
@@ -109,31 +109,29 @@ TransactionFrameImpl::addSignature(SecretKey const& secretKey)
 }
 
 AccountFrame::pointer
-TransactionFrameImpl::loadAccount(LedgerDelta* delta, Database& db,
+TransactionFrameImpl::loadAccount(StorageHelper& storageHelper,
                                   AccountID const& accountID)
 {
     AccountFrame::pointer res;
-    auto accountHelper = AccountHelperLegacy::Instance();
+    auto& accountHelper = storageHelper.getAccountHelper();
 
     if (mSigningAccount && mSigningAccount->getID() == accountID)
     {
         res = mSigningAccount;
     }
-    else if (delta)
-    {
-        res = accountHelper->loadAccount(*delta, accountID, db);
-    }
     else
     {
-        res = accountHelper->loadAccount(accountID, db);
+        res = accountHelper.loadAccount(accountID);
+
     }
+
     return res;
 }
 
 bool
-TransactionFrameImpl::loadAccount(LedgerDelta* delta, Database& db)
+TransactionFrameImpl::loadAccount(StorageHelper& storageHelper)
 {
-    mSigningAccount = loadAccount(delta, db, getSourceID());
+    mSigningAccount = loadAccount(storageHelper, getSourceID());
     return !!mSigningAccount;
 }
 
@@ -143,7 +141,7 @@ TransactionFrameImpl::resetResults()
     // pre-allocates the results for all operations
     getResult().result.code(TransactionResultCode::txSUCCESS);
     getResult().result.results().resize(
-        (uint32_t)mEnvelope.tx.operations.size());
+        (uint32_t) mEnvelope.tx.operations.size());
 
     mOperations.clear();
 
@@ -166,33 +164,33 @@ TransactionFrameImpl::doCheckSignature(Application& app,
 {
     SignerRuleVerifierImpl signerRuleVerifier;
     auto result = getSignatureValidator()->check(app, storageHelper,
-            signerRuleVerifier, accountID, {});
+                                                 signerRuleVerifier, accountID, {});
     switch (result)
     {
-    case SignatureValidator::Result::SUCCESS:
-        return true;
-    case SignatureValidator::Result::INVALID_ACCOUNT_TYPE:
-        throw runtime_error("Did not expect INVALID_ACCOUNT_TYPE error for tx");
-    case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
-        app.getMetrics()
-            .NewMeter({"transaction", "invalid", "bad-auth"}, "transaction")
-            .Mark();
-        getResult().result.code(TransactionResultCode::txBAD_AUTH);
-        return false;
-    case SignatureValidator::Result::EXTRA:
-        app.getMetrics()
-            .NewMeter({"transaction", "invalid", "bad-auth-extra"},
-                      "transaction")
-            .Mark();
-        getResult().result.code(TransactionResultCode::txBAD_AUTH_EXTRA);
-        return false;
-    case SignatureValidator::Result::ACCOUNT_BLOCKED:
-        app.getMetrics()
-            .NewMeter({"transaction", "invalid", "account-blocked"},
-                      "transaction")
-            .Mark();
-        getResult().result.code(TransactionResultCode::txACCOUNT_BLOCKED);
-        return false;
+        case SignatureValidator::Result::SUCCESS:
+            return true;
+        case SignatureValidator::Result::INVALID_ACCOUNT_TYPE:
+            throw runtime_error("Did not expect INVALID_ACCOUNT_TYPE error for tx");
+        case SignatureValidator::Result::NOT_ENOUGH_WEIGHT:
+            app.getMetrics()
+                .NewMeter({"transaction", "invalid", "bad-auth"}, "transaction")
+                .Mark();
+            getResult().result.code(TransactionResultCode::txBAD_AUTH);
+            return false;
+        case SignatureValidator::Result::EXTRA:
+            app.getMetrics()
+                .NewMeter({"transaction", "invalid", "bad-auth-extra"},
+                          "transaction")
+                .Mark();
+            getResult().result.code(TransactionResultCode::txBAD_AUTH_EXTRA);
+            return false;
+        case SignatureValidator::Result::ACCOUNT_BLOCKED:
+            app.getMetrics()
+                .NewMeter({"transaction", "invalid", "account-blocked"},
+                          "transaction")
+                .Mark();
+            getResult().result.code(TransactionResultCode::txACCOUNT_BLOCKED);
+            return false;
     }
 
     throw runtime_error("Unexpected error code from signatureValidator");
@@ -202,11 +200,11 @@ bool
 TransactionFrameImpl::isLicenseOp()
 {
     return mEnvelope.tx.operations.size() == 1
-    && mEnvelope.tx.operations[0].body.type() == OperationType::LICENSE;
+           && mEnvelope.tx.operations[0].body.type() == OperationType::LICENSE;
 }
 
 bool
-TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
+TransactionFrameImpl::commonValid(Application& app, LedgerDelta *delta)
 {
     if (mOperations.size() == 0)
     {
@@ -231,9 +229,9 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
         return false;
     }
     if (mEnvelope.tx.timeBounds.maxTime < closeTime ||
-            (!isLicenseOp() && ((mEnvelope.tx.timeBounds.maxTime - closeTime) >
-            lm.getTxExpirationPeriod()))
-            )
+        (!isLicenseOp() && ((mEnvelope.tx.timeBounds.maxTime - closeTime) >
+                            lm.getTxExpirationPeriod()))
+        )
     {
         app.getMetrics()
             .NewMeter({"transaction", "invalid", "too-late"}, "transaction")
@@ -243,8 +241,8 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
     }
 
     auto& db = app.getDatabase();
-
-    if (!loadAccount(delta, db))
+    StorageHelperImpl storageHelper(db, delta);
+    if (!loadAccount(storageHelper))
     {
         app.getMetrics()
             .NewMeter({"transaction", "invalid", "no-account"}, "transaction")
@@ -253,7 +251,6 @@ TransactionFrameImpl::commonValid(Application& app, LedgerDelta* delta)
         return false;
     }
 
-    StorageHelperImpl storageHelper(db, delta);
     AccountRuleVerifierImpl accountRuleVerifier;
     if (!checkSendTxRule(accountRuleVerifier, storageHelper))
     {
@@ -270,10 +267,10 @@ TransactionFrameImpl::checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
 {
     AccountRuleResource resource(LedgerEntryType::TRANSACTION);
     AccountRuleAction action(AccountRuleAction::SEND);
-    
+
     OperationCondition operationCondition(resource, action, mSigningAccount);
 
-    if (!accountRuleVerifier.isAllowed(operationCondition, storageHelper)) 
+    if (!accountRuleVerifier.isAllowed(operationCondition, storageHelper))
     {
         getResult().result.code(TransactionResultCode::txNO_ROLE_PERMISSION);
         auto& requirement = getResult().result.requirement();
@@ -282,7 +279,7 @@ TransactionFrameImpl::checkSendTxRule(AccountRuleVerifier& accountRuleVerifier,
         requirement.account = mSigningAccount->getID();
         return false;
     }
-    
+
     return true;
 }
 
@@ -448,7 +445,7 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
             meta.operations().emplace_back(opDelta.getAllChanges());
 
             storageHelper.commit();
-            if (app.getLedgerManager().shouldUse(LedgerVersion::CLEAR_DATABASE_CACHE)) 
+            if (app.getLedgerManager().shouldUse(LedgerVersion::CLEAR_DATABASE_CACHE))
             {
                 app.getDatabase().getEntryCache().clear();
             }

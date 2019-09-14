@@ -1,6 +1,5 @@
 #include "TxTests.h"
 #include "crypto/SHA.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "test/test.h"
 #include "overlay/LoopbackPeer.h"
@@ -41,9 +40,9 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
+        0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
     auto createRuleResult = manageAccountRuleTestHelper.applyTx(
-            master, ruleEntry, ManageAccountRuleAction::CREATE);
+        master, ruleEntry, ManageAccountRuleAction::CREATE);
 
     SECTION("Create account role")
     {
@@ -52,13 +51,13 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
         auto createAccountRoleOp = manageAccountRoleHelper.buildCreateRoleOp(R"({"data": "new_details"})", ruleIDs);
 
         ManageAccountRoleResult result = manageAccountRoleHelper.applyTx(master,
-                createAccountRoleOp);
+                                                                         createAccountRoleOp);
         auto accountRoleID = result.success().roleID;
 
         SECTION("update")
         {
             auto updateRoleOp = manageAccountRoleHelper.buildUpdateRoleOp(
-                    accountRoleID, "{}", ruleIDs);
+                accountRoleID, "{}", ruleIDs);
 
             manageAccountRoleHelper.applyTx(master, updateRoleOp);
         }
@@ -68,10 +67,10 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
             uint64_t nonExistingRuleID = 1408;
 
             auto updateRoleOp = manageAccountRoleHelper.buildUpdateRoleOp(
-                    accountRoleID, R"({"data": "new_details"})", {nonExistingRuleID});
+                accountRoleID, R"({"data": "new_details"})", {nonExistingRuleID});
 
             result = manageAccountRoleHelper.applyTx(master, updateRoleOp,
-                    ManageAccountRoleResultCode::NO_SUCH_RULE);
+                                                     ManageAccountRoleResultCode::NO_SUCH_RULE);
 
             REQUIRE(result.ruleID() == nonExistingRuleID);
         }
@@ -84,7 +83,7 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
             SECTION("Delete non-existing account role")
             {
                 manageAccountRoleHelper.applyTx(master, removeRoleOp,
-                        ManageAccountRoleResultCode::NOT_FOUND);
+                                                ManageAccountRoleResultCode::NOT_FOUND);
             }
         }
 
@@ -92,26 +91,26 @@ TEST_CASE("Account role tests", "[tx][manage_account_role]")
         {
             auto randomAccount = SecretKey::random();
             createAccountTestHelper.applyTx(CreateAccountTestBuilder()
-                                                    .setSource(master)
-                                                    .setToPublicKey(randomAccount.getPublicKey())
-                                                    .addBasicSigner()
-                                                    .setRoleID(accountRoleID));
+                                                .setSource(master)
+                                                .setToPublicKey(randomAccount.getPublicKey())
+                                                .addBasicSigner()
+                                                .setRoleID(accountRoleID));
 
             manageAccountRoleHelper.applyTx(master, removeRoleOp,
                                             ManageAccountRoleResultCode::ROLE_IS_USED);
         }
     }
-    
-    SECTION("no such rule") 
+
+    SECTION("no such rule")
     {
         uint64_t nonExistingRuleID = 1408;
-        
+
         auto createAccountRoleOp = manageAccountRoleHelper.buildCreateRoleOp(
-                R"({"data": "new_details"})", {nonExistingRuleID});
+            R"({"data": "new_details"})", {nonExistingRuleID});
 
         ManageAccountRoleResult result = manageAccountRoleHelper.applyTx(master,
-                createAccountRoleOp, ManageAccountRoleResultCode::NO_SUCH_RULE);
-        
+                                                                         createAccountRoleOp, ManageAccountRoleResultCode::NO_SUCH_RULE);
+
         REQUIRE(result.ruleID() == nonExistingRuleID);
     }
 }
