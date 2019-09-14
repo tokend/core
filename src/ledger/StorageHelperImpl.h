@@ -24,6 +24,7 @@ class LicenseSignatureHelper;
 class StampHelper;
 class VoteHelper;
 class PollHelper;
+class SwapHelper;
 class StorageHelperImpl : public StorageHelper
 {
   public:
@@ -67,6 +68,7 @@ class StorageHelperImpl : public StorageHelper
     VoteHelper& getVoteHelper() override;
     PollHelper& getPollHelper() override;
     AccountSpecificRuleHelper& getAccountSpecificRuleHelper() override;
+    SwapHelper& getSwapHelper() override;
 
     Database& mDatabase;
     LedgerDelta* mLedgerDelta;
@@ -95,5 +97,6 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<VoteHelper> mVoteHelper;
     std::unique_ptr<PollHelper> mPollHelper;
     std::unique_ptr<AccountSpecificRuleHelper> mAccountSpecificRuleHelper;
+    std::unique_ptr<SwapHelper> mSwapHelper;
 };
 } // namespace stellar

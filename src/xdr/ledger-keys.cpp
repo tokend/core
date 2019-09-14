@@ -3932,6 +3932,51 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+LedgerKey::_swap_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okswapID = u.from_bytes(swapID);
+if (!okswapID)
+{
+return false;
+}
+return true;
+}
+bool
+LedgerKey::_swap_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okswapID = m.to_bytes(swapID);
+if (!okswapID)
+{
+return false;
+}
+return true;
+}
+void
+LedgerKey::_swap_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(swapID);
+}
+bool
+LedgerKey::_swap_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_swap_t const&>(other_abstract);return true
+&& (swapID== other.swapID)
+;}
+bool
+LedgerKey::_swap_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_swap_t const&>(other_abstract);
+if (swapID < other.swapID) return true;
+if (other.swapID < swapID) return false;
+return false;
+}bool
 LedgerKey::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -4001,6 +4046,8 @@ return u.from_bytes(poll_);
 return u.from_bytes(vote_);
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return u.from_bytes(accountSpecificRule_);
+  case (int32_t)LedgerEntryType::SWAP:
+return u.from_bytes(swap_);
 }
 return false;
 }
@@ -4075,6 +4122,8 @@ return m.to_bytes(poll_);
 return m.to_bytes(vote_);
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return m.to_bytes(accountSpecificRule_);
+  case (int32_t)LedgerEntryType::SWAP:
+return m.to_bytes(swap_);
 }
 return false;
 }
@@ -4145,6 +4194,8 @@ return m.count_size(poll_);
 return m.count_size(vote_);
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return m.count_size(accountSpecificRule_);
+  case (int32_t)LedgerEntryType::SWAP:
+return m.count_size(swap_);
 }
 }
 bool
@@ -4218,6 +4269,8 @@ return poll_ == other.poll_;
 return vote_ == other.vote_;
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return accountSpecificRule_ == other.accountSpecificRule_;
+  case (int32_t)LedgerEntryType::SWAP:
+return swap_ == other.swap_;
 }
 return false;
 }
@@ -4293,6 +4346,8 @@ return poll_ < other.poll_;
 return vote_ < other.vote_;
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return accountSpecificRule_ < other.accountSpecificRule_;
+  case (int32_t)LedgerEntryType::SWAP:
+return swap_ < other.swap_;
 }
 return false;
 }

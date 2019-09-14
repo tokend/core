@@ -1,24 +1,25 @@
 #include "ledger/StorageHelperImpl.h"
+#include "AccountHelperImpl.h"
+#include "AccountRoleHelperImpl.h"
+#include "AccountRuleHelperImpl.h"
+#include "AccountSpecificRuleHelperImpl.h"
+#include "AssetHelperImpl.h"
+#include "BalanceHelperImpl.h"
+#include "LicenseHelperImpl.h"
+#include "PollHelperImpl.h"
+#include "SignerHelperImpl.h"
+#include "SignerRoleHelperImpl.h"
+#include "SignerRuleHelperImpl.h"
+#include "StampHelperImpl.h"
+#include "SwapHelperImpl.h"
+#include "VoteHelperImpl.h"
 #include "ledger/ExternalSystemAccountIDHelperImpl.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperImpl.h"
 #include "ledger/KeyValueHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/LicenseHelperImpl.h"
-#include "ledger/StampHelperImpl.h"
 #include "ledger/LicenseSignatureHelperImpl.h"
-#include "BalanceHelperImpl.h"
-#include "AssetHelperImpl.h"
-#include "AccountRuleHelperImpl.h"
-#include "AccountRoleHelperImpl.h"
-#include "AccountHelperImpl.h"
-#include "SignerHelperImpl.h"
-#include "SignerRuleHelperImpl.h"
-#include "SignerRoleHelperImpl.h"
-#include "VoteHelperImpl.h"
-#include "PollHelperImpl.h"
-#include "LicenseHelperImpl.h"
-#include "StampHelperImpl.h"
-#include "AccountSpecificRuleHelperImpl.h"
+#include "ledger/StampHelperImpl.h"
 
 namespace stellar
 {
@@ -46,7 +47,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::LICENSE, &getLicenseHelper()},
         {LedgerEntryType::VOTE, &getVoteHelper()},
         {LedgerEntryType::POLL, &getPollHelper()},
-        {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()}
+        {LedgerEntryType::ACCOUNT_SPECIFIC_RULE,&getAccountSpecificRuleHelper()},
+        {LedgerEntryType::SWAP, &getSwapHelper()},
     };
 }
 
@@ -153,10 +155,11 @@ StorageHelperImpl::rollback()
 void
 StorageHelperImpl::release()
 {
-    if (!mIsReleased) {
-            mIsReleased = true;
-            mTransaction->rollback();
-            mTransaction = nullptr;
+    if (!mIsReleased)
+    {
+        mIsReleased = true;
+        mTransaction->rollback();
+        mTransaction = nullptr;
     }
 }
 
@@ -165,8 +168,9 @@ StorageHelperImpl::startNestedTransaction()
 {
     if (!mLedgerDelta)
     {
-        throw std::runtime_error("This StorageHelper has empty ledger delta and "
-                                 "cannot create nested transactions.");
+        throw std::runtime_error(
+            "This StorageHelper has empty ledger delta and "
+            "cannot create nested transactions.");
     }
     if (mNestedDelta && mNestedDelta->isStateActive())
     {
@@ -310,7 +314,8 @@ StorageHelperImpl::getLicenseSignatureHelper()
 {
     if (!mLicenseSignatureHelper)
     {
-        mLicenseSignatureHelper = std::make_unique<LicenseSignatureHelperImpl>(*this);
+        mLicenseSignatureHelper =
+            std::make_unique<LicenseSignatureHelperImpl>(*this);
     }
     return *mLicenseSignatureHelper;
 }
@@ -318,7 +323,7 @@ StorageHelperImpl::getLicenseSignatureHelper()
 StampHelper&
 StorageHelperImpl::getStampHelper()
 {
-    if(!mStampHelper)
+    if (!mStampHelper)
     {
         mStampHelper = std::make_unique<StampHelperImpl>(*this);
     }
@@ -328,7 +333,7 @@ StorageHelperImpl::getStampHelper()
 VoteHelper&
 StorageHelperImpl::getVoteHelper()
 {
-    if(!mVoteHelper)
+    if (!mVoteHelper)
     {
         mVoteHelper = std::make_unique<VoteHelperImpl>(*this);
     }
@@ -338,11 +343,21 @@ StorageHelperImpl::getVoteHelper()
 PollHelper&
 StorageHelperImpl::getPollHelper()
 {
-    if(!mPollHelper)
+    if (!mPollHelper)
     {
         mPollHelper = std::make_unique<PollHelperImpl>(*this);
     }
     return *mPollHelper;
+}
+
+SwapHelper&
+StorageHelperImpl::getSwapHelper()
+{
+    if (!mSwapHelper)
+    {
+        mSwapHelper = std::make_unique<SwapHelperImpl>(*this);
+    }
+    return *mSwapHelper;
 }
 
 AccountSpecificRuleHelper&
@@ -350,7 +365,8 @@ StorageHelperImpl::getAccountSpecificRuleHelper()
 {
     if (!mAccountSpecificRuleHelper)
     {
-        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelperImpl>(*this);
+        mAccountSpecificRuleHelper =
+            std::make_unique<AccountSpecificRuleHelperImpl>(*this);
     }
     return *mAccountSpecificRuleHelper;
 }

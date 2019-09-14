@@ -105,6 +105,10 @@ return u.from_bytes(removeAssetPairOp_);
 return u.from_bytes(initiateKYCRecoveryOp_);
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return u.from_bytes(createKYCRecoveryRequestOp_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return u.from_bytes(openSwapOp_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return u.from_bytes(closeSwapOp_);
 }
 return false;
 }
@@ -207,6 +211,10 @@ return m.to_bytes(removeAssetPairOp_);
 return m.to_bytes(initiateKYCRecoveryOp_);
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return m.to_bytes(createKYCRecoveryRequestOp_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.to_bytes(openSwapOp_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.to_bytes(closeSwapOp_);
 }
 return false;
 }
@@ -305,6 +313,10 @@ return m.count_size(removeAssetPairOp_);
 return m.count_size(initiateKYCRecoveryOp_);
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return m.count_size(createKYCRecoveryRequestOp_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.count_size(openSwapOp_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.count_size(closeSwapOp_);
 }
 }
 bool
@@ -406,6 +418,10 @@ return removeAssetPairOp_ == other.removeAssetPairOp_;
 return initiateKYCRecoveryOp_ == other.initiateKYCRecoveryOp_;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return createKYCRecoveryRequestOp_ == other.createKYCRecoveryRequestOp_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapOp_ == other.openSwapOp_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapOp_ == other.closeSwapOp_;
 }
 return false;
 }
@@ -509,6 +525,10 @@ return removeAssetPairOp_ < other.removeAssetPairOp_;
 return initiateKYCRecoveryOp_ < other.initiateKYCRecoveryOp_;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return createKYCRecoveryRequestOp_ < other.createKYCRecoveryRequestOp_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapOp_ < other.openSwapOp_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapOp_ < other.closeSwapOp_;
 }
 return false;
 }
@@ -1185,6 +1205,10 @@ return u.from_bytes(removeAssetPairResult_);
 return u.from_bytes(createKYCRecoveryRequestResult_);
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return u.from_bytes(initiateKYCRecoveryResult_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return u.from_bytes(openSwapResult_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return u.from_bytes(closeSwapResult_);
 }
 return false;
 }
@@ -1287,6 +1311,10 @@ return m.to_bytes(removeAssetPairResult_);
 return m.to_bytes(createKYCRecoveryRequestResult_);
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return m.to_bytes(initiateKYCRecoveryResult_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.to_bytes(openSwapResult_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.to_bytes(closeSwapResult_);
 }
 return false;
 }
@@ -1385,6 +1413,10 @@ return m.count_size(removeAssetPairResult_);
 return m.count_size(createKYCRecoveryRequestResult_);
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return m.count_size(initiateKYCRecoveryResult_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.count_size(openSwapResult_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.count_size(closeSwapResult_);
 }
 }
 bool
@@ -1486,6 +1518,10 @@ return removeAssetPairResult_ == other.removeAssetPairResult_;
 return createKYCRecoveryRequestResult_ == other.createKYCRecoveryRequestResult_;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return initiateKYCRecoveryResult_ == other.initiateKYCRecoveryResult_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapResult_ == other.openSwapResult_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapResult_ == other.closeSwapResult_;
 }
 return false;
 }
@@ -1589,6 +1625,10 @@ return removeAssetPairResult_ < other.removeAssetPairResult_;
 return createKYCRecoveryRequestResult_ < other.createKYCRecoveryRequestResult_;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return initiateKYCRecoveryResult_ < other.initiateKYCRecoveryResult_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapResult_ < other.openSwapResult_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapResult_ < other.closeSwapResult_;
 }
 return false;
 }

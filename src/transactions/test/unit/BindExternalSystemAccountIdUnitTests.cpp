@@ -1,8 +1,13 @@
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
+#include "herder/HerderPersistenceImpl.h"
+#include "herder/LedgerCloseData.h"
+#include "history/HistoryArchiveManager.h"
+#include "invariant/InvariantManagerImpl.h"
 #include "invariant/Invariants.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "main/CommandHandler.h"
+#include "main/Maintainer.h"
 #include "main/PersistentState.h"
 #include "medida/metrics_registry.h"
 #include "overlay/BanManager.h"
@@ -10,39 +15,34 @@
 #include "process/ProcessManager.h"
 #include "simulation/LoadGenerator.h"
 #include "test/test_marshaler.h"
-#include "invariant/InvariantManagerImpl.h"
-#include "herder/HerderPersistenceImpl.h"
-#include "main/Maintainer.h"
-#include "history/HistoryArchiveManager.h"
-#include "herder/LedgerCloseData.h"
 #include "transactions/external_system_pool/BindExternalSystemAccountIdOpFrame.h"
-#include "transactions/test/mocks/MockApplication.h"
-#include "transactions/test/mocks/MockDatabase.h"
+#include "transactions/test/mocks/MockAccountHelper.h"
+#include "transactions/test/mocks/MockAccountRoleHelper.h"
+#include "transactions/test/mocks/MockAccountRuleHelper.h"
 #include "transactions/test/mocks/MockAccountRuleVerifier.h"
+#include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
+#include "transactions/test/mocks/MockApplication.h"
+#include "transactions/test/mocks/MockAssetHelper.h"
+#include "transactions/test/mocks/MockBalanceHelper.h"
+#include "transactions/test/mocks/MockDatabase.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDHelper.h"
 #include "transactions/test/mocks/MockExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/test/mocks/MockKeyValueHelper.h"
-#include "transactions/test/mocks/MockSignerHelper.h"
-#include "transactions/test/mocks/MockSignerRuleHelper.h"
-#include "transactions/test/mocks/MockSignerRoleHelper.h"
 #include "transactions/test/mocks/MockLedgerDelta.h"
 #include "transactions/test/mocks/MockLedgerManager.h"
-#include "transactions/test/mocks/MockSignatureValidator.h"
-#include "transactions/test/mocks/MockStorageHelper.h"
-#include "transactions/test/mocks/MockTransactionFrame.h"
-#include "transactions/test/mocks/MockAccountRuleHelper.h"
-#include "transactions/test/mocks/MockAssetHelper.h"
-#include "transactions/test/mocks/MockBalanceHelper.h"
-#include "transactions/test/mocks/MockAccountRoleHelper.h"
-#include "transactions/test/mocks/MockAccountRuleHelper.h"
-#include "transactions/test/mocks/MockAccountHelper.h"
-#include "transactions/test/mocks/MockSignerRuleVerifier.h"
 #include "transactions/test/mocks/MockLicenseHelper.h"
 #include "transactions/test/mocks/MockLicenseSignatureHelper.h"
-#include "transactions/test/mocks/MockStampHelper.h"
-#include "transactions/test/mocks/MockVoteHelper.h"
 #include "transactions/test/mocks/MockPollHelper.h"
-#include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
+#include "transactions/test/mocks/MockSignatureValidator.h"
+#include "transactions/test/mocks/MockSignerHelper.h"
+#include "transactions/test/mocks/MockSignerRoleHelper.h"
+#include "transactions/test/mocks/MockSignerRuleHelper.h"
+#include "transactions/test/mocks/MockSignerRuleVerifier.h"
+#include "transactions/test/mocks/MockStampHelper.h"
+#include "transactions/test/mocks/MockStorageHelper.h"
+#include "transactions/test/mocks/MockSwapHelper.h"
+#include "transactions/test/mocks/MockTransactionFrame.h"
+#include "transactions/test/mocks/MockVoteHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
@@ -80,7 +80,7 @@ TEST_CASE("bind external system account_id - unit test",
     operation.sourceAccount =
         xdr::pointer<AccountID>(new AccountID(CryptoKeyType::KEY_TYPE_ED25519));
     operation.sourceAccount->ed25519() = hexToBin256(
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB");
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB");
     OperationResult operationResult;
 
     AccountFrame::pointer accountFrameFake =
@@ -107,17 +107,17 @@ TEST_CASE("bind external system account_id - unit test",
     ON_CALL(storageHelperMock, getKeyValueHelper())
         .WillByDefault(ReturnRef(keyValueHelperMock));
     ON_CALL(storageHelperMock, getSignerHelper())
-            .WillByDefault(ReturnRef(signerHelperMock));
+        .WillByDefault(ReturnRef(signerHelperMock));
     ON_CALL(storageHelperMock, getSignerRuleHelper())
-            .WillByDefault(ReturnRef(signerRuleHelperMock));
+        .WillByDefault(ReturnRef(signerRuleHelperMock));
     ON_CALL(storageHelperMock, getSignerRoleHelper())
-            .WillByDefault(ReturnRef(signerRoleHelperMock));
+        .WillByDefault(ReturnRef(signerRoleHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDHelperMock));
     ON_CALL(storageHelperMock, getExternalSystemAccountIDPoolEntryHelper())
         .WillByDefault(ReturnRef(externalSystemAccountIDPoolEntryHelperMock));
     ON_CALL(accountRuleVerifierMock, isAllowed(_, _))
-            .WillByDefault(Return(true));
+        .WillByDefault(Return(true));
 
     BindExternalSystemAccountIdOpFrame opFrame(operation, operationResult,
                                                transactionFrameMock);
@@ -127,7 +127,8 @@ TEST_CASE("bind external system account_id - unit test",
                     loadAccount(&ledgerDeltaMock, Ref(dbMock),
                                 *operation.sourceAccount))
             .WillOnce(Return(accountFrameFake));
-        REQUIRE(opFrame.checkValid(appMock, accountRuleVerifierMock, &ledgerDeltaMock));
+        REQUIRE(opFrame.checkValid(appMock, accountRuleVerifierMock,
+                                   &ledgerDeltaMock));
 
         SECTION("Apply, no pool entry to bind")
         {

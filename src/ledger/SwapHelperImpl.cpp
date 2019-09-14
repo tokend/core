@@ -1,0 +1,306 @@
+#include "SwapHelperImpl.h"
+#include "LedgerDelta.h"
+#include "StorageHelper.h"
+#include "database/Database.h"
+
+using namespace soci;
+
+namespace stellar
+{
+
+SwapHelperImpl::SwapHelperImpl(StorageHelper& storageHelper)
+    : mStorageHelper(storageHelper)
+{
+    mSwapColumnSelector =
+        "SELECT id, secret_hash, source_account, source_balance, "
+        "destination_account, destination_balance, "
+        "asset, amount, created_at, lock_time, fee, version "
+        "FROM  swap";
+}
+
+void
+SwapHelperImpl::dropAll()
+{
+    Database& db = getDatabase();
+
+    db.getSession() << "DROP TABLE IF EXISTS swap;";
+    db.getSession()
+        << "CREATE TABLE swap"
+           "("
+           "id                    BIGINT      NOT NULL,"
+           "secret_hash           VARCHAR(64) NOT NULL,"
+           "source_account        VARCHAR(56) NOT NULL,"
+           "source_balance        VARCHAR(56) NOT NULL,"
+           "destination_account   VARCHAR(56) NOT NULL,"
+           "destination_balance   VARCHAR(56) NOT NULL,"
+           "asset                 VARCHAR(16) NOT NULL,"
+           "amount                BIGINT      NOT NULL,"
+           "fee                   BIGINT      NOT NULL,"
+           "lock_time             BIGINT      NOT NULL,"
+           "created_at            BIGINT      NOT NULL,"
+           "version               INT         NOT NULL    DEFAULT 0,"
+           "PRIMARY KEY(id)"
+           ");";
+}
+void
+SwapHelperImpl::storeAdd(LedgerEntry const& entry)
+{
+    auto swapFrame = std::make_shared<SwapFrame>(entry);
+    auto swapEntry = swapFrame->getSwap();
+
+    LedgerKey const& key = swapFrame->getKey();
+    flushCachedEntry(key);
+
+    int32_t swapVersion = static_cast<int32_t>(swapFrame->getSwap().ext.v());
+    std::string secretHash = binToHex(swapEntry.secretHash);
+
+    std::string sql;
+
+    sql = "INSERT INTO swap (id, secret_hash, source_account, "
+          "source_balance, destination_account, destination_balance, "
+          "asset, amount, fee, lock_time, "
+          "created_at, version) "
+          "VALUES "
+          "(:id, :sh, :sa, :sb, :da, :db, :a, :am, :f, :lt, "
+          ":ca, :v)";
+
+    Database& db = getDatabase();
+    auto prep = db.getPreparedStatement(sql);
+
+    {
+        soci::statement& st = prep.statement();
+        st.exchange(use(swapEntry.swapID, "id"));
+        st.exchange(use(secretHash, "sh"));
+        st.exchange(use(swapEntry.sourceAccount, "sa"));
+        st.exchange(use(swapEntry.sourceBalance, "sb"));
+        st.exchange(use(swapEntry.destinationAccount, "da"));
+        st.exchange(use(swapEntry.destinationBalance, "db"));
+        st.exchange(use(swapEntry.assetCode, "a"));
+        st.exchange(use(swapEntry.amount, "am"));
+        st.exchange(use(swapEntry.fee, "f"));
+        st.exchange(use(swapEntry.lockTime, "lt"));
+        st.exchange(use(swapEntry.createdAt, "ca"));
+        st.exchange(use(swapVersion, "v"));
+
+        st.define_and_bind();
+        {
+            auto timer = db.getInsertTimer("swap");
+            st.execute(true);
+        }
+
+        if (st.get_affected_rows() != 1)
+        {
+            throw std::runtime_error("Could not update data in SQL");
+        }
+        mStorageHelper.mustGetLedgerDelta().addEntry(*swapFrame);
+    }
+}
+
+void
+SwapHelperImpl::storeChange(LedgerEntry const& entry)
+{
+    std::throw_with_nested(std::runtime_error("swap update is not supported"));
+}
+
+void
+SwapHelperImpl::storeDelete(LedgerKey const& key)
+{
+    flushCachedEntry(key);
+
+    auto id = key.swap().swapID;
+
+    {
+        Database& db = getDatabase();
+        auto timer = db.getDeleteTimer("swap");
+        auto prep = db.getPreparedStatement("DELETE FROM swap "
+                                            "WHERE       id=:id");
+        auto& st = prep.statement();
+        st.exchange(soci::use(id, "id"));
+        st.define_and_bind();
+        st.execute(true);
+    }
+
+    mStorageHelper.mustGetLedgerDelta().deleteEntry(key);
+}
+
+bool
+SwapHelperImpl::exists(LedgerKey const& key)
+{
+    if (cachedEntryExists(key) && getCachedEntry(key) != nullptr)
+    {
+        return true;
+    }
+
+    return exists(key.swap().swapID);
+}
+
+LedgerKey
+SwapHelperImpl::getLedgerKey(LedgerEntry const& from)
+{
+    LedgerKey ledgerKey(from.data.type());
+    ledgerKey.swap().swapID = from.data.swap().swapID;
+
+    return ledgerKey;
+}
+
+EntryFrame::pointer
+SwapHelperImpl::storeLoad(LedgerKey const& key)
+{
+    return loadSwap(key.swap().swapID);
+}
+
+EntryFrame::pointer
+SwapHelperImpl::fromXDR(LedgerEntry const& from)
+{
+    return std::make_shared<SwapFrame>(from);
+}
+
+uint64_t
+SwapHelperImpl::countObjects()
+{
+    soci::session& sess = getDatabase().getSession();
+    uint64_t count = 0;
+    sess << "SELECT COUNT(*) FROM swap;", into(count);
+
+    return count;
+}
+
+SwapFrame::pointer
+SwapHelperImpl::loadSwap(uint64_t id)
+{
+    LedgerKey key;
+    key.type(LedgerEntryType::SWAP);
+    key.swap().swapID = id;
+
+    if (cachedEntryExists(key))
+    {
+        auto p = getCachedEntry(key);
+        return p ? std::make_shared<SwapFrame>(*p) : nullptr;
+    }
+
+    Database& db = getDatabase();
+    std::string sql = mSwapColumnSelector;
+    sql += " WHERE id = :id";
+
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(id, "id"));
+
+    SwapFrame::pointer result;
+    load(prep, [&result](LedgerEntry const& entry) {
+        result = std::make_shared<SwapFrame>(entry);
+    });
+
+    if (!result)
+    {
+        putCachedEntry(key, nullptr);
+        return nullptr;
+    }
+
+    if (mStorageHelper.getLedgerDelta() != nullptr)
+    {
+        mStorageHelper.mustGetLedgerDelta().recordEntry(*result);
+    }
+
+    auto pEntry = std::make_shared<LedgerEntry>(result->mEntry);
+    putCachedEntry(key, pEntry);
+
+    return result;
+}
+
+void
+SwapHelperImpl::load(StatementContext& prep,
+                     std::function<void(LedgerEntry const&)> processor)
+{
+    try
+    {
+        LedgerEntry le;
+        le.data.type(LedgerEntryType::SWAP);
+        auto& swapEntry = le.data.swap();
+
+        int32_t version;
+        std::string sourceAccRaw, sourceBalRaw, destAccRaw, destBalRaw,
+            secretHash;
+
+        auto& st = prep.statement();
+        st.exchange(into(swapEntry.swapID));
+        st.exchange(into(secretHash));
+        st.exchange(into(sourceAccRaw));
+        st.exchange(into(sourceBalRaw));
+        st.exchange(into(destAccRaw));
+        st.exchange(into(destBalRaw));
+        st.exchange(into(swapEntry.assetCode));
+        st.exchange(into(swapEntry.amount));
+        st.exchange(into(swapEntry.createdAt));
+        st.exchange(into(swapEntry.lockTime));
+        st.exchange(into(swapEntry.fee));
+        st.exchange(into(version));
+        st.define_and_bind();
+        st.execute(true);
+
+        while (st.got_data())
+        {
+            swapEntry.sourceAccount = PubKeyUtils::fromStrKey(sourceAccRaw);
+            swapEntry.destinationAccount = PubKeyUtils::fromStrKey(destAccRaw);
+            swapEntry.sourceBalance = BalanceKeyUtils::fromStrKey(sourceBalRaw);
+            swapEntry.destinationBalance =
+                BalanceKeyUtils::fromStrKey(destBalRaw);
+            swapEntry.secretHash = hexToBin256(secretHash);
+
+            swapEntry.ext.v(static_cast<LedgerVersion>(version));
+            processor(le);
+            st.fetch();
+        }
+    }
+    catch (std::exception& e)
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << e.what();
+        std::throw_with_nested(std::runtime_error("Failed to load swap"));
+    }
+}
+
+bool
+SwapHelperImpl::exists(uint64_t id)
+{
+    int exists = 0;
+    {
+        Database& db = getDatabase();
+        auto timer = db.getSelectTimer("swap-exists");
+        auto prep =
+            db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM swap "
+                                    "WHERE id=:id)");
+        auto& st = prep.statement();
+        st.exchange(use(id));
+        st.exchange(into(exists));
+        st.define_and_bind();
+        st.execute(true);
+    }
+    return exists != 0;
+}
+
+SwapFrame::pointer
+SwapHelperImpl::mustLoadSwap(uint64_t id)
+{
+    auto swapFrame = loadSwap(id);
+
+    if (!swapFrame)
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Expected swap to exist: " << id;
+        throw std::runtime_error("Expected swap to exist");
+    }
+
+    return swapFrame;
+}
+
+Database&
+SwapHelperImpl::getDatabase()
+{
+    return mStorageHelper.getDatabase();
+}
+
+LedgerDelta*
+SwapHelperImpl::getLedgerDelta()
+{
+    return mStorageHelper.getLedgerDelta();
+}
+}

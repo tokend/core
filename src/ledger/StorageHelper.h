@@ -26,6 +26,7 @@ class StampHelper;
 class VoteHelper;
 class PollHelper;
 class AccountSpecificRuleHelper;
+class SwapHelper;
 
 class StorageHelper
 {
@@ -70,5 +71,6 @@ class StorageHelper
     virtual VoteHelper& getVoteHelper() = 0;
     virtual PollHelper& getPollHelper() = 0;
     virtual AccountSpecificRuleHelper& getAccountSpecificRuleHelper() = 0;
+    virtual SwapHelper& getSwapHelper() = 0;
 };
 } // namespace stellar

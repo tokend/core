@@ -22,6 +22,7 @@ enum class FeeType : std::int32_t {
   PAYOUT_FEE = 7,
   ATOMIC_SWAP_SALE_FEE = 8,
   ATOMIC_SWAP_PURCHASE_FEE = 9,
+  SWAP_FEE = 10,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::FeeType>
@@ -51,6 +52,8 @@ template<> struct xdr_traits<::stellar::FeeType>
       return "ATOMIC_SWAP_SALE_FEE";
     case ::stellar::FeeType::ATOMIC_SWAP_PURCHASE_FEE:
       return "ATOMIC_SWAP_PURCHASE_FEE";
+    case ::stellar::FeeType::SWAP_FEE:
+      return "SWAP_FEE";
     default:
       return nullptr;
     }
@@ -66,7 +69,8 @@ template<> struct xdr_traits<::stellar::FeeType>
       (int32_t)::stellar::FeeType::OPERATION_FEE,
       (int32_t)::stellar::FeeType::PAYOUT_FEE,
       (int32_t)::stellar::FeeType::ATOMIC_SWAP_SALE_FEE,
-      (int32_t)::stellar::FeeType::ATOMIC_SWAP_PURCHASE_FEE
+      (int32_t)::stellar::FeeType::ATOMIC_SWAP_PURCHASE_FEE,
+      (int32_t)::stellar::FeeType::SWAP_FEE
     };
     return _xdr_enum_vec;
   }

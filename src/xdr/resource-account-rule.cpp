@@ -1533,6 +1533,79 @@ return accountSpecificRule_ < other.accountSpecificRule_;
 return false;
 }
 bool
+AccountRuleResource::_swap_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okassetCode = u.from_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = u.from_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+AccountRuleResource::_swap_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okassetCode = m.to_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = m.to_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+AccountRuleResource::_swap_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(assetCode);
+m.count_size(assetType);
+m.count_size(ext);
+}
+bool
+AccountRuleResource::_swap_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_swap_t const&>(other_abstract);return true
+&& (assetCode== other.assetCode)
+&& (assetType== other.assetType)
+&& (ext== other.ext)
+;}
+bool
+AccountRuleResource::_swap_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_swap_t const&>(other_abstract);
+if (assetCode < other.assetCode) return true;
+if (other.assetCode < assetCode) return false;
+if (assetType < other.assetType) return true;
+if (other.assetType < assetType) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 AccountRuleResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -1565,6 +1638,8 @@ return u.from_bytes(vote_);
 return u.from_bytes(initiateKYCRecovery_);
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return u.from_bytes(accountSpecificRuleExt_);
+  case (int32_t)LedgerEntryType::SWAP:
+return u.from_bytes(swap_);
   default:
 return u.from_bytes(ext_);
 }
@@ -1603,6 +1678,8 @@ return m.to_bytes(vote_);
 return m.to_bytes(initiateKYCRecovery_);
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return m.to_bytes(accountSpecificRuleExt_);
+  case (int32_t)LedgerEntryType::SWAP:
+return m.to_bytes(swap_);
   default:
 return m.to_bytes(ext_);
 }
@@ -1638,6 +1715,8 @@ return m.count_size(vote_);
 return m.count_size(initiateKYCRecovery_);
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return m.count_size(accountSpecificRuleExt_);
+  case (int32_t)LedgerEntryType::SWAP:
+return m.count_size(swap_);
   default:
 return m.count_size(ext_);
 }
@@ -1676,6 +1755,8 @@ return vote_ == other.vote_;
 return initiateKYCRecovery_ == other.initiateKYCRecovery_;
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return accountSpecificRuleExt_ == other.accountSpecificRuleExt_;
+  case (int32_t)LedgerEntryType::SWAP:
+return swap_ == other.swap_;
   default:
 return ext_ == other.ext_;
 }
@@ -1715,6 +1796,8 @@ return vote_ < other.vote_;
 return initiateKYCRecovery_ < other.initiateKYCRecovery_;
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 return accountSpecificRuleExt_ < other.accountSpecificRuleExt_;
+  case (int32_t)LedgerEntryType::SWAP:
+return swap_ < other.swap_;
   default:
 return ext_ < other.ext_;
 }

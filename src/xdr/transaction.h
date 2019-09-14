@@ -52,6 +52,8 @@
 #include "xdr/operation-create-kyc-recovery-request.h"
 #include "xdr/operation-initiate-kyc-recovery.h"
 #include "xdr/operation-remove-asset-pair.h"
+#include "xdr/operation-open-swap.h"
+#include "xdr/operation-close-swap.h"
 
 namespace stellar {
 
@@ -105,6 +107,8 @@ struct Operation  : xdr::xdr_abstract {
       RemoveAssetPairOp removeAssetPairOp_;
       InitiateKYCRecoveryOp initiateKYCRecoveryOp_;
       CreateKYCRecoveryRequestOp createKYCRecoveryRequestOp_;
+      OpenSwapOp openSwapOp_;
+      CloseSwapOp closeSwapOp_;
     };
 
   public:
@@ -154,7 +158,9 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::CANCEL_CHANGE_ROLE_REQUEST,
         OperationType::REMOVE_ASSET_PAIR,
         OperationType::INITIATE_KYC_RECOVERY,
-        OperationType::CREATE_KYC_RECOVERY_REQUEST
+        OperationType::CREATE_KYC_RECOVERY_REQUEST,
+        OperationType::OPEN_SWAP,
+        OperationType::CLOSE_SWAP
       };
       return _xdr_disc_vec;
     }
@@ -203,6 +209,8 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET_PAIR ? 42
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 43
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 44
+        : which == (int32_t)OperationType::OPEN_SWAP ? 45
+        : which == (int32_t)OperationType::CLOSE_SWAP ? 46
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -339,6 +347,12 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
         _f(&_body_t::createKYCRecoveryRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::OPEN_SWAP:
+        _f(&_body_t::openSwapOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CLOSE_SWAP:
+        _f(&_body_t::closeSwapOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -485,6 +499,12 @@ break;
         case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp{};
 break;
+        case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp{};
+break;
+        case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp{};
+break;
 }
 
       }
@@ -626,6 +646,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp{};
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp{};
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp{};
+break;
 }
 
     }
@@ -763,6 +789,12 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(source.initiateKYCRecoveryOp_
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(source.createKYCRecoveryRequestOp_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(source.openSwapOp_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
 }
 
@@ -902,6 +934,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(std::move(source.createKYCRecoveryRequestOp_));
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(std::move(source.openSwapOp_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
+break;
 }
 
     }
@@ -1039,6 +1077,12 @@ initiateKYCRecoveryOp_.~InitiateKYCRecoveryOp();
 break;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_.~CreateKYCRecoveryRequestOp();
+break;
+    case (int32_t)OperationType::OPEN_SWAP:
+openSwapOp_.~OpenSwapOp();
+break;
+    case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapOp_.~CloseSwapOp();
 break;
 }
 }
@@ -1180,6 +1224,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_ = source.createKYCRecoveryRequestOp_;
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapOp_ = source.openSwapOp_;
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapOp_ = source.closeSwapOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1317,6 +1367,12 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(source.initiateKYCRecoveryOp_
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(source.createKYCRecoveryRequestOp_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(source.openSwapOp_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
 }
 }
@@ -1459,6 +1515,12 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_ = std::move(source.createKYCRecoveryRequestOp_);
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapOp_ = std::move(source.openSwapOp_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapOp_ = std::move(source.closeSwapOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -1596,6 +1658,12 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(std::move(source.initiateKYCR
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(std::move(source.createKYCRecoveryRequestOp_));
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(std::move(source.openSwapOp_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
 break;
 }
 }
@@ -2047,6 +2115,26 @@ break;
       if (_xdr_field_number(type_) == 44)
         return createKYCRecoveryRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: createKYCRecoveryRequestOp accessed when not selected");
+    }
+    OpenSwapOp &openSwapOp() {
+      if (_xdr_field_number(type_) == 45)
+        return openSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: openSwapOp accessed when not selected");
+    }
+    const OpenSwapOp &openSwapOp() const {
+      if (_xdr_field_number(type_) == 45)
+        return openSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: openSwapOp accessed when not selected");
+    }
+    CloseSwapOp &closeSwapOp() {
+      if (_xdr_field_number(type_) == 46)
+        return closeSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: closeSwapOp accessed when not selected");
+    }
+    const CloseSwapOp &closeSwapOp() const {
+      if (_xdr_field_number(type_) == 46)
+        return closeSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: closeSwapOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -2837,6 +2925,8 @@ struct OperationResult : xdr::xdr_abstract {
       RemoveAssetPairResult removeAssetPairResult_;
       CreateKYCRecoveryRequestResult createKYCRecoveryRequestResult_;
       InitiateKYCRecoveryResult initiateKYCRecoveryResult_;
+      OpenSwapResult openSwapResult_;
+      CloseSwapResult closeSwapResult_;
     };
 
   public:
@@ -2886,7 +2976,9 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CANCEL_CHANGE_ROLE_REQUEST,
         OperationType::REMOVE_ASSET_PAIR,
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
-        OperationType::INITIATE_KYC_RECOVERY
+        OperationType::INITIATE_KYC_RECOVERY,
+        OperationType::OPEN_SWAP,
+        OperationType::CLOSE_SWAP
       };
       return _xdr_disc_vec;
     }
@@ -2935,6 +3027,8 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET_PAIR ? 42
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 43
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 44
+        : which == (int32_t)OperationType::OPEN_SWAP ? 45
+        : which == (int32_t)OperationType::CLOSE_SWAP ? 46
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3071,6 +3165,12 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
         _f(&_tr_t::initiateKYCRecoveryResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::OPEN_SWAP:
+        _f(&_tr_t::openSwapResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CLOSE_SWAP:
+        _f(&_tr_t::closeSwapResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -3217,6 +3317,12 @@ break;
         case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult{};
 break;
+        case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult{};
+break;
+        case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult{};
+break;
 }
 
       }
@@ -3358,6 +3464,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult{};
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult{};
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult{};
+break;
 }
 
     }
@@ -3495,6 +3607,12 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(source.crea
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(source.initiateKYCRecoveryResult_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(source.openSwapResult_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(source.closeSwapResult_);
 break;
 }
 
@@ -3634,6 +3752,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(std::move(source.initiateKYCRecoveryResult_));
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(std::move(source.openSwapResult_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(std::move(source.closeSwapResult_));
+break;
 }
 
     }
@@ -3771,6 +3895,12 @@ createKYCRecoveryRequestResult_.~CreateKYCRecoveryRequestResult();
 break;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_.~InitiateKYCRecoveryResult();
+break;
+    case (int32_t)OperationType::OPEN_SWAP:
+openSwapResult_.~OpenSwapResult();
+break;
+    case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapResult_.~CloseSwapResult();
 break;
 }
 }
@@ -3912,6 +4042,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_ = source.initiateKYCRecoveryResult_;
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapResult_ = source.openSwapResult_;
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapResult_ = source.closeSwapResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -4049,6 +4185,12 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(source.crea
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(source.initiateKYCRecoveryResult_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(source.openSwapResult_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(source.closeSwapResult_);
 break;
 }
 }
@@ -4191,6 +4333,12 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_ = std::move(source.initiateKYCRecoveryResult_);
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapResult_ = std::move(source.openSwapResult_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapResult_ = std::move(source.closeSwapResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -4328,6 +4476,12 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(std::move(s
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(std::move(source.initiateKYCRecoveryResult_));
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(std::move(source.openSwapResult_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(std::move(source.closeSwapResult_));
 break;
 }
 }
@@ -4779,6 +4933,26 @@ break;
       if (_xdr_field_number(type_) == 44)
         return initiateKYCRecoveryResult_;
       throw xdr::xdr_wrong_union("_tr_t: initiateKYCRecoveryResult accessed when not selected");
+    }
+    OpenSwapResult &openSwapResult() {
+      if (_xdr_field_number(type_) == 45)
+        return openSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: openSwapResult accessed when not selected");
+    }
+    const OpenSwapResult &openSwapResult() const {
+      if (_xdr_field_number(type_) == 45)
+        return openSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: openSwapResult accessed when not selected");
+    }
+    CloseSwapResult &closeSwapResult() {
+      if (_xdr_field_number(type_) == 46)
+        return closeSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: closeSwapResult accessed when not selected");
+    }
+    const CloseSwapResult &closeSwapResult() const {
+      if (_xdr_field_number(type_) == 46)
+        return closeSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: closeSwapResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
