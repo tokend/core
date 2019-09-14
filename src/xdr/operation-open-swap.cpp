@@ -100,11 +100,6 @@ if (!oksourceBalance)
 {
 return false;
 }
-bool okasset = u.from_bytes(asset);
-if (!okasset)
-{
-return false;
-}
 bool okamount = u.from_bytes(amount);
 if (!okamount)
 {
@@ -117,6 +112,11 @@ return false;
 }
 bool okfeeData = u.from_bytes(feeData);
 if (!okfeeData)
+{
+return false;
+}
+bool okdetails = u.from_bytes(details);
+if (!okdetails)
 {
 return false;
 }
@@ -145,11 +145,6 @@ if (!oksourceBalance)
 {
 return false;
 }
-bool okasset = m.to_bytes(asset);
-if (!okasset)
-{
-return false;
-}
 bool okamount = m.to_bytes(amount);
 if (!okamount)
 {
@@ -162,6 +157,11 @@ return false;
 }
 bool okfeeData = m.to_bytes(feeData);
 if (!okfeeData)
+{
+return false;
+}
+bool okdetails = m.to_bytes(details);
+if (!okdetails)
 {
 return false;
 }
@@ -186,10 +186,10 @@ void
 OpenSwapOp::count_size(xdr::measurer& m) const 
 {
 m.count_size(sourceBalance);
-m.count_size(asset);
 m.count_size(amount);
 m.count_size(destination);
 m.count_size(feeData);
+m.count_size(details);
 m.count_size(secretHash);
 m.count_size(lockTime);
 m.count_size(ext);
@@ -202,10 +202,10 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<OpenSwapOp const&>(other_abstract);return true
 && (sourceBalance== other.sourceBalance)
-&& (asset== other.asset)
 && (amount== other.amount)
 && (destination== other.destination)
 && (feeData== other.feeData)
+&& (details== other.details)
 && (secretHash== other.secretHash)
 && (lockTime== other.lockTime)
 && (ext== other.ext)
@@ -220,14 +220,14 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<OpenSwapOp const&>(other_abstract);
 if (sourceBalance < other.sourceBalance) return true;
 if (other.sourceBalance < sourceBalance) return false;
-if (asset < other.asset) return true;
-if (other.asset < asset) return false;
 if (amount < other.amount) return true;
 if (other.amount < amount) return false;
 if (destination < other.destination) return true;
 if (other.destination < destination) return false;
 if (feeData < other.feeData) return true;
 if (other.feeData < feeData) return false;
+if (details < other.details) return true;
+if (other.details < details) return false;
 if (secretHash < other.secretHash) return true;
 if (other.secretHash < secretHash) return false;
 if (lockTime < other.lockTime) return true;

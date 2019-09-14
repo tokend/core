@@ -52,6 +52,10 @@ class CheckSaleStateOpFrame : public OperationFrame
     CreateIssuanceRequestResult applyCreateIssuanceRequest(const SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount, Application& app,
         LedgerDelta& delta, LedgerManager& lm) const;
 
+    static void issueTokens(TransactionFrame& parentTx, Application& app, LedgerDelta& delta, LedgerManager &lm, AccountFrame::pointer source, AssetCode const& asset, uint64_t amount, BalanceID const& receiver);
+
+    void applyOffers(Application& app, LedgerDelta& delta, LedgerManager& lm, SaleFrame::pointer sale, AccountFrame::pointer owner);
+
     FeeManager::FeeResult obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
                                                         AssetCode const& asset, int64_t amount,
                                                         LedgerManager& lm, Database& db) const;
@@ -72,7 +76,14 @@ public:
     CheckSaleStateOpFrame(Operation const& op, OperationResult& res,
                          TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    static ManageOfferSuccessResult createCounterOffer(
+        Application& app, LedgerDelta& delta, LedgerManager& lm,
+        TransactionFrame& parentTx, SaleFrame::pointer sale,
+        AccountFrame::pointer saleOwnerAccount,
+        SaleQuoteAsset const& saleQuoteAsset, int64_t baseAmount, int64_t price,
+        FeeManager::FeeResult feeResult);
+
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 

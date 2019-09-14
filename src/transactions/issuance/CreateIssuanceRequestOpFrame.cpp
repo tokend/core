@@ -335,7 +335,7 @@ CreateIssuanceRequestOpFrame::calculateFee(Application& app, AccountID receiver,
 
 CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
     AssetCode const& asset, const uint64_t amount, BalanceID const& receiver,
-    LedgerManager& lm, uint32_t allTasks)
+    LedgerManager& lm, uint32_t allTasks, std::string* reference)
 {
     IssuanceRequest request;
     request.amount = amount;
@@ -346,9 +346,21 @@ CreateIssuanceRequestOp CreateIssuanceRequestOpFrame::build(
     request.receiver = receiver;
     CreateIssuanceRequestOp issuanceRequestOp;
     issuanceRequestOp.request = request;
-    issuanceRequestOp.reference = binToHex(sha256(xdr_to_opaque(receiver, asset, amount, lm.getCloseTime())));
+    if (reference != nullptr)
+    {
+        if (reference->size() != 64)
+        {
+            throw std::runtime_error("Reference length is wrong");
+        }
+        issuanceRequestOp.reference = *reference;
+    }
+    else
+    {
+        issuanceRequestOp.reference = binToHex(
+            sha256(xdr_to_opaque(receiver, asset, amount, lm.getCloseTime())));
+    }
 
-	issuanceRequestOp.allTasks.activate() = allTasks;
+    issuanceRequestOp.allTasks.activate() = allTasks;
 
     return issuanceRequestOp;
 }

@@ -946,8 +946,11 @@ enum class OperationType : std::int32_t {
   INITIATE_KYC_RECOVERY = 48,
   CREATE_KYC_RECOVERY_REQUEST = 49,
   REMOVE_ASSET_PAIR = 50,
-  OPEN_SWAP = 51,
-  CLOSE_SWAP = 52,
+  CREATE_MANAGE_OFFER_REQUEST = 51,
+  CREATE_PAYMENT_REQUEST = 52,
+  REMOVE_ASSET = 53,
+  OPEN_SWAP = 54,
+  CLOSE_SWAP = 55,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1045,6 +1048,12 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CREATE_KYC_RECOVERY_REQUEST";
     case ::stellar::OperationType::REMOVE_ASSET_PAIR:
       return "REMOVE_ASSET_PAIR";
+    case ::stellar::OperationType::CREATE_MANAGE_OFFER_REQUEST:
+      return "CREATE_MANAGE_OFFER_REQUEST";
+    case ::stellar::OperationType::CREATE_PAYMENT_REQUEST:
+      return "CREATE_PAYMENT_REQUEST";
+    case ::stellar::OperationType::REMOVE_ASSET:
+      return "REMOVE_ASSET";
     case ::stellar::OperationType::OPEN_SWAP:
       return "OPEN_SWAP";
     case ::stellar::OperationType::CLOSE_SWAP:
@@ -1099,6 +1108,9 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::INITIATE_KYC_RECOVERY,
       (int32_t)::stellar::OperationType::CREATE_KYC_RECOVERY_REQUEST,
       (int32_t)::stellar::OperationType::REMOVE_ASSET_PAIR,
+      (int32_t)::stellar::OperationType::CREATE_MANAGE_OFFER_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_PAYMENT_REQUEST,
+      (int32_t)::stellar::OperationType::REMOVE_ASSET,
       (int32_t)::stellar::OperationType::OPEN_SWAP,
       (int32_t)::stellar::OperationType::CLOSE_SWAP
     };

@@ -52,6 +52,9 @@
 #include "xdr/operation-create-kyc-recovery-request.h"
 #include "xdr/operation-initiate-kyc-recovery.h"
 #include "xdr/operation-remove-asset-pair.h"
+#include "xdr/operation-create-manage-offer-request.h"
+#include "xdr/operation-create-payment-request.h"
+#include "xdr/operation-remove-asset.h"
 #include "xdr/operation-open-swap.h"
 #include "xdr/operation-close-swap.h"
 
@@ -107,6 +110,9 @@ struct Operation  : xdr::xdr_abstract {
       RemoveAssetPairOp removeAssetPairOp_;
       InitiateKYCRecoveryOp initiateKYCRecoveryOp_;
       CreateKYCRecoveryRequestOp createKYCRecoveryRequestOp_;
+      CreateManageOfferRequestOp createManageOfferRequestOp_;
+      CreatePaymentRequestOp createPaymentRequestOp_;
+      RemoveAssetOp removeAssetOp_;
       OpenSwapOp openSwapOp_;
       CloseSwapOp closeSwapOp_;
     };
@@ -159,6 +165,9 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::REMOVE_ASSET_PAIR,
         OperationType::INITIATE_KYC_RECOVERY,
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
+        OperationType::CREATE_MANAGE_OFFER_REQUEST,
+        OperationType::CREATE_PAYMENT_REQUEST,
+        OperationType::REMOVE_ASSET,
         OperationType::OPEN_SWAP,
         OperationType::CLOSE_SWAP
       };
@@ -209,8 +218,11 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET_PAIR ? 42
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 43
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 44
-        : which == (int32_t)OperationType::OPEN_SWAP ? 45
-        : which == (int32_t)OperationType::CLOSE_SWAP ? 46
+        : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
+        : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
+        : which == (int32_t)OperationType::REMOVE_ASSET ? 47
+        : which == (int32_t)OperationType::OPEN_SWAP ? 48
+        : which == (int32_t)OperationType::CLOSE_SWAP ? 49
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -347,6 +359,15 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
         _f(&_body_t::createKYCRecoveryRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+        _f(&_body_t::createManageOfferRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+        _f(&_body_t::createPaymentRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::REMOVE_ASSET:
+        _f(&_body_t::removeAssetOp_, std::forward<_A>(_a)...);
         return true;
       case (int32_t)OperationType::OPEN_SWAP:
         _f(&_body_t::openSwapOp_, std::forward<_A>(_a)...);
@@ -499,6 +520,15 @@ break;
         case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp{};
 break;
+        case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp{};
+break;
+        case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp{};
+break;
+        case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp{};
+break;
         case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapOp_) OpenSwapOp{};
 break;
@@ -646,6 +676,15 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp{};
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp{};
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp{};
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp{};
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapOp_) OpenSwapOp{};
 break;
@@ -789,6 +828,15 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(source.initiateKYCRecoveryOp_
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(source.createKYCRecoveryRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(source.createManageOfferRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(source.removeAssetOp_);
 break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapOp_) OpenSwapOp(source.openSwapOp_);
@@ -934,6 +982,15 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(std::move(source.createKYCRecoveryRequestOp_));
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(std::move(source.createManageOfferRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaymentRequestOp_));
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(std::move(source.removeAssetOp_));
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapOp_) OpenSwapOp(std::move(source.openSwapOp_));
 break;
@@ -1077,6 +1134,15 @@ initiateKYCRecoveryOp_.~InitiateKYCRecoveryOp();
 break;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_.~CreateKYCRecoveryRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestOp_.~CreateManageOfferRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestOp_.~CreatePaymentRequestOp();
+break;
+    case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetOp_.~RemoveAssetOp();
 break;
     case (int32_t)OperationType::OPEN_SWAP:
 openSwapOp_.~OpenSwapOp();
@@ -1224,6 +1290,15 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_ = source.createKYCRecoveryRequestOp_;
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestOp_ = source.createManageOfferRequestOp_;
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestOp_ = source.createPaymentRequestOp_;
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetOp_ = source.removeAssetOp_;
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 openSwapOp_ = source.openSwapOp_;
 break;
@@ -1367,6 +1442,15 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(source.initiateKYCRecoveryOp_
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(source.createKYCRecoveryRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(source.createManageOfferRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(source.removeAssetOp_);
 break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapOp_) OpenSwapOp(source.openSwapOp_);
@@ -1515,6 +1599,15 @@ break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 createKYCRecoveryRequestOp_ = std::move(source.createKYCRecoveryRequestOp_);
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestOp_ = std::move(source.createManageOfferRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestOp_ = std::move(source.createPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetOp_ = std::move(source.removeAssetOp_);
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 openSwapOp_ = std::move(source.openSwapOp_);
 break;
@@ -1658,6 +1751,15 @@ new(&initiateKYCRecoveryOp_) InitiateKYCRecoveryOp(std::move(source.initiateKYCR
 break;
       case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 new(&createKYCRecoveryRequestOp_) CreateKYCRecoveryRequestOp(std::move(source.createKYCRecoveryRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestOp_) CreateManageOfferRequestOp(std::move(source.createManageOfferRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaymentRequestOp_));
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetOp_) RemoveAssetOp(std::move(source.removeAssetOp_));
 break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapOp_) OpenSwapOp(std::move(source.openSwapOp_));
@@ -2116,23 +2218,53 @@ break;
         return createKYCRecoveryRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: createKYCRecoveryRequestOp accessed when not selected");
     }
-    OpenSwapOp &openSwapOp() {
+    CreateManageOfferRequestOp &createManageOfferRequestOp() {
       if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createManageOfferRequestOp accessed when not selected");
+    }
+    const CreateManageOfferRequestOp &createManageOfferRequestOp() const {
+      if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createManageOfferRequestOp accessed when not selected");
+    }
+    CreatePaymentRequestOp &createPaymentRequestOp() {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createPaymentRequestOp accessed when not selected");
+    }
+    const CreatePaymentRequestOp &createPaymentRequestOp() const {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createPaymentRequestOp accessed when not selected");
+    }
+    RemoveAssetOp &removeAssetOp() {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetOp_;
+      throw xdr::xdr_wrong_union("_body_t: removeAssetOp accessed when not selected");
+    }
+    const RemoveAssetOp &removeAssetOp() const {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetOp_;
+      throw xdr::xdr_wrong_union("_body_t: removeAssetOp accessed when not selected");
+    }
+    OpenSwapOp &openSwapOp() {
+      if (_xdr_field_number(type_) == 48)
         return openSwapOp_;
       throw xdr::xdr_wrong_union("_body_t: openSwapOp accessed when not selected");
     }
     const OpenSwapOp &openSwapOp() const {
-      if (_xdr_field_number(type_) == 45)
+      if (_xdr_field_number(type_) == 48)
         return openSwapOp_;
       throw xdr::xdr_wrong_union("_body_t: openSwapOp accessed when not selected");
     }
     CloseSwapOp &closeSwapOp() {
-      if (_xdr_field_number(type_) == 46)
+      if (_xdr_field_number(type_) == 49)
         return closeSwapOp_;
       throw xdr::xdr_wrong_union("_body_t: closeSwapOp accessed when not selected");
     }
     const CloseSwapOp &closeSwapOp() const {
-      if (_xdr_field_number(type_) == 46)
+      if (_xdr_field_number(type_) == 49)
         return closeSwapOp_;
       throw xdr::xdr_wrong_union("_body_t: closeSwapOp accessed when not selected");
     }bool
@@ -2925,6 +3057,9 @@ struct OperationResult : xdr::xdr_abstract {
       RemoveAssetPairResult removeAssetPairResult_;
       CreateKYCRecoveryRequestResult createKYCRecoveryRequestResult_;
       InitiateKYCRecoveryResult initiateKYCRecoveryResult_;
+      CreateManageOfferRequestResult createManageOfferRequestResult_;
+      CreatePaymentRequestResult createPaymentRequestResult_;
+      RemoveAssetResult removeAssetResult_;
       OpenSwapResult openSwapResult_;
       CloseSwapResult closeSwapResult_;
     };
@@ -2977,6 +3112,9 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::REMOVE_ASSET_PAIR,
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
         OperationType::INITIATE_KYC_RECOVERY,
+        OperationType::CREATE_MANAGE_OFFER_REQUEST,
+        OperationType::CREATE_PAYMENT_REQUEST,
+        OperationType::REMOVE_ASSET,
         OperationType::OPEN_SWAP,
         OperationType::CLOSE_SWAP
       };
@@ -3027,8 +3165,11 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET_PAIR ? 42
         : which == (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST ? 43
         : which == (int32_t)OperationType::INITIATE_KYC_RECOVERY ? 44
-        : which == (int32_t)OperationType::OPEN_SWAP ? 45
-        : which == (int32_t)OperationType::CLOSE_SWAP ? 46
+        : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
+        : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
+        : which == (int32_t)OperationType::REMOVE_ASSET ? 47
+        : which == (int32_t)OperationType::OPEN_SWAP ? 48
+        : which == (int32_t)OperationType::CLOSE_SWAP ? 49
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3165,6 +3306,15 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
         _f(&_tr_t::initiateKYCRecoveryResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+        _f(&_tr_t::createManageOfferRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+        _f(&_tr_t::createPaymentRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::REMOVE_ASSET:
+        _f(&_tr_t::removeAssetResult_, std::forward<_A>(_a)...);
         return true;
       case (int32_t)OperationType::OPEN_SWAP:
         _f(&_tr_t::openSwapResult_, std::forward<_A>(_a)...);
@@ -3317,6 +3467,15 @@ break;
         case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult{};
 break;
+        case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult{};
+break;
+        case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult{};
+break;
+        case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult{};
+break;
         case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapResult_) OpenSwapResult{};
 break;
@@ -3464,6 +3623,15 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult{};
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult{};
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult{};
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult{};
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapResult_) OpenSwapResult{};
 break;
@@ -3607,6 +3775,15 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(source.crea
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(source.initiateKYCRecoveryResult_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(source.createManageOfferRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(source.removeAssetResult_);
 break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapResult_) OpenSwapResult(source.openSwapResult_);
@@ -3752,6 +3929,15 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(std::move(source.initiateKYCRecoveryResult_));
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(std::move(source.createManageOfferRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.createPaymentRequestResult_));
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(std::move(source.removeAssetResult_));
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapResult_) OpenSwapResult(std::move(source.openSwapResult_));
 break;
@@ -3895,6 +4081,15 @@ createKYCRecoveryRequestResult_.~CreateKYCRecoveryRequestResult();
 break;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_.~InitiateKYCRecoveryResult();
+break;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestResult_.~CreateManageOfferRequestResult();
+break;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestResult_.~CreatePaymentRequestResult();
+break;
+    case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetResult_.~RemoveAssetResult();
 break;
     case (int32_t)OperationType::OPEN_SWAP:
 openSwapResult_.~OpenSwapResult();
@@ -4042,6 +4237,15 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_ = source.initiateKYCRecoveryResult_;
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestResult_ = source.createManageOfferRequestResult_;
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestResult_ = source.createPaymentRequestResult_;
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetResult_ = source.removeAssetResult_;
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 openSwapResult_ = source.openSwapResult_;
 break;
@@ -4185,6 +4389,15 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(source.crea
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(source.initiateKYCRecoveryResult_);
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(source.createManageOfferRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(source.removeAssetResult_);
 break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapResult_) OpenSwapResult(source.openSwapResult_);
@@ -4333,6 +4546,15 @@ break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 initiateKYCRecoveryResult_ = std::move(source.initiateKYCRecoveryResult_);
 break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+createManageOfferRequestResult_ = std::move(source.createManageOfferRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+createPaymentRequestResult_ = std::move(source.createPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+removeAssetResult_ = std::move(source.removeAssetResult_);
+break;
       case (int32_t)OperationType::OPEN_SWAP:
 openSwapResult_ = std::move(source.openSwapResult_);
 break;
@@ -4476,6 +4698,15 @@ new(&createKYCRecoveryRequestResult_) CreateKYCRecoveryRequestResult(std::move(s
 break;
       case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 new(&initiateKYCRecoveryResult_) InitiateKYCRecoveryResult(std::move(source.initiateKYCRecoveryResult_));
+break;
+      case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+new(&createManageOfferRequestResult_) CreateManageOfferRequestResult(std::move(source.createManageOfferRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.createPaymentRequestResult_));
+break;
+      case (int32_t)OperationType::REMOVE_ASSET:
+new(&removeAssetResult_) RemoveAssetResult(std::move(source.removeAssetResult_));
 break;
       case (int32_t)OperationType::OPEN_SWAP:
 new(&openSwapResult_) OpenSwapResult(std::move(source.openSwapResult_));
@@ -4934,23 +5165,53 @@ break;
         return initiateKYCRecoveryResult_;
       throw xdr::xdr_wrong_union("_tr_t: initiateKYCRecoveryResult accessed when not selected");
     }
-    OpenSwapResult &openSwapResult() {
+    CreateManageOfferRequestResult &createManageOfferRequestResult() {
       if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createManageOfferRequestResult accessed when not selected");
+    }
+    const CreateManageOfferRequestResult &createManageOfferRequestResult() const {
+      if (_xdr_field_number(type_) == 45)
+        return createManageOfferRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createManageOfferRequestResult accessed when not selected");
+    }
+    CreatePaymentRequestResult &createPaymentRequestResult() {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createPaymentRequestResult accessed when not selected");
+    }
+    const CreatePaymentRequestResult &createPaymentRequestResult() const {
+      if (_xdr_field_number(type_) == 46)
+        return createPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createPaymentRequestResult accessed when not selected");
+    }
+    RemoveAssetResult &removeAssetResult() {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetResult_;
+      throw xdr::xdr_wrong_union("_tr_t: removeAssetResult accessed when not selected");
+    }
+    const RemoveAssetResult &removeAssetResult() const {
+      if (_xdr_field_number(type_) == 47)
+        return removeAssetResult_;
+      throw xdr::xdr_wrong_union("_tr_t: removeAssetResult accessed when not selected");
+    }
+    OpenSwapResult &openSwapResult() {
+      if (_xdr_field_number(type_) == 48)
         return openSwapResult_;
       throw xdr::xdr_wrong_union("_tr_t: openSwapResult accessed when not selected");
     }
     const OpenSwapResult &openSwapResult() const {
-      if (_xdr_field_number(type_) == 45)
+      if (_xdr_field_number(type_) == 48)
         return openSwapResult_;
       throw xdr::xdr_wrong_union("_tr_t: openSwapResult accessed when not selected");
     }
     CloseSwapResult &closeSwapResult() {
-      if (_xdr_field_number(type_) == 46)
+      if (_xdr_field_number(type_) == 49)
         return closeSwapResult_;
       throw xdr::xdr_wrong_union("_tr_t: closeSwapResult accessed when not selected");
     }
     const CloseSwapResult &closeSwapResult() const {
-      if (_xdr_field_number(type_) == 46)
+      if (_xdr_field_number(type_) == 49)
         return closeSwapResult_;
       throw xdr::xdr_wrong_union("_tr_t: closeSwapResult accessed when not selected");
     }bool

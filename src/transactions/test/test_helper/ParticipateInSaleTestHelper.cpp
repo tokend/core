@@ -76,7 +76,7 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
     return ManageOfferTestHelper::ensureCreateSuccess(source, op, success, stateBeforeTx);
 }
 
-    uint64_t ParticipateInSaleTestHelper::addNewParticipant(Account& root, Account& participant, const uint64_t saleID, const AssetCode baseAsset,
+    ManageOfferResult ParticipateInSaleTestHelper::addNewParticipant(Account& root, Account& participant, const uint64_t saleID, const AssetCode baseAsset,
                                const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee)
     {
         IssuanceRequestHelper issuanceRequestHelper(mTestManager);
@@ -94,11 +94,10 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
         const auto baseAssetAmount = bigDivide(quoteAssetAmount, ONE, price, ROUND_UP);
         auto manageOfferOp = OfferManager::buildManageOfferOp(balanceCreationResult.success().balanceID, quoteBalance->getBalanceID(),
                                                               true, baseAssetAmount, price, fee, 0, saleID);
-        auto result = applyManageOffer(participant, manageOfferOp);
-        return result.success().offer.offer().offerID;
+        return applyManageOffer(participant, manageOfferOp);
     }
 
-    uint64_t ParticipateInSaleTestHelper::addNewParticipant(Account& root, const uint64_t saleID, const AssetCode baseAsset,
+    ManageOfferResult ParticipateInSaleTestHelper::addNewParticipant(Account& root, const uint64_t saleID, const AssetCode baseAsset,
                                const AssetCode quoteAsset, const uint64_t quoteAssetAmount, const uint64_t price, const uint64_t fee)
     {
         auto account = Account{ SecretKey::random(), 0 };

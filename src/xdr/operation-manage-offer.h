@@ -7,7 +7,7 @@
 
 #include <xdrpp/types.h>
 
-#include "xdr/ledger-entries.h"
+#include "xdr/ledger-entries-offer.h"
 
 namespace stellar {
 

@@ -377,6 +377,51 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+ImmediateSale::from_bytes(xdr::unmarshaler& u) 
+{
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ImmediateSale::to_bytes(xdr::marshaler& m) const 
+{
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ImmediateSale::count_size(xdr::measurer& m) const 
+{
+m.count_size(ext);
+}
+bool
+ImmediateSale::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<ImmediateSale const&>(other_abstract);return true
+&& (ext== other.ext)
+;}
+bool
+ImmediateSale::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<ImmediateSale const&>(other_abstract);
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 SaleTypeExt::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -392,6 +437,8 @@ return u.from_bytes(basicSale_);
 return u.from_bytes(crowdFundingSale_);
   case (int32_t)SaleType::FIXED_PRICE:
 return u.from_bytes(fixedPriceSale_);
+  case (int32_t)SaleType::IMMEDIATE:
+return u.from_bytes(immediateSale_);
 }
 return false;
 }
@@ -412,6 +459,8 @@ return m.to_bytes(basicSale_);
 return m.to_bytes(crowdFundingSale_);
   case (int32_t)SaleType::FIXED_PRICE:
 return m.to_bytes(fixedPriceSale_);
+  case (int32_t)SaleType::IMMEDIATE:
+return m.to_bytes(immediateSale_);
 }
 return false;
 }
@@ -428,6 +477,8 @@ return m.count_size(basicSale_);
 return m.count_size(crowdFundingSale_);
   case (int32_t)SaleType::FIXED_PRICE:
 return m.count_size(fixedPriceSale_);
+  case (int32_t)SaleType::IMMEDIATE:
+return m.count_size(immediateSale_);
 }
 }
 bool
@@ -447,6 +498,8 @@ return basicSale_ == other.basicSale_;
 return crowdFundingSale_ == other.crowdFundingSale_;
   case (int32_t)SaleType::FIXED_PRICE:
 return fixedPriceSale_ == other.fixedPriceSale_;
+  case (int32_t)SaleType::IMMEDIATE:
+return immediateSale_ == other.immediateSale_;
 }
 return false;
 }
@@ -468,6 +521,8 @@ return basicSale_ < other.basicSale_;
 return crowdFundingSale_ < other.crowdFundingSale_;
   case (int32_t)SaleType::FIXED_PRICE:
 return fixedPriceSale_ < other.fixedPriceSale_;
+  case (int32_t)SaleType::IMMEDIATE:
+return immediateSale_ < other.immediateSale_;
 }
 return false;
 }

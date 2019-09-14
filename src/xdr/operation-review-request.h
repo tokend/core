@@ -9,6 +9,7 @@
 
 #include "xdr/ledger-entries.h"
 #include "xdr/operation-payment.h"
+#include "xdr/operation-manage-offer.h"
 
 namespace stellar {
 
@@ -1736,6 +1737,8 @@ struct ExtendedResult  : xdr::xdr_abstract {
       AtomicSwapBidExtended atomicSwapBidExtended_;
       AtomicSwapAskExtended atomicSwapAskExtended_;
       CreatePollExtended createPoll_;
+      ManageOfferResult manageOfferResult_;
+      PaymentResult paymentResult_;
     };
 
   public:
@@ -1746,7 +1749,9 @@ struct ExtendedResult  : xdr::xdr_abstract {
         ReviewableRequestType::NONE,
         ReviewableRequestType::CREATE_ATOMIC_SWAP_BID,
         ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK,
-        ReviewableRequestType::CREATE_POLL
+        ReviewableRequestType::CREATE_POLL,
+        ReviewableRequestType::MANAGE_OFFER,
+        ReviewableRequestType::CREATE_PAYMENT
       };
       return _xdr_disc_vec;
     }
@@ -1756,6 +1761,8 @@ struct ExtendedResult  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_BID ? 2
         : which == (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK ? 3
         : which == (int32_t)ReviewableRequestType::CREATE_POLL ? 4
+        : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 5
+        : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 6
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -1774,6 +1781,12 @@ struct ExtendedResult  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
         _f(&_typeExt_t::createPoll_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+        _f(&_typeExt_t::manageOfferResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+        _f(&_typeExt_t::paymentResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -1802,6 +1815,12 @@ break;
         case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) CreatePollExtended{};
 break;
+        case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferResult_) ManageOfferResult{};
+break;
+        case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&paymentResult_) PaymentResult{};
+break;
 }
 
       }
@@ -1825,6 +1844,12 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) CreatePollExtended{};
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferResult_) ManageOfferResult{};
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&paymentResult_) PaymentResult{};
+break;
 }
 
     }
@@ -1844,6 +1869,12 @@ new(&atomicSwapAskExtended_) AtomicSwapAskExtended(source.atomicSwapAskExtended_
 break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) CreatePollExtended(source.createPoll_);
+break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferResult_) ManageOfferResult(source.manageOfferResult_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&paymentResult_) PaymentResult(source.paymentResult_);
 break;
 }
 
@@ -1865,6 +1896,12 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) CreatePollExtended(std::move(source.createPoll_));
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferResult_) ManageOfferResult(std::move(source.manageOfferResult_));
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&paymentResult_) PaymentResult(std::move(source.paymentResult_));
+break;
 }
 
     }
@@ -1884,6 +1921,12 @@ atomicSwapAskExtended_.~AtomicSwapAskExtended();
 break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 createPoll_.~CreatePollExtended();
+break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOfferResult_.~ManageOfferResult();
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+paymentResult_.~PaymentResult();
 break;
 }
 }
@@ -1907,6 +1950,12 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 createPoll_ = source.createPoll_;
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOfferResult_ = source.manageOfferResult_;
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+paymentResult_ = source.paymentResult_;
+break;
 }
 }
 else {this->~_typeExt_t();
@@ -1926,6 +1975,12 @@ new(&atomicSwapAskExtended_) AtomicSwapAskExtended(source.atomicSwapAskExtended_
 break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) CreatePollExtended(source.createPoll_);
+break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferResult_) ManageOfferResult(source.manageOfferResult_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&paymentResult_) PaymentResult(source.paymentResult_);
 break;
 }
 }
@@ -1950,6 +2005,12 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 createPoll_ = std::move(source.createPoll_);
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOfferResult_ = std::move(source.manageOfferResult_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+paymentResult_ = std::move(source.paymentResult_);
+break;
 }
 }
 else {this->~_typeExt_t();
@@ -1969,6 +2030,12 @@ new(&atomicSwapAskExtended_) AtomicSwapAskExtended(std::move(source.atomicSwapAs
 break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) CreatePollExtended(std::move(source.createPoll_));
+break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOfferResult_) ManageOfferResult(std::move(source.manageOfferResult_));
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&paymentResult_) PaymentResult(std::move(source.paymentResult_));
 break;
 }
 }
@@ -2020,6 +2087,26 @@ break;
       if (_xdr_field_number(requestType_) == 4)
         return createPoll_;
       throw xdr::xdr_wrong_union("_typeExt_t: createPoll accessed when not selected");
+    }
+    ManageOfferResult &manageOfferResult() {
+      if (_xdr_field_number(requestType_) == 5)
+        return manageOfferResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: manageOfferResult accessed when not selected");
+    }
+    const ManageOfferResult &manageOfferResult() const {
+      if (_xdr_field_number(requestType_) == 5)
+        return manageOfferResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: manageOfferResult accessed when not selected");
+    }
+    PaymentResult &paymentResult() {
+      if (_xdr_field_number(requestType_) == 6)
+        return paymentResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: paymentResult accessed when not selected");
+    }
+    const PaymentResult &paymentResult() const {
+      if (_xdr_field_number(requestType_) == 6)
+        return paymentResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: paymentResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -2788,6 +2875,8 @@ enum class ReviewRequestResultCode : std::int32_t {
   QUOTE_ASSET_CANNOT_BE_SWAPPED = -1501,
   ATOMIC_SWAP_BID_OWNER_FULL_LINE = -1504,
   INVALID_SIGNER_DATA = -1600,
+  MANAGE_OFFER_FAILED = -1700,
+  PAYMENT_FAILED = -1800,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
@@ -2919,6 +3008,10 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       return "ATOMIC_SWAP_BID_OWNER_FULL_LINE";
     case ::stellar::ReviewRequestResultCode::INVALID_SIGNER_DATA:
       return "INVALID_SIGNER_DATA";
+    case ::stellar::ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+      return "MANAGE_OFFER_FAILED";
+    case ::stellar::ReviewRequestResultCode::PAYMENT_FAILED:
+      return "PAYMENT_FAILED";
     default:
       return nullptr;
     }
@@ -2985,7 +3078,9 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       (int32_t)::stellar::ReviewRequestResultCode::BASE_ASSET_CANNOT_BE_SWAPPED,
       (int32_t)::stellar::ReviewRequestResultCode::QUOTE_ASSET_CANNOT_BE_SWAPPED,
       (int32_t)::stellar::ReviewRequestResultCode::ATOMIC_SWAP_BID_OWNER_FULL_LINE,
-      (int32_t)::stellar::ReviewRequestResultCode::INVALID_SIGNER_DATA
+      (int32_t)::stellar::ReviewRequestResultCode::INVALID_SIGNER_DATA,
+      (int32_t)::stellar::ReviewRequestResultCode::MANAGE_OFFER_FAILED,
+      (int32_t)::stellar::ReviewRequestResultCode::PAYMENT_FAILED
     };
     return _xdr_enum_vec;
   }
@@ -2998,6 +3093,8 @@ private:
   _xdr_case_type code_;
   union {
     ExtendedResult success_;
+    ManageOfferResultCode manageOfferCode_;
+    PaymentResultCode paymentCode_;
   };
 
 public:
@@ -3008,6 +3105,8 @@ public:
   }
   static constexpr int _xdr_field_number(_xdr_case_type which) {
     return which == (int32_t)ReviewRequestResultCode::SUCCESS ? 1
+      : which == (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED ? 2
+      : which == (int32_t)ReviewRequestResultCode::PAYMENT_FAILED ? 3
       : 0;
   }
   template<typename _F, typename..._A> static bool
@@ -3015,6 +3114,12 @@ public:
     switch (_which) {
     case (int32_t)ReviewRequestResultCode::SUCCESS:
       _f(&ReviewRequestResult::success_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+      _f(&ReviewRequestResult::manageOfferCode_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+      _f(&ReviewRequestResult::paymentCode_, std::forward<_A>(_a)...);
       return true;
     default:
       return true;
@@ -3033,6 +3138,12 @@ public:
       case (int32_t)ReviewRequestResultCode::SUCCESS:
 new(&success_) ExtendedResult{};
 break;
+      case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+new(&manageOfferCode_) ManageOfferResultCode{};
+break;
+      case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+new(&paymentCode_) PaymentResultCode{};
+break;
       default:
         break;
 }
@@ -3047,6 +3158,12 @@ break;
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 new(&success_) ExtendedResult{};
 break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+new(&manageOfferCode_) ManageOfferResultCode{};
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+new(&paymentCode_) PaymentResultCode{};
+break;
     default:
       break;
 }
@@ -3057,6 +3174,12 @@ break;
 {
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 new(&success_) ExtendedResult(source.success_);
+break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+new(&manageOfferCode_) ManageOfferResultCode(source.manageOfferCode_);
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+new(&paymentCode_) PaymentResultCode(source.paymentCode_);
 break;
     default:
       break;
@@ -3069,6 +3192,12 @@ break;
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 new(&success_) ExtendedResult(std::move(source.success_));
 break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+new(&manageOfferCode_) ManageOfferResultCode(std::move(source.manageOfferCode_));
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+new(&paymentCode_) PaymentResultCode(std::move(source.paymentCode_));
+break;
     default:
       break;
 }
@@ -3079,6 +3208,12 @@ switch (code_)
 {
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 success_.~ExtendedResult();
+break;
+  case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+manageOfferCode_.~ManageOfferResultCode();
+break;
+  case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+paymentCode_.~PaymentResultCode();
 break;
   default:
     break;
@@ -3093,6 +3228,12 @@ switch (code_)
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 success_ = source.success_;
 break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+manageOfferCode_ = source.manageOfferCode_;
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+paymentCode_ = source.paymentCode_;
+break;
     default:
       break;
 }
@@ -3103,6 +3244,12 @@ switch (code_)
 {
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 new(&success_) ExtendedResult(source.success_);
+break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+new(&manageOfferCode_) ManageOfferResultCode(source.manageOfferCode_);
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+new(&paymentCode_) PaymentResultCode(source.paymentCode_);
 break;
     default:
       break;
@@ -3118,6 +3265,12 @@ switch (code_)
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 success_ = std::move(source.success_);
 break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+manageOfferCode_ = std::move(source.manageOfferCode_);
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+paymentCode_ = std::move(source.paymentCode_);
+break;
     default:
       break;
 }
@@ -3128,6 +3281,12 @@ switch (code_)
 {
     case (int32_t)ReviewRequestResultCode::SUCCESS:
 new(&success_) ExtendedResult(std::move(source.success_));
+break;
+    case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+new(&manageOfferCode_) ManageOfferResultCode(std::move(source.manageOfferCode_));
+break;
+    case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+new(&paymentCode_) PaymentResultCode(std::move(source.paymentCode_));
 break;
     default:
       break;
@@ -3151,6 +3310,26 @@ break;
     if (_xdr_field_number(code_) == 1)
       return success_;
     throw xdr::xdr_wrong_union("ReviewRequestResult: success accessed when not selected");
+  }
+  ManageOfferResultCode &manageOfferCode() {
+    if (_xdr_field_number(code_) == 2)
+      return manageOfferCode_;
+    throw xdr::xdr_wrong_union("ReviewRequestResult: manageOfferCode accessed when not selected");
+  }
+  const ManageOfferResultCode &manageOfferCode() const {
+    if (_xdr_field_number(code_) == 2)
+      return manageOfferCode_;
+    throw xdr::xdr_wrong_union("ReviewRequestResult: manageOfferCode accessed when not selected");
+  }
+  PaymentResultCode &paymentCode() {
+    if (_xdr_field_number(code_) == 3)
+      return paymentCode_;
+    throw xdr::xdr_wrong_union("ReviewRequestResult: paymentCode accessed when not selected");
+  }
+  const PaymentResultCode &paymentCode() const {
+    if (_xdr_field_number(code_) == 3)
+      return paymentCode_;
+    throw xdr::xdr_wrong_union("ReviewRequestResult: paymentCode accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

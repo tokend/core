@@ -1,10 +1,10 @@
 #include <ledger/OfferHelper.h>
-#include <ledger/AssetPairHelper.h>
 #include <transactions/FeesManager.h>
-#include <ledger/FeeHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "ledger/AssetHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "test/test.h"
@@ -21,14 +21,12 @@
 #include "transactions/dex/OfferManager.h"
 #include "ledger/SaleHelper.h"
 #include "test_helper/CheckSaleStateTestHelper.h"
-#include "test_helper/ReviewAssetRequestHelper.h"
 #include "test_helper/ReviewSaleRequestHelper.h"
 #include "test_helper/ReviewUpdateSaleDetailsRequestHelper.h"
 #include "test_helper/SetFeesTestHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
-#include "test_helper/ManageAssetPairTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -150,6 +148,55 @@ TEST_CASE("Sale", "[tx][sale]")
 
     uint32_t issuanceTasks = 0;
 
+    SECTION("An Immediate sale") {
+        auto saleRequest = SaleRequestHelper::createSaleRequest(baseAsset, quoteAsset, currentTime,
+                                                                endTime, softCap, hardCap, "{}",
+                                                                {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
+                                                                requiredBaseAssetForHardCap, SaleType::IMMEDIATE);
+
+        //set offer fee for sale owner and participants
+        // TODO: use set fees
+        auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
+        LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
+        EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
+        auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
+                                                    nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
+        setFeesTestHelper.applySetFeesTx(root, &fee, false);
+
+        uint64_t quotePreIssued(0);
+        participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
+        quotePreIssued += hardCap + ONE;
+        IssuanceRequestHelper(testManager).authorizePreIssuedAmount(root, root.key, quoteAsset, quotePreIssued, root);
+
+        saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
+
+        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        REQUIRE(sales.size() == 1);
+        const auto saleID = sales[0]->getID();
+
+        const int numberOfParticipants = 10;
+        const auto quoteAssetAmount = hardCap / numberOfParticipants;
+        uint64_t feeToPay(0);
+        participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
+
+        for (auto i = 0; i < numberOfParticipants; i++)
+        {
+            auto account = Account{ SecretKey::random(), 0 };
+            CreateAccountTestHelper(testManager).applyCreateAccountTx(root, account.key.getPublicKey(), 1);
+            participationHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
+            if (i < numberOfParticipants - 1)
+            {
+                const auto baseAssetAmount = bigDivide(quoteAssetAmount, ONE, price, ROUND_UP);
+                auto balance = testManager->getStorageHelper().getBalanceHelper().loadBalance(account.key.getPublicKey(), baseAsset);
+                REQUIRE(balance->getAmount() == baseAssetAmount);
+                CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
+            }
+        }
+
+        CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
+
+    }
+
     SECTION("Happy path")
     {
         //set offer fee for sale owner and participants
@@ -233,7 +280,8 @@ TEST_CASE("Sale", "[tx][sale]")
             uint64_t quoteAssetAmount = hardCap / 2;
             uint64_t feeToPay(0);
             participantsFeeFrame->calculatePercentFee(quoteAssetAmount, feeToPay, ROUND_UP, 1);
-            const auto offerID = participationHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
+            auto offerResult = participationHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
+            auto offerID = offerResult.success().offer.offer().offerID;
             auto offer = OfferHelper::Instance()->loadOffer(account.key.getPublicKey(), offerID, testManager->getDB());
             REQUIRE(!!offer);
             const auto offerEntry = offer->getOffer();

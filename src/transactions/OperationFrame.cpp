@@ -57,6 +57,8 @@
 #include "ledger/SignerHelper.h"
 #include "transactions/CancelChangeRoleRequestOpFrame.h"
 #include "transactions/manage_asset_pair/RemoveAssetPairOpFrame.h"
+#include "payment/CreatePaymentRequestOpFrame.h"
+#include "dex/CreateManageOfferRequestOpFrame.h"
 
 namespace stellar
 {
@@ -157,6 +159,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
         case OperationType::CREATE_KYC_RECOVERY_REQUEST:
             return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_MANAGE_OFFER_REQUEST:
+            return make_shared<CreateManageOfferRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_PAYMENT_REQUEST:
+            return make_shared<CreatePaymentRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

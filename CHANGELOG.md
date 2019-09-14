@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added 
+
+* `CreatePaymentRequestOpFrame`
+* `CreateManageOfferRequestOpFrame`
+* Account rule resources for `ManageOffer` and `CreatePayment` reviewable requests
+* Signer rule resources for `ManageOffer` and `CreatePayment` reviewable requests
+
 ### Fixed
 
 * long serialization on OS X 64-bit

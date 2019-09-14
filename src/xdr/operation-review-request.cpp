@@ -1566,6 +1566,10 @@ return u.from_bytes(atomicSwapBidExtended_);
 return u.from_bytes(atomicSwapAskExtended_);
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 return u.from_bytes(createPoll_);
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return u.from_bytes(manageOfferResult_);
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return u.from_bytes(paymentResult_);
 }
 return false;
 }
@@ -1590,6 +1594,10 @@ return m.to_bytes(atomicSwapBidExtended_);
 return m.to_bytes(atomicSwapAskExtended_);
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 return m.to_bytes(createPoll_);
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return m.to_bytes(manageOfferResult_);
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return m.to_bytes(paymentResult_);
 }
 return false;
 }
@@ -1611,6 +1619,10 @@ return m.count_size(atomicSwapBidExtended_);
 return m.count_size(atomicSwapAskExtended_);
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 return m.count_size(createPoll_);
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return m.count_size(manageOfferResult_);
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return m.count_size(paymentResult_);
 }
 }
 bool
@@ -1635,6 +1647,10 @@ return atomicSwapBidExtended_ == other.atomicSwapBidExtended_;
 return atomicSwapAskExtended_ == other.atomicSwapAskExtended_;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 return createPoll_ == other.createPoll_;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return manageOfferResult_ == other.manageOfferResult_;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return paymentResult_ == other.paymentResult_;
 }
 return false;
 }
@@ -1660,6 +1676,10 @@ return atomicSwapBidExtended_ < other.atomicSwapBidExtended_;
 return atomicSwapAskExtended_ < other.atomicSwapAskExtended_;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 return createPoll_ < other.createPoll_;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return manageOfferResult_ < other.manageOfferResult_;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return paymentResult_ < other.paymentResult_;
 }
 return false;
 }
@@ -2161,6 +2181,10 @@ _xdr_discriminant(disc, true);switch (code_)
 {
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 return u.from_bytes(success_);
+  case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+return u.from_bytes(manageOfferCode_);
+  case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+return u.from_bytes(paymentCode_);
   default:
   
   return true;
@@ -2180,6 +2204,10 @@ switch (code_)
 
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 return m.to_bytes(success_);
+  case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+return m.to_bytes(manageOfferCode_);
+  case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+return m.to_bytes(paymentCode_);
   default:
     return true;
 }
@@ -2194,6 +2222,10 @@ switch (code_)
 
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 return m.count_size(success_);
+  case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+return m.count_size(manageOfferCode_);
+  case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+return m.count_size(paymentCode_);
   default:
   
   return;
@@ -2212,6 +2244,10 @@ switch (code_)
 {
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 return success_ == other.success_;
+  case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+return manageOfferCode_ == other.manageOfferCode_;
+  case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+return paymentCode_ == other.paymentCode_;
   default:
   
   return true;
@@ -2232,6 +2268,10 @@ switch (code_)
 {
   case (int32_t)ReviewRequestResultCode::SUCCESS:
 return success_ < other.success_;
+  case (int32_t)ReviewRequestResultCode::MANAGE_OFFER_FAILED:
+return manageOfferCode_ < other.manageOfferCode_;
+  case (int32_t)ReviewRequestResultCode::PAYMENT_FAILED:
+return paymentCode_ < other.paymentCode_;
   default:
     return false;
 }

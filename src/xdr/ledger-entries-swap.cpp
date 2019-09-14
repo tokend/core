@@ -20,18 +20,8 @@ if (!oksecretHash)
 {
 return false;
 }
-bool oksourceAccount = u.from_bytes(sourceAccount);
-if (!oksourceAccount)
-{
-return false;
-}
 bool oksourceBalance = u.from_bytes(sourceBalance);
 if (!oksourceBalance)
-{
-return false;
-}
-bool okdestinationAccount = u.from_bytes(destinationAccount);
-if (!okdestinationAccount)
 {
 return false;
 }
@@ -40,8 +30,8 @@ if (!okdestinationBalance)
 {
 return false;
 }
-bool okassetCode = u.from_bytes(assetCode);
-if (!okassetCode)
+bool okdetails = u.from_bytes(details);
+if (!okdetails)
 {
 return false;
 }
@@ -85,18 +75,8 @@ if (!oksecretHash)
 {
 return false;
 }
-bool oksourceAccount = m.to_bytes(sourceAccount);
-if (!oksourceAccount)
-{
-return false;
-}
 bool oksourceBalance = m.to_bytes(sourceBalance);
 if (!oksourceBalance)
-{
-return false;
-}
-bool okdestinationAccount = m.to_bytes(destinationAccount);
-if (!okdestinationAccount)
 {
 return false;
 }
@@ -105,8 +85,8 @@ if (!okdestinationBalance)
 {
 return false;
 }
-bool okassetCode = m.to_bytes(assetCode);
-if (!okassetCode)
+bool okdetails = m.to_bytes(details);
+if (!okdetails)
 {
 return false;
 }
@@ -142,11 +122,9 @@ SwapEntry::count_size(xdr::measurer& m) const
 {
 m.count_size(swapID);
 m.count_size(secretHash);
-m.count_size(sourceAccount);
 m.count_size(sourceBalance);
-m.count_size(destinationAccount);
 m.count_size(destinationBalance);
-m.count_size(assetCode);
+m.count_size(details);
 m.count_size(amount);
 m.count_size(createdAt);
 m.count_size(lockTime);
@@ -162,11 +140,9 @@ return false;
 }auto& other = dynamic_cast<SwapEntry const&>(other_abstract);return true
 && (swapID== other.swapID)
 && (secretHash== other.secretHash)
-&& (sourceAccount== other.sourceAccount)
 && (sourceBalance== other.sourceBalance)
-&& (destinationAccount== other.destinationAccount)
 && (destinationBalance== other.destinationBalance)
-&& (assetCode== other.assetCode)
+&& (details== other.details)
 && (amount== other.amount)
 && (createdAt== other.createdAt)
 && (lockTime== other.lockTime)
@@ -185,16 +161,12 @@ if (swapID < other.swapID) return true;
 if (other.swapID < swapID) return false;
 if (secretHash < other.secretHash) return true;
 if (other.secretHash < secretHash) return false;
-if (sourceAccount < other.sourceAccount) return true;
-if (other.sourceAccount < sourceAccount) return false;
 if (sourceBalance < other.sourceBalance) return true;
 if (other.sourceBalance < sourceBalance) return false;
-if (destinationAccount < other.destinationAccount) return true;
-if (other.destinationAccount < destinationAccount) return false;
 if (destinationBalance < other.destinationBalance) return true;
 if (other.destinationBalance < destinationBalance) return false;
-if (assetCode < other.assetCode) return true;
-if (other.assetCode < assetCode) return false;
+if (details < other.details) return true;
+if (other.details < details) return false;
 if (amount < other.amount) return true;
 if (other.amount < amount) return false;
 if (createdAt < other.createdAt) return true;
