@@ -15,28 +15,27 @@ namespace stellar
 
 using namespace std;
 using xdr::operator==;
-    
+
 CancelAssetRequestOpFrame::CancelAssetRequestOpFrame(Operation const& op,
-                                           OperationResult& res,
-                                           TransactionFrame& parentTx)
+                                                     OperationResult& res,
+                                                     TransactionFrame& parentTx)
     : ManageAssetOpFrame(op, res, parentTx)
 {
 }
 
 bool
 CancelAssetRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-						  std::vector<OperationCondition>& result) const
+                                                     std::vector<OperationCondition>& result) const
 {
-	// only request creator can cancel it
+    // only request creator can cancel it
     return true;
 }
 
 bool
-CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-							std::vector<stellar::SignerRequirement> &result) const
+CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                    std::vector<stellar::SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-            mManageAsset.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(mManageAsset.requestID);
     if (!request || ((request->getType() != ReviewableRequestType::CREATE_ASSET) &&
                      (request->getType() != ReviewableRequestType::UPDATE_ASSET)))
     {
@@ -55,8 +54,8 @@ CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
             resource.asset().assetType = createData.type;
             resource.asset().assetCode = createData.code;
             break;
-	    }
-	    case ReviewableRequestType::UPDATE_ASSET:
+        }
+        case ReviewableRequestType::UPDATE_ASSET:
         {
             auto updateData = request->getRequestEntry().body.assetUpdateRequest();
             resource.asset().assetCode = updateData.code;
@@ -75,37 +74,37 @@ CancelAssetRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper
 
 bool
 CancelAssetRequestOpFrame::doApply(Application& app,
-                              LedgerDelta& delta, LedgerManager& ledgerManager)
+                                   StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-	
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-	auto request = reviewableRequestHelper->loadRequest(mManageAsset.requestID, getSourceID(), db, &delta);
-	if (!request) {
-		innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
-		return false;
-	}
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto request = requestHelper.loadRequest(mManageAsset.requestID, getSourceID());
+    if (!request)
+    {
+        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
+        return false;
+    }
 
-	auto requestType = request->getRequestEntry().body.type();
-	if (requestType != ReviewableRequestType::CREATE_ASSET && requestType != ReviewableRequestType::UPDATE_ASSET) {
-		innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
-		return false;
-	}
+    auto requestType = request->getRequestEntry().body.type();
+    if (requestType != ReviewableRequestType::CREATE_ASSET && requestType != ReviewableRequestType::UPDATE_ASSET)
+    {
+        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
+        return false;
+    }
 
- 	EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
 
-	innerResult().code(ManageAssetResultCode::SUCCESS);
-	innerResult().success().requestID = request->getRequestID();
-	return true;
+    innerResult().code(ManageAssetResultCode::SUCCESS);
+    innerResult().success().requestID = request->getRequestID();
+    return true;
 }
 
 bool CancelAssetRequestOpFrame::doCheckValid(Application& app)
 {
-	if (mManageAsset.requestID == 0)
-	{
-		innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
-		return false;
-	}
+    if (mManageAsset.requestID == 0)
+    {
+        innerResult().code(ManageAssetResultCode::REQUEST_NOT_FOUND);
+        return false;
+    }
 
     return true;
 }

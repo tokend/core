@@ -9,7 +9,14 @@
 * Account rule resources for `ManageOffer` and `CreatePayment` reviewable requests
 * Signer rule resources for `ManageOffer` and `CreatePayment` reviewable requests
 * `RemoveAssetOp` operation to remove asset
+* BalanceManager
 
+### Changed
+* Partially migrated to new helpers
+* Refactored all OpFrames to use StorageHelper
+
+### Removed
+* AccountManager
 
 ### Fixed
 

@@ -19,8 +19,8 @@ bool
 ReviewPaymentRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper, 
                                             std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-			mReviewRequest.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(
+			mReviewRequest.requestID);
 	if (!request || (request->getType() != ReviewableRequestType::CREATE_PAYMENT))
 	{
 		mResult.code(OperationResultCode::opNO_ENTRY);
@@ -51,13 +51,13 @@ ReviewPaymentRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelp
 }
 
 bool 
-ReviewPaymentRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
+ReviewPaymentRequestOpFrame::handleApprove(Application& app,  StorageHelper& sh,
         LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) 
 {
     request->checkRequestType(ReviewableRequestType::CREATE_PAYMENT);
 
-    Database& db = app.getDatabase();
-    handleTasks(db, delta, request);
+    auto& requestHelper = sh.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
     if (!request->canBeFulfilled(ledgerManager))
     {
@@ -79,12 +79,10 @@ ReviewPaymentRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
 
     PaymentOpFrame opFrame(op, res, mParentTx);
 
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
-    auto requestor = storageHelper.getAccountHelper().mustLoadAccount(request->getRequestor());
+    auto requestor = sh.getAccountHelper().mustLoadAccount(request->getRequestor());
     opFrame.setSourceAccountPtr(requestor);
 
-    if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, storageHelper, ledgerManager)) 
+    if (!opFrame.doCheckValid(app) || !opFrame.doApply(app, sh, ledgerManager))
     {
         innerResult().code(ReviewRequestResultCode::PAYMENT_FAILED);
         innerResult().paymentCode() = PaymentOpFrame::getInnerCode(res);
@@ -100,7 +98,7 @@ ReviewPaymentRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
 
 bool 
 ReviewPaymentRequestOpFrame::handleReject(
-    Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    Application& app, StorageHelper& sh, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
     innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);

@@ -1,7 +1,7 @@
 #include "main/Application.h"
 #include <database/Database.h>
 #include <ledger/AtomicSwapAskHelper.h>
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include "CancelAtomicSwapAskOpFrame.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
@@ -11,27 +11,26 @@ using namespace std;
 namespace stellar
 {
 
-CancelAtomicSwapAskOpFrame::CancelAtomicSwapAskOpFrame(Operation const &op,
-        OperationResult &opRes, TransactionFrame &parentTx)
-        : OperationFrame(op, opRes, parentTx)
-        , mCancelASwapBid(mOperation.body.cancelAtomicSwapAskOp())
+CancelAtomicSwapAskOpFrame::CancelAtomicSwapAskOpFrame(Operation const& op,
+                                                       OperationResult& opRes, TransactionFrame& parentTx)
+    : OperationFrame(op, opRes, parentTx), mCancelASwapBid(mOperation.body.cancelAtomicSwapAskOp())
 {
 }
 
 bool
-CancelAtomicSwapAskOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                 std::vector<OperationCondition> &result) const
+CancelAtomicSwapAskOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                                      std::vector<OperationCondition>& result) const
 {
     // only ask owner can do this
     return true;
 }
 
 bool
-CancelAtomicSwapAskOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                    std::vector<SignerRequirement> &result) const
+CancelAtomicSwapAskOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                     std::vector<SignerRequirement>& result) const
 {
     auto ask = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-            mCancelASwapBid.askID, storageHelper.getDatabase());
+        mCancelASwapBid.askID, storageHelper.getDatabase());
     if (!ask)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -56,14 +55,15 @@ CancelAtomicSwapAskOpFrame::tryGetSignerRequirements(StorageHelper &storageHelpe
     return true;
 }
 
-bool CancelAtomicSwapAskOpFrame::doApply(Application &app, LedgerDelta &delta,
-                                    LedgerManager &ledgerManager)
+bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                         LedgerManager& ledgerManager)
 {
     innerResult().code(CancelAtomicSwapAskResultCode::SUCCESS);
     Database& db = app.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto askFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-            getSourceID(), mCancelASwapBid.askID, db, &delta);
+        getSourceID(), mCancelASwapBid.askID, db, &delta);
     if (askFrame == nullptr)
     {
         innerResult().code(CancelAtomicSwapAskResultCode::NOT_FOUND);
@@ -84,16 +84,22 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application &app, LedgerDelta &delta,
         return true;
     }
 
-    auto bidOwnerBalanceFrame = BalanceHelperLegacy::Instance()->mustLoadBalance(
-            askFrame->getOwnerID(), askFrame->getBaseAsset(), db, &delta);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
 
-    if (bidOwnerBalanceFrame->unlock(askFrame->getAmount()) != BalanceFrame::Result ::SUCCESS)
+    auto bidOwnerBalanceFrame = balanceHelper.loadBalance(askFrame->getOwnerID(), askFrame->getBaseAsset());
+    if (!bidOwnerBalanceFrame)
+    {
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "expected balance to exist";
+        throw std::runtime_error("expected balance to exist");
+    }
+
+    if (bidOwnerBalanceFrame->unlock(askFrame->getAmount()) != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: failed to unlock amount in ask owner balance, "
-                   "ask ID: " << askFrame->getID();
+            << "Unexpected state: failed to unlock amount in ask owner balance, "
+               "ask ID: " << askFrame->getID();
         throw runtime_error(
-                "Unexpected state: failed to unlock amount in ask owner balance");
+            "Unexpected state: failed to unlock amount in ask owner balance");
     }
 
     EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
@@ -102,7 +108,7 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application &app, LedgerDelta &delta,
     return true;
 }
 
-bool CancelAtomicSwapAskOpFrame::doCheckValid(Application &app)
+bool CancelAtomicSwapAskOpFrame::doCheckValid(Application& app)
 {
     if (mCancelASwapBid.askID == 0)
     {

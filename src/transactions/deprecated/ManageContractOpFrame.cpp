@@ -1,8 +1,9 @@
-#include <ledger/ContractHelper.h>
-#include <ledger/KeyValueHelperLegacy.h>
+#include "ledger/ContractHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ManageContractOpFrame.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 
@@ -11,9 +12,8 @@ namespace stellar
 using xdr::operator==;
 
 ManageContractOpFrame::ManageContractOpFrame(Operation const& op, OperationResult& res,
-        TransactionFrame& parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mManageContract(mOperation.body.manageContractOp())
+                                             TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mManageContract(mOperation.body.manageContractOp())
 {
 }
 
@@ -40,12 +40,13 @@ ManageContractOpFrame::ensureIsAllowed(std::vector<AccountID> validSources)
 }
 
 bool
-ManageContractOpFrame::doApply(Application& app, LedgerDelta& delta,
-                                LedgerManager& ledgerManager)
+ManageContractOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                               LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
     AccountEntry& account = mSourceAccount->getAccount();
 
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     innerResult().code(ManageContractResultCode::SUCCESS);
 
     auto contractFrame = ContractHelper::Instance()->loadContract(mManageContract.contractID, db, &delta);
@@ -59,13 +60,13 @@ ManageContractOpFrame::doApply(Application& app, LedgerDelta& delta,
     switch (mManageContract.data.action())
     {
         case ManageContractAction::ADD_DETAILS:
-            return tryAddContractDetails(contractFrame, app, db, delta);
+            return tryAddContractDetails(contractFrame, app, storageHelper);
         case ManageContractAction::START_DISPUTE:
-            return tryStartDispute(contractFrame, app, db, delta);
+            return tryStartDispute(contractFrame, app, storageHelper);
         case ManageContractAction::CONFIRM_COMPLETED:
-            return tryConfirmCompleted(contractFrame, db, delta);
+            return tryConfirmCompleted(contractFrame, storageHelper);
         case ManageContractAction::RESOLVE_DISPUTE:
-            return tryResolveDispute(contractFrame, db, delta);
+            return tryResolveDispute(contractFrame, storageHelper);
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected source account. "
                                                    << "Expected contractor, customer or master";
@@ -75,19 +76,20 @@ ManageContractOpFrame::doApply(Application& app, LedgerDelta& delta,
 
 bool
 ManageContractOpFrame::tryAddContractDetails(ContractFrame::pointer contractFrame,
-                                             Application &app, Database &db, LedgerDelta &delta)
+                                             Application& app, StorageHelper& storageHelper)
 {
     std::vector<AccountID> validSources = {contractFrame->getContractor(), contractFrame->getCustomer()};
     if (contractFrame->isInState(ContractState::DISPUTING))
         validSources.emplace_back(contractFrame->getEscrow());
 
-    if (!ensureIsAllowed(validSources)) {
+    if (!ensureIsAllowed(validSources))
+    {
         return false;
     }
 
     innerResult().response().data.action(ManageContractAction::ADD_DETAILS);
 
-    auto maxContractDetailLength = obtainMaxContractDetailLength(app, db, delta);
+    auto maxContractDetailLength = obtainMaxContractDetailLength(app, storageHelper);
 
     if (mManageContract.data.details().size() > maxContractDetailLength)
     {
@@ -99,11 +101,12 @@ ManageContractOpFrame::tryAddContractDetails(ContractFrame::pointer contractFram
 }
 
 uint64_t
-ManageContractOpFrame::obtainMaxContractDetailLength(Application& app, Database& db, LedgerDelta& delta)
+ManageContractOpFrame::obtainMaxContractDetailLength(Application& app, StorageHelper& storageHelper)
 {
     auto maxContractDetailLengthKey = ManageKeyValueOpFrame::makeMaxContractDetailLengthKey();
-    auto maxContractDetailLengthKeyValue = KeyValueHelperLegacy::Instance()->
-            loadKeyValue(maxContractDetailLengthKey, db, &delta);
+    auto maxContractDetailLengthKeyValue = storageHelper.
+        getKeyValueHelper().
+        loadKeyValue(maxContractDetailLengthKey);
 
     if (!maxContractDetailLengthKeyValue)
     {
@@ -113,8 +116,8 @@ ManageContractOpFrame::obtainMaxContractDetailLength(Application& app, Database&
     if (maxContractDetailLengthKeyValue->getKeyValueEntryType() != KeyValueEntryType::UINT32)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected database state. "
-             << "Expected max contract detail length key value to be UINT32. Actual: "
-             << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxContractDetailLengthKeyValue->getKeyValueEntryType());
+                                               << "Expected max contract detail length key value to be UINT32. Actual: "
+                                               << xdr::xdr_traits<KeyValueEntryType>::enum_name(maxContractDetailLengthKeyValue->getKeyValueEntryType());
         throw std::runtime_error("Unexpected database state, expected max contract detail length key value to be UINT32");
     }
 
@@ -122,15 +125,16 @@ ManageContractOpFrame::obtainMaxContractDetailLength(Application& app, Database&
 }
 
 bool
-ManageContractOpFrame::tryConfirmCompleted(ContractFrame::pointer contractFrame, Database &db, LedgerDelta &delta)
+ManageContractOpFrame::tryConfirmCompleted(ContractFrame::pointer contractFrame, StorageHelper& storageHelper)
 {
     if (!ensureIsAllowed({contractFrame->getContractor(), contractFrame->getCustomer()}))
         return false;
 
     innerResult().response().data.action(ManageContractAction::CONFIRM_COMPLETED);
 
-    auto invoiceRequests = ReviewableRequestHelper::Instance()->loadRequests(
-            contractFrame->getInvoiceRequestIDs(), db);
+    auto invoiceRequests = storageHelper.
+        getReviewableRequestHelper().
+        loadRequests(contractFrame->getInvoiceRequestIDs());
 
     if (!checkIsInvoicesApproved(invoiceRequests))
         return false;
@@ -147,16 +151,17 @@ ManageContractOpFrame::tryConfirmCompleted(ContractFrame::pointer contractFrame,
         innerResult().code(ManageContractResultCode::ALREADY_CONFIRMED);
         return false;
     }
-
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     EntryHelperProvider::storeChangeEntry(delta, db, contractFrame->mEntry);
 
-    return tryCompleted(contractFrame, invoiceRequests, db, delta);
+    return tryCompleted(contractFrame, invoiceRequests, storageHelper);
 }
 
 bool
 ManageContractOpFrame::tryCompleted(ContractFrame::pointer contractFrame,
                                     std::vector<ReviewableRequestFrame::pointer> invoiceRequests,
-                                    Database &db, LedgerDelta &delta)
+                                    StorageHelper& storageHelper)
 {
     if (!contractFrame->isBothConfirmed())
     {
@@ -166,13 +171,13 @@ ManageContractOpFrame::tryCompleted(ContractFrame::pointer contractFrame,
 
     innerResult().response().data.isCompleted() = true;
 
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
 
     for (ReviewableRequestFrame::pointer invoiceRequest : invoiceRequests)
     {
         auto invoice = invoiceRequest->getRequestEntry().body.invoiceRequest();
-        auto balanceHelper = BalanceHelperLegacy::Instance();
-        auto balanceFrame = balanceHelper->mustLoadBalance(invoice.receiverBalance, db, &delta);
+        auto balanceFrame = balanceHelper.mustLoadBalance(invoice.receiverBalance);
 
         if (balanceFrame->unlock(invoice.amount) != BalanceFrame::Result::SUCCESS)
         {
@@ -181,10 +186,12 @@ ManageContractOpFrame::tryCompleted(ContractFrame::pointer contractFrame,
             throw std::runtime_error("Unexpected balance state. Expected success unlock in manage contract.");
         }
 
-        balanceHelper->storeChange(delta, db, balanceFrame->mEntry);
-        requestHelper->storeDelete(delta, db, invoiceRequest->getKey());
+        balanceHelper.storeChange(balanceFrame->mEntry);
+        requestHelper.storeDelete(invoiceRequest->getKey());
     }
 
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     EntryHelperProvider::storeDeleteEntry(delta, db, contractFrame->getKey());
 
     return true;
@@ -207,7 +214,7 @@ bool ManageContractOpFrame::checkIsInvoicesApproved(std::vector<ReviewableReques
 
 bool
 ManageContractOpFrame::tryStartDispute(ContractFrame::pointer contractFrame,
-                                       Application &app, Database &db, LedgerDelta &delta)
+                                       Application& app, StorageHelper& storageHelper)
 {
     innerResult().response().data.action(ManageContractAction::START_DISPUTE);
 
@@ -217,11 +224,12 @@ ManageContractOpFrame::tryStartDispute(ContractFrame::pointer contractFrame,
         return false;
     }
 
-    if (!ensureIsAllowed({contractFrame->getContractor(), contractFrame->getCustomer()})) {
+    if (!ensureIsAllowed({contractFrame->getContractor(), contractFrame->getCustomer()}))
+    {
         return false;
     }
 
-    auto maxDisputeLength = obtainMaxContractDetailLength(app, db, delta);
+    auto maxDisputeLength = obtainMaxContractDetailLength(app, storageHelper);
     if (mManageContract.data.disputeReason().size() > maxDisputeLength)
     {
         innerResult().code(ManageContractResultCode::DISPUTE_REASON_TOO_LONG);
@@ -229,6 +237,9 @@ ManageContractOpFrame::tryStartDispute(ContractFrame::pointer contractFrame,
     }
 
     contractFrame->addState(ContractState::DISPUTING);
+
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     ContractHelper::Instance()->storeChange(delta, db, contractFrame->mEntry);
 
     return true;
@@ -236,36 +247,38 @@ ManageContractOpFrame::tryStartDispute(ContractFrame::pointer contractFrame,
 
 bool
 ManageContractOpFrame::tryResolveDispute(ContractFrame::pointer contractFrame,
-                                         Database &db, LedgerDelta &delta)
+                                         StorageHelper& storageHelper)
 {
     if (!ensureIsAllowed({contractFrame->getEscrow()}))
         return false;
 
     innerResult().response().data.action(ManageContractAction::RESOLVE_DISPUTE);
 
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     EntryHelperProvider::storeDeleteEntry(delta, db, contractFrame->getKey());
 
     if (mManageContract.data.isRevert())
     {
-        return revertInvoicesAmounts(contractFrame, db, delta);
+        return revertInvoicesAmounts(contractFrame, storageHelper);
     }
 
-    unlockApprovedInvoicesAmounts(contractFrame, db, delta);
+    unlockApprovedInvoicesAmounts(contractFrame, storageHelper);
 
     return true;
 }
 
 bool
 ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFrame,
-                                             Database& db, LedgerDelta& delta)
+                                             StorageHelper& storageHelper)
 {
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto requestHelper = ReviewableRequestHelper::Instance();
-    auto invoiceRequests = requestHelper->loadRequests(contractFrame->getInvoiceRequestIDs(), db);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto invoiceRequests = requestHelper.loadRequests(contractFrame->getInvoiceRequestIDs());
 
     for (ReviewableRequestFrame::pointer invoiceRequest : invoiceRequests)
     {
-        requestHelper->storeDelete(delta, db, invoiceRequest->getKey());
+        requestHelper.storeDelete(invoiceRequest->getKey());
 
         auto invoice = invoiceRequest->getRequestEntry().body.invoiceRequest();
         if (!invoice.isApproved)
@@ -273,7 +286,7 @@ ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFram
             continue;
         }
 
-        auto contractorBalance = balanceHelper->mustLoadBalance(invoice.receiverBalance, db, &delta);
+        auto contractorBalance = balanceHelper.mustLoadBalance(invoice.receiverBalance);
         const BalanceFrame::Result contractorBalanceChargeResult = contractorBalance->tryChargeFromLocked(invoice.amount);
         if (contractorBalanceChargeResult != BalanceFrame::Result::SUCCESS)
         {
@@ -281,19 +294,19 @@ ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFram
                                                    << "Expected success charge from locked in manage contract. ";
             throw std::runtime_error("Unexpected balance state. Expected success charge from locked in manage contract.");
         }
-        balanceHelper->storeChange(delta, db, contractorBalance->mEntry);
+        balanceHelper.storeChange(contractorBalance->mEntry);
 
-        auto customerBalance = balanceHelper->mustLoadBalance(invoice.senderBalance, db, &delta);
+        auto customerBalance = balanceHelper.mustLoadBalance(invoice.senderBalance);
         const BalanceFrame::Result customerBalanceFundResult = customerBalance->tryFundAccount(invoice.amount);
         if (customerBalanceFundResult != BalanceFrame::Result::SUCCESS)
         {
             innerResult().code(
-                    customerBalanceFundResult == BalanceFrame::Result::NONMATCHING_PRECISION ?
-                    ManageContractResultCode::INCORRECT_PRECISION :
-                    ManageContractResultCode::CUSTOMER_BALANCE_OVERFLOW);
+                customerBalanceFundResult == BalanceFrame::Result::NONMATCHING_PRECISION ?
+                ManageContractResultCode::INCORRECT_PRECISION :
+                ManageContractResultCode::CUSTOMER_BALANCE_OVERFLOW);
             return false;
         }
-        balanceHelper->storeChange(delta, db, customerBalance->mEntry);
+        balanceHelper.storeChange(customerBalance->mEntry);
     }
 
     return true;
@@ -301,15 +314,15 @@ ManageContractOpFrame::revertInvoicesAmounts(ContractFrame::pointer contractFram
 
 void
 ManageContractOpFrame::unlockApprovedInvoicesAmounts(ContractFrame::pointer contractFrame,
-                                                     Database& db, LedgerDelta & delta)
+                                                     StorageHelper& storageHelper)
 {
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto requestHelper = ReviewableRequestHelper::Instance();
-    auto invoiceRequests = requestHelper->loadRequests(contractFrame->getInvoiceRequestIDs(), db);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto invoiceRequests = requestHelper.loadRequests(contractFrame->getInvoiceRequestIDs());
 
     for (ReviewableRequestFrame::pointer invoiceRequest : invoiceRequests)
     {
-        requestHelper->storeDelete(delta, db, invoiceRequest->getKey());
+        requestHelper.storeDelete(invoiceRequest->getKey());
 
         auto invoice = invoiceRequest->getRequestEntry().body.invoiceRequest();
         if (!invoice.isApproved)
@@ -317,14 +330,14 @@ ManageContractOpFrame::unlockApprovedInvoicesAmounts(ContractFrame::pointer cont
             continue;
         }
 
-        auto contractorBalance = balanceHelper->mustLoadBalance(invoice.receiverBalance, db, &delta);
+        auto contractorBalance = balanceHelper.mustLoadBalance(invoice.receiverBalance);
         if (contractorBalance->unlock(invoice.amount) != BalanceFrame::Result::SUCCESS)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected balance state. "
                                                    << "Expected success charge from locked in manage contract. ";
             throw std::runtime_error("Unexpected balance state. Expected success charge from locked in manage contract.");
         }
-        balanceHelper->storeChange(delta, db, contractorBalance->mEntry);
+        balanceHelper.storeChange(contractorBalance->mEntry);
     }
 }
 

@@ -30,10 +30,10 @@ class CreateChangeRoleRequestOpFrame : public OperationFrame
 
     void updateRequest(ReviewableRequestEntry &requestEntry);
 
-    bool updateChangeRoleRequest(Database &db, LedgerDelta &delta,
+    bool updateChangeRoleRequest(StorageHelper& storageHelper,
                                  Application &app);
 
-    void tryAutoApprove(Database &db, LedgerDelta &delta, Application &app,
+    void tryAutoApprove(StorageHelper& storageHelper, Application &app,
                         ReviewableRequestFrame::pointer requestFrame);
 
     bool ensureDestinationNotChanged(ReviewableRequestEntry &requestEntry);

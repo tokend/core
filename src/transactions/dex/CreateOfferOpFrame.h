@@ -4,7 +4,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <transactions/FeesManager.h>
+#include <transactions/managers/FeeManager.h>
 #include "ledger/OfferFrame.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/AssetPairFrame.h"
@@ -14,34 +14,32 @@
 
 namespace stellar
 {
-class CreateOfferOpFrame : public ManageOfferOpFrame
-{
+class CreateOfferOpFrame : public ManageOfferOpFrame {
 
     FeeType feeType;
 
-    bool checkOfferValid(LedgerManager& lm, Database& db, LedgerDelta& delta);
+    bool checkOfferValid(LedgerManager& lm, StorageHelper& storageHelper);
 
     OfferExchange::OfferFilterResult filterOffer(uint64_t price, OfferFrame const& o);
 
-    AssetPairFrame::pointer loadTradableAssetPair(Database& db, LedgerDelta& delta);
+    AssetPairFrame::pointer loadTradableAssetPair(StorageHelper& storageHelper);
 
     bool lockSellingAmount(OfferEntry const& offer);
 
     FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
 
-    bool currentPriceRestrictionsMet(LedgerManager &lm);
+    bool currentPriceRestrictionsMet(LedgerManager& lm);
 
-    bool physicalPriceRestrictionsMet(LedgerManager &lm);
+    bool physicalPriceRestrictionsMet(LedgerManager& lm);
 
 protected:
 
-    BalanceFrame::pointer loadBalanceValidForTrading(
-        BalanceID const& balanceID,
-        Database& db, LedgerDelta& delta);
+    BalanceFrame::pointer loadBalanceValidForTrading(StorageHelper& storageHelper,
+                                                     BalanceID const& balanceID);
 
     bool
-    tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const override;
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -51,7 +49,7 @@ public:
     CreateOfferOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx, FeeType feeType);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 };

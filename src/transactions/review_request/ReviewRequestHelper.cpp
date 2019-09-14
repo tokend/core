@@ -1,51 +1,52 @@
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/AccountHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ReviewRequestHelper.h"
 #include "ReviewRequestOpFrame.h"
 
 
-namespace stellar {
+namespace stellar
+{
 
-ReviewRequestHelper::ReviewRequestHelper(Application &app, LedgerManager &ledgerManager, LedgerDelta &delta,
+ReviewRequestHelper::ReviewRequestHelper(Application& app, LedgerManager& ledgerManager, StorageHelper& storageHelper,
                                          ReviewableRequestFrame::pointer reviewableRequest)
-        :mApp(app), mLedgerManager(ledgerManager), mDelta(delta), mRequest(reviewableRequest)
+    : mApp(app), mLedgerManager(ledgerManager), mStorageHelper(storageHelper), mRequest(reviewableRequest)
 {
 }
 
-ReviewRequestResultCode ReviewRequestHelper::tryApproveRequest(TransactionFrame &parentTx, Application &app,
-                                                               LedgerManager &ledgerManager, LedgerDelta &delta,
+ReviewRequestResultCode ReviewRequestHelper::tryApproveRequest(TransactionFrame& parentTx, Application& app,
+                                                               LedgerManager& ledgerManager, StorageHelper& storageHelper,
                                                                ReviewableRequestFrame::pointer reviewableRequest)
 {
-    return tryApproveRequestWithResult(parentTx, app, ledgerManager, delta, reviewableRequest).code();
+    return tryApproveRequestWithResult(parentTx, app, ledgerManager, storageHelper, reviewableRequest).code();
 }
 
-ReviewRequestResult ReviewRequestHelper::tryApproveRequestWithResult(TransactionFrame &parentTx, Application &app,
-                                                                     LedgerManager &ledgerManager,
-                                                                     LedgerDelta &delta,
+ReviewRequestResult ReviewRequestHelper::tryApproveRequestWithResult(TransactionFrame& parentTx, Application& app,
+                                                                     LedgerManager& ledgerManager,
+                                                                     StorageHelper& storageHelper,
                                                                      ReviewableRequestFrame::pointer reviewableRequest)
 {
-    Database& db = ledgerManager.getDatabase();
     // shield outer scope of any side effects by using
     // a StorageHelper and LedgerDelta
-    LedgerDeltaImpl reviewRequestDelta(delta);
-    StorageHelperImpl storageHelperImpl(ledgerManager.getDatabase(), &reviewRequestDelta);
-    StorageHelper& storageHelper = storageHelperImpl;
-    storageHelper.begin();
+    LedgerDeltaImpl reviewRequestDeltaImpl(storageHelper.mustGetLedgerDelta());
+    LedgerDelta& reviewRequestDelta = reviewRequestDeltaImpl;
+    StorageHelperImpl storageHelperImpl(storageHelper.getDatabase(), &reviewRequestDelta);
+    StorageHelper& localHelper = storageHelperImpl;
+    localHelper.begin();
 
-    auto helper = ReviewRequestHelper(app, ledgerManager, reviewRequestDelta, reviewableRequest);
+    auto helper = ReviewRequestHelper(app, ledgerManager, localHelper, reviewableRequest);
     auto result = helper.tryApproveRequest(parentTx);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
         return result;
     }
 
-    storageHelper.commit();
+    localHelper.commit();
 
     return result;
 }
 
-    ReviewRequestResult ReviewRequestHelper::tryApproveRequest(TransactionFrame &parentTx)
+ReviewRequestResult ReviewRequestHelper::tryApproveRequest(TransactionFrame& parentTx)
 {
     auto result = tryReviewRequest(parentTx);
     bool isApplied = result.first;
@@ -56,16 +57,18 @@ ReviewRequestResult ReviewRequestHelper::tryApproveRequestWithResult(Transaction
     }
 
     auto resultCode = reviewRequestResult.code();
-    if (resultCode != ReviewRequestResultCode::SUCCESS) {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: doApply returned true, but result code is not success: "
-                                               << xdr::xdr_to_string(mRequest->getRequestEntry());
+    if (resultCode != ReviewRequestResultCode::SUCCESS)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected state: doApply returned true, but result code is not success: "
+            << xdr::xdr_to_string(mRequest->getRequestEntry());
         throw std::runtime_error("Unexpected state: doApply returned true, but result code is not success.");
     }
 
     return reviewRequestResult;
 }
 
-std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(TransactionFrame &parentTx)
+std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(TransactionFrame& parentTx)
 {
     Operation op;
     auto reviewer = mRequest->getReviewer();
@@ -86,18 +89,20 @@ std::pair<bool, ReviewRequestResult> ReviewRequestHelper::tryReviewRequest(Trans
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::REVIEW_REQUEST);
     Database& db = mLedgerManager.getDatabase();
-	auto accountHelper = AccountHelperLegacy::Instance();
-    auto reviewerFrame = accountHelper->loadAccount(reviewer, db);
-    if (!reviewerFrame) {
+    auto& accountHelper = mStorageHelper.getAccountHelper();
+    auto reviewerFrame = accountHelper.loadAccount(reviewer);
+    if (!reviewerFrame)
+    {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: expected review to exist for request: "
                                                << xdr::xdr_to_string(mRequest->getRequestEntry());
         throw std::runtime_error("Unexpected state expected reviewer to exist");
     }
 
     auto reviewRequestOpFrame = std::unique_ptr<ReviewRequestOpFrame>(
-            ReviewRequestOpFrame::makeHelper(op, opRes, parentTx));
+        ReviewRequestOpFrame::makeHelper(op, opRes, parentTx));
     reviewRequestOpFrame->setSourceAccountPtr(reviewerFrame);
-    bool isApplied = reviewRequestOpFrame->doCheckValid(mApp) && reviewRequestOpFrame->doApply(mApp, mDelta, mLedgerManager);
+    bool isApplied =
+        reviewRequestOpFrame->doCheckValid(mApp) && reviewRequestOpFrame->doApply(mApp, mStorageHelper, mLedgerManager);
     if (reviewRequestOpFrame->getResultCode() != OperationResultCode::opINNER)
     {
         throw std::runtime_error("Unexpected error code from review request operation");

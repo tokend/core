@@ -4,7 +4,7 @@
 
 #include <ledger/LimitsV2Helper.h>
 #include "ReviewLimitsUpdateRequestHelper.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 
 namespace stellar
@@ -16,7 +16,7 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 {
     Database& db = mTestManager->getDB();
 
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, db);
     if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
     {

@@ -19,44 +19,51 @@ namespace stellar
 
 using namespace std;
 using xdr::operator==;
-    
+
 ManageAssetOpFrame::ManageAssetOpFrame(Operation const& op,
-                                           OperationResult& res,
-                                           TransactionFrame& parentTx)
-    : OperationFrame(op, res, parentTx)
-    , mManageAsset(mOperation.body.manageAssetOp())
+                                       OperationResult& res,
+                                       TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mManageAsset(mOperation.body.manageAssetOp())
 {
 }
 
-ManageAssetOpFrame* ManageAssetOpFrame::makeHelper(Operation const & op, OperationResult & res, TransactionFrame & parentTx)
+ManageAssetOpFrame *
+ManageAssetOpFrame::makeHelper(Operation const& op, OperationResult& res, TransactionFrame& parentTx)
 {
-    switch (op.body.manageAssetOp().request.action()) {
-    case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
-        return new CreateAssetOpFrame(op, res, parentTx);
-    case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
-        return new UpdateAssetOpFrame(op, res, parentTx);
-    case ManageAssetAction::CANCEL_ASSET_REQUEST:
-        return new CancelAssetRequestOpFrame(op, res, parentTx);
-    case ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER:
-        return new ChangeAssetPreIssuerOpFrame(op, res, parentTx);
-    case ManageAssetAction::UPDATE_MAX_ISSUANCE:
-        return new ChangeAssetMaxIssuanceOpFrame(op, res, parentTx);
-    default:
-        throw runtime_error("Unexpected action in manage asset op");
+    switch (op.body.manageAssetOp().request.action())
+    {
+        case ManageAssetAction::CREATE_ASSET_CREATION_REQUEST:
+            return new CreateAssetOpFrame(op, res, parentTx);
+        case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
+            return new UpdateAssetOpFrame(op, res, parentTx);
+        case ManageAssetAction::CANCEL_ASSET_REQUEST:
+            return new CancelAssetRequestOpFrame(op, res, parentTx);
+        case ManageAssetAction::CHANGE_PREISSUED_ASSET_SIGNER:
+            return new ChangeAssetPreIssuerOpFrame(op, res, parentTx);
+        case ManageAssetAction::UPDATE_MAX_ISSUANCE:
+            return new ChangeAssetMaxIssuanceOpFrame(op, res, parentTx);
+        default:
+            throw runtime_error("Unexpected action in manage asset op");
     }
-}	
+}
 
-ReviewableRequestFrame::pointer ManageAssetOpFrame::getOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta, const ReviewableRequestType requestType) const
+ReviewableRequestFrame::pointer
+ManageAssetOpFrame::
+getOrCreateReviewableRequest(Application& app,
+                             StorageHelper& storageHelper, const ReviewableRequestType requestType) const
 {
-	if (mManageAsset.requestID == 0) {
+    if (mManageAsset.requestID == 0)
+    {
         const auto reference = xdr::pointer<string64>(new string64(getAssetCode()));
         ReviewableRequestEntry::_body_t body;
-		return ReviewableRequestFrame::createNew(delta, getSourceID(),
+        auto& delta = storageHelper.mustGetLedgerDelta();
+        return ReviewableRequestFrame::createNew(delta, getSourceID(),
                                                  app.getAdminID(), reference,
                                                  app.getLedgerManager().getCloseTime());
-	}
+    }
 
-	auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-	return reviewableRequestHelper->loadRequest(mManageAsset.requestID, getSourceID(), requestType, db, &delta);
+    return storageHelper.
+        getReviewableRequestHelper().
+        loadRequest(mManageAsset.requestID, getSourceID(), requestType);
 }
 }

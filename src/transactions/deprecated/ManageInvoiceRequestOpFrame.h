@@ -1,12 +1,10 @@
 #pragma once
 
-#include <xdr/operation-manage-invoice-request.h>
 #include "transactions/OperationFrame.h"
 
 namespace stellar
 {
-class ManageInvoiceRequestOpFrame : public OperationFrame
-{
+class ManageInvoiceRequestOpFrame : public OperationFrame {
     bool
     isSupported(LedgerManager& lm) const override
     {
@@ -37,19 +35,23 @@ class ManageInvoiceRequestOpFrame : public OperationFrame
 
     ManageInvoiceRequestOp const& mManageInvoiceRequest;
 
-    bool createManageInvoiceRequest(Application& app, StorageHelper &storageHelper, LedgerManager& ledgerManager);
+    bool createManageInvoiceRequest(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager);
 
-    bool checkMaxInvoicesForReceiverAccount(Application& app, Database &db, KeyValueHelper &keyValueHelper);
-    bool checkMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper);
-    int64_t obtainMaxInvoicesCount(Application& app, KeyValueHelper &keyValueHelper);
-    uint64_t obtainMaxInvoiceDetailsLength(Application& app, KeyValueHelper &keyValueHelper);
+    bool checkMaxInvoicesForReceiverAccount(Application& app, StorageHelper& storageHelper);
+
+    bool checkMaxInvoiceDetailsLength(Application& app, KeyValueHelper& keyValueHelper);
+
+    int64_t obtainMaxInvoicesCount(Application& app, KeyValueHelper& keyValueHelper);
+
+    uint64_t obtainMaxInvoiceDetailsLength(Application& app, KeyValueHelper& keyValueHelper);
 
 
 public:
     ManageInvoiceRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application& app, StorageHelper &storageHelper,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 
     static ManageInvoiceRequestResultCode

@@ -16,8 +16,9 @@ ManageOfferReviewChecker::ManageOfferReviewChecker(
     const TestManager::pointer testManager, const uint64_t requestID)
     : ReviewChecker(testManager)
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-        requestID, mTestManager->getDB());
+    auto request = mTestManager->getStorageHelper()
+                       .getReviewableRequestHelper()
+                       .loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::MANAGE_OFFER)
     {
         return;

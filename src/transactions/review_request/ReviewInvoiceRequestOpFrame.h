@@ -32,20 +32,20 @@ class ReviewInvoiceRequestOpFrame : public ReviewRequestOpFrame
     bool checkPaymentDetails(ReviewableRequestEntry& requestEntry,
                              BalanceID receiverBalance, BalanceID senderBalance);
 
-    bool processPaymentV2(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager);
+    bool processPaymentV2(Application &app, StorageHelper& storageHelper, LedgerManager &ledgerManager);
 
     bool tryLockAmount(BalanceFrame::pointer balance, uint64_t amount);
 
     void trySetErrorCode(PaymentResultCode paymentResult);
 
 protected:
-    bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                        ReviewableRequestFrame::pointer request) override;
 
-    bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
 
-    bool handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handlePermanentReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                                ReviewableRequestFrame::pointer request) override;
 
 public:

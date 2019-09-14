@@ -29,6 +29,7 @@
 #include "transactions/test/mocks/MockVoteHelper.h"
 #include "transactions/test/mocks/MockPollHelper.h"
 #include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
+#include "transactions/test/mocks/MockReviewableRequestHelper.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"
@@ -56,7 +57,7 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
     Config config;
 
     Hash content = sha256("Some content");
-    xdr::xvector<DecoratedSignature, 20>  signatures;
+    xdr::xvector<DecoratedSignature, 20> signatures;
     std::vector<SignerFrame::pointer> signers;
     for (uint32_t i = 0; i < 3; i++)
     {
@@ -81,17 +82,17 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
         SECTION("Success")
         {
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(3).WillRepeatedly(Return(true));
+                .Times(3).WillRepeatedly(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                                   signerRuleVerifierMock, source,
+                                                   {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(signatureValidator.checkAllSignaturesUsed());
@@ -100,17 +101,17 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
         SECTION("Not enough weight")
         {
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(3).WillOnce(Return(false)).WillRepeatedly(Return(true));
+                .Times(3).WillOnce(Return(false)).WillRepeatedly(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                                   signerRuleVerifierMock, source,
+                                                   {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::NOT_ENOUGH_WEIGHT);
         }
@@ -119,17 +120,17 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
         {
             signers[0]->getEntry().weight = 700;
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(2).WillRepeatedly(Return(true));
+                .Times(2).WillRepeatedly(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                                   signerRuleVerifierMock, source,
+                                                   {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
@@ -154,17 +155,17 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
             signatureValidator = SignatureValidatorImpl(content, signatures);
 
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(6).WillRepeatedly(Return(true));
+                .Times(6).WillRepeatedly(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                                   signerRuleVerifierMock, source,
+                                                   {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
@@ -183,34 +184,34 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
         {
             SignerRequirement saleReq(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE);
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(2).WillRepeatedly(Return(true));
+                .Times(2).WillRepeatedly(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {saleReq});
+                                                   signerRuleVerifierMock, source,
+                                                   {saleReq});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
 
             SignerRequirement feeReq(SignerRuleResource(LedgerEntryType::FEE), SignerRuleAction::MANAGE);
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(3).WillOnce(Return(false)).WillRepeatedly(Return(true));
+                .Times(3).WillOnce(Return(false)).WillRepeatedly(Return(true));
 
             result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {feeReq});
+                                              signerRuleVerifierMock, source,
+                                              {feeReq});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(signatureValidator.checkAllSignaturesUsed());
@@ -219,33 +220,33 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
         SECTION("Not enough weight")
         {
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .Times(2).WillRepeatedly(Return(true));
+                .Times(2).WillRepeatedly(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                                   signerRuleVerifierMock, source,
+                                                   {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
 
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .WillOnce(Return(false)).WillOnce(Return(false)).WillOnce(Return(true));
+                .WillOnce(Return(false)).WillOnce(Return(false)).WillOnce(Return(true));
 
             result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                              signerRuleVerifierMock, source,
+                                              {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::NOT_ENOUGH_WEIGHT);
         }
@@ -255,33 +256,33 @@ TEST_CASE("Signature validator", "[tx][unit][signature_validator]")
             signers[0]->getEntry().weight = 1000;
             signers[1]->getEntry().weight = 1000;
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .WillOnce(Return(true));
+                .WillOnce(Return(true));
 
             auto result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                                   signerRuleVerifierMock, source,
+                                                   {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());
 
             EXPECT_CALL(appMock, getConfig())
-                    .WillOnce(ReturnRef(Const(config)));
+                .WillOnce(ReturnRef(Const(config)));
             EXPECT_CALL(storageHelperMock, getSignerHelper())
-                    .WillOnce(ReturnRef(signerHelperMock));
+                .WillOnce(ReturnRef(signerHelperMock));
             EXPECT_CALL(signerHelperMock, loadSigners(Ref(Const(source))))
-                    .WillOnce(Return(signers));
+                .WillOnce(Return(signers));
             EXPECT_CALL(signerRuleVerifierMock, isAllowed(_, _, Ref(storageHelperMock)))
-                    .WillOnce(Return(false)).WillOnce(Return(true));
+                .WillOnce(Return(false)).WillOnce(Return(true));
 
             result = signatureValidator.check(appMock, storageHelperMock,
-                    signerRuleVerifierMock, source,
-                    {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
+                                              signerRuleVerifierMock, source,
+                                              {SignerRequirement(SignerRuleResource(LedgerEntryType::SALE), SignerRuleAction::MANAGE)});
 
             REQUIRE(result == SignatureValidatorImpl::Result::SUCCESS);
             REQUIRE(!signatureValidator.checkAllSignaturesUsed());

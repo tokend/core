@@ -17,8 +17,9 @@ PaymentReviewChecker::PaymentReviewChecker(
     PaymentDelta* delta)
     : ReviewChecker(testManager), delta(delta)
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-        requestID, mTestManager->getDB());
+    auto request = mTestManager->getStorageHelper()
+                       .getReviewableRequestHelper()
+                       .loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::CREATE_PAYMENT)
     {
         return;

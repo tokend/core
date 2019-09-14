@@ -5,7 +5,7 @@
 #include <ledger/AssetPairHelper.h>
 #include "ReviewSaleRequestHelper.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "ledger/SaleFrame.h"
 #include "test/test_marshaler.h"
 #include "transactions/review_request/ReviewSaleCreationRequestOpFrame.h"
@@ -18,7 +18,7 @@ namespace txtest
 SaleReviewChecker::SaleReviewChecker(const TestManager::pointer testManager,
                                      const uint64_t requestID) : ReviewChecker(testManager)
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, mTestManager->getDB());
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, mTestManager->getDB());
     if (!request || request->getType() != ReviewableRequestType::CREATE_SALE)
     {
         return;

@@ -4,7 +4,7 @@
 
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
 #include "SaleRequestHelper.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "ledger/SaleHelper.h"
 #include "ReviewSaleRequestHelper.h"
 #include "test/test_marshaler.h"
@@ -50,7 +50,7 @@ CreateSaleCreationRequestResult
 SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t requestID, const SaleCreationRequest request,
                                           uint32_t *allTasks, CreateSaleCreationRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
 
 
@@ -75,7 +75,7 @@ CancelSaleCreationRequestResult
 SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
         CancelSaleCreationRequestResultCode expectedResult, OperationResultCode opExpectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
             countObjects(mTestManager->getDB().getSession());
 

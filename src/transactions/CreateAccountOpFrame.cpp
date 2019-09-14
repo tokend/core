@@ -1,6 +1,8 @@
 #include "transactions/CreateAccountOpFrame.h"
-#include <transactions/manage_asset/ManageAssetHelper.h>
-#include <ledger/LedgerHeaderFrame.h>
+#include "transactions/managers/BalanceManager.h"
+#include "main/Application.h"
+#include "ledger/LedgerHeaderFrame.h"
+#include "ledger/LedgerDelta.h"
 #include <ledger/StorageHelper.h>
 #include <ledger/SignerRuleFrame.h>
 #include "ledger/AccountRoleHelper.h"
@@ -87,17 +89,15 @@ CreateAccountOpFrame::createAccount(Application &app, StorageHelper& storageHelp
 }
 
 void
-CreateAccountOpFrame::createBalances(StorageHelper& storageHelper)
+CreateAccountOpFrame::createBalances(Application& app, StorageHelper& storageHelper)
 {
     auto& assetHelper = storageHelper.getAssetHelper();
+    BalanceManager balanceManager(app, storageHelper);
 
     std::vector<AssetFrame::pointer> baseAssets = assetHelper.loadBaseAssets();
     for (const auto &baseAsset : baseAssets)
     {
-        ManageAssetHelper::createBalanceForAccount(mCreateAccount.destination,
-                                                   baseAsset->getCode(),
-                                                   storageHelper.getDatabase(),
-                                                   storageHelper.mustGetLedgerDelta());
+        balanceManager.loadOrCreateBalance(mCreateAccount.destination, baseAsset->getCode());
     }
 }
 
@@ -173,7 +173,7 @@ CreateAccountOpFrame::doApply(Application &app, StorageHelper& storageHelper,
         return false;
     }
 
-    createBalances(storageHelper);
+    createBalances(app, storageHelper);
 
     return createSigners(app, storageHelper);
 }

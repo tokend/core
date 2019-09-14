@@ -15,28 +15,33 @@
 #include "test_helper/ManageAssetPairTestHelper.h"
 #include "test_helper/SetFeesTestHelper.h"
 #include "test/test_marshaler.h"
-#include "ledger/AccountHelperLegacy.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/StorageHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("Set fee", "[tx][set_fees]") {
-    Config const &cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
+TEST_CASE("Set fee", "[tx][set_fees]")
+{
+    Config const& cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
 
     VirtualClock clock;
     Application::pointer appPtr = Application::create(clock, cfg);
-    Application &app = *appPtr;
+    Application& app = *appPtr;
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
 
-    Database &db = app.getDatabase();
+    Database& db = app.getDatabase();
 
     auto testManager = TestManager::make(app);
 
     LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
                           app.getDatabase());
+
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& accountHelper = storageHelper.getAccountHelper();
 
     // set up world
     auto master = Account{getRoot(), Salt(1)};
@@ -60,19 +65,23 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
     auto account = SecretKey::random();
     AccountID accountID = account.getPublicKey();
 
-    SECTION("Invalid asset") {
+    SECTION("Invalid asset")
+    {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, "", 0, 0);
         setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_ASSET);
     }
-    SECTION("Invalid fee type") {
+    SECTION("Invalid fee type")
+    {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType(123), assetCode, 0, 0);
         setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_FEE_TYPE);
     }
-    SECTION("Asset not found") {
+    SECTION("Asset not found")
+    {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, "AETH", 0, 0);
         setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::ASSET_NOT_FOUND);
     }
-    SECTION("Invalid set fee tx hash") {
+    SECTION("Invalid set fee tx hash")
+    {
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0);
         fee.hash.fill(0);
         setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_FEE_HASH);
@@ -81,8 +90,10 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
     {
         assetCode = "NEW0ASSET";
         assetCreationRequest = manageAssetTestHelper.createAssetCreationRequest(assetCode,
-                master.key.getPublicKey(), "{}", UINT64_MAX - (UINT64_MAX % ONE), uint32_t(AssetPolicy::BASE_ASSET),
-                &zeroTasks,  1000000, 0);
+                                                                                master.key.getPublicKey(), "{}",
+                                                                                UINT64_MAX - (UINT64_MAX
+                                                                                              % ONE), uint32_t(AssetPolicy::BASE_ASSET),
+                                                                                &zeroTasks, 1000000, 0);
         manageAssetTestHelper.applyManageAssetTx(master, 0, assetCreationRequest);
 
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 1, 2);
@@ -103,20 +114,22 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
 
     // create account for further tests
     createAccountTestHelper.applyCreateAccountTx(master, account.getPublicKey(), 1);
-    auto accountFrame = AccountHelperLegacy::Instance()->loadAccount(account.getPublicKey(), db);
+    auto accountFrame = accountHelper.loadAccount(account.getPublicKey());
 
     auto accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
                                                 accountFrame, 0, db);
     REQUIRE(!accountFee);
 
-    SECTION("AccountID is set") {
+    SECTION("AccountID is set")
+    {
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 1, 2);
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false);
         accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
                                                accountFrame, 0, db);
         REQUIRE(accountFee->getFee() == feeEntry);
     }
-    SECTION("AccountType is set") {
+    SECTION("AccountType is set")
+    {
         auto accountType = accountFrame->getAccountRole();
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 10, 20, nullptr,
                                                          &accountType);
@@ -126,7 +139,8 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         REQUIRE(accountFee->getFee() == feeEntry);
     }
 
-    SECTION("Both cannot be set") {
+    SECTION("Both cannot be set")
+    {
         auto accountID = accountFrame->getID();
         auto accountType = accountFrame->getAccountRole();
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0, &accountID,
@@ -134,87 +148,109 @@ TEST_CASE("Set fee", "[tx][set_fees]") {
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false, SetFeesResultCode::MALFORMED);
     }
 
-    SECTION("Payment fee") {
-        SECTION("Success") {
+    SECTION("Payment fee")
+    {
+        SECTION("Success")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 1, 2 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
         }
-        SECTION("Success zero") {
+        SECTION("Success zero")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 0);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
         }
-        SECTION("Invalid percent fee fee") {
+        SECTION("Invalid percent fee fee")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 0, 101 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }
     }
-    SECTION("Offer fee") {
-        SECTION("Success") {
+    SECTION("Offer fee")
+    {
+        SECTION("Success")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, assetCode, 0, 2 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
         }
-        SECTION("Success zero") {
+        SECTION("Success zero")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, assetCode, 0, 0);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
         }
-        SECTION("Invalid fixed fee") {
+        SECTION("Invalid fixed fee")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, assetCode, 1, 2 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }
-        SECTION("Invalid percent fee") {
+        SECTION("Invalid percent fee")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, assetCode, 0, 101 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }
     }
-    SECTION("Withdrawal fee") {
-        SECTION("Success") {
+    SECTION("Withdrawal fee")
+    {
+        SECTION("Success")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::WITHDRAWAL_FEE, assetCode, 1, 2 * ONE, nullptr,
                                                         nullptr, 1);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
-            SECTION("update existing") {
+            SECTION("update existing")
+            {
                 fee = setFeesTestHelper.createFeeEntry(FeeType::WITHDRAWAL_FEE, assetCode, 0, 0, nullptr, nullptr, 1);
                 setFeesTestHelper.applySetFeesTx(master, &fee, false);
             }
-            SECTION("Can delete") {
+            SECTION("Can delete")
+            {
                 fee = setFeesTestHelper.createFeeEntry(FeeType::WITHDRAWAL_FEE, assetCode, 0, 0, nullptr, nullptr, 1);
                 setFeesTestHelper.applySetFeesTx(master, &fee, true);
             }
 
         }
-        SECTION("Success zero") {
+        SECTION("Success zero")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::WITHDRAWAL_FEE, assetCode, 0, 0);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
         }
-        SECTION("Invalid percent fee") {
+        SECTION("Invalid percent fee")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::WITHDRAWAL_FEE, assetCode, 0, 101 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }
     }
 
-    SECTION("Investment fee") {
-        SECTION("Success") {
+    SECTION("Investment fee")
+    {
+        SECTION("Success")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 2 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
-            SECTION("update existing") {
+            SECTION("update existing")
+            {
                 fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 0);
                 setFeesTestHelper.applySetFeesTx(master, &fee, false);
             }
-            SECTION("Can delete") {
+            SECTION("Can delete")
+            {
                 fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 0);
                 setFeesTestHelper.applySetFeesTx(master, &fee, true);
             }
 
         }
-        SECTION("Success zero") {
+        SECTION("Success zero")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 0);
             setFeesTestHelper.applySetFeesTx(master, &fee, false);
         }
-        SECTION("Invalid percent fee") {
+        SECTION("Invalid percent fee")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 0, 101 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }
 
-        SECTION("Fixed invest fee not allowed") {
+        SECTION("Fixed invest fee not allowed")
+        {
             auto fee = setFeesTestHelper.createFeeEntry(FeeType::INVEST_FEE, assetCode, 12, 10 * ONE);
             setFeesTestHelper.applySetFeesTx(master, &fee, false, SetFeesResultCode::INVALID_AMOUNT);
         }

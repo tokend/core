@@ -4,15 +4,13 @@
 
 #include "DeleteOfferOpFrame.h"
 #include "OfferManager.h"
-#include "database/Database.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/LedgerDelta.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/OfferHelper.h"
 #include "main/Application.h"
 #include "OfferManager.h"
-#include "ledger/StorageHelper.h"
-#include "ledger/AssetHelper.h"
 
 namespace stellar
 {
@@ -27,19 +25,19 @@ DeleteOfferOpFrame::DeleteOfferOpFrame(Operation const& op,
 }
 
 bool
-DeleteOfferOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                std::vector<OperationCondition> &result) const
+DeleteOfferOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
+                                              std::vector<OperationCondition>& result) const
 {
     // only offer owner can remove it
     return true;
 }
 
 bool
-DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                 std::vector<SignerRequirement> &result) const
+DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                             std::vector<SignerRequirement>& result) const
 {
     auto offerFrame = OfferHelper::Instance()->loadOffer(getSourceID(),
-            mManageOffer.offerID, storageHelper.getDatabase());
+                                                         mManageOffer.offerID, storageHelper.getDatabase());
     if (!offerFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -63,10 +61,11 @@ DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 }
 
 bool
-DeleteOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
+DeleteOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                             LedgerManager& ledgerManager)
 {
-    auto& db = app.getDatabase();
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     const auto offer = OfferHelper::Instance()->loadOffer(
         getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID, db,
         &delta);
@@ -77,11 +76,9 @@ DeleteOfferOpFrame::doApply(Application& app, LedgerDelta& delta,
     }
 
     OfferManager::deleteOffer(offer, db, delta);
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto baseBalance =
-        balanceHelper->mustLoadBalance(offer->getOffer().baseBalance, db, &delta);
-    auto quoteBalance = balanceHelper->mustLoadBalance(
-        offer->getOffer().quoteBalance, db, &delta);
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto baseBalance = balanceHelper.mustLoadBalance(offer->getOffer().baseBalance);
+    auto quoteBalance = balanceHelper.mustLoadBalance(offer->getOffer().quoteBalance);
     innerResult().code(ManageOfferResultCode::SUCCESS);
     auto& success = innerResult().success();
     success.offer.effect(ManageOfferEffect::DELETED);

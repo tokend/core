@@ -4,18 +4,17 @@
 
 namespace stellar
 {
-class ReviewChangeRoleRequestOpFrame : public ReviewRequestOpFrame
-{
+class ReviewChangeRoleRequestOpFrame : public ReviewRequestOpFrame {
 protected:
-    bool handleApprove(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
+    bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                        ReviewableRequestFrame::pointer request) override;
 
-    bool handleReject(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager,
+    bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
 
 public:
-    ReviewChangeRoleRequestOpFrame(Operation const &op, OperationResult &res, TransactionFrame &parentTx);
+    ReviewChangeRoleRequestOpFrame(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doCheckValid(Application &app) override;
+    bool doCheckValid(Application& app) override;
 };
 }

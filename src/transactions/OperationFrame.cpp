@@ -195,7 +195,7 @@ OperationFrame::apply(StorageHelper& storageHelper, Application& app)
     }
 
     bool isApplied =
-        doApply(app, *storageHelper.getLedgerDelta(), app.getLedgerManager());
+        doApply(app, storageHelper, app.getLedgerManager());
     app.getMetrics().NewMeter({"operation", isApplied ? "applied" : "rejected",
                                getInnerResultCodeAsStr()}, "operation").Mark();
     return isApplied;
@@ -291,7 +291,7 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
     std::unordered_map<AccountID, std::vector<SignerRequirement>> involvedAccounts;
     auto source = getSourceID();
     involvedAccounts.emplace(source, std::vector<SignerRequirement>{});
-    for(auto& sr : signerRequirements)
+    for (auto& sr : signerRequirements)
     {
         if (!sr.source)
         {
@@ -335,32 +335,11 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
     return true;
 }
 
-// TMP
-bool
-OperationFrame::doApply(Application& app, LedgerDelta& delta,
-                        LedgerManager& ledgerManager)
-{
-    StorageHelperImpl storageHelper(app.getDatabase(), &delta);
-    return doApply(app, storageHelper, ledgerManager);
-}
-
-// TMP
-bool OperationFrame::doApply(Application& app, StorageHelper& storageHelper,
-                             LedgerManager& ledgerManager)
-{
-    if (!storageHelper.getLedgerDelta())
-    {
-        throw std::runtime_error("Cannot apply operation frame without "
-                                 "LedgerDelta.");
-    }
-    return doApply(app, *storageHelper.getLedgerDelta(), ledgerManager);
-}
-
 // Wraper to make it work for old operations
 // This method should be implemented by inheritors
-bool OperationFrame::tryGetOperationConditions(stellar::StorageHelper &storageHelper,
-                                               std::vector<stellar::OperationCondition> &result,
-                                               stellar::LedgerManager &ledgerManager) const
+bool OperationFrame::tryGetOperationConditions(stellar::StorageHelper& storageHelper,
+                                               std::vector<stellar::OperationCondition>& result,
+                                               stellar::LedgerManager& ledgerManager) const
 {
     return tryGetOperationConditions(storageHelper, result);
 }
@@ -373,9 +352,9 @@ OperationFrame::getSourceID() const
 }
 
 bool
-OperationFrame::loadAccount(LedgerDelta *delta, Database& db)
+OperationFrame::loadAccount(StorageHelper& storageHelper)
 {
-    mSourceAccount = mParentTx.loadAccount(delta, db, getSourceID());
+    mSourceAccount = mParentTx.loadAccount(storageHelper, getSourceID());
     return !!mSourceAccount;
 }
 
@@ -419,7 +398,8 @@ OperationFrame::checkValid(Application& app,
 
     bool forApply = (delta != nullptr);
     auto& db = app.getDatabase();
-    if (!loadAccount(delta, db))
+    StorageHelperImpl storageHelper(db, delta);
+    if (!loadAccount(storageHelper))
     {
         if (forApply || !mOperation.sourceAccount)
         {
@@ -445,7 +425,6 @@ OperationFrame::checkValid(Application& app,
         return isValid;
     }
 
-    StorageHelperImpl storageHelper(db, delta);
     if (!checkRolePermissions(storageHelper, accountRuleVerifier, app.getLedgerManager()))
     {
         return false;

@@ -5,19 +5,19 @@
 #include "ReviewSaleCreationRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/SaleHelper.h"
 #include "main/Application.h"
 #include "transactions/sale/CreateSaleCreationRequestOpFrame.h"
 #include "xdrpp/printer.h"
-#include <ledger/AccountHelperLegacy.h>
 #include <transactions/manage_asset_pair/ManageAssetPairOpFrame.h>
 #include <transactions/manage_specific_rule/CreateAccountSpecificRuleOpFrame.h>
 #include <ledger/StorageHelperImpl.h>
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -26,10 +26,9 @@ using xdr::operator==;
 
 bool
 ReviewSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                            std::vector<SignerRequirement>& result) const
+                                                           std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-            mReviewRequest.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_SALE))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -40,7 +39,7 @@ ReviewSaleCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storag
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_SALE);
     resource.reviewableRequest().details.createSale().type =
-            request->getRequestEntry().body.saleCreationRequest().saleType;
+        request->getRequestEntry().body.saleCreationRequest().saleType;
     resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
     resource.reviewableRequest().allTasks = 0;
@@ -57,33 +56,33 @@ ReviewSaleCreationRequestOpFrame::getSaleCreationRequestFromBody(
     auto requestType = request->getType();
     switch (requestType)
     {
-    case ReviewableRequestType::CREATE_SALE:
-    {
-        return request->getRequestEntry().body.saleCreationRequest();
-    }
-    default:
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-            << "Unexpected reviewable request type while retrieving sale "
-               "creation request from body: "
-            << request->getRequestID();
-        throw runtime_error("Unexpected reviewable request type while "
-                            "retrieving sale creation request from body");
-    }
+        case ReviewableRequestType::CREATE_SALE:
+        {
+            return request->getRequestEntry().body.saleCreationRequest();
+        }
+        default:
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected reviewable request type while retrieving sale "
+                   "creation request from body: "
+                << request->getRequestID();
+            throw runtime_error("Unexpected reviewable request type while "
+                                "retrieving sale creation request from body");
+        }
     }
 }
 
 ReviewRequestResultCode
 ReviewSaleCreationRequestOpFrame::tryCreateSale(
-    Application& app, Database& db, LedgerDelta& delta,
+    Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request,
     uint64_t saleID)
 {
     auto saleCreationRequest = getSaleCreationRequestFromBody(request);
 
     if (!CreateSaleCreationRequestOpFrame::areQuoteAssetsValid(
-            db, saleCreationRequest.quoteAssets,
-            saleCreationRequest.defaultQuoteAsset))
+        storageHelper, saleCreationRequest.quoteAssets,
+        saleCreationRequest.defaultQuoteAsset))
     {
         if (ledgerManager.shouldUse(LedgerVersion::FIX_INVEST_FEE))
         {
@@ -95,34 +94,36 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
             << request->getRequestID();
         throw runtime_error("Quote asset does not exist");
     }
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto baseAsset = assetHelper->loadAsset(
-            saleCreationRequest.baseAsset, request->getRequestor(), db, &delta);
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+    auto baseAsset = assetHelper.loadAsset(saleCreationRequest.baseAsset, request->getRequestor());
     if (!baseAsset)
     {
         return ReviewRequestResultCode::BASE_ASSET_DOES_NOT_EXISTS;
     }
 
     const uint64_t requiredBaseAssetForHardCap =
-       getRequiredBaseAssetForHardCap(saleCreationRequest);
+        getRequiredBaseAssetForHardCap(saleCreationRequest);
 
     if (!baseAsset->lockIssuedAmount(requiredBaseAssetForHardCap))
     {
         return ReviewRequestResultCode::INSUFFICIENT_PREISSUED_FOR_HARD_CAP;
     }
 
-    assetHelper->storeChange(delta, db, baseAsset->mEntry);
+    assetHelper.storeChange(baseAsset->mEntry);
 
-    AccountManager accountManager(app, db, delta, ledgerManager);
+    BalanceManager balanceManager(app, storageHelper);
     const auto balances =
-        loadBalances(accountManager, request, saleCreationRequest);
+        loadBalances(balanceManager, request, saleCreationRequest);
+
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& db = storageHelper.getDatabase();
     const auto saleFrame =
         SaleFrame::createNew(saleID, baseAsset->getOwner(), saleCreationRequest,
                              balances, requiredBaseAssetForHardCap);
     SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
-    createAssetPair(saleFrame, app, ledgerManager, delta);
+    createAssetPair(saleFrame, app, ledgerManager, storageHelper);
 
-    StorageHelperImpl storageHelper(db, &delta);
     createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest, saleFrame);
 
     return ReviewRequestResultCode::SUCCESS;
@@ -130,8 +131,8 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
 
 void
 ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
-        StorageHelper& storageHelper, LedgerManager& ledgerManager,
-        SaleCreationRequest const& request, SaleFrame::pointer const& sale)
+                                                  StorageHelper& storageHelper, LedgerManager& ledgerManager,
+                                                  SaleCreationRequest const& request, SaleFrame::pointer const& sale)
 {
     switch (request.ext.v())
     {
@@ -141,7 +142,7 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
             break;
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale request version"
-                                                << static_cast<int32_t>(request.ext.v());
+                                                   << static_cast<int32_t>(request.ext.v());
             throw std::runtime_error("Unexpected sale request version");
     }
 
@@ -173,8 +174,8 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
         if (!opFrame.doApply(app, storageHelper, ledgerManager))
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to create sale rule "
-                                    << xdr::xdr_to_string(createData, "createData")
-                                    << opFrame.getInnerResultCodeAsStr();
+                                                   << xdr::xdr_to_string(createData, "createData")
+                                                   << opFrame.getInnerResultCodeAsStr();
             throw std::runtime_error("Failed to create sale rule");
         }
     }
@@ -182,7 +183,7 @@ ReviewSaleCreationRequestOpFrame::createSaleRules(Application& app,
 
 bool
 ReviewSaleCreationRequestOpFrame::handleApprove(
-    Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
     if (request->getRequestType() != ReviewableRequestType::CREATE_SALE)
@@ -190,28 +191,28 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected request type. Expected SALE, but got "
             << xdr::xdr_traits<ReviewableRequestType>::enum_name(
-                   request->getRequestType());
+                request->getRequestType());
         throw invalid_argument(
             "Unexpected request type for review sale creation request");
     }
 
-    auto& db = app.getDatabase();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
-
-    handleTasks(db, delta, request);
-
-    if (!request->canBeFulfilled(ledgerManager)){
+    if (!request->canBeFulfilled(ledgerManager))
+    {
         innerResult().code(ReviewRequestResultCode::SUCCESS);
         innerResult().success().fulfilled = false;
         return true;
     }
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
 
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto newSaleID = delta.getHeaderFrame().generateID(LedgerEntryType::SALE);
 
     ReviewRequestResultCode saleCreationResult =
-        tryCreateSale(app, db, delta, ledgerManager, request, newSaleID);
+        tryCreateSale(app, storageHelper, ledgerManager, request, newSaleID);
 
     innerResult().code(saleCreationResult);
 
@@ -237,15 +238,15 @@ void
 ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
                                                   Application& app,
                                                   LedgerManager& ledgerManager,
-                                                  LedgerDelta& delta) const
+                                                  StorageHelper& storageHelper) const
 {
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
         const auto assetPair = ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR)
-                ? AssetPairHelper::Instance()->loadAssetPair(sale->getBaseAsset(), quoteAsset.quoteAsset,
-                    ledgerManager.getDatabase())
-                : AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getBaseAsset(), quoteAsset.quoteAsset,
-                    ledgerManager.getDatabase());
+                               ? AssetPairHelper::Instance()->loadAssetPair(sale->getBaseAsset(), quoteAsset.quoteAsset,
+                                                                            ledgerManager.getDatabase())
+                               : AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getBaseAsset(), quoteAsset.quoteAsset,
+                                                                                        ledgerManager.getDatabase());
         if (!!assetPair)
         {
             continue;
@@ -267,7 +268,7 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
         assetPairOpFrame.setSourceAccountPtr(mSourceAccount);
         const auto applied =
             assetPairOpFrame.doCheckValid(app) &&
-            assetPairOpFrame.doApply(app, delta, ledgerManager);
+            assetPairOpFrame.doApply(app, storageHelper, ledgerManager);
         if (!applied)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -281,19 +282,19 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
 
 std::map<AssetCode, BalanceID>
 ReviewSaleCreationRequestOpFrame::loadBalances(
-    AccountManager& accountManager,
+    BalanceManager& balanceManager,
     const ReviewableRequestFrame::pointer request,
     SaleCreationRequest const& saleCreationRequest)
 {
     map<AssetCode, BalanceID> result;
-    const auto baseBalanceID = accountManager.loadOrCreateBalanceForAsset(
+    const auto baseBalance = balanceManager.loadOrCreateBalance(
         request->getRequestor(), saleCreationRequest.baseAsset);
-    result.insert(make_pair(saleCreationRequest.baseAsset, baseBalanceID));
+    result.insert(make_pair(saleCreationRequest.baseAsset, baseBalance->getBalanceID()));
     for (auto quoteAsset : saleCreationRequest.quoteAssets)
     {
-        const auto quoteBalanceID = accountManager.loadOrCreateBalanceForAsset(
+        const auto quoteBalance = balanceManager.loadOrCreateBalance(
             request->getRequestor(), quoteAsset.quoteAsset);
-        result.insert(make_pair(quoteAsset.quoteAsset, quoteBalanceID));
+        result.insert(make_pair(quoteAsset.quoteAsset, quoteBalance->getBalanceID()));
     }
     return result;
 }

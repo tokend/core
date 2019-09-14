@@ -5,7 +5,6 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include <memory>
-#include "transactions/AccountManager.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/AccountFrame.h"
 #include "ledger/AssetFrame.h"
@@ -30,37 +29,35 @@ class AccountRuleVerifier;
 
 class TransactionFrame;
 
-struct OperationCondition
-{
+struct OperationCondition {
     AccountRuleResource resource;
     AccountRuleAction action;
     AccountFrame::pointer account;
 
     OperationCondition(AccountRuleResource res, AccountRuleAction act, AccountFrame::pointer acc)
-            : resource(res), action(act), account(acc)
+        : resource(res), action(act), account(acc)
     {
     }
 };
 
-struct SignerRequirement
-{
+struct SignerRequirement {
     SignerRuleResource resource;
     SignerRuleAction action;
     std::shared_ptr<AccountID> source;
 
     SignerRequirement(SignerRuleResource res, SignerRuleAction act, std::shared_ptr<AccountID> src = nullptr)
-            : resource(res), action(act), source(src)
+        : resource(res), action(act), source(src)
     {
     }
 };
 
-class OperationFrame
-{
+class OperationFrame {
 private:
-	bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier,
-	                          LedgerManager& ledgerManager);
+    bool checkRolePermissions(StorageHelper& storageHelper, AccountRuleVerifier& accountRuleVerifier,
+                              LedgerManager& ledgerManager);
 
-	bool canBeApplied(Application& app, StorageHelper& storageHelper);
+    bool canBeApplied(Application& app, StorageHelper& storageHelper);
+
     bool checkOp(Application& app, StorageHelper& storageHelper);
 
 protected:
@@ -70,27 +67,27 @@ protected:
     AccountFrame::pointer mSourceAccount;
     OperationResult& mResult;
 
-	// checks signature, if not valid - returns false and sets operation error code;
+    // checks signature, if not valid - returns false and sets operation error code;
     bool doCheckSignature(Application& app, StorageHelper& storageHelper);
+
     bool checkAdminCount(Application& app, StorageHelper& storageHelper);
 
     virtual bool doCheckValid(Application& app) = 0;
-    virtual bool doApply(Application& app, LedgerDelta& delta,
-                         LedgerManager& ledgerManager);
-    virtual bool doApply(Application& app, StorageHelper& storageHelper,
-                         LedgerManager& ledgerManager);
 
-  public:
+    virtual bool doApply(Application& app, StorageHelper& storageHelper,
+                         LedgerManager& ledgerManager) = 0;
+
+public:
     virtual ~OperationFrame() = default;
 
     virtual bool
-    tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result,
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result,
                               LedgerManager& ledgerManager) const;
 
     virtual bool
-    tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const;
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const;
 
     virtual bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -101,11 +98,11 @@ protected:
                              std::vector<SignerRequirement>& result,
                              LedgerManager& ledgerManager) const;
 
-	// returns true if operation is allowed in the system
-	virtual bool isSupported(LedgerManager& lm) const;
+    // returns true if operation is allowed in the system
+    virtual bool isSupported(LedgerManager& lm) const;
 
-	// returns fee paid for operation.
-	// default fee for all operations is 0, finantial operations must override this function
+    // returns fee paid for operation.
+    // default fee for all operations is 0, finantial operations must override this function
     virtual int64_t getPaidFee() const;
 
     static std::shared_ptr<OperationFrame>
@@ -114,6 +111,7 @@ protected:
 
     OperationFrame(Operation const& op, OperationResult& res,
                    TransactionFrame& parentTx);
+
     OperationFrame(OperationFrame const&) = delete;
 
     AccountFrame&
@@ -130,12 +128,12 @@ protected:
     {
         mSourceAccount = sa;
     }
-    
+
     AccountID const& getSourceID() const;
 
     // load account if needed
     // returns true on success
-    bool loadAccount(LedgerDelta* delta, Database& db);
+    bool loadAccount(StorageHelper& storageHelper);
 
     void
     createReferenceEntry(std::string reference, AccountID sender, StorageHelper& storageHelper);
@@ -145,10 +143,11 @@ protected:
     {
         return mResult;
     }
+
     OperationResultCode getResultCode() const;
 
     bool checkValid(Application& app, AccountRuleVerifier& accountRuleVerifier,
-                    LedgerDelta* delta = nullptr);
+                    LedgerDelta *delta = nullptr);
 
     bool apply(StorageHelper& storageHelper, Application& app);
 
@@ -158,6 +157,6 @@ protected:
         return mOperation;
     }
 
-	virtual std::string getInnerResultCodeAsStr();
+    virtual std::string getInnerResultCodeAsStr();
 };
 }

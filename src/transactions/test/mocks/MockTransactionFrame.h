@@ -54,8 +54,8 @@ namespace stellar {
                      bool(LedgerDelta& delta, Application& app));
         MOCK_CONST_METHOD0(toStellarMessage,
                            StellarMessage());
-        MOCK_METHOD3(loadAccount,
-                     AccountFrame::pointer(LedgerDelta* delta, Database& app, AccountID const& accountID));
+        MOCK_METHOD2(loadAccount,
+                     AccountFrame::pointer(StorageHelper& storageHelper, AccountID const& accountID));
         MOCK_CONST_METHOD4(storeTransaction,
                            void(LedgerManager& ledgerManager, TransactionMeta& tm, int txindex, TransactionResultSet& resultSet));
         MOCK_CONST_METHOD3(storeTransactionFee,

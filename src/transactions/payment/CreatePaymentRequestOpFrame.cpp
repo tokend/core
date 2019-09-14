@@ -170,10 +170,10 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh,
         lm.getCloseTime());
     request->setTasks(allTasks);
 
-    auto requestHelper = ReviewableRequestHelper::Instance();
+    auto& requestHelper = sh.getReviewableRequestHelper();
     Database& db = sh.getDatabase();
     LedgerDelta& delta = sh.mustGetLedgerDelta();
-    requestHelper->storeAdd(delta, db, request->mEntry);
+    requestHelper.storeAdd(request->mEntry);
     if (!request->canBeFulfilled(lm))
     {
         innerResult().success().requestID =
@@ -182,17 +182,16 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh,
         return true;
     }
 
-    return tryAutoApprove(db, delta, app, request);
+    return tryAutoApprove(app, sh, request);
 }
 
 bool
-CreatePaymentRequestOpFrame::tryAutoApprove(
-    Database& db, LedgerDelta& delta, Application& app,
+CreatePaymentRequestOpFrame::tryAutoApprove(Application& app, StorageHelper& sh,
     ReviewableRequestFrame::pointer request)
 {
     auto& ledgerManager = app.getLedgerManager();
     auto result = ReviewRequestHelper::tryApproveRequestWithResult(
-        mParentTx, app, ledgerManager, delta, request);
+        mParentTx, app, ledgerManager, sh, request);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
         CLOG(DEBUG, Logging::OPERATION_LOGGER)

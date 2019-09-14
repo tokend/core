@@ -5,15 +5,15 @@
 namespace stellar
 {
 
-class DeleteExternalSystemAccountIDPoolEntryOpFrame : public ManageExternalSystemAccountIdPoolEntryOpFrame
-{
+class DeleteExternalSystemAccountIDPoolEntryOpFrame : public ManageExternalSystemAccountIdPoolEntryOpFrame {
     DeleteExternalSystemAccountIdPoolEntryActionInput const& mInput;
 
 public:
     DeleteExternalSystemAccountIDPoolEntryOpFrame(Operation const& op, OperationResult& res,
                                                   TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager) override;
+    bool doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 };
 
