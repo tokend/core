@@ -15,6 +15,7 @@ enum class SaleType : std::int32_t {
   BASIC_SALE = 1,
   CROWD_FUNDING = 2,
   FIXED_PRICE = 3,
+  IMMEDIATE = 4,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SaleType>
@@ -30,6 +31,8 @@ template<> struct xdr_traits<::stellar::SaleType>
       return "CROWD_FUNDING";
     case ::stellar::SaleType::FIXED_PRICE:
       return "FIXED_PRICE";
+    case ::stellar::SaleType::IMMEDIATE:
+      return "IMMEDIATE";
     default:
       return nullptr;
     }
@@ -38,7 +41,8 @@ template<> struct xdr_traits<::stellar::SaleType>
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::SaleType::BASIC_SALE,
       (int32_t)::stellar::SaleType::CROWD_FUNDING,
-      (int32_t)::stellar::SaleType::FIXED_PRICE
+      (int32_t)::stellar::SaleType::FIXED_PRICE,
+      (int32_t)::stellar::SaleType::IMMEDIATE
     };
     return _xdr_enum_vec;
   }
@@ -516,6 +520,28 @@ count_size(xdr::measurer& m) const override;
 
 };
 
+struct ImmediateSale  : xdr::xdr_abstract {
+  EmptyExt ext{};
+
+  ImmediateSale() = default;
+  template<typename _ext_T,
+           typename = typename
+           std::enable_if<std::is_constructible<EmptyExt, _ext_T>::value
+                         >::type>
+  explicit ImmediateSale(_ext_T &&_ext)
+    : ext(std::forward<_ext_T>(_ext)) {}
+  bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+  bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+};
+
 struct SaleTypeExt : xdr::xdr_abstract {
   using _xdr_case_type = xdr::xdr_traits<SaleType>::case_type;
 private:
@@ -524,6 +550,7 @@ private:
     BasicSale basicSale_;
     CrowdFundingSale crowdFundingSale_;
     FixedPriceSale fixedPriceSale_;
+    ImmediateSale immediateSale_;
   };
 
 public:
@@ -532,7 +559,8 @@ public:
     static const std::vector<SaleType> _xdr_disc_vec {
       SaleType::BASIC_SALE,
       SaleType::CROWD_FUNDING,
-      SaleType::FIXED_PRICE
+      SaleType::FIXED_PRICE,
+      SaleType::IMMEDIATE
     };
     return _xdr_disc_vec;
   }
@@ -540,6 +568,7 @@ public:
     return which == (int32_t)SaleType::BASIC_SALE ? 1
       : which == (int32_t)SaleType::CROWD_FUNDING ? 2
       : which == (int32_t)SaleType::FIXED_PRICE ? 3
+      : which == (int32_t)SaleType::IMMEDIATE ? 4
       : -1;
   }
   template<typename _F, typename..._A> static bool
@@ -553,6 +582,9 @@ public:
       return true;
     case (int32_t)SaleType::FIXED_PRICE:
       _f(&SaleTypeExt::fixedPriceSale_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)SaleType::IMMEDIATE:
+      _f(&SaleTypeExt::immediateSale_, std::forward<_A>(_a)...);
       return true;
     }
     return false;
@@ -576,6 +608,9 @@ break;
       case (int32_t)SaleType::FIXED_PRICE:
 new(&fixedPriceSale_) FixedPriceSale{};
 break;
+      case (int32_t)SaleType::IMMEDIATE:
+new(&immediateSale_) ImmediateSale{};
+break;
 }
 
     }
@@ -594,6 +629,9 @@ break;
     case (int32_t)SaleType::FIXED_PRICE:
 new(&fixedPriceSale_) FixedPriceSale{};
 break;
+    case (int32_t)SaleType::IMMEDIATE:
+new(&immediateSale_) ImmediateSale{};
+break;
 }
 
   }
@@ -608,6 +646,9 @@ new(&crowdFundingSale_) CrowdFundingSale(source.crowdFundingSale_);
 break;
     case (int32_t)SaleType::FIXED_PRICE:
 new(&fixedPriceSale_) FixedPriceSale(source.fixedPriceSale_);
+break;
+    case (int32_t)SaleType::IMMEDIATE:
+new(&immediateSale_) ImmediateSale(source.immediateSale_);
 break;
 }
 
@@ -624,6 +665,9 @@ break;
     case (int32_t)SaleType::FIXED_PRICE:
 new(&fixedPriceSale_) FixedPriceSale(std::move(source.fixedPriceSale_));
 break;
+    case (int32_t)SaleType::IMMEDIATE:
+new(&immediateSale_) ImmediateSale(std::move(source.immediateSale_));
+break;
 }
 
   }
@@ -638,6 +682,9 @@ crowdFundingSale_.~CrowdFundingSale();
 break;
   case (int32_t)SaleType::FIXED_PRICE:
 fixedPriceSale_.~FixedPriceSale();
+break;
+  case (int32_t)SaleType::IMMEDIATE:
+immediateSale_.~ImmediateSale();
 break;
 }
 }
@@ -656,6 +703,9 @@ break;
     case (int32_t)SaleType::FIXED_PRICE:
 fixedPriceSale_ = source.fixedPriceSale_;
 break;
+    case (int32_t)SaleType::IMMEDIATE:
+immediateSale_ = source.immediateSale_;
+break;
 }
 }
 else {this->~SaleTypeExt();
@@ -670,6 +720,9 @@ new(&crowdFundingSale_) CrowdFundingSale(source.crowdFundingSale_);
 break;
     case (int32_t)SaleType::FIXED_PRICE:
 new(&fixedPriceSale_) FixedPriceSale(source.fixedPriceSale_);
+break;
+    case (int32_t)SaleType::IMMEDIATE:
+new(&immediateSale_) ImmediateSale(source.immediateSale_);
 break;
 }
 }
@@ -689,6 +742,9 @@ break;
     case (int32_t)SaleType::FIXED_PRICE:
 fixedPriceSale_ = std::move(source.fixedPriceSale_);
 break;
+    case (int32_t)SaleType::IMMEDIATE:
+immediateSale_ = std::move(source.immediateSale_);
+break;
 }
 }
 else {this->~SaleTypeExt();
@@ -703,6 +759,9 @@ new(&crowdFundingSale_) CrowdFundingSale(std::move(source.crowdFundingSale_));
 break;
     case (int32_t)SaleType::FIXED_PRICE:
 new(&fixedPriceSale_) FixedPriceSale(std::move(source.fixedPriceSale_));
+break;
+    case (int32_t)SaleType::IMMEDIATE:
+new(&immediateSale_) ImmediateSale(std::move(source.immediateSale_));
 break;
 }
 }
@@ -744,6 +803,16 @@ break;
     if (_xdr_field_number(saleType_) == 3)
       return fixedPriceSale_;
     throw xdr::xdr_wrong_union("SaleTypeExt: fixedPriceSale accessed when not selected");
+  }
+  ImmediateSale &immediateSale() {
+    if (_xdr_field_number(saleType_) == 4)
+      return immediateSale_;
+    throw xdr::xdr_wrong_union("SaleTypeExt: immediateSale accessed when not selected");
+  }
+  const ImmediateSale &immediateSale() const {
+    if (_xdr_field_number(saleType_) == 4)
+      return immediateSale_;
+    throw xdr::xdr_wrong_union("SaleTypeExt: immediateSale accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

@@ -105,6 +105,10 @@ return u.from_bytes(removeAssetPairOp_);
 return u.from_bytes(initiateKYCRecoveryOp_);
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return u.from_bytes(createKYCRecoveryRequestOp_);
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return u.from_bytes(createManageOfferRequestOp_);
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return u.from_bytes(createPaymentRequestOp_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return u.from_bytes(removeAssetOp_);
 }
@@ -209,6 +213,10 @@ return m.to_bytes(removeAssetPairOp_);
 return m.to_bytes(initiateKYCRecoveryOp_);
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return m.to_bytes(createKYCRecoveryRequestOp_);
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return m.to_bytes(createManageOfferRequestOp_);
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return m.to_bytes(createPaymentRequestOp_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.to_bytes(removeAssetOp_);
 }
@@ -309,6 +317,10 @@ return m.count_size(removeAssetPairOp_);
 return m.count_size(initiateKYCRecoveryOp_);
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return m.count_size(createKYCRecoveryRequestOp_);
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return m.count_size(createManageOfferRequestOp_);
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return m.count_size(createPaymentRequestOp_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.count_size(removeAssetOp_);
 }
@@ -412,6 +424,10 @@ return removeAssetPairOp_ == other.removeAssetPairOp_;
 return initiateKYCRecoveryOp_ == other.initiateKYCRecoveryOp_;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return createKYCRecoveryRequestOp_ == other.createKYCRecoveryRequestOp_;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return createManageOfferRequestOp_ == other.createManageOfferRequestOp_;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return createPaymentRequestOp_ == other.createPaymentRequestOp_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetOp_ == other.removeAssetOp_;
 }
@@ -517,6 +533,10 @@ return removeAssetPairOp_ < other.removeAssetPairOp_;
 return initiateKYCRecoveryOp_ < other.initiateKYCRecoveryOp_;
     case (int32_t)OperationType::CREATE_KYC_RECOVERY_REQUEST:
 return createKYCRecoveryRequestOp_ < other.createKYCRecoveryRequestOp_;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return createManageOfferRequestOp_ < other.createManageOfferRequestOp_;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return createPaymentRequestOp_ < other.createPaymentRequestOp_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetOp_ < other.removeAssetOp_;
 }
@@ -1195,6 +1215,10 @@ return u.from_bytes(removeAssetPairResult_);
 return u.from_bytes(createKYCRecoveryRequestResult_);
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return u.from_bytes(initiateKYCRecoveryResult_);
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return u.from_bytes(createManageOfferRequestResult_);
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return u.from_bytes(createPaymentRequestResult_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return u.from_bytes(removeAssetResult_);
 }
@@ -1299,6 +1323,10 @@ return m.to_bytes(removeAssetPairResult_);
 return m.to_bytes(createKYCRecoveryRequestResult_);
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return m.to_bytes(initiateKYCRecoveryResult_);
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return m.to_bytes(createManageOfferRequestResult_);
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return m.to_bytes(createPaymentRequestResult_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.to_bytes(removeAssetResult_);
 }
@@ -1399,6 +1427,10 @@ return m.count_size(removeAssetPairResult_);
 return m.count_size(createKYCRecoveryRequestResult_);
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return m.count_size(initiateKYCRecoveryResult_);
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return m.count_size(createManageOfferRequestResult_);
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return m.count_size(createPaymentRequestResult_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.count_size(removeAssetResult_);
 }
@@ -1502,6 +1534,10 @@ return removeAssetPairResult_ == other.removeAssetPairResult_;
 return createKYCRecoveryRequestResult_ == other.createKYCRecoveryRequestResult_;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return initiateKYCRecoveryResult_ == other.initiateKYCRecoveryResult_;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return createManageOfferRequestResult_ == other.createManageOfferRequestResult_;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return createPaymentRequestResult_ == other.createPaymentRequestResult_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetResult_ == other.removeAssetResult_;
 }
@@ -1607,6 +1643,10 @@ return removeAssetPairResult_ < other.removeAssetPairResult_;
 return createKYCRecoveryRequestResult_ < other.createKYCRecoveryRequestResult_;
     case (int32_t)OperationType::INITIATE_KYC_RECOVERY:
 return initiateKYCRecoveryResult_ < other.initiateKYCRecoveryResult_;
+    case (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST:
+return createManageOfferRequestResult_ < other.createManageOfferRequestResult_;
+    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+return createPaymentRequestResult_ < other.createPaymentRequestResult_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetResult_ < other.removeAssetResult_;
 }

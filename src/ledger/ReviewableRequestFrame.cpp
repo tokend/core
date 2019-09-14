@@ -241,6 +241,28 @@ void ReviewableRequestFrame::ensurePollCreationValid(CreatePollRequest const& re
     }
 }
 
+void
+ReviewableRequestFrame::ensureManageOfferValid(ManageOfferRequest const& request) 
+{
+    if (request.op.amount < 0)
+    {
+        throw runtime_error("invalid offer amount");
+    }
+
+    if (request.op.price <= 0) 
+    {
+        throw runtime_error("invalid offer price");
+    }
+}
+
+void
+ReviewableRequestFrame::ensureCreatePaymentValid(CreatePaymentRequest const& request) 
+{
+    if (request.paymentOp.amount <= 0) 
+    {
+        throw runtime_error("invalid payment amount");
+    }
+}
 
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
@@ -297,6 +319,10 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensurePollCreationValid(oe.body.createPollRequest());
         case ReviewableRequestType::KYC_RECOVERY:
             return ensureKYCRecoveryValid(oe.body.kycRecoveryRequest());
+        case ReviewableRequestType::MANAGE_OFFER:
+            return ensureManageOfferValid(oe.body.manageOfferRequest());
+        case ReviewableRequestType::CREATE_PAYMENT:
+            return ensureCreatePaymentValid(oe.body.createPaymentRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

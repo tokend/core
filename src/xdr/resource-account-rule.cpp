@@ -594,6 +594,222 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+ReviewableRequestResource::_manageOffer_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okbaseAssetType = u.from_bytes(baseAssetType);
+if (!okbaseAssetType)
+{
+return false;
+}
+bool okquoteAssetType = u.from_bytes(quoteAssetType);
+if (!okquoteAssetType)
+{
+return false;
+}
+bool okbaseAssetCode = u.from_bytes(baseAssetCode);
+if (!okbaseAssetCode)
+{
+return false;
+}
+bool okquoteAssetCode = u.from_bytes(quoteAssetCode);
+if (!okquoteAssetCode)
+{
+return false;
+}
+bool okisBuy = u.from_bytes(isBuy);
+if (!okisBuy)
+{
+return false;
+}
+bool okmanageAction = u.from_bytes(manageAction);
+if (!okmanageAction)
+{
+return false;
+}
+bool okorderBookID = u.from_bytes(orderBookID);
+if (!okorderBookID)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_manageOffer_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okbaseAssetType = m.to_bytes(baseAssetType);
+if (!okbaseAssetType)
+{
+return false;
+}
+bool okquoteAssetType = m.to_bytes(quoteAssetType);
+if (!okquoteAssetType)
+{
+return false;
+}
+bool okbaseAssetCode = m.to_bytes(baseAssetCode);
+if (!okbaseAssetCode)
+{
+return false;
+}
+bool okquoteAssetCode = m.to_bytes(quoteAssetCode);
+if (!okquoteAssetCode)
+{
+return false;
+}
+bool okisBuy = m.to_bytes(isBuy);
+if (!okisBuy)
+{
+return false;
+}
+bool okmanageAction = m.to_bytes(manageAction);
+if (!okmanageAction)
+{
+return false;
+}
+bool okorderBookID = m.to_bytes(orderBookID);
+if (!okorderBookID)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_manageOffer_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(baseAssetType);
+m.count_size(quoteAssetType);
+m.count_size(baseAssetCode);
+m.count_size(quoteAssetCode);
+m.count_size(isBuy);
+m.count_size(manageAction);
+m.count_size(orderBookID);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_manageOffer_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_manageOffer_t const&>(other_abstract);return true
+&& (baseAssetType== other.baseAssetType)
+&& (quoteAssetType== other.quoteAssetType)
+&& (baseAssetCode== other.baseAssetCode)
+&& (quoteAssetCode== other.quoteAssetCode)
+&& (isBuy== other.isBuy)
+&& (manageAction== other.manageAction)
+&& (orderBookID== other.orderBookID)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_manageOffer_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_manageOffer_t const&>(other_abstract);
+if (baseAssetType < other.baseAssetType) return true;
+if (other.baseAssetType < baseAssetType) return false;
+if (quoteAssetType < other.quoteAssetType) return true;
+if (other.quoteAssetType < quoteAssetType) return false;
+if (baseAssetCode < other.baseAssetCode) return true;
+if (other.baseAssetCode < baseAssetCode) return false;
+if (quoteAssetCode < other.quoteAssetCode) return true;
+if (other.quoteAssetCode < quoteAssetCode) return false;
+if (isBuy < other.isBuy) return true;
+if (other.isBuy < isBuy) return false;
+if (manageAction < other.manageAction) return true;
+if (other.manageAction < manageAction) return false;
+if (orderBookID < other.orderBookID) return true;
+if (other.orderBookID < orderBookID) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
+ReviewableRequestResource::_createPayment_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okassetCode = u.from_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = u.from_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_createPayment_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okassetCode = m.to_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = m.to_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_createPayment_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(assetCode);
+m.count_size(assetType);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_createPayment_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_createPayment_t const&>(other_abstract);return true
+&& (assetCode== other.assetCode)
+&& (assetType== other.assetType)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_createPayment_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_createPayment_t const&>(other_abstract);
+if (assetCode < other.assetCode) return true;
+if (other.assetCode < assetCode) return false;
+if (assetType < other.assetType) return true;
+if (other.assetType < assetType) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ReviewableRequestResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -615,6 +831,10 @@ return u.from_bytes(createAtomicSwapAskExt_);
 return u.from_bytes(createAtomicSwapBidExt_);
   case (int32_t)ReviewableRequestType::CREATE_POLL:
 return u.from_bytes(createPoll_);
+  case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return u.from_bytes(manageOffer_);
+  case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return u.from_bytes(createPayment_);
   default:
 return u.from_bytes(ext_);
 }
@@ -643,6 +863,10 @@ return m.to_bytes(createAtomicSwapAskExt_);
 return m.to_bytes(createAtomicSwapBidExt_);
   case (int32_t)ReviewableRequestType::CREATE_POLL:
 return m.to_bytes(createPoll_);
+  case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return m.to_bytes(manageOffer_);
+  case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return m.to_bytes(createPayment_);
   default:
 return m.to_bytes(ext_);
 }
@@ -667,6 +891,10 @@ return m.count_size(createAtomicSwapAskExt_);
 return m.count_size(createAtomicSwapBidExt_);
   case (int32_t)ReviewableRequestType::CREATE_POLL:
 return m.count_size(createPoll_);
+  case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return m.count_size(manageOffer_);
+  case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return m.count_size(createPayment_);
   default:
 return m.count_size(ext_);
 }
@@ -694,6 +922,10 @@ return createAtomicSwapAskExt_ == other.createAtomicSwapAskExt_;
 return createAtomicSwapBidExt_ == other.createAtomicSwapBidExt_;
   case (int32_t)ReviewableRequestType::CREATE_POLL:
 return createPoll_ == other.createPoll_;
+  case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return manageOffer_ == other.manageOffer_;
+  case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return createPayment_ == other.createPayment_;
   default:
 return ext_ == other.ext_;
 }
@@ -723,6 +955,10 @@ return createAtomicSwapAskExt_ < other.createAtomicSwapAskExt_;
 return createAtomicSwapBidExt_ < other.createAtomicSwapBidExt_;
   case (int32_t)ReviewableRequestType::CREATE_POLL:
 return createPoll_ < other.createPoll_;
+  case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+return manageOffer_ < other.manageOffer_;
+  case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+return createPayment_ < other.createPayment_;
   default:
 return ext_ < other.ext_;
 }

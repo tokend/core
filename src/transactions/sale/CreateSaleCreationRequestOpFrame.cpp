@@ -1,21 +1,19 @@
 #include "CreateSaleCreationRequestOpFrame.h"
+#include "bucket/BucketApplicator.h"
 #include "database/Database.h"
-#include "main/Application.h"
+#include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetPairHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/KeyValueHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/StorageHelper.h"
-#include "transactions/review_request/ReviewRequestHelper.h"
-#include "ledger/AssetHelper.h"
-#include "xdrpp/printer.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "bucket/BucketApplicator.h"
-#include "ledger/AssetPairHelper.h"
+#include "ledger/StorageHelper.h"
+#include "main/Application.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/KeyValueHelper.h"
-#include "ledger/AccountHelper.h"
+#include "transactions/review_request/ReviewRequestHelper.h"
+#include "xdrpp/printer.h"
 
 namespace stellar
 {
@@ -108,7 +106,6 @@ bool CreateSaleCreationRequestOpFrame::areQuoteAssetsValid(Database& db, xdr::xv
         {
             return false;
         }
-
     }
 
     return true;
@@ -157,7 +154,8 @@ CreateSaleCreationRequestOpFrame::doApply(Application& app, StorageHelper &stora
 bool CreateSaleCreationRequestOpFrame::ensureEnoughAvailable(const SaleCreationRequest& saleCreationRequest,
                                                              AssetFrame::pointer baseAsset)
 {
-    if (saleCreationRequest.saleTypeExt.saleType() != SaleType::FIXED_PRICE)
+    if (saleCreationRequest.saleTypeExt.saleType() != SaleType::FIXED_PRICE ||
+    saleCreationRequest.saleTypeExt.saleType() != SaleType::IMMEDIATE)
         return true;
 
     return baseAsset->getAvailableForIssuance() >= saleCreationRequest.requiredBaseAssetForHardCap;

@@ -57,7 +57,10 @@
 #include "ledger/SignerHelper.h"
 #include "transactions/CancelChangeRoleRequestOpFrame.h"
 #include "transactions/manage_asset_pair/RemoveAssetPairOpFrame.h"
+#include "payment/CreatePaymentRequestOpFrame.h"
+#include "dex/CreateManageOfferRequestOpFrame.h"
 #include "transactions/manage_asset/RemoveAssetOpFrame.h"
+
 
 namespace stellar
 {
@@ -70,125 +73,104 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
 {
     switch (op.body.type())
     {
-    case OperationType::CREATE_ACCOUNT:
-        return shared_ptr<OperationFrame>(
-            new CreateAccountOpFrame(op, res, tx));
-    case OperationType::CREATE_ISSUANCE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CreateIssuanceRequestOpFrame(op, res, tx));
-    case OperationType::SET_FEES:
-        return shared_ptr<OperationFrame>(new SetFeesOpFrame(op, res, tx));
-    case OperationType::CREATE_WITHDRAWAL_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CreateWithdrawalRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_BALANCE:
-        return shared_ptr<OperationFrame>(
-            new ManageBalanceOpFrame(op, res, tx));
-    case OperationType::MANAGE_ASSET:
-        return shared_ptr<OperationFrame>(
-            ManageAssetOpFrame::makeHelper(op, res, tx));
-    case OperationType::CREATE_PREISSUANCE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CreatePreIssuanceRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_LIMITS:
-        return shared_ptr<OperationFrame>(new ManageLimitsOpFrame(op, res, tx));
-    case OperationType::MANAGE_ASSET_PAIR:
-        return shared_ptr<OperationFrame>(
-            new ManageAssetPairOpFrame(op, res, tx));
-    case OperationType::MANAGE_OFFER:
-        return shared_ptr<OperationFrame>(
-            ManageOfferOpFrame::make(op, res, tx));
-    case OperationType::MANAGE_INVOICE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new ManageInvoiceRequestOpFrame(op, res, tx));
-    case OperationType::REVIEW_REQUEST:
-        return shared_ptr<OperationFrame>(
-            ReviewRequestOpFrame::makeHelper(op, res, tx));
-    case OperationType::CREATE_SALE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CreateSaleCreationRequestOpFrame(op, res, tx));
-    case OperationType::CHECK_SALE_STATE:
-        return shared_ptr<OperationFrame>(
-            new CheckSaleStateOpFrame(op, res, tx));
-    case OperationType::PAYOUT:
-        return shared_ptr<OperationFrame>(new PayoutOpFrame(op, res, tx));
-    case OperationType::MANAGE_EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
-        return shared_ptr<OperationFrame>(
-            ManageExternalSystemAccountIdPoolEntryOpFrame::makeHelper(op, res,
-                                                                      tx));
-    case OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID:
-        return shared_ptr<OperationFrame>(
-            new BindExternalSystemAccountIdOpFrame(op, res, tx));
-    case OperationType::CREATE_AML_ALERT:
-        return shared_ptr<OperationFrame>(
-            new CreateAMLAlertRequestOpFrame(op, res, tx));
-    case OperationType::CREATE_CHANGE_ROLE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CreateChangeRoleRequestOpFrame(op, res, tx));
-    case OperationType::PAYMENT:
-        return make_shared<PaymentOpFrame>(op, res, tx);
-    case OperationType::MANAGE_KEY_VALUE:
-        return shared_ptr<OperationFrame>(
-            new ManageKeyValueOpFrame(op, res, tx));
-    case OperationType::MANAGE_SALE:
-        return shared_ptr<OperationFrame>(new ManageSaleOpFrame(op, res, tx));
-    case OperationType::CREATE_MANAGE_LIMITS_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CreateManageLimitsRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_CONTRACT_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new ManageContractRequestOpFrame(op, res, tx));
-    case OperationType::MANAGE_CONTRACT:
-        return shared_ptr<OperationFrame>(
-            new ManageContractOpFrame(op, res, tx));
-    case OperationType::CANCEL_SALE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CancelSaleCreationRequestOpFrame(op, res, tx));
-    case OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST:
-        return make_shared<CreateAtomicSwapAskRequestOpFrame>(op, res, tx);
-    case OperationType::CANCEL_ATOMIC_SWAP_ASK:
-        return make_shared<CancelAtomicSwapAskOpFrame>(op, res, tx);
-    case OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST:
-        return make_shared<CreateAtomicSwapBidRequestOpFrame>(op, res, tx);
-    case OperationType::MANAGE_ACCOUNT_ROLE:
-        return shared_ptr<OperationFrame>(
-            new ManageAccountRoleOpFrame(op, res, tx));
-    case OperationType::MANAGE_ACCOUNT_RULE:
-        return shared_ptr<OperationFrame>(
-            new ManageAccountRuleOpFrame(op, res, tx));
-    case OperationType::MANAGE_SIGNER:
-        return make_shared<ManageSignerOpFrame>(op, res, tx);
-    case OperationType::MANAGE_SIGNER_ROLE:
-        return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
-    case OperationType::MANAGE_SIGNER_RULE:
-        return make_shared<ManageSignerRuleOpFrame>(op, res, tx);
-    case OperationType::STAMP:
-        return shared_ptr<OperationFrame>(new StampOpFrame(op, res, tx));
-    case OperationType::LICENSE:
-        return shared_ptr<OperationFrame>(new LicenseOpFrame(op, res, tx));
-    case OperationType::MANAGE_CREATE_POLL_REQUEST:
-        return ManageCreatePollRequestOpFrame::makeHelper(op, res, tx);
-    case OperationType::MANAGE_POLL:
-        return ManagePollOpFrame::makeHelper(op, res, tx);
-    case OperationType::MANAGE_VOTE:
-        return shared_ptr<OperationFrame>(ManageVoteOpFrame::make(op, res, tx));
-    case OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE:
-        return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
-    case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
-        return shared_ptr<OperationFrame>(
-            new CancelChangeRoleRequestOpFrame(op, res, tx));
-    case OperationType::REMOVE_ASSET_PAIR:
-        return make_shared<RemoveAssetPairOpFrame>(op, res, tx);
-    case OperationType::INITIATE_KYC_RECOVERY:
-        return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
-    case OperationType::CREATE_KYC_RECOVERY_REQUEST:
-        return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
-    case OperationType::REMOVE_ASSET:
-        return make_shared<RemoveAssetOpFrame>(op, res, tx);
-    default:
-        ostringstream err;
-        err << "Unknown Tx type: " << static_cast<int32_t>(op.body.type());
-        throw std::invalid_argument(err.str());
+        case OperationType::CREATE_ACCOUNT:
+            return shared_ptr<OperationFrame>(new CreateAccountOpFrame(op, res, tx));
+        case OperationType::CREATE_ISSUANCE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateIssuanceRequestOpFrame(op, res, tx));
+        case OperationType::SET_FEES:
+            return shared_ptr<OperationFrame>(new SetFeesOpFrame(op, res, tx));
+        case OperationType::CREATE_WITHDRAWAL_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateWithdrawalRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_BALANCE:
+            return shared_ptr<OperationFrame>(new ManageBalanceOpFrame(op, res, tx));
+        case OperationType::MANAGE_ASSET:
+            return shared_ptr<OperationFrame>(ManageAssetOpFrame::makeHelper(op, res, tx));
+        case OperationType::CREATE_PREISSUANCE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreatePreIssuanceRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_LIMITS:
+            return shared_ptr<OperationFrame>(new ManageLimitsOpFrame(op, res, tx));
+        case OperationType::MANAGE_ASSET_PAIR:
+            return shared_ptr<OperationFrame>(new ManageAssetPairOpFrame(op, res, tx));
+        case OperationType::MANAGE_OFFER:
+            return shared_ptr<OperationFrame>(ManageOfferOpFrame::make(op, res, tx));
+        case OperationType::MANAGE_INVOICE_REQUEST:
+            return shared_ptr<OperationFrame>(new ManageInvoiceRequestOpFrame(op, res, tx));
+        case OperationType::REVIEW_REQUEST:
+            return shared_ptr<OperationFrame>(ReviewRequestOpFrame::makeHelper(op, res, tx));
+        case OperationType::CREATE_SALE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateSaleCreationRequestOpFrame(op, res, tx));
+        case OperationType::CHECK_SALE_STATE:
+            return shared_ptr<OperationFrame>(new CheckSaleStateOpFrame(op, res, tx));
+        case OperationType::PAYOUT:
+            return shared_ptr<OperationFrame>(new PayoutOpFrame(op, res, tx));
+        case OperationType::MANAGE_EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY:
+            return shared_ptr<OperationFrame>(ManageExternalSystemAccountIdPoolEntryOpFrame::makeHelper(op, res, tx));
+        case OperationType::BIND_EXTERNAL_SYSTEM_ACCOUNT_ID:
+            return shared_ptr<OperationFrame>(new BindExternalSystemAccountIdOpFrame(op, res, tx));
+        case OperationType::CREATE_AML_ALERT:
+            return shared_ptr<OperationFrame>(new CreateAMLAlertRequestOpFrame(op, res, tx));
+        case OperationType::CREATE_CHANGE_ROLE_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::PAYMENT:
+            return make_shared<PaymentOpFrame>(op, res, tx);
+        case OperationType::MANAGE_KEY_VALUE:
+            return shared_ptr<OperationFrame>(new ManageKeyValueOpFrame(op, res, tx));
+        case OperationType::MANAGE_SALE:
+            return shared_ptr<OperationFrame>(new ManageSaleOpFrame(op, res, tx));
+        case OperationType::CREATE_MANAGE_LIMITS_REQUEST:
+            return shared_ptr<OperationFrame>(new CreateManageLimitsRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_CONTRACT_REQUEST:
+            return shared_ptr<OperationFrame>(new ManageContractRequestOpFrame(op, res, tx));
+        case OperationType::MANAGE_CONTRACT:
+            return shared_ptr<OperationFrame>(new ManageContractOpFrame(op, res, tx));
+        case OperationType::CANCEL_SALE_REQUEST:
+            return shared_ptr<OperationFrame>(new CancelSaleCreationRequestOpFrame(op, res, tx));
+        case OperationType::CREATE_ATOMIC_SWAP_ASK_REQUEST:
+            return make_shared<CreateAtomicSwapAskRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_ATOMIC_SWAP_ASK:
+            return make_shared<CancelAtomicSwapAskOpFrame>(op, res, tx);
+        case OperationType::CREATE_ATOMIC_SWAP_BID_REQUEST:
+            return make_shared<CreateAtomicSwapBidRequestOpFrame>(op, res, tx);
+        case OperationType::MANAGE_ACCOUNT_ROLE:
+            return shared_ptr<OperationFrame>(new ManageAccountRoleOpFrame(op, res, tx));
+        case OperationType::MANAGE_ACCOUNT_RULE:
+            return shared_ptr<OperationFrame>(new ManageAccountRuleOpFrame(op, res, tx));
+        case OperationType::MANAGE_SIGNER:
+            return make_shared<ManageSignerOpFrame>(op, res, tx);
+        case OperationType::MANAGE_SIGNER_ROLE:
+            return make_shared<ManageSignerRoleOpFrame>(op, res, tx);
+        case OperationType::MANAGE_SIGNER_RULE:
+            return make_shared<ManageSignerRuleOpFrame>(op, res, tx);
+        case OperationType::STAMP:
+            return shared_ptr<OperationFrame>(new StampOpFrame(op, res, tx));
+        case OperationType::LICENSE:
+            return shared_ptr<OperationFrame>(new LicenseOpFrame(op, res, tx));
+        case OperationType::MANAGE_CREATE_POLL_REQUEST:
+            return ManageCreatePollRequestOpFrame::makeHelper(op, res, tx);
+        case OperationType::MANAGE_POLL:
+            return ManagePollOpFrame::makeHelper(op, res, tx);
+        case OperationType::MANAGE_VOTE:
+            return shared_ptr<OperationFrame>(ManageVoteOpFrame::make(op, res, tx));
+        case OperationType::MANAGE_ACCOUNT_SPECIFIC_RULE:
+            return ManageAccountSpecificRuleOpFrame::makeHelper(op, res, tx);
+        case OperationType::CANCEL_CHANGE_ROLE_REQUEST:
+            return shared_ptr<OperationFrame>(new CancelChangeRoleRequestOpFrame(op, res, tx));
+        case OperationType::REMOVE_ASSET_PAIR:
+            return make_shared<RemoveAssetPairOpFrame>(op, res, tx);
+        case OperationType::INITIATE_KYC_RECOVERY:
+            return make_shared<InitiateKYCRecoveryOpFrame>(op, res, tx);
+        case OperationType::CREATE_KYC_RECOVERY_REQUEST:
+            return make_shared<CreateKYCRecoveryRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_MANAGE_OFFER_REQUEST:
+            return make_shared<CreateManageOfferRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_PAYMENT_REQUEST:
+            return make_shared<CreatePaymentRequestOpFrame>(op, res, tx);
+        case OperationType::REMOVE_ASSET:
+            return make_shared<RemoveAssetOpFrame>(op, res, tx);
+        default:
+            ostringstream err;
+            err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
+            throw std::invalid_argument(err.str());
     }
 }
 

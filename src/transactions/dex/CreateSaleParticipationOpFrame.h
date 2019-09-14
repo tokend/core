@@ -26,6 +26,13 @@ class CreateSaleParticipationOpFrame : public CreateOfferOpFrame
     bool
     checkSaleRules(StorageHelper& storageHelper, SaleFrame::pointer const& sale);
 
+    void
+    createImmediateSaleCounterOffer(Application& app,
+        StorageHelper& storageHelper,
+        LedgerManager& lm,
+        SaleFrame::pointer sale,
+        uint64_t quoteAmount);
+
 public:
 
     CreateSaleParticipationOpFrame(Operation const& op, OperationResult& res,

@@ -2,10 +2,18 @@
 
 ## Unreleased
 
-## Added
+### Added 
 
+* `CreatePaymentRequestOpFrame`
+* `CreateManageOfferRequestOpFrame`
+* Account rule resources for `ManageOffer` and `CreatePayment` reviewable requests
+* Signer rule resources for `ManageOffer` and `CreatePayment` reviewable requests
 * `RemoveAssetOp` operation to remove asset
 
+
+### Fixed
+
+* long serialization on OS X 64-bit
 
 ## 3.5.2-x.0
 
@@ -111,6 +119,7 @@
 ### Changed
 
 * Merge internal and non-functionality (non business logic) improvements from stellar
+* Updated Cereal serialization library version 
 
 ### Fixed
 

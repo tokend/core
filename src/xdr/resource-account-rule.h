@@ -545,6 +545,93 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _manageOffer_t  : xdr::xdr_abstract {
+    uint64 baseAssetType{};
+    uint64 quoteAssetType{};
+    AssetCode baseAssetCode{};
+    AssetCode quoteAssetCode{};
+    bool isBuy{};
+    uint32 manageAction{};
+    uint64 orderBookID{};
+    EmptyExt ext{};
+
+    _manageOffer_t() = default;
+    template<typename _baseAssetType_T,
+             typename _quoteAssetType_T,
+             typename _baseAssetCode_T,
+             typename _quoteAssetCode_T,
+             typename _isBuy_T,
+             typename _manageAction_T,
+             typename _orderBookID_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<uint64, _baseAssetType_T>::value
+                            && std::is_constructible<uint64, _quoteAssetType_T>::value
+                            && std::is_constructible<AssetCode, _baseAssetCode_T>::value
+                            && std::is_constructible<AssetCode, _quoteAssetCode_T>::value
+                            && std::is_constructible<bool, _isBuy_T>::value
+                            && std::is_constructible<uint32, _manageAction_T>::value
+                            && std::is_constructible<uint64, _orderBookID_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _manageOffer_t(_baseAssetType_T &&_baseAssetType,
+                            _quoteAssetType_T &&_quoteAssetType,
+                            _baseAssetCode_T &&_baseAssetCode,
+                            _quoteAssetCode_T &&_quoteAssetCode,
+                            _isBuy_T &&_isBuy,
+                            _manageAction_T &&_manageAction,
+                            _orderBookID_T &&_orderBookID,
+                            _ext_T &&_ext)
+      : baseAssetType(std::forward<_baseAssetType_T>(_baseAssetType)),
+        quoteAssetType(std::forward<_quoteAssetType_T>(_quoteAssetType)),
+        baseAssetCode(std::forward<_baseAssetCode_T>(_baseAssetCode)),
+        quoteAssetCode(std::forward<_quoteAssetCode_T>(_quoteAssetCode)),
+        isBuy(std::forward<_isBuy_T>(_isBuy)),
+        manageAction(std::forward<_manageAction_T>(_manageAction)),
+        orderBookID(std::forward<_orderBookID_T>(_orderBookID)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
+  struct _createPayment_t  : xdr::xdr_abstract {
+    AssetCode assetCode{};
+    uint64 assetType{};
+    EmptyExt ext{};
+
+    _createPayment_t() = default;
+    template<typename _assetCode_T,
+             typename _assetType_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<AssetCode, _assetCode_T>::value
+                            && std::is_constructible<uint64, _assetType_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _createPayment_t(_assetCode_T &&_assetCode,
+                              _assetType_T &&_assetType,
+                              _ext_T &&_ext)
+      : assetCode(std::forward<_assetCode_T>(_assetCode)),
+        assetType(std::forward<_assetType_T>(_assetType)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
 
   using _xdr_case_type = xdr::xdr_traits<ReviewableRequestType>::case_type;
 private:
@@ -556,6 +643,8 @@ private:
     _createAtomicSwapAskExt_t createAtomicSwapAskExt_;
     _createAtomicSwapBidExt_t createAtomicSwapBidExt_;
     _createPoll_t createPoll_;
+    _manageOffer_t manageOffer_;
+    _createPayment_t createPayment_;
     EmptyExt ext_;
   };
 
@@ -572,7 +661,9 @@ public:
       : which == (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK ? 4
       : which == (int32_t)ReviewableRequestType::CREATE_ATOMIC_SWAP_BID ? 5
       : which == (int32_t)ReviewableRequestType::CREATE_POLL ? 6
-      : 7;
+      : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 7
+      : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 8
+      : 9;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -594,6 +685,12 @@ public:
       return true;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
       _f(&ReviewableRequestResource::createPoll_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+      _f(&ReviewableRequestResource::manageOffer_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+      _f(&ReviewableRequestResource::createPayment_, std::forward<_A>(_a)...);
       return true;
     default:
       _f(&ReviewableRequestResource::ext_, std::forward<_A>(_a)...);
@@ -628,6 +725,12 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) _createPoll_t{};
 break;
+      case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOffer_) _manageOffer_t{};
+break;
+      case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPayment_) _createPayment_t{};
+break;
       default:
 new(&ext_) EmptyExt{};
 break;
@@ -658,6 +761,12 @@ break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) _createPoll_t{};
 break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOffer_) _manageOffer_t{};
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPayment_) _createPayment_t{};
+break;
     default:
 new(&ext_) EmptyExt{};
 break;
@@ -684,6 +793,12 @@ new(&createAtomicSwapBidExt_) _createAtomicSwapBidExt_t(source.createAtomicSwapB
 break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) _createPoll_t(source.createPoll_);
+break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOffer_) _manageOffer_t(source.manageOffer_);
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPayment_) _createPayment_t(source.createPayment_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -712,6 +827,12 @@ break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) _createPoll_t(std::move(source.createPoll_));
 break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOffer_) _manageOffer_t(std::move(source.manageOffer_));
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPayment_) _createPayment_t(std::move(source.createPayment_));
+break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
@@ -738,6 +859,12 @@ createAtomicSwapBidExt_.~_createAtomicSwapBidExt_t();
 break;
   case (int32_t)ReviewableRequestType::CREATE_POLL:
 createPoll_.~_createPoll_t();
+break;
+  case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOffer_.~_manageOffer_t();
+break;
+  case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+createPayment_.~_createPayment_t();
 break;
   default:
 ext_.~EmptyExt();
@@ -768,6 +895,12 @@ break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 createPoll_ = source.createPoll_;
 break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOffer_ = source.manageOffer_;
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+createPayment_ = source.createPayment_;
+break;
     default:
 ext_ = source.ext_;
 break;
@@ -794,6 +927,12 @@ new(&createAtomicSwapBidExt_) _createAtomicSwapBidExt_t(source.createAtomicSwapB
 break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) _createPoll_t(source.createPoll_);
+break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOffer_) _manageOffer_t(source.manageOffer_);
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPayment_) _createPayment_t(source.createPayment_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -825,6 +964,12 @@ break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 createPoll_ = std::move(source.createPoll_);
 break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+manageOffer_ = std::move(source.manageOffer_);
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+createPayment_ = std::move(source.createPayment_);
+break;
     default:
 ext_ = std::move(source.ext_);
 break;
@@ -851,6 +996,12 @@ new(&createAtomicSwapBidExt_) _createAtomicSwapBidExt_t(std::move(source.createA
 break;
     case (int32_t)ReviewableRequestType::CREATE_POLL:
 new(&createPoll_) _createPoll_t(std::move(source.createPoll_));
+break;
+    case (int32_t)ReviewableRequestType::MANAGE_OFFER:
+new(&manageOffer_) _manageOffer_t(std::move(source.manageOffer_));
+break;
+    case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
+new(&createPayment_) _createPayment_t(std::move(source.createPayment_));
 break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
@@ -926,13 +1077,33 @@ break;
       return createPoll_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: createPoll accessed when not selected");
   }
-  EmptyExt &ext() {
+  _manageOffer_t &manageOffer() {
     if (_xdr_field_number(requestType_) == 7)
+      return manageOffer_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: manageOffer accessed when not selected");
+  }
+  const _manageOffer_t &manageOffer() const {
+    if (_xdr_field_number(requestType_) == 7)
+      return manageOffer_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: manageOffer accessed when not selected");
+  }
+  _createPayment_t &createPayment() {
+    if (_xdr_field_number(requestType_) == 8)
+      return createPayment_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: createPayment accessed when not selected");
+  }
+  const _createPayment_t &createPayment() const {
+    if (_xdr_field_number(requestType_) == 8)
+      return createPayment_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: createPayment accessed when not selected");
+  }
+  EmptyExt &ext() {
+    if (_xdr_field_number(requestType_) == 9)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(requestType_) == 7)
+    if (_xdr_field_number(requestType_) == 9)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }bool
