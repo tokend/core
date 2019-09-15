@@ -14,6 +14,7 @@ namespace stellar {
 struct SwapEntry  : xdr::xdr_abstract {
   uint64 swapID{};
   Hash secretHash{};
+  AccountID source{};
   BalanceID sourceBalance{};
   BalanceID destinationBalance{};
   longstring details{};
@@ -26,6 +27,7 @@ struct SwapEntry  : xdr::xdr_abstract {
   SwapEntry() = default;
   template<typename _swapID_T,
            typename _secretHash_T,
+           typename _source_T,
            typename _sourceBalance_T,
            typename _destinationBalance_T,
            typename _details_T,
@@ -37,6 +39,7 @@ struct SwapEntry  : xdr::xdr_abstract {
            typename = typename
            std::enable_if<std::is_constructible<uint64, _swapID_T>::value
                           && std::is_constructible<Hash, _secretHash_T>::value
+                          && std::is_constructible<AccountID, _source_T>::value
                           && std::is_constructible<BalanceID, _sourceBalance_T>::value
                           && std::is_constructible<BalanceID, _destinationBalance_T>::value
                           && std::is_constructible<longstring, _details_T>::value
@@ -48,6 +51,7 @@ struct SwapEntry  : xdr::xdr_abstract {
                          >::type>
   explicit SwapEntry(_swapID_T &&_swapID,
                      _secretHash_T &&_secretHash,
+                     _source_T &&_source,
                      _sourceBalance_T &&_sourceBalance,
                      _destinationBalance_T &&_destinationBalance,
                      _details_T &&_details,
@@ -58,6 +62,7 @@ struct SwapEntry  : xdr::xdr_abstract {
                      _ext_T &&_ext)
     : swapID(std::forward<_swapID_T>(_swapID)),
       secretHash(std::forward<_secretHash_T>(_secretHash)),
+      source(std::forward<_source_T>(_source)),
       sourceBalance(std::forward<_sourceBalance_T>(_sourceBalance)),
       destinationBalance(std::forward<_destinationBalance_T>(_destinationBalance)),
       details(std::forward<_details_T>(_details)),

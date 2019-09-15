@@ -378,6 +378,7 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     SwapEntry swapEntry;
     swapEntry.swapID = swapID;
     swapEntry.secretHash = mOpenSwap.secretHash;
+    swapEntry.source = mSourceAccount->getID();
     swapEntry.sourceBalance = mOpenSwap.sourceBalance;
     swapEntry.destinationBalance = destBalance->getBalanceID();
     swapEntry.amount = amount;

@@ -20,6 +20,11 @@ if (!oksecretHash)
 {
 return false;
 }
+bool oksource = u.from_bytes(source);
+if (!oksource)
+{
+return false;
+}
 bool oksourceBalance = u.from_bytes(sourceBalance);
 if (!oksourceBalance)
 {
@@ -75,6 +80,11 @@ if (!oksecretHash)
 {
 return false;
 }
+bool oksource = m.to_bytes(source);
+if (!oksource)
+{
+return false;
+}
 bool oksourceBalance = m.to_bytes(sourceBalance);
 if (!oksourceBalance)
 {
@@ -122,6 +132,7 @@ SwapEntry::count_size(xdr::measurer& m) const
 {
 m.count_size(swapID);
 m.count_size(secretHash);
+m.count_size(source);
 m.count_size(sourceBalance);
 m.count_size(destinationBalance);
 m.count_size(details);
@@ -140,6 +151,7 @@ return false;
 }auto& other = dynamic_cast<SwapEntry const&>(other_abstract);return true
 && (swapID== other.swapID)
 && (secretHash== other.secretHash)
+&& (source== other.source)
 && (sourceBalance== other.sourceBalance)
 && (destinationBalance== other.destinationBalance)
 && (details== other.details)
@@ -161,6 +173,8 @@ if (swapID < other.swapID) return true;
 if (other.swapID < swapID) return false;
 if (secretHash < other.secretHash) return true;
 if (other.secretHash < secretHash) return false;
+if (source < other.source) return true;
+if (other.source < source) return false;
 if (sourceBalance < other.sourceBalance) return true;
 if (other.sourceBalance < sourceBalance) return false;
 if (destinationBalance < other.destinationBalance) return true;

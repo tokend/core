@@ -14,7 +14,8 @@ SwapHelperImpl::SwapHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
     mSwapColumnSelector =
-        "SELECT id, secret_hash, source_balance, destination_balance, amount, "
+        "SELECT id, secret_hash, source, source_balance, destination_balance, "
+        "amount, "
         "created_at, lock_time, fee, details, version "
         "FROM  swap";
 }
@@ -30,6 +31,7 @@ SwapHelperImpl::dropAll()
            "("
            "id                    BIGINT      NOT NULL,"
            "secret_hash           VARCHAR(64) NOT NULL,"
+           "source                VARCHAR(56) NOT NULL,"
            "source_balance        VARCHAR(56) NOT NULL,"
            "destination_balance   VARCHAR(56) NOT NULL,"
            "amount                BIGINT      NOT NULL,"
@@ -52,14 +54,18 @@ SwapHelperImpl::storeAdd(LedgerEntry const& entry)
     int32_t swapVersion =
         static_cast<int32_t>(swapFrame->getSwapEntry().ext.v());
     std::string secretHash = binToHex(swapEntry.secretHash);
+    std::string source = PubKeyUtils::toStrKey(swapEntry.source);
+    std::string destinationBalance =
+        PubKeyUtils::toStrKey(swapEntry.destinationBalance);
+    std::string sourceBalance = PubKeyUtils::toStrKey(swapEntry.sourceBalance);
 
     std::string sql;
 
-    sql = "INSERT INTO swap (id, secret_hash, source_balance,  "
+    sql = "INSERT INTO swap (id, secret_hash, source, source_balance,  "
           "destination_balance, amount, fee, lock_time, "
           "created_at, version) "
           "VALUES "
-          "(:id, :sh, :sb, :db, :am, :f :lt, :ca, :d, :v)";
+          "(:id, :sh, :s, :sb, :db, :am, :f :lt, :ca, :d, :v)";
 
     Database& db = getDatabase();
     auto prep = db.getPreparedStatement(sql);
@@ -68,8 +74,9 @@ SwapHelperImpl::storeAdd(LedgerEntry const& entry)
         soci::statement& st = prep.statement();
         st.exchange(use(swapEntry.swapID, "id"));
         st.exchange(use(secretHash, "sh"));
-        st.exchange(use(swapEntry.sourceBalance, "sb"));
-        st.exchange(use(swapEntry.destinationBalance, "db"));
+        st.exchange(use(source, "s"));
+        st.exchange(use(sourceBalance, "sb"));
+        st.exchange(use(destinationBalance, "db"));
         st.exchange(use(swapEntry.amount, "am"));
         st.exchange(use(swapEntry.fee, "sff"));
         st.exchange(use(swapEntry.lockTime, "lt"));
@@ -214,11 +221,12 @@ SwapHelperImpl::load(StatementContext& prep,
         auto& swapEntry = le.data.swap();
 
         int32_t version;
-        std::string sourceBalRaw, destBalRaw, secretHash;
+        std::string sourceRaw, sourceBalRaw, destBalRaw, secretHash;
 
         auto& st = prep.statement();
         st.exchange(into(swapEntry.swapID));
         st.exchange(into(secretHash));
+        st.exchange(into(sourceRaw));
         st.exchange(into(sourceBalRaw));
         st.exchange(into(destBalRaw));
         st.exchange(into(swapEntry.amount));
@@ -232,6 +240,7 @@ SwapHelperImpl::load(StatementContext& prep,
 
         while (st.got_data())
         {
+            swapEntry.source = PubKeyUtils::fromStrKey(sourceRaw);
             swapEntry.sourceBalance = BalanceKeyUtils::fromStrKey(sourceBalRaw);
             swapEntry.destinationBalance =
                 BalanceKeyUtils::fromStrKey(destBalRaw);
