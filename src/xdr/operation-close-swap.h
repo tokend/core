@@ -8,7 +8,6 @@
 #include <xdrpp/types.h>
 
 #include "xdr/types.h"
-#include "xdr/operation-payment.h"
 
 namespace stellar {
 
@@ -50,6 +49,7 @@ enum class CloseSwapResultCode : std::int32_t {
   INVALID_SECRET = -2,
   LINE_FULL = -3,
   NOT_AUTHORIZED = -4,
+  NOT_READY = -5,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CloseSwapResultCode>
@@ -69,6 +69,8 @@ template<> struct xdr_traits<::stellar::CloseSwapResultCode>
       return "LINE_FULL";
     case ::stellar::CloseSwapResultCode::NOT_AUTHORIZED:
       return "NOT_AUTHORIZED";
+    case ::stellar::CloseSwapResultCode::NOT_READY:
+      return "NOT_READY";
     default:
       return nullptr;
     }
@@ -79,7 +81,38 @@ template<> struct xdr_traits<::stellar::CloseSwapResultCode>
       (int32_t)::stellar::CloseSwapResultCode::SWAP_EXPIRED,
       (int32_t)::stellar::CloseSwapResultCode::INVALID_SECRET,
       (int32_t)::stellar::CloseSwapResultCode::LINE_FULL,
-      (int32_t)::stellar::CloseSwapResultCode::NOT_AUTHORIZED
+      (int32_t)::stellar::CloseSwapResultCode::NOT_AUTHORIZED,
+      (int32_t)::stellar::CloseSwapResultCode::NOT_READY
+    };
+    return _xdr_enum_vec;
+  }
+};
+} namespace stellar {
+
+enum class CloseSwapEffect : std::int32_t {
+  CLOSED = 0,
+  CANCELLED = 1,
+};
+} namespace xdr {
+template<> struct xdr_traits<::stellar::CloseSwapEffect>
+  : xdr_integral_base<::stellar::CloseSwapEffect, std::uint32_t> {
+  using case_type = std::int32_t;
+  static constexpr const bool is_enum = true;
+  static constexpr const bool is_numeric = false;
+  static const char *enum_name(::stellar::CloseSwapEffect val) {
+    switch (val) {
+    case ::stellar::CloseSwapEffect::CLOSED:
+      return "CLOSED";
+    case ::stellar::CloseSwapEffect::CANCELLED:
+      return "CANCELLED";
+    default:
+      return nullptr;
+    }
+  }
+  static const std::vector<int32_t> &enum_values() {
+    static const std::vector<int32_t> _xdr_enum_vec = {
+      (int32_t)::stellar::CloseSwapEffect::CLOSED,
+      (int32_t)::stellar::CloseSwapEffect::CANCELLED
     };
     return _xdr_enum_vec;
   }
@@ -87,15 +120,20 @@ template<> struct xdr_traits<::stellar::CloseSwapResultCode>
 } namespace stellar {
 
 struct CloseSwapSuccess  : xdr::xdr_abstract {
+  CloseSwapEffect effect{};
   EmptyExt ext{};
 
   CloseSwapSuccess() = default;
-  template<typename _ext_T,
+  template<typename _effect_T,
+           typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<EmptyExt, _ext_T>::value
+           std::enable_if<std::is_constructible<CloseSwapEffect, _effect_T>::value
+                          && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit CloseSwapSuccess(_ext_T &&_ext)
-    : ext(std::forward<_ext_T>(_ext)) {}
+  explicit CloseSwapSuccess(_effect_T &&_effect,
+                            _ext_T &&_ext)
+    : effect(std::forward<_effect_T>(_effect)),
+      ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
 operator<(xdr::xdr_abstract const& other) const override;private:

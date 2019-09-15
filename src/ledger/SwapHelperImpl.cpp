@@ -2,6 +2,8 @@
 #include "LedgerDelta.h"
 #include "StorageHelper.h"
 #include "database/Database.h"
+#include <lib/util/basen.h>
+#include <xdrpp/marshal.h>
 
 using namespace soci;
 
@@ -12,9 +14,8 @@ SwapHelperImpl::SwapHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
     mSwapColumnSelector =
-        "SELECT id, secret_hash, source_account, source_balance, "
-        "destination_account, destination_balance, "
-        "asset, amount, created_at, lock_time, fee, version "
+        "SELECT id, secret_hash, source_balance, destination_balance, amount, "
+        "created_at, lock_time, fee, details, version "
         "FROM  swap";
 }
 
@@ -29,11 +30,8 @@ SwapHelperImpl::dropAll()
            "("
            "id                    BIGINT      NOT NULL,"
            "secret_hash           VARCHAR(64) NOT NULL,"
-           "source_account        VARCHAR(56) NOT NULL,"
            "source_balance        VARCHAR(56) NOT NULL,"
-           "destination_account   VARCHAR(56) NOT NULL,"
            "destination_balance   VARCHAR(56) NOT NULL,"
-           "asset                 VARCHAR(16) NOT NULL,"
            "amount                BIGINT      NOT NULL,"
            "fee                   BIGINT      NOT NULL,"
            "lock_time             BIGINT      NOT NULL,"
@@ -46,23 +44,22 @@ void
 SwapHelperImpl::storeAdd(LedgerEntry const& entry)
 {
     auto swapFrame = std::make_shared<SwapFrame>(entry);
-    auto swapEntry = swapFrame->getSwap();
+    auto swapEntry = swapFrame->getSwapEntry();
 
     LedgerKey const& key = swapFrame->getKey();
     flushCachedEntry(key);
 
-    int32_t swapVersion = static_cast<int32_t>(swapFrame->getSwap().ext.v());
+    int32_t swapVersion =
+        static_cast<int32_t>(swapFrame->getSwapEntry().ext.v());
     std::string secretHash = binToHex(swapEntry.secretHash);
 
     std::string sql;
 
-    sql = "INSERT INTO swap (id, secret_hash, source_account, "
-          "source_balance, destination_account, destination_balance, "
-          "asset, amount, fee, lock_time, "
+    sql = "INSERT INTO swap (id, secret_hash, source_balance,  "
+          "destination_balance, amount, fee, lock_time, "
           "created_at, version) "
           "VALUES "
-          "(:id, :sh, :sa, :sb, :da, :db, :a, :am, :f, :lt, "
-          ":ca, :v)";
+          "(:id, :sh, :sb, :db, :am, :f :lt, :ca, :d, :v)";
 
     Database& db = getDatabase();
     auto prep = db.getPreparedStatement(sql);
@@ -71,15 +68,13 @@ SwapHelperImpl::storeAdd(LedgerEntry const& entry)
         soci::statement& st = prep.statement();
         st.exchange(use(swapEntry.swapID, "id"));
         st.exchange(use(secretHash, "sh"));
-        st.exchange(use(swapEntry.sourceAccount, "sa"));
         st.exchange(use(swapEntry.sourceBalance, "sb"));
-        st.exchange(use(swapEntry.destinationAccount, "da"));
         st.exchange(use(swapEntry.destinationBalance, "db"));
-        st.exchange(use(swapEntry.assetCode, "a"));
         st.exchange(use(swapEntry.amount, "am"));
-        st.exchange(use(swapEntry.fee, "f"));
+        st.exchange(use(swapEntry.fee, "sff"));
         st.exchange(use(swapEntry.lockTime, "lt"));
         st.exchange(use(swapEntry.createdAt, "ca"));
+        st.exchange(use(swapEntry.details, "d"));
         st.exchange(use(swapVersion, "v"));
 
         st.define_and_bind();
@@ -219,29 +214,24 @@ SwapHelperImpl::load(StatementContext& prep,
         auto& swapEntry = le.data.swap();
 
         int32_t version;
-        std::string sourceAccRaw, sourceBalRaw, destAccRaw, destBalRaw,
-            secretHash;
+        std::string sourceBalRaw, destBalRaw, secretHash;
 
         auto& st = prep.statement();
         st.exchange(into(swapEntry.swapID));
         st.exchange(into(secretHash));
-        st.exchange(into(sourceAccRaw));
         st.exchange(into(sourceBalRaw));
-        st.exchange(into(destAccRaw));
         st.exchange(into(destBalRaw));
-        st.exchange(into(swapEntry.assetCode));
         st.exchange(into(swapEntry.amount));
         st.exchange(into(swapEntry.createdAt));
         st.exchange(into(swapEntry.lockTime));
         st.exchange(into(swapEntry.fee));
+        st.exchange(into(swapEntry.details));
         st.exchange(into(version));
         st.define_and_bind();
         st.execute(true);
 
         while (st.got_data())
         {
-            swapEntry.sourceAccount = PubKeyUtils::fromStrKey(sourceAccRaw);
-            swapEntry.destinationAccount = PubKeyUtils::fromStrKey(destAccRaw);
             swapEntry.sourceBalance = BalanceKeyUtils::fromStrKey(sourceBalRaw);
             swapEntry.destinationBalance =
                 BalanceKeyUtils::fromStrKey(destBalRaw);

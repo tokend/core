@@ -32,14 +32,20 @@ CloseSwapOpFrame::tryGetOperationConditions(
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::SWAP;
     }
+    auto swapEntry = swap->getSwapEntry();
+
+    auto destinationBalance = storageHelper.getBalanceHelper().mustLoadBalance(
+        swapEntry.destinationBalance);
+    auto sourceBalance = storageHelper.getBalanceHelper().mustLoadBalance(
+        swapEntry.sourceBalance);
 
     auto destination = storageHelper.getAccountHelper().mustLoadAccount(
-        swap->mEntry.data.swap().destinationAccount);
+        destinationBalance->getAccountID());
     auto source = storageHelper.getAccountHelper().mustLoadAccount(
-        swap->mEntry.data.swap().sourceAccount);
+        sourceBalance->getAccountID());
 
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(
-        swap->mEntry.data.swap().assetCode);
+        destinationBalance->getAsset());
 
     AccountRuleResource resource(LedgerEntryType::SWAP);
     resource.swap().assetCode = asset->getCode();
@@ -61,8 +67,13 @@ CloseSwapOpFrame::tryGetSignerRequirements(
         mResult.entryType() = LedgerEntryType::SWAP;
     }
 
+    auto swapEntry = swap->getSwapEntry();
+
+    auto destinationBalance = storageHelper.getBalanceHelper().mustLoadBalance(
+        swapEntry.destinationBalance);
+
     auto asset = storageHelper.getAssetHelper().mustLoadAsset(
-        swap->mEntry.data.swap().assetCode);
+        destinationBalance->getAsset());
 
     SignerRuleResource resource(LedgerEntryType::SWAP);
     resource.asset().assetType = asset->getType();
@@ -87,7 +98,7 @@ CloseSwapOpFrame::doApply(Application& app, StorageHelper& sh,
 {
     auto swap = sh.getSwapHelper().mustLoadSwap(mCloseSwap.swapID);
 
-    if (!isAuthorized(lm, app.getAdminID(), swap))
+    if (!isAuthorized(sh, lm, app.getAdminID(), swap))
     {
         innerResult().code(CloseSwapResultCode::NOT_AUTHORIZED);
         return false;
@@ -95,7 +106,7 @@ CloseSwapOpFrame::doApply(Application& app, StorageHelper& sh,
 
     if (!mCloseSwap.secret)
     {
-        return cancelSwap(swap, sh);
+        return cancelSwap(app, sh, lm, swap);
     }
 
     if (!secretValid(swap))
@@ -104,7 +115,7 @@ CloseSwapOpFrame::doApply(Application& app, StorageHelper& sh,
         return false;
     }
 
-    return true;
+    return processSwap(app, sh, lm, swap);
 }
 
 bool
@@ -114,11 +125,17 @@ CloseSwapOpFrame::doCheckValid(Application& app)
 }
 
 bool
-CloseSwapOpFrame::cancelSwap(stellar::SwapFrame::pointer swap,
-                             stellar::StorageHelper& sh)
+CloseSwapOpFrame::cancelSwap(Application& app, StorageHelper& sh,
+                             LedgerManager& lm, SwapFrame::pointer swap)
 {
     auto& balanceHelper = sh.getBalanceHelper();
-    auto swapEntry = swap->getSwap();
+    auto swapEntry = swap->getSwapEntry();
+
+    if (swapEntry.lockTime > lm.getCloseTime())
+    {
+        innerResult().code(CloseSwapResultCode::NOT_READY);
+        return false;
+    }
 
     auto sourceBalance = balanceHelper.mustLoadBalance(swapEntry.sourceBalance);
 
@@ -140,7 +157,8 @@ CloseSwapOpFrame::cancelSwap(stellar::SwapFrame::pointer swap,
     balanceHelper.storeChange(sourceBalance->mEntry);
     swapHelper.storeDelete(swap->getKey());
 
-    innerResult().code(CloseSwapResultCode::SWAP_EXPIRED);
+    innerResult().code(CloseSwapResultCode::SUCCESS);
+    innerResult().success().effect = CloseSwapEffect::CANCELLED;
     return true;
 }
 
@@ -148,16 +166,21 @@ bool
 CloseSwapOpFrame::processSwap(Application& app, StorageHelper& sh,
                               LedgerManager& lm, SwapFrame::pointer swap)
 {
-    auto swapEntry = swap->getSwap();
+    auto swapEntry = swap->getSwapEntry();
+    if (swapEntry.lockTime <= lm.getCloseTime())
+    {
+        innerResult().code(CloseSwapResultCode::SWAP_EXPIRED);
+        return false;
+    }
+
     auto& db = sh.getDatabase();
     auto& delta = sh.mustGetLedgerDelta();
     AccountManager accountManager(app, db, delta, lm);
 
-    accountManager.transferFee(swapEntry.assetCode, swapEntry.fee);
-
     auto& balanceHelper = sh.getBalanceHelper();
-
     auto sourceBalance = balanceHelper.mustLoadBalance(swapEntry.sourceBalance);
+
+    accountManager.transferFee(sourceBalance->getAsset(), swapEntry.fee);
 
     auto totalAmount = swapEntry.amount + swapEntry.fee;
 
@@ -194,21 +217,33 @@ CloseSwapOpFrame::processSwap(Application& app, StorageHelper& sh,
     }
 
     innerResult().code(CloseSwapResultCode::SUCCESS);
+    innerResult().success().effect = CloseSwapEffect::CLOSED;
     return true;
 }
 
 bool
-CloseSwapOpFrame::isAuthorized(LedgerManager& lm, AccountID adminID,
-                               SwapFrame::pointer swap)
+CloseSwapOpFrame::isAuthorized(StorageHelper& sh, LedgerManager& lm,
+                               AccountID adminID, SwapFrame::pointer swap)
 {
-    auto swapEntry = swap->getSwap();
-    if (getSourceID() == swapEntry.destinationAccount && mCloseSwap.secret)
+    auto swapEntry = swap->getSwapEntry();
+    auto destinationBalance =
+        sh.getBalanceHelper().mustLoadBalance(swapEntry.destinationBalance);
+    auto sourceBalance =
+        sh.getBalanceHelper().mustLoadBalance(swapEntry.sourceBalance);
+
+    auto swapSource = sourceBalance->getAccountID();
+    auto swapDestination = destinationBalance->getAccountID();
+
+    if (getSourceID() == swapDestination && mCloseSwap.secret)
     {
         return true;
     }
+    if (mCloseSwap.secret)
+    {
+        return false;
+    }
 
-    if (getSourceID() == swapEntry.sourceAccount &&
-        swapEntry.lockTime > lm.getCloseTime())
+    if (getSourceID() == swapSource && swapEntry.lockTime > lm.getCloseTime())
     {
         return true;
     }

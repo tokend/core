@@ -59,6 +59,8 @@
 #include "transactions/manage_asset_pair/RemoveAssetPairOpFrame.h"
 #include "payment/CreatePaymentRequestOpFrame.h"
 #include "dex/CreateManageOfferRequestOpFrame.h"
+#include "swap/OpenSwapOpFrame.h"
+#include "swap/CloseSwapOpFrame.h"
 
 namespace stellar
 {
@@ -163,6 +165,10 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<CreateManageOfferRequestOpFrame>(op, res, tx);
         case OperationType::CREATE_PAYMENT_REQUEST:
             return make_shared<CreatePaymentRequestOpFrame>(op, res, tx);
+        case OperationType::OPEN_SWAP:
+            return make_shared<OpenSwapOpFrame>(op, res, tx);
+        case OperationType::CLOSE_SWAP:
+            return make_shared<CloseSwapOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

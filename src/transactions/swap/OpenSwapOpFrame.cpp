@@ -356,6 +356,20 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
             << "Failed to calculate total fee - overflow";
         throw std::runtime_error("Failed to calculate total fee - overflow");
     }
+    uint64_t totalAmount ;
+    if (!safeSum(totalFee, amount, totalAmount))
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Failed to calculate total amount - overflow";
+        throw std::runtime_error("Failed to calculate total amount - overflow");
+    }
+
+    if (!tryLock(sh, sourceBalance, totalAmount))
+    {
+        innerResult().code(OpenSwapResultCode::UNDERFUNDED);
+        return false;
+    }
+
 
     uint64 swapID = delta.getHeaderFrame().generateID(LedgerEntryType::SWAP);
 
@@ -364,11 +378,8 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     SwapEntry swapEntry;
     swapEntry.swapID = swapID;
     swapEntry.secretHash = mOpenSwap.secretHash;
-    swapEntry.sourceAccount = getSourceID();
     swapEntry.sourceBalance = mOpenSwap.sourceBalance;
-    swapEntry.destinationAccount = destAccount->getID();
     swapEntry.destinationBalance = destBalance->getBalanceID();
-    swapEntry.assetCode = mOpenSwap.asset;
     swapEntry.amount = amount;
     swapEntry.createdAt = lm.getCloseTime();
     swapEntry.lockTime = mOpenSwap.lockTime;
@@ -379,6 +390,10 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
 
     innerResult().code(OpenSwapResultCode::SUCCESS);
     innerResult().success().swapID = swapID;
+    innerResult().success().destinationBalance = destBalance->getBalanceID();
+    innerResult().success().destination = destAccount->getID();
+    innerResult().success().actualDestinationFee = destFee;
+    innerResult().success().actualSourceFee = sourceFee;
     return true;
 }
 
@@ -406,8 +421,23 @@ OpenSwapOpFrame::isDestinationFeeValid()
 }
 
 bool
+OpenSwapOpFrame::tryLock(StorageHelper& sh,
+                         BalanceFrame::pointer balance,
+                         uint64_t amount)
+{
+    auto result = balance->tryLock(amount);
+    return result == BalanceFrame::Result::SUCCESS;
+}
+
+bool
 OpenSwapOpFrame::doCheckValid(Application& app)
 {
+    if (!isValidJson(mOpenSwap.details))
+    {
+        innerResult().code(OpenSwapResultCode::INVALID_DETAILS);
+        return false;
+    }
+
     if (!isDestinationFeeValid())
     {
         return false;

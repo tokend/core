@@ -27,9 +27,10 @@ class CloseSwapOpFrame : public OperationFrame
 
     bool processSwap(Application& app, StorageHelper& sh, LedgerManager& lm,
                      SwapFrame::pointer swap);
-    bool cancelSwap(SwapFrame::pointer swap, StorageHelper& sh);
+    bool cancelSwap(Application& app, StorageHelper& sh, LedgerManager& lm,
+                    SwapFrame::pointer swap);
 
-    bool isAuthorized(LedgerManager& lm, AccountID admin,
+    bool isAuthorized(StorageHelper& sh, LedgerManager& lm, AccountID admin,
                       SwapFrame::pointer swap);
 
   public:

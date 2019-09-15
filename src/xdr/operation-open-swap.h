@@ -281,6 +281,7 @@ enum class OpenSwapResultCode : std::int32_t {
   AMOUNT_IS_LESS_THAN_DEST_FEE = -9,
   DESTINATION_ACCOUNT_NOT_FOUND = -10,
   INCORRECT_AMOUNT_PRECISION = -11,
+  INVALID_DETAILS = -12,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OpenSwapResultCode>
@@ -314,6 +315,8 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       return "DESTINATION_ACCOUNT_NOT_FOUND";
     case ::stellar::OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION:
       return "INCORRECT_AMOUNT_PRECISION";
+    case ::stellar::OpenSwapResultCode::INVALID_DETAILS:
+      return "INVALID_DETAILS";
     default:
       return nullptr;
     }
@@ -331,7 +334,8 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       (int32_t)::stellar::OpenSwapResultCode::INSUFFICIENT_FEE_AMOUNT,
       (int32_t)::stellar::OpenSwapResultCode::AMOUNT_IS_LESS_THAN_DEST_FEE,
       (int32_t)::stellar::OpenSwapResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
-      (int32_t)::stellar::OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION
+      (int32_t)::stellar::OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION,
+      (int32_t)::stellar::OpenSwapResultCode::INVALID_DETAILS
     };
     return _xdr_enum_vec;
   }
@@ -340,18 +344,43 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
 
 struct OpenSwapSuccess  : xdr::xdr_abstract {
   uint64 swapID{};
+  AccountID destination{};
+  BalanceID destinationBalance{};
+  AssetCode asset{};
+  Fee actualSourceFee{};
+  Fee actualDestinationFee{};
   EmptyExt ext{};
 
   OpenSwapSuccess() = default;
   template<typename _swapID_T,
+           typename _destination_T,
+           typename _destinationBalance_T,
+           typename _asset_T,
+           typename _actualSourceFee_T,
+           typename _actualDestinationFee_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _swapID_T>::value
+                          && std::is_constructible<AccountID, _destination_T>::value
+                          && std::is_constructible<BalanceID, _destinationBalance_T>::value
+                          && std::is_constructible<AssetCode, _asset_T>::value
+                          && std::is_constructible<Fee, _actualSourceFee_T>::value
+                          && std::is_constructible<Fee, _actualDestinationFee_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit OpenSwapSuccess(_swapID_T &&_swapID,
+                           _destination_T &&_destination,
+                           _destinationBalance_T &&_destinationBalance,
+                           _asset_T &&_asset,
+                           _actualSourceFee_T &&_actualSourceFee,
+                           _actualDestinationFee_T &&_actualDestinationFee,
                            _ext_T &&_ext)
     : swapID(std::forward<_swapID_T>(_swapID)),
+      destination(std::forward<_destination_T>(_destination)),
+      destinationBalance(std::forward<_destinationBalance_T>(_destinationBalance)),
+      asset(std::forward<_asset_T>(_asset)),
+      actualSourceFee(std::forward<_actualSourceFee_T>(_actualSourceFee)),
+      actualDestinationFee(std::forward<_actualDestinationFee_T>(_actualDestinationFee)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool

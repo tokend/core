@@ -27,13 +27,13 @@ class SwapFrame : public EntryFrame
     uint64_t getID() const;
 
     SwapEntry const&
-    getSwap() const
+    getSwapEntry() const
     {
         return mSwapEntry;
     }
 
     SwapEntry&
-    getSwap()
+    getSwapEntry()
     {
         clearCached();
         return mSwapEntry;

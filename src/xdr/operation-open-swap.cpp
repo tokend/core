@@ -243,6 +243,31 @@ if (!okswapID)
 {
 return false;
 }
+bool okdestination = u.from_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool okdestinationBalance = u.from_bytes(destinationBalance);
+if (!okdestinationBalance)
+{
+return false;
+}
+bool okasset = u.from_bytes(asset);
+if (!okasset)
+{
+return false;
+}
+bool okactualSourceFee = u.from_bytes(actualSourceFee);
+if (!okactualSourceFee)
+{
+return false;
+}
+bool okactualDestinationFee = u.from_bytes(actualDestinationFee);
+if (!okactualDestinationFee)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -258,6 +283,31 @@ if (!okswapID)
 {
 return false;
 }
+bool okdestination = m.to_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool okdestinationBalance = m.to_bytes(destinationBalance);
+if (!okdestinationBalance)
+{
+return false;
+}
+bool okasset = m.to_bytes(asset);
+if (!okasset)
+{
+return false;
+}
+bool okactualSourceFee = m.to_bytes(actualSourceFee);
+if (!okactualSourceFee)
+{
+return false;
+}
+bool okactualDestinationFee = m.to_bytes(actualDestinationFee);
+if (!okactualDestinationFee)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -269,6 +319,11 @@ void
 OpenSwapSuccess::count_size(xdr::measurer& m) const 
 {
 m.count_size(swapID);
+m.count_size(destination);
+m.count_size(destinationBalance);
+m.count_size(asset);
+m.count_size(actualSourceFee);
+m.count_size(actualDestinationFee);
 m.count_size(ext);
 }
 bool
@@ -279,6 +334,11 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<OpenSwapSuccess const&>(other_abstract);return true
 && (swapID== other.swapID)
+&& (destination== other.destination)
+&& (destinationBalance== other.destinationBalance)
+&& (asset== other.asset)
+&& (actualSourceFee== other.actualSourceFee)
+&& (actualDestinationFee== other.actualDestinationFee)
 && (ext== other.ext)
 ;}
 bool
@@ -291,6 +351,16 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<OpenSwapSuccess const&>(other_abstract);
 if (swapID < other.swapID) return true;
 if (other.swapID < swapID) return false;
+if (destination < other.destination) return true;
+if (other.destination < destination) return false;
+if (destinationBalance < other.destinationBalance) return true;
+if (other.destinationBalance < destinationBalance) return false;
+if (asset < other.asset) return true;
+if (other.asset < asset) return false;
+if (actualSourceFee < other.actualSourceFee) return true;
+if (other.actualSourceFee < actualSourceFee) return false;
+if (actualDestinationFee < other.actualDestinationFee) return true;
+if (other.actualDestinationFee < actualDestinationFee) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

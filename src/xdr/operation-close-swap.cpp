@@ -83,6 +83,11 @@ return false;
 }bool
 CloseSwapSuccess::from_bytes(xdr::unmarshaler& u) 
 {
+bool okeffect = u.from_bytes(effect);
+if (!okeffect)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -93,6 +98,11 @@ return true;
 bool
 CloseSwapSuccess::to_bytes(xdr::marshaler& m) const 
 {
+bool okeffect = m.to_bytes(effect);
+if (!okeffect)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -103,6 +113,7 @@ return true;
 void
 CloseSwapSuccess::count_size(xdr::measurer& m) const 
 {
+m.count_size(effect);
 m.count_size(ext);
 }
 bool
@@ -112,6 +123,7 @@ if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }auto& other = dynamic_cast<CloseSwapSuccess const&>(other_abstract);return true
+&& (effect== other.effect)
 && (ext== other.ext)
 ;}
 bool
@@ -122,6 +134,8 @@ if (typeid(*this) != typeid(other_abstract))
 throw std::runtime_error("unexpected operator< invoke");
 }
 auto& other = dynamic_cast<CloseSwapSuccess const&>(other_abstract);
+if (effect < other.effect) return true;
+if (other.effect < effect) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
