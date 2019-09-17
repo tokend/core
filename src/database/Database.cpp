@@ -39,6 +39,7 @@
 #include "ledger/PollHelper.h"
 #include "ledger/AccountSpecificRuleHelper.h"
 #include "ledger/VoteHelper.h"
+#include "ledger/SwapHelper.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -69,10 +70,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_PEER_TYPE = 16,
     ADD_SPECIFIC_RULES = 17,
     FIX_HISTORY_UPGRADES = 18,
-    ENABLE_ATOMIC_SWAP = 19
+    ENABLE_ATOMIC_SWAP = 19,
+    SWAPS = 20
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ENABLE_ATOMIC_SWAP;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::SWAPS;
 
 static void
 setSerializable(soci::session& sess)
@@ -190,6 +192,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case ENABLE_ATOMIC_SWAP:
             AtomicSwapAskHelper::Instance()->dropAll(*this);
+            break;
+        case SWAPS:
+            sh.getSwapHelper().dropAll();
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
