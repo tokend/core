@@ -45,8 +45,8 @@ OpenSwapOpFrame::tryGetOperationConditions(
     auto assetFrame = assetHelper.mustLoadAsset(senderBalanceFrame->getAsset());
 
     AccountRuleResource resource(LedgerEntryType::SWAP);
-    resource.asset().assetType = assetFrame->getType();
-    resource.asset().assetCode = assetFrame->getCode();
+    resource.swap().assetType = assetFrame->getType();
+    resource.swap().assetCode = assetFrame->getCode();
 
     result.emplace_back(resource, AccountRuleAction::EXCHANGE, mSourceAccount);
     result.emplace_back(resource, AccountRuleAction::EXCHANGE,
@@ -66,8 +66,8 @@ OpenSwapOpFrame::tryGetSignerRequirements(
     auto assetFrame = assetHelper.mustLoadAsset(balanceFrame->getAsset());
 
     SignerRuleResource resource(LedgerEntryType::SWAP);
-    resource.asset().assetType = assetFrame->getType();
-    resource.asset().assetCode = assetFrame->getCode();
+    resource.swap().assetType = assetFrame->getType();
+    resource.swap().assetCode = assetFrame->getCode();
 
     result.emplace_back(resource, SignerRuleAction::EXCHANGE);
 
@@ -162,39 +162,22 @@ OpenSwapOpFrame::checkFee(AccountManager& accountManager,
 }
 
 BalanceFrame::pointer
-OpenSwapOpFrame::tryLoadDestinationBalance(AssetCode asset,
-                                           StorageHelper& storageHelper)
+OpenSwapOpFrame::mustLoadDestinationBalance(AssetCode asset,
+                                            StorageHelper& storageHelper)
 {
     switch (mOpenSwap.destination.type())
     {
     case PaymentDestinationType::BALANCE:
     {
-        auto dest = storageHelper.getBalanceHelper().loadBalance(
+        auto dest = storageHelper.getBalanceHelper().mustLoadBalance(
             mOpenSwap.destination.balanceID());
-        if (!dest)
-        {
-            innerResult().code(
-                OpenSwapResultCode::DESTINATION_BALANCE_NOT_FOUND);
-            return nullptr;
-        }
-
-        if (dest->getAsset() != asset)
-        {
-            innerResult().code(OpenSwapResultCode::BALANCE_ASSETS_MISMATCHED);
-            return nullptr;
-        }
 
         return dest;
     }
     case PaymentDestinationType::ACCOUNT:
     {
-        if (!storageHelper.getAccountHelper().exists(
-                mOpenSwap.destination.accountID()))
-        {
-            innerResult().code(
-                OpenSwapResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
-            return nullptr;
-        }
+        storageHelper.getAccountHelper().mustLoadAccount(
+            mOpenSwap.destination.accountID());
 
         auto dest = AccountManager::loadOrCreateBalanceFrameForAsset(
             mOpenSwap.destination.accountID(), asset,
@@ -212,7 +195,7 @@ OpenSwapOpFrame::tryLoadDestinationBalance(AssetCode asset,
         return dest;
     }
     default:
-        throw std::runtime_error("Unexpected destination type on openSwap v2");
+        throw std::runtime_error("Unexpected destination type on open swap");
     }
 }
 
@@ -288,20 +271,26 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     auto& balanceHelper = sh.getBalanceHelper();
     auto& accountHelper = sh.getAccountHelper();
     auto sourceBalance =
-        balanceHelper.loadBalance(getSourceID(), mOpenSwap.sourceBalance);
+        balanceHelper.loadBalance(mOpenSwap.sourceBalance, getSourceID());
     if (!sourceBalance)
     {
         innerResult().code(OpenSwapResultCode::SRC_BALANCE_NOT_FOUND);
         return false;
     }
 
-    auto destBalance = tryLoadDestinationBalance(sourceBalance->getAsset(), sh);
+    auto destBalance =
+        mustLoadDestinationBalance(sourceBalance->getAsset(), sh);
     if (!destBalance)
     {
         return false;
     }
 
     BalanceID destBalanceID = destBalance->getBalanceID();
+    if (mOpenSwap.amount % sourceBalance->getMinimumAmount() != 0)
+    {
+        innerResult().code(OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION);
+        return false;
+    }
 
     if (isSendToSelf(mOpenSwap.sourceBalance, destBalanceID))
     {
@@ -356,7 +345,7 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
             << "Failed to calculate total fee - overflow";
         throw std::runtime_error("Failed to calculate total fee - overflow");
     }
-    uint64_t totalAmount ;
+    uint64_t totalAmount;
     if (!safeSum(totalFee, amount, totalAmount))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -369,14 +358,14 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
         innerResult().code(OpenSwapResultCode::UNDERFUNDED);
         return false;
     }
-
+    balanceHelper.storeChange(sourceBalance->mEntry);
 
     uint64 swapID = delta.getHeaderFrame().generateID(LedgerEntryType::SWAP);
 
     LedgerEntry entry;
     entry.data.type(LedgerEntryType::SWAP);
     SwapEntry swapEntry;
-    swapEntry.swapID = swapID;
+    swapEntry.id = swapID;
     swapEntry.secretHash = mOpenSwap.secretHash;
     swapEntry.source = mSourceAccount->getID();
     swapEntry.sourceBalance = mOpenSwap.sourceBalance;
@@ -422,8 +411,7 @@ OpenSwapOpFrame::isDestinationFeeValid()
 }
 
 bool
-OpenSwapOpFrame::tryLock(StorageHelper& sh,
-                         BalanceFrame::pointer balance,
+OpenSwapOpFrame::tryLock(StorageHelper& sh, BalanceFrame::pointer balance,
                          uint64_t amount)
 {
     auto result = balance->tryLock(amount);

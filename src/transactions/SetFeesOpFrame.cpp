@@ -251,6 +251,15 @@ SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
         return true;
     }
 
+    bool SetFeesOpFrame::isSwapFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
+        FeeFrame::checkFeeType(fee, FeeType::SWAP_FEE);
+
+        if (!mustValidFeeAmounts(fee, metrics))
+            return false;
+
+        return true;
+    }
+
     bool SetFeesOpFrame::isForfeitFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
         FeeFrame::checkFeeType(fee, FeeType::WITHDRAWAL_FEE);
 
@@ -406,6 +415,9 @@ SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
                 break;
             case FeeType::PAYOUT_FEE:
                 isValidFee = isPayoutFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::SWAP_FEE:
+                isValidFee = isSwapFeeValid(*mSetFees.fee, app.getMetrics());
                 break;
             default:
                 innerResult().code(SetFeesResultCode::INVALID_FEE_TYPE);

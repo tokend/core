@@ -20,7 +20,7 @@ SwapFrame::SwapFrame(SwapFrame const& from) : SwapFrame(from.mEntry)
 
 SwapFrame::SwapFrame(uint64_t id) : SwapFrame()
 {
-    mSwapEntry.swapID = id;
+    mSwapEntry.id = id;
 }
 
 
@@ -30,7 +30,7 @@ SwapFrame::getKey() const
     if (!mKeyCalculated)
     {
         mKey = LedgerKey(LedgerEntryType::SWAP);
-        mKey.swap().swapID = getID();
+        mKey.swap().id = getID();
         mKeyCalculated = true;
     }
 
@@ -39,7 +39,7 @@ SwapFrame::getKey() const
 
 uint64_t SwapFrame::getID() const
 {
-    return mSwapEntry.swapID;
+    return mSwapEntry.id;
 }
 
 } // namespace stellar

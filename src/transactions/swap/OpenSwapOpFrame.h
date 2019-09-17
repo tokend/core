@@ -17,7 +17,7 @@ class OpenSwapOpFrame : public OperationFrame
     bool isDestinationFeeValid();
 
     BalanceFrame::pointer
-    tryLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
+    mustLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
 
     bool isSwapAllowed(StorageHelper& sh, BalanceFrame::pointer from,
                        BalanceFrame::pointer to);

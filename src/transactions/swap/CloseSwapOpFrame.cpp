@@ -76,8 +76,8 @@ CloseSwapOpFrame::tryGetSignerRequirements(
         destinationBalance->getAsset());
 
     SignerRuleResource resource(LedgerEntryType::SWAP);
-    resource.asset().assetType = asset->getType();
-    resource.asset().assetCode = asset->getCode();
+    resource.swap().assetType = asset->getType();
+    resource.swap().assetCode = asset->getCode();
 
     result.emplace_back(resource, SignerRuleAction::EXCHANGE);
 
@@ -131,12 +131,6 @@ CloseSwapOpFrame::cancelSwap(Application& app, StorageHelper& sh,
     auto& balanceHelper = sh.getBalanceHelper();
     auto swapEntry = swap->getSwapEntry();
 
-    if (swapEntry.lockTime > lm.getCloseTime())
-    {
-        innerResult().code(CloseSwapResultCode::NOT_READY);
-        return false;
-    }
-
     auto sourceBalance = balanceHelper.mustLoadBalance(swapEntry.sourceBalance);
 
     auto totalAmount = swapEntry.amount + swapEntry.fee;
@@ -147,7 +141,7 @@ CloseSwapOpFrame::cancelSwap(Application& app, StorageHelper& sh,
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state: failed to unlock total amount on swap "
                "cancel, swap_id: "
-            << swapEntry.swapID;
+            << swapEntry.id;
         throw std::runtime_error(
             "Unexpected state: failed to unlock total amount on swap cancel");
     }
@@ -190,11 +184,12 @@ CloseSwapOpFrame::processSwap(Application& app, StorageHelper& sh,
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state: failed to charge total amount from source "
                "balance on swap close, swap_id: "
-            << swapEntry.swapID;
+            << swapEntry.id;
         throw std::runtime_error(
             "Unexpected state: failed to charge total amount from source "
             "balance on swap close");
     }
+    balanceHelper.storeChange(sourceBalance->mEntry);
 
     auto destinationBalance =
         balanceHelper.mustLoadBalance(swapEntry.destinationBalance);
@@ -211,10 +206,12 @@ CloseSwapOpFrame::processSwap(Application& app, StorageHelper& sh,
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state: failed to fund destination on swap close, "
                "swap_id: "
-            << swapEntry.swapID;
+            << swapEntry.id;
         throw std::runtime_error(
             "Unexpected state: failed to fund destination on swap close ");
     }
+
+    balanceHelper.storeChange(destinationBalance->mEntry);
 
     innerResult().code(CloseSwapResultCode::SUCCESS);
     innerResult().success().effect = CloseSwapEffect::CLOSED;
@@ -243,12 +240,12 @@ CloseSwapOpFrame::isAuthorized(StorageHelper& sh, LedgerManager& lm,
         return false;
     }
 
-    if (getSourceID() == swapSource && swapEntry.lockTime > lm.getCloseTime())
+    if (getSourceID() == swapSource && swapEntry.lockTime <= lm.getCloseTime())
     {
         return true;
     }
 
-    if (getSourceID() == adminID && swapEntry.lockTime > lm.getCloseTime())
+    if (getSourceID() == adminID && swapEntry.lockTime <= lm.getCloseTime())
     {
         return true;
     }

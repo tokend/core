@@ -3934,8 +3934,8 @@ return false;
 }bool
 LedgerKey::_swap_t::from_bytes(xdr::unmarshaler& u) 
 {
-bool okswapID = u.from_bytes(swapID);
-if (!okswapID)
+bool okid = u.from_bytes(id);
+if (!okid)
 {
 return false;
 }
@@ -3944,8 +3944,8 @@ return true;
 bool
 LedgerKey::_swap_t::to_bytes(xdr::marshaler& m) const 
 {
-bool okswapID = m.to_bytes(swapID);
-if (!okswapID)
+bool okid = m.to_bytes(id);
+if (!okid)
 {
 return false;
 }
@@ -3954,7 +3954,7 @@ return true;
 void
 LedgerKey::_swap_t::count_size(xdr::measurer& m) const 
 {
-m.count_size(swapID);
+m.count_size(id);
 }
 bool
 LedgerKey::_swap_t::operator==(xdr::xdr_abstract const& other_abstract) const 
@@ -3963,7 +3963,7 @@ if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }auto& other = dynamic_cast<_swap_t const&>(other_abstract);return true
-&& (swapID== other.swapID)
+&& (id== other.id)
 ;}
 bool
 LedgerKey::_swap_t::operator<(xdr_abstract const& other_abstract) const
@@ -3973,8 +3973,8 @@ if (typeid(*this) != typeid(other_abstract))
 throw std::runtime_error("unexpected operator< invoke");
 }
 auto& other = dynamic_cast<_swap_t const&>(other_abstract);
-if (swapID < other.swapID) return true;
-if (other.swapID < swapID) return false;
+if (id < other.id) return true;
+if (other.id < id) return false;
 return false;
 }bool
 LedgerKey::from_bytes(xdr::unmarshaler& u) 

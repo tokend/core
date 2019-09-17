@@ -49,7 +49,6 @@ enum class CloseSwapResultCode : std::int32_t {
   INVALID_SECRET = -2,
   LINE_FULL = -3,
   NOT_AUTHORIZED = -4,
-  NOT_READY = -5,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CloseSwapResultCode>
@@ -69,8 +68,6 @@ template<> struct xdr_traits<::stellar::CloseSwapResultCode>
       return "LINE_FULL";
     case ::stellar::CloseSwapResultCode::NOT_AUTHORIZED:
       return "NOT_AUTHORIZED";
-    case ::stellar::CloseSwapResultCode::NOT_READY:
-      return "NOT_READY";
     default:
       return nullptr;
     }
@@ -81,8 +78,7 @@ template<> struct xdr_traits<::stellar::CloseSwapResultCode>
       (int32_t)::stellar::CloseSwapResultCode::SWAP_EXPIRED,
       (int32_t)::stellar::CloseSwapResultCode::INVALID_SECRET,
       (int32_t)::stellar::CloseSwapResultCode::LINE_FULL,
-      (int32_t)::stellar::CloseSwapResultCode::NOT_AUTHORIZED,
-      (int32_t)::stellar::CloseSwapResultCode::NOT_READY
+      (int32_t)::stellar::CloseSwapResultCode::NOT_AUTHORIZED
     };
     return _xdr_enum_vec;
   }

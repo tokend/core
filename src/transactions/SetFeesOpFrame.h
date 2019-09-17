@@ -38,6 +38,8 @@ namespace stellar {
 
         bool isPaymentFeeValid(FeeEntry const &fee, medida::MetricsRegistry &media);
 
+        bool isSwapFeeValid(FeeEntry const &fee, medida::MetricsRegistry &media);
+
         bool isOfferFeeValid(FeeEntry const &fee, medida::MetricsRegistry &media);
 
         bool isCapitalDeploymentFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics);

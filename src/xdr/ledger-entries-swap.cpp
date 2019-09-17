@@ -10,8 +10,8 @@ namespace stellar {
 bool
 SwapEntry::from_bytes(xdr::unmarshaler& u) 
 {
-bool okswapID = u.from_bytes(swapID);
-if (!okswapID)
+bool okid = u.from_bytes(id);
+if (!okid)
 {
 return false;
 }
@@ -70,8 +70,8 @@ return true;
 bool
 SwapEntry::to_bytes(xdr::marshaler& m) const 
 {
-bool okswapID = m.to_bytes(swapID);
-if (!okswapID)
+bool okid = m.to_bytes(id);
+if (!okid)
 {
 return false;
 }
@@ -130,7 +130,7 @@ return true;
 void
 SwapEntry::count_size(xdr::measurer& m) const 
 {
-m.count_size(swapID);
+m.count_size(id);
 m.count_size(secretHash);
 m.count_size(source);
 m.count_size(sourceBalance);
@@ -149,7 +149,7 @@ if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }auto& other = dynamic_cast<SwapEntry const&>(other_abstract);return true
-&& (swapID== other.swapID)
+&& (id== other.id)
 && (secretHash== other.secretHash)
 && (source== other.source)
 && (sourceBalance== other.sourceBalance)
@@ -169,8 +169,8 @@ if (typeid(*this) != typeid(other_abstract))
 throw std::runtime_error("unexpected operator< invoke");
 }
 auto& other = dynamic_cast<SwapEntry const&>(other_abstract);
-if (swapID < other.swapID) return true;
-if (other.swapID < swapID) return false;
+if (id < other.id) return true;
+if (other.id < id) return false;
 if (secretHash < other.secretHash) return true;
 if (other.secretHash < secretHash) return false;
 if (source < other.source) return true;

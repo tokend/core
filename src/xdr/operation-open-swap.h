@@ -272,16 +272,14 @@ enum class OpenSwapResultCode : std::int32_t {
   SUCCESS = 0,
   MALFORMED = -1,
   UNDERFUNDED = -2,
-  DESTINATION_BALANCE_NOT_FOUND = -3,
-  BALANCE_ASSETS_MISMATCHED = -4,
-  SRC_BALANCE_NOT_FOUND = -5,
-  NOT_ALLOWED_BY_ASSET_POLICY = -6,
-  INVALID_DESTINATION_FEE = -7,
-  INSUFFICIENT_FEE_AMOUNT = -8,
-  AMOUNT_IS_LESS_THAN_DEST_FEE = -9,
-  DESTINATION_ACCOUNT_NOT_FOUND = -10,
-  INCORRECT_AMOUNT_PRECISION = -11,
-  INVALID_DETAILS = -12,
+  BALANCE_ASSETS_MISMATCHED = -3,
+  SRC_BALANCE_NOT_FOUND = -4,
+  NOT_ALLOWED_BY_ASSET_POLICY = -5,
+  INVALID_DESTINATION_FEE = -6,
+  INSUFFICIENT_FEE_AMOUNT = -7,
+  AMOUNT_IS_LESS_THAN_DEST_FEE = -8,
+  INCORRECT_AMOUNT_PRECISION = -9,
+  INVALID_DETAILS = -10,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OpenSwapResultCode>
@@ -297,8 +295,6 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       return "MALFORMED";
     case ::stellar::OpenSwapResultCode::UNDERFUNDED:
       return "UNDERFUNDED";
-    case ::stellar::OpenSwapResultCode::DESTINATION_BALANCE_NOT_FOUND:
-      return "DESTINATION_BALANCE_NOT_FOUND";
     case ::stellar::OpenSwapResultCode::BALANCE_ASSETS_MISMATCHED:
       return "BALANCE_ASSETS_MISMATCHED";
     case ::stellar::OpenSwapResultCode::SRC_BALANCE_NOT_FOUND:
@@ -311,8 +307,6 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       return "INSUFFICIENT_FEE_AMOUNT";
     case ::stellar::OpenSwapResultCode::AMOUNT_IS_LESS_THAN_DEST_FEE:
       return "AMOUNT_IS_LESS_THAN_DEST_FEE";
-    case ::stellar::OpenSwapResultCode::DESTINATION_ACCOUNT_NOT_FOUND:
-      return "DESTINATION_ACCOUNT_NOT_FOUND";
     case ::stellar::OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION:
       return "INCORRECT_AMOUNT_PRECISION";
     case ::stellar::OpenSwapResultCode::INVALID_DETAILS:
@@ -326,14 +320,12 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       (int32_t)::stellar::OpenSwapResultCode::SUCCESS,
       (int32_t)::stellar::OpenSwapResultCode::MALFORMED,
       (int32_t)::stellar::OpenSwapResultCode::UNDERFUNDED,
-      (int32_t)::stellar::OpenSwapResultCode::DESTINATION_BALANCE_NOT_FOUND,
       (int32_t)::stellar::OpenSwapResultCode::BALANCE_ASSETS_MISMATCHED,
       (int32_t)::stellar::OpenSwapResultCode::SRC_BALANCE_NOT_FOUND,
       (int32_t)::stellar::OpenSwapResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
       (int32_t)::stellar::OpenSwapResultCode::INVALID_DESTINATION_FEE,
       (int32_t)::stellar::OpenSwapResultCode::INSUFFICIENT_FEE_AMOUNT,
       (int32_t)::stellar::OpenSwapResultCode::AMOUNT_IS_LESS_THAN_DEST_FEE,
-      (int32_t)::stellar::OpenSwapResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
       (int32_t)::stellar::OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION,
       (int32_t)::stellar::OpenSwapResultCode::INVALID_DETAILS
     };

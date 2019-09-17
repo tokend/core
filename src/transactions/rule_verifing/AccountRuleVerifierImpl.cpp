@@ -247,6 +247,11 @@ AccountRuleVerifierImpl::isResourceMatches(
         }
         }
     }
+    case LedgerEntryType::SWAP:
+        return isTypeMatches(conditionResource.swap().assetType,
+                             actualResource.swap().assetType) &&
+               isStringMatches(conditionResource.swap().assetCode,
+                               actualResource.swap().assetCode);
     case LedgerEntryType::ACCOUNT_KYC:
     case LedgerEntryType::ACCOUNT:
     case LedgerEntryType::ACCOUNT_RULE:
