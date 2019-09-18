@@ -753,7 +753,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                         uint32_t toAdd = 0, toRemove = issuanceTasks;
                         auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
                         reviewRequestHelper.applyReviewRequestTxWithTasks(
-                            issuer,
+                            root,
                             requestID,
                             request->getHash(),
                             ReviewableRequestType::CREATE_ISSUANCE,
@@ -879,7 +879,7 @@ TEST_CASE("Issuance", "[tx][issuance]")
                 SECTION("Success")
                 {
                     auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
-                    reviewRequestHelper.applyReviewRequestTx(issuer, requestID, ReviewRequestOpAction::APPROVE, "");
+                    reviewRequestHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "");
                 }
             }
         }

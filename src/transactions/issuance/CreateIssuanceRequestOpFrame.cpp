@@ -295,8 +295,14 @@ CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application& app, Storage
     body.issuanceRequest() = mCreateIssuanceRequest.request;
     body.issuanceRequest().fee = feeToPay;
 
+    AccountID reviewer = app.getAdminID();
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_ISSUANCE_REVIEWER)) 
+    {
+        reviewer = asset->getOwner();
+    }
+
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), asset->getOwner(), reference,
+    auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), reviewer, reference,
                                                              body, ledgerManager.getCloseTime());
     requestHelper.storeAdd(request->mEntry);
     return request;

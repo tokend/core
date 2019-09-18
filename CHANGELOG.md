@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+
+* Reviewer for issuance requests
+
+## 3.6.0-x.0
+
 ### Added 
 
 * `CreatePaymentRequestOpFrame`
