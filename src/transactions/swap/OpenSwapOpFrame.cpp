@@ -423,6 +423,11 @@ OpenSwapOpFrame::tryLock(StorageHelper& sh, BalanceFrame::pointer balance,
 bool
 OpenSwapOpFrame::doCheckValid(Application& app)
 {
+    if (mOpenSwap.amount == 0)
+    {
+        innerResult().code(OpenSwapResultCode::INVALID_AMOUNT);
+        return false;
+    }
     if (mOpenSwap.lockTime <= app.getLedgerManager().getCloseTime())
     {
         innerResult().code(OpenSwapResultCode::INVALID_LOCK_TIME);
