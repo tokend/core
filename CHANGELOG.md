@@ -11,8 +11,8 @@
 * `OpenSwapOpFrame`
 * `CloseSwapOpFrame`
 * `SwapEntry`
-* Account rule resources for `Swap` reviewable requests
-* Signer rule resources for `Swap` reviewable requests
+* Account rule resources for `Swap`
+* Signer rule resources for `Swap` 
 
 ### Fixed
 
