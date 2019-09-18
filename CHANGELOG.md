@@ -8,6 +8,11 @@
 * `CreateManageOfferRequestOpFrame`
 * Account rule resources for `ManageOffer` and `CreatePayment` reviewable requests
 * Signer rule resources for `ManageOffer` and `CreatePayment` reviewable requests
+* `OpenSwapOpFrame`
+* `CloseSwapOpFrame`
+* `SwapEntry`
+* Account rule resources for `Swap` reviewable requests
+* Signer rule resources for `Swap` reviewable requests
 
 ### Fixed
 
