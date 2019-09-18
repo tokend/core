@@ -37,6 +37,7 @@
 #include "xdr/ledger-entries-poll.h"
 #include "xdr/ledger-entries-vote.h"
 #include "xdr/ledger-entries-account-specific-rule.h"
+#include "xdr/ledger-entries-swap.h"
 
 namespace stellar {
 
@@ -114,6 +115,7 @@ struct LedgerEntry  : xdr::xdr_abstract {
       PollEntry poll_;
       VoteEntry vote_;
       AccountSpecificRuleEntry accountSpecificRule_;
+      SwapEntry swap_;
     };
 
   public:
@@ -149,7 +151,8 @@ struct LedgerEntry  : xdr::xdr_abstract {
         LedgerEntryType::STAMP,
         LedgerEntryType::POLL,
         LedgerEntryType::VOTE,
-        LedgerEntryType::ACCOUNT_SPECIFIC_RULE
+        LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
+        LedgerEntryType::SWAP
       };
       return _xdr_disc_vec;
     }
@@ -184,6 +187,7 @@ struct LedgerEntry  : xdr::xdr_abstract {
         : which == (int32_t)LedgerEntryType::POLL ? 28
         : which == (int32_t)LedgerEntryType::VOTE ? 29
         : which == (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE ? 30
+        : which == (int32_t)LedgerEntryType::SWAP ? 31
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -278,6 +282,9 @@ struct LedgerEntry  : xdr::xdr_abstract {
         return true;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
         _f(&_data_t::accountSpecificRule_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)LedgerEntryType::SWAP:
+        _f(&_data_t::swap_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -382,6 +389,9 @@ break;
         case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) AccountSpecificRuleEntry{};
 break;
+        case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) SwapEntry{};
+break;
 }
 
       }
@@ -481,6 +491,9 @@ break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) AccountSpecificRuleEntry{};
 break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) SwapEntry{};
+break;
 }
 
     }
@@ -576,6 +589,9 @@ new(&vote_) VoteEntry(source.vote_);
 break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) AccountSpecificRuleEntry(source.accountSpecificRule_);
+break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) SwapEntry(source.swap_);
 break;
 }
 
@@ -673,6 +689,9 @@ break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) AccountSpecificRuleEntry(std::move(source.accountSpecificRule_));
 break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) SwapEntry(std::move(source.swap_));
+break;
 }
 
     }
@@ -768,6 +787,9 @@ vote_.~VoteEntry();
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRule_.~AccountSpecificRuleEntry();
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+swap_.~SwapEntry();
 break;
 }
 }
@@ -867,6 +889,9 @@ break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRule_ = source.accountSpecificRule_;
 break;
+      case (int32_t)LedgerEntryType::SWAP:
+swap_ = source.swap_;
+break;
 }
 }
 else {this->~_data_t();
@@ -962,6 +987,9 @@ new(&vote_) VoteEntry(source.vote_);
 break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) AccountSpecificRuleEntry(source.accountSpecificRule_);
+break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) SwapEntry(source.swap_);
 break;
 }
 }
@@ -1062,6 +1090,9 @@ break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRule_ = std::move(source.accountSpecificRule_);
 break;
+      case (int32_t)LedgerEntryType::SWAP:
+swap_ = std::move(source.swap_);
+break;
 }
 }
 else {this->~_data_t();
@@ -1157,6 +1188,9 @@ new(&vote_) VoteEntry(std::move(source.vote_));
 break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) AccountSpecificRuleEntry(std::move(source.accountSpecificRule_));
+break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) SwapEntry(std::move(source.swap_));
 break;
 }
 }
@@ -1468,6 +1502,16 @@ break;
       if (_xdr_field_number(type_) == 30)
         return accountSpecificRule_;
       throw xdr::xdr_wrong_union("_data_t: accountSpecificRule accessed when not selected");
+    }
+    SwapEntry &swap() {
+      if (_xdr_field_number(type_) == 31)
+        return swap_;
+      throw xdr::xdr_wrong_union("_data_t: swap accessed when not selected");
+    }
+    const SwapEntry &swap() const {
+      if (_xdr_field_number(type_) == 31)
+        return swap_;
+      throw xdr::xdr_wrong_union("_data_t: swap accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

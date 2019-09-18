@@ -111,6 +111,10 @@ return u.from_bytes(createManageOfferRequestOp_);
 return u.from_bytes(createPaymentRequestOp_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return u.from_bytes(removeAssetOp_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return u.from_bytes(openSwapOp_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return u.from_bytes(closeSwapOp_);
 }
 return false;
 }
@@ -219,6 +223,10 @@ return m.to_bytes(createManageOfferRequestOp_);
 return m.to_bytes(createPaymentRequestOp_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.to_bytes(removeAssetOp_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.to_bytes(openSwapOp_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.to_bytes(closeSwapOp_);
 }
 return false;
 }
@@ -323,6 +331,10 @@ return m.count_size(createManageOfferRequestOp_);
 return m.count_size(createPaymentRequestOp_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.count_size(removeAssetOp_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.count_size(openSwapOp_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.count_size(closeSwapOp_);
 }
 }
 bool
@@ -430,6 +442,10 @@ return createManageOfferRequestOp_ == other.createManageOfferRequestOp_;
 return createPaymentRequestOp_ == other.createPaymentRequestOp_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetOp_ == other.removeAssetOp_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapOp_ == other.openSwapOp_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapOp_ == other.closeSwapOp_;
 }
 return false;
 }
@@ -539,6 +555,10 @@ return createManageOfferRequestOp_ < other.createManageOfferRequestOp_;
 return createPaymentRequestOp_ < other.createPaymentRequestOp_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetOp_ < other.removeAssetOp_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapOp_ < other.openSwapOp_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapOp_ < other.closeSwapOp_;
 }
 return false;
 }
@@ -1221,6 +1241,10 @@ return u.from_bytes(createManageOfferRequestResult_);
 return u.from_bytes(createPaymentRequestResult_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return u.from_bytes(removeAssetResult_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return u.from_bytes(openSwapResult_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return u.from_bytes(closeSwapResult_);
 }
 return false;
 }
@@ -1329,6 +1353,10 @@ return m.to_bytes(createManageOfferRequestResult_);
 return m.to_bytes(createPaymentRequestResult_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.to_bytes(removeAssetResult_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.to_bytes(openSwapResult_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.to_bytes(closeSwapResult_);
 }
 return false;
 }
@@ -1433,6 +1461,10 @@ return m.count_size(createManageOfferRequestResult_);
 return m.count_size(createPaymentRequestResult_);
     case (int32_t)OperationType::REMOVE_ASSET:
 return m.count_size(removeAssetResult_);
+    case (int32_t)OperationType::OPEN_SWAP:
+return m.count_size(openSwapResult_);
+    case (int32_t)OperationType::CLOSE_SWAP:
+return m.count_size(closeSwapResult_);
 }
 }
 bool
@@ -1540,6 +1572,10 @@ return createManageOfferRequestResult_ == other.createManageOfferRequestResult_;
 return createPaymentRequestResult_ == other.createPaymentRequestResult_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetResult_ == other.removeAssetResult_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapResult_ == other.openSwapResult_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapResult_ == other.closeSwapResult_;
 }
 return false;
 }
@@ -1649,6 +1685,10 @@ return createManageOfferRequestResult_ < other.createManageOfferRequestResult_;
 return createPaymentRequestResult_ < other.createPaymentRequestResult_;
     case (int32_t)OperationType::REMOVE_ASSET:
 return removeAssetResult_ < other.removeAssetResult_;
+    case (int32_t)OperationType::OPEN_SWAP:
+return openSwapResult_ < other.openSwapResult_;
+    case (int32_t)OperationType::CLOSE_SWAP:
+return closeSwapResult_ < other.closeSwapResult_;
 }
 return false;
 }

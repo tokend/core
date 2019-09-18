@@ -505,6 +505,7 @@ enum class LedgerEntryType : std::int32_t {
   VOTE = 35,
   ACCOUNT_SPECIFIC_RULE = 36,
   INITIATE_KYC_RECOVERY = 37,
+  SWAP = 38,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerEntryType>
@@ -584,6 +585,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       return "ACCOUNT_SPECIFIC_RULE";
     case ::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY:
       return "INITIATE_KYC_RECOVERY";
+    case ::stellar::LedgerEntryType::SWAP:
+      return "SWAP";
     default:
       return nullptr;
     }
@@ -624,7 +627,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       (int32_t)::stellar::LedgerEntryType::POLL,
       (int32_t)::stellar::LedgerEntryType::VOTE,
       (int32_t)::stellar::LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
-      (int32_t)::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY
+      (int32_t)::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY,
+      (int32_t)::stellar::LedgerEntryType::SWAP
     };
     return _xdr_enum_vec;
   }
@@ -949,6 +953,8 @@ enum class OperationType : std::int32_t {
   CREATE_MANAGE_OFFER_REQUEST = 51,
   CREATE_PAYMENT_REQUEST = 52,
   REMOVE_ASSET = 53,
+  OPEN_SWAP = 54,
+  CLOSE_SWAP = 55,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1052,6 +1058,10 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CREATE_PAYMENT_REQUEST";
     case ::stellar::OperationType::REMOVE_ASSET:
       return "REMOVE_ASSET";
+    case ::stellar::OperationType::OPEN_SWAP:
+      return "OPEN_SWAP";
+    case ::stellar::OperationType::CLOSE_SWAP:
+      return "CLOSE_SWAP";
     default:
       return nullptr;
     }
@@ -1104,7 +1114,9 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::REMOVE_ASSET_PAIR,
       (int32_t)::stellar::OperationType::CREATE_MANAGE_OFFER_REQUEST,
       (int32_t)::stellar::OperationType::CREATE_PAYMENT_REQUEST,
-      (int32_t)::stellar::OperationType::REMOVE_ASSET
+      (int32_t)::stellar::OperationType::REMOVE_ASSET,
+      (int32_t)::stellar::OperationType::OPEN_SWAP,
+      (int32_t)::stellar::OperationType::CLOSE_SWAP
     };
     return _xdr_enum_vec;
   }

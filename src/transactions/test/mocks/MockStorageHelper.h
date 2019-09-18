@@ -19,6 +19,7 @@ class PollHelper;
 class VoteHelper;
 class AccountSpecificRuleHelper;
 class ReviewableRequestHelper;
+class SwapHelper;
 
 enum class LedgerEntryType;
 
@@ -60,9 +61,10 @@ public:
     MOCK_METHOD0(getVoteHelper,
                  VoteHelper & ());
     MOCK_METHOD0(getPollHelper,
-                 PollHelper & ());
-    MOCK_METHOD0(getAccountSpecificRuleHelper, AccountSpecificRuleHelper & ());
+                 PollHelper&());
+    MOCK_METHOD0(getAccountSpecificRuleHelper, AccountSpecificRuleHelper&());
     MOCK_METHOD0(getReviewableRequestHelper, ReviewableRequestHelper & ());
+    MOCK_METHOD0(getSwapHelper, SwapHelper&());
 };
 
 }  // namespace stellar

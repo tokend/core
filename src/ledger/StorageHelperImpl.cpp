@@ -20,33 +20,41 @@
 #include "StampHelperImpl.h"
 #include "AccountSpecificRuleHelperImpl.h"
 #include "ReviewableRequestHelperImpl.h"
+#include "SwapHelperImpl.h"
+
 
 namespace stellar
 {
 
-StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta *ledgerDelta)
-    : mDatabase(db), mLedgerDelta(ledgerDelta), mTransaction(nullptr), mIsReleased(true)
+StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
+    : mDatabase(db)
+    , mLedgerDelta(ledgerDelta)
+    , mTransaction(nullptr)
+    , mIsReleased(true)
 {
     mHelpers =
-        {
-            {LedgerEntryType::ACCOUNT,                               &getAccountHelper()},
-            {LedgerEntryType::ACCOUNT_ROLE,                          &getAccountRoleHelper()},
-            {LedgerEntryType::ACCOUNT_RULE,                          &getAccountRuleHelper()},
-            {LedgerEntryType::SIGNER,                                &getSignerHelper()},
-            {LedgerEntryType::SIGNER_ROLE,                           &getSignerRoleHelper()},
-            {LedgerEntryType::SIGNER_RULE,                           &getSignerRuleHelper()},
-            {LedgerEntryType::KEY_VALUE,                             &getKeyValueHelper()},
-            {LedgerEntryType::BALANCE,                               &getBalanceHelper()},
-            {LedgerEntryType::ASSET,                                 &getAssetHelper()},
-            {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
-            {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            &getExternalSystemAccountIDHelper()},
-            {LedgerEntryType::STAMP,                                 &getStampHelper()},
-            {LedgerEntryType::LICENSE,                               &getLicenseHelper()},
-            {LedgerEntryType::VOTE,                                  &getVoteHelper()},
-            {LedgerEntryType::POLL,                                  &getPollHelper()},
-            {LedgerEntryType::ACCOUNT_SPECIFIC_RULE,                 &getAccountSpecificRuleHelper()},
-            {LedgerEntryType::REVIEWABLE_REQUEST,                    &getReviewableRequestHelper()}
-        };
+    {
+        {LedgerEntryType::ACCOUNT, &getAccountHelper()},
+        {LedgerEntryType::ACCOUNT_ROLE, &getAccountRoleHelper()},
+        {LedgerEntryType::ACCOUNT_RULE, &getAccountRuleHelper()},
+        {LedgerEntryType::SIGNER, &getSignerHelper()},
+        {LedgerEntryType::SIGNER_ROLE, &getSignerRoleHelper()},
+        {LedgerEntryType::SIGNER_RULE, &getSignerRuleHelper()},
+        {LedgerEntryType::KEY_VALUE, &getKeyValueHelper()},
+        {LedgerEntryType::BALANCE, &getBalanceHelper()},
+        {LedgerEntryType::ASSET, &getAssetHelper()},
+        {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, &getExternalSystemAccountIDPoolEntryHelper()},
+        {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID, &getExternalSystemAccountIDHelper()},
+        {LedgerEntryType::STAMP, &getStampHelper()},
+        {LedgerEntryType::LICENSE, &getLicenseHelper()},
+        {LedgerEntryType::VOTE, &getVoteHelper()},
+        {LedgerEntryType::POLL, &getPollHelper()},
+        {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()},
+        {LedgerEntryType::REVIEWABLE_REQUEST,                    &getReviewableRequestHelper()},
+        {LedgerEntryType::SWAP, &getSwapHelper()},
+
+
+    };
 }
 
 StorageHelperImpl::~StorageHelperImpl()
@@ -171,8 +179,9 @@ StorageHelperImpl::startNestedTransaction()
 {
     if (!mLedgerDelta)
     {
-        throw std::runtime_error("This StorageHelper has empty ledger delta and "
-                                 "cannot create nested transactions.");
+        throw std::runtime_error(
+            "This StorageHelper has empty ledger delta and "
+            "cannot create nested transactions.");
     }
     if (mNestedDelta && mNestedDelta->isStateActive())
     {
@@ -328,7 +337,8 @@ StorageHelperImpl::getLicenseSignatureHelper()
 {
     if (!mLicenseSignatureHelper)
     {
-        mLicenseSignatureHelper = std::make_unique<LicenseSignatureHelperImpl>(*this);
+        mLicenseSignatureHelper =
+            std::make_unique<LicenseSignatureHelperImpl>(*this);
     }
     return *mLicenseSignatureHelper;
 }
@@ -363,12 +373,23 @@ StorageHelperImpl::getPollHelper()
     return *mPollHelper;
 }
 
+SwapHelper&
+StorageHelperImpl::getSwapHelper()
+{
+    if (!mSwapHelper)
+    {
+        mSwapHelper = std::make_unique<SwapHelperImpl>(*this);
+    }
+    return *mSwapHelper;
+}
+
 AccountSpecificRuleHelper&
 StorageHelperImpl::getAccountSpecificRuleHelper()
 {
     if (!mAccountSpecificRuleHelper)
     {
-        mAccountSpecificRuleHelper = std::make_unique<AccountSpecificRuleHelperImpl>(*this);
+        mAccountSpecificRuleHelper =
+            std::make_unique<AccountSpecificRuleHelperImpl>(*this);
     }
     return *mAccountSpecificRuleHelper;
 }

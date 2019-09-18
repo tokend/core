@@ -328,6 +328,11 @@ SignerRuleVerifierImpl::isResourceMatches(
         }
         }
     }
+    case LedgerEntryType::SWAP:
+        return isTypeMatches(requiredResource.swap().assetType,
+                             actualResource.swap().assetType) &&
+               isStringMatches(requiredResource.swap().assetCode,
+                               actualResource.swap().assetCode);
     case LedgerEntryType::INITIATE_KYC_RECOVERY:
         return isIDMatches(requiredResource.initiateKYCRecovery().roleID,
                            actualResource.initiateKYCRecovery().roleID);

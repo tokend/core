@@ -272,6 +272,17 @@ bool SetFeesOpFrame::isPaymentFeeValid(FeeEntry const& fee, medida::MetricsRegis
     return true;
 }
 
+
+bool SetFeesOpFrame::isSwapFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
+    FeeFrame::checkFeeType(fee, FeeType::SWAP_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return true;
+}
+
+
 bool SetFeesOpFrame::isForfeitFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
 {
     FeeFrame::checkFeeType(fee, FeeType::WITHDRAWAL_FEE);
@@ -414,42 +425,44 @@ SetFeesOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    bool isValidFee;
-    switch (mSetFees.fee->feeType)
-    {
-        case FeeType::PAYMENT_FEE:
-            isValidFee = isPaymentFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::OFFER_FEE:
-            isValidFee = isOfferFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::WITHDRAWAL_FEE:
-            isValidFee = isForfeitFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::ISSUANCE_FEE:
-            isValidFee = isEmissionFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::INVEST_FEE:
-            isValidFee = isInvestFeeValid(*mSetFees.fee, app.getMetrics());
-            if (!app.getLedgerManager().shouldUse(LedgerVersion::FIX_INVEST_FEE))
+        bool isValidFee;
+        switch (mSetFees.fee->feeType) {
+            case FeeType::PAYMENT_FEE:
+                isValidFee = isPaymentFeeValid(*mSetFees.fee, app.getMetrics());
                 break;
-            if (isValidFee)
-                isValidFee = isValidFee && mustEmptyFixed(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::OPERATION_FEE:
-            isValidFee = isOperationFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::CAPITAL_DEPLOYMENT_FEE:
-            isValidFee = isCapitalDeploymentFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        case FeeType::PAYOUT_FEE:
-            isValidFee = isPayoutFeeValid(*mSetFees.fee, app.getMetrics());
-            break;
-        default:
-            innerResult().code(SetFeesResultCode::INVALID_FEE_TYPE);
-            app.getMetrics().NewMeter({"op-set-fees", "invalid", "invalid-operation-type"}, "operation").Mark();
-            return false;
-    }
+            case FeeType::OFFER_FEE:
+                isValidFee = isOfferFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::WITHDRAWAL_FEE:
+                isValidFee = isForfeitFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::ISSUANCE_FEE:
+                isValidFee = isEmissionFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::INVEST_FEE:
+                isValidFee = isInvestFeeValid(*mSetFees.fee, app.getMetrics());
+                if (!app.getLedgerManager().shouldUse(LedgerVersion::FIX_INVEST_FEE))
+                    break;
+                if (isValidFee)
+                    isValidFee = isValidFee && mustEmptyFixed(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::OPERATION_FEE:
+                isValidFee = isOperationFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::CAPITAL_DEPLOYMENT_FEE:
+                isValidFee = isCapitalDeploymentFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::PAYOUT_FEE:
+                isValidFee = isPayoutFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            case FeeType::SWAP_FEE:
+                isValidFee = isSwapFeeValid(*mSetFees.fee, app.getMetrics());
+                break;
+            default:
+                innerResult().code(SetFeesResultCode::INVALID_FEE_TYPE);
+                app.getMetrics().NewMeter({"op-set-fees", "invalid", "invalid-operation-type"}, "operation").Mark();
+                return false;
+        }
 
     return isValidFee;
 }
