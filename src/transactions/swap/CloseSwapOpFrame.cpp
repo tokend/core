@@ -31,6 +31,7 @@ CloseSwapOpFrame::tryGetOperationConditions(
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::SWAP;
+        return false;
     }
     auto swapEntry = swap->getSwapEntry();
 
@@ -65,6 +66,7 @@ CloseSwapOpFrame::tryGetSignerRequirements(
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::SWAP;
+        return false;
     }
 
     auto swapEntry = swap->getSwapEntry();
