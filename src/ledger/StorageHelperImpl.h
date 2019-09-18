@@ -25,6 +25,8 @@ class StampHelper;
 class VoteHelper;
 class PollHelper;
 class ReviewableRequestHelper;
+class SwapHelper;
+
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -69,6 +71,7 @@ private:
     PollHelper& getPollHelper() override;
     AccountSpecificRuleHelper& getAccountSpecificRuleHelper() override;
     ReviewableRequestHelper& getReviewableRequestHelper() override;
+    SwapHelper& getSwapHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -98,5 +101,6 @@ private:
     std::unique_ptr<PollHelper> mPollHelper;
     std::unique_ptr<AccountSpecificRuleHelper> mAccountSpecificRuleHelper;
     std::unique_ptr<ReviewableRequestHelper> mReviewableRequestHelper;
+    std::unique_ptr<SwapHelper> mSwapHelper;
 };
 } // namespace stellar

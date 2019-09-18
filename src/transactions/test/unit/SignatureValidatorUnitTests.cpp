@@ -28,6 +28,7 @@
 #include "transactions/test/mocks/MockStampHelper.h"
 #include "transactions/test/mocks/MockVoteHelper.h"
 #include "transactions/test/mocks/MockPollHelper.h"
+#include "transactions/test/mocks/MockSwapHelper.h"
 #include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
 #include "transactions/test/mocks/MockReviewableRequestHelper.h"
 #include "bucket/BucketManager.h"

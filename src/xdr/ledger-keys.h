@@ -4347,6 +4347,32 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _swap_t  : xdr::xdr_abstract {
+    uint64 id{};
+    EmptyExt ext{};
+
+    _swap_t() = default;
+    template<typename _id_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<uint64, _id_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _swap_t(_id_T &&_id,
+                     _ext_T &&_ext)
+      : id(std::forward<_id_T>(_id)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
 
   using _xdr_case_type = xdr::xdr_traits<LedgerEntryType>::case_type;
 private:
@@ -4382,6 +4408,7 @@ private:
     _poll_t poll_;
     _vote_t vote_;
     _accountSpecificRule_t accountSpecificRule_;
+    _swap_t swap_;
   };
 
 public:
@@ -4417,7 +4444,8 @@ public:
       LedgerEntryType::LICENSE,
       LedgerEntryType::POLL,
       LedgerEntryType::VOTE,
-      LedgerEntryType::ACCOUNT_SPECIFIC_RULE
+      LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
+      LedgerEntryType::SWAP
     };
     return _xdr_disc_vec;
   }
@@ -4452,6 +4480,7 @@ public:
       : which == (int32_t)LedgerEntryType::POLL ? 28
       : which == (int32_t)LedgerEntryType::VOTE ? 29
       : which == (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE ? 30
+      : which == (int32_t)LedgerEntryType::SWAP ? 31
       : -1;
   }
   template<typename _F, typename..._A> static bool
@@ -4546,6 +4575,9 @@ public:
       return true;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
       _f(&LedgerKey::accountSpecificRule_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)LedgerEntryType::SWAP:
+      _f(&LedgerKey::swap_, std::forward<_A>(_a)...);
       return true;
     }
     return false;
@@ -4650,6 +4682,9 @@ break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) _accountSpecificRule_t{};
 break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t{};
+break;
 }
 
     }
@@ -4749,6 +4784,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) _accountSpecificRule_t{};
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t{};
+break;
 }
 
   }
@@ -4844,6 +4882,9 @@ new(&vote_) _vote_t(source.vote_);
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) _accountSpecificRule_t(source.accountSpecificRule_);
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(source.swap_);
 break;
 }
 
@@ -4941,6 +4982,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) _accountSpecificRule_t(std::move(source.accountSpecificRule_));
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(std::move(source.swap_));
+break;
 }
 
   }
@@ -5036,6 +5080,9 @@ vote_.~_vote_t();
 break;
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRule_.~_accountSpecificRule_t();
+break;
+  case (int32_t)LedgerEntryType::SWAP:
+swap_.~_swap_t();
 break;
 }
 }
@@ -5135,6 +5182,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRule_ = source.accountSpecificRule_;
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+swap_ = source.swap_;
+break;
 }
 }
 else {this->~LedgerKey();
@@ -5230,6 +5280,9 @@ new(&vote_) _vote_t(source.vote_);
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) _accountSpecificRule_t(source.accountSpecificRule_);
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(source.swap_);
 break;
 }
 }
@@ -5330,6 +5383,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRule_ = std::move(source.accountSpecificRule_);
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+swap_ = std::move(source.swap_);
+break;
 }
 }
 else {this->~LedgerKey();
@@ -5425,6 +5481,9 @@ new(&vote_) _vote_t(std::move(source.vote_));
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRule_) _accountSpecificRule_t(std::move(source.accountSpecificRule_));
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(std::move(source.swap_));
 break;
 }
 }
@@ -5736,6 +5795,16 @@ break;
     if (_xdr_field_number(type_) == 30)
       return accountSpecificRule_;
     throw xdr::xdr_wrong_union("LedgerKey: accountSpecificRule accessed when not selected");
+  }
+  _swap_t &swap() {
+    if (_xdr_field_number(type_) == 31)
+      return swap_;
+    throw xdr::xdr_wrong_union("LedgerKey: swap accessed when not selected");
+  }
+  const _swap_t &swap() const {
+    if (_xdr_field_number(type_) == 31)
+      return swap_;
+    throw xdr::xdr_wrong_union("LedgerKey: swap accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

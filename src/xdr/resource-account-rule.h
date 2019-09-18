@@ -1604,6 +1604,37 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _swap_t  : xdr::xdr_abstract {
+    AssetCode assetCode{};
+    uint64 assetType{};
+    EmptyExt ext{};
+
+    _swap_t() = default;
+    template<typename _assetCode_T,
+             typename _assetType_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<AssetCode, _assetCode_T>::value
+                            && std::is_constructible<uint64, _assetType_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _swap_t(_assetCode_T &&_assetCode,
+                     _assetType_T &&_assetType,
+                     _ext_T &&_ext)
+      : assetCode(std::forward<_assetCode_T>(_assetCode)),
+        assetType(std::forward<_assetType_T>(_assetType)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
 
   using _xdr_case_type = xdr::xdr_traits<LedgerEntryType>::case_type;
 private:
@@ -1619,6 +1650,7 @@ private:
     _vote_t vote_;
     _initiateKYCRecovery_t initiateKYCRecovery_;
     _accountSpecificRuleExt_t accountSpecificRuleExt_;
+    _swap_t swap_;
     EmptyExt ext_;
   };
 
@@ -1640,7 +1672,8 @@ public:
       : which == (int32_t)LedgerEntryType::VOTE ? 8
       : which == (int32_t)LedgerEntryType::INITIATE_KYC_RECOVERY ? 9
       : which == (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE ? 10
-      : 11;
+      : which == (int32_t)LedgerEntryType::SWAP ? 11
+      : 12;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -1676,6 +1709,9 @@ public:
       return true;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
       _f(&AccountRuleResource::accountSpecificRuleExt_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)LedgerEntryType::SWAP:
+      _f(&AccountRuleResource::swap_, std::forward<_A>(_a)...);
       return true;
     default:
       _f(&AccountRuleResource::ext_, std::forward<_A>(_a)...);
@@ -1724,6 +1760,9 @@ break;
       case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRuleExt_) _accountSpecificRuleExt_t{};
 break;
+      case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t{};
+break;
       default:
 new(&ext_) EmptyExt{};
 break;
@@ -1768,6 +1807,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRuleExt_) _accountSpecificRuleExt_t{};
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t{};
+break;
     default:
 new(&ext_) EmptyExt{};
 break;
@@ -1808,6 +1850,9 @@ new(&initiateKYCRecovery_) _initiateKYCRecovery_t(source.initiateKYCRecovery_);
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRuleExt_) _accountSpecificRuleExt_t(source.accountSpecificRuleExt_);
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(source.swap_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -1850,6 +1895,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRuleExt_) _accountSpecificRuleExt_t(std::move(source.accountSpecificRuleExt_));
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(std::move(source.swap_));
+break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
@@ -1890,6 +1938,9 @@ initiateKYCRecovery_.~_initiateKYCRecovery_t();
 break;
   case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRuleExt_.~_accountSpecificRuleExt_t();
+break;
+  case (int32_t)LedgerEntryType::SWAP:
+swap_.~_swap_t();
 break;
   default:
 ext_.~EmptyExt();
@@ -1934,6 +1985,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRuleExt_ = source.accountSpecificRuleExt_;
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+swap_ = source.swap_;
+break;
     default:
 ext_ = source.ext_;
 break;
@@ -1974,6 +2028,9 @@ new(&initiateKYCRecovery_) _initiateKYCRecovery_t(source.initiateKYCRecovery_);
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRuleExt_) _accountSpecificRuleExt_t(source.accountSpecificRuleExt_);
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(source.swap_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -2019,6 +2076,9 @@ break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 accountSpecificRuleExt_ = std::move(source.accountSpecificRuleExt_);
 break;
+    case (int32_t)LedgerEntryType::SWAP:
+swap_ = std::move(source.swap_);
+break;
     default:
 ext_ = std::move(source.ext_);
 break;
@@ -2059,6 +2119,9 @@ new(&initiateKYCRecovery_) _initiateKYCRecovery_t(std::move(source.initiateKYCRe
 break;
     case (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE:
 new(&accountSpecificRuleExt_) _accountSpecificRuleExt_t(std::move(source.accountSpecificRuleExt_));
+break;
+    case (int32_t)LedgerEntryType::SWAP:
+new(&swap_) _swap_t(std::move(source.swap_));
 break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
@@ -2174,13 +2237,23 @@ break;
       return accountSpecificRuleExt_;
     throw xdr::xdr_wrong_union("AccountRuleResource: accountSpecificRuleExt accessed when not selected");
   }
-  EmptyExt &ext() {
+  _swap_t &swap() {
     if (_xdr_field_number(type_) == 11)
+      return swap_;
+    throw xdr::xdr_wrong_union("AccountRuleResource: swap accessed when not selected");
+  }
+  const _swap_t &swap() const {
+    if (_xdr_field_number(type_) == 11)
+      return swap_;
+    throw xdr::xdr_wrong_union("AccountRuleResource: swap accessed when not selected");
+  }
+  EmptyExt &ext() {
+    if (_xdr_field_number(type_) == 12)
       return ext_;
     throw xdr::xdr_wrong_union("AccountRuleResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(type_) == 11)
+    if (_xdr_field_number(type_) == 12)
       return ext_;
     throw xdr::xdr_wrong_union("AccountRuleResource: ext accessed when not selected");
   }bool
@@ -2218,6 +2291,7 @@ enum class AccountRuleAction : std::int32_t {
   UPDATE_END_TIME = 18,
   CREATE_FOR_OTHER_WITH_TASKS = 19,
   REMOVE_FOR_OTHER = 20,
+  EXCHANGE = 21,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::AccountRuleAction>
@@ -2267,6 +2341,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       return "CREATE_FOR_OTHER_WITH_TASKS";
     case ::stellar::AccountRuleAction::REMOVE_FOR_OTHER:
       return "REMOVE_FOR_OTHER";
+    case ::stellar::AccountRuleAction::EXCHANGE:
+      return "EXCHANGE";
     default:
       return nullptr;
     }
@@ -2292,7 +2368,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       (int32_t)::stellar::AccountRuleAction::REMOVE,
       (int32_t)::stellar::AccountRuleAction::UPDATE_END_TIME,
       (int32_t)::stellar::AccountRuleAction::CREATE_FOR_OTHER_WITH_TASKS,
-      (int32_t)::stellar::AccountRuleAction::REMOVE_FOR_OTHER
+      (int32_t)::stellar::AccountRuleAction::REMOVE_FOR_OTHER,
+      (int32_t)::stellar::AccountRuleAction::EXCHANGE
     };
     return _xdr_enum_vec;
   }

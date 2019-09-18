@@ -19,6 +19,7 @@ enum class AssetPolicy : std::int32_t {
   ISSUANCE_MANUAL_REVIEW_REQUIRED = 16,
   CAN_BE_BASE_IN_ATOMIC_SWAP = 32,
   CAN_BE_QUOTE_IN_ATOMIC_SWAP = 64,
+  SWAPPABLE = 128,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::AssetPolicy>
@@ -42,6 +43,8 @@ template<> struct xdr_traits<::stellar::AssetPolicy>
       return "CAN_BE_BASE_IN_ATOMIC_SWAP";
     case ::stellar::AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP:
       return "CAN_BE_QUOTE_IN_ATOMIC_SWAP";
+    case ::stellar::AssetPolicy::SWAPPABLE:
+      return "SWAPPABLE";
     default:
       return nullptr;
     }
@@ -54,7 +57,8 @@ template<> struct xdr_traits<::stellar::AssetPolicy>
       (int32_t)::stellar::AssetPolicy::WITHDRAWABLE,
       (int32_t)::stellar::AssetPolicy::ISSUANCE_MANUAL_REVIEW_REQUIRED,
       (int32_t)::stellar::AssetPolicy::CAN_BE_BASE_IN_ATOMIC_SWAP,
-      (int32_t)::stellar::AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP
+      (int32_t)::stellar::AssetPolicy::CAN_BE_QUOTE_IN_ATOMIC_SWAP,
+      (int32_t)::stellar::AssetPolicy::SWAPPABLE
     };
     return _xdr_enum_vec;
   }

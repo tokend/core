@@ -271,6 +271,13 @@ struct LedgerEntryIdCmp
 
             return ar.id < br.id;
         }
+        case LedgerEntryType::SWAP:
+        {
+            auto const& as = a.swap();
+            auto const& bs = b.swap();
+
+            return as.id < bs.id;
+        }
         default:
         {
             throw std::runtime_error(

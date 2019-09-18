@@ -55,6 +55,8 @@
 #include "xdr/operation-create-manage-offer-request.h"
 #include "xdr/operation-create-payment-request.h"
 #include "xdr/operation-remove-asset.h"
+#include "xdr/operation-open-swap.h"
+#include "xdr/operation-close-swap.h"
 
 namespace stellar {
 
@@ -111,6 +113,8 @@ struct Operation  : xdr::xdr_abstract {
       CreateManageOfferRequestOp createManageOfferRequestOp_;
       CreatePaymentRequestOp createPaymentRequestOp_;
       RemoveAssetOp removeAssetOp_;
+      OpenSwapOp openSwapOp_;
+      CloseSwapOp closeSwapOp_;
     };
 
   public:
@@ -163,7 +167,9 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::CREATE_KYC_RECOVERY_REQUEST,
         OperationType::CREATE_MANAGE_OFFER_REQUEST,
         OperationType::CREATE_PAYMENT_REQUEST,
-        OperationType::REMOVE_ASSET
+        OperationType::REMOVE_ASSET,
+        OperationType::OPEN_SWAP,
+        OperationType::CLOSE_SWAP
       };
       return _xdr_disc_vec;
     }
@@ -215,6 +221,8 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
         : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
         : which == (int32_t)OperationType::REMOVE_ASSET ? 47
+        : which == (int32_t)OperationType::OPEN_SWAP ? 48
+        : which == (int32_t)OperationType::CLOSE_SWAP ? 49
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -360,6 +368,12 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::REMOVE_ASSET:
         _f(&_body_t::removeAssetOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::OPEN_SWAP:
+        _f(&_body_t::openSwapOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CLOSE_SWAP:
+        _f(&_body_t::closeSwapOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -515,6 +529,12 @@ break;
         case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetOp_) RemoveAssetOp{};
 break;
+        case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp{};
+break;
+        case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp{};
+break;
 }
 
       }
@@ -665,6 +685,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetOp_) RemoveAssetOp{};
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp{};
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp{};
+break;
 }
 
     }
@@ -811,6 +837,12 @@ new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequest
 break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetOp_) RemoveAssetOp(source.removeAssetOp_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(source.openSwapOp_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
 }
 
@@ -959,6 +991,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetOp_) RemoveAssetOp(std::move(source.removeAssetOp_));
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(std::move(source.openSwapOp_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
+break;
 }
 
     }
@@ -1105,6 +1143,12 @@ createPaymentRequestOp_.~CreatePaymentRequestOp();
 break;
     case (int32_t)OperationType::REMOVE_ASSET:
 removeAssetOp_.~RemoveAssetOp();
+break;
+    case (int32_t)OperationType::OPEN_SWAP:
+openSwapOp_.~OpenSwapOp();
+break;
+    case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapOp_.~CloseSwapOp();
 break;
 }
 }
@@ -1255,6 +1299,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 removeAssetOp_ = source.removeAssetOp_;
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapOp_ = source.openSwapOp_;
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapOp_ = source.closeSwapOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1401,6 +1451,12 @@ new(&createPaymentRequestOp_) CreatePaymentRequestOp(source.createPaymentRequest
 break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetOp_) RemoveAssetOp(source.removeAssetOp_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(source.openSwapOp_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
 }
 }
@@ -1552,6 +1608,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 removeAssetOp_ = std::move(source.removeAssetOp_);
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapOp_ = std::move(source.openSwapOp_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapOp_ = std::move(source.closeSwapOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -1698,6 +1760,12 @@ new(&createPaymentRequestOp_) CreatePaymentRequestOp(std::move(source.createPaym
 break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetOp_) RemoveAssetOp(std::move(source.removeAssetOp_));
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapOp_) OpenSwapOp(std::move(source.openSwapOp_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
 break;
 }
 }
@@ -2179,6 +2247,26 @@ break;
       if (_xdr_field_number(type_) == 47)
         return removeAssetOp_;
       throw xdr::xdr_wrong_union("_body_t: removeAssetOp accessed when not selected");
+    }
+    OpenSwapOp &openSwapOp() {
+      if (_xdr_field_number(type_) == 48)
+        return openSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: openSwapOp accessed when not selected");
+    }
+    const OpenSwapOp &openSwapOp() const {
+      if (_xdr_field_number(type_) == 48)
+        return openSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: openSwapOp accessed when not selected");
+    }
+    CloseSwapOp &closeSwapOp() {
+      if (_xdr_field_number(type_) == 49)
+        return closeSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: closeSwapOp accessed when not selected");
+    }
+    const CloseSwapOp &closeSwapOp() const {
+      if (_xdr_field_number(type_) == 49)
+        return closeSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: closeSwapOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -2972,6 +3060,8 @@ struct OperationResult : xdr::xdr_abstract {
       CreateManageOfferRequestResult createManageOfferRequestResult_;
       CreatePaymentRequestResult createPaymentRequestResult_;
       RemoveAssetResult removeAssetResult_;
+      OpenSwapResult openSwapResult_;
+      CloseSwapResult closeSwapResult_;
     };
 
   public:
@@ -3024,7 +3114,9 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::INITIATE_KYC_RECOVERY,
         OperationType::CREATE_MANAGE_OFFER_REQUEST,
         OperationType::CREATE_PAYMENT_REQUEST,
-        OperationType::REMOVE_ASSET
+        OperationType::REMOVE_ASSET,
+        OperationType::OPEN_SWAP,
+        OperationType::CLOSE_SWAP
       };
       return _xdr_disc_vec;
     }
@@ -3076,6 +3168,8 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CREATE_MANAGE_OFFER_REQUEST ? 45
         : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 46
         : which == (int32_t)OperationType::REMOVE_ASSET ? 47
+        : which == (int32_t)OperationType::OPEN_SWAP ? 48
+        : which == (int32_t)OperationType::CLOSE_SWAP ? 49
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3221,6 +3315,12 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::REMOVE_ASSET:
         _f(&_tr_t::removeAssetResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::OPEN_SWAP:
+        _f(&_tr_t::openSwapResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CLOSE_SWAP:
+        _f(&_tr_t::closeSwapResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -3376,6 +3476,12 @@ break;
         case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetResult_) RemoveAssetResult{};
 break;
+        case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult{};
+break;
+        case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult{};
+break;
 }
 
       }
@@ -3526,6 +3632,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetResult_) RemoveAssetResult{};
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult{};
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult{};
+break;
 }
 
     }
@@ -3672,6 +3784,12 @@ new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymen
 break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetResult_) RemoveAssetResult(source.removeAssetResult_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(source.openSwapResult_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(source.closeSwapResult_);
 break;
 }
 
@@ -3820,6 +3938,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetResult_) RemoveAssetResult(std::move(source.removeAssetResult_));
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(std::move(source.openSwapResult_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(std::move(source.closeSwapResult_));
+break;
 }
 
     }
@@ -3966,6 +4090,12 @@ createPaymentRequestResult_.~CreatePaymentRequestResult();
 break;
     case (int32_t)OperationType::REMOVE_ASSET:
 removeAssetResult_.~RemoveAssetResult();
+break;
+    case (int32_t)OperationType::OPEN_SWAP:
+openSwapResult_.~OpenSwapResult();
+break;
+    case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapResult_.~CloseSwapResult();
 break;
 }
 }
@@ -4116,6 +4246,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 removeAssetResult_ = source.removeAssetResult_;
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapResult_ = source.openSwapResult_;
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapResult_ = source.closeSwapResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -4262,6 +4398,12 @@ new(&createPaymentRequestResult_) CreatePaymentRequestResult(source.createPaymen
 break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetResult_) RemoveAssetResult(source.removeAssetResult_);
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(source.openSwapResult_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(source.closeSwapResult_);
 break;
 }
 }
@@ -4413,6 +4555,12 @@ break;
       case (int32_t)OperationType::REMOVE_ASSET:
 removeAssetResult_ = std::move(source.removeAssetResult_);
 break;
+      case (int32_t)OperationType::OPEN_SWAP:
+openSwapResult_ = std::move(source.openSwapResult_);
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+closeSwapResult_ = std::move(source.closeSwapResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -4559,6 +4707,12 @@ new(&createPaymentRequestResult_) CreatePaymentRequestResult(std::move(source.cr
 break;
       case (int32_t)OperationType::REMOVE_ASSET:
 new(&removeAssetResult_) RemoveAssetResult(std::move(source.removeAssetResult_));
+break;
+      case (int32_t)OperationType::OPEN_SWAP:
+new(&openSwapResult_) OpenSwapResult(std::move(source.openSwapResult_));
+break;
+      case (int32_t)OperationType::CLOSE_SWAP:
+new(&closeSwapResult_) CloseSwapResult(std::move(source.closeSwapResult_));
 break;
 }
 }
@@ -5040,6 +5194,26 @@ break;
       if (_xdr_field_number(type_) == 47)
         return removeAssetResult_;
       throw xdr::xdr_wrong_union("_tr_t: removeAssetResult accessed when not selected");
+    }
+    OpenSwapResult &openSwapResult() {
+      if (_xdr_field_number(type_) == 48)
+        return openSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: openSwapResult accessed when not selected");
+    }
+    const OpenSwapResult &openSwapResult() const {
+      if (_xdr_field_number(type_) == 48)
+        return openSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: openSwapResult accessed when not selected");
+    }
+    CloseSwapResult &closeSwapResult() {
+      if (_xdr_field_number(type_) == 49)
+        return closeSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: closeSwapResult accessed when not selected");
+    }
+    const CloseSwapResult &closeSwapResult() const {
+      if (_xdr_field_number(type_) == 49)
+        return closeSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: closeSwapResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
