@@ -9,16 +9,15 @@
 
 namespace stellar
 {
-class ReviewLimitsUpdateRequestOpFrame : public ReviewRequestOpFrame
-{
+class ReviewLimitsUpdateRequestOpFrame : public ReviewRequestOpFrame {
 protected:
-    bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                        ReviewableRequestFrame::pointer request) override;
 
-    bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    bool handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager,
                       ReviewableRequestFrame::pointer request) override;
 
-    bool tryCallManageLimits(Application &app, LedgerManager &ledgerManager, LedgerDelta &delta,
+    bool tryCallManageLimits(Application& app, LedgerManager& ledgerManager, StorageHelper& storageHelper,
                              ReviewableRequestFrame::pointer request);
 
     bool handleManageLimitsResult(ManageLimitsResultCode manageLimitsResultCode);

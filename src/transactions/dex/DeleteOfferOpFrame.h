@@ -13,11 +13,10 @@
 
 namespace stellar
 {
-class DeleteOfferOpFrame : public ManageOfferOpFrame
-{
+class DeleteOfferOpFrame : public ManageOfferOpFrame {
     bool
-    tryGetOperationConditions(StorageHelper &storageHelper,
-                              std::vector<OperationCondition> &result) const override;
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
@@ -27,7 +26,7 @@ public:
     DeleteOfferOpFrame(Operation const& op, OperationResult& res,
                        TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 };

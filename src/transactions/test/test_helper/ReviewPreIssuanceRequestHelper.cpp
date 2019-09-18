@@ -5,7 +5,7 @@
 #include "ReviewPreIssuanceRequestHelper.h"
 #include "ledger/AssetFrame.h"
 #include "ledger/AssetHelperLegacy.h"
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 
 
@@ -18,7 +18,7 @@ namespace txtest
 ReviewPreIssuanceChecker::ReviewPreIssuanceChecker(
     const TestManager::pointer& testManager, const uint64_t requestID) : ReviewChecker(testManager)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     if (!request || request->getType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
         return;
@@ -58,7 +58,7 @@ ReviewRequestResult ReviewPreIssuanceRequestHelper::applyReviewRequestTx(Account
                                                                          ReviewRequestOpAction action, std::string rejectReason,
                                                                          ReviewRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     REQUIRE(request);
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);

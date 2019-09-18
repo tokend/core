@@ -9,16 +9,17 @@
 
 namespace stellar
 {
-class ReviewRequestOpFrame : public OperationFrame
-{
-	bool isRejectReasonValid(Application& app);
+class ReviewableRequestHelper;
 
-	bool
-	tryGetOperationConditions(StorageHelper& storageHelper,
-							  std::vector<OperationCondition>& result) const override;
-	bool
-	tryGetSignerRequirements(StorageHelper& storageHelper,
-							 std::vector<SignerRequirement>& result) const override;
+class ReviewRequestOpFrame : public OperationFrame {
+    bool isRejectReasonValid(Application& app);
+
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 protected:
     ReviewRequestResult&
@@ -29,28 +30,34 @@ protected:
 
     ReviewRequestOp const& mReviewRequest;
 
-	virtual bool handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
-	virtual bool handlePermanentReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
-	virtual bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) {
-		throw std::runtime_error("There is no default implementation of handleApprove of Reviewable Request");
-	}
+    virtual bool
+    handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
+    virtual bool
+    handlePermanentReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request);
+    virtual bool
+    handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
+    {
+        throw std::runtime_error("There is no default implementation of handleApprove of Reviewable Request");
+    }
 
-	void handleTasks(Database& db, LedgerDelta &delta, ReviewableRequestFrame::pointer request);
+    void handleTasks(ReviewableRequestHelper& reviewableRequestHelper, ReviewableRequestFrame::pointer request);
 
-        // ensures that blocking rules are fulfilled, if not sets the error code and returns false
-        bool areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, Database& db, LedgerDelta& delta);
+    // ensures that blocking rules are fulfilled, if not sets the error code and returns false
+    bool
+    areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, StorageHelper& storageHelper);
 
-	// creates reference entry, throws excpetion if reference already exist. Throws expception if reference is null
-	void createReference(LedgerDelta& delta, Database& db, AccountID const& requestor, xdr::pointer<stellar::string64> reference);
+    // creates reference entry, throws excpetion if reference already exist. Throws expception if reference is null
+    void
+    createReference(StorageHelper& storageHelper, AccountID const& requestor, xdr::pointer<stellar::string64> reference);
 
-  public:
+public:
 
     ReviewRequestOpFrame(Operation const& op, OperationResult& res,
-                       TransactionFrame& parentTx);
+                         TransactionFrame& parentTx);
 
-	static ReviewRequestOpFrame* makeHelper(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
+    static ReviewRequestOpFrame *makeHelper(Operation const& op, OperationResult& res, TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
     bool doCheckValid(Application& app) override;
 
@@ -60,13 +67,14 @@ protected:
         return res.tr().reviewRequestResult().code();
     }
 
-	std::string getInnerResultCodeAsStr() override {
-		return xdr::xdr_traits<ReviewRequestResultCode>::enum_name(innerResult().code());
-	}
+    std::string getInnerResultCodeAsStr() override
+    {
+        return xdr::xdr_traits<ReviewRequestResultCode>::enum_name(innerResult().code());
+    }
 
     static uint64_t getTotalFee(uint64_t requestID, Fee fee);
 
-	bool removingExistingTasks(ReviewableRequestEntry &requestEntry);
+    bool removingExistingTasks(ReviewableRequestEntry& requestEntry);
 
 };
 }

@@ -18,19 +18,17 @@ ReviewKYCRecoveryRequestOpFrame::ReviewKYCRecoveryRequestOpFrame(
 }
 
 bool
-ReviewKYCRecoveryRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
+ReviewKYCRecoveryRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
                                                LedgerManager& ledgerManager,
                                                ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::KYC_RECOVERY);
 
-    Database& db = ledgerManager.getDatabase();
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
 
     auto& requestEntry = request->getRequestEntry();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    handleTasks(db, delta, request);
+    handleTasks(requestHelper, request);
 
     if (!request->canBeFulfilled(ledgerManager))
     {
@@ -45,7 +43,7 @@ ReviewKYCRecoveryRequestOpFrame::handleApprove(Application& app, LedgerDelta& de
         return false;
     }
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
 
     auto& kycRecoveryRequest = requestEntry.body.kycRecoveryRequest();
 
@@ -55,11 +53,9 @@ ReviewKYCRecoveryRequestOpFrame::handleApprove(Application& app, LedgerDelta& de
 }
 
 bool
-ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
+ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::KYC_RECOVERY);
-
-    Database& db = ledgerManager.getDatabase();
 
     if (mReviewRequest.reviewDetails.tasksToRemove != 0)
     {
@@ -76,7 +72,8 @@ ReviewKYCRecoveryRequestOpFrame::handleReject(Application& app, LedgerDelta& del
 
     const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);
     requestEntry.hash = newHash;
-    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+
+    storageHelper.getReviewableRequestHelper().storeChange(request->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;

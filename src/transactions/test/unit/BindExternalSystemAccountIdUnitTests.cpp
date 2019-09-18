@@ -43,6 +43,10 @@
 #include "transactions/test/mocks/MockSwapHelper.h"
 #include "transactions/test/mocks/MockTransactionFrame.h"
 #include "transactions/test/mocks/MockVoteHelper.h"
+#include "transactions/test/mocks/MockPollHelper.h"
+#include "transactions/test/mocks/MockAccountSpecificRuleHelper.h"
+#include "transactions/test/mocks/MockReviewableRequestHelper.h"
+
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
@@ -124,7 +128,7 @@ TEST_CASE("bind external system account_id - unit test",
     SECTION("Check validity")
     {
         EXPECT_CALL(transactionFrameMock,
-                    loadAccount(&ledgerDeltaMock, Ref(dbMock),
+                    loadAccount(_,
                                 *operation.sourceAccount))
             .WillOnce(Return(accountFrameFake));
         REQUIRE(opFrame.checkValid(appMock, accountRuleVerifierMock,

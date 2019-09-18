@@ -1,7 +1,6 @@
 #include "CreateManageOfferRequestTestHelper.h"
 #include "ManageOfferTestHelper.h"
 #include "bucket/BucketApplicator.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "test/test_marshaler.h"
 
 namespace stellar

@@ -1,14 +1,12 @@
 #include "main/Application.h"
-#include "database/Database.h"
-#include <transactions/dex/OfferManager.h>
-#include <ledger/LedgerDelta.h>
+#include "transactions/dex/OfferManager.h"
+#include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/KeyValueHelper.h"
-#include <ledger/AssetHelperLegacy.h>
-#include <ledger/ReviewableRequestFrame.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/ReviewableRequestFrame.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include <transactions/review_request/ReviewRequestHelper.h>
 #include <transactions/ManageKeyValueOpFrame.h>
 #include "CreateAtomicSwapAskRequestOpFrame.h"
@@ -19,17 +17,16 @@ namespace stellar
 {
 
 CreateAtomicSwapAskRequestOpFrame::CreateAtomicSwapAskRequestOpFrame(
-        Operation const &op, OperationResult &opRes, TransactionFrame &parentTx)
-        : OperationFrame(op, opRes, parentTx)
-        , mCreateASwapAskCreationRequest(
-                  mOperation.body.createAtomicSwapAskRequestOp())
+    Operation const& op, OperationResult& opRes, TransactionFrame& parentTx)
+    : OperationFrame(op, opRes, parentTx), mCreateASwapAskCreationRequest(
+    mOperation.body.createAtomicSwapAskRequestOp())
 {
 }
 
 bool
 CreateAtomicSwapAskRequestOpFrame::tryGetOperationConditions(
-                                StorageHelper &storageHelper,
-                                std::vector<OperationCondition> &result) const
+    StorageHelper& storageHelper,
+    std::vector<OperationCondition>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto balance = balanceHelper.loadBalance(mCreateASwapAskCreationRequest.request.baseBalance);
@@ -59,12 +56,12 @@ CreateAtomicSwapAskRequestOpFrame::tryGetOperationConditions(
 }
 
 bool
-CreateAtomicSwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-        std::vector<SignerRequirement> &result) const
+CreateAtomicSwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                            std::vector<SignerRequirement>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto balance = balanceHelper.mustLoadBalance(
-            mCreateASwapAskCreationRequest.request.baseBalance);
+        mCreateASwapAskCreationRequest.request.baseBalance);
 
     auto& assetHelper = storageHelper.getAssetHelper();
     auto asset = assetHelper.mustLoadAsset(balance->getAsset());
@@ -88,10 +85,10 @@ CreateAtomicSwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper &stora
 }
 
 CreateAtomicSwapAskRequestResultCode
-CreateAtomicSwapAskRequestOpFrame::isBaseAssetValid(Database &db,
-        uint64 baseAmount, AssetCode baseAssetCode)
+CreateAtomicSwapAskRequestOpFrame::isBaseAssetValid(StorageHelper& storageHelper,
+                                                    uint64 baseAmount, AssetCode baseAssetCode)
 {
-    auto baseAsset = AssetHelperLegacy::Instance()->loadAsset(baseAssetCode, db);
+    auto baseAsset = storageHelper.getAssetHelper().loadAsset(baseAssetCode);
     if (!baseAsset)
     {
         return CreateAtomicSwapAskRequestResultCode::BASE_ASSET_NOT_FOUND;
@@ -111,15 +108,15 @@ CreateAtomicSwapAskRequestOpFrame::isBaseAssetValid(Database &db,
 }
 
 CreateAtomicSwapAskRequestResultCode
-CreateAtomicSwapAskRequestOpFrame::isQuoteAssetValid(Database& db,
-        AssetCode baseAssetCode, AtomicSwapAskQuoteAsset quoteAsset)
+CreateAtomicSwapAskRequestOpFrame::isQuoteAssetValid(StorageHelper& storageHelper,
+                                                     AssetCode baseAssetCode, AtomicSwapAskQuoteAsset quoteAsset)
 {
     if (baseAssetCode == quoteAsset.quoteAsset)
     {
         return CreateAtomicSwapAskRequestResultCode::ASSETS_ARE_EQUAL;
     }
 
-    auto quoteAssetFrame = AssetHelperLegacy::Instance()->loadAsset(quoteAsset.quoteAsset, db);
+    auto quoteAssetFrame = storageHelper.getAssetHelper().loadAsset(quoteAsset.quoteAsset);
 
     if (!quoteAssetFrame)
     {
@@ -135,13 +132,13 @@ CreateAtomicSwapAskRequestOpFrame::isQuoteAssetValid(Database& db,
 }
 
 CreateAtomicSwapAskRequestResultCode
-CreateAtomicSwapAskRequestOpFrame::areQuoteAssetsValid(Database& db,
-        AssetCode baseAssetCode, xdr::xvector<AtomicSwapAskQuoteAsset> quoteAssets)
+CreateAtomicSwapAskRequestOpFrame::areQuoteAssetsValid(StorageHelper& storageHelper,
+                                                       AssetCode baseAssetCode, xdr::xvector<AtomicSwapAskQuoteAsset> quoteAssets)
 {
     for (auto const& quoteAsset : quoteAssets)
     {
-        auto quoteAssetValidationResultCode = isQuoteAssetValid(db,
-                baseAssetCode, quoteAsset);
+        auto quoteAssetValidationResultCode = isQuoteAssetValid(storageHelper,
+                                                                baseAssetCode, quoteAsset);
         if (quoteAssetValidationResultCode !=
             CreateAtomicSwapAskRequestResultCode::SUCCESS)
         {
@@ -153,17 +150,17 @@ CreateAtomicSwapAskRequestOpFrame::areQuoteAssetsValid(Database& db,
 }
 
 CreateAtomicSwapAskRequestResultCode
-CreateAtomicSwapAskRequestOpFrame::areAllAssetsValid(Database &db,
-        uint64_t baseAmount, AssetCode baseAssetCode,
-        xdr::xvector<AtomicSwapAskQuoteAsset> quoteAssets)
+CreateAtomicSwapAskRequestOpFrame::areAllAssetsValid(StorageHelper& storageHelper,
+                                                     uint64_t baseAmount, AssetCode baseAssetCode,
+                                                     xdr::xvector<AtomicSwapAskQuoteAsset> quoteAssets)
 {
-    auto validationResultCode = isBaseAssetValid(db, baseAmount, baseAssetCode);
+    auto validationResultCode = isBaseAssetValid(storageHelper, baseAmount, baseAssetCode);
     if (validationResultCode != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
         return validationResultCode;
     }
 
-    validationResultCode = areQuoteAssetsValid(db, baseAssetCode, quoteAssets);
+    validationResultCode = areQuoteAssetsValid(storageHelper, baseAssetCode, quoteAssets);
     if (validationResultCode != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
         return validationResultCode;
@@ -172,19 +169,18 @@ CreateAtomicSwapAskRequestOpFrame::areAllAssetsValid(Database &db,
     return CreateAtomicSwapAskRequestResultCode::SUCCESS;
 }
 
-void CreateAtomicSwapAskRequestOpFrame::tryAutoApprove(
-        Database& db, LedgerDelta& delta, Application& app,
-        ReviewableRequestFrame::pointer request)
+void CreateAtomicSwapAskRequestOpFrame::tryAutoApprove(Application& app, StorageHelper& storageHelper,
+                                                       ReviewableRequestFrame::pointer request)
 {
     auto& ledgerManager = app.getLedgerManager();
     auto result = ReviewRequestHelper::tryApproveRequestWithResult(mParentTx,
-            app, ledgerManager, delta, request);
+                                                                   app, ledgerManager, storageHelper, request);
     if (result.code() != ReviewRequestResultCode::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: "
-                   "tryApproveRequest expected to be success, but was: "
-                << xdr::xdr_to_string(result);
+            << "Unexpected state: "
+               "tryApproveRequest expected to be success, but was: "
+            << xdr::xdr_to_string(result);
         throw std::runtime_error("Unexpected state: "
                                  "tryApproveRequest expected to be success");
     }
@@ -194,22 +190,21 @@ void CreateAtomicSwapAskRequestOpFrame::tryAutoApprove(
 }
 
 bool
-CreateAtomicSwapAskRequestOpFrame::doApply(Application &app, StorageHelper& storageHelper,
-                                              LedgerManager &ledgerManager)
+CreateAtomicSwapAskRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
+                                           LedgerManager& ledgerManager)
 {
-    Database& db = storageHelper.getDatabase();
     auto& requestBody = mCreateASwapAskCreationRequest.request;
 
-    auto baseBalance = storageHelper.getBalanceHelper().loadBalance(
-            requestBody.baseBalance, getSourceID());
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto baseBalance = balanceHelper.loadBalance(requestBody.baseBalance, getSourceID());
     if (!baseBalance)
     {
         innerResult().code(CreateAtomicSwapAskRequestResultCode::BASE_BALANCE_NOT_FOUND);
         return false;
     }
 
-    auto validationResultCode = areAllAssetsValid(db, requestBody.amount,
-            baseBalance->getAsset(), requestBody.quoteAssets);
+    auto validationResultCode = areAllAssetsValid(storageHelper, requestBody.amount,
+                                                  baseBalance->getAsset(), requestBody.quoteAssets);
     if (validationResultCode != CreateAtomicSwapAskRequestResultCode::SUCCESS)
     {
         innerResult().code(validationResultCode);
@@ -223,7 +218,7 @@ CreateAtomicSwapAskRequestOpFrame::doApply(Application &app, StorageHelper& stor
         return false;
     }
 
-    storageHelper.getBalanceHelper().storeChange(baseBalance->mEntry);
+    balanceHelper.storeChange(baseBalance->mEntry);
 
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
     uint32_t allTasks;
@@ -235,11 +230,11 @@ CreateAtomicSwapAskRequestOpFrame::doApply(Application &app, StorageHelper& stor
 
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-            app.getAdminID(), nullptr, ledgerManager.getCloseTime());
+                                                          app.getAdminID(), nullptr, ledgerManager.getCloseTime());
     fillRequest(requestFrame->getRequestEntry(), requestBody, allTasks);
     requestFrame->recalculateHashRejectReason();
 
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    storageHelper.getReviewableRequestHelper().storeAdd(requestFrame->mEntry);
 
     innerResult().code(CreateAtomicSwapAskRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestFrame->getRequestID();
@@ -247,13 +242,13 @@ CreateAtomicSwapAskRequestOpFrame::doApply(Application &app, StorageHelper& stor
 
     if (requestFrame->canBeFulfilled(ledgerManager))
     {
-        tryAutoApprove(db, delta, app, requestFrame);
+        tryAutoApprove(app, storageHelper, requestFrame);
     }
 
     return true;
 }
 
-bool CreateAtomicSwapAskRequestOpFrame::doCheckValid(Application &app)
+bool CreateAtomicSwapAskRequestOpFrame::doCheckValid(Application& app)
 {
     auto& aSwapCreationRequest = mCreateASwapAskCreationRequest.request;
 
@@ -275,14 +270,14 @@ bool CreateAtomicSwapAskRequestOpFrame::doCheckValid(Application &app)
         if (!AssetFrame::isAssetCodeValid(quoteAsset.quoteAsset))
         {
             innerResult().code(
-                    CreateAtomicSwapAskRequestResultCode::INVALID_QUOTE_ASSET);
+                CreateAtomicSwapAskRequestResultCode::INVALID_QUOTE_ASSET);
             return false;
         }
 
         if (quoteAssets.find(quoteAsset.quoteAsset) != quoteAssets.end())
         {
             innerResult().code(
-                    CreateAtomicSwapAskRequestResultCode::INVALID_QUOTE_ASSET);
+                CreateAtomicSwapAskRequestResultCode::INVALID_QUOTE_ASSET);
             return false;
         }
 
@@ -299,8 +294,8 @@ bool CreateAtomicSwapAskRequestOpFrame::doCheckValid(Application &app)
 }
 
 void
-CreateAtomicSwapAskRequestOpFrame::fillRequest(ReviewableRequestEntry &requestEntry,
-                                                  CreateAtomicSwapAskRequest body, uint32_t allTasks)
+CreateAtomicSwapAskRequestOpFrame::fillRequest(ReviewableRequestEntry& requestEntry,
+                                               CreateAtomicSwapAskRequest body, uint32_t allTasks)
 {
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
     requestEntry.body.createAtomicSwapAskRequest() = body;

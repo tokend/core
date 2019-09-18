@@ -34,29 +34,34 @@ class SHA256;
 class TransactionFrame;
 typedef std::shared_ptr<TransactionFrame> TransactionFramePtr;
 
-class TransactionFrame
-{
-  public:
+class TransactionFrame {
+public:
     static TransactionFramePtr
     makeTransactionFromWire(Hash const& networkID,
                             TransactionEnvelope const& msg);
 
     virtual Hash const& getFullHash() const = 0;
+
     virtual Hash const& getContentsHash() const = 0;
 
     virtual SignatureValidator::pointer getSignatureValidator() = 0;
+
     virtual AccountFrame::pointer getSourceAccountPtr() const = 0;
 
     virtual void setSourceAccountPtr(AccountFrame::pointer signingAccount) = 0;
 
     virtual std::vector<std::shared_ptr<OperationFrame>> const& getOperations() const = 0;
+
     virtual TransactionResult const& getResult() const = 0;
+
     virtual TransactionResult& getResult() = 0;
 
     virtual TransactionResultCode getResultCode() const = 0;
 
     virtual TransactionResultPair getResultPair() const = 0;
+
     virtual TransactionEnvelope const& getEnvelope() const = 0;
+
     virtual TransactionEnvelope& getEnvelope() = 0;
 
     virtual Salt getSalt() const = 0;
@@ -64,12 +69,14 @@ class TransactionFrame
     virtual AccountFrame const& getSourceAccount() const = 0;
 
     virtual AccountID const& getSourceID() const = 0;
+
     virtual TimeBounds getTimeBounds() const = 0;
+
     virtual int64_t getPaidFee() const = 0;
 
     virtual void addSignature(SecretKey const& secretKey) = 0;
 
-	// Checks signature, if not valid - returns false and sets valid error code
+    // Checks signature, if not valid - returns false and sets valid error code
     virtual bool doCheckSignature(Application& app, StorageHelper& storageHelper,
                                   AccountID const& accountID) = 0;
 
@@ -89,7 +96,7 @@ class TransactionFrame
 
     virtual StellarMessage toStellarMessage() const = 0;
 
-    virtual AccountFrame::pointer loadAccount(LedgerDelta* delta, Database& app,
+    virtual AccountFrame::pointer loadAccount(StorageHelper& storageHelper,
                                               AccountID const& accountID) = 0;
 
 
@@ -109,9 +116,10 @@ class TransactionFrame
     // access to history tables
     static TransactionResultSet getTransactionHistoryResults(Database& db,
                                                              uint32 ledgerSeq);
+
     static std::vector<LedgerEntryChanges>
     getTransactionFeeMeta(Database& db, uint32 ledgerSeq);
-    
+
     static bool timingExists(Database& db, std::string txID);
 
     /*
@@ -124,11 +132,12 @@ class TransactionFrame
                                            uint32_t ledgerCount,
                                            XDROutputFileStream& txOut,
                                            XDROutputFileStream& txResultOut);
+
     static void dropAll(Database& db);
 
     static void deleteOldEntries(Database& db, uint32_t ledgerSeq,
-        uint64 ledgerCloseTime);
+                                 uint64 ledgerCloseTime);
 
-	virtual void clearCached() = 0;
+    virtual void clearCached() = 0;
 };
 }

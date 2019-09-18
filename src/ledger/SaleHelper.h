@@ -40,6 +40,7 @@ namespace stellar
 
         bool exists(Database& db, uint64_t saleID);
         bool exists(Database& db, AssetCode const& base, AssetCode const& quote);
+        bool exists(Database& db, AssetCode const& code);
 
         SaleFrame::pointer loadSale(uint64_t saleID, AccountID ownerID, Database& db, LedgerDelta* delta = nullptr);
         SaleFrame::pointer loadSale(uint64_t saleID, Database& db, LedgerDelta* delta = nullptr);

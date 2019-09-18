@@ -24,21 +24,23 @@ class LicenseSignatureHelper;
 class StampHelper;
 class VoteHelper;
 class PollHelper;
+class ReviewableRequestHelper;
 class SwapHelper;
-class StorageHelperImpl : public StorageHelper
-{
-  public:
-    StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta);
+
+
+class StorageHelperImpl : public StorageHelper {
+public:
+    StorageHelperImpl(Database& db, LedgerDelta *ledgerDelta);
+
     virtual ~StorageHelperImpl();
 
-  private:
+private:
     virtual Database& getDatabase();
     virtual const Database& getDatabase() const;
-    virtual LedgerDelta* getLedgerDelta();
-    virtual const LedgerDelta* getLedgerDelta() const;
+    virtual LedgerDelta *getLedgerDelta();
+    virtual const LedgerDelta *getLedgerDelta() const;
     LedgerDelta& mustGetLedgerDelta() override;
     const LedgerDelta& mustGetLedgerDelta() const override;
-
 
     virtual void commit();
     virtual void rollback();
@@ -47,8 +49,8 @@ class StorageHelperImpl : public StorageHelper
 
     virtual std::unique_ptr<StorageHelper> startNestedTransaction();
 
-    std::vector<EntryHelper*> getEntryHelpers() override;
-    EntryHelper* getHelper(LedgerEntryType type) override;
+    std::vector<EntryHelper *> getEntryHelpers() override;
+    EntryHelper *getHelper(LedgerEntryType type) override;
 
     KeyValueHelper& getKeyValueHelper() override;
     BalanceHelper& getBalanceHelper() override;
@@ -68,10 +70,11 @@ class StorageHelperImpl : public StorageHelper
     VoteHelper& getVoteHelper() override;
     PollHelper& getPollHelper() override;
     AccountSpecificRuleHelper& getAccountSpecificRuleHelper() override;
+    ReviewableRequestHelper& getReviewableRequestHelper() override;
     SwapHelper& getSwapHelper() override;
 
     Database& mDatabase;
-    LedgerDelta* mLedgerDelta;
+    LedgerDelta *mLedgerDelta;
     bool mIsReleased = true;
     std::unique_ptr<LedgerDelta> mNestedDelta;
     std::unique_ptr<soci::transaction> mTransaction;
@@ -90,13 +93,14 @@ class StorageHelperImpl : public StorageHelper
     std::unique_ptr<SignerRuleHelper> mSignerRuleHelper;
     std::unique_ptr<SignerRoleHelper> mSignerRoleHelper;
 
-    std::map<LedgerEntryType, EntryHelper*> mHelpers;
+    std::map<LedgerEntryType, EntryHelper *> mHelpers;
     std::unique_ptr<LicenseHelper> mLicenseHelper;
     std::unique_ptr<LicenseSignatureHelper> mLicenseSignatureHelper;
     std::unique_ptr<StampHelper> mStampHelper;
     std::unique_ptr<VoteHelper> mVoteHelper;
     std::unique_ptr<PollHelper> mPollHelper;
     std::unique_ptr<AccountSpecificRuleHelper> mAccountSpecificRuleHelper;
+    std::unique_ptr<ReviewableRequestHelper> mReviewableRequestHelper;
     std::unique_ptr<SwapHelper> mSwapHelper;
 };
 } // namespace stellar

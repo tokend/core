@@ -5,7 +5,7 @@
 #include "ledger/LedgerDelta.h"
 #include <ledger/PollFrame.h>
 #include <ledger/PollHelper.h>
-#include "ledger/StorageHelperImpl.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 
 namespace stellar
@@ -15,10 +15,9 @@ using xdr::operator==;
 
 bool
 ReviewCreatePollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                                           std::vector<SignerRequirement>& result) const
+                                                         std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-            mReviewRequest.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_POLL))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -29,7 +28,7 @@ ReviewCreatePollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_POLL);
     resource.reviewableRequest().details.createPoll().permissionType =
-            request->getRequestEntry().body.createPollRequest().permissionType;
+        request->getRequestEntry().body.createPollRequest().permissionType;
     resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
     resource.reviewableRequest().allTasks = 0;
@@ -40,14 +39,13 @@ ReviewCreatePollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
 }
 
 bool
-ReviewCreatePollRequestOpFrame::handleApprove(Application& app, LedgerDelta& delta,
-        LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
+ReviewCreatePollRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
+                                              LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::CREATE_POLL);
 
-    Database& db = app.getDatabase();
-
-    handleTasks(db, delta, request);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
     if (!request->canBeFulfilled(ledgerManager))
     {
@@ -56,15 +54,13 @@ ReviewCreatePollRequestOpFrame::handleApprove(Application& app, LedgerDelta& del
         return true;
     }
 
-    ReviewableRequestHelper::Instance()->storeDelete(delta, db, request->getKey());
-
+    requestHelper.storeDelete(request->getKey());
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto newPollID = delta.getHeaderFrame().generateID(LedgerEntryType::POLL);
 
     auto pollFrame = PollFrame::createNew(newPollID,
-            request->getRequestEntry().body.createPollRequest(), request->getRequestor());
+                                          request->getRequestEntry().body.createPollRequest(), request->getRequestor());
 
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
     storageHelper.getPollHelper().storeAdd(pollFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
@@ -75,16 +71,16 @@ ReviewCreatePollRequestOpFrame::handleApprove(Application& app, LedgerDelta& del
 }
 
 bool
-ReviewCreatePollRequestOpFrame::handleReject(Application &app, LedgerDelta &delta,
-        LedgerManager &ledgerManager, ReviewableRequestFrame::pointer request)
+ReviewCreatePollRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper,
+                                             LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
     innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);
     return false;
 }
 
 ReviewCreatePollRequestOpFrame::ReviewCreatePollRequestOpFrame(Operation const& op,
-        OperationResult& res, TransactionFrame& parentTx)
-        : ReviewRequestOpFrame(op, res, parentTx)
+                                                               OperationResult& res, TransactionFrame& parentTx)
+    : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 }

@@ -43,5 +43,7 @@ public:
     virtual std::vector<BalanceFrame::pointer>
     loadAssetHolders(AssetCode assetCode, AccountID owner,
                      uint64_t minTotalAmount) = 0;
+    virtual std::vector<BalanceFrame::pointer>
+    loadBalancesForAsset(AssetCode assetCode) = 0;
 };
 } // namespace stellar

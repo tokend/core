@@ -13,12 +13,12 @@
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/SaleHelper.h"
-#include "ledger/StorageHelperImpl.h"
+#include "ledger/StorageHelper.h"
 #include "main/Application.h"
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/sale/CheckSaleStateOpFrame.h"
-#include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
+#include "xdrpp/printer.h"
 
 namespace stellar
 {
@@ -27,11 +27,11 @@ using xdr::operator==;
 using xdr::operator<;
 
 bool
-CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                            std::vector<OperationCondition> &result) const
+CreateSaleParticipationOpFrame::tryGetOperationConditions(
+    StorageHelper& storageHelper, std::vector<OperationCondition>& result) const
 {
     auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-            storageHelper.getDatabase());
+                                                 storageHelper.getDatabase());
     if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -43,17 +43,18 @@ CreateSaleParticipationOpFrame::tryGetOperationConditions(StorageHelper &storage
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, AccountRuleAction::PARTICIPATE, mSourceAccount);
+    result.emplace_back(resource, AccountRuleAction::PARTICIPATE,
+                        mSourceAccount);
 
     return CreateOfferOpFrame::tryGetOperationConditions(storageHelper, result);
 }
 
 bool
-CreateSaleParticipationOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                         std::vector<SignerRequirement>& result) const
+CreateSaleParticipationOpFrame::tryGetSignerRequirements(
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
     auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-            storageHelper.getDatabase());
+                                                 storageHelper.getDatabase());
     if (!sale)
     {
         throw std::runtime_error("Expected sale to exists");
@@ -68,34 +69,35 @@ CreateSaleParticipationOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     return CreateOfferOpFrame::tryGetSignerRequirements(storageHelper, result);
 }
 
-SaleFrame::pointer CreateSaleParticipationOpFrame::loadSaleForOffer(
-    Database& db, LedgerDelta& delta)
+SaleFrame::pointer
+CreateSaleParticipationOpFrame::loadSaleForOffer(StorageHelper& storageHelper)
 {
-    auto baseBalance = loadBalanceValidForTrading(mManageOffer.baseBalance, db,
-                                                  delta);
+    auto baseBalance =
+        loadBalanceValidForTrading(storageHelper, mManageOffer.baseBalance);
     if (!baseBalance)
     {
         return nullptr;
     }
 
-    auto quoteBalance = loadBalanceValidForTrading(mManageOffer.quoteBalance,
-                                                   db, delta);
+    auto quoteBalance =
+        loadBalanceValidForTrading(storageHelper, mManageOffer.quoteBalance);
     if (!quoteBalance)
     {
         return nullptr;
     }
 
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-                                                 baseBalance->getAsset(),
-                                                 quoteBalance->getAsset(), db,
-                                                 &delta);
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto sale = SaleHelper::Instance()->loadSale(
+        mManageOffer.orderBookID, baseBalance->getAsset(),
+        quoteBalance->getAsset(), db, &delta);
     if (!sale)
     {
         innerResult().code(ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS);
         return nullptr;
     }
 
-    if (!isPriceValid(sale, quoteBalance, db))
+    if (!isPriceValid(storageHelper, sale, quoteBalance))
     {
         return nullptr;
     }
@@ -103,7 +105,10 @@ SaleFrame::pointer CreateSaleParticipationOpFrame::loadSaleForOffer(
     return sale;
 }
 
-bool CreateSaleParticipationOpFrame::isPriceValid(SaleFrame::pointer sale, BalanceFrame::pointer quoteBalance, Database& db) const
+bool
+CreateSaleParticipationOpFrame::isPriceValid(
+    StorageHelper& storageHelper, SaleFrame::pointer sale,
+    BalanceFrame::pointer quoteBalance) const
 {
     if (sale->getPrice(quoteBalance->getAsset()) != mManageOffer.price)
     {
@@ -111,20 +116,31 @@ bool CreateSaleParticipationOpFrame::isPriceValid(SaleFrame::pointer sale, Balan
         return false;
     }
 
-    //ensure that on soft cap we are able to receive some tokens
+    // ensure that on soft cap we are able to receive some tokens
     if (sale->getSaleType() != SaleType::CROWD_FUNDING)
     {
         return true;
     }
 
-    const int64_t priceForSoftCap = CheckSaleStateOpFrame::getSalePriceForCap(sale->getSoftCap(), sale);
-    const int64_t priceInQuoteAsset = CheckSaleStateOpFrame::getPriceInQuoteAsset(priceForSoftCap, sale, quoteBalance->getAsset(), db);
-    const uint64_t baseStep = AssetHelperLegacy::Instance()->mustLoadAsset(sale->getBaseAsset(), db)->getMinimumAmount();
+    const int64_t priceForSoftCap =
+        CheckSaleStateOpFrame::getSalePriceForCap(sale->getSoftCap(), sale);
+    auto& db = storageHelper.getDatabase();
+    const int64_t priceInQuoteAsset =
+        CheckSaleStateOpFrame::getPriceInQuoteAsset(
+            priceForSoftCap, sale, quoteBalance->getAsset(), db);
+    const uint64_t baseStep = storageHelper.getAssetHelper()
+                                  .mustLoadAsset(sale->getBaseAsset())
+                                  ->getMinimumAmount();
     int64_t baseAmount = 0;
-    if (!bigDivide(baseAmount, mManageOffer.amount, ONE, priceInQuoteAsset, ROUND_DOWN, baseStep))
+    if (!bigDivide(baseAmount, mManageOffer.amount, ONE, priceInQuoteAsset,
+                   ROUND_DOWN, baseStep))
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate base amount for sale participation on soft cap " << xdr::xdr_to_string(mManageOffer);
-        throw runtime_error("Failed to calculate base amount for sale participation on soft cap");
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Failed to calculate base amount for sale participation on soft "
+               "cap "
+            << xdr::xdr_to_string(mManageOffer);
+        throw runtime_error("Failed to calculate base amount for sale "
+                            "participation on soft cap");
     }
 
     if (baseAmount == 0)
@@ -137,12 +153,13 @@ bool CreateSaleParticipationOpFrame::isPriceValid(SaleFrame::pointer sale, Balan
 }
 
 CreateSaleParticipationOpFrame::CreateSaleParticipationOpFrame(
-    Operation const& op, OperationResult& res,
-    TransactionFrame& parentTx) : CreateOfferOpFrame(op, res, parentTx, FeeType::INVEST_FEE)
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : CreateOfferOpFrame(op, res, parentTx, FeeType::INVEST_FEE)
 {
 }
 
-bool CreateSaleParticipationOpFrame::doCheckValid(Application& app)
+bool
+CreateSaleParticipationOpFrame::doCheckValid(Application& app)
 {
     if (!mManageOffer.isBuy)
     {
@@ -153,9 +170,13 @@ bool CreateSaleParticipationOpFrame::doCheckValid(Application& app)
     return CreateOfferOpFrame::doCheckValid(app);
 }
 
-bool CreateSaleParticipationOpFrame::isSaleActive(Database& db, LedgerManager& ledgerManager, const SaleFrame::pointer sale)
+bool
+CreateSaleParticipationOpFrame::isSaleActive(StorageHelper& storageHelper,
+                                             LedgerManager& ledgerManager,
+                                             const SaleFrame::pointer sale)
 {
-    const auto saleState = getSaleState(sale, db, ledgerManager.getCloseTime());
+    const auto saleState =
+        getSaleState(storageHelper, sale, ledgerManager.getCloseTime());
     switch (saleState)
     {
     case SaleFrame::State::ACTIVE:
@@ -173,26 +194,29 @@ bool CreateSaleParticipationOpFrame::isSaleActive(Database& db, LedgerManager& l
     }
     default:
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) <<
-            "Unexpected state of the sale: " << static_cast<int32_t>(saleState);
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected state of the sale: "
+            << static_cast<int32_t>(saleState);
         throw runtime_error("Unexpected state of the sale");
     }
     }
 }
 
 bool
-CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, SaleFrame::pointer const& sale)
+CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper,
+                                               SaleFrame::pointer const& sale)
 {
     switch (sale->getSaleEntry().ext.v())
     {
-        case LedgerVersion::EMPTY_VERSION:
-            return true;
-        case LedgerVersion::ADD_SALE_WHITELISTS:
-            break;
-        default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected sale request version"
-                                 << static_cast<int32_t>(sale->getSaleEntry().ext.v());
-            throw std::runtime_error("Unexpected sale request version");
+    case LedgerVersion::EMPTY_VERSION:
+        return true;
+    case LedgerVersion::ADD_SALE_WHITELISTS:
+        break;
+    default:
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected sale request version"
+            << static_cast<int32_t>(sale->getSaleEntry().ext.v());
+        throw std::runtime_error("Unexpected sale request version");
     }
 
     auto& accountSpecificRule = storageHelper.getAccountSpecificRuleHelper();
@@ -200,9 +224,9 @@ CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, Sal
     auto rule = accountSpecificRule.loadRule(sale->getKey(), getSourceID());
     if (!rule)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected specific rule to exists, sale id: "
-                                               << sale->getID() << ", account id: "
-                                               << PubKeyUtils::toStrKey(getSourceID());
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Expected specific rule to exists, sale id: " << sale->getID()
+            << ", account id: " << PubKeyUtils::toStrKey(getSourceID());
         throw std::runtime_error("Expected specific rule to exists");
     }
 
@@ -215,14 +239,12 @@ CreateSaleParticipationOpFrame::checkSaleRules(StorageHelper& storageHelper, Sal
     return true;
 }
 
-bool CreateSaleParticipationOpFrame::doApply(Application& app,
-                                             LedgerDelta& delta,
-                                             LedgerManager& ledgerManager)
+bool
+CreateSaleParticipationOpFrame::doApply(Application& app,
+                                        StorageHelper& storageHelper,
+                                        LedgerManager& ledgerManager)
 {
-    auto& db = app.getDatabase();
-    StorageHelperImpl storageHelper(db, &delta);
-
-    auto sale = loadSaleForOffer(db, delta);
+    auto sale = loadSaleForOffer(storageHelper);
     if (!sale)
     {
         return false;
@@ -234,7 +256,7 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
-    if (!isSaleActive(db, ledgerManager, sale))
+    if (!isSaleActive(storageHelper, ledgerManager, sale))
     {
         return false;
     }
@@ -250,16 +272,20 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
         return false;
     }
 
-    auto quoteBalance = BalanceHelperLegacy::Instance()->mustLoadBalance(mManageOffer.quoteBalance, db);
-    const auto quoteAmount = OfferManager::calculateQuoteAmount(mManageOffer.amount, mManageOffer.price,
-            quoteBalance->getMinimumAmount());
+    auto quoteBalance = storageHelper.getBalanceHelper().mustLoadBalance(
+        mManageOffer.quoteBalance);
+    const auto quoteAmount = OfferManager::calculateQuoteAmount(
+        mManageOffer.amount, mManageOffer.price,
+        quoteBalance->getMinimumAmount());
     if (quoteAmount == 0)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: quote amount overflows";
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected state: quote amount overflows";
         throw runtime_error("Unexpected state: quote amount overflows");
     }
 
-    if (!tryAddSaleCap(db, quoteAmount, quoteBalance->getAsset(), sale))
+    if (!tryAddSaleCap(storageHelper, quoteAmount, quoteBalance->getAsset(),
+                       sale))
     {
         innerResult().code(ManageOfferResultCode::ORDER_VIOLATES_HARD_CAP);
         return false;
@@ -272,8 +298,8 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
                                         quoteAmount);
     }
 
-
-    const auto isApplied = CreateOfferOpFrame::doApply(app, delta, ledgerManager);
+    const auto isApplied =
+        CreateOfferOpFrame::doApply(app, storageHelper, ledgerManager);
     if (!isApplied)
     {
         return false;
@@ -281,11 +307,12 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
 
     if (innerResult().code() != ManageOfferResultCode::SUCCESS)
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) <<
-            "Unexpected state: expected success for manage offer on create sale participation, but got: "
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected state: expected success for manage offer on create "
+               "sale participation, but got: "
             << getInnerResultCodeAsStr();
-        throw
-            runtime_error("Unexpected state: expected success for manage offer on create sale participation");
+        throw runtime_error("Unexpected state: expected success for manage "
+                            "offer on create sale participation");
     }
 
     // For all sale types except `IMMEDIATE` offer claim is erroneous
@@ -299,17 +326,24 @@ bool CreateSaleParticipationOpFrame::doApply(Application& app,
             throw runtime_error("Order match on sale participation");
         }
     }
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& db = storageHelper.getDatabase();
 
     SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
-
     return true;
 }
 
-bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer sale,
-    Database& db, uint64_t& totalCurrentCapInDefaultQuote)
+bool
+CreateSaleParticipationOpFrame::getSaleCurrentCap(
+    StorageHelper& storageHelper, const SaleFrame::pointer sale,
+    uint64_t& totalCurrentCapInDefaultQuote)
 {
     totalCurrentCapInDefaultQuote = 0;
     auto const& saleEntry = sale->getSaleEntry();
+
+    auto& assetHelper = storageHelper.getAssetHelper();
+    auto& db = storageHelper.getDatabase();
+
     for (auto const& quoteAsset : saleEntry.quoteAssets)
     {
         if (quoteAsset.currentCap == 0)
@@ -317,41 +351,53 @@ bool CreateSaleParticipationOpFrame::getSaleCurrentCap(const SaleFrame::pointer 
 
         if (quoteAsset.quoteAsset == saleEntry.defaultQuoteAsset)
         {
-            if (!safeSum(totalCurrentCapInDefaultQuote, quoteAsset.currentCap, totalCurrentCapInDefaultQuote))
+            if (!safeSum(totalCurrentCapInDefaultQuote, quoteAsset.currentCap,
+                         totalCurrentCapInDefaultQuote))
                 return false;
 
             continue;
         }
 
-        const auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(quoteAsset.quoteAsset, saleEntry.defaultQuoteAsset, db);
+        const auto assetPair =
+            AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
+                quoteAsset.quoteAsset, saleEntry.defaultQuoteAsset, db);
         if (!assetPair)
         {
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to load asset pair for sale: " << saleEntry.saleID
-                << " assets: " << quoteAsset.quoteAsset << " & " << saleEntry.defaultQuoteAsset;
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to load asset pair for sale: "
+                << saleEntry.saleID << " assets: " << quoteAsset.quoteAsset
+                << " & " << saleEntry.defaultQuoteAsset;
             throw runtime_error("Failed to load asset pair for sale");
         }
 
-        auto defaultQuoteAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(saleEntry.defaultQuoteAsset, db);
+        auto defaultQuoteAssetFrame =
+            assetHelper.mustLoadAsset(saleEntry.defaultQuoteAsset);
         uint64_t currentCapInDefaultQuote = 0;
-        if (!AssetPairHelper::Instance()->convertAmount(assetPair, saleEntry.defaultQuoteAsset, quoteAsset.currentCap,
-                                                        ROUND_UP, db, currentCapInDefaultQuote))
+        if (!AssetPairHelper::Instance()->convertAmount(
+                assetPair, saleEntry.defaultQuoteAsset, quoteAsset.currentCap,
+                ROUND_UP, db, currentCapInDefaultQuote))
         {
             return false;
         }
 
-        if (!safeSum(totalCurrentCapInDefaultQuote, currentCapInDefaultQuote, totalCurrentCapInDefaultQuote))
+        if (!safeSum(totalCurrentCapInDefaultQuote, currentCapInDefaultQuote,
+                     totalCurrentCapInDefaultQuote))
             return false;
     }
 
     return true;
 }
 
-SaleFrame::State CreateSaleParticipationOpFrame::getSaleState(const SaleFrame::pointer sale, Database& db, const uint64_t currentTime)
+SaleFrame::State
+CreateSaleParticipationOpFrame::getSaleState(StorageHelper& storageHelper,
+                                             const SaleFrame::pointer sale,
+                                             const uint64_t currentTime)
 {
     uint64_t currentCap = 0;
-    if (!getSaleCurrentCap(sale, db, currentCap))
+    if (!getSaleCurrentCap(storageHelper, sale, currentCap))
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to calculate current cap for sale: " << sale->getID();
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Failed to calculate current cap for sale: " << sale->getID();
         throw runtime_error("Failed to calculate current cap for sale");
     }
 
@@ -368,8 +414,11 @@ SaleFrame::State CreateSaleParticipationOpFrame::getSaleState(const SaleFrame::p
     return SaleFrame::State::ACTIVE;
 }
 
-bool CreateSaleParticipationOpFrame::tryAddSaleCap(Database& db, uint64_t const& amount,
-    AssetCode const& asset, SaleFrame::pointer sale)
+bool
+CreateSaleParticipationOpFrame::tryAddSaleCap(StorageHelper& storageHelper,
+                                              uint64_t const& amount,
+                                              AssetCode const& asset,
+                                              SaleFrame::pointer sale)
 {
     auto& saleQuoteAsset = sale->getSaleQuoteAsset(asset);
     if (!safeSum(amount, saleQuoteAsset.currentCap, saleQuoteAsset.currentCap))
@@ -378,7 +427,7 @@ bool CreateSaleParticipationOpFrame::tryAddSaleCap(Database& db, uint64_t const&
     }
 
     uint64_t currentCap = 0;
-    if (!getSaleCurrentCap(sale, db, currentCap))
+    if (!getSaleCurrentCap(storageHelper, sale, currentCap))
     {
         return false;
     }
@@ -391,7 +440,6 @@ bool CreateSaleParticipationOpFrame::tryAddSaleCap(Database& db, uint64_t const&
     }
 
     return true;
-
 }
 
 void
@@ -423,14 +471,18 @@ CreateSaleParticipationOpFrame::createImmediateSaleCounterOffer(
     OperationResult opRes;
     opRes.code(OperationResultCode::opINNER);
     opRes.tr().type(OperationType::CREATE_ISSUANCE_REQUEST);
-    CreateIssuanceRequestOpFrame createIssuanceRequestOpFrame(op, opRes, mParentTx);
+    CreateIssuanceRequestOpFrame createIssuanceRequestOpFrame(op, opRes,
+                                                              mParentTx);
     createIssuanceRequestOpFrame.doNotRequireFee();
     createIssuanceRequestOpFrame.setSourceAccountPtr(saleOwner);
 
-    if (!createIssuanceRequestOpFrame.doCheckValid(app) || !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
+    if (!createIssuanceRequestOpFrame.doCheckValid(app) ||
+        !createIssuanceRequestOpFrame.doApply(app, storageHelper, lm))
     {
-        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: failed to apply create issuance request ";
-        throw runtime_error("Unexpected state: failed to create issuance request");
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+            << "Unexpected state: failed to apply create issuance request ";
+        throw runtime_error(
+            "Unexpected state: failed to create issuance request");
     }
 
     auto quoteBalance =
@@ -443,7 +495,7 @@ CreateSaleParticipationOpFrame::createImmediateSaleCounterOffer(
         FeeFrame::SUBTYPE_ANY, quoteAmount, db);
 
     CheckSaleStateOpFrame::createCounterOffer(
-        app, storageHelper.mustGetLedgerDelta(), lm, mParentTx, sale, saleOwner,
-        saleQuoteAsset, mManageOffer.amount, mManageOffer.price, feeResult);
+        app, storageHelper, lm, mParentTx, sale, saleOwner, saleQuoteAsset,
+        mManageOffer.amount, mManageOffer.price, feeResult);
 }
 }

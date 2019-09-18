@@ -1,5 +1,5 @@
 #include "ReviewASwapBidRequestTestHelper.h"
-#include <ledger/ReviewableRequestHelper.h>
+#include <ledger/ReviewableRequestHelperLegacy.h>
 #include <ledger/BalanceHelperLegacy.h>
 #include "test/test_marshaler.h"
 
@@ -14,7 +14,7 @@ ASwapBidRequestReviewChecker::ASwapBidRequestReviewChecker(TestManager::pointer 
         : ReviewChecker(testManager)
 {
     auto& db = mTestManager->getDB();
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
     auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
     mAskBeforeTx = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
             aSwapRequest.askID, db);
@@ -29,7 +29,7 @@ ASwapBidRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::point
 {
     auto& db = mTestManager->getDB();
 
-    auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(
+    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(
             request->getRequestID(), db);
 
     REQUIRE(requestAfterTx == nullptr);
@@ -62,7 +62,7 @@ ASwapBidRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer reque
 {
     auto& db = mTestManager->getDB();
 
-    auto requestAfterTx = ReviewableRequestHelper::Instance()->loadRequest(
+    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(
             request->getRequestID(), db);
 
     REQUIRE(requestAfterTx == nullptr);
@@ -148,7 +148,7 @@ ReviewASwapBidRequestHelper::applyReviewRequestTx(Account &source, uint64_t requ
                                                std::string rejectReason,
                                                ReviewRequestResultCode expectedResult)
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
             requestID, mTestManager->getDB());
     REQUIRE(request != nullptr);
     return applyReviewRequestTx(source, requestID, request->getHash(),

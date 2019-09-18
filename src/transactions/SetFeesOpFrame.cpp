@@ -14,21 +14,21 @@
 #include "main/Application.h"
 #include "medida/metrics_registry.h"
 
-namespace stellar {
+namespace stellar
+{
 
 using namespace std;
 using xdr::operator==;
 
-SetFeesOpFrame::SetFeesOpFrame(Operation const &op, OperationResult &res,
-                               TransactionFrame &parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mSetFees(mOperation.body.setFeesOp())
+SetFeesOpFrame::SetFeesOpFrame(Operation const& op, OperationResult& res,
+                               TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mSetFees(mOperation.body.setFeesOp())
 {
 }
 
 bool
 SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                                std::vector<OperationCondition>& result) const
+                                          std::vector<OperationCondition>& result) const
 {
     result.emplace_back(AccountRuleResource(LedgerEntryType::FEE),
                         AccountRuleAction::MANAGE, mSourceAccount);
@@ -38,7 +38,7 @@ SetFeesOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
 
 bool
 SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                std::vector<SignerRequirement>& result) const
+                                         std::vector<SignerRequirement>& result) const
 {
     result.emplace_back(SignerRuleResource(LedgerEntryType::FEE),
                         SignerRuleAction::MANAGE);
@@ -46,84 +46,91 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return true;
 }
 
-    bool SetFeesOpFrame::trySetFee(LedgerManager &ledgerManager, Database &db, LedgerDelta &delta) {
-        assert(mSetFees.fee);
-        if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(db, delta))
-            return false;
+bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, Database& db, LedgerDelta& delta)
+{
+    assert(mSetFees.fee);
+    if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(db, delta))
+        return false;
 
-        if (mSetFees.fee->feeType == FeeType::PAYMENT_FEE && !doCheckPaymentFee(db, delta))
-            return false;
+    if (mSetFees.fee->feeType == FeeType::PAYMENT_FEE && !doCheckPaymentFee(db, delta))
+        return false;
 
-        StorageHelperImpl storageHelperImpl(db, &delta);
-        if (!checkAccountRoleExisting(storageHelperImpl, ledgerManager))
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    if (!checkAccountRoleExisting(storageHelperImpl, ledgerManager))
+    {
+        return false;
+    }
+
+    Hash hash = FeeFrame::calcHash(mSetFees.fee->feeType, mSetFees.fee->asset, mSetFees.fee->accountID.get(),
+                                   mSetFees.fee->accountRole.get(), mSetFees.fee->subtype);
+
+    auto actualHashValue = mSetFees.fee.get()->hash;
+    if (actualHashValue != hash)
+    {
+        innerResult().code(SetFeesResultCode::INVALID_FEE_HASH);
+        return false;
+    }
+
+    auto feeHelper = FeeHelper::Instance();
+    auto feeFrame = feeHelper->loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db, &delta);
+
+    // delete
+    if (mSetFees.isDelete)
+    {
+        if (!feeFrame)
         {
+            innerResult().code(SetFeesResultCode::NOT_FOUND);
             return false;
         }
 
-        Hash hash = FeeFrame::calcHash(mSetFees.fee->feeType, mSetFees.fee->asset, mSetFees.fee->accountID.get(),
-                                       mSetFees.fee->accountRole.get(), mSetFees.fee->subtype);
-
-        auto actualHashValue = mSetFees.fee.get()->hash;
-        if (actualHashValue != hash) {
-            innerResult().code(SetFeesResultCode::INVALID_FEE_HASH);
-            return false;
-        }
-
-        auto feeHelper = FeeHelper::Instance();
-        auto feeFrame = feeHelper->loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db, &delta);
-
-        // delete
-        if (mSetFees.isDelete) {
-            if (!feeFrame) {
-                innerResult().code(SetFeesResultCode::NOT_FOUND);
-                return false;
-            }
-
-            EntryHelperProvider::storeDeleteEntry(delta, db, feeFrame->getKey());
-            return true;
-        }
-
-        // update
-        if (feeFrame) {
-            auto &fee = feeFrame->getFee();
-            fee.percentFee = mSetFees.fee->percentFee;
-            fee.fixedFee = mSetFees.fee->fixedFee;
-            EntryHelperProvider::storeChangeEntry(delta, db, feeFrame->mEntry);
-            return true;
-        }
-
-        // create
-        auto assetHelper = AssetHelperLegacy::Instance();
-        if (!assetHelper->exists(db, mSetFees.fee->asset)) {
-            innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
-            return false;
-        }
-
-        if (feeHelper->isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db)) {
-            innerResult().code(SetFeesResultCode::RANGE_OVERLAP);
-            return false;
-        }
-
-        LedgerEntry le;
-        le.data.type(LedgerEntryType::FEE);
-        le.data.feeState() = *mSetFees.fee;
-        feeFrame = make_shared<FeeFrame>(le);
-
-        StorageHelper& storageHelper = storageHelperImpl;
-        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
-                feeFrame->getFeeAsset(), feeFrame->getFixedFee()))
-        {
-            innerResult().code(SetFeesResultCode::INVALID_AMOUNT_PRECISION);
-            return false;
-        }
-
-        EntryHelperProvider::storeAddEntry(delta, db, feeFrame->mEntry);
+        EntryHelperProvider::storeDeleteEntry(delta, db, feeFrame->getKey());
         return true;
     }
 
-bool 
-SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,                                          
-                                         LedgerManager &ledgerManager)
+    // update
+    if (feeFrame)
+    {
+        auto& fee = feeFrame->getFee();
+        fee.percentFee = mSetFees.fee->percentFee;
+        fee.fixedFee = mSetFees.fee->fixedFee;
+        EntryHelperProvider::storeChangeEntry(delta, db, feeFrame->mEntry);
+        return true;
+    }
+
+    // create
+    auto assetHelper = AssetHelperLegacy::Instance();
+    if (!assetHelper->exists(db, mSetFees.fee->asset))
+    {
+        innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
+        return false;
+    }
+
+    if (feeHelper->isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db))
+    {
+        innerResult().code(SetFeesResultCode::RANGE_OVERLAP);
+        return false;
+    }
+
+    LedgerEntry le;
+    le.data.type(LedgerEntryType::FEE);
+    le.data.feeState() = *mSetFees.fee;
+    feeFrame = make_shared<FeeFrame>(le);
+
+    StorageHelper& storageHelper = storageHelperImpl;
+    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+        feeFrame->getFeeAsset(), feeFrame->getFixedFee()))
+    {
+        innerResult().code(SetFeesResultCode::INVALID_AMOUNT_PRECISION);
+        return false;
+    }
+
+    EntryHelperProvider::storeAddEntry(delta, db, feeFrame->mEntry);
+    return true;
+}
+
+bool
+SetFeesOpFrame::checkAccountRoleExisting(StorageHelper& storageHelper,
+                                         LedgerManager& ledgerManager)
 {
     if (!ledgerManager.shouldUse(LedgerVersion::CHECK_SET_FEE_ACCOUNT_EXISTING))
     {
@@ -158,233 +165,265 @@ SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
     return true;
 }
 
-    bool SetFeesOpFrame::doCheckForfeitFee(Database &db, LedgerDelta &delta) {
-        auto asset = AssetHelperLegacy::Instance()->loadAsset(mSetFees.fee->asset, db);
-        if (!asset) {
-            innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
-            return false;
-        }
-
-        return true;
-    }
-
-    bool SetFeesOpFrame::doCheckPaymentFee(stellar::Database &db, stellar::LedgerDelta &delta) {
-        if (!AssetHelperLegacy::Instance()->exists(db, mSetFees.fee->asset)) {
-            innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
-            return false;
-        }
-        return true;
-    }
-
-    bool
-    SetFeesOpFrame::doApply(Application &app, LedgerDelta &delta, LedgerManager &ledgerManager) {
-        Database &db = ledgerManager.getDatabase();
-        innerResult().code(SetFeesResultCode::SUCCESS);
-
-        LedgerDeltaImpl setFeesDeltaImpl(delta);
-        LedgerDelta& setFeesDelta = setFeesDeltaImpl;
-
-        LedgerHeader &ledgerHeader = setFeesDelta.getHeader();
-
-        if (mSetFees.fee) {
-            if (!trySetFee(ledgerManager, db, setFeesDelta))
-                return false;
-        }
-
-        app.getMetrics().NewMeter({"op-set-fees", "success", "apply"}, "operation").Mark();
-
-        setFeesDelta.commit();
-
-        return true;
-    }
-
-    bool SetFeesOpFrame::mustFullRange(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        if (fee.lowerBound == 0 && fee.upperBound == INT64_MAX) {
-            return true;
-        }
-
-        innerResult().code(SetFeesResultCode::MALFORMED_RANGE);
-        metrics.NewMeter({"op-set-fees", "invalid", "invalid-range"}, "operation").Mark();
+bool SetFeesOpFrame::doCheckForfeitFee(Database& db, LedgerDelta& delta)
+{
+    auto asset = AssetHelperLegacy::Instance()->loadAsset(mSetFees.fee->asset, db);
+    if (!asset)
+    {
+        innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
         return false;
     }
 
-    bool SetFeesOpFrame::mustDefaultSubtype(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        if (fee.subtype == 0)
-            return true;
+    return true;
+}
 
-        innerResult().code(SetFeesResultCode::SUB_TYPE_NOT_EXIST);
-        metrics.NewMeter({"op-set-fees", "invalid", "invalid-sub-type-not-exist"}, "operation").Mark();
+bool SetFeesOpFrame::doCheckPaymentFee(stellar::Database& db, stellar::LedgerDelta& delta)
+{
+    if (!AssetHelperLegacy::Instance()->exists(db, mSetFees.fee->asset))
+    {
+        innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
         return false;
     }
+    return true;
+}
 
-    bool SetFeesOpFrame::mustBaseAsset(FeeEntry const &fee, Application &app) {
-        vector<AssetFrame::pointer> baseAssets;
-        auto assetHelper = AssetHelperLegacy::Instance();
-        assetHelper->loadBaseAssets(baseAssets, app.getDatabase());
-        if (baseAssets.empty())
-            throw std::runtime_error("Unable to create referral fee - there is no base assets in the system");
+bool
+SetFeesOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager)
+{
+    Database& db = ledgerManager.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    innerResult().code(SetFeesResultCode::SUCCESS);
 
-        if (fee.asset == baseAssets[0]->getCode())
-            return true;
+    LedgerDeltaImpl setFeesDeltaImpl(delta);
+    LedgerDelta& setFeesDelta = setFeesDeltaImpl;
 
-        innerResult().code(SetFeesResultCode::SUB_TYPE_NOT_EXIST);
-        app.getMetrics().NewMeter({"op-set-fees", "invalid", "must-be-base-asset"}, "operation").Mark();
-        return false;
-    }
+    LedgerHeader& ledgerHeader = setFeesDelta.getHeader();
 
-    bool SetFeesOpFrame::mustValidFeeAmounts(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        if (fee.fixedFee >= 0 && fee.percentFee >= 0 && fee.percentFee <= 100 * ONE) {
-            return true;
-        }
-
-        innerResult().code(SetFeesResultCode::INVALID_AMOUNT);
-        metrics.NewMeter({"op-set-fees", "invalid", "invalid-fee-amount"}, "operation").Mark();
-        return false;
-    }
-
-    bool SetFeesOpFrame::isPaymentFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::PAYMENT_FEE);
-
-        if (!mustValidFeeAmounts(fee, metrics))
+    if (mSetFees.fee)
+    {
+        if (!trySetFee(ledgerManager, db, setFeesDelta))
             return false;
+    }
 
+    app.getMetrics().NewMeter({"op-set-fees", "success", "apply"}, "operation").Mark();
+
+    setFeesDelta.commit();
+
+    return true;
+}
+
+bool SetFeesOpFrame::mustFullRange(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    if (fee.lowerBound == 0 && fee.upperBound == INT64_MAX)
+    {
         return true;
     }
 
-    bool SetFeesOpFrame::isSwapFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::SWAP_FEE);
+    innerResult().code(SetFeesResultCode::MALFORMED_RANGE);
+    metrics.NewMeter({"op-set-fees", "invalid", "invalid-range"}, "operation").Mark();
+    return false;
+}
 
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
+bool SetFeesOpFrame::mustDefaultSubtype(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    if (fee.subtype == 0)
+        return true;
 
+    innerResult().code(SetFeesResultCode::SUB_TYPE_NOT_EXIST);
+    metrics.NewMeter({"op-set-fees", "invalid", "invalid-sub-type-not-exist"}, "operation").Mark();
+    return false;
+}
+
+bool SetFeesOpFrame::mustBaseAsset(FeeEntry const& fee, Application& app)
+{
+    vector<AssetFrame::pointer> baseAssets;
+    auto assetHelper = AssetHelperLegacy::Instance();
+    assetHelper->loadBaseAssets(baseAssets, app.getDatabase());
+    if (baseAssets.empty())
+        throw std::runtime_error("Unable to create referral fee - there is no base assets in the system");
+
+    if (fee.asset == baseAssets[0]->getCode())
+        return true;
+
+    innerResult().code(SetFeesResultCode::SUB_TYPE_NOT_EXIST);
+    app.getMetrics().NewMeter({"op-set-fees", "invalid", "must-be-base-asset"}, "operation").Mark();
+    return false;
+}
+
+bool SetFeesOpFrame::mustValidFeeAmounts(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    if (fee.fixedFee >= 0 && fee.percentFee >= 0 && fee.percentFee <= 100 * ONE)
+    {
         return true;
     }
 
-    bool SetFeesOpFrame::isForfeitFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::WITHDRAWAL_FEE);
+    innerResult().code(SetFeesResultCode::INVALID_AMOUNT);
+    metrics.NewMeter({"op-set-fees", "invalid", "invalid-fee-amount"}, "operation").Mark();
+    return false;
+}
 
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
+bool SetFeesOpFrame::isPaymentFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::PAYMENT_FEE);
 
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return true;
+}
+
+
+bool SetFeesOpFrame::isSwapFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
+    FeeFrame::checkFeeType(fee, FeeType::SWAP_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return true;
+}
+
+
+bool SetFeesOpFrame::isForfeitFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::WITHDRAWAL_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return true;
+}
+
+bool SetFeesOpFrame::isOfferFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::OFFER_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    if (!mustEmptyFixed(fee, metrics))
+        return false;
+
+    if (!mustDefaultSubtype(fee, metrics))
+        return false;
+
+    return true;
+}
+
+bool SetFeesOpFrame::isCapitalDeploymentFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::CAPITAL_DEPLOYMENT_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    if (!mustEmptyFixed(fee, metrics))
+        return false;
+
+    return mustDefaultSubtype(fee, metrics);
+}
+
+bool SetFeesOpFrame::isEmissionFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::ISSUANCE_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return true;
+}
+
+bool SetFeesOpFrame::isInvestFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::INVEST_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return mustDefaultSubtype(fee, metrics);
+}
+
+bool SetFeesOpFrame::isOperationFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::OPERATION_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    if (!mustEmptyPercent(fee, metrics))
+        return false;
+
+    auto operationTypes = xdr::xdr_traits<OperationType>::enum_values();
+
+    return fee.subtype >= 0 &&
+           (std::find(operationTypes.begin(), operationTypes.end(), fee.subtype) != operationTypes.end());
+}
+
+bool
+SetFeesOpFrame::isPayoutFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    FeeFrame::checkFeeType(fee, FeeType::PAYOUT_FEE);
+
+    if (!mustValidFeeAmounts(fee, metrics))
+        return false;
+
+    return mustDefaultSubtype(fee, metrics);
+}
+
+bool SetFeesOpFrame::mustEmptyFixed(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    if (fee.fixedFee == 0)
+        return true;
+
+    innerResult().code(SetFeesResultCode::INVALID_AMOUNT);
+    metrics.NewMeter({"op-set-fees", "invalid", "fixed-fee-must-be-empty"}, "operation").Mark();
+    return false;
+}
+
+bool SetFeesOpFrame::mustEmptyPercent(FeeEntry const& fee, medida::MetricsRegistry& metrics)
+{
+    if (fee.percentFee == 0)
+    {
         return true;
     }
 
-    bool SetFeesOpFrame::isOfferFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::OFFER_FEE);
+    innerResult().code(SetFeesResultCode::INVALID_AMOUNT);
+    return false;
+}
 
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
-
-        if (!mustEmptyFixed(fee, metrics))
-            return false;
-
-        if (!mustDefaultSubtype(fee, metrics))
-            return false;
-
+bool
+SetFeesOpFrame::doCheckValid(Application& app)
+{
+    if (!mSetFees.fee)
+    {
         return true;
     }
 
-    bool SetFeesOpFrame::isCapitalDeploymentFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::CAPITAL_DEPLOYMENT_FEE);
-
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
-
-        if (!mustEmptyFixed(fee, metrics))
-            return false;
-
-        return mustDefaultSubtype(fee, metrics);
-    }
-
-    bool SetFeesOpFrame::isEmissionFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::ISSUANCE_FEE);
-
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
-
-        return true;
-    }
-
-    bool SetFeesOpFrame::isInvestFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::INVEST_FEE);
-
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
-
-        return mustDefaultSubtype(fee, metrics);
-    }
-
-    bool SetFeesOpFrame::isOperationFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::OPERATION_FEE);
-
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
-
-        if (!mustEmptyPercent(fee, metrics))
-            return false;
-
-        auto operationTypes = xdr::xdr_traits<OperationType>::enum_values();
-
-        return fee.subtype >= 0 &&
-               (std::find(operationTypes.begin(), operationTypes.end(), fee.subtype) != operationTypes.end());
-    }
-
-    bool
-    SetFeesOpFrame::isPayoutFeeValid(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        FeeFrame::checkFeeType(fee, FeeType::PAYOUT_FEE);
-
-        if (!mustValidFeeAmounts(fee, metrics))
-            return false;
-
-        return mustDefaultSubtype(fee, metrics);
-    }
-
-    bool SetFeesOpFrame::mustEmptyFixed(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        if (fee.fixedFee == 0)
-            return true;
-
-        innerResult().code(SetFeesResultCode::INVALID_AMOUNT);
-        metrics.NewMeter({"op-set-fees", "invalid", "fixed-fee-must-be-empty"}, "operation").Mark();
+    if (!AssetFrame::isAssetCodeValid(mSetFees.fee->asset))
+    {
+        innerResult().code(SetFeesResultCode::INVALID_ASSET);
+        app.getMetrics().NewMeter({"op-set-fees", "invalid", "invalid-asset"}, "operation").Mark();
         return false;
     }
 
-    bool SetFeesOpFrame::mustEmptyPercent(FeeEntry const &fee, medida::MetricsRegistry &metrics) {
-        if (fee.percentFee == 0) {
-            return true;
-        }
-
-        innerResult().code(SetFeesResultCode::INVALID_AMOUNT);
+    if (mSetFees.fee->accountID && mSetFees.fee->accountRole)
+    {
+        innerResult().code(SetFeesResultCode::MALFORMED);
+        app.getMetrics().NewMeter({"op-set-fees", "invalid", "malformed-both-set"}, "operation").Mark();
         return false;
     }
 
-    bool
-    SetFeesOpFrame::doCheckValid(Application &app) {
-        if (!mSetFees.fee) {
-            return true;
-        }
+    if (mSetFees.fee->lowerBound > mSetFees.fee->upperBound)
+    {
+        innerResult().code(SetFeesResultCode::MALFORMED);
+        app.getMetrics().NewMeter({"op-set-fees", "invalid", "malformed-boundaries"}, "operation").Mark();
+        return false;
+    }
 
-        if (!AssetFrame::isAssetCodeValid(mSetFees.fee->asset)) {
-            innerResult().code(SetFeesResultCode::INVALID_ASSET);
-            app.getMetrics().NewMeter({"op-set-fees", "invalid", "invalid-asset"}, "operation").Mark();
-            return false;
-        }
-
-        if (mSetFees.fee->accountID && mSetFees.fee->accountRole) {
-            innerResult().code(SetFeesResultCode::MALFORMED);
-            app.getMetrics().NewMeter({"op-set-fees", "invalid", "malformed-both-set"}, "operation").Mark();
-            return false;
-        }
-
-        if (mSetFees.fee->lowerBound > mSetFees.fee->upperBound) {
-            innerResult().code(SetFeesResultCode::MALFORMED);
-            app.getMetrics().NewMeter({"op-set-fees", "invalid", "malformed-boundaries"}, "operation").Mark();
-            return false;
-        }
-
-        if (!app.getLedgerManager().shouldUse(mSetFees.fee->ext.v())) {
-            innerResult().code(SetFeesResultCode::INVALID_FEE_VERSION);
-            return false;
-        }
+    if (!app.getLedgerManager().shouldUse(mSetFees.fee->ext.v()))
+    {
+        innerResult().code(SetFeesResultCode::INVALID_FEE_VERSION);
+        return false;
+    }
 
         bool isValidFee;
         switch (mSetFees.fee->feeType) {
@@ -425,6 +464,6 @@ SetFeesOpFrame::checkAccountRoleExisting(StorageHelper &storageHelper,
                 return false;
         }
 
-        return isValidFee;
-    }
+    return isValidFee;
+}
 }

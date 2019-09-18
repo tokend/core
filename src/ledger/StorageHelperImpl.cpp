@@ -1,25 +1,27 @@
 #include "ledger/StorageHelperImpl.h"
-#include "AccountHelperImpl.h"
-#include "AccountRoleHelperImpl.h"
-#include "AccountRuleHelperImpl.h"
-#include "AccountSpecificRuleHelperImpl.h"
-#include "AssetHelperImpl.h"
-#include "BalanceHelperImpl.h"
-#include "LicenseHelperImpl.h"
-#include "PollHelperImpl.h"
-#include "SignerHelperImpl.h"
-#include "SignerRoleHelperImpl.h"
-#include "SignerRuleHelperImpl.h"
-#include "StampHelperImpl.h"
-#include "SwapHelperImpl.h"
-#include "VoteHelperImpl.h"
 #include "ledger/ExternalSystemAccountIDHelperImpl.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperImpl.h"
 #include "ledger/KeyValueHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/LicenseHelperImpl.h"
-#include "ledger/LicenseSignatureHelperImpl.h"
 #include "ledger/StampHelperImpl.h"
+#include "ledger/LicenseSignatureHelperImpl.h"
+#include "BalanceHelperImpl.h"
+#include "AssetHelperImpl.h"
+#include "AccountRuleHelperImpl.h"
+#include "AccountRoleHelperImpl.h"
+#include "AccountHelperImpl.h"
+#include "SignerHelperImpl.h"
+#include "SignerRuleHelperImpl.h"
+#include "SignerRoleHelperImpl.h"
+#include "VoteHelperImpl.h"
+#include "PollHelperImpl.h"
+#include "LicenseHelperImpl.h"
+#include "StampHelperImpl.h"
+#include "AccountSpecificRuleHelperImpl.h"
+#include "ReviewableRequestHelperImpl.h"
+#include "SwapHelperImpl.h"
+
 
 namespace stellar
 {
@@ -47,8 +49,11 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::LICENSE, &getLicenseHelper()},
         {LedgerEntryType::VOTE, &getVoteHelper()},
         {LedgerEntryType::POLL, &getPollHelper()},
-        {LedgerEntryType::ACCOUNT_SPECIFIC_RULE,&getAccountSpecificRuleHelper()},
+        {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()},
+        {LedgerEntryType::REVIEWABLE_REQUEST,                    &getReviewableRequestHelper()},
         {LedgerEntryType::SWAP, &getSwapHelper()},
+
+
     };
 }
 
@@ -71,17 +76,20 @@ StorageHelperImpl::getDatabase()
 {
     return mDatabase;
 }
+
 const Database&
 StorageHelperImpl::getDatabase() const
 {
     return mDatabase;
 }
-LedgerDelta*
+
+LedgerDelta *
 StorageHelperImpl::getLedgerDelta()
 {
     return mLedgerDelta;
 }
-const LedgerDelta*
+
+const LedgerDelta *
 StorageHelperImpl::getLedgerDelta() const
 {
     return mLedgerDelta;
@@ -97,6 +105,7 @@ StorageHelperImpl::mustGetLedgerDelta()
 
     throw std::runtime_error("Expected ledger delta to exists");
 }
+
 const LedgerDelta&
 StorageHelperImpl::mustGetLedgerDelta() const
 {
@@ -134,6 +143,7 @@ StorageHelperImpl::commit()
         mIsReleased = true;
     }
 }
+
 void
 StorageHelperImpl::rollback()
 {
@@ -152,6 +162,7 @@ StorageHelperImpl::rollback()
         mIsReleased = true;
     }
 }
+
 void
 StorageHelperImpl::release()
 {
@@ -181,16 +192,16 @@ StorageHelperImpl::startNestedTransaction()
     return std::make_unique<StorageHelperImpl>(mDatabase, mNestedDelta.get());
 }
 
-EntryHelper*
+EntryHelper *
 StorageHelperImpl::getHelper(LedgerEntryType type)
 {
     return mHelpers[type];
 }
 
-std::vector<EntryHelper*>
+std::vector<EntryHelper *>
 StorageHelperImpl::getEntryHelpers()
 {
-    std::vector<EntryHelper*> result;
+    std::vector<EntryHelper *> result;
     for (auto& helper : mHelpers)
     {
         result.emplace_back(helper.second);
@@ -208,6 +219,7 @@ StorageHelperImpl::getKeyValueHelper()
     }
     return *mKeyValueHelper;
 }
+
 BalanceHelper&
 StorageHelperImpl::getBalanceHelper()
 {
@@ -217,6 +229,7 @@ StorageHelperImpl::getBalanceHelper()
     }
     return *mBalanceHelper;
 }
+
 AssetHelper&
 StorageHelperImpl::getAssetHelper()
 {
@@ -226,6 +239,7 @@ StorageHelperImpl::getAssetHelper()
     }
     return *mAssetHelper;
 }
+
 ExternalSystemAccountIDHelper&
 StorageHelperImpl::getExternalSystemAccountIDHelper()
 {
@@ -236,6 +250,7 @@ StorageHelperImpl::getExternalSystemAccountIDHelper()
     }
     return *mExternalSystemAccountIDHelper;
 }
+
 ExternalSystemAccountIDPoolEntryHelper&
 StorageHelperImpl::getExternalSystemAccountIDPoolEntryHelper()
 {
@@ -246,6 +261,7 @@ StorageHelperImpl::getExternalSystemAccountIDPoolEntryHelper()
     }
     return *mExternalSystemAccountIDPoolEntryHelper;
 }
+
 AccountHelper&
 StorageHelperImpl::getAccountHelper()
 {
@@ -255,6 +271,7 @@ StorageHelperImpl::getAccountHelper()
     }
     return *mAccountHelper;
 }
+
 AccountRoleHelper&
 StorageHelperImpl::getAccountRoleHelper()
 {
@@ -264,6 +281,7 @@ StorageHelperImpl::getAccountRoleHelper()
     }
     return *mAccountRoleHelper;
 }
+
 AccountRuleHelper&
 StorageHelperImpl::getAccountRuleHelper()
 {
@@ -273,6 +291,7 @@ StorageHelperImpl::getAccountRuleHelper()
     }
     return *mAccountRuleHelper;
 }
+
 SignerHelper&
 StorageHelperImpl::getSignerHelper()
 {
@@ -282,6 +301,7 @@ StorageHelperImpl::getSignerHelper()
     }
     return *mSignerHelper;
 }
+
 SignerRuleHelper&
 StorageHelperImpl::getSignerRuleHelper()
 {
@@ -291,6 +311,7 @@ StorageHelperImpl::getSignerRuleHelper()
     }
     return *mSignerRuleHelper;
 }
+
 SignerRoleHelper&
 StorageHelperImpl::getSignerRoleHelper()
 {
@@ -300,6 +321,7 @@ StorageHelperImpl::getSignerRoleHelper()
     }
     return *mSignerRoleHelper;
 }
+
 LicenseHelper&
 StorageHelperImpl::getLicenseHelper()
 {
@@ -309,6 +331,7 @@ StorageHelperImpl::getLicenseHelper()
     }
     return *mLicenseHelper;
 }
+
 LicenseSignatureHelper&
 StorageHelperImpl::getLicenseSignatureHelper()
 {
@@ -369,6 +392,17 @@ StorageHelperImpl::getAccountSpecificRuleHelper()
             std::make_unique<AccountSpecificRuleHelperImpl>(*this);
     }
     return *mAccountSpecificRuleHelper;
+}
+
+ReviewableRequestHelper&
+StorageHelperImpl::getReviewableRequestHelper()
+{
+    if (!mReviewableRequestHelper)
+    {
+        mReviewableRequestHelper = std::make_unique<ReviewableRequestHelperImpl>(*this);
+    }
+
+    return *mReviewableRequestHelper;
 }
 
 } // namespace stellar

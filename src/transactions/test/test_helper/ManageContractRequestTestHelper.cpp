@@ -1,4 +1,5 @@
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include <transactions/deprecated/ManageContractRequestOpFrame.h>
 #include <lib/catch.hpp>
 #include "ManageContractRequestTestHelper.h"
@@ -10,7 +11,7 @@ namespace txtest
 {
 
 ManageContractRequestTestHelper::ManageContractRequestTestHelper(TestManager::pointer testManager)
-        : TxHelper(testManager)
+    : TxHelper(testManager)
 {
 }
 
@@ -60,9 +61,9 @@ ManageContractRequestTestHelper::applyManageContractRequest(Account& source,
                                                             ManageContractRequestResultCode expectedResult)
 {
     Database& db = mTestManager->getDB();
-
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    uint64 reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(db.getSession());
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    uint64 reviewableRequestCountBeforeTx = requestHelper.countObjects();
 
     auto txFrame = createManageContractRequest(source, manageContractRequestOp);
     mTestManager->applyCheck(txFrame);
@@ -72,7 +73,7 @@ ManageContractRequestTestHelper::applyManageContractRequest(Account& source,
     auto actualResult = ManageContractRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResult == expectedResult);
 
-    uint64 reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(db.getSession());
+    uint64 reviewableRequestCountAfterTx = requestHelper.countObjects();
     if (expectedResult != ManageContractRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
@@ -84,15 +85,15 @@ ManageContractRequestTestHelper::applyManageContractRequest(Account& source,
     {
         case ManageContractRequestAction::CREATE:
         {
-            auto contractRequest = reviewableRequestHelper->loadRequest(
-                    manageContractRequestResult.success().details.response().requestID, db);
+            auto contractRequest = requestHelper.loadRequest(
+                manageContractRequestResult.success().details.response().requestID);
             REQUIRE(!!contractRequest);
             REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
             break;
         }
         case ManageContractRequestAction::REMOVE:
         {
-            REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx +1);
+            REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx + 1);
             break;
         }
         default:

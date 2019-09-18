@@ -9,14 +9,14 @@
 
 namespace stellar
 {
-class ReviewAssetCreationRequestOpFrame : public ReviewRequestOpFrame
-{
+class ReviewAssetCreationRequestOpFrame : public ReviewRequestOpFrame {
 protected:
-	bool handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
+    bool
+    handleApprove(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) override;
 
 public:
 
-	  ReviewAssetCreationRequestOpFrame(Operation const& op, OperationResult& res,
-                       TransactionFrame& parentTx);
+    ReviewAssetCreationRequestOpFrame(Operation const& op, OperationResult& res,
+                                      TransactionFrame& parentTx);
 };
 }

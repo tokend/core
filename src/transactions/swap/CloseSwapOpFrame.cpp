@@ -8,6 +8,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/SwapHelper.h"
 #include "main/Application.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -171,12 +172,12 @@ CloseSwapOpFrame::processSwap(Application& app, StorageHelper& sh,
 
     auto& db = sh.getDatabase();
     auto& delta = sh.mustGetLedgerDelta();
-    AccountManager accountManager(app, db, delta, lm);
+    BalanceManager balanceManager(app, sh);
 
     auto& balanceHelper = sh.getBalanceHelper();
     auto sourceBalance = balanceHelper.mustLoadBalance(swapEntry.sourceBalance);
 
-    accountManager.transferFee(sourceBalance->getAsset(), swapEntry.fee);
+    balanceManager.transferFee(sourceBalance->getAsset(), swapEntry.fee);
 
     auto totalAmount = swapEntry.amount + swapEntry.fee;
 

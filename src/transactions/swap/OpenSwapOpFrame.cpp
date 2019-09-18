@@ -8,6 +8,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/SwapHelper.h"
 #include "main/Application.h"
+#include "transactions/managers/BalanceManager.h"
 
 namespace stellar
 {
@@ -60,10 +61,22 @@ OpenSwapOpFrame::tryGetSignerRequirements(
     StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
     auto& balanceHelper = storageHelper.getBalanceHelper();
-    auto balanceFrame = balanceHelper.mustLoadBalance(mOpenSwap.sourceBalance);
+    auto balanceFrame = balanceHelper.loadBalance(mOpenSwap.sourceBalance);
+    if (!balanceFrame)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::BALANCE;
+        return false;
+    }
 
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto assetFrame = assetHelper.mustLoadAsset(balanceFrame->getAsset());
+    auto assetFrame = assetHelper.loadAsset(balanceFrame->getAsset());
+    if (!assetFrame)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::ASSET;
+        return false;
+    }
 
     SignerRuleResource resource(LedgerEntryType::SWAP);
     resource.swap().assetType = assetFrame->getType();
@@ -117,11 +130,10 @@ OpenSwapOpFrame::tryLoadDestinationAccount(StorageHelper& storageHelper) const
 }
 
 bool
-OpenSwapOpFrame::checkFee(AccountManager& accountManager,
+OpenSwapOpFrame::checkFee(BalanceManager& balanceManager,
                           AccountFrame::pointer payer,
                           BalanceFrame::pointer chargeFrom, Fee expectedFee,
-                          Fee actualFee, AccountID const& commissionID,
-                          StorageHelper& sh)
+                          Fee actualFee, StorageHelper& sh)
 {
     if (actualFee.fixed == 0 && actualFee.percent == 0)
     {
@@ -148,8 +160,8 @@ OpenSwapOpFrame::checkFee(AccountManager& accountManager,
     auto& delta = sh.mustGetLedgerDelta();
 
     // load commission balance
-    auto commissionBalance = AccountManager::loadOrCreateBalanceFrameForAsset(
-        commissionID, chargeFrom->getAsset(), db, delta);
+    auto commissionBalance =
+        balanceManager.loadOrCreateBalanceForAdmin(chargeFrom->getAsset());
     if (!commissionBalance)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -162,8 +174,9 @@ OpenSwapOpFrame::checkFee(AccountManager& accountManager,
 }
 
 BalanceFrame::pointer
-OpenSwapOpFrame::mustLoadDestinationBalance(AssetCode asset,
-                                            StorageHelper& storageHelper)
+OpenSwapOpFrame::mustLoadDestinationBalance(Application& app,
+                                            StorageHelper& storageHelper,
+                                            AssetCode asset)
 {
     switch (mOpenSwap.destination.type())
     {
@@ -179,9 +192,9 @@ OpenSwapOpFrame::mustLoadDestinationBalance(AssetCode asset,
         storageHelper.getAccountHelper().mustLoadAccount(
             mOpenSwap.destination.accountID());
 
-        auto dest = AccountManager::loadOrCreateBalanceFrameForAsset(
-            mOpenSwap.destination.accountID(), asset,
-            storageHelper.getDatabase(), storageHelper.mustGetLedgerDelta());
+        BalanceManager balanceManager(app, storageHelper);
+        auto dest = balanceManager.loadOrCreateBalance(
+            mOpenSwap.destination.accountID(), asset);
         if (!dest)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -279,7 +292,7 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     }
 
     auto destBalance =
-        mustLoadDestinationBalance(sourceBalance->getAsset(), sh);
+        mustLoadDestinationBalance(app, sh, sourceBalance->getAsset());
     if (!destBalance)
     {
         return false;
@@ -305,14 +318,14 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
 
     auto& delta = sh.mustGetLedgerDelta();
 
-    AccountManager accountManager(app, db, delta, app.getLedgerManager());
+    BalanceManager balanceManager(app, sh);
 
     auto sourceFee =
         getActualFee(mSourceAccount, sourceBalance->getAsset(),
                      mOpenSwap.amount, PaymentFeeType::OUTGOING, sh, lm);
 
-    if (!checkFee(accountManager, mSourceAccount, sourceBalance,
-                  mOpenSwap.feeData.sourceFee, sourceFee, app.getAdminID(), sh))
+    if (!checkFee(balanceManager, mSourceAccount, sourceBalance,
+                  mOpenSwap.feeData.sourceFee, sourceFee, sh))
     {
         innerResult().code(OpenSwapResultCode::INSUFFICIENT_FEE_AMOUNT);
         return false;
@@ -323,8 +336,8 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
         getActualFee(destAccount, destBalance->getAsset(), mOpenSwap.amount,
                      PaymentFeeType::INCOMING, sh, lm);
 
-    if (!checkFee(accountManager, mSourceAccount, sourceBalance,
-                  mOpenSwap.feeData.sourceFee, sourceFee, app.getAdminID(), sh))
+    if (!checkFee(balanceManager, mSourceAccount, sourceBalance,
+                  mOpenSwap.feeData.sourceFee, sourceFee, sh))
     {
         innerResult().code(OpenSwapResultCode::INSUFFICIENT_FEE_AMOUNT);
         return false;
@@ -353,7 +366,8 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
         throw std::runtime_error("Failed to calculate total amount - overflow");
     }
 
-    if (mOpenSwap.feeData.sourcePaysForDest) {
+    if (mOpenSwap.feeData.sourcePaysForDest)
+    {
         sourceFee.fixed += destFee.fixed;
         sourceFee.percent += destFee.percent;
         destFee.fixed = 0;

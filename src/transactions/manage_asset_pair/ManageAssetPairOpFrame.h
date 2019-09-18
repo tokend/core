@@ -10,18 +10,19 @@
 namespace stellar
 {
 
-class ManageAssetPairOpFrame : public OperationFrame
-{
+class ManageAssetPairOpFrame : public OperationFrame {
     ManageAssetPairResult&
     innerResult()
     {
         return mResult.tr().manageAssetPairResult();
     }
+
     ManageAssetPairOp const& mManageAssetPair;
 
-	bool createNewAssetPair(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair);
+    bool
+    createNewAssetPair(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair);
 
-	bool
+    bool
     tryGetOperationConditions(StorageHelper& storageHelper,
                               std::vector<OperationCondition>& result) const override;
 
@@ -29,13 +30,14 @@ class ManageAssetPairOpFrame : public OperationFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
-  public:
-    
-    ManageAssetPairOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
+public:
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    ManageAssetPairOpFrame(Operation const& op, OperationResult& res,
+                           TransactionFrame& parentTx);
+
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 
     static ManageAssetPairResultCode

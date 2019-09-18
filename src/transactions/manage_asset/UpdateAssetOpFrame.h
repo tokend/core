@@ -10,37 +10,38 @@
 namespace stellar
 {
 
-class UpdateAssetOpFrame : public ManageAssetOpFrame
-{
-	AssetUpdateRequest const& mAssetUpdateRequest;
+class UpdateAssetOpFrame : public ManageAssetOpFrame {
+    AssetUpdateRequest const& mAssetUpdateRequest;
 
     // Returns update already existing request from db or creates new one.
-	// if fails to load request, returns nullptr
-	ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, Database& db, LedgerDelta& delta);
+    // if fails to load request, returns nullptr
+    ReviewableRequestFrame::pointer getUpdatedOrCreateReviewableRequest(Application& app, StorageHelper& storageHelper);
 
-	bool
-	tryGetOperationConditions(StorageHelper& storageHelper,
-							  std::vector<OperationCondition>& result,
-							  LedgerManager& ledgerManager) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result,
+                              LedgerManager& ledgerManager) const override;
 
-	bool
-	tryGetSignerRequirements(StorageHelper& storageHelper,
-							 std::vector<SignerRequirement>& result) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
 public:
-    
-	UpdateAssetOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
 
-    bool doApply(Application& app, StorageHelper &storageHelper,
+    UpdateAssetOpFrame(Operation const& op, OperationResult& res,
+                       TransactionFrame& parentTx);
+
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
+
     bool doCheckValid(Application& app) override;
 
 protected:
     std::string getAssetCode() const override;
-	void updateRequest(ReviewableRequestEntry &requestEntry);
-	bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
 
+    void updateRequest(ReviewableRequestEntry& requestEntry);
+
+    bool ensureUpdateRequestValid(ReviewableRequestFrame::pointer request);
 
 };
 }

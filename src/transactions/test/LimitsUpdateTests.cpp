@@ -2,11 +2,10 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AccountHelperLegacy.h>
-#include <ledger/FeeHelper.h>
-#include <transactions/test/test_helper/ManageLimitsTestHelper.h>
+#include "ledger/StorageHelper.h"
+#include "ledger/FeeHelper.h"
+#include "transactions/test/test_helper/ManageLimitsTestHelper.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "test/test.h"
 #include "TxTests.h"
 #include "crypto/SHA.h"
@@ -39,15 +38,18 @@ TEST_CASE("limits update", "[tx][limits_update]")
 
     upgradeToCurrentLedgerVersion(app);
 
-    auto root = Account{ getRoot(), Salt(0) };
+    //Helpers
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+
+    auto root = Account{getRoot(), Salt(0)};
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto limitsUpdateRequestHelper = LimitsUpdateRequestHelper(testManager);
     auto reviewLimitsUpdateHelper = ReviewLimitsUpdateRequestHelper(testManager);
-    auto reviewRequestHelper = ReviewableRequestHelper::Instance();
     auto manageLimitsTestHelper = ManageLimitsTestHelper(testManager);
 
     // create requestor
-    auto requestor = Account{ SecretKey::random(), Salt(0) };
+    auto requestor = Account{SecretKey::random(), Salt(0)};
     AccountID requestorID = requestor.key.getPublicKey();
     createAccountTestHelper.applyCreateAccountTx(root, requestorID, 1);
 
@@ -58,7 +60,8 @@ TEST_CASE("limits update", "[tx][limits_update]")
     std::string documentData = "{}";
 
 
-    SECTION("with tasks") {
+    SECTION("with tasks")
+    {
         uint32_t allTasks = 2, tasksToAdd = 0, tasksToRemove = 2;
         auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
         auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
@@ -68,9 +71,11 @@ TEST_CASE("limits update", "[tx][limits_update]")
 
         REQUIRE_FALSE(limitsUpdateResult.success().fulfilled);
 
-        SECTION("Happy path") {
-            SECTION("Approve") {
-                auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+        SECTION("Happy path")
+        {
+            SECTION("Approve")
+            {
+                auto request = requestHelper.loadRequest(limitsUpdateResult.success().manageLimitsRequestID);
                 REQUIRE(request);
                 auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                                                            request->getHash(),
@@ -82,17 +87,20 @@ TEST_CASE("limits update", "[tx][limits_update]")
 
                 REQUIRE(reviewResult.success().fulfilled);
             }
-            SECTION("Reject") {
+            SECTION("Reject")
+            {
                 reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                               ReviewRequestOpAction::REJECT, "Invalid document");
             }
-            SECTION("Permanent reject") {
+            SECTION("Permanent reject")
+            {
                 reviewLimitsUpdateHelper.applyReviewRequestTx(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                               ReviewRequestOpAction::PERMANENT_REJECT,
                                                               "Invalid document");
 
             }
-            SECTION("Approve for account with limits") {
+            SECTION("Approve for account with limits")
+            {
                 auto accountWithLimits = Account{SecretKey::random(), Salt(0)};
                 AccountID accountWithoutLimitsID = accountWithLimits.key.getPublicKey();
                 createAccountTestHelper.applyCreateAccountTx(root, accountWithoutLimitsID, 1);
@@ -111,14 +119,14 @@ TEST_CASE("limits update", "[tx][limits_update]")
                 std::string documentDataOfAccountWithLimits = "{\n \"a\": \"I have a lot of money\" \n}";
 
                 limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(
-                        documentDataOfAccountWithLimits);
+                    documentDataOfAccountWithLimits);
                 limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(accountWithLimits,
                                                                                               limitsUpdateRequest,
                                                                                               &allTasks, nullptr,
                                                                                               CreateManageLimitsRequestResultCode::SUCCESS);
 
                 REQUIRE_FALSE(limitsUpdateResult.success().fulfilled);
-                auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+                auto request = requestHelper.loadRequest(limitsUpdateResult.success().manageLimitsRequestID);
                 REQUIRE(request);
                 auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                                                            request->getHash(),
@@ -128,7 +136,8 @@ TEST_CASE("limits update", "[tx][limits_update]")
                                                                                            &tasksToAdd,
                                                                                            &tasksToRemove);
             }
-            SECTION("Update limits update request") {
+            SECTION("Update limits update request")
+            {
                 std::string newDocumentData = "{\n \"a\": \"New document data\" \n}";
                 limitsUpdateRequest.creatorDetails = newDocumentData;
                 uint64_t limitsUpdateRequestID = limitsUpdateResult.success().manageLimitsRequestID;
@@ -144,7 +153,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
         SECTION("Invalid details")
         {
             limitsUpdateRequest.creatorDetails = "Some document data, huge data, very huge data to check convert to string64"
-                                                " when get reference to write to database information about request";
+                                                 " when get reference to write to database information about request";
             limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(requestor,
                                                                                           limitsUpdateRequest, nullptr,
                                                                                           &requestID,
@@ -170,7 +179,7 @@ TEST_CASE("limits update", "[tx][limits_update]")
         }
         SECTION("Approve and create same request for second time")
         {
-            auto request = reviewRequestHelper->loadRequest(limitsUpdateResult.success().manageLimitsRequestID, db, nullptr);
+            auto request = requestHelper.loadRequest(limitsUpdateResult.success().manageLimitsRequestID);
             REQUIRE(request);
             auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
                                                                                        request->getHash(),
@@ -214,29 +223,29 @@ TEST_CASE("limits update", "[tx][limits_update]")
         auto syndicateRoleID = manageAccountRoleTestHelper.applyTx(root, createSyndicateRoleOp).success().roleID;
 
         auto createAccountBuilder = CreateAccountTestBuilder()
-                .setSource(root);
+            .setSource(root);
 
-        auto syndicate = Account{ SecretKey::random(), 0 };
+        auto syndicate = Account{SecretKey::random(), 0};
         auto syndicatePubKey = syndicate.key.getPublicKey();
         createAccountTestHelper.applyTx(createAccountBuilder
-                                                .setToPublicKey(syndicatePubKey)
-                                                .addBasicSigner()
-                                                .setRoleID(syndicateRoleID));
+                                            .setToPublicKey(syndicatePubKey)
+                                            .addBasicSigner()
+                                            .setRoleID(syndicateRoleID));
 
         SECTION("Set tasks without permission")
         {
             uint32_t zeroTasks = 0;
             auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
             auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(syndicate,
-                    limitsUpdateRequest, &zeroTasks, nullptr,
-                    CreateManageLimitsRequestResultCode::SUCCESS, // No need to check inner code
-                    OperationResultCode::opNO_ROLE_PERMISSION);
+                                                                                               limitsUpdateRequest, &zeroTasks, nullptr,
+                                                                                               CreateManageLimitsRequestResultCode::SUCCESS, // No need to check inner code
+                                                                                               OperationResultCode::opNO_ROLE_PERMISSION);
         }
         SECTION("Without setting tasks")
         {
             auto limitsUpdateRequest = limitsUpdateRequestHelper.createLimitsUpdateRequest(documentData);
             auto limitsUpdateResult = limitsUpdateRequestHelper.applyCreateLimitsUpdateRequest(syndicate,
-                    limitsUpdateRequest, nullptr, nullptr, CreateManageLimitsRequestResultCode::SUCCESS);
+                                                                                               limitsUpdateRequest, nullptr, nullptr, CreateManageLimitsRequestResultCode::SUCCESS);
         }
     }
 }

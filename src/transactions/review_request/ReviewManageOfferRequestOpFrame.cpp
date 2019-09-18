@@ -20,8 +20,8 @@ bool
 ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(
     StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(
-        mReviewRequest.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(
+        mReviewRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::MANAGE_OFFER))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -87,13 +87,13 @@ ReviewManageOfferRequestOpFrame::getManageOfferAction(
 
 bool
 ReviewManageOfferRequestOpFrame::handleApprove(
-    Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    Application& app, StorageHelper& sh, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::MANAGE_OFFER);
 
-    Database& db = app.getDatabase();
-    handleTasks(db, delta, request);
+    auto& requestHelper = sh.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
     if (!request->canBeFulfilled(ledgerManager))
     {
@@ -115,14 +115,12 @@ ReviewManageOfferRequestOpFrame::handleApprove(
 
     ManageOfferOpFrame& opFrame = *ManageOfferOpFrame::make(op, res, mParentTx);
 
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
-    auto requestor = storageHelper.getAccountHelper().mustLoadAccount(
+    auto requestor = sh.getAccountHelper().mustLoadAccount(
         request->getRequestor());
     opFrame.setSourceAccountPtr(requestor);
 
     if (!opFrame.doCheckValid(app) ||
-        !opFrame.doApply(app, delta, ledgerManager))
+        !opFrame.doApply(app, sh, ledgerManager))
     {
         innerResult().code(ReviewRequestResultCode::MANAGE_OFFER_FAILED);
         innerResult().manageOfferCode() = opFrame.getInnerCode();
@@ -131,7 +129,8 @@ ReviewManageOfferRequestOpFrame::handleApprove(
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(ReviewableRequestType::MANAGE_OFFER);
+    innerResult().success().typeExt.requestType(
+        ReviewableRequestType::MANAGE_OFFER);
     innerResult().success().typeExt.manageOfferResult() =
         res.tr().manageOfferResult();
     return true;
@@ -139,7 +138,7 @@ ReviewManageOfferRequestOpFrame::handleApprove(
 
 bool
 ReviewManageOfferRequestOpFrame::handleReject(
-    Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    Application& app, StorageHelper& sh, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)
 {
     innerResult().code(ReviewRequestResultCode::REJECT_NOT_ALLOWED);

@@ -12,10 +12,10 @@ class ReviewManageOfferRequestOpFrame : public ReviewRequestOpFrame
     tryGetSignerRequirements(StorageHelper& sh, std::vector<SignerRequirement>& result) const override;
 
     bool 
-    handleApprove(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    handleApprove(Application& app, StorageHelper& sh, LedgerManager& ledgerManager,
 					   ReviewableRequestFrame::pointer request) override;
 	bool 
-    handleReject(Application& app, LedgerDelta& delta, LedgerManager& ledgerManager,
+    handleReject(Application& app, StorageHelper& sh, LedgerManager& ledgerManager,
 					  ReviewableRequestFrame::pointer request) override;
 
     ManageOfferAction

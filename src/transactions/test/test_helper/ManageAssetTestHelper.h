@@ -4,59 +4,71 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "overlay/StellarXDR.h"
 #include "TxHelper.h"
+#include "overlay/StellarXDR.h"
 
 namespace stellar
 {
-namespace txtest 
-{	
-	class ManageAssetTestHelper : TxHelper
-	{
-    private:
-        void validateManageAssetEffect(ManageAssetOp::_request_t request);
-	public:
-		ManageAssetTestHelper(TestManager::pointer testManager);
+namespace txtest
+{
+class ManageAssetTestHelper : TxHelper
+{
+  private:
+    void validateManageAssetEffect(ManageAssetOp::_request_t request);
 
-		void createApproveRequest(Account& root, Account & source, ManageAssetOp::_request_t request);
+  public:
+    ManageAssetTestHelper(TestManager::pointer testManager);
 
-		ManageAssetResult applyManageAssetTx(Account & source, uint64_t requestID, ManageAssetOp::_request_t request,
-			ManageAssetResultCode expectedResult = ManageAssetResultCode::SUCCESS, OperationResultCode expectedOpCode = OperationResultCode::opINNER);
-		TransactionFramePtr createManageAssetTx(Account& source, uint64_t requestID, ManageAssetOp::_request_t request);
+    void createApproveRequest(Account& root, Account& source,
+                              ManageAssetOp::_request_t request);
 
-		Operation createManageAssetOp(Account& source, uint64_t requestID, ManageAssetOp::_request_t request);
+    ManageAssetResult applyManageAssetTx(
+        Account& source, uint64_t requestID, ManageAssetOp::_request_t request,
+        ManageAssetResultCode expectedResult = ManageAssetResultCode::SUCCESS,
+        OperationResultCode expectedOpCode = OperationResultCode::opINNER);
+    TransactionFramePtr createManageAssetTx(Account& source, uint64_t requestID,
+                                            ManageAssetOp::_request_t request);
 
-		ManageAssetOp::_request_t createAssetCreationRequest(
-				AssetCode code,
-				AccountID preissuedAssetSigner,
-				std::string details,
-				uint64_t maxIssuanceAmount,
-				uint32_t policies,
-                uint32_t *allTasks = nullptr,
-                uint64_t initialPreissuanceAmount = 0,
-                uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
-				uint64_t assetType = 0);
+    Operation createManageAssetOp(Account& source, uint64_t requestID,
+                                  ManageAssetOp::_request_t request);
 
-		ManageAssetOp::_request_t createAssetUpdateRequest(
-				AssetCode code,
-				std::string details,
-				uint32_t policies,
-				uint32_t* allTasks = nullptr);
+    ManageAssetOp::_request_t createAssetCreationRequest(
+        AssetCode code, AccountID preissuedAssetSigner, std::string details,
+        uint64_t maxIssuanceAmount, uint32_t policies,
+        uint32_t* allTasks = nullptr, uint64_t initialPreissuanceAmount = 0,
+        uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
+        uint64_t assetType = 0);
 
-		ManageAssetOp::_request_t createCancelRequest();
+    ManageAssetOp::_request_t
+    createAssetUpdateRequest(AssetCode code, std::string details,
+                             uint32_t policies, uint32_t* allTasks = nullptr);
+    TransactionFramePtr createRemoveAssetTx(txtest::Account& source,
+                                            AssetCode code,
+                                            txtest::Account* signer);
 
-                ManageAssetOp::_request_t updateMaxAmount(AssetCode asset, uint64 amount);
+    RemoveAssetResult applyRemoveAssetTx(txtest::Account& source,
+                                         AssetCode code,
+                                         txtest::Account* signer,
+                                         RemoveAssetResultCode expectedResult = RemoveAssetResultCode::SUCCESS,
+                                         OperationResultCode expectedOpResult = OperationResultCode::opINNER);
 
-		ManageAssetOp::_request_t createChangeSignerRequest(Account& account,
-															AssetCode code,
-															AccountID accountID);
+        ManageAssetOp::_request_t createCancelRequest();
 
-        void createAsset(Account &assetOwner, SecretKey &preIssuedSigner, AssetCode assetCode, Account &root,
-                uint32_t policies, uint32_t *allTasks = nullptr,
-                		uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
-                		uint64_t assetType = 0, uint64_t maxIssuance = UINT64_MAX);
-        void updateAsset(Account& assetOwner, AssetCode assetCode, Account& root, uint32_t policies);
-        void changeAssetTrailingDigits(AssetCode assetCode, uint32 trailingDigitsCount);
-	};
+    ManageAssetOp::_request_t updateMaxAmount(AssetCode asset, uint64 amount);
+
+    ManageAssetOp::_request_t createChangeSignerRequest(Account& account,
+                                                        AssetCode code,
+                                                        AccountID accountID);
+
+    void createAsset(
+        Account& assetOwner, SecretKey& preIssuedSigner, AssetCode assetCode,
+        Account& root, uint32_t policies, uint32_t* allTasks = nullptr,
+        uint32_t trailingDigitsCount = AssetFrame::kMaximumTrailingDigits,
+        uint64_t assetType = 0, uint64_t maxIssuance = UINT64_MAX);
+    void updateAsset(Account& assetOwner, AssetCode assetCode, Account& root,
+                     uint32_t policies);
+    void changeAssetTrailingDigits(AssetCode assetCode,
+                                   uint32 trailingDigitsCount);
+};
 }
 }

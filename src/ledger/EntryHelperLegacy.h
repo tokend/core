@@ -14,7 +14,7 @@
 
 /*
 Helper
-Parent of AccountHelperLegacy, AssetHelperLegacy etc.
+Parent of AssetHelperLegacy etc.
 */
 
 namespace stellar

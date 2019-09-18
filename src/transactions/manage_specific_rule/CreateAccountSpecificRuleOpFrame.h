@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ManageAccountSpecificRuleOpFrame.h"
+#include "ledger/SaleFrame.h"
 
 namespace stellar
 {

@@ -47,7 +47,7 @@ class CreateManageOfferRequestOpFrame : public OperationFrame
     makeTasksKeyVector(AssetCode const& base, AssetCode const& quote);
 
     bool
-    tryAutoApprove(Database& db, LedgerDelta& delta, Application& app,
+    tryAutoApprove(Application& app, StorageHelper& sh,
                    ReviewableRequestFrame::pointer request);
 
 public:

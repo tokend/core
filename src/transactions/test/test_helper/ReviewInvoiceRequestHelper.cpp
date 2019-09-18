@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 #include "ReviewInvoiceRequestHelper.h"
 
@@ -35,7 +35,7 @@ ReviewInvoiceRequestHelper::applyReviewRequestTx(Account &source, uint64_t reque
 {
     auto checker = InvoiceReviewChecker(mTestManager, requestID);
     requestMustBeDeletedAfterApproval = true;
-    auto request = ReviewableRequestHelper::Instance()->loadRequest(requestID, mTestManager->getDB());
+    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, mTestManager->getDB());
     if (request && (request->getType() == ReviewableRequestType::CREATE_INVOICE) &&
         request->getRequestEntry().body.invoiceRequest().contractID)
         requestMustBeDeletedAfterApproval = false;

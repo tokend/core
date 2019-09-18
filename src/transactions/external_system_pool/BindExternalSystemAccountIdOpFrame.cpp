@@ -1,6 +1,5 @@
 #include "BindExternalSystemAccountIdOpFrame.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/AccountHelperLegacy.h"
 #include "ledger/ExternalSystemAccountID.h"
 #include "ledger/ExternalSystemAccountIDHelper.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"

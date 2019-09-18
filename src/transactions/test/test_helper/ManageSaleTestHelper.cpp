@@ -6,7 +6,7 @@
 #include "TxHelper.h"
 #include "test/test_marshaler.h"
 #include <ledger/AssetHelperLegacy.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include <ledger/ReviewableRequestHelperLegacy.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
 #include <transactions/sale/ManageSaleOpFrame.h>
@@ -25,40 +25,40 @@ txtest::ManageSaleTestHelper::ManageSaleTestHelper(
 
 ManageSaleOp::_data_t
 ManageSaleTestHelper::createDataForAction(ManageSaleAction action,
-        uint32_t *allTasks,
-        uint64_t* requestID,
-        std::string* newDetails)
+                                          uint32_t *allTasks,
+                                          uint64_t *requestID,
+                                          std::string *newDetails)
 {
     ManageSaleOp::_data_t data;
 
     switch (action)
     {
-    case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
-    {
-        if (!requestID || !newDetails)
+        case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
         {
-            throw std::runtime_error(
-                "Request ID and new details string cannot be nullptr "
-                "while creating update sale details request");
+            if (!requestID || !newDetails)
+            {
+                throw std::runtime_error(
+                    "Request ID and new details string cannot be nullptr "
+                    "while creating update sale details request");
+            }
+            data.action(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST);
+            data.updateSaleDetailsData().requestID = *requestID;
+            data.updateSaleDetailsData().creatorDetails = *newDetails;
+            if (allTasks)
+            {
+                data.updateSaleDetailsData().allTasks.activate() = *allTasks;
+            }
+            break;
         }
-        data.action(ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST);
-        data.updateSaleDetailsData().requestID = *requestID;
-        data.updateSaleDetailsData().creatorDetails = *newDetails;
-        if (allTasks)
+        case ManageSaleAction::CANCEL:
         {
-            data.updateSaleDetailsData().allTasks.activate() = *allTasks;
+            data.action(ManageSaleAction::CANCEL);
+            break;
         }
-        break;
-    }
-    case ManageSaleAction::CANCEL:
-    {
-        data.action(ManageSaleAction::CANCEL);
-        break;
-    }
-    default:
-    {
-        throw std::runtime_error("Unexpected ManageSaleAction type");
-    }
+        default:
+        {
+            throw std::runtime_error("Unexpected ManageSaleAction type");
+        }
     }
 
     return data;
@@ -84,7 +84,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         OperationResultCode opExpectedCode)
 {
     auto& db = mTestManager->getDB();
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
+    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto saleHelper = SaleHelper::Instance();
 
     auto saleBeforeOp = saleHelper->loadSale(saleID, db);
@@ -93,14 +93,14 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 
     switch (data.action())
     {
-    case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
-    {
-        requestBeforeTx = reviewableRequestHelper->loadRequest(
-            data.updateSaleDetailsData().requestID, db);
-        break;
-    }
-    default:
-        break;
+        case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
+        {
+            requestBeforeTx = reviewableRequestHelper->loadRequest(
+                data.updateSaleDetailsData().requestID, db);
+            break;
+        }
+        default:
+            break;
     }
 
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOp;
@@ -130,44 +130,44 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 
     switch (data.action())
     {
-    case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
-    {
-        if (!manageSaleResult.success().fulfilled)
+        case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
         {
-            auto requestAfterTx = reviewableRequestHelper->loadRequest(
-                    manageSaleResult.success().response.requestID(), db);
-            REQUIRE(!!requestAfterTx);
-
-            auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
-
-            REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
-                    saleID);
-            REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails ==
-                    data.updateSaleDetailsData().creatorDetails);
-
-            if (!!requestBeforeTx)
+            if (!manageSaleResult.success().fulfilled)
             {
-                auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
+                auto requestAfterTx = reviewableRequestHelper->loadRequest(
+                    manageSaleResult.success().response.requestID(), db);
+                REQUIRE(!!requestAfterTx);
 
-                REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
-                        requestAfterTxEntry.body.updateSaleDetailsRequest().saleID);
+                auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
 
-                REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().creatorDetails !=
-                        requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails);
+                REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().saleID ==
+                        saleID);
+                REQUIRE(requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails ==
+                        data.updateSaleDetailsData().creatorDetails);
+
+                if (!!requestBeforeTx)
+                {
+                    auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
+
+                    REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().saleID ==
+                            requestAfterTxEntry.body.updateSaleDetailsRequest().saleID);
+
+                    REQUIRE(requestBeforeTxEntry.body.updateSaleDetailsRequest().creatorDetails !=
+                            requestAfterTxEntry.body.updateSaleDetailsRequest().creatorDetails);
+                }
             }
-        }
 
-        break;
-    }
-    case ManageSaleAction::CANCEL:
-    {
-        REQUIRE(!saleAfterOp);
-        REQUIRE(stateBeforeOp.size() == 1);
-        StateBeforeTxHelper stateBeforeTxHelper(stateBeforeOp[0]);
-        CheckSaleStateHelper(mTestManager)
-            .ensureCancel(saleID, stateBeforeTxHelper);
-        break;
-    }
+            break;
+        }
+        case ManageSaleAction::CANCEL:
+        {
+            REQUIRE(!saleAfterOp);
+            REQUIRE(stateBeforeOp.size() == 1);
+            StateBeforeTxHelper stateBeforeTxHelper(stateBeforeOp[0]);
+            CheckSaleStateHelper(mTestManager)
+                .ensureCancel(saleID, stateBeforeTxHelper);
+            break;
+        }
     }
 
     return manageSaleResult;

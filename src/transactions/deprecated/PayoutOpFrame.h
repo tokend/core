@@ -6,6 +6,9 @@
 
 namespace stellar
 {
+class BalanceManager;
+class StatisticsV2Processor;
+
 class PayoutOpFrame : public OperationFrame
 {
     bool
@@ -40,7 +43,7 @@ class PayoutOpFrame : public OperationFrame
     isFeeAppropriate(Fee const& actualFee) const;
 
     bool
-    tryProcessTransferFee(AccountManager& accountManager,
+    tryProcessTransferFee(BalanceManager& accountManager,
                           Database& db, uint64_t actualTotalAmount,
                           BalanceFrame::pointer sourceBalance);
 

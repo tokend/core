@@ -171,9 +171,9 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
         manageSignerOp.data.action(ManageSignerAction::REMOVE);
         manageSignerOp.data.removeData() = removeData;
 
-    ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
+        ManageSignerOpFrame manageSignerOpFrame(op, opRes, mParentTx);
 
-    manageSignerOpFrame.setSourceAccountPtr(accountFrame);
+        manageSignerOpFrame.setSourceAccountPtr(accountFrame);
 
         if (!manageSignerOpFrame.doCheckValid(app) ||
             !manageSignerOpFrame.doApply(app, storageHelper, app.getLedgerManager()))
@@ -208,16 +208,13 @@ InitiateKYCRecoveryOpFrame::handleSigners(Application& app, StorageHelper& stora
 void
 InitiateKYCRecoveryOpFrame::deletePendingRecoveryRequests(Application& app, StorageHelper& storageHelper)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    auto targetAccRequest =
-        reviewableRequestHelper->loadRequest(mInitiateKYCRecoveryOp.account,
-                                             CreateKYCRecoveryRequestOpFrame::getReference(), db, &delta);
+    auto targetAccRequest = requestHelper.loadRequest(mInitiateKYCRecoveryOp.account,
+                                                      CreateKYCRecoveryRequestOpFrame::getReference());
     if (targetAccRequest)
     {
-        reviewableRequestHelper->storeDelete(delta, db, targetAccRequest->getKey());
+        requestHelper.storeDelete(targetAccRequest->getKey());
     }
 }
 

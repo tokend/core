@@ -1,46 +1,54 @@
 #include <ledger/SaleHelper.h>
 #include "ReviewUpdateSaleDetailsRequestOpFrame.h"
 #include "transactions/sale/ManageSaleOpFrame.h"
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
-namespace stellar {
-    ReviewUpdateSaleDetailsRequestOpFrame::ReviewUpdateSaleDetailsRequestOpFrame(const stellar::Operation &op,
-                                                                                 stellar::OperationResult &res,
-                                                                                 stellar::TransactionFrame &parentTx) :
-            ReviewRequestOpFrame(op, res, parentTx) {
+namespace stellar
+{
+ReviewUpdateSaleDetailsRequestOpFrame::ReviewUpdateSaleDetailsRequestOpFrame(const stellar::Operation& op,
+                                                                             stellar::OperationResult& res,
+                                                                             stellar::TransactionFrame& parentTx) :
+    ReviewRequestOpFrame(op, res, parentTx)
+{
 
-    }
+}
 
-    bool ReviewUpdateSaleDetailsRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,
-                                                              LedgerManager &ledgerManager,
-                                                              ReviewableRequestFrame::pointer request) {
-        request->checkRequestType(ReviewableRequestType::UPDATE_SALE_DETAILS);
+bool ReviewUpdateSaleDetailsRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
+                                                          LedgerManager& ledgerManager,
+                                                          ReviewableRequestFrame::pointer request)
+{
+    request->checkRequestType(ReviewableRequestType::UPDATE_SALE_DETAILS);
 
-        Database &db = ledgerManager.getDatabase();
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-        handleTasks(db, delta, request);
+    handleTasks(requestHelper, request);
 
-        if (!request->canBeFulfilled(ledgerManager)){
-            innerResult().code(ReviewRequestResultCode::SUCCESS);
-            innerResult().success().fulfilled = false;
-            return true;
-        }
-
-        auto &updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
-
-        auto saleFrame = SaleHelper::Instance()->loadSale(updateSaleDetailsRequest.saleID, db, &delta);
-
-        if (!saleFrame) {
-            innerResult().code(ReviewRequestResultCode::SALE_NOT_FOUND);
-            return false;
-        }
-
-        saleFrame->getSaleEntry().details = updateSaleDetailsRequest.creatorDetails;
-
-        EntryHelperProvider::storeChangeEntry(delta, db, saleFrame->mEntry);
-        EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
-
+    if (!request->canBeFulfilled(ledgerManager))
+    {
         innerResult().code(ReviewRequestResultCode::SUCCESS);
-        innerResult().success().fulfilled = true;
+        innerResult().success().fulfilled = false;
         return true;
     }
+
+    auto& updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto saleFrame = SaleHelper::Instance()->loadSale(updateSaleDetailsRequest.saleID, db, &delta);
+
+    if (!saleFrame)
+    {
+        innerResult().code(ReviewRequestResultCode::SALE_NOT_FOUND);
+        return false;
+    }
+
+    saleFrame->getSaleEntry().details = updateSaleDetailsRequest.creatorDetails;
+
+    EntryHelperProvider::storeChangeEntry(delta, db, saleFrame->mEntry);
+    requestHelper.storeDelete(request->getKey());
+
+    innerResult().code(ReviewRequestResultCode::SUCCESS);
+    innerResult().success().fulfilled = true;
+    return true;
+}
 }

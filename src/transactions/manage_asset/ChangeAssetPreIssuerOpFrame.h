@@ -10,33 +10,33 @@
 namespace stellar
 {
 
-class ChangeAssetPreIssuerOpFrame : public ManageAssetOpFrame
-{
+class ChangeAssetPreIssuerOpFrame : public ManageAssetOpFrame {
 
-	AssetChangePreissuedSigner const& mAssetChangePreissuedSigner;
+    AssetChangePreissuedSigner const& mAssetChangePreissuedSigner;
 
-	bool
-	tryGetOperationConditions(StorageHelper& storageHelper,
-							  std::vector<OperationCondition>& result) const override;
+    bool
+    tryGetOperationConditions(StorageHelper& storageHelper,
+                              std::vector<OperationCondition>& result) const override;
 
-	bool
-	tryGetSignerRequirements(StorageHelper& storageHelper,
-							 std::vector<SignerRequirement>& result) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result) const override;
 
-	bool
-	isSignatureValid(AssetFrame::pointer asset, LedgerVersion version);
+    bool
+    isSignatureValid(AssetFrame::pointer asset, LedgerVersion version);
 
-	Hash
-	getSignatureData(AssetCode const& assetCode, AccountID const& newPreIssuer);
+    Hash
+    getSignatureData(AssetCode const& assetCode, AccountID const& newPreIssuer);
 
 public:
     ChangeAssetPreIssuerOpFrame(Operation const& op, OperationResult& res,
-                         TransactionFrame& parentTx);
+                                TransactionFrame& parentTx);
 
-    bool doApply(Application& app, LedgerDelta& delta,
+    bool doApply(Application& app, StorageHelper& storageHelper,
                  LedgerManager& ledgerManager) override;
 
     bool doCheckValid(Application& app) override;
+
 protected:
     std::string getAssetCode() const override;
 };

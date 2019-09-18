@@ -10,27 +10,23 @@ namespace stellar
 {
 
 ReviewChangeRoleRequestOpFrame::ReviewChangeRoleRequestOpFrame(
-        Operation const &op, OperationResult &res, TransactionFrame &parentTx)
-        : ReviewRequestOpFrame(op, res, parentTx)
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : ReviewRequestOpFrame(op, res, parentTx)
 {
 }
 
 bool
-ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &delta,
-                                              LedgerManager &ledgerManager,
+ReviewChangeRoleRequestOpFrame::handleApprove(Application& app, StorageHelper& storageHelper,
+                                              LedgerManager& ledgerManager,
                                               ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::CHANGE_ROLE);
-
-    Database &db = ledgerManager.getDatabase();
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
 
     if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_TO_NON_EXISTING_ROLE))
     {
         auto roleID = request->getRequestEntry().body.changeRoleRequest().accountRoleToSet;
         auto accountRole = storageHelper.getAccountRoleHelper().loadAccountRole(roleID);
-        if(!accountRole)
+        if (!accountRole)
         {
             innerResult().code(ReviewRequestResultCode::ACCOUNT_ROLE_TO_SET_DOES_NOT_EXIST);
             return false;
@@ -39,7 +35,8 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
     }
 
     auto& requestEntry = request->getRequestEntry();
-    handleTasks(db, delta, request);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    handleTasks(requestHelper, request);
 
     if (!request->canBeFulfilled(ledgerManager))
     {
@@ -48,7 +45,7 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
         return true;
     }
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, request->getKey());
+    requestHelper.storeDelete(request->getKey());
 
     auto& changeRoleRequest = requestEntry.body.changeRoleRequest();
     auto destinationAccount = changeRoleRequest.destinationAccount;
@@ -59,6 +56,8 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 
     // set KYC Data
     auto kycHelper = AccountKYCHelper::Instance();
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     auto updatedKYC = kycHelper->loadAccountKYC(destinationAccount, db, &delta);
     if (!updatedKYC)
     {
@@ -80,8 +79,8 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application &app, LedgerDelta &del
 }
 
 bool
-ReviewChangeRoleRequestOpFrame::handleReject(Application &app, LedgerDelta &delta,
-                                             LedgerManager &ledgerManager,
+ReviewChangeRoleRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper,
+                                             LedgerManager& ledgerManager,
                                              ReviewableRequestFrame::pointer request)
 {
     if (mReviewRequest.reviewDetails.tasksToRemove != 0)
@@ -91,8 +90,6 @@ ReviewChangeRoleRequestOpFrame::handleReject(Application &app, LedgerDelta &delt
     }
 
     request->checkRequestType(ReviewableRequestType::CHANGE_ROLE);
-
-    Database &db = ledgerManager.getDatabase();
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.tasks.allTasks |= mReviewRequest.reviewDetails.tasksToAdd;
@@ -107,13 +104,14 @@ ReviewChangeRoleRequestOpFrame::handleReject(Application &app, LedgerDelta &delt
 
     const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);
     requestEntry.hash = newHash;
-    ReviewableRequestHelper::Instance()->storeChange(delta, db, request->mEntry);
+
+    storageHelper.getReviewableRequestHelper().storeChange(request->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;
 }
 
-bool ReviewChangeRoleRequestOpFrame::doCheckValid(Application &app)
+bool ReviewChangeRoleRequestOpFrame::doCheckValid(Application& app)
 {
     if (!isValidJson(mReviewRequest.reviewDetails.externalDetails))
     {

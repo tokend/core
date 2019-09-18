@@ -4,6 +4,7 @@
 
 namespace stellar
 {
+class BalanceManager;
 class OpenSwapOpFrame : public OperationFrame
 {
     OpenSwapResult&
@@ -17,7 +18,7 @@ class OpenSwapOpFrame : public OperationFrame
     bool isDestinationFeeValid();
 
     BalanceFrame::pointer
-    mustLoadDestinationBalance(AssetCode asset, StorageHelper& storageHelper);
+    mustLoadDestinationBalance(Application& app, StorageHelper& sh, AssetCode asset);
 
     bool isSwapAllowed(StorageHelper& sh, BalanceFrame::pointer from,
                        BalanceFrame::pointer to);
@@ -27,10 +28,9 @@ class OpenSwapOpFrame : public OperationFrame
                      PaymentFeeType feeType, StorageHelper& sh,
                      LedgerManager& lm);
 
-    bool checkFee(AccountManager& accountManager, AccountFrame::pointer payer,
+    bool checkFee(BalanceManager& balanceManager, AccountFrame::pointer payer,
                   BalanceFrame::pointer chargeFrom, Fee expectedFee,
-                  Fee actualFee, AccountID const& commissionID,
-                  StorageHelper& sh);
+                  Fee actualFee, StorageHelper& sh);
 
     bool isSendToSelf(BalanceID sourceBalanceID, BalanceID destBalanceID);
 

@@ -4,8 +4,9 @@
 
 #include <transactions/test/TxTests.h>
 #include "IssuanceRequestHelper.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/ReferenceFrame.h"
@@ -23,220 +24,230 @@ namespace stellar
 
 namespace txtest
 {
-	IssuanceRequestHelper::IssuanceRequestHelper(TestManager::pointer testManager) : TxHelper(testManager)
-	{
-	}
-	CreatePreIssuanceRequestResult IssuanceRequestHelper::applyCreatePreIssuanceRequest(Account & source,
-                                                          SecretKey & preIssuedAssetSigner, AssetCode assetCode,
-                                                          uint64_t amount, std::string reference,
-                                                          CreatePreIssuanceRequestResultCode expectedResult,
-                                                          uint32_t* allTasks, OperationResultCode expectedOpCode)
-	{
-		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-		auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
+IssuanceRequestHelper::IssuanceRequestHelper(TestManager::pointer testManager) : TxHelper(testManager)
+{
+}
 
-		auto referenceHelper = ReferenceHelper::Instance();
-		auto referenceBeforeTx = referenceHelper->loadReference(source.key.getPublicKey(), reference, mTestManager->getDB());
+CreatePreIssuanceRequestResult IssuanceRequestHelper::applyCreatePreIssuanceRequest(Account& source,
+                                                                                    SecretKey& preIssuedAssetSigner, AssetCode assetCode,
+                                                                                    uint64_t amount, std::string reference,
+                                                                                    CreatePreIssuanceRequestResultCode expectedResult,
+                                                                                    uint32_t *allTasks, OperationResultCode expectedOpCode)
+{
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
+    auto reviewableRequestCountBeforeTx = reviewableRequestHelper.countObjects();
 
-        auto preIssuanceRequest = createPreIssuanceRequest(preIssuedAssetSigner, assetCode, amount, reference);
-		auto txFrame = createPreIssuanceRequestTx(source, preIssuanceRequest, allTasks);
+    auto referenceHelper = ReferenceHelper::Instance();
+    auto referenceBeforeTx = referenceHelper->loadReference(source.key.getPublicKey(), reference, mTestManager->getDB());
 
-        auto checker = ReviewPreIssuanceChecker(mTestManager, std::make_shared<PreIssuanceRequest>(preIssuanceRequest));
+    auto preIssuanceRequest = createPreIssuanceRequest(preIssuedAssetSigner, assetCode, amount, reference);
+    auto txFrame = createPreIssuanceRequestTx(source, preIssuanceRequest, allTasks);
 
-		mTestManager->applyCheck(txFrame);
-		auto txResult = txFrame->getResult();
-		auto opResult = txResult.result.results()[0];
-		REQUIRE(opResult.code() == expectedOpCode);
-		if (opResult.code() != OperationResultCode::opINNER)
-        {
-            return CreatePreIssuanceRequestResult();
-        }
-		auto actualResultCode = CreatePreIssuanceRequestOpFrame::getInnerCode(opResult);
-		REQUIRE(actualResultCode == expectedResult);
+    auto checker = ReviewPreIssuanceChecker(mTestManager, std::make_shared<PreIssuanceRequest>(preIssuanceRequest));
 
-		uint64 reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
-		if (expectedResult != CreatePreIssuanceRequestResultCode::SUCCESS)
-		{
-			REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
-			return CreatePreIssuanceRequestResult{};
-		}
-
-        auto createPreIssuanceResult = opResult.tr().createPreIssuanceRequestResult();
-        if (createPreIssuanceResult.success().fulfilled)
-        {
-            checker.checkApprove(nullptr);
-            return createPreIssuanceResult;
-        }
-
-		REQUIRE(!referenceBeforeTx);
-		REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
-        REQUIRE(!createPreIssuanceResult.success().fulfilled);
-		return createPreIssuanceResult;
-	}
-
-	TransactionFramePtr IssuanceRequestHelper::createPreIssuanceRequestTx(Account &source,
-	        const PreIssuanceRequest &request, uint32_t* allTasks)
-	{
-		Operation op;
-		op.body.type(OperationType::CREATE_PREISSUANCE_REQUEST);
-		CreatePreIssuanceRequestOp& createPreIssuanceRequestOp = op.body.createPreIssuanceRequest();
-		createPreIssuanceRequestOp.request = request;
-        if (allTasks != nullptr)
-        {
-            createPreIssuanceRequestOp.allTasks.activate() = *allTasks;
-        }
-		createPreIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
-		return txFromOperation(source, op, nullptr);
-	}
-
-    PreIssuanceRequest IssuanceRequestHelper::createPreIssuanceRequest(SecretKey &preIssuedAssetSigner, AssetCode assetCode,
-                                                                       uint64_t amount, std::string reference)
+    mTestManager->applyCheck(txFrame);
+    auto txResult = txFrame->getResult();
+    auto opResult = txResult.result.results()[0];
+    REQUIRE(opResult.code() == expectedOpCode);
+    if (opResult.code() != OperationResultCode::opINNER)
     {
-        PreIssuanceRequest preIssuanceRequest;
-        preIssuanceRequest.amount = amount;
-        preIssuanceRequest.asset = assetCode;
-        preIssuanceRequest.reference = reference;
-        preIssuanceRequest.signature = createPreIssuanceRequestSignature(preIssuedAssetSigner, assetCode, amount, reference);
-        preIssuanceRequest.creatorDetails = "{}";
-        preIssuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
-        return preIssuanceRequest;
+        return CreatePreIssuanceRequestResult();
+    }
+    auto actualResultCode = CreatePreIssuanceRequestOpFrame::getInnerCode(opResult);
+    REQUIRE(actualResultCode == expectedResult);
+
+    uint64 reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
+    if (expectedResult != CreatePreIssuanceRequestResultCode::SUCCESS)
+    {
+        REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
+        return CreatePreIssuanceRequestResult{};
     }
 
-	DecoratedSignature IssuanceRequestHelper::createPreIssuanceRequestSignature(SecretKey & preIssuedAssetSigner, AssetCode assetCode, uint64_t amount, std::string reference)
-	{
-		auto signatureData = CreatePreIssuanceRequestOpFrame::getSignatureData(reference, amount, assetCode);
-		DecoratedSignature sig;
-		sig.signature = preIssuedAssetSigner.sign(signatureData);
-		sig.hint = PubKeyUtils::getHint(preIssuedAssetSigner.getPublicKey());
-		return sig;
-	}
+    auto createPreIssuanceResult = opResult.tr().createPreIssuanceRequestResult();
+    if (createPreIssuanceResult.success().fulfilled)
+    {
+        checker.checkApprove(nullptr);
+        return createPreIssuanceResult;
+    }
+
+    REQUIRE(!referenceBeforeTx);
+    REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
+    REQUIRE(!createPreIssuanceResult.success().fulfilled);
+    return createPreIssuanceResult;
+}
+
+TransactionFramePtr IssuanceRequestHelper::createPreIssuanceRequestTx(Account& source,
+                                                                      const PreIssuanceRequest& request, uint32_t *allTasks)
+{
+    Operation op;
+    op.body.type(OperationType::CREATE_PREISSUANCE_REQUEST);
+    CreatePreIssuanceRequestOp& createPreIssuanceRequestOp = op.body.createPreIssuanceRequest();
+    createPreIssuanceRequestOp.request = request;
+    if (allTasks != nullptr)
+    {
+        createPreIssuanceRequestOp.allTasks.activate() = *allTasks;
+    }
+    createPreIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+    return txFromOperation(source, op, nullptr);
+}
+
+PreIssuanceRequest IssuanceRequestHelper::createPreIssuanceRequest(SecretKey& preIssuedAssetSigner, AssetCode assetCode,
+                                                                   uint64_t amount, std::string reference)
+{
+    PreIssuanceRequest preIssuanceRequest;
+    preIssuanceRequest.amount = amount;
+    preIssuanceRequest.asset = assetCode;
+    preIssuanceRequest.reference = reference;
+    preIssuanceRequest.signature = createPreIssuanceRequestSignature(preIssuedAssetSigner, assetCode, amount, reference);
+    preIssuanceRequest.creatorDetails = "{}";
+    preIssuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
+    return preIssuanceRequest;
+}
+
+DecoratedSignature
+IssuanceRequestHelper::createPreIssuanceRequestSignature(SecretKey& preIssuedAssetSigner, AssetCode assetCode, uint64_t amount, std::string reference)
+{
+    auto signatureData = CreatePreIssuanceRequestOpFrame::getSignatureData(reference, amount, assetCode);
+    DecoratedSignature sig;
+    sig.signature = preIssuedAssetSigner.sign(signatureData);
+    sig.hint = PubKeyUtils::getHint(preIssuedAssetSigner.getPublicKey());
+    return sig;
+}
 
 CreateIssuanceRequestResult
-IssuanceRequestHelper::applyCreateIssuanceRequest(Account & source, AssetCode assetCode,
-												  uint64_t amount, BalanceID receiver,
-												  std::string reference,
-												  uint32_t *allTasks,
-												  CreateIssuanceRequestResultCode expectedResult,
-												  std::string externalDetails,
-												  OperationResultCode expectedOpCode)
-	{
-		auto &db = mTestManager->getDB();
-		auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-		auto expectedReviewableRequestAfterTx = reviewableRequestHelper->countObjects(db.getSession());
+IssuanceRequestHelper::applyCreateIssuanceRequest(Account& source, AssetCode assetCode,
+                                                  uint64_t amount, BalanceID receiver,
+                                                  std::string reference,
+                                                  uint32_t *allTasks,
+                                                  CreateIssuanceRequestResultCode expectedResult,
+                                                  std::string externalDetails,
+                                                  OperationResultCode expectedOpCode)
+{
+    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
 
-		auto referenceBeforeTx = ReferenceHelper::Instance()->loadReference(source.key.getPublicKey(), reference,
-																			db);
+    auto& db = mTestManager->getDB();
+    auto expectedReviewableRequestAfterTx = reviewableRequestHelper.countObjects();
 
-		auto assetBeforeTx = AssetHelperLegacy::Instance()->loadAsset(assetCode, db);
+    auto referenceBeforeTx = ReferenceHelper::Instance()->loadReference(source.key.getPublicKey(), reference,
+                                                                        db);
 
-        auto issuanceRequest = createIssuanceRequest(assetCode, amount, receiver, externalDetails);
-        auto txFrame = createIssuanceRequestTx(source, issuanceRequest, reference, allTasks);
+    auto assetBeforeTx = assetHelper.loadAsset(assetCode);
 
-        auto reviewIssuanceChecker = ReviewIssuanceChecker(mTestManager, std::make_shared<IssuanceRequest>(issuanceRequest));
+    auto issuanceRequest = createIssuanceRequest(assetCode, amount, receiver, externalDetails);
+    auto txFrame = createIssuanceRequestTx(source, issuanceRequest, reference, allTasks);
 
-		mTestManager->applyCheck(txFrame);
-		auto txResult = txFrame->getResult();
-		auto opResult = txResult.result.results()[0];
+    auto reviewIssuanceChecker = ReviewIssuanceChecker(mTestManager, std::make_shared<IssuanceRequest>(issuanceRequest));
 
-		REQUIRE(opResult.code() == expectedOpCode);
+    mTestManager->applyCheck(txFrame);
+    auto txResult = txFrame->getResult();
+    auto opResult = txResult.result.results()[0];
 
-		if (opResult.code() != OperationResultCode::opINNER)
-		{
-			return CreateIssuanceRequestResult();
-		}
+    REQUIRE(opResult.code() == expectedOpCode);
 
-		auto actualResultCode = CreateIssuanceRequestOpFrame::getInnerCode(opResult);
-		REQUIRE(actualResultCode == expectedResult);
-
-		uint64 reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(db.getSession());
-		if (expectedResult != CreateIssuanceRequestResultCode::SUCCESS)
-		{
-			REQUIRE(expectedReviewableRequestAfterTx == reviewableRequestCountAfterTx);
-			return CreateIssuanceRequestResult{};
-		}
-
-		REQUIRE(!referenceBeforeTx);
-		auto result = opResult.tr().createIssuanceRequestResult();
-		if (!result.success().fulfilled) {
-			expectedReviewableRequestAfterTx++;
-		}
-
-		REQUIRE(expectedReviewableRequestAfterTx == reviewableRequestCountAfterTx);
-		// if request was auto fulfilled, lets check if receiver actually got assets
-		if (result.success().fulfilled) {
-            reviewIssuanceChecker.checkApprove(nullptr);
-			return result;
-		}
-
-		if (allTasks == nullptr)
-		{
-			return result;
-		}
-
-		auto requestID = result.success().requestID;
-		auto issuanceRequestFrameAfterTx = ReviewableRequestHelper::Instance()->loadRequest(requestID, db);
-		REQUIRE(!!issuanceRequestFrameAfterTx);
-
-		auto& issuanceRequestEntryAfterTx = issuanceRequestFrameAfterTx->getRequestEntry();
-		REQUIRE(issuanceRequestEntryAfterTx.tasks.allTasks != 0);
-		REQUIRE(issuanceRequestEntryAfterTx.tasks.pendingTasks != 0);
-
-
-		return result;
-	}
-
-	TransactionFramePtr
-    IssuanceRequestHelper::createIssuanceRequestTx(Account &source, const IssuanceRequest &request,
-												   std::string reference, uint32_t* allTasks)
-	{
-		Operation op;
-		op.body.type(OperationType::CREATE_ISSUANCE_REQUEST);
-		CreateIssuanceRequestOp& createIssuanceRequestOp = op.body.createIssuanceRequestOp();
-		createIssuanceRequestOp.request = request;
-        createIssuanceRequestOp.reference = reference;
-		createIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
-
-        if (allTasks != nullptr)
-		{
-			createIssuanceRequestOp.allTasks.activate() = *allTasks;
-		}
-
-		return txFromOperation(source, op, nullptr);
-	}
-
-    IssuanceRequest
-    IssuanceRequestHelper::createIssuanceRequest(AssetCode assetCode, uint64_t amount, BalanceID receiver, std::string externalDetails)
+    if (opResult.code() != OperationResultCode::opINNER)
     {
-        IssuanceRequest issuanceRequest;
-        issuanceRequest.amount = amount;
-        issuanceRequest.asset = assetCode;
-        issuanceRequest.receiver = receiver;
-        issuanceRequest.creatorDetails = externalDetails;
-        issuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
-        return issuanceRequest;
+        return CreateIssuanceRequestResult();
     }
 
-    void IssuanceRequestHelper::createAssetWithPreIssuedAmount(Account& assetOwner, AssetCode assetCode, uint64_t preIssuedAmount,
-                                                               Account& root, uint32_t trailingDigitsCount, uint64_t assetType, uint64_t maxIssuance) {
-		auto manageAssetHelper = ManageAssetTestHelper(mTestManager);
-		auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
-														 ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
-														 : 0;
-		manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount, assetType, maxIssuance);
-		authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
-	}
+    auto actualResultCode = CreateIssuanceRequestOpFrame::getInnerCode(opResult);
+    REQUIRE(actualResultCode == expectedResult);
 
-	void IssuanceRequestHelper::authorizePreIssuedAmount(Account &assetOwner, SecretKey &preIssuedAssetSigner,
-                                                         AssetCode assetCode, uint64_t preIssuedAmount, Account &root)
-	{
-		auto preIssuanceResult = applyCreatePreIssuanceRequest(assetOwner, preIssuedAssetSigner, assetCode, preIssuedAmount,
-			SecretKey::random().getStrKeyPublic());
-        if (preIssuanceResult.code() == CreatePreIssuanceRequestResultCode::SUCCESS
-        	&& preIssuanceResult.success().fulfilled)
-            return;
-		auto reviewPreIssuanceRequestHelper = ReviewPreIssuanceRequestHelper(mTestManager);
-		reviewPreIssuanceRequestHelper.applyReviewRequestTx(root, preIssuanceResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
-	}
+    uint64 reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
+    if (expectedResult != CreateIssuanceRequestResultCode::SUCCESS)
+    {
+        REQUIRE(expectedReviewableRequestAfterTx == reviewableRequestCountAfterTx);
+        return CreateIssuanceRequestResult{};
+    }
+
+    REQUIRE(!referenceBeforeTx);
+    auto result = opResult.tr().createIssuanceRequestResult();
+    if (!result.success().fulfilled)
+    {
+        expectedReviewableRequestAfterTx++;
+    }
+
+    REQUIRE(expectedReviewableRequestAfterTx == reviewableRequestCountAfterTx);
+    // if request was auto fulfilled, lets check if receiver actually got assets
+    if (result.success().fulfilled)
+    {
+        reviewIssuanceChecker.checkApprove(nullptr);
+        return result;
+    }
+
+    if (allTasks == nullptr)
+    {
+        return result;
+    }
+
+    auto requestID = result.success().requestID;
+    auto issuanceRequestFrameAfterTx = reviewableRequestHelper.loadRequest(requestID);
+    REQUIRE(!!issuanceRequestFrameAfterTx);
+
+    auto& issuanceRequestEntryAfterTx = issuanceRequestFrameAfterTx->getRequestEntry();
+    REQUIRE(issuanceRequestEntryAfterTx.tasks.allTasks != 0);
+    REQUIRE(issuanceRequestEntryAfterTx.tasks.pendingTasks != 0);
+
+
+    return result;
+}
+
+TransactionFramePtr
+IssuanceRequestHelper::createIssuanceRequestTx(Account& source, const IssuanceRequest& request,
+                                               std::string reference, uint32_t *allTasks)
+{
+    Operation op;
+    op.body.type(OperationType::CREATE_ISSUANCE_REQUEST);
+    CreateIssuanceRequestOp& createIssuanceRequestOp = op.body.createIssuanceRequestOp();
+    createIssuanceRequestOp.request = request;
+    createIssuanceRequestOp.reference = reference;
+    createIssuanceRequestOp.ext.v(LedgerVersion::EMPTY_VERSION);
+
+    if (allTasks != nullptr)
+    {
+        createIssuanceRequestOp.allTasks.activate() = *allTasks;
+    }
+
+    return txFromOperation(source, op, nullptr);
+}
+
+IssuanceRequest
+IssuanceRequestHelper::createIssuanceRequest(AssetCode assetCode, uint64_t amount, BalanceID receiver, std::string externalDetails)
+{
+    IssuanceRequest issuanceRequest;
+    issuanceRequest.amount = amount;
+    issuanceRequest.asset = assetCode;
+    issuanceRequest.receiver = receiver;
+    issuanceRequest.creatorDetails = externalDetails;
+    issuanceRequest.ext.v(LedgerVersion::EMPTY_VERSION);
+    return issuanceRequest;
+}
+
+void
+IssuanceRequestHelper::createAssetWithPreIssuedAmount(Account& assetOwner, AssetCode assetCode, uint64_t preIssuedAmount,
+                                                      Account& root, uint32_t trailingDigitsCount, uint64_t assetType, uint64_t maxIssuance)
+{
+    auto manageAssetHelper = ManageAssetTestHelper(mTestManager);
+    auto policies = assetOwner.key.getPublicKey() == root.key.getPublicKey()
+                    ? static_cast<uint32_t>(AssetPolicy::BASE_ASSET)
+                    : 0;
+    manageAssetHelper.createAsset(assetOwner, assetOwner.key, assetCode, root, policies, nullptr, trailingDigitsCount, assetType, maxIssuance);
+    authorizePreIssuedAmount(assetOwner, assetOwner.key, assetCode, preIssuedAmount, root);
+}
+
+void IssuanceRequestHelper::authorizePreIssuedAmount(Account& assetOwner, SecretKey& preIssuedAssetSigner,
+                                                     AssetCode assetCode, uint64_t preIssuedAmount, Account& root)
+{
+    auto preIssuanceResult = applyCreatePreIssuanceRequest(assetOwner, preIssuedAssetSigner, assetCode, preIssuedAmount,
+                                                           SecretKey::random().getStrKeyPublic());
+    if (preIssuanceResult.code() == CreatePreIssuanceRequestResultCode::SUCCESS
+        && preIssuanceResult.success().fulfilled)
+        return;
+    auto reviewPreIssuanceRequestHelper = ReviewPreIssuanceRequestHelper(mTestManager);
+    reviewPreIssuanceRequestHelper.applyReviewRequestTx(root, preIssuanceResult.success().requestID, ReviewRequestOpAction::APPROVE, "");
+}
 }
 
 }

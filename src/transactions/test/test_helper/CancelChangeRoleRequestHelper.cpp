@@ -2,21 +2,22 @@
 #include "transactions/CancelChangeRoleRequestOpFrame.h"
 #include "test/test_marshaler.h"
 #include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
 namespace txtest
 {
 CancelChangeRoleRequestHelper::CancelChangeRoleRequestHelper(txtest::TestManager::pointer testManager)
-: TxHelper(testManager) {}
+    : TxHelper(testManager)
+{}
 
 CancelChangeRoleRequestResult
-CancelChangeRoleRequestHelper::applyCancelChangeRoleRequest(txtest::Account &source, uint64_t requestID,
-                                                                CancelChangeRoleRequestResultCode expectedResult)
+CancelChangeRoleRequestHelper::applyCancelChangeRoleRequest(txtest::Account& source, uint64_t requestID,
+                                                            CancelChangeRoleRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelper::Instance();
-    auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
-            countObjects(mTestManager->getDB().getSession());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto reviewableRequestCountBeforeTx = reviewableRequestHelper.countObjects();
 
 
     auto txFrame = cancelChangeRoleRequest(source, requestID);
@@ -25,11 +26,10 @@ CancelChangeRoleRequestHelper::applyCancelChangeRoleRequest(txtest::Account &sou
     auto opResult = txResult.result.results()[0];
 
     auto actualResultCode =
-            CancelChangeRoleRequestOpFrame::getInnerCode(opResult);
+        CancelChangeRoleRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
-    auto reviewableRequestCountAfterTx = reviewableRequestHelper->
-            countObjects(mTestManager->getDB().getSession());
+    auto reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
     if (expectedResult != CancelChangeRoleRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
@@ -42,7 +42,7 @@ CancelChangeRoleRequestHelper::applyCancelChangeRoleRequest(txtest::Account &sou
 }
 
 TransactionFramePtr
-CancelChangeRoleRequestHelper::cancelChangeRoleRequest(txtest::Account &source, uint64_t requestID)
+CancelChangeRoleRequestHelper::cancelChangeRoleRequest(txtest::Account& source, uint64_t requestID)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CANCEL_CHANGE_ROLE_REQUEST);

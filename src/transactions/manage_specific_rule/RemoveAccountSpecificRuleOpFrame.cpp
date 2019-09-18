@@ -123,7 +123,7 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
         auto offersToDelete = offerHelper->loadOffers(*ruleFrame->getEntry().accountID, sale->getID(), db);
         for (auto const& offerToCancel : offersToDelete)
         {
-            DeleteSaleParticipationOpFrame::deleteSaleParticipation(app, delta,
+            DeleteSaleParticipationOpFrame::deleteSaleParticipation(app, storageHelper,
                     app.getLedgerManager(), offerToCancel, mParentTx);
         }
     }

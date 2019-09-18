@@ -44,6 +44,7 @@
 #include "transactions/test/mocks/MockVoteHelper.h"
 #include "transactions/test/mocks/MockPollHelper.h"
 #include "transactions/test/mocks/MockSwapHelper.h"
+#include "transactions/test/mocks/MockReviewableRequestHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"
@@ -63,7 +64,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
     MockSignerRuleHelper signerRuleHelperMock;
     MockSignerRuleVerifier signerRuleVerifierMock;
     std::shared_ptr<MockSignatureValidator> signatureValidatorMock =
-            std::make_shared<MockSignatureValidator>();
+        std::make_shared<MockSignatureValidator>();
 
     auto secretKey = SecretKey::random();
 
@@ -74,21 +75,21 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
     OperationResult operationResult;
 
     AccountFrame::pointer accountFrameFake =
-            AccountFrame::makeAuthOnlyAccount(*op.sourceAccount);
+        AccountFrame::makeAuthOnlyAccount(*op.sourceAccount);
 
     Database::EntryCache cacheFake(4096);
 
     ON_CALL(appMock, getDatabase()).WillByDefault(ReturnRef(dbMock));
     ON_CALL(appMock, getLedgerManager())
-            .WillByDefault(ReturnRef(ledgerManagerMock));
+        .WillByDefault(ReturnRef(ledgerManagerMock));
     ON_CALL(storageHelperMock, getDatabase()).WillByDefault(ReturnRef(dbMock));
     ON_CALL(storageHelperMock, getLedgerDelta())
-            .WillByDefault(Return(&ledgerDeltaMock));
+        .WillByDefault(Return(&ledgerDeltaMock));
     ON_CALL(transactionFrameMock, getSignatureValidator())
-            .WillByDefault(Return(signatureValidatorMock));
+        .WillByDefault(Return(signatureValidatorMock));
     ON_CALL(*signatureValidatorMock,
             check(Ref(appMock), Ref(storageHelperMock), _, Const(*op.sourceAccount), _))
-            .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
+        .WillByDefault(Return(SignatureValidator::Result::SUCCESS));
     ON_CALL(dbMock, getEntryCache()).WillByDefault(ReturnRef(cacheFake));
     ON_CALL(storageHelperMock, getSignerRoleHelper());
 
@@ -119,7 +120,7 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
         createData.forbids = false;
 
         auto signerRuleFrame = std::make_shared<SignerRuleFrame>(1,
-                secretKey.getPublicKey(), operation.data.createData());
+                                                                 secretKey.getPublicKey(), operation.data.createData());
 
         operationResult.code(OperationResultCode::opINNER);
         operationResult.tr().type(OperationType::MANAGE_SIGNER_RULE);
@@ -127,17 +128,17 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
         ManageSignerRuleOpFrame opFrame(op, operationResult, transactionFrameMock);
 
         EXPECT_CALL(storageHelperMock, mustGetLedgerDelta())
-                .WillOnce(ReturnRef(ledgerDeltaMock));
+            .WillOnce(ReturnRef(ledgerDeltaMock));
         EXPECT_CALL(ledgerDeltaMock, getHeaderFrame())
-                .WillOnce(ReturnRef(ledgerHeaderFrameMock));
+            .WillOnce(ReturnRef(ledgerHeaderFrameMock));
         EXPECT_CALL(ledgerHeaderFrameMock, generateID(LedgerEntryType::SIGNER_RULE))
-                .WillOnce(Return(signerRuleFrame->getID()));
+            .WillOnce(Return(signerRuleFrame->getID()));
         EXPECT_CALL(appMock, getAdminID())
-                .WillOnce(Return(secretKey.getPublicKey()));
+            .WillOnce(Return(secretKey.getPublicKey()));
         EXPECT_CALL(storageHelperMock, getSignerRuleHelper())
-                .WillOnce(ReturnRef(signerRuleHelperMock));
+            .WillOnce(ReturnRef(signerRuleHelperMock));
         EXPECT_CALL(signerRuleHelperMock, storeAdd(signerRuleFrame->mEntry))
-                .WillOnce(Return());
+            .WillOnce(Return());
 
         REQUIRE(opFrame.doCheckValid(appMock));
         REQUIRE(opFrame.doApply(appMock, storageHelperMock, ledgerManagerMock));
@@ -165,11 +166,11 @@ TEST_CASE("manage signer rule unit test", "[tx][unit][manage_signer_rule]")
             ManageSignerRuleOpFrame updateFrame(op, operationResult, transactionFrameMock);
 
             EXPECT_CALL(storageHelperMock, getSignerRuleHelper())
-                    .WillOnce(ReturnRef(signerRuleHelperMock));
+                .WillOnce(ReturnRef(signerRuleHelperMock));
             EXPECT_CALL(signerRuleHelperMock, loadSignerRule(updateData.ruleID))
-                    .WillOnce(Return(signerRuleFrame));
+                .WillOnce(Return(signerRuleFrame));
             EXPECT_CALL(signerRuleHelperMock, storeChange(signerRuleFrame->mEntry))
-                    .Times(1);
+                .Times(1);
 
             REQUIRE(updateFrame.doCheckValid(appMock));
             REQUIRE(updateFrame.doApply(appMock, storageHelperMock, ledgerManagerMock));

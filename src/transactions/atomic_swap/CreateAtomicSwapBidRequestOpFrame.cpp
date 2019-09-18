@@ -17,40 +17,39 @@ namespace stellar
 using xdr::operator==;
 
 CreateAtomicSwapBidRequestOpFrame::CreateAtomicSwapBidRequestOpFrame(
-        Operation const& op, OperationResult& res, TransactionFrame& parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mCreateASwapRequest(mOperation.body.createAtomicSwapBidRequestOp())
+    Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx), mCreateASwapRequest(mOperation.body.createAtomicSwapBidRequestOp())
 {
 }
 
 bool
 CreateAtomicSwapBidRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const
-{ 
+                                                             std::vector<OperationCondition>& result) const
+{
     auto bid = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-            mCreateASwapRequest.request.askID, storageHelper.getDatabase());
-    if (!bid) 
+        mCreateASwapRequest.request.askID, storageHelper.getDatabase());
+    if (!bid)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::ATOMIC_SWAP_ASK;
         return false;
     }
-    
+
     auto& assetHelper = storageHelper.getAssetHelper();
     auto asset = assetHelper.mustLoadAsset(bid->getBaseAsset());
-    
+
     AccountRuleResource resource(LedgerEntryType::ASSET);
     resource.asset().assetType = asset->getType();
     resource.asset().assetCode = asset->getCode();
-    
+
     result.emplace_back(resource, AccountRuleAction::RECEIVE_ATOMIC_SWAP, mSourceAccount);
-    
+
     return true;
 }
 
 bool
-CreateAtomicSwapBidRequestOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                    std::vector<SignerRequirement> &result) const
+CreateAtomicSwapBidRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                            std::vector<SignerRequirement>& result) const
 {
     auto& assetHelper = storageHelper.getAssetHelper();
     auto asset = assetHelper.loadAsset(mCreateASwapRequest.request.quoteAsset);
@@ -77,7 +76,7 @@ CreateAtomicSwapBidRequestOpFrame::tryGetSignerRequirements(StorageHelper &stora
 
 bool
 CreateAtomicSwapBidRequestOpFrame::tryFillRequest(ReviewableRequestEntry& requestEntry,
-                                          StorageHelper& storageHelper)
+                                                  StorageHelper& storageHelper)
 {
     requestEntry.body.type(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
     requestEntry.body.createAtomicSwapBidRequest() = mCreateASwapRequest.request;
@@ -104,10 +103,13 @@ CreateAtomicSwapBidRequestOpFrame::tryFillRequest(ReviewableRequestEntry& reques
 
 AtomicSwapAskFrame::pointer
 CreateAtomicSwapBidRequestOpFrame::loadAtomicSwapAsk(CreateAtomicSwapBidRequest atomicSwapRequest,
-                                             Database& db, LedgerDelta& delta)
+                                                     StorageHelper& storageHelper)
 {
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+
     auto bidFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-            atomicSwapRequest.askID, db, &delta);
+        atomicSwapRequest.askID, db, &delta);
     if (!bidFrame)
     {
         innerResult().code(CreateAtomicSwapBidRequestResultCode::ASK_NOT_FOUND);
@@ -117,7 +119,7 @@ CreateAtomicSwapBidRequestOpFrame::loadAtomicSwapAsk(CreateAtomicSwapBidRequest 
     if (bidFrame->getOwnerID() == getSourceID())
     {
         innerResult().code(
-                CreateAtomicSwapBidRequestResultCode::SOURCE_ACCOUNT_EQUALS_ASK_OWNER);
+            CreateAtomicSwapBidRequestResultCode::SOURCE_ACCOUNT_EQUALS_ASK_OWNER);
         return nullptr;
     }
 
@@ -132,7 +134,7 @@ CreateAtomicSwapBidRequestOpFrame::loadAtomicSwapAsk(CreateAtomicSwapBidRequest 
 
 bool
 CreateAtomicSwapBidRequestOpFrame::checkAmounts(StorageHelper& storageHelper,
-        AtomicSwapAskFrame::pointer const& bidFrame)
+                                                AtomicSwapAskFrame::pointer const& bidFrame)
 {
     auto& atomicSwapRequest = mCreateASwapRequest.request;
     auto& assetHelper = storageHelper.getAssetHelper();
@@ -153,13 +155,13 @@ CreateAtomicSwapBidRequestOpFrame::checkAmounts(StorageHelper& storageHelper,
 
     auto quoteAsset = assetHelper.mustLoadAsset(atomicSwapRequest.quoteAsset);
     auto quoteAmount = OfferManager::calculateQuoteAmount(
-            atomicSwapRequest.baseAmount, price, quoteAsset->getMinimumAmount());
+        atomicSwapRequest.baseAmount, price, quoteAsset->getMinimumAmount());
 
-     if (quoteAmount == 0)
-     {
-         innerResult().code(CreateAtomicSwapBidRequestResultCode::QUOTE_AMOUNT_OVERFLOWS);
-         return false;
-     }
+    if (quoteAmount == 0)
+    {
+        innerResult().code(CreateAtomicSwapBidRequestResultCode::QUOTE_AMOUNT_OVERFLOWS);
+        return false;
+    }
 
     innerResult().success().quoteAmount = static_cast<uint64_t>(quoteAmount);
     return true;
@@ -167,15 +169,13 @@ CreateAtomicSwapBidRequestOpFrame::checkAmounts(StorageHelper& storageHelper,
 
 bool
 CreateAtomicSwapBidRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
-                                   LedgerManager& ledgerManager)
+                                           LedgerManager& ledgerManager)
 {
     innerResult().code(CreateAtomicSwapBidRequestResultCode::SUCCESS);
 
-    Database& db = storageHelper.getDatabase();
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto aSwapRequest = mCreateASwapRequest.request;
 
-    auto bid = loadAtomicSwapAsk(aSwapRequest, db, delta);
+    auto bid = loadAtomicSwapAsk(aSwapRequest, storageHelper);
     if (!bid)
     {
         return false; // error codes are handled above
@@ -192,8 +192,9 @@ CreateAtomicSwapBidRequestOpFrame::doApply(Application& app, StorageHelper& stor
         return false;
     }
 
+    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto requestFrame = ReviewableRequestFrame::createNew(delta, getSourceID(),
-            app.getAdminID(), nullptr, ledgerManager.getCloseTime());
+                                                          app.getAdminID(), nullptr, ledgerManager.getCloseTime());
 
     if (!tryFillRequest(requestFrame->getRequestEntry(), storageHelper))
     {
@@ -202,8 +203,9 @@ CreateAtomicSwapBidRequestOpFrame::doApply(Application& app, StorageHelper& stor
 
     requestFrame->recalculateHashRejectReason();
 
+    Database& db = storageHelper.getDatabase();
     AtomicSwapAskHelper::Instance()->storeChange(delta, db, bid->mEntry);
-    ReviewableRequestHelper::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    storageHelper.getReviewableRequestHelper().storeAdd(requestFrame->mEntry);
 
     innerResult().success().requestID = requestFrame->getRequestID();
     innerResult().success().askOwnerID = bid->getOwnerID();

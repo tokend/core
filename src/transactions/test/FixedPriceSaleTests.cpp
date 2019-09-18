@@ -1,5 +1,5 @@
 #include <ledger/AssetPairHelper.h>
-#include <transactions/FeesManager.h>
+#include <transactions/managers/FeeManager.h>
 #include "main/Application.h"
 #include "test/test.h"
 #include "TxTests.h"
