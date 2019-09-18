@@ -378,6 +378,14 @@ TEST_CASE("swap", "[tx][swap]")
                                            invalidDetails, secretHash, lockTime,
                                            OpenSwapResultCode::INVALID_DETAILS);
         }
+        SECTION("Invalid locktime")
+        {
+            auto wrongLockTime = currentTime - 1;
+            openSwapHelper.applyOpenSwapTx(payer, payerBalance->getBalanceID(),
+                                           destination, swapAmount, swapFeeData,
+                                           details, secretHash, wrongLockTime,
+                                           OpenSwapResultCode::INVALID_LOCK_TIME);
+        }
     }
 
     SECTION("Valid swap")

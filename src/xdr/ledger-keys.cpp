@@ -3939,6 +3939,11 @@ if (!okid)
 {
 return false;
 }
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
 return true;
 }
 bool
@@ -3949,12 +3954,18 @@ if (!okid)
 {
 return false;
 }
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
 return true;
 }
 void
 LedgerKey::_swap_t::count_size(xdr::measurer& m) const 
 {
 m.count_size(id);
+m.count_size(ext);
 }
 bool
 LedgerKey::_swap_t::operator==(xdr::xdr_abstract const& other_abstract) const 
@@ -3964,6 +3975,7 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<_swap_t const&>(other_abstract);return true
 && (id== other.id)
+&& (ext== other.ext)
 ;}
 bool
 LedgerKey::_swap_t::operator<(xdr_abstract const& other_abstract) const
@@ -3975,6 +3987,8 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<_swap_t const&>(other_abstract);
 if (id < other.id) return true;
 if (other.id < id) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
 return false;
 }bool
 LedgerKey::from_bytes(xdr::unmarshaler& u) 

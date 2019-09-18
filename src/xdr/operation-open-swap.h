@@ -280,6 +280,7 @@ enum class OpenSwapResultCode : std::int32_t {
   AMOUNT_IS_LESS_THAN_DEST_FEE = -8,
   INCORRECT_AMOUNT_PRECISION = -9,
   INVALID_DETAILS = -10,
+  INVALID_LOCK_TIME = -11,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OpenSwapResultCode>
@@ -311,6 +312,8 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       return "INCORRECT_AMOUNT_PRECISION";
     case ::stellar::OpenSwapResultCode::INVALID_DETAILS:
       return "INVALID_DETAILS";
+    case ::stellar::OpenSwapResultCode::INVALID_LOCK_TIME:
+      return "INVALID_LOCK_TIME";
     default:
       return nullptr;
     }
@@ -327,7 +330,8 @@ template<> struct xdr_traits<::stellar::OpenSwapResultCode>
       (int32_t)::stellar::OpenSwapResultCode::INSUFFICIENT_FEE_AMOUNT,
       (int32_t)::stellar::OpenSwapResultCode::AMOUNT_IS_LESS_THAN_DEST_FEE,
       (int32_t)::stellar::OpenSwapResultCode::INCORRECT_AMOUNT_PRECISION,
-      (int32_t)::stellar::OpenSwapResultCode::INVALID_DETAILS
+      (int32_t)::stellar::OpenSwapResultCode::INVALID_DETAILS,
+      (int32_t)::stellar::OpenSwapResultCode::INVALID_LOCK_TIME
     };
     return _xdr_enum_vec;
   }

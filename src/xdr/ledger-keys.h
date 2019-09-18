@@ -4349,14 +4349,19 @@ count_size(xdr::measurer& m) const override;
   };
   struct _swap_t  : xdr::xdr_abstract {
     uint64 id{};
+    EmptyExt ext{};
 
     _swap_t() = default;
     template<typename _id_T,
+             typename _ext_T,
              typename = typename
              std::enable_if<std::is_constructible<uint64, _id_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
                            >::type>
-    explicit _swap_t(_id_T &&_id)
-      : id(std::forward<_id_T>(_id)) {}
+    explicit _swap_t(_id_T &&_id,
+                     _ext_T &&_ext)
+      : id(std::forward<_id_T>(_id)),
+        ext(std::forward<_ext_T>(_ext)) {}
     bool
 operator==(xdr::xdr_abstract const& other) const override;bool
 operator<(xdr::xdr_abstract const& other) const override;private:

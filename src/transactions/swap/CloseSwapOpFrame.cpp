@@ -212,6 +212,8 @@ CloseSwapOpFrame::processSwap(Application& app, StorageHelper& sh,
     }
 
     balanceHelper.storeChange(destinationBalance->mEntry);
+    auto& swapHelper = sh.getSwapHelper();
+    swapHelper.storeDelete(swap->getKey());
 
     innerResult().code(CloseSwapResultCode::SUCCESS);
     innerResult().success().effect = CloseSwapEffect::CLOSED;

@@ -374,6 +374,7 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     swapEntry.createdAt = lm.getCloseTime();
     swapEntry.lockTime = mOpenSwap.lockTime;
     swapEntry.fee = totalFee;
+    swapEntry.details = mOpenSwap.details;
     entry.data.swap() = swapEntry;
 
     sh.getSwapHelper().storeAdd(entry);
@@ -384,6 +385,7 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     innerResult().success().destination = destAccount->getID();
     innerResult().success().actualDestinationFee = destFee;
     innerResult().success().actualSourceFee = sourceFee;
+    innerResult().success().asset = sourceBalance->getAsset();
     return true;
 }
 
@@ -421,6 +423,12 @@ OpenSwapOpFrame::tryLock(StorageHelper& sh, BalanceFrame::pointer balance,
 bool
 OpenSwapOpFrame::doCheckValid(Application& app)
 {
+    if (mOpenSwap.lockTime <= app.getLedgerManager().getCloseTime())
+    {
+        innerResult().code(OpenSwapResultCode::INVALID_LOCK_TIME);
+        return false;
+    }
+
     if (!isValidJson(mOpenSwap.details))
     {
         innerResult().code(OpenSwapResultCode::INVALID_DETAILS);
