@@ -353,6 +353,13 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
         throw std::runtime_error("Failed to calculate total amount - overflow");
     }
 
+    if (mOpenSwap.feeData.sourcePaysForDest) {
+        sourceFee.fixed += destFee.fixed;
+        sourceFee.percent += destFee.percent;
+        destFee.fixed = 0;
+        destFee.percent = 0;
+    }
+
     if (!tryLock(sh, sourceBalance, totalAmount))
     {
         innerResult().code(OpenSwapResultCode::UNDERFUNDED);
