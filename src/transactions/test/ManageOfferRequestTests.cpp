@@ -17,6 +17,7 @@
 #include "test_helper/ManageOfferTestHelper.h"
 #include "test_helper/ReviewManageOfferTestHelper.h"
 #include "transactions/dex/OfferExchange.h"
+#include "test_helper/ManageAMLAlertTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -50,6 +51,7 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     auto assetPairHelper = ManageAssetPairTestHelper(testManager);
     auto issuanceHelper = IssuanceRequestHelper(testManager);
     auto offerTestHelper = ManageOfferTestHelper(testManager);
+    auto amlAlertHelper = ManageAMLAlertTestHelper(testManager);
     CreateAccountTestHelper createAccountTestHelper(testManager);
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
@@ -334,10 +336,8 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             REQUIRE(reviewResult.success().typeExt.requestType() ==
                     ReviewableRequestType::MANAGE_OFFER);
 
-            auto lockResult = baseSellerBalance->tryLock(baseAssetAmount);
-            REQUIRE(lockResult == BalanceFrame::Result::SUCCESS);
-            testManager->getStorageHelper().getBalanceHelper().storeChange(
-                baseSellerBalance->mEntry);
+            amlAlertHelper.applyCreateAmlAlert(rootAccount, baseSellerBalance->getBalanceID(),
+                                               baseAssetAmount, "Inalid", "", &toAdd);
 
             reviewResult =
                 reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(
