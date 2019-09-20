@@ -219,11 +219,11 @@ AssetPairHelper::storeLoad(LedgerKey const& key, Database& db)
 
     if (!retAssetPair)
     {
-        putCachedEntry(key, nullptr, db, nullptr);
+        putCachedEntry(key, nullptr, db);
         return nullptr;
     }
     auto pEntry = std::make_shared<LedgerEntry const>(retAssetPair->mEntry);
-    putCachedEntry(key, pEntry, db, nullptr);
+    putCachedEntry(key, pEntry, db);
     return retAssetPair;
 }
 
@@ -253,7 +253,9 @@ AssetPairHelper::loadAssetPair(AssetCode base, AssetCode quote, Database& db,
     if (cachedEntryExists(key, db))
     {
         auto p = getCachedEntry(key, db);
-        return p ? std::make_shared<AssetPairFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<AssetPairFrame>(*p) : nullptr;
+        tryRecordEntry(result, delta);
+        return result;
     }
 
     string baseCode = base;
@@ -273,7 +275,7 @@ AssetPairHelper::loadAssetPair(AssetCode base, AssetCode quote, Database& db,
 
     if (!retAssetPair)
     {
-        putCachedEntry(key, nullptr, db, delta);
+        putCachedEntry(key, nullptr, db);
         return nullptr;
     }
 
@@ -282,7 +284,7 @@ AssetPairHelper::loadAssetPair(AssetCode base, AssetCode quote, Database& db,
         delta->recordEntry(*retAssetPair);
     }
     auto pEntry = std::make_shared<LedgerEntry const>(retAssetPair->mEntry);
-    putCachedEntry(key, pEntry, db, delta);
+    putCachedEntry(key, pEntry, db);
     return retAssetPair;
 }
 

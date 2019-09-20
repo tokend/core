@@ -363,7 +363,7 @@ SaleFrame::pointer SaleHelper::loadSale(uint64_t saleID, Database& db,
 
     if (!retSale)
     {
-        putCachedEntry(key, nullptr, db, delta);
+        putCachedEntry(key, nullptr, db);
         return nullptr;
     }
 
@@ -373,7 +373,7 @@ SaleFrame::pointer SaleHelper::loadSale(uint64_t saleID, Database& db,
     }
 
     const auto pEntry = std::make_shared<LedgerEntry>(retSale->mEntry);
-    putCachedEntry(key, pEntry, db, delta);
+    putCachedEntry(key, pEntry, db);
     return retSale;
 }
 

@@ -39,6 +39,9 @@ class AccountRuleHelperImpl : public AccountRuleHelper, NonCopyable
 
     void storeUpdate(LedgerEntry const& entry, bool insert);
 
+    std::vector<uint64_t>
+    tryGetFromCache(std::vector<AccountRuleFrame::pointer>& result, std::vector<uint64_t> ids);
+
     Database& mDb;
     LedgerDelta* mLedgerDelta{nullptr};
 

@@ -186,7 +186,9 @@ ReviewableRequestFrame::pointer ReviewableRequestHelperImpl::loadRequest(uint64 
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<ReviewableRequestFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<ReviewableRequestFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     auto& db = getDatabase();

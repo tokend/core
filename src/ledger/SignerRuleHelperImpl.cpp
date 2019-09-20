@@ -121,19 +121,59 @@ SignerRuleHelperImpl::storeChange(LedgerEntry const &entry)
     storeUpdate(entry, false);
 }
 
+std::vector<uint64_t>
+SignerRuleHelperImpl::tryGetFromCache(std::vector<SignerRuleFrame::pointer>& result, 
+                                       std::vector<uint64_t> ids) 
+{
+    std::vector<uint64_t> entryToLoad;
+
+    for (auto const& id : ids) 
+    {
+        LedgerKey key(LedgerEntryType::SIGNER_RULE);
+        key.signerRule().id = id;
+
+        if (cachedEntryExists(key))
+        {
+            auto p = getCachedEntry(key);
+            auto resultFrame = p ? std::make_shared<SignerRuleFrame>(*p) : nullptr;
+            // we do not add to ledger entry state, because we do not need rules in horizon that used on checking permissions
+            result.emplace_back(resultFrame);
+            continue;
+        }
+
+        entryToLoad.emplace_back(id);
+    }
+
+    return entryToLoad;
+}
+
 std::vector<SignerRuleFrame::pointer>
 SignerRuleHelperImpl::loadSignerRules(std::vector<uint64_t> const ruleIDs)
 {
+    if (ruleIDs.empty())
+    {
+        return {};
+    }
+
+    std::vector<SignerRuleFrame::pointer> result;
+    result.reserve(ruleIDs.size());
+    auto idsToLoad = tryGetFromCache(result, ruleIDs);
+    if (idsToLoad.empty())
+    {
+        return result;
+    }
+
     std::string sql = mSignerRuleColumnSelector;
-    sql += " WHERE id IN (" + obtainSqlIDsString(ruleIDs) + ")";
+    sql += " WHERE id IN (" + obtainSqlIDsString(idsToLoad) + ")";
 
     auto prep = getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();
     auto timer = getDatabase().getSelectTimer("signer_rules");
 
     std::vector<SignerRuleFrame::pointer> result;
-    load(prep, [&result](LedgerEntry const& entry)
+    load(prep, [&result, this](LedgerEntry const& entry)
     {
+        putCachedEntry(getLedgerKey(entry), std::make_shared<LedgerEntry>(entry));
         result.emplace_back(std::make_shared<SignerRuleFrame>(entry));
     });
 
@@ -239,7 +279,9 @@ SignerRuleHelperImpl::loadSignerRule(uint64_t  const ruleID)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<SignerRuleFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<SignerRuleFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     Database& db = getDatabase();

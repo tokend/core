@@ -33,6 +33,8 @@ class EntryHelper
     virtual std::shared_ptr<LedgerEntry const> getCachedEntry(LedgerKey const& key);
     virtual void putCachedEntry(LedgerKey const& key,
                                 std::shared_ptr<LedgerEntry const> p);
+    virtual void 
+    tryRecordEntry(EntryFrame::pointer frame);
 
     virtual std::string obtainSqlIDsString(std::vector<uint64_t> ids);
 };

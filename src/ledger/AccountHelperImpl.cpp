@@ -205,7 +205,9 @@ AccountHelperImpl::loadAccount(AccountID const& accountID)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<AccountFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<AccountFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     std::string actIDStrKey = PubKeyUtils::toStrKey(accountID);

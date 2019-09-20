@@ -41,7 +41,10 @@ namespace stellar
 
 	protected:
 		std::shared_ptr<LedgerEntry const> getCachedEntry(LedgerKey const& key, Database& db);
-		void putCachedEntry(LedgerKey const& key, std::shared_ptr<LedgerEntry const> p, Database& db, LedgerDelta* delta);
+		void putCachedEntry(LedgerKey const& key, std::shared_ptr<LedgerEntry const> p, Database& db);
+		
+		void 
+		tryRecordEntry(EntryFrame::pointer frame, LedgerDelta *delta);
 	};
 
 	class EntryHelperProvider {
