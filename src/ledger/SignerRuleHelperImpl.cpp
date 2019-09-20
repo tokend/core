@@ -170,7 +170,6 @@ SignerRuleHelperImpl::loadSignerRules(std::vector<uint64_t> const ruleIDs)
     auto& st = prep.statement();
     auto timer = getDatabase().getSelectTimer("signer_rules");
 
-    std::vector<SignerRuleFrame::pointer> result;
     load(prep, [&result, this](LedgerEntry const& entry)
     {
         putCachedEntry(getLedgerKey(entry), std::make_shared<LedgerEntry>(entry));
