@@ -116,7 +116,9 @@ SignerRoleHelperImpl::loadSignerRole(uint64_t const roleID)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<SignerRoleFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<SignerRoleFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     std::string sql = mSignerRoleColumnSelector;

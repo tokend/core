@@ -177,7 +177,9 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
     if (cachedEntryExists(key, db))
     {
         auto p = getCachedEntry(key, db);
-        return p ? std::make_shared<KeyValueEntryFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<KeyValueEntryFrame>(*p) : nullptr;
+        tryRecordEntry(result, delta);
+        return result;
     }
 
     std::string sql = selectorKeyValue;
@@ -194,7 +196,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
 
     if (!retKeyValue)
     {
-        putCachedEntry(key, nullptr, db, delta);
+        putCachedEntry(key, nullptr, db);
         return nullptr;
     }
 
@@ -204,7 +206,7 @@ KeyValueHelperLegacy::loadKeyValue(string256 valueKey, Database& db,
     }
 
     auto pEntry = std::make_shared<LedgerEntry>(retKeyValue->mEntry);
-    putCachedEntry(key, pEntry, db, delta);
+    putCachedEntry(key, pEntry, db);
     return retKeyValue;
 }
 

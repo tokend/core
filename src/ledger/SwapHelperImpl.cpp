@@ -178,7 +178,9 @@ SwapHelperImpl::loadSwap(uint64_t id)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<SwapFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<SwapFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     Database& db = getDatabase();

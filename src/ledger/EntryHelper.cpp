@@ -1,6 +1,7 @@
 #include <xdrpp/marshal.h>
 #include "ledger/EntryHelper.h"
 #include "database/Database.h"
+#include "LedgerDelta.h"
 
 namespace stellar
 {
@@ -30,13 +31,17 @@ void
 EntryHelper::putCachedEntry(LedgerKey const& key,
                             std::shared_ptr<LedgerEntry const> p)
 {
-    if (getLedgerDelta() == nullptr)
-    {
-        return;
-    }
-
     auto s = binToHex(xdr::xdr_to_opaque(key));
     getDatabase().getEntryCache().put(s, p);
+}
+
+void 
+EntryHelper::tryRecordEntry(EntryFrame::pointer frame) 
+{
+    if (frame && (getLedgerDelta() != nullptr))
+    {
+        getLedgerDelta()->recordEntry(*frame);
+    }
 }
 
 std::string

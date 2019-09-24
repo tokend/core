@@ -179,6 +179,17 @@ stellar::AccountRoleHelperImpl::getLedgerKey(LedgerEntry const& from)
 AccountRoleFrame::pointer
 AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
 {
+    LedgerKey key(LedgerEntryType::ACCOUNT_ROLE);
+    key.accountRole().id = roleID;
+
+    if (cachedEntryExists(key))
+    {
+        auto p = getCachedEntry(key);
+        auto result = p ? std::make_shared<AccountRoleFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
+    }
+
     std::string sql = mAccountRoleSelector;
     sql += " WHERE id = :id";
     auto prep = mStorageHelper.getDatabase().getPreparedStatement(sql);
@@ -192,9 +203,6 @@ AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
     {
         result = std::make_shared<AccountRoleFrame>(entry);
     });
-
-    LedgerKey key(LedgerEntryType::ACCOUNT_ROLE);
-    key.accountRole().id = roleID;
 
     if (!result)
     {

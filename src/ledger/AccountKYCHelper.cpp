@@ -148,7 +148,9 @@ AccountKYCFrame::pointer AccountKYCHelper::loadAccountKYC(const AccountID &accou
     if (cachedEntryExists(key, db))
     {
         auto accountKYCFrame = getCachedEntry(key, db);
-        return accountKYCFrame ? std::make_shared<AccountKYCFrame>(*accountKYCFrame) : nullptr;
+        auto result = accountKYCFrame ? std::make_shared<AccountKYCFrame>(*accountKYCFrame) : nullptr;
+        tryRecordEntry(result, delta);
+        return result;
     }
 
     LedgerEntry ledgerEntry;
@@ -175,7 +177,7 @@ AccountKYCFrame::pointer AccountKYCHelper::loadAccountKYC(const AccountID &accou
 
     if (!st.got_data())
     {
-        putCachedEntry(key, nullptr, db, delta);
+        putCachedEntry(key, nullptr, db);
         return nullptr;
     }
 
@@ -183,7 +185,7 @@ AccountKYCFrame::pointer AccountKYCHelper::loadAccountKYC(const AccountID &accou
     auto accountKYCFrame = std::make_shared<AccountKYCFrame>(ledgerEntry);
 
     auto pEntry = std::make_shared<const LedgerEntry>(ledgerEntry);
-    putCachedEntry(key, pEntry, db, delta);
+    putCachedEntry(key, pEntry, db);
 
     return accountKYCFrame;
 }

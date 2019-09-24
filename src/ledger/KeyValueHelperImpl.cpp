@@ -194,7 +194,9 @@ KeyValueHelperImpl::loadKeyValue(string256 valueKey)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<KeyValueEntryFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<KeyValueEntryFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     std::string sql = selectorKeyValue;

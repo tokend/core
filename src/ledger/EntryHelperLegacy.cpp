@@ -68,16 +68,19 @@ EntryHelperLegacy::getCachedEntry(LedgerKey const& key, Database& db)
 }
 
 void EntryHelperLegacy::putCachedEntry(LedgerKey const& key,
-                                       std::shared_ptr<LedgerEntry const> p, Database& db, LedgerDelta *delta)
+                                       std::shared_ptr<LedgerEntry const> p, Database& db)
 {
-    // do not add to cache if there is no delta, because when we get from cache we do not record to delta
-    if (delta == nullptr)
-    {
-        return;
-    }
-
     auto s = binToHex(xdr::xdr_to_opaque(key));
     db.getEntryCache().put(s, p);
+}
+
+void 
+EntryHelperLegacy::tryRecordEntry(EntryFrame::pointer frame, LedgerDelta *delta) 
+{
+    if (frame && (delta != nullptr))
+    {
+        delta->recordEntry(*frame);
+    }
 }
 
 uint64_t

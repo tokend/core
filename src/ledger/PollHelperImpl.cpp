@@ -262,7 +262,9 @@ PollHelperImpl::loadPoll(uint64_t const id)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<PollFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<PollFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     Database& db = getDatabase();

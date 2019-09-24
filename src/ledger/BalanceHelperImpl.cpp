@@ -117,16 +117,13 @@ void
 BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
 {
     Database& db = getDatabase();
-    LedgerDelta* delta = mStorageHelper.getLedgerDelta();
+    LedgerDelta& delta = mStorageHelper.mustGetLedgerDelta();
 
     auto balanceFrame = make_shared<BalanceFrame>(entry);
     auto balanceEntry = balanceFrame->getBalance();
 
-    if (delta)
-    {
-        balanceFrame->touch(*delta);
-    }
-    putCachedEntry(getLedgerKey(entry), make_shared<LedgerEntry>(entry));
+    balanceFrame->touch(delta);
+    flushCachedEntry(getLedgerKey(entry));
 
     if (!balanceFrame->isValid())
     {
@@ -182,16 +179,13 @@ BalanceHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
         throw std::runtime_error("could not update SQL");
     }
 
-    if (delta)
+    if (insert)
     {
-        if (insert)
-        {
-            delta->addEntry(*balanceFrame);
-        }
-        else
-        {
-            delta->modEntry(*balanceFrame);
-        }
+        delta.addEntry(*balanceFrame);
+    }
+    else
+    {
+        delta.modEntry(*balanceFrame);
     }
 }
 

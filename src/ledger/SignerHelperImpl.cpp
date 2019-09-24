@@ -165,7 +165,7 @@ SignerHelperImpl::storeDelete(LedgerKey const &key)
 bool
 SignerHelperImpl::exists(LedgerKey const& key)
 {
-    if (cachedEntryExists(key) && getCachedEntry(key) != nullptr)
+    if (cachedEntryExists(key) && (getCachedEntry(key) != nullptr))
     {
         return true;
     }
@@ -259,7 +259,9 @@ SignerHelperImpl::loadSigner(PublicKey const &publicKey, AccountID const& accoun
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<SignerFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<SignerFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     std::string pubKeyStr = PubKeyUtils::toStrKey(publicKey);

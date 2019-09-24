@@ -201,8 +201,10 @@ AccountRuleHelperImpl::storeLoad(LedgerKey const& key)
     if (cachedEntryExists(key))
     {
         auto cachedEntry = getCachedEntry(key);
-        return cachedEntry ? std::make_shared<AccountRuleFrame>(*cachedEntry)
-                           : nullptr;
+        auto result = cachedEntry ? std::make_shared<AccountRuleFrame>(*cachedEntry)
+                                  : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     std::string sql = mAccountRuleSelector;
@@ -234,6 +236,32 @@ AccountRuleHelperImpl::storeLoad(LedgerKey const& key)
     return result;
 }
 
+std::vector<uint64_t>
+AccountRuleHelperImpl::tryGetFromCache(std::vector<AccountRuleFrame::pointer>& result, 
+                                       std::vector<uint64_t> ids) 
+{
+    std::vector<uint64_t> entryToLoad;
+
+    for (auto const& id : ids) 
+    {
+        LedgerKey key(LedgerEntryType::ACCOUNT_RULE);
+        key.accountRule().id = id;
+
+        if (cachedEntryExists(key))
+        {
+            auto p = getCachedEntry(key);
+            auto resultFrame = p ? std::make_shared<AccountRuleFrame>(*p) : nullptr;
+            // we do not add to ledger entry state, because we do not need rules in horizon that used on checking permissions
+            result.emplace_back(resultFrame);
+            continue;
+        }
+
+        entryToLoad.emplace_back(id);
+    }
+
+    return entryToLoad;
+}
+
 std::vector<AccountRuleFrame::pointer>
 AccountRuleHelperImpl::loadAccountRules(std::vector<uint64_t> const ruleIDs)
 {
@@ -242,18 +270,25 @@ AccountRuleHelperImpl::loadAccountRules(std::vector<uint64_t> const ruleIDs)
         return {};
     }
 
+    std::vector<AccountRuleFrame::pointer> result;
+    result.reserve(ruleIDs.size());
+    auto idsToLoad = tryGetFromCache(result, ruleIDs);
+    if (idsToLoad.empty())
+    {
+        return result;
+    }
+
     std::string sql = mAccountRuleSelector;
 
-    sql += " WHERE id IN (" + obtainSqlIDsString(ruleIDs) + ")";
+    sql += " WHERE id IN (" + obtainSqlIDsString(idsToLoad) + ")";
 
     auto prep = mDb.getPreparedStatement(sql);
     auto timer = mDb.getSelectTimer("select_account_rules");
 
-    std::vector<AccountRuleFrame::pointer> result;
-    result.reserve(ruleIDs.size());
-    load(prep, [&result](LedgerEntry const& entry)
+    load(prep, [&result, this](LedgerEntry const& entry)
     {
-        result.emplace_back(make_shared<AccountRuleFrame>(entry));
+        putCachedEntry(getLedgerKey(entry), std::make_shared<LedgerEntry>(entry));
+        result.emplace_back(std::make_shared<AccountRuleFrame>(entry));
     });
 
     return result;

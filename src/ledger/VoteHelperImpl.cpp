@@ -236,7 +236,9 @@ VoteHelperImpl::loadVote(uint64_t pollID, AccountID voterID)
     if (cachedEntryExists(key))
     {
         auto p = getCachedEntry(key);
-        return p ? std::make_shared<VoteFrame>(*p) : nullptr;
+        auto result = p ? std::make_shared<VoteFrame>(*p) : nullptr;
+        tryRecordEntry(result);
+        return result;
     }
 
     Database& db = getDatabase();
