@@ -9,17 +9,24 @@ variables:
   # * `2` is actual second version
   BUILD_BASE_IMAGE: $IMAGE_NAME/buildbase:2
   BUILD_IMAGE: corebuild
+  BUILDNC_IMAGE: corebuildnc
   BUILD_DOCKERFILE: build.dockerfile
+  BUILDNC_DOCKERFILE: buildnc.dockerfile
   LEGACY_IMAGE: $IMAGE_NAME:$CI_COMMIT_SHA
   LEGACY_DOCKERFILE: legacy.dockerfile
   PG_IMAGE: $IMAGE_NAME:pg-$CI_COMMIT_SHA
+  PGNC_IMAGE: $IMAGE_NAME:pg-$CI_COMMIT_SHA-nc
   PG_DOCKERFILE: pg.dockerfile
+  PGNC_DOCKERFILE: pgnc.dockerfile
   DH_IMAGE: tokend/core
+  DHNC_IMAGE: tokendconto/core
 
 stages:
   - buildbase
   - build
+  - buildnc
   - publish
+  - publishnc
 
 build-base-image:
   image: docker:latest
@@ -56,6 +63,24 @@ build:
     - docker build -t $PG_IMAGE -f $PG_DOCKERFILE .
     - docker push $PG_IMAGE
 
+buildnc:
+  image: docker:latest
+  stage: build
+  tags:
+    - tokend
+  only:
+    - /^.+\..+\..+$/
+  script:
+    - version=$(test -z $CI_COMMIT_TAG && echo $CI_COMMIT_SHA || echo $CI_COMMIT_TAG)
+    # login to docker registry
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    # build intermediate binary base
+    - docker build --pull --build-arg RSA_KEY="$SSH_PRIVATE_KEY" --build-arg VERSION="$version" -t $BUILDNC_IMAGE -f $BUILDNC_DOCKERFILE .
+    # new container
+    - docker pull registry.gitlab.com/tokend/deployment/postgres-ubuntu:9.6
+    - docker build -t $PGNC_IMAGE -f $PGNC_DOCKERFILE .
+    - docker push $PGNC_IMAGE
+
 publish dockerhub:
   image: docker:latest
   stage: publish
@@ -70,3 +95,18 @@ publish dockerhub:
     - docker pull $PG_IMAGE
     - docker tag $PG_IMAGE $DH_IMAGE:$RELEASE
     - docker push $DH_IMAGE:$RELEASE
+
+publishnc dockerhub:
+  image: docker:latest
+  stage: publish
+  tags:
+    - tokend
+  only:
+    - /^.+\..+\..+$/
+  script:
+    - RELEASE=$CI_COMMIT_REF_NAME
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
+    - docker pull $PGNC_IMAGE
+    - docker tag $PGNC_IMAGE $DHNC_IMAGE:$RELEASE-nc
+    - docker push $DHNC_IMAGE:$RELEASE-nc
