@@ -26,6 +26,7 @@ stages:
   - build
   - buildnc
   - publish
+  - publishnc
 
 build-base-image:
   image: docker:latest
@@ -94,6 +95,18 @@ publish dockerhub:
     - docker pull $PG_IMAGE
     - docker tag $PG_IMAGE $DH_IMAGE:$RELEASE
     - docker push $DH_IMAGE:$RELEASE
+
+publishnc dockerhub:
+  image: docker:latest
+  stage: publish
+  tags:
+    - tokend
+  only:
+    - /^.+\..+\..+$/
+  script:
+    - RELEASE=$CI_COMMIT_REF_NAME
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
     - docker pull $PGNC_IMAGE
     - docker tag $PGNC_IMAGE $DHNC_IMAGE:$RELEASE-nc
     - docker push $DHNC_IMAGE:$RELEASE-nc
