@@ -36,6 +36,8 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
     auto randomSecretKey = SecretKey::random();
     auto account = Account{randomSecretKey, Salt(1)};
 
+    auto kycInitiator = Account{ SecretKey::random(), Salt(2)};
+
     auto master = Account{getRoot(), Salt(1)};
 
     CreateAccountTestHelper accountTestHelper(testManager);
@@ -43,6 +45,28 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
     InitiateKYCRecoveryTestHelper initKycRecoveryTestHelper(testManager);
     ManageKeyValueTestHelper manageKVHelper(testManager);
     ReviewKycRecoveryHelper reviewKycRecoveryHelper(testManager);
+    ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
+    ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
+
+    AccountRuleResource resource(LedgerEntryType::INITIATE_KYC_RECOVERY);
+    resource.initiateKYCRecovery().roleID = 1;
+
+    auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, resource, AccountRuleAction::CREATE, false);
+    auto kycInitiatorRuleID = manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, AccountRuleResource(LedgerEntryType::TRANSACTION), AccountRuleAction::SEND, false);
+    auto sendTxRuleID = manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::CREATE).success().ruleID;
+
+    // create account role using root as source
+    auto createSenderAccountRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+            R"({"name":"kyc_initiator"})", {kycInitiatorRuleID, sendTxRuleID});
+
+    auto kycInitiatorRoleID = manageAccountRoleTestHelper.applyTx(
+            master, createSenderAccountRoleOp).success().roleID;
 
     auto createAccountTestBuilder = CreateAccountTestBuilder()
         .setSource(master)
@@ -52,12 +76,17 @@ TEST_CASE("kyc recovery", "[tx][kyc_recovery]")
 
     accountTestHelper.applyTx(createAccountTestBuilder);
 
+    accountTestHelper.applyTx(createAccountTestBuilder
+        .setRoleID(kycInitiatorRoleID)
+        .setToPublicKey(kycInitiator.key.getPublicKey())
+        .addBasicSigner());
+
     auto recoverySigner = SecretKey::random();
     AccountID targetAccountID = account.key.getPublicKey();
     auto initKYCRecovery = InitiateKYCRecoveryTestBuilder()
         .setTargetAccount(targetAccountID)
         .setSigner(recoverySigner.getPublicKey())
-        .setSource(master);
+        .setSource(kycInitiator);
 
     SECTION("Recovery not allowed")
     {
