@@ -252,6 +252,9 @@ AccountRuleVerifierImpl::isResourceMatches(
                              actualResource.swap().assetType) &&
                isStringMatches(conditionResource.swap().assetCode,
                                actualResource.swap().assetCode);
+    case LedgerEntryType::INITIATE_KYC_RECOVERY:
+        return isIDMatches(conditionResource.initiateKYCRecovery().roleID,
+                           actualResource.initiateKYCRecovery().roleID);
     case LedgerEntryType::ACCOUNT_KYC:
     case LedgerEntryType::ACCOUNT:
     case LedgerEntryType::ACCOUNT_RULE:

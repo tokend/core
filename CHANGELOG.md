@@ -4,6 +4,12 @@
 
 ### Fixed
 
+* Checking initiate kyc recovery account rule
+
+## 3.6.0-x.2
+
+### Fixed
+
 * Reviewer for issuance requests
 
 ## 3.6.0-x.0
