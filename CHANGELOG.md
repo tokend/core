@@ -2,17 +2,13 @@
 
 ## Unreleased
 
+## 3.6.1-x.0
+
 ### Fixed
 
 * Checking initiate kyc recovery account rule
 
-## 3.6.0-x.2
-
-### Fixed
-
-* Reviewer for issuance requests
-
-## 3.6.0-x.0
+## 3.6.0
 
 ### Added 
 
@@ -38,8 +34,9 @@
 ### Fixed
 
 * long serialization on OS X 64-bit
+* Reviewer for issuance requests
 
-## 3.5.2-x.0
+## 3.5.2
 
 ### Changed
 
