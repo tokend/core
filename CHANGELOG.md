@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 3.6.1-x.0
+## 3.6.1
 
 ### Fixed
 
