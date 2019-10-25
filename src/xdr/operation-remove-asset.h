@@ -179,6 +179,9 @@ enum class RemoveAssetResultCode : std::int32_t {
   HAS_PAIR = -2,
   HAS_ACTIVE_OFFERS = -3,
   HAS_ACTIVE_SALES = -4,
+  HAS_ACTIVE_ATOMIC_SWAPS = -5,
+  HAS_ACTIVE_SWAPS = -6,
+  CANNOT_REMOVE_STATS_QUOTE_ASSET = -7,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::RemoveAssetResultCode>
@@ -198,6 +201,12 @@ template<> struct xdr_traits<::stellar::RemoveAssetResultCode>
       return "HAS_ACTIVE_OFFERS";
     case ::stellar::RemoveAssetResultCode::HAS_ACTIVE_SALES:
       return "HAS_ACTIVE_SALES";
+    case ::stellar::RemoveAssetResultCode::HAS_ACTIVE_ATOMIC_SWAPS:
+      return "HAS_ACTIVE_ATOMIC_SWAPS";
+    case ::stellar::RemoveAssetResultCode::HAS_ACTIVE_SWAPS:
+      return "HAS_ACTIVE_SWAPS";
+    case ::stellar::RemoveAssetResultCode::CANNOT_REMOVE_STATS_QUOTE_ASSET:
+      return "CANNOT_REMOVE_STATS_QUOTE_ASSET";
     default:
       return nullptr;
     }
@@ -208,7 +217,10 @@ template<> struct xdr_traits<::stellar::RemoveAssetResultCode>
       (int32_t)::stellar::RemoveAssetResultCode::INVALID_ASSET_CODE,
       (int32_t)::stellar::RemoveAssetResultCode::HAS_PAIR,
       (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_OFFERS,
-      (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_SALES
+      (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_SALES,
+      (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_ATOMIC_SWAPS,
+      (int32_t)::stellar::RemoveAssetResultCode::HAS_ACTIVE_SWAPS,
+      (int32_t)::stellar::RemoveAssetResultCode::CANNOT_REMOVE_STATS_QUOTE_ASSET
     };
     return _xdr_enum_vec;
   }

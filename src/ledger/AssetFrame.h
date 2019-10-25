@@ -17,6 +17,14 @@ class AssetFrame : public EntryFrame
     AssetFrame(AssetFrame const& from);
 
 public:
+
+    enum class State
+    {
+        ACTIVE = 0,
+        DELETED = 1
+    };
+
+
     typedef std::shared_ptr<AssetFrame> pointer;
 
     static const uint32 kMaximumTrailingDigits = 6;

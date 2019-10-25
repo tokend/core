@@ -4,42 +4,41 @@
 
 #include "database/Database.h"
 #include "DatabaseConnectionString.h"
-#include "main/Application.h"
-#include "main/Config.h"
-#include "util/Logging.h"
-#include "util/GlobalChecks.h"
-#include "ledger/EntryHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
-#include "ledger/StorageHelperImpl.h"
-#include "overlay/OverlayManager.h"
-#include "overlay/BanManager.h"
-#include "main/PersistentState.h"
-#include "main/ExternalQueue.h"
-#include "ledger/LedgerHeaderFrame.h"
-#include "transactions/TransactionFrame.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
-#include "bucket/BucketManager.h"
 #include "herder/HerderPersistence.h"
 #include "herder/Upgrades.h"
 #include "history/HistoryManager.h"
+#include "ledger/AccountSpecificRuleHelper.h"
+#include "ledger/AtomicSwapAskHelper.h"
+#include "ledger/EntryHelperLegacy.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ledger/LedgerHeaderFrame.h"
 #include "ledger/LedgerHeaderUtils.h"
+#include "ledger/PollHelper.h"
+#include "ledger/ReferenceHelper.h"
+#include "ledger/SaleHelper.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/SwapHelper.h"
+#include "ledger/VoteHelper.h"
+#include "main/Application.h"
+#include "main/Config.h"
+#include "main/ExternalQueue.h"
+#include "main/PersistentState.h"
 #include "medida/metrics_registry.h"
+#include "overlay/BanManager.h"
+#include "overlay/OverlayManager.h"
+#include "transactions/TransactionFrame.h"
+#include "util/GlobalChecks.h"
+#include "util/Logging.h"
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AssetHelperImpl.h>
+#include <ledger/ContractHelper.h>
 #include <ledger/KeyValueHelperLegacy.h>
 #include <ledger/LimitsV2Helper.h>
-#include <ledger/StatisticsV2Helper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
-#include <ledger/ContractHelper.h>
-#include "ledger/SaleHelper.h"
-#include "ledger/ReferenceHelper.h"
-#include "ledger/AtomicSwapAskHelper.h"
-#include "ledger/PollHelper.h"
-#include "ledger/AccountSpecificRuleHelper.h"
-#include "ledger/VoteHelper.h"
-#include "ledger/SwapHelper.h"
+#include <ledger/StatisticsV2Helper.h>
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -52,9 +51,10 @@ using namespace std;
 
 bool DatabaseImpl::gDriversRegistered = false;
 
-enum databaseSchemaVersion : unsigned long {
-	DROP_SCP = 2,
-	DROP_BAN = 3,
+enum databaseSchemaVersion : unsigned long
+{
+    DROP_SCP = 2,
+    DROP_BAN = 3,
     REFERENCE_VERSION = 4,
     ADD_ACCOUNT_KYC = 5,
     EXTERNAL_POOL_FIX_MIGRATION = 6,
@@ -71,10 +71,11 @@ enum databaseSchemaVersion : unsigned long {
     ADD_SPECIFIC_RULES = 17,
     FIX_HISTORY_UPGRADES = 18,
     ENABLE_ATOMIC_SWAP = 19,
-    SWAPS = 20
+    SWAPS = 20,
+    ASSET_STATE = 21
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::SWAPS;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ASSET_STATE;
 
 static void
 setSerializable(soci::session& sess)
@@ -110,7 +111,8 @@ DatabaseImpl::DatabaseImpl(Application& app)
 {
     registerDrivers();
     CLOG(INFO, "Database") << "Connecting to: "
-          << removePasswordFromConnectionString(app.getConfig().DATABASE.value);
+                           << removePasswordFromConnectionString(
+                                  app.getConfig().DATABASE.value);
     mSession.open(app.getConfig().DATABASE.value);
 
     if (isSqlite())
@@ -195,6 +197,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case SWAPS:
             sh.getSwapHelper().dropAll();
+            break;
+        case ASSET_STATE:
+            sh.getAssetHelper().addAssetState();
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
@@ -303,8 +308,8 @@ DatabaseImpl::getUpsertTimer(std::string const& entityName)
     mEntityTypes.insert(entityName);
     mQueryMeter.Mark();
     return mApp.getMetrics()
-            .NewTimer({"database", "upsert", entityName})
-            .TimeScope();
+        .NewTimer({"database", "upsert", entityName})
+        .TimeScope();
 }
 
 void
@@ -362,7 +367,7 @@ DatabaseImpl::initialize()
         helper->dropAll();
     }
 
-	EntryHelperProvider::dropAll(*this);
+    EntryHelperProvider::dropAll(*this);
     OverlayManager::dropAll(*this);
     PersistentState::dropAll(*this);
     ExternalQueue::dropAll(*this);
@@ -511,7 +516,7 @@ DatabaseImpl::totalQueryTime() const
 
 void
 DatabaseImpl::excludeTime(std::chrono::nanoseconds const& queryTime,
-                      std::chrono::nanoseconds const& totalTime)
+                          std::chrono::nanoseconds const& totalTime)
 {
     mExcludedQueryTime += queryTime;
     mExcludedTotalTime += totalTime;

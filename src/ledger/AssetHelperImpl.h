@@ -71,6 +71,10 @@ private:
     std::vector<AssetFrame::pointer>
     loadBaseAssets() override;
 
+    void addAssetState() override;
+
+    void markDeleted(const AssetCode& code) override;
+
     bool
     doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) override;
 

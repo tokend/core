@@ -1,8 +1,8 @@
 #include "AssetHelperImpl.h"
+#include "database/Database.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
 #include <xdrpp/marshal.h>
-#include "database/Database.h"
 
 using namespace soci;
 using namespace std;
@@ -13,13 +13,14 @@ namespace stellar
 using xdr::operator<;
 
 AssetHelperImpl::AssetHelperImpl(StorageHelper& storageHelper)
-        : mStorageHelper(storageHelper)
+    : mStorageHelper(storageHelper)
 {
-    mAssetColumnSelector = "SELECT code, owner, preissued_asset_signer, "
-                           "details, max_issuance_amount, "
-                           "available_for_issueance, issued, pending_issuance, "
-                           "policies, type, trailing_digits, lastmodified, version "
-                           "FROM asset";
+    mAssetColumnSelector =
+        "SELECT code, owner, preissued_asset_signer, "
+        "details, max_issuance_amount, "
+        "available_for_issueance, issued, pending_issuance, "
+        "policies, type, trailing_digits, lastmodified, version "
+        "FROM asset ";
 }
 
 void
@@ -28,14 +29,17 @@ AssetHelperImpl::dropAll()
     Database& db = getDatabase();
 
     db.getSession() << "DROP TABLE IF EXISTS asset;";
-    db.getSession() << "CREATE TABLE asset"
+    db.getSession()
+        << "CREATE TABLE asset"
            "("
            "code                    VARCHAR(16)   NOT NULL,"
            "owner                   VARCHAR(56)   NOT NULL,"
            "preissued_asset_signer  VARCHAR(56)   NOT NULL,"
            "details                 TEXT          NOT NULL,"
-           "max_issuance_amount     NUMERIC(23,0) NOT NULL CHECK (max_issuance_amount >= 0),"
-           "available_for_issueance NUMERIC(23,0) NOT NULL CHECK (available_for_issueance >= 0),"
+           "max_issuance_amount     NUMERIC(23,0) NOT NULL CHECK "
+           "(max_issuance_amount >= 0),"
+           "available_for_issueance NUMERIC(23,0) NOT NULL CHECK "
+           "(available_for_issueance >= 0),"
            "issued                  NUMERIC(23,0) NOT NULL CHECK (issued >= 0),"
            "pending_issuance        NUMERIC(23,0) NOT NULL CHECK (issued >= 0),"
            "policies                INT           NOT NULL, "
@@ -47,10 +51,19 @@ AssetHelperImpl::dropAll()
 }
 
 void
+AssetHelperImpl::addAssetState()
+{
+    getDatabase().getSession()
+        << "ALTER TABLE asset ADD COLUMN state INT NOT NULL DEFAULT "
+        << int(AssetFrame::State::ACTIVE) << ";";
+}
+
+void
 AssetHelperImpl::addTrailingDigits()
 {
-    getDatabase().getSession() << "ALTER TABLE asset ADD COLUMN trailing_digits INT NOT NULL DEFAULT "
-                               << AssetFrame::kMaximumTrailingDigits << ";";
+    getDatabase().getSession()
+        << "ALTER TABLE asset ADD COLUMN trailing_digits INT NOT NULL DEFAULT "
+        << AssetFrame::kMaximumTrailingDigits << ";";
 }
 
 void
@@ -84,6 +97,23 @@ AssetHelperImpl::storeDelete(LedgerKey const& key)
     }
 }
 
+void
+AssetHelperImpl::markDeleted(const AssetCode& code)
+{
+
+    Database& db = getDatabase();
+    auto timer = db.getDeleteTimer("delete-asset");
+    auto prep = db.getPreparedStatement(
+        "UPDATE asset SET state = :state WHERE code = :code");
+    auto& st = prep.statement();
+    st.exchange(use(code, "code"));
+    int deletedState = int(AssetFrame::State::DELETED);
+    st.exchange(use(deletedState, "state"));
+
+    st.define_and_bind();
+    st.execute(true);
+}
+
 bool
 AssetHelperImpl::exists(LedgerKey const& key)
 {
@@ -91,7 +121,8 @@ AssetHelperImpl::exists(LedgerKey const& key)
 
     Database& db = getDatabase();
     auto timer = db.getSelectTimer("asset-exists");
-    auto prep = db.getPreparedStatement("SELECT EXISTS "
+    auto prep =
+        db.getPreparedStatement("SELECT EXISTS "
                                 "(SELECT NULL FROM asset WHERE code=:code)");
     auto& st = prep.statement();
     st.exchange(use(key.asset().code, "code"));
@@ -103,12 +134,13 @@ AssetHelperImpl::exists(LedgerKey const& key)
 }
 
 bool
-AssetHelperImpl::exists(const AssetCode &code)
+AssetHelperImpl::exists(const AssetCode& code)
 {
     int exists = 0;
     auto timer = getDatabase().getSelectTimer("asset-exists");
     std::string assetCode = code;
-    auto prep = getDatabase().getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
+    auto prep = getDatabase().getPreparedStatement(
+        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
     auto& st = prep.statement();
     st.exchange(use(assetCode));
     st.exchange(into(exists));
@@ -240,7 +272,8 @@ AssetHelperImpl::loadAsset(AssetCode assetCode)
     if (cachedEntryExists(key))
     {
         auto asset = getCachedEntry(key);
-        auto assetFrame = asset ? std::make_shared<AssetFrame>(*asset) : nullptr;
+        auto assetFrame =
+            asset ? std::make_shared<AssetFrame>(*asset) : nullptr;
         if (asset && mStorageHelper.getLedgerDelta())
         {
             mStorageHelper.getLedgerDelta()->recordEntry(*assetFrame);
@@ -252,15 +285,16 @@ AssetHelperImpl::loadAsset(AssetCode assetCode)
     Database& db = getDatabase();
 
     string sql = mAssetColumnSelector;
-    sql += " WHERE code = :code";
+    sql += " WHERE state = :state and code = :code";
     auto prep = db.getPreparedStatement(sql);
     auto& st = prep.statement();
-    st.exchange(use(assetCode));
+    st.exchange(use(assetCode, "code"));
+    int activeState = int(AssetFrame::State::ACTIVE);
+    st.exchange(use(activeState, "state"));
 
     auto timer = db.getSelectTimer("load-asset");
     AssetFrame::pointer retAsset;
-    loadAssets(prep, [&retAsset](LedgerEntry const& entry)
-    {
+    loadAssets(prep, [&retAsset](LedgerEntry const& entry) {
         retAsset = make_shared<AssetFrame>(entry);
     });
 
@@ -286,9 +320,9 @@ AssetHelperImpl::mustLoadAsset(AssetCode assetCode)
 
     if (!assetFrame)
     {
-        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected state, "
-                       << "expected asset to exists, asset code: "
-                       << assetCode;
+        CLOG(ERROR, Logging::ENTRY_LOGGER)
+            << "Unexpected state, "
+            << "expected asset to exists, asset code: " << assetCode;
         throw runtime_error("Unexpected state, expected asset to exists");
     }
 
@@ -315,18 +349,20 @@ AssetHelperImpl::loadAsset(AssetCode assetCode, AccountID owner)
 AssetFrame::pointer
 AssetHelperImpl::loadStatsAsset()
 {
-    const uint32 statsAssetPolicy = static_cast<uint32>(AssetPolicy::STATS_QUOTE_ASSET);
+    const uint32 statsAssetPolicy =
+        static_cast<uint32>(AssetPolicy::STATS_QUOTE_ASSET);
 
     AssetFrame::pointer retAsset;
     std::string sql = mAssetColumnSelector;
-    sql += " WHERE policies & :sp = :sp";
+    sql += " WHERE state = :state and policies & :sp = :sp";
     auto prep = getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();
     st.exchange(use(statsAssetPolicy, "sp"));
+    int activeState = int(AssetFrame::State::ACTIVE);
+    st.exchange(use(activeState, "state"));
 
     auto timer = getDatabase().getSelectTimer("asset");
-    loadAssets(prep, [&retAsset](LedgerEntry const& asset)
-    {
+    loadAssets(prep, [&retAsset](LedgerEntry const& asset) {
         retAsset = make_shared<AssetFrame>(asset);
     });
     return retAsset;
@@ -373,7 +409,8 @@ AssetHelperImpl::loadAssets(StatementContext& prep,
 }
 
 bool
-AssetHelperImpl::doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount)
+AssetHelperImpl::doesAmountFitAssetPrecision(const AssetCode& assetCode,
+                                             uint64_t amount)
 {
     const uint64_t precision = mustLoadAsset(assetCode)->getMinimumAmount();
     return amount % precision == 0;
@@ -383,16 +420,18 @@ std::vector<AssetFrame::pointer>
 AssetHelperImpl::loadBaseAssets()
 {
     std::string sql = mAssetColumnSelector;
-    sql += " WHERE policies & :bp = :bp "
+    sql += " WHERE state = :state"
+           " policies & :bp = :bp "
            " ORDER BY code ";
     uint32 baseAssetPolicy = static_cast<uint32>(AssetPolicy::BASE_ASSET);
     auto prep = getDatabase().getPreparedStatement(sql);
     prep.statement().exchange(use(baseAssetPolicy, "bp"));
+    int activeState = int(AssetFrame::State::ACTIVE);
+    prep.statement().exchange(use(activeState, "state"));
 
     auto timer = getDatabase().getSelectTimer("asset");
     std::vector<AssetFrame::pointer> retAssets;
-    loadAssets(prep, [&retAssets](LedgerEntry const& asset)
-    {
+    loadAssets(prep, [&retAssets](LedgerEntry const& asset) {
         retAssets.push_back(make_shared<AssetFrame>(asset));
     });
 
@@ -411,4 +450,3 @@ AssetHelperImpl::getLedgerDelta()
     return mStorageHelper.getLedgerDelta();
 }
 } // namespace stellar
-

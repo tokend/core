@@ -18,7 +18,8 @@ ReviewManageOfferRequestOpFrame::ReviewManageOfferRequestOpFrame(
 
 bool
 ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(
-    StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result,
+    LedgerManager& lm) const
 {
     auto request = storageHelper.getReviewableRequestHelper().loadRequest(
         mReviewRequest.requestID);
@@ -35,11 +36,48 @@ ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    auto baseBalance = balanceHelper.mustLoadBalance(manageOffer.baseBalance);
-    auto quoteBalance = balanceHelper.mustLoadBalance(manageOffer.quoteBalance);
 
-    auto baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
-    auto quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+
+    AssetFrame::pointer baseAsset, quoteAsset;
+    BalanceFrame::pointer baseBalance, quoteBalance;
+    if (!lm.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED)){
+        auto baseBalance = balanceHelper.mustLoadBalance(manageOffer.baseBalance);
+        auto quoteBalance = balanceHelper.mustLoadBalance(manageOffer.quoteBalance);
+        baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
+        quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
+    }
+    else {
+        baseBalance = balanceHelper.loadBalance(manageOffer.baseBalance);
+        if (!baseBalance)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::BALANCE;
+            return false;
+        }
+        quoteBalance = balanceHelper.loadBalance(manageOffer.quoteBalance);
+        if (!quoteBalance)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::BALANCE;
+            return false;
+        }
+
+        baseAsset = assetHelper.loadAsset(baseBalance->getAsset());
+        if (!baseAsset)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ASSET;
+            return false;
+        }
+        quoteAsset = assetHelper.loadAsset(quoteBalance->getAsset());
+        if (!quoteAsset)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ASSET;
+            return false;
+        }
+
+    }
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(

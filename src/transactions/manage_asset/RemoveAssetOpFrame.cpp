@@ -1,10 +1,13 @@
 #include "RemoveAssetOpFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/SwapHelper.h"
 #include "main/Application.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
@@ -109,10 +112,35 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
         innerResult().code(RemoveAssetResultCode::HAS_PAIR);
         return false;
     }
+    if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        if (AtomicSwapAskHelper::Instance()->existForAsset(db,
+                                                           mRemoveAsset.code))
+        {
+            innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_ATOMIC_SWAPS);
+            return false;
+        }
 
-    deleteBalances(storageHelper);
+        if (storageHelper.getSwapHelper().existForAsset(mRemoveAsset.code))
+        {
+            innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_SWAPS);
+            return false;
+        }
 
-    assetHelper.storeDelete(asset->getKey());
+        if (asset->isPolicySet(AssetPolicy::STATS_QUOTE_ASSET))
+        {
+            innerResult().code(RemoveAssetResultCode::CANNOT_REMOVE_STATS_QUOTE_ASSET);
+            return false;
+        }
+
+        assetHelper.markDeleted(mRemoveAsset.code);
+    }
+    else
+    {
+        deleteBalances(storageHelper);
+
+        assetHelper.storeDelete(asset->getKey());
+    }
 
     innerResult().code(RemoveAssetResultCode::SUCCESS);
     return true;

@@ -42,7 +42,13 @@ public:
 	virtual bool
 	doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) = 0;
 
-private:
+        virtual void
+        addAssetState() = 0;
+
+        virtual void
+        markDeleted(const AssetCode& code) = 0;
+
+  private:
 
 	virtual void
 	loadAssets(StatementContext& prep,

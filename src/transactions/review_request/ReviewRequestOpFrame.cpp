@@ -64,6 +64,13 @@ ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 }
 
 bool
+ReviewRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                               std::vector<SignerRequirement>& result, LedgerManager& lm) const
+{
+    return tryGetSignerRequirements(storageHelper, result);
+}
+
+bool
 ReviewRequestOpFrame::areBlockingRulesFulfilled(ReviewableRequestFrame::pointer request, LedgerManager& lm, StorageHelper& storageHelper)
 {
     auto requestorAccount = storageHelper.getAccountHelper().loadAccount(request->getRequestor());

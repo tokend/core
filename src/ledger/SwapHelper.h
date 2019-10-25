@@ -15,5 +15,6 @@ class SwapHelper : public EntryHelper
 
     virtual SwapFrame::pointer loadSwap(uint64_t swapID) = 0;
     virtual SwapFrame::pointer mustLoadSwap(uint64_t swapID) = 0;
+    virtual bool existForAsset(const AssetCode& assetCode) = 0;
 };
 }

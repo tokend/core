@@ -20,6 +20,10 @@ class ReviewRequestOpFrame : public OperationFrame {
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result,
+                             LedgerManager& lm) const override;
 
 protected:
     ReviewRequestResult&
