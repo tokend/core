@@ -23,21 +23,50 @@ ReviewASwapAskRequestOpFrame::ReviewASwapAskRequestOpFrame(
 }
 
 bool
-ReviewASwapAskRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                                       std::vector<SignerRequirement>& result) const
+ReviewASwapAskRequestOpFrame::tryGetSignerRequirements(
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result,
+    LedgerManager& lm) const
 {
-    auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
-    if (!request || (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK))
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(
+        mReviewRequest.requestID);
+    if (!request ||
+        (request->getType() != ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
         return false;
     }
+    auto askRequest = request->getRequestEntry().body.createAtomicSwapAskRequest();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
 
-    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
-        request->getRequestEntry().body.createAtomicSwapAskRequest().baseBalance);
+    BalanceFrame::pointer balance;
+    AssetFrame::pointer asset;
+    if (!lm.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        balance =
+            balanceHelper.mustLoadBalance(askRequest.baseBalance);
+        asset = assetHelper.mustLoadAsset(balance->getAsset());
+    }
+    else
+    {
 
-    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
+        balance = balanceHelper.loadBalance(askRequest.baseBalance);
+        if (!balance)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::BALANCE;
+            return false;
+        }
+        asset = assetHelper.loadAsset(balance->getAsset());
+        if (!asset)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ASSET;
+            return false;
+        }
+    }
+
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK);
@@ -134,6 +163,9 @@ ReviewASwapAskRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto baseBalanceFrame = balanceHelper.loadBalance(requestBody.baseBalance);
 
+    // Balance existense was checked previously. The one must consider that balances
+    // can be removed, so, if calling doApply for this operation during another operation
+    // application, balance existence must be checked
     if (baseBalanceFrame == nullptr)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)

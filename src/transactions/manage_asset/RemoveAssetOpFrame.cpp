@@ -133,6 +133,12 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
             return false;
         }
 
+        if (!deleteBalancesWithCheck(storageHelper))
+        {
+            innerResult().code(RemoveAssetResultCode::HAS_PENDING_MOVEMENTS);
+            return false;
+        }
+
         assetHelper.markDeleted(mRemoveAsset.code);
     }
     else
@@ -167,6 +173,24 @@ RemoveAssetOpFrame::deleteBalances(StorageHelper& storageHelper)
 
     for (auto& holder : holders)
     {
+        balanceHelper.storeDelete(holder->getKey());
+    }
+}
+
+bool
+RemoveAssetOpFrame::deleteBalancesWithCheck(StorageHelper& storageHelper)
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
+    auto holders = balanceHelper.loadBalancesForAsset(mRemoveAsset.code);
+
+    for (auto& holder : holders)
+    {
+        if (holder->getLocked() != 0)
+        {
+            return false;
+        }
+
         balanceHelper.storeDelete(holder->getKey());
     }
 }

@@ -4,6 +4,7 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/AccountHelper.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/AccountRoleHelper.h"
 #include "ledger/StorageHelperImpl.h"
 
@@ -51,6 +52,16 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                              LedgerManager& ledgerManager)
 {
     innerResult().code(ManageLimitsResultCode::SUCCESS);
+
+    if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        if (!storageHelper.getAssetHelper().exists(
+            mManageLimits.details.limitsCreateDetails().assetCode))
+        {
+            innerResult().code(ManageLimitsResultCode::ASSET_NOT_FOUND);
+            return false;
+        }
+    }
 
     auto limitsV2Helper = LimitsV2Helper::Instance();
     auto& db = storageHelper.getDatabase();
@@ -151,7 +162,7 @@ ManageLimitsOpFrame::doCheckValid(Application& app)
         innerResult().code(ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE);
         return false;
     }
-    
+
     if ((mManageLimits.details.action() == ManageLimitsAction::CREATE) && !isValidLimits())
     {
         innerResult().code(ManageLimitsResultCode::INVALID_LIMITS);

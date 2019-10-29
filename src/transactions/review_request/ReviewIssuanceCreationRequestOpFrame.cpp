@@ -20,7 +20,8 @@ using xdr::operator==;
 
 bool
 ReviewIssuanceCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                                               std::vector<SignerRequirement>& result) const
+                                                               std::vector<SignerRequirement>& result,
+                                                               LedgerManager& lm) const
 {
     auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_ISSUANCE))
@@ -30,8 +31,23 @@ ReviewIssuanceCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& st
         return false;
     }
 
-    auto asset = storageHelper.getAssetHelper().mustLoadAsset(
-        request->getRequestEntry().body.issuanceRequest().asset);
+    auto& assetHelper = storageHelper.getAssetHelper();
+    AssetFrame::pointer asset;
+    if (!lm.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED)){
+        asset = assetHelper.mustLoadAsset(
+            request->getRequestEntry().body.issuanceRequest().asset);
+    }
+    else {
+        asset = assetHelper.loadAsset(
+            request->getRequestEntry().body.issuanceRequest().asset);
+        if (!asset)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ASSET;
+            return false;
+        }
+
+    }
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_ISSUANCE);
@@ -58,7 +74,17 @@ handleApprove(Application& app, StorageHelper& storageHelper,
 
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    auto asset = assetHelper.mustLoadAsset(issuanceRequest.asset);
+    AssetFrame::pointer asset;
+    if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        if (!storageHelper.getAssetHelper().exists(issuanceRequest.asset))
+        {
+            innerResult().code(ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
+            return false;
+        }
+    }
+
+    asset = assetHelper.mustLoadAsset(issuanceRequest.asset);
     if (asset->willExceedMaxIssuanceAmount(issuanceRequest.amount))
     {
         innerResult().code(ReviewRequestResultCode::MAX_ISSUANCE_AMOUNT_EXCEEDED);

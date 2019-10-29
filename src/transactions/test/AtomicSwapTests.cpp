@@ -318,6 +318,12 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
                 request);
         auto requestID = creationResult.success().requestID;
 
+        SECTION("Try to remove asset")
+        {
+            manageAssetTestHelper.applyRemoveAssetTx(
+                root, baseAsset, nullptr, RemoveAssetResultCode::HAS_PENDING_MOVEMENTS);
+        }
+
         SECTION("Try review atomic swap ask creation request")
         {
             SECTION("Base asset can not be swapped anymore")

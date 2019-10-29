@@ -49,6 +49,11 @@ ReviewLimitsUpdateRequestOpFrame::handleManageLimitsResult(ManageLimitsResultCod
             innerResult().code(ReviewRequestResultCode::ROLE_NOT_FOUND);
             return false;
         }
+        case ManageLimitsResultCode::ASSET_NOT_FOUND:
+        {
+            innerResult().code(ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
+            return false;
+        }
         default:
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected result code from manage limits: "

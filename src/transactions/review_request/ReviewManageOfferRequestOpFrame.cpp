@@ -41,8 +41,8 @@ ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(
     AssetFrame::pointer baseAsset, quoteAsset;
     BalanceFrame::pointer baseBalance, quoteBalance;
     if (!lm.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED)){
-        auto baseBalance = balanceHelper.mustLoadBalance(manageOffer.baseBalance);
-        auto quoteBalance = balanceHelper.mustLoadBalance(manageOffer.quoteBalance);
+        baseBalance = balanceHelper.mustLoadBalance(manageOffer.baseBalance);
+        quoteBalance = balanceHelper.mustLoadBalance(manageOffer.quoteBalance);
         baseAsset = assetHelper.mustLoadAsset(baseBalance->getAsset());
         quoteAsset = assetHelper.mustLoadAsset(quoteBalance->getAsset());
     }

@@ -35,7 +35,7 @@ protected:
 
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const override;
+                             std::vector<SignerRequirement>& result, LedgerManager& lm) const override;
 };
 
 }

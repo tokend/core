@@ -21,6 +21,9 @@ public:
 	virtual bool
 	exists(const AssetCode &code) = 0;
 
+        virtual bool
+        existedForCode(const AssetCode &code) = 0;
+
 	virtual AssetFrame::pointer
 	loadAsset(AssetCode assetCode) = 0;
 

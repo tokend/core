@@ -15,6 +15,7 @@ class RemoveAssetOpFrame : public OperationFrame
     RemoveAssetOp const& mRemoveAsset;
 
     void deleteBalances(StorageHelper& storageHelper);
+    bool deleteBalancesWithCheck(StorageHelper& storageHelper);
 
     bool tryGetOperationConditions(StorageHelper& storageHelper,
                                    std::vector<OperationCondition>& result,

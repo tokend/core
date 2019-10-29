@@ -23,7 +23,8 @@ using xdr::operator==;
 
 bool
 ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
-                                                         std::vector<SignerRequirement>& result) const
+                                                         std::vector<SignerRequirement>& result,
+                                                         LedgerManager& lm) const
 {
     auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_WITHDRAW))
@@ -33,9 +34,33 @@ ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
         return false;
     }
 
-    auto balance = storageHelper.getBalanceHelper().mustLoadBalance(
-        request->getRequestEntry().body.withdrawalRequest().balance);
-    auto asset = storageHelper.getAssetHelper().mustLoadAsset(balance->getAsset());
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+    AssetFrame::pointer asset;
+    BalanceFrame::pointer balance;
+    if (!lm.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED)){
+        balance = balanceHelper.mustLoadBalance(
+            request->getRequestEntry().body.withdrawalRequest().balance);
+        asset = assetHelper.mustLoadAsset(balance->getAsset());
+    }
+    else {
+        balance = balanceHelper.mustLoadBalance(
+            request->getRequestEntry().body.withdrawalRequest().balance);
+        if (!balance)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::BALANCE;
+            return false;
+        }
+        asset = assetHelper.mustLoadAsset(balance->getAsset());
+        if (!asset)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ASSET;
+            return false;
+        }
+
+    }
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_WITHDRAW);

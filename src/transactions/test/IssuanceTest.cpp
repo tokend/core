@@ -881,6 +881,17 @@ TEST_CASE("Issuance", "[tx][issuance]")
                     auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
                     reviewRequestHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "");
                 }
+//Will return opNO_ENTRY. But I'm too lazy to change signature of all applyReviewRequestTx.. methods.
+//                SECTION("Delete asset and review")
+//                {
+//                    manageAssetTestHelper.applyRemoveAssetTx(root, assetToBeIssued,
+//                                                             nullptr);
+//
+//                    auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
+//                    reviewRequestHelper.applyReviewRequestTx(root, requestID,
+//                        ReviewRequestOpAction::APPROVE, "",
+//                        ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
+//                }
             }
         }
     }

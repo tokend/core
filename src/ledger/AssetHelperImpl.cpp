@@ -134,15 +134,34 @@ AssetHelperImpl::exists(LedgerKey const& key)
 }
 
 bool
+AssetHelperImpl::existedForCode(const stellar::AssetCode& code){
+    int exists = 0;
+    auto timer = getDatabase().getSelectTimer("asset-existed");
+    std::string assetCode = code;
+    auto prep = getDatabase().getPreparedStatement(
+        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
+    auto& st = prep.statement();
+    st.exchange(use(assetCode));
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
+bool
 AssetHelperImpl::exists(const AssetCode& code)
 {
     int exists = 0;
     auto timer = getDatabase().getSelectTimer("asset-exists");
     std::string assetCode = code;
     auto prep = getDatabase().getPreparedStatement(
-        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
+        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code "
+        "and state = :state)");
     auto& st = prep.statement();
-    st.exchange(use(assetCode));
+    st.exchange(use(assetCode, "code"));
+    int activeState = int(AssetFrame::State::ACTIVE);
+    st.exchange(use(activeState, "state"));
     st.exchange(into(exists));
     st.define_and_bind();
     st.execute(true);
@@ -420,7 +439,7 @@ std::vector<AssetFrame::pointer>
 AssetHelperImpl::loadBaseAssets()
 {
     std::string sql = mAssetColumnSelector;
-    sql += " WHERE state = :state"
+    sql += " WHERE state = :state and "
            " policies & :bp = :bp "
            " ORDER BY code ";
     uint32 baseAssetPolicy = static_cast<uint32>(AssetPolicy::BASE_ASSET);

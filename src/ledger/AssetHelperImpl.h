@@ -40,6 +40,9 @@ private:
     bool
     exists(const AssetCode &code) override;
 
+    bool
+    existedForCode(const AssetCode &code) override;
+
     LedgerKey
     getLedgerKey(LedgerEntry const& from) override;
 

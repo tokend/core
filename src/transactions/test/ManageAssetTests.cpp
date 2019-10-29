@@ -421,6 +421,10 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
     uint32_t zeroTasks = 0;
     uint32_t tasks = 1;
 
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+
     SECTION("Can create asset")
     {
 
@@ -622,6 +626,20 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             {
                 manageAssetHelper.applyRemoveAssetTx(root, assetCode,
                                                    nullptr);
+
+                REQUIRE(assetHelper.existedForCode(assetCode));
+                REQUIRE_FALSE(assetHelper.exists(assetCode));
+
+                SECTION("Create again")
+                {
+                    auto req = manageAssetHelper.
+                        createAssetCreationRequest(assetCode,
+                                                   preissuedSigner.getPublicKey(),
+                                                   "{}", maxIssuance, 0, &tasks, initialPreIssuedAmount);
+                    manageAssetHelper.applyManageAssetTx(account, 0,
+                                                                               req, ManageAssetResultCode::ASSET_ALREADY_EXISTS);
+                }
+
             }
 
         }

@@ -434,6 +434,24 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
                 REQUIRE(reviewRequestResult.success().typeExt.requestType() ==
                     ReviewableRequestType::CREATE_PAYMENT);
             }
+
+            SECTION("Remove asset & review")
+            {
+                manageAssetTestHelper.applyRemoveAssetTx(root, paymentAsset,
+                                                     nullptr);
+
+                auto requestID = result.success().requestID;
+                uint32_t toAdd = 0, toRemove = 1;
+                auto reviewRequestResult =
+                    reviewPaymentTestHelper.applyReviewRequestTxWithTasks(
+                        root, requestID, ReviewRequestOpAction::APPROVE, "",
+                        ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS, &toAdd, &toRemove);
+                REQUIRE_FALSE(reviewRequestResult.success().fulfilled);
+                REQUIRE(reviewRequestResult.success().typeExt.requestType() ==
+                    ReviewableRequestType::CREATE_PAYMENT);
+            }
+
+
         }
     }
 }

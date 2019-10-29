@@ -44,7 +44,21 @@ bool ReviewAMLAlertRequestOpFrame::handleApprove(Application& app,
     }
 
     createReference(storageHelper, request->getRequestor(), request->getReference());
-    auto balanceFrame = balanceHelper.mustLoadBalance(amlAlert.balanceID);
+    BalanceFrame::pointer balanceFrame;
+    if (!ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        balanceFrame = balanceHelper.mustLoadBalance(amlAlert.balanceID);
+    }
+    else {
+        //it is safe to check for balance existense only, as balances are being removed on
+        // asset removal
+       balanceFrame = balanceHelper.loadBalance(amlAlert.balanceID);
+       if (!balanceFrame)
+       {
+            innerResult().code(ReviewRequestResultCode::DESTINATION_BALANCE_NOT_FOUND);
+            return false;
+       }
+    }
     const BalanceFrame::Result chargeResult = balanceFrame->tryChargeFromLocked(amlAlert.amount);
     if (chargeResult != BalanceFrame::Result::SUCCESS)
     {
