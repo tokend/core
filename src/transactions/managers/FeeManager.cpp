@@ -8,7 +8,7 @@ namespace stellar
 {
 
 FeeManager::FeeManager(Application &app, StorageHelper& storageHelper)
-        : mApp(app) , mSh(sh)
+        : mApp(app) , mSh(storageHelper)
 {
 }
 
@@ -24,8 +24,9 @@ FeeManager::calculateFeeForAccount(const AccountFrame::pointer account,
         return result;
     }
 
-    StorageHelperImpl storageHelper(db, nullptr);
-    auto feeAssetFrame = storageHelper.mustLoadAsset(asset);
+    StorageHelperImpl storageHelperImpl(db, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto feeAssetFrame = storageHelper.getAssetHelper().mustLoadAsset(asset);
     const uint64_t feeAssetPrecision = feeAssetFrame->getMinimumAmount();
 
     result.fixedFee = feeFrame->getFixedFee();
@@ -44,7 +45,7 @@ FeeManager::isFeeMatches(const AccountFrame::pointer account, const Fee fee,
         return fee.fixed == 0 && fee.percent == 0;
     }
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(feeType, assetCode, subtype, account, amount, mDb);
+    auto feeFrame = FeeHelper::Instance()->loadForAccount(feeType, assetCode, subtype, account, amount, mSh.getDatabase());
     if (!feeFrame)
     {
         return fee.fixed == 0 && fee.percent == 0;

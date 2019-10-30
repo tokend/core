@@ -1,6 +1,7 @@
 #include "ManageBalanceTestHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
 #include "transactions/ManageBalanceOpFrame.h"
 #include "test/test_marshaler.h"
 
