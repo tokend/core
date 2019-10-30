@@ -62,14 +62,14 @@ ReviewManageOfferRequestOpFrame::tryGetSignerRequirements(
             return false;
         }
 
-        baseAsset = assetHelper.loadAsset(baseBalance->getAsset());
+        baseAsset = assetHelper.loadActiveAsset(baseBalance->getAsset());
         if (!baseAsset)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);
             mResult.entryType() = LedgerEntryType::ASSET;
             return false;
         }
-        quoteAsset = assetHelper.loadAsset(quoteBalance->getAsset());
+        quoteAsset = assetHelper.loadActiveAsset(quoteBalance->getAsset());
         if (!quoteAsset)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);

@@ -88,7 +88,8 @@ CreateAtomicSwapAskRequestResultCode
 CreateAtomicSwapAskRequestOpFrame::isBaseAssetValid(StorageHelper& storageHelper,
                                                     uint64 baseAmount, AssetCode baseAssetCode)
 {
-    auto baseAsset = storageHelper.getAssetHelper().loadAsset(baseAssetCode);
+    auto baseAsset =
+        storageHelper.getAssetHelper().loadActiveAsset(baseAssetCode);
     if (!baseAsset)
     {
         return CreateAtomicSwapAskRequestResultCode::BASE_ASSET_NOT_FOUND;
@@ -116,7 +117,8 @@ CreateAtomicSwapAskRequestOpFrame::isQuoteAssetValid(StorageHelper& storageHelpe
         return CreateAtomicSwapAskRequestResultCode::ASSETS_ARE_EQUAL;
     }
 
-    auto quoteAssetFrame = storageHelper.getAssetHelper().loadAsset(quoteAsset.quoteAsset);
+    auto quoteAssetFrame =
+        storageHelper.getAssetHelper().loadActiveAsset(quoteAsset.quoteAsset);
 
     if (!quoteAssetFrame)
     {

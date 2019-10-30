@@ -137,7 +137,7 @@ TEST_CASE("payout", "[!hide][dep_tx][payout]") {
             holdersAmounts.push_back({newAccount, holderAmount});
         }
 
-        auto assetFrame = assetHelper.loadAsset(assetCode);
+        auto assetFrame = assetHelper.loadActiveAsset(assetCode);
         REQUIRE(assetFrame != nullptr);
         REQUIRE(assetFrame->getIssued() != 0);
 

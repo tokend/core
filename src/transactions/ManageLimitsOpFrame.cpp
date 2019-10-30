@@ -57,7 +57,7 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
     {
         if (mManageLimits.details.action() == ManageLimitsAction::CREATE &&
-            !storageHelper.getAssetHelper().exists(
+            !storageHelper.getAssetHelper().existActive(
                 mManageLimits.details.limitsCreateDetails().assetCode))
         {
             innerResult().code(ManageLimitsResultCode::ASSET_NOT_FOUND);

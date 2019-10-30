@@ -5,7 +5,6 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerManager.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/AssetHelperLegacy.h"
 #include "main/Application.h"
 #include "transactions/managers/StatisticsV2Processor.h"
 
@@ -26,7 +25,7 @@ BalanceManager::loadOrCreateBalance(const AccountID& account, const AssetCode& a
         return balance;
     }
 
-    if (!mSh.getAssetHelper().exists(asset))
+    if (!mSh.getAssetHelper().existActive(asset))
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected db state: "
                                                << "expected asset to exist: " << asset;
@@ -166,7 +165,7 @@ BalanceManager::calculateUniversalAmount(AssetCode transferAsset, uint64_t amoun
     mUniversalAmount = 0;
     Database& db = mSh.getDatabase();
 
-    auto statsAssetFrame = AssetHelperLegacy::Instance()->loadStatsAsset(db);
+    auto statsAssetFrame = mSh.getAssetHelper().loadStatsAsset();
     if (!statsAssetFrame)
     {
         return true;

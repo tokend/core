@@ -33,7 +33,8 @@ CreatePreIssuanceRequestOpFrame::doApply(Application& app,
 	}
 
 	auto& assetHelper = storageHelper.getAssetHelper();
-	auto asset = assetHelper.loadAsset(mCreatePreIssuanceRequest.request.asset);
+	auto asset = assetHelper.loadActiveAsset(
+            mCreatePreIssuanceRequest.request.asset);
 	if (!asset) {
 		innerResult().code(CreatePreIssuanceRequestResultCode::ASSET_NOT_FOUND);
 		return false;

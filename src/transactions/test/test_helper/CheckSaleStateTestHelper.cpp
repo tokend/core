@@ -19,7 +19,8 @@ void CheckSaleStateHelper::ensureCancel(uint64_t saleID, StateBeforeTxHelper& st
     // asset unlocked
     const auto sale = stateBeforeTx.getSale(saleID);
     auto baseAssetBeforeTx = stateBeforeTx.getAssetEntry(sale->getBaseAsset());
-    auto baseAssetAfterTx = storageHelper.getAssetHelper().loadAsset(sale->getBaseAsset());
+    auto baseAssetAfterTx =
+        storageHelper.getAssetHelper().loadActiveAsset(sale->getBaseAsset());
 
     // TODO: at current stage we do not allow to issue tokens before the sale. Must be fixed
     auto hardCapBaseAssetAmount = sale->getSaleEntry().maxAmountToBeSold;
@@ -63,7 +64,8 @@ void CheckSaleStateHelper::ensureClose(const CheckSaleStateSuccess result, State
     }
 
     auto baseAssetBeforeTx = stateBeforeTx.getAssetEntry(sale->getBaseAsset());
-    auto baseAssetAfterTx = storageHelper.getAssetHelper().loadAsset(sale->getBaseAsset());
+    auto baseAssetAfterTx =
+        storageHelper.getAssetHelper().loadActiveAsset(sale->getBaseAsset());
 
     // always unlock hard cap
     if (sale->getSaleType() != SaleType::FIXED_PRICE)

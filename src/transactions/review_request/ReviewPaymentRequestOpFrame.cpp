@@ -50,7 +50,8 @@ ReviewPaymentRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelp
             mResult.entryType() = LedgerEntryType::BALANCE;
             return false;
         }
-        assetFrame = assetHelper.loadAsset(senderBalanceFrame->getAsset());
+        assetFrame =
+            assetHelper.loadActiveAsset(senderBalanceFrame->getAsset());
         if (!assetFrame)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);

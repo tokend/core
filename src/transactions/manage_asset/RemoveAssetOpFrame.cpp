@@ -33,7 +33,7 @@ RemoveAssetOpFrame::tryGetOperationConditions(
     stellar::LedgerManager& ledgerManager) const
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.loadAsset(mRemoveAsset.code);
+    auto asset = assetHelper.loadActiveAsset(mRemoveAsset.code);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -61,7 +61,7 @@ RemoveAssetOpFrame::tryGetSignerRequirements(
     std::vector<stellar::SignerRequirement>& result) const
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.loadAsset(mRemoveAsset.code);
+    auto asset = assetHelper.loadActiveAsset(mRemoveAsset.code);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -143,7 +143,7 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
 
         deleteLimits(storageHelper);
 
-        assetHelper.markDeleted(mRemoveAsset.code);
+        assetHelper.markDeleted(asset->mEntry);
     }
     else
     {

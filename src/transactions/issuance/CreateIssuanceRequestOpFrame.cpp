@@ -38,7 +38,8 @@ CreateIssuanceRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHe
                                                         std::vector<OperationCondition>& result,
                                                         LedgerManager& ledgerManager) const
 {
-    auto asset = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
+    auto asset = storageHelper.getAssetHelper().loadActiveAsset(
+        mCreateIssuanceRequest.request.asset);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -128,7 +129,8 @@ CreateIssuanceRequestOpFrame::doApply(Application& app, StorageHelper& storageHe
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
     requestHelper.storeChange(requestFrame->mEntry);
 
-    const auto assetFrame = storageHelper.getAssetHelper().loadAsset(mCreateIssuanceRequest.request.asset);
+    const auto assetFrame = storageHelper.getAssetHelper().loadActiveAsset(
+        mCreateIssuanceRequest.request.asset);
     if (!assetFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to load asset for issuance request. Asset Code: "
@@ -247,7 +249,8 @@ CreateIssuanceRequestOpFrame::tryCreateIssuanceRequest(Application& app, Storage
 
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    auto asset = assetHelper.loadAsset(mCreateIssuanceRequest.request.asset);
+    auto asset =
+        assetHelper.loadActiveAsset(mCreateIssuanceRequest.request.asset);
     if (!asset)
     {
         innerResult().code(CreateIssuanceRequestResultCode::ASSET_NOT_FOUND);

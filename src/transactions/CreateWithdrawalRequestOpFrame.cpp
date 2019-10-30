@@ -80,7 +80,7 @@ BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelp
 }
 
 bool
-CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, BalanceFrame::pointer balance) const
+CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, StorageHelper& sh, BalanceFrame::pointer balance) const
 {
     Database& db = app.getDatabase();
     FeeManager feeManager(app, db);

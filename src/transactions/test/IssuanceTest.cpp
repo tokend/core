@@ -142,7 +142,7 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
         newAccountBalanceAfterRequest = balanceHelper.loadBalance(receiverBalance->getBalanceID());
         REQUIRE(newAccountBalanceAfterRequest->getAmount() == issuanceRequestAmount);
 
-        auto assetFrame = assetHelper.loadAsset(assetToBeIssued);
+        auto assetFrame = assetHelper.loadActiveAsset(assetToBeIssued);
         REQUIRE(assetFrame->getIssued() == issuanceRequestAmount);
         REQUIRE(assetFrame->getAvailableForIssuance() == preIssuedAmount);
     }

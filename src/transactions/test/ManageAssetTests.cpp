@@ -65,7 +65,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
                                                                    ManageAssetResultCode::SUCCESS);
         REQUIRE(creationResult.success().fulfilled);
 
-        auto assetFrame = assetHelper.loadAsset(assetCode);
+        auto assetFrame = assetHelper.loadActiveAsset(assetCode);
         REQUIRE(!!assetFrame);
 
         SECTION("Able to change max issuance with fork")
@@ -81,7 +81,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
                                   app.getDatabase());
             applyCheck(txFrame, delta, app);
 
-            assetFrame = assetHelper.loadAsset(assetCode);
+            assetFrame = assetHelper.loadActiveAsset(assetCode);
             REQUIRE(!!assetFrame);
             REQUIRE(assetFrame->getMaxIssuanceAmount() == maxIssuanceAmount);
         }
@@ -503,7 +503,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 const auto opResult = txResult.result.results()[0];
                 auto actualResultCode = ManageAssetOpFrame::getInnerCode(opResult);
                 REQUIRE(actualResultCode == ManageAssetResultCode::SUCCESS);
-                auto assetFrame = assetHelper.loadAsset(assetCode);
+                auto assetFrame = assetHelper.loadActiveAsset(assetCode);
                 REQUIRE(assetFrame->getPreIssuedAssetSigner() == newPreIssuanceSigner.getPublicKey());
                 SECTION("Owner is not able to change signer")
                 {
@@ -627,8 +627,8 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 manageAssetHelper.applyRemoveAssetTx(root, assetCode,
                                                    nullptr);
 
-                REQUIRE(assetHelper.existedForCode(assetCode));
-                REQUIRE_FALSE(assetHelper.exists(assetCode));
+                REQUIRE(assetHelper.exists(assetCode));
+                REQUIRE_FALSE(assetHelper.existActive(assetCode));
 
                 SECTION("Create again")
                 {

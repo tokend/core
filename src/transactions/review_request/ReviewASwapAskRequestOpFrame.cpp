@@ -58,7 +58,7 @@ ReviewASwapAskRequestOpFrame::tryGetSignerRequirements(
             mResult.entryType() = LedgerEntryType::BALANCE;
             return false;
         }
-        asset = assetHelper.loadAsset(balance->getAsset());
+        asset = assetHelper.loadActiveAsset(balance->getAsset());
         if (!asset)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);

@@ -21,7 +21,7 @@ class CreateWithdrawalRequestOpFrame : public OperationFrame {
 
     BalanceFrame::pointer tryLoadBalance(StorageHelper& storageHelper) const;
 
-    bool isFeeMatches(Application& app, BalanceFrame::pointer balance) const;
+    bool isFeeMatches(Application& app, StorageHelper& sh, BalanceFrame::pointer balance) const;
 
     bool tryLockBalance(BalanceFrame::pointer balance);
 

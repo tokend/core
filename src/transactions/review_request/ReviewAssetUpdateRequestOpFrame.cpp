@@ -29,7 +29,7 @@ ReviewAssetUpdateRequestOpFrame::handleApprove(Application& app, StorageHelper& 
 
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    auto assetFrame = assetHelper.loadAsset(assetUpdateRequest.code);
+    auto assetFrame = assetHelper.loadActiveAsset(assetUpdateRequest.code);
     if (!assetFrame)
     {
         innerResult().code(ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);

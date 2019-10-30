@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ledger/AccountFrame.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -9,7 +10,7 @@ class Application;
 class FeeManager
 {
     Application& mApp;
-    Database& mDb;
+    StorageHelper& mSh;
 
 public:
     struct FeeResult
@@ -20,7 +21,7 @@ public:
         bool isOverflow;
     };
 
-    FeeManager(Application& app, Database& db);
+    FeeManager(Application& app, StorageHelper& sh);
 
     static FeeResult
     calculateFeeForAccount(const AccountFrame::pointer account, FeeType const feeType,

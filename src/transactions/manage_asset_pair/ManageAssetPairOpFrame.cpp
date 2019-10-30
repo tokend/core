@@ -70,8 +70,8 @@ ManageAssetPairOpFrame::createNewAssetPair(Application& app, StorageHelper& stor
     }
 
     auto& assetHelper = storageHelper.getAssetHelper();
-    bool assetsExist = assetHelper.exists(mManageAssetPair.base);
-    assetsExist = assetsExist && assetHelper.exists(mManageAssetPair.quote);
+    bool assetsExist = assetHelper.existActive(mManageAssetPair.base);
+    assetsExist = assetsExist && assetHelper.existActive(mManageAssetPair.quote);
     if (!assetsExist)
     {
         app.getMetrics().NewMeter({"op-manage-asset-pair", "invalid", "asset-not-exists"},

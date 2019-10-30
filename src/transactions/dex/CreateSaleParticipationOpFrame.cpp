@@ -8,7 +8,6 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AccountSpecificRuleHelper.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"

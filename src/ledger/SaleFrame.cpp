@@ -7,7 +7,6 @@
 #include "LedgerDelta.h"
 #include "xdrpp/printer.h"
 #include "AssetFrame.h"
-#include "AssetHelperLegacy.h"
 
 using namespace soci;
 using namespace std;

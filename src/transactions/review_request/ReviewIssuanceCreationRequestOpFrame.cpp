@@ -38,7 +38,7 @@ ReviewIssuanceCreationRequestOpFrame::tryGetSignerRequirements(StorageHelper& st
             request->getRequestEntry().body.issuanceRequest().asset);
     }
     else {
-        asset = assetHelper.loadAsset(
+        asset = assetHelper.loadActiveAsset(
             request->getRequestEntry().body.issuanceRequest().asset);
         if (!asset)
         {
@@ -77,7 +77,7 @@ handleApprove(Application& app, StorageHelper& storageHelper,
     AssetFrame::pointer asset;
     if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
     {
-        if (!storageHelper.getAssetHelper().exists(issuanceRequest.asset))
+        if (!storageHelper.getAssetHelper().existActive(issuanceRequest.asset))
         {
             innerResult().code(ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
             return false;

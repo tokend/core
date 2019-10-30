@@ -51,13 +51,14 @@ ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application& app, Storage
 
     if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
     {
-        if (!storageHelper.getAssetHelper().exists(preIssuanceCreationRequest.asset))
+        if (!storageHelper.getAssetHelper().existActive(
+                preIssuanceCreationRequest.asset))
         {
             innerResult().code(ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
             return false;
         }
     }
-    auto asset = assetHelper.loadAsset(preIssuanceCreationRequest.asset);
+    auto asset = assetHelper.loadActiveAsset(preIssuanceCreationRequest.asset);
     if (!asset)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)

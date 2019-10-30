@@ -1,6 +1,7 @@
 #include "ReviewAMLAlertRequestHelper.h"
 #include "ledger/AssetFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
 #include "ledger/BalanceHelperLegacy.h"
 
@@ -12,6 +13,8 @@ namespace txtest
 void AmlReviewChecker::checkApproval(AMLAlertRequest const& request,
     AccountID const& requestor)
 {
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     auto balanceBeforeTx = mStateBeforeTxHelper.getBalance(request.balanceID);
     REQUIRE(!!balanceBeforeTx);
     auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(request.balanceID, mTestManager->getDB());
@@ -20,7 +23,7 @@ void AmlReviewChecker::checkApproval(AMLAlertRequest const& request,
     REQUIRE(balanceBeforeTx->getLocked() - request.amount == balanceAfterTx->getLocked());
 
     auto assetBeforeTx = mStateBeforeTxHelper.getAssetEntry(balanceBeforeTx->getAsset());
-    auto assetFrameAfterTx = AssetHelperLegacy::Instance()->loadAsset(balanceBeforeTx->getAsset(), mTestManager->getDB());
+    auto assetFrameAfterTx = assetHelper.loadAsset(balanceBeforeTx->getAsset());
     auto assetAfterTx = assetFrameAfterTx->getAsset();
     REQUIRE(assetBeforeTx.availableForIssueance == assetAfterTx.availableForIssueance);
     REQUIRE(assetBeforeTx.maxIssuanceAmount == assetAfterTx.maxIssuanceAmount);

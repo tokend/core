@@ -98,15 +98,17 @@ AssetHelperImpl::storeDelete(LedgerKey const& key)
 }
 
 void
-AssetHelperImpl::markDeleted(const AssetCode& code)
+AssetHelperImpl::markDeleted(LedgerEntry const& entry)
 {
-
     Database& db = getDatabase();
+
+    auto assetFrame = make_shared<AssetFrame>(entry);
+
     auto timer = db.getDeleteTimer("delete-asset");
     auto prep = db.getPreparedStatement(
         "UPDATE asset SET state = :state WHERE code = :code");
     auto& st = prep.statement();
-    st.exchange(use(code, "code"));
+    st.exchange(use(assetFrame->getCode(), "code"));
     int deletedState = int(AssetFrame::State::DELETED);
     st.exchange(use(deletedState, "state"));
 
@@ -117,32 +119,22 @@ AssetHelperImpl::markDeleted(const AssetCode& code)
 bool
 AssetHelperImpl::exists(LedgerKey const& key)
 {
-    int exists = 0;
-
-    Database& db = getDatabase();
-    auto timer = db.getSelectTimer("asset-exists");
-    auto prep =
-        db.getPreparedStatement("SELECT EXISTS "
-                                "(SELECT NULL FROM asset WHERE code=:code)");
-    auto& st = prep.statement();
-    st.exchange(use(key.asset().code, "code"));
-    st.exchange(into(exists));
-    st.define_and_bind();
-    st.execute(true);
-
-    return exists != 0;
+    return exists(key.asset().code);
 }
 
 bool
-AssetHelperImpl::existedForCode(const stellar::AssetCode& code)
+AssetHelperImpl::existActive(const AssetCode& code)
 {
     int exists = 0;
-    auto timer = getDatabase().getSelectTimer("asset-existed");
+    auto timer = getDatabase().getSelectTimer("asset-exists");
     std::string assetCode = code;
     auto prep = getDatabase().getPreparedStatement(
-        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
+        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code "
+        "and state = :state)");
     auto& st = prep.statement();
-    st.exchange(use(assetCode));
+    st.exchange(use(assetCode, "code"));
+    int activeState = int(AssetFrame::State::ACTIVE);
+    st.exchange(use(activeState, "state"));
     st.exchange(into(exists));
     st.define_and_bind();
     st.execute(true);
@@ -157,12 +149,9 @@ AssetHelperImpl::exists(const AssetCode& code)
     auto timer = getDatabase().getSelectTimer("asset-exists");
     std::string assetCode = code;
     auto prep = getDatabase().getPreparedStatement(
-        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code "
-        "and state = :state)");
+        "SELECT EXISTS (SELECT NULL FROM asset WHERE code=:code)");
     auto& st = prep.statement();
     st.exchange(use(assetCode, "code"));
-    int activeState = int(AssetFrame::State::ACTIVE);
-    st.exchange(use(activeState, "state"));
     st.exchange(into(exists));
     st.define_and_bind();
     st.execute(true);
@@ -284,6 +273,56 @@ AssetHelperImpl::countObjects()
 }
 
 AssetFrame::pointer
+AssetHelperImpl::loadActiveAsset(AssetCode assetCode)
+{
+    LedgerKey key;
+    key.type(LedgerEntryType::ASSET);
+    key.asset().code = assetCode;
+    if (cachedEntryExists(key))
+    {
+        auto asset = getCachedEntry(key);
+        auto assetFrame =
+            asset ? std::make_shared<AssetFrame>(*asset) : nullptr;
+        if (asset && mStorageHelper.getLedgerDelta())
+        {
+            mStorageHelper.getLedgerDelta()->recordEntry(*assetFrame);
+        }
+
+        return assetFrame;
+    }
+
+    Database& db = getDatabase();
+
+    string sql = mAssetColumnSelector;
+    sql += " WHERE state = :state and code = :code";
+    auto prep = db.getPreparedStatement(sql);
+    auto& st = prep.statement();
+    st.exchange(use(assetCode, "code"));
+    int activeState = int(AssetFrame::State::ACTIVE);
+    st.exchange(use(activeState, "state"));
+
+    auto timer = db.getSelectTimer("load-asset");
+    AssetFrame::pointer retAsset;
+    loadAssets(prep, [&retAsset](LedgerEntry const& entry) {
+        retAsset = make_shared<AssetFrame>(entry);
+    });
+
+    if (!retAsset)
+    {
+        putCachedEntry(key, nullptr);
+        return nullptr;
+    }
+
+    if (mStorageHelper.getLedgerDelta())
+    {
+        mStorageHelper.getLedgerDelta()->recordEntry(*retAsset);
+    }
+    putCachedEntry(key, make_shared<LedgerEntry>(retAsset->mEntry));
+
+    return retAsset;
+}
+
+AssetFrame::pointer
 AssetHelperImpl::loadAsset(AssetCode assetCode)
 {
     LedgerKey key;
@@ -336,7 +375,7 @@ AssetHelperImpl::loadAsset(AssetCode assetCode)
 AssetFrame::pointer
 AssetHelperImpl::mustLoadAsset(AssetCode assetCode)
 {
-    auto assetFrame = loadAsset(assetCode);
+    auto assetFrame = loadActiveAsset(assetCode);
 
     if (!assetFrame)
     {
@@ -352,7 +391,7 @@ AssetHelperImpl::mustLoadAsset(AssetCode assetCode)
 AssetFrame::pointer
 AssetHelperImpl::loadAsset(AssetCode assetCode, AccountID owner)
 {
-    auto assetFrame = loadAsset(assetCode);
+    auto assetFrame = loadActiveAsset(assetCode);
     if (!assetFrame)
     {
         return nullptr;

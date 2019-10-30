@@ -28,7 +28,8 @@ bool
 ChangeAssetMaxIssuanceOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                                          std::vector<OperationCondition>& result) const
 {
-    auto asset = storageHelper.getAssetHelper().loadAsset(mUpdateMaxIssuance.assetCode);
+    auto asset = storageHelper.getAssetHelper().loadActiveAsset(
+        mUpdateMaxIssuance.assetCode);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);

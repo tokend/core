@@ -70,7 +70,7 @@ OpenSwapOpFrame::tryGetSignerRequirements(
     }
 
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto assetFrame = assetHelper.loadAsset(balanceFrame->getAsset());
+    auto assetFrame = assetHelper.loadActiveAsset(balanceFrame->getAsset());
     if (!assetFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);

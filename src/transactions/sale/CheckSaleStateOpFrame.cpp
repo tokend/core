@@ -241,7 +241,8 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
     SaleFrame::pointer sale, const AccountFrame::pointer saleOwnerAccount,
     Application& app, StorageHelper& storageHelper, LedgerManager& lm) const
 {
-    const auto asset = storageHelper.getAssetHelper().loadAsset(sale->getBaseAsset());
+    const auto asset =
+        storageHelper.getAssetHelper().loadActiveAsset(sale->getBaseAsset());
     //TODO Must be refactored
     uint64_t amountToIssue = std::min(sale->getBaseAmountForCurrentCap(asset->getMinimumAmount()), asset->getMaxIssuanceAmount());
     const auto issuanceRequestOp = CreateIssuanceRequestOpFrame::build(sale->getBaseAsset(), amountToIssue,

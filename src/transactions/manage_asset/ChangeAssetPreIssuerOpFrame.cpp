@@ -46,7 +46,8 @@ bool ChangeAssetPreIssuerOpFrame::doApply(Application& app, StorageHelper& stora
                                           LedgerManager& ledgerManager)
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto assetFrame = assetHelper.loadAsset(mAssetChangePreissuedSigner.code);
+    auto assetFrame =
+        assetHelper.loadActiveAsset(mAssetChangePreissuedSigner.code);
     if (!assetFrame)
     {
         innerResult().code(ManageAssetResultCode::ASSET_NOT_FOUND);

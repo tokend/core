@@ -87,12 +87,12 @@ RemoveAssetResult ManageAssetTestHelper::applyRemoveAssetTx(txtest::Account &sou
 
     if (actualResultCode != RemoveAssetResultCode::SUCCESS)
     {
-        REQUIRE(assetHelper.exists(code));
+        REQUIRE(assetHelper.existActive(code));
     }
     else
     {
-        REQUIRE_FALSE(assetHelper.exists(code));
-        REQUIRE(assetHelper.existedForCode(code));
+        REQUIRE_FALSE(assetHelper.existActive(code));
+        REQUIRE(assetHelper.exists(code));
     }
 
     return opResult.tr().removeAssetResult();
@@ -384,7 +384,7 @@ void ManageAssetTestHelper::validateManageAssetEffect(
         case ManageAssetAction::CREATE_ASSET_UPDATE_REQUEST:
         {
             assetCode = request.createAssetUpdateRequest().updateAsset.code;
-            auto assetFrame = assetHelper.loadAsset(assetCode);
+            auto assetFrame = assetHelper.loadActiveAsset(assetCode);
             REQUIRE(assetFrame);
             auto assetEntry = assetFrame->getAsset();
             REQUIRE(assetEntry.details == request.createAssetUpdateRequest().updateAsset.creatorDetails);
@@ -395,7 +395,7 @@ void ManageAssetTestHelper::validateManageAssetEffect(
             throw std::
             runtime_error("Unexpected manage asset action from master account");
     }
-    auto assetFrame = assetHelper.loadAsset(assetCode);
+    auto assetFrame = assetHelper.loadActiveAsset(assetCode);
     REQUIRE(assetFrame);
     auto& balanceHelper = storageHelper.getBalanceHelper();
     if (assetFrame->isPolicySet(AssetPolicy::BASE_ASSET))

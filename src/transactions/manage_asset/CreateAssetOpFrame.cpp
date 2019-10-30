@@ -91,15 +91,7 @@ bool CreateAssetOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    bool isAssetExist = false;
-    if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
-    {
-        isAssetExist = assetHelper.existedForCode(mAssetCreationRequest.code);
-    }
-    else
-    {
-        isAssetExist = assetHelper.exists(mAssetCreationRequest.code);
-    }
+    bool isAssetExist = assetHelper.exists(mAssetCreationRequest.code);
     if (isAssetExist)
     {
         innerResult().code(ManageAssetResultCode::ASSET_ALREADY_EXISTS);

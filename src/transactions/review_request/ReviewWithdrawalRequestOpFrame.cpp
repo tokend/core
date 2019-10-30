@@ -136,7 +136,7 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     balanceManager.transferFee(balance->getAsset(), totalFee);
 
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto assetFrame = assetHelper.loadAsset(balance->getAsset());
+    auto assetFrame = assetHelper.loadActiveAsset(balance->getAsset());
     if (!assetFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to load asset for withdrawal request"

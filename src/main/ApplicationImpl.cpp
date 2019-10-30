@@ -25,7 +25,8 @@
 #include "invariant/InvariantManager.h"
 //#include "invariant/LedgerEntryIsValid.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AssetHelper.h"
 //#include "ledger/LedgerTxn.h"
 #include "main/CommandHandler.h"
 #include "main/ExternalQueue.h"
@@ -243,13 +244,14 @@ ApplicationImpl::getJsonInfo()
     info["network"] = getConfig().NETWORK_PASSPHRASE;
     info["admin_account_id"] = PubKeyUtils::toStrKey(getAdminID());
 
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto statsAssetFrame = assetHelper->loadStatsAsset(getDatabase());
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(getDatabase(), nullptr));
+    storageHelper->release();
+    auto& assetHelper = storageHelper->getAssetHelper();
+    auto statsAssetFrame = assetHelper.loadStatsAsset();
     if (statsAssetFrame)
         info["statistics_quote_asset"] = statsAssetFrame->getCode();
 
-    std::vector<AssetFrame::pointer> baseAssets;
-    assetHelper->loadBaseAssets(baseAssets, getDatabase());
+    auto baseAssets = assetHelper.loadBaseAssets();
     for (auto asset: baseAssets)
     {
         info["base_assets"].append(asset->getCode());

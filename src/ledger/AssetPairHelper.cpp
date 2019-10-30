@@ -7,8 +7,8 @@
 #include "crypto/Hex.h"
 #include "crypto/SecretKey.h"
 #include "database/Database.h"
-#include "ledger/AssetHelperLegacy.h"
-#include "ledger/LedgerManager.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "lib/util/format.h"
 #include "util/basen.h"
 #include "util/types.h"
@@ -382,8 +382,11 @@ AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair,
     }
 
     const int64_t currentPrice = assetPair->getCurrentPrice();
-    const auto destAsset =
-        AssetHelperLegacy::Instance()->mustLoadAsset(destCode, db);
+
+    auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
+    storageHelper->release();
+    auto& assetHelper = storageHelper->getAssetHelper();
+    const auto destAsset = assetHelper.mustLoadAsset(destCode);
     const uint64_t destAssetMinimumAmount = destAsset->getMinimumAmount();
     if (destCode == assetPair->getQuoteAsset())
     {

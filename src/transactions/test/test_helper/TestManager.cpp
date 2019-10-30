@@ -4,10 +4,10 @@
 
 #include <herder/LedgerCloseData.h>
 #include <ledger/StorageHelperImpl.h>
-#include "ledger/AssetHelperLegacy.h"
 #include "TestManager.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "invariant/Invariants.h"
+#include "ledger/AssetHelper.h"
 #include "test/test_marshaler.h"
 #include "xdrpp/marshal.h"
 
@@ -115,7 +115,7 @@ namespace stellar {
         {
             Database& db = mDB;
 
-            auto allAssetsWithIssued = AssetHelperLegacy::Instance()->loadIssuedForAssets(db);
+            auto allAssetsWithIssued = getStorageHelper().getAssetHelper().loadIssuedForAssets();
 
             for (const auto& item : allAssetsWithIssued)
             {

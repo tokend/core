@@ -12,7 +12,6 @@
 #include "ledger/StatisticsHelper.h"
 #include "ledger/AccountLimitsFrame.h"
 #include "ledger/AccountLimitsHelper.h"
-#include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/AtomicSwapAskHelper.h"
@@ -174,7 +173,7 @@ void EntryHelperProvider::dropAll(Database& db)
 EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::ACCOUNT,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT)},
     {LedgerEntryType::ACCOUNT_LIMITS,                        AccountLimitsHelper::Instance()},
-    {LedgerEntryType::ASSET,                                 AssetHelperLegacy::Instance()},
+    {LedgerEntryType::ASSET,                                 EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET)},
     {LedgerEntryType::ASSET_PAIR,                            AssetPairHelper::Instance()},
     {LedgerEntryType::BALANCE,                               BalanceHelperLegacy::Instance()},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            ExternalSystemAccountIDHelperLegacy::Instance()},

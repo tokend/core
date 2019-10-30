@@ -5,7 +5,6 @@
 #include "TestManager.h"
 #include "TxHelper.h"
 #include "test/test_marshaler.h"
-#include <ledger/AssetHelperLegacy.h>
 #include <ledger/ReviewableRequestHelperLegacy.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>

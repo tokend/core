@@ -1,5 +1,5 @@
 #include "ManageBalanceTestHelper.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "transactions/ManageBalanceOpFrame.h"
 #include "test/test_marshaler.h"
@@ -40,7 +40,8 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
 {
     TransactionFramePtr txFrame;
 
-    auto assetHelper = AssetHelperLegacy::Instance();
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     auto balanceHelper = BalanceHelperLegacy::Instance();
 
     std::vector<BalanceFrame::pointer> balances;
@@ -73,7 +74,7 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
         case ManageBalanceAction::CREATE:
         case ManageBalanceAction::CREATE_UNIQUE:
         {
-            auto assetFrame = assetHelper->loadAsset(asset, db);
+            auto assetFrame = assetHelper.loadAsset(asset);
             REQUIRE(balances.size() == balancesAfter.size() - 1);
             auto balance = balanceHelper->
                 loadBalance(opResult.success().balanceID, db);

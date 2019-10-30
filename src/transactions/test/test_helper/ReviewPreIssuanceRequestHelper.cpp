@@ -4,7 +4,8 @@
 
 #include "ReviewPreIssuanceRequestHelper.h"
 #include "ledger/AssetFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 
@@ -18,20 +19,22 @@ namespace txtest
 ReviewPreIssuanceChecker::ReviewPreIssuanceChecker(
     const TestManager::pointer& testManager, const uint64_t requestID) : ReviewChecker(testManager)
 {
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     if (!request || request->getType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
         return;
     }
     preIssuanceRequest = std::make_shared<PreIssuanceRequest>(request->getRequestEntry().body.preIssuanceRequest());
-    assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(preIssuanceRequest->asset, mTestManager->getDB());
+    assetFrameBeforeTx = assetHelper.loadAsset(preIssuanceRequest->asset);
 }
 
 void ReviewPreIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer requestBeforeTx)
 {
     REQUIRE(!!assetFrameBeforeTx);
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto assetFrameAfterTx = assetHelper->loadAsset(preIssuanceRequest->asset, mTestManager->getDB());
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+    auto assetFrameAfterTx = assetHelper.loadAsset(preIssuanceRequest->asset);
     REQUIRE(assetFrameAfterTx->getAvailableForIssuance() == assetFrameBeforeTx->getAvailableForIssuance() + preIssuanceRequest->amount);
 }
 
@@ -39,7 +42,8 @@ ReviewPreIssuanceChecker::ReviewPreIssuanceChecker(const TestManager::pointer &t
                                                    std::shared_ptr<PreIssuanceRequest> request) : ReviewChecker(testManager)
 {
     preIssuanceRequest = request;
-    assetFrameBeforeTx = AssetHelperLegacy::Instance()->loadAsset(preIssuanceRequest->asset, mTestManager->getDB());
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+    assetFrameBeforeTx = assetHelper.loadAsset(preIssuanceRequest->asset);
 }
 
 ReviewPreIssuanceRequestHelper::ReviewPreIssuanceRequestHelper(TestManager::pointer testManager) : ReviewRequestHelper(testManager)

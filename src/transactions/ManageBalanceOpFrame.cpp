@@ -84,7 +84,7 @@ ManageBalanceOpFrame::doApply(Application& app,
                                                   mManageBalance.asset);
 
     auto& assetHelper = storageHelper.getAssetHelper();
-    const auto assetFrame = assetHelper.loadAsset(mManageBalance.asset);
+    const auto assetFrame = assetHelper.loadActiveAsset(mManageBalance.asset);
     if (!assetFrame)
     {
         innerResult().code(ManageBalanceResultCode::ASSET_NOT_FOUND);

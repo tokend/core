@@ -20,14 +20,11 @@ public:
 
         virtual std::map<AssetCode, uint64_t>
         loadIssuedForAssets() = 0;
-	virtual bool
-	exists(const AssetCode &code) = 0;
+	virtual bool existActive(const AssetCode &code) = 0;
+	virtual bool exists(const AssetCode &code) = 0;
 
-        virtual bool
-        existedForCode(const AssetCode &code) = 0;
-
-	virtual AssetFrame::pointer
-	loadAsset(AssetCode assetCode) = 0;
+	virtual AssetFrame::pointer loadActiveAsset(AssetCode assetCode) = 0;
+	virtual AssetFrame::pointer loadAsset(AssetCode assetCode) = 0;
 
 	virtual AssetFrame::pointer
 	mustLoadAsset(AssetCode assetCode) = 0;
@@ -51,7 +48,7 @@ public:
         addAssetState() = 0;
 
         virtual void
-        markDeleted(const AssetCode& code) = 0;
+        markDeleted(LedgerEntry const& entry) = 0;
 
   private:
 

@@ -12,7 +12,8 @@
 #include "test_helper/ReviewPreIssuanceRequestHelper.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
 
 using namespace stellar;
@@ -27,8 +28,8 @@ void testAuthPreissuedAssetHappyPath(TestManager::pointer testManager, Account& 
     manageAssetHelper.createAsset(account, preissuedSigner, assetCode, root, 0);
 	auto issuanceRequestHelper = IssuanceRequestHelper(testManager);
 	auto reviewPreIssuanceRequestHelper = ReviewPreIssuanceRequestHelper(testManager);
-	auto assetHelper = AssetHelperLegacy::Instance();
-	auto asset = assetHelper->loadAsset(assetCode, testManager->getDB());
+        auto& assetHelper = testManager->getStorageHelper().getAssetHelper();
+	auto asset = assetHelper.loadAsset(assetCode);
 	const uint64_t amountToIssue = 10000;
 	const int issueTimes = 3;
     bool isMaster = account.key == getRoot();
@@ -39,7 +40,7 @@ void testAuthPreissuedAssetHappyPath(TestManager::pointer testManager, Account& 
             reviewPreIssuanceRequestHelper.applyReviewRequestTx(root, preIssuanceResult.success().requestID,
                                                                 ReviewRequestOpAction::APPROVE, "");
 	}
-	asset = assetHelper->loadAsset(assetCode, testManager->getDB());
+	asset = assetHelper.loadAsset(assetCode);
 	REQUIRE(asset->getAvailableForIssuance() == amountToIssue * issueTimes);
 }
 

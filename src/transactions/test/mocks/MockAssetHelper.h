@@ -15,6 +15,7 @@ public:
     MOCK_METHOD1(storeAdd, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeChange, void(LedgerEntry const& entry));
     MOCK_METHOD1(storeDelete, void(LedgerKey const& key));
+    MOCK_METHOD1(existActive, bool(LedgerKey const& key));
     MOCK_METHOD1(exists, bool(LedgerKey const& key));
     MOCK_METHOD1(exists, bool(AssetCode const& key));
     MOCK_METHOD1(getLedgerKey, LedgerKey(LedgerEntry const& from));
@@ -25,6 +26,8 @@ public:
     MOCK_METHOD0(getLedgerDelta, LedgerDelta*());
     MOCK_METHOD1(flushCachedEntry, void(LedgerKey const& key));
     MOCK_METHOD1(cachedEntryExists, bool(LedgerKey const& key));
+    MOCK_METHOD1(loadActiveAsset,
+                 AssetFrame::pointer(AssetCode assetCode));
     MOCK_METHOD1(loadAsset,
                  AssetFrame::pointer(AssetCode assetCode));
     MOCK_METHOD1(mustLoadAsset,

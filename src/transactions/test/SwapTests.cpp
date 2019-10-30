@@ -197,8 +197,9 @@ TEST_CASE("swap", "[tx][swap]")
     auto destination = openSwapHelper.createDestinationForAccount(
         recipient.key.getPublicKey());
 
-    auto asset = testManager->getStorageHelper().getAssetHelper().loadAsset(
-        testSet.swapAsset);
+    auto asset =
+        testManager->getStorageHelper().getAssetHelper().loadActiveAsset(
+            testSet.swapAsset);
 
     // maxPaymnetFee more in five times because fee in ETH, swap in USD,
     // exchange rates 1:5
