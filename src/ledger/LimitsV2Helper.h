@@ -47,7 +47,7 @@ public:
                                       xdr::pointer<AccountID> accountID, uint64_t* accountType,
                                       bool isConvertNeeded, LedgerDelta *delta = nullptr);
     LimitsV2Frame::pointer loadLimits(uint64_t id, Database& db, LedgerDelta* delta = nullptr);
-    LimitsV2Frame::pointer loadLimitsForAsset(Database& db, AssetCode const& code);
+    std::vector<LimitsV2Frame::pointer> loadLimitsForAsset(Database& db, AssetCode const& code);
 
 private:
     LimitsV2Helper() { ; }

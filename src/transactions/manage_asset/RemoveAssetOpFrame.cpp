@@ -207,12 +207,13 @@ RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
 {
     auto limitsHelper = LimitsV2Helper::Instance();
     auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto limits = limitsHelper->loadLimitsForAsset(db, mRemoveAsset.code);
 
     for (auto limit : limits)
     {
-        limitsHelper->storeDelete(limit->getKey());
+        limitsHelper->storeDelete(delta, db, limit->getKey());
     }
 
 }
