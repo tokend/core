@@ -134,7 +134,8 @@ AssetHelperImpl::exists(LedgerKey const& key)
 }
 
 bool
-AssetHelperImpl::existedForCode(const stellar::AssetCode& code){
+AssetHelperImpl::existedForCode(const stellar::AssetCode& code)
+{
     int exists = 0;
     auto timer = getDatabase().getSelectTimer("asset-existed");
     std::string assetCode = code;
@@ -468,4 +469,32 @@ AssetHelperImpl::getLedgerDelta()
 {
     return mStorageHelper.getLedgerDelta();
 }
+
+std::map<AssetCode, uint64_t>
+AssetHelperImpl::loadIssuedForAssets()
+{
+    auto& db = getDatabase();
+    uint64_t issued = 0;
+    AssetCode assetCode;
+
+    std::map<AssetCode, uint64_t> result;
+
+    auto timer = db.getSelectTimer("issued-for-asset");
+    auto prep = db.getPreparedStatement("SELECT code, issued FROM asset "
+                                        " WHERE state = :state");
+    auto& st = prep.statement();
+    st.exchange(use(int(AssetFrame::State::ACTIVE)));
+    st.exchange(into(assetCode));
+    st.exchange(into(issued));
+    st.define_and_bind();
+    st.execute(true);
+    while (st.got_data())
+    {
+        result[assetCode] = issued;
+        st.fetch();
+    }
+
+    return result;
+}
+
 } // namespace stellar

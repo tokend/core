@@ -220,9 +220,9 @@ SwapHelperImpl::existForAsset(const stellar::AssetCode& code)
     int exists = 0;
     auto timer = db.getSelectTimer("swaps-for-asset-exist");
     auto prep =
-        db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM swap, balance"
-                                "WHERE asset=:code and source_balance = balance_id"
-                                "or destination_balance = balance_id)");
+        db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM swap, balance "
+                                " WHERE asset = :code and (source_balance = balance_id "
+                                " or destination_balance = balance_id))");
     auto& st = prep.statement();
     std::string assetCode = code;
     st.exchange(use(assetCode, "code"));

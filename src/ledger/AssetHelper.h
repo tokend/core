@@ -18,6 +18,8 @@ class AssetHelper : public EntryHelper
 public:
     using EntryHelper::exists;
 
+        virtual std::map<AssetCode, uint64_t>
+        loadIssuedForAssets() = 0;
 	virtual bool
 	exists(const AssetCode &code) = 0;
 

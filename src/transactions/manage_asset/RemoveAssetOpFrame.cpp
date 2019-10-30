@@ -4,6 +4,7 @@
 #include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
+#include "ledger/LimitsV2Helper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
@@ -129,7 +130,8 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
 
         if (asset->isPolicySet(AssetPolicy::STATS_QUOTE_ASSET))
         {
-            innerResult().code(RemoveAssetResultCode::CANNOT_REMOVE_STATS_QUOTE_ASSET);
+            innerResult().code(
+                RemoveAssetResultCode::CANNOT_REMOVE_STATS_QUOTE_ASSET);
             return false;
         }
 
@@ -138,6 +140,8 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
             innerResult().code(RemoveAssetResultCode::HAS_PENDING_MOVEMENTS);
             return false;
         }
+
+        deleteLimits(storageHelper);
 
         assetHelper.markDeleted(mRemoveAsset.code);
     }
@@ -193,6 +197,24 @@ RemoveAssetOpFrame::deleteBalancesWithCheck(StorageHelper& storageHelper)
 
         balanceHelper.storeDelete(holder->getKey());
     }
+
+    return true;
+}
+
+
+void
+RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
+{
+    auto limitsHelper = LimitsV2Helper::Instance();
+    auto& db = storageHelper.getDatabase();
+
+    auto limits = limitsHelper->loadLimitsForAsset(db, mRemoveAsset.code);
+
+    for (auto limit : limits)
+    {
+        limitsHelper->storeDelete(limit->getKey());
+    }
+
 }
 
 }

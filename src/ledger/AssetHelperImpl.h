@@ -67,6 +67,9 @@ private:
     AssetFrame::pointer
     loadStatsAsset() override;
 
+    std::map<AssetCode, uint64_t>
+    loadIssuedForAssets() override;
+
     void
     loadAssets(StatementContext& prep,
                std::function<void(LedgerEntry const&)> assetProcessor) override;

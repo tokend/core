@@ -323,7 +323,7 @@ AtomicSwapAskHelper::existForAsset(Database& db, const AssetCode& code)
     auto prep = db.getPreparedStatement(
         "SELECT EXISTS "
         "(SELECT NULL FROM atomic_swap_ask, atomic_swap_quote_asset "
-        "WHERE ask_id = id and (base_asset=:code or quote_asset = :code)");
+        "WHERE ask_id = id and (base_asset_code = :code or quote_asset = :code))");
     auto& st = prep.statement();
     std::string assetCode = code;
     st.exchange(use(assetCode, "code"));

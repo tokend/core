@@ -48,7 +48,14 @@ public:
           uint64_t requestID, Hash requestHash, ReviewableRequestType requestType,
           ReviewRequestOpAction action, std::string rejectReason) override;
 
-    void initializeLimits(AccountID& requestorID);
+    TransactionFramePtr createReviewRequestTxWithTasks(txtest::Account &source, uint64_t requestID,
+                                                       Hash requestHash,
+                                                       ReviewableRequestType requestType,
+                                                       ReviewRequestOpAction action,
+                                                       std::string rejectReason, uint32_t *tasksToAdd = nullptr,
+                                                       uint32_t *tasksToRemove = nullptr) override;
+
+    void initializeLimits(AccountID& requestorID, AssetCode const& assetCode);
 
     ReviewRequestResult applyReviewRequestTxWithTasks(Account &source, uint64_t requestID, Hash requestHash,
                                                       ReviewableRequestType requestType, ReviewRequestOpAction action,

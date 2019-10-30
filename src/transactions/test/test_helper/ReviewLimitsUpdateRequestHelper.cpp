@@ -88,11 +88,40 @@ ReviewLimitsUpdateRequestHelper::createReviewRequestTx(Account &source, uint64_t
     return txFromOperation(source, op, nullptr);
 }
 
+TransactionFramePtr
+ReviewLimitsUpdateRequestHelper::createReviewRequestTxWithTasks(txtest::Account &source, uint64_t requestID,
+                                                                Hash requestHash,
+                                                                ReviewableRequestType requestType,
+                                                                ReviewRequestOpAction action,
+                                                                std::string rejectReason, uint32_t *tasksToAdd,
+                                                                uint32_t *tasksToRemove)
+{
+    Operation op;
+    op.body.type(OperationType::REVIEW_REQUEST);
+    ReviewRequestOp& reviewRequestOp = op.body.reviewRequestOp();
+    reviewRequestOp.action = action;
+    reviewRequestOp.reason = rejectReason;
+    reviewRequestOp.requestHash = requestHash;
+    reviewRequestOp.requestID = requestID;
+    reviewRequestOp.requestDetails.requestType(requestType);
+    reviewRequestOp.requestDetails.limitsUpdate().newLimitsV2 = limitsV2Entry;
+
+    if (tasksToAdd != nullptr){
+        reviewRequestOp.reviewDetails.tasksToAdd = *tasksToAdd;
+    }
+
+    if (tasksToRemove != nullptr){
+        reviewRequestOp.reviewDetails.tasksToRemove = *tasksToRemove;
+    }
+
+    return txFromOperation(source, op, nullptr);
+}
+
 void
-ReviewLimitsUpdateRequestHelper::initializeLimits(AccountID& requestorID)
+ReviewLimitsUpdateRequestHelper::initializeLimits(AccountID& requestorID, AssetCode const& code)
 {
     limitsV2Entry.accountID.activate() = requestorID;
-    limitsV2Entry.assetCode = "USD";
+    limitsV2Entry.assetCode = code;
     limitsV2Entry.statsOpType = StatsOpType::PAYMENT_OUT;
     limitsV2Entry.isConvertNeeded = false;
     limitsV2Entry.dailyOut = 100;

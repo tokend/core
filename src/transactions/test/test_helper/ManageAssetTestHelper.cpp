@@ -68,7 +68,6 @@ RemoveAssetResult ManageAssetTestHelper::applyRemoveAssetTx(txtest::Account &sou
 {
     auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
     Database& db = mTestManager->getDB();
-    auto countBefore = assetHelper.countObjects();
 
     TransactionFramePtr txFrame;
     txFrame = createRemoveAssetTx(source, code, signer);
@@ -86,15 +85,14 @@ RemoveAssetResult ManageAssetTestHelper::applyRemoveAssetTx(txtest::Account &sou
 
     REQUIRE(expectedResult == actualResultCode);
 
-    auto countAfter = assetHelper.countObjects();
-    auto assetFrameAfter = assetHelper.loadAsset(code);
     if (actualResultCode != RemoveAssetResultCode::SUCCESS)
     {
-        REQUIRE(countBefore == countAfter);
+        REQUIRE(assetHelper.exists(code));
     }
     else
     {
-        REQUIRE(countBefore == countAfter + 1);
+        REQUIRE_FALSE(assetHelper.exists(code));
+        REQUIRE(assetHelper.existedForCode(code));
     }
 
     return opResult.tr().removeAssetResult();

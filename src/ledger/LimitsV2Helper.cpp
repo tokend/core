@@ -233,6 +233,27 @@ namespace  stellar
         return result.substr(0, result.size()-2);
     }
 
+
+std::vector<LimitsV2Frame::pointer>
+LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
+   {
+       string sql = limitsV2Selector;
+       sql += " WHERE asset_code = :asset_c ";
+
+       auto prep = db.getPreparedStatement(sql);
+       auto& st = prep.statement();
+       st.exchange(use(assetCode, "asset_c"));
+
+       std::vector<LimitsV2Frame::pointer> result;
+       auto timer = db.getSelectTimer("limits-v2");
+       load(prep, [&result](LedgerEntry const& entry)
+       {
+         result.emplace_back(make_shared<LimitsV2Frame>(entry));
+       });
+
+       return result;
+    }
+
     std::vector<LimitsV2Frame::pointer>
     LimitsV2Helper::loadLimits(Database &db, vector<StatsOpType> statsOpTypes, AssetCode assetCode,
                                xdr::pointer<AccountID> accountID, uint64_t* roleID)
