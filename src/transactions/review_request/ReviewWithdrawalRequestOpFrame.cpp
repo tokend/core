@@ -44,7 +44,7 @@ ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
         asset = assetHelper.mustLoadAsset(balance->getAsset());
     }
     else {
-        balance = balanceHelper.mustLoadBalance(
+        balance = balanceHelper.loadBalance(
             request->getRequestEntry().body.withdrawalRequest().balance);
         if (!balance)
         {
@@ -52,7 +52,7 @@ ReviewWithdrawalRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
             mResult.entryType() = LedgerEntryType::BALANCE;
             return false;
         }
-        asset = assetHelper.mustLoadAsset(balance->getAsset());
+        asset = assetHelper.loadAsset(balance->getAsset());
         if (!asset)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);
