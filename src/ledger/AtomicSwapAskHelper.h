@@ -59,6 +59,9 @@ public:
     std::unordered_map<AccountID, std::vector<AtomicSwapAskFrame::pointer>>
     loadAllAtomicSwapAsks(Database& db);
 
+    bool
+    existForAsset(Database& db, const AssetCode& code);
+
 private:
     AtomicSwapAskHelper() { ; }
     ~AtomicSwapAskHelper() { ; }

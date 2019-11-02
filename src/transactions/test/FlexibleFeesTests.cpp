@@ -3,17 +3,14 @@
 // this distribution or at http://opensource.org/licenses/ISC
 
 #include "main/Application.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/AssetHelper.h"
 #include "TxTests.h"
-
-#include "ledger/LedgerDelta.h"
 #include "crypto/SHA.h"
-
+#include "test_helper/TestManager.h"
 #include "test/test_marshaler.h"
-#include "ledger/AssetHelperLegacy.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -31,7 +28,10 @@ TEST_CASE("Flexible fees", "[!hide][dep_tx][flexible_fees]")
 
     app.start();
 
-	upgradeToCurrentLedgerVersion(app);
+    auto testManager = TestManager::make(app);
+    TestManager::upgradeToCurrentLedgerVersion(app);
+
+    auto& assetHelper = testManager->getStorageHelper().getAssetHelper();
 
     // set up world
     SecretKey root = getRoot();
@@ -44,8 +44,7 @@ TEST_CASE("Flexible fees", "[!hide][dep_tx][flexible_fees]")
 
 	auto feeHelper = FeeHelper::Instance();
 
-        std::vector<AssetFrame::pointer> baseAssets;
-        AssetHelperLegacy::Instance()->loadBaseAssets(baseAssets, app.getDatabase());
+        auto baseAssets = assetHelper.loadBaseAssets();
         REQUIRE(!baseAssets.empty());
         auto asset = baseAssets[0];
 

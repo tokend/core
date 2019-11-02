@@ -48,7 +48,17 @@ ReviewPreIssuanceCreationRequestOpFrame::handleApprove(Application& app, Storage
     createReference(storageHelper, request->getRequestor(), request->getReference());
 
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.loadAsset(preIssuanceCreationRequest.asset);
+
+    if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        if (!storageHelper.getAssetHelper().existActive(
+                preIssuanceCreationRequest.asset))
+        {
+            innerResult().code(ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
+            return false;
+        }
+    }
+    auto asset = assetHelper.loadActiveAsset(preIssuanceCreationRequest.asset);
     if (!asset)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)

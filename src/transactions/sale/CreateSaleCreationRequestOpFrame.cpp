@@ -1,10 +1,8 @@
 #include "CreateSaleCreationRequestOpFrame.h"
 #include "bucket/BucketApplicator.h"
-#include "database/Database.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/SaleHelper.h"
-#include "ledger/AssetHelperLegacy.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "ledger/LedgerDelta.h"
@@ -91,14 +89,14 @@ areQuoteAssetsValid(StorageHelper& storageHelper,
                     xdr::xvector<SaleCreationRequestQuoteAsset, 100> quoteAssets, AssetCode defaultQuoteAsset)
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    if (!assetHelper.exists(defaultQuoteAsset))
+    if (!assetHelper.existActive(defaultQuoteAsset))
     {
         return false;
     }
     auto& db = storageHelper.getDatabase();
     for (auto const& quoteAsset : quoteAssets)
     {
-        if (!assetHelper.exists(quoteAsset.quoteAsset))
+        if (!assetHelper.existActive(quoteAsset.quoteAsset))
         {
             return false;
         }

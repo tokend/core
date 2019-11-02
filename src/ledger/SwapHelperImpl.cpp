@@ -213,6 +213,26 @@ SwapHelperImpl::loadSwap(uint64_t id)
     return result;
 }
 
+bool
+SwapHelperImpl::existForAsset(const stellar::AssetCode& code)
+{
+    Database& db = getDatabase();
+    int exists = 0;
+    auto timer = db.getSelectTimer("swaps-for-asset-exist");
+    auto prep =
+        db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM swap, balance "
+                                " WHERE asset = :code and (source_balance = balance_id "
+                                " or destination_balance = balance_id))");
+    auto& st = prep.statement();
+    std::string assetCode = code;
+    st.exchange(use(assetCode, "code"));
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 void
 SwapHelperImpl::load(StatementContext& prep,
                      std::function<void(LedgerEntry const&)> processor)

@@ -4,9 +4,9 @@
 
 #include <ledger/AssetPairHelper.h>
 #include "ReviewSaleRequestHelper.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
-#include "ledger/SaleFrame.h"
 #include "test/test_marshaler.h"
 #include "transactions/review_request/ReviewSaleCreationRequestOpFrame.h"
 
@@ -18,6 +18,8 @@ namespace txtest
 SaleReviewChecker::SaleReviewChecker(const TestManager::pointer testManager,
                                      const uint64_t requestID) : ReviewChecker(testManager)
 {
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, mTestManager->getDB());
     if (!request || request->getType() != ReviewableRequestType::CREATE_SALE)
     {
@@ -25,14 +27,16 @@ SaleReviewChecker::SaleReviewChecker(const TestManager::pointer testManager,
     }
 
     saleCreationRequest = std::make_shared<SaleCreationRequest>(request->getRequestEntry().body.saleCreationRequest());
-    baseAssetBeforeTx = AssetHelperLegacy::Instance()->loadAsset(saleCreationRequest->baseAsset, mTestManager->getDB());
+    baseAssetBeforeTx = assetHelper.loadAsset(saleCreationRequest->baseAsset);
 }
 
 void SaleReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
 {
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     REQUIRE(!!saleCreationRequest);
     REQUIRE(!!baseAssetBeforeTx);
-    auto baseAssetAfterTx = AssetHelperLegacy::Instance()->loadAsset(saleCreationRequest->baseAsset, mTestManager->getDB());
+    auto baseAssetAfterTx = assetHelper.loadAsset(saleCreationRequest->baseAsset);
     REQUIRE(!!baseAssetAfterTx);
     auto saleCreationRequestTemp = *saleCreationRequest;
     uint64_t hardCapInBaseAsset = ReviewSaleCreationRequestOpFrame::getRequiredBaseAssetForHardCap(saleCreationRequestTemp);

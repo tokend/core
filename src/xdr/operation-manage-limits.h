@@ -610,6 +610,7 @@ enum class ManageLimitsResultCode : std::int32_t {
   ROLE_NOT_FOUND = -3,
   CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE = -4,
   INVALID_LIMITS = -5,
+  ASSET_NOT_FOUND = -6,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ManageLimitsResultCode>
@@ -631,6 +632,8 @@ template<> struct xdr_traits<::stellar::ManageLimitsResultCode>
       return "CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE";
     case ::stellar::ManageLimitsResultCode::INVALID_LIMITS:
       return "INVALID_LIMITS";
+    case ::stellar::ManageLimitsResultCode::ASSET_NOT_FOUND:
+      return "ASSET_NOT_FOUND";
     default:
       return nullptr;
     }
@@ -642,7 +645,8 @@ template<> struct xdr_traits<::stellar::ManageLimitsResultCode>
       (int32_t)::stellar::ManageLimitsResultCode::NOT_FOUND,
       (int32_t)::stellar::ManageLimitsResultCode::ROLE_NOT_FOUND,
       (int32_t)::stellar::ManageLimitsResultCode::CANNOT_CREATE_FOR_ACC_ID_AND_ACC_TYPE,
-      (int32_t)::stellar::ManageLimitsResultCode::INVALID_LIMITS
+      (int32_t)::stellar::ManageLimitsResultCode::INVALID_LIMITS,
+      (int32_t)::stellar::ManageLimitsResultCode::ASSET_NOT_FOUND
     };
     return _xdr_enum_vec;
   }

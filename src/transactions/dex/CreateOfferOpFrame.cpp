@@ -2,7 +2,6 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/AssetHelperLegacy.h>
 #include "CreateOfferOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
@@ -10,7 +9,6 @@
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "main/Application.h"
 #include "OfferManager.h"
 #include "transactions/managers/BalanceManager.h"

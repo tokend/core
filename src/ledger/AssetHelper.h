@@ -18,11 +18,13 @@ class AssetHelper : public EntryHelper
 public:
     using EntryHelper::exists;
 
-	virtual bool
-	exists(const AssetCode &code) = 0;
+        virtual std::map<AssetCode, uint64_t>
+        loadIssuedForAssets() = 0;
+	virtual bool existActive(const AssetCode &code) = 0;
+	virtual bool exists(const AssetCode &code) = 0;
 
-	virtual AssetFrame::pointer
-	loadAsset(AssetCode assetCode) = 0;
+	virtual AssetFrame::pointer loadActiveAsset(AssetCode assetCode) = 0;
+	virtual AssetFrame::pointer loadAsset(AssetCode assetCode) = 0;
 
 	virtual AssetFrame::pointer
 	mustLoadAsset(AssetCode assetCode) = 0;
@@ -42,7 +44,13 @@ public:
 	virtual bool
 	doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) = 0;
 
-private:
+        virtual void
+        addAssetState() = 0;
+
+        virtual void
+        markDeleted(LedgerEntry const& entry) = 0;
+
+  private:
 
 	virtual void
 	loadAssets(StatementContext& prep,

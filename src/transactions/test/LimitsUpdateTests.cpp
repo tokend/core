@@ -52,9 +52,28 @@ TEST_CASE("limits update", "[tx][limits_update]")
     auto requestor = Account{SecretKey::random(), Salt(0)};
     AccountID requestorID = requestor.key.getPublicKey();
     createAccountTestHelper.applyCreateAccountTx(root, requestorID, 1);
+    auto issuanceHelper = IssuanceRequestHelper(testManager);
+
+    uint64_t preIssuedAmount = 10*ONE;
+
+    AssetCode asset = "USD";
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey(asset);
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    key = ManageKeyValueOpFrame::makePreIssuanceTasksKey(asset);
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    key = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount/3*2, root, AssetFrame::kMaximumTrailingDigits, 1, preIssuedAmount);
+
 
     // set default limits for review request
-    reviewLimitsUpdateHelper.initializeLimits(requestorID);
+    reviewLimitsUpdateHelper.initializeLimits(requestorID, asset);
 
     // prepare data for request
     std::string documentData = "{}";
@@ -86,6 +105,22 @@ TEST_CASE("limits update", "[tx][limits_update]")
                                                                                            &tasksToRemove);
 
                 REQUIRE(reviewResult.success().fulfilled);
+            }
+
+            SECTION("No asset")
+            {
+                reviewLimitsUpdateHelper.initializeLimits(requestorID, "asset");
+
+                auto request = requestHelper.loadRequest(limitsUpdateResult.success().manageLimitsRequestID);
+                REQUIRE(request);
+                auto reviewResult = reviewLimitsUpdateHelper.applyReviewRequestTxWithTasks(root, limitsUpdateResult.success().manageLimitsRequestID,
+                                                                                           request->getHash(),
+                                                                                           request->getRequestType(),
+                                                                                           ReviewRequestOpAction::APPROVE, "",
+                                                                                           ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS,
+                                                                                           &tasksToAdd,
+                                                                                           &tasksToRemove);
+
             }
             SECTION("Reject")
             {

@@ -7,17 +7,17 @@
 #include "ledger/AccountHelper.h"
 #include "transactions/payment/PaymentOpFrame.h"
 
-namespace stellar 
+namespace stellar
 {
 ReviewPaymentRequestOpFrame::ReviewPaymentRequestOpFrame(
         Operation const& op, OperationResult& res, TransactionFrame& tx)
-        : ReviewRequestOpFrame(op, res, tx) 
+        : ReviewRequestOpFrame(op, res, tx)
 {
 }
 
 bool
-ReviewPaymentRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper, 
-                                            std::vector<SignerRequirement>& result) const
+ReviewPaymentRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                            std::vector<SignerRequirement>& result, LedgerManager& lm) const
 {
     auto request = storageHelper.getReviewableRequestHelper().loadRequest(
 			mReviewRequest.requestID);
@@ -31,28 +31,55 @@ ReviewPaymentRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelp
     auto const& payment = request->getRequestEntry().body.createPaymentRequest().paymentOp;
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
-    auto senderBalanceFrame = balanceHelper.mustLoadBalance(payment.sourceBalanceID);
-
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto assetFrame = assetHelper.mustLoadAsset(senderBalanceFrame->getAsset());
+
+    AssetFrame::pointer assetFrame;
+    BalanceFrame::pointer senderBalanceFrame;
+    if (!lm.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        senderBalanceFrame = balanceHelper.mustLoadBalance(payment.sourceBalanceID);
+        assetFrame = assetHelper.mustLoadAsset(senderBalanceFrame->getAsset());
+    }
+    else
+    {
+
+        senderBalanceFrame = balanceHelper.loadBalance(payment.sourceBalanceID);
+        if (!senderBalanceFrame)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::BALANCE;
+            return false;
+        }
+        assetFrame =
+            assetHelper.loadActiveAsset(senderBalanceFrame->getAsset());
+        if (!assetFrame)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::ASSET;
+            return false;
+        }
+    }
 
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-    resource.reviewableRequest().details.requestType(ReviewableRequestType::CREATE_PAYMENT);
+    resource.reviewableRequest().details.requestType(
+        ReviewableRequestType::CREATE_PAYMENT);
     auto& details = resource.reviewableRequest().details.createPayment();
     details.assetCode = assetFrame->getCode();
     details.assetType = assetFrame->getType();
-	resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
-	resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
-	resource.reviewableRequest().allTasks = 0;
+    resource.reviewableRequest().tasksToAdd =
+        mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove =
+        mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
 
-	result.emplace_back(resource, SignerRuleAction::REVIEW);
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
 
-	return true;
+    return true;
 }
 
-bool 
+bool
 ReviewPaymentRequestOpFrame::handleApprove(Application& app,  StorageHelper& sh,
-        LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request) 
+        LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
     request->checkRequestType(ReviewableRequestType::CREATE_PAYMENT);
 
@@ -96,7 +123,7 @@ ReviewPaymentRequestOpFrame::handleApprove(Application& app,  StorageHelper& sh,
     return true;
 }
 
-bool 
+bool
 ReviewPaymentRequestOpFrame::handleReject(
     Application& app, StorageHelper& sh, LedgerManager& ledgerManager,
     ReviewableRequestFrame::pointer request)

@@ -314,4 +314,24 @@ AtomicSwapAskHelper::loadAtomicSwapAsks(Database& db, StatementContext &prep,
         st.fetch();
     }
 }
+
+bool
+AtomicSwapAskHelper::existForAsset(Database& db, const AssetCode& code)
+{
+    int exists = 0;
+    auto timer = db.getSelectTimer("aswap-ask-for-asset-exist");
+    auto prep = db.getPreparedStatement(
+        "SELECT EXISTS "
+        "(SELECT NULL FROM atomic_swap_ask, atomic_swap_quote_asset "
+        "WHERE ask_id = id and (base_asset_code = :code or quote_asset = :code))");
+    auto& st = prep.statement();
+    std::string assetCode = code;
+    st.exchange(use(assetCode, "code"));
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 }

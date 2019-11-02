@@ -8,7 +8,8 @@ namespace stellar
 class ReviewPaymentRequestOpFrame : public ReviewRequestOpFrame 
 {
     bool
-    tryGetSignerRequirements(StorageHelper& sh, std::vector<SignerRequirement>& result) const override;
+    tryGetSignerRequirements(StorageHelper& sh,
+        std::vector<SignerRequirement>& result, LedgerManager& lm) const override;
 
     bool 
     handleApprove(Application& app, StorageHelper& sh, LedgerManager& ledgerManager,

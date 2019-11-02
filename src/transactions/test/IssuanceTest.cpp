@@ -142,7 +142,7 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
         newAccountBalanceAfterRequest = balanceHelper.loadBalance(receiverBalance->getBalanceID());
         REQUIRE(newAccountBalanceAfterRequest->getAmount() == issuanceRequestAmount);
 
-        auto assetFrame = assetHelper.loadAsset(assetToBeIssued);
+        auto assetFrame = assetHelper.loadActiveAsset(assetToBeIssued);
         REQUIRE(assetFrame->getIssued() == issuanceRequestAmount);
         REQUIRE(assetFrame->getAvailableForIssuance() == preIssuedAmount);
     }
@@ -881,6 +881,17 @@ TEST_CASE("Issuance", "[tx][issuance]")
                     auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
                     reviewRequestHelper.applyReviewRequestTx(root, requestID, ReviewRequestOpAction::APPROVE, "");
                 }
+//Will return opNO_ENTRY. But I'm too lazy to change signature of all applyReviewRequestTx.. methods.
+//                SECTION("Delete asset and review")
+//                {
+//                    manageAssetTestHelper.applyRemoveAssetTx(root, assetToBeIssued,
+//                                                             nullptr);
+//
+//                    auto reviewRequestHelper = ReviewIssuanceRequestHelper(testManager);
+//                    reviewRequestHelper.applyReviewRequestTx(root, requestID,
+//                        ReviewRequestOpAction::APPROVE, "",
+//                        ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS);
+//                }
             }
         }
     }

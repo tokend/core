@@ -134,7 +134,7 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account& source, AssetCode ass
     auto referenceBeforeTx = ReferenceHelper::Instance()->loadReference(source.key.getPublicKey(), reference,
                                                                         db);
 
-    auto assetBeforeTx = assetHelper.loadAsset(assetCode);
+    auto assetBeforeTx = assetHelper.loadActiveAsset(assetCode);
 
     auto issuanceRequest = createIssuanceRequest(assetCode, amount, receiver, externalDetails);
     auto txFrame = createIssuanceRequestTx(source, issuanceRequest, reference, allTasks);

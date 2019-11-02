@@ -80,10 +80,10 @@ BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelp
 }
 
 bool
-CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, BalanceFrame::pointer balance) const
+CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, StorageHelper& sh, BalanceFrame::pointer balance) const
 {
     Database& db = app.getDatabase();
-    FeeManager feeManager(app, db);
+    FeeManager feeManager(app, sh);
 
     return feeManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee,
                                    FeeType::WITHDRAWAL_FEE, FeeFrame::SUBTYPE_ANY, balance->getAsset(),
@@ -154,7 +154,7 @@ CreateWithdrawalRequestOpFrame::tryCreateWithdrawalRequest(Application& app,
         return nullptr;
     }
 
-    if (!isFeeMatches(app, balanceFrame))
+    if (!isFeeMatches(app, storageHelper, balanceFrame))
     {
         innerResult().code(CreateWithdrawalRequestResultCode::FEE_MISMATCHED);
         return nullptr;

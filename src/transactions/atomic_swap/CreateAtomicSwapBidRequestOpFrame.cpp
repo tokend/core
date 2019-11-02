@@ -1,6 +1,5 @@
 #include "main/Application.h"
 #include <ledger/AtomicSwapAskHelper.h>
-#include <ledger/AssetHelperLegacy.h>
 #include "ledger/StorageHelper.h"
 #include <ledger/ReviewableRequestFrame.h>
 #include <transactions/ManageKeyValueOpFrame.h>
@@ -52,7 +51,8 @@ CreateAtomicSwapBidRequestOpFrame::tryGetSignerRequirements(StorageHelper& stora
                                                             std::vector<SignerRequirement>& result) const
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.loadAsset(mCreateASwapRequest.request.quoteAsset);
+    auto asset =
+        assetHelper.loadActiveAsset(mCreateASwapRequest.request.quoteAsset);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);

@@ -1,6 +1,8 @@
 #include <ledger/LimitsV2Helper.h>
 #include "ledger/LedgerDeltaImpl.h"
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
+#include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
+#include <transactions/test/test_helper/IssuanceRequestHelper.h>
 #include "main/Application.h"
 #include "main/Config.h"
 #include "util/Timer.h"
@@ -47,6 +49,25 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
                                             .setToPublicKey(a1.key.getPublicKey())
                                             .setRoleID(1)
                                             .addBasicSigner());
+
+    auto issuanceHelper = IssuanceRequestHelper(testManager);
+
+    uint64_t preIssuedAmount = 10*ONE;
+
+    AssetCode asset = "USD";
+    ManageKeyValueTestHelper manageKeyValueHelper(testManager);
+    longstring key = ManageKeyValueOpFrame::makeIssuanceTasksKey(asset);
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    key = ManageKeyValueOpFrame::makeAssetCreateTasksKey();
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+    key = ManageKeyValueOpFrame::makePreIssuanceTasksKey(asset);
+    manageKeyValueHelper.setKey(key)->setUi32Value(0);
+    manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT, true);
+
+    issuanceHelper.createAssetWithPreIssuedAmount(root, asset, preIssuedAmount/3*2, root, AssetFrame::kMaximumTrailingDigits, 1, preIssuedAmount);
+
 
     ManageLimitsOp manageLimitsOp;
     manageLimitsOp.details.action(ManageLimitsAction::CREATE);
@@ -164,5 +185,13 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
         REQUIRE(limitsAfterFrame->getWeeklyOut() == manageLimitsOp.details.limitsCreateDetails().weeklyOut);
         REQUIRE(limitsAfterFrame->getMonthlyOut() == manageLimitsOp.details.limitsCreateDetails().monthlyOut);
         REQUIRE(limitsAfterFrame->getAnnualOut() == manageLimitsOp.details.limitsCreateDetails().annualOut);
+    }
+
+    SECTION("Asset does not exist")
+    {
+        manageLimitsOp.details.limitsCreateDetails().assetCode = "asset";
+
+        manageLimitsOp.details.limitsCreateDetails().accountRole = nullptr;
+        manageLimitsTestHelper.applyManageLimitsTx(root, manageLimitsOp, ManageLimitsResultCode::ASSET_NOT_FOUND);
     }
 }

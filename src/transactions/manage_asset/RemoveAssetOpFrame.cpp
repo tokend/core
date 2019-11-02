@@ -1,10 +1,14 @@
 #include "RemoveAssetOpFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
+#include "ledger/LimitsV2Helper.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/SwapHelper.h"
 #include "main/Application.h"
 #include "medida/meter.h"
 #include "medida/metrics_registry.h"
@@ -29,7 +33,7 @@ RemoveAssetOpFrame::tryGetOperationConditions(
     stellar::LedgerManager& ledgerManager) const
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.loadAsset(mRemoveAsset.code);
+    auto asset = assetHelper.loadActiveAsset(mRemoveAsset.code);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -57,7 +61,7 @@ RemoveAssetOpFrame::tryGetSignerRequirements(
     std::vector<stellar::SignerRequirement>& result) const
 {
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto asset = assetHelper.loadAsset(mRemoveAsset.code);
+    auto asset = assetHelper.loadActiveAsset(mRemoveAsset.code);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -109,10 +113,44 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
         innerResult().code(RemoveAssetResultCode::HAS_PAIR);
         return false;
     }
+    if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
+    {
+        if (AtomicSwapAskHelper::Instance()->existForAsset(db,
+                                                           mRemoveAsset.code))
+        {
+            innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_ATOMIC_SWAPS);
+            return false;
+        }
 
-    deleteBalances(storageHelper);
+        if (storageHelper.getSwapHelper().existForAsset(mRemoveAsset.code))
+        {
+            innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_SWAPS);
+            return false;
+        }
 
-    assetHelper.storeDelete(asset->getKey());
+        if (asset->isPolicySet(AssetPolicy::STATS_QUOTE_ASSET))
+        {
+            innerResult().code(
+                RemoveAssetResultCode::CANNOT_REMOVE_STATS_QUOTE_ASSET);
+            return false;
+        }
+
+        if (!deleteBalancesWithCheck(storageHelper))
+        {
+            innerResult().code(RemoveAssetResultCode::HAS_PENDING_MOVEMENTS);
+            return false;
+        }
+
+        deleteLimits(storageHelper);
+
+        assetHelper.markDeleted(asset->mEntry);
+    }
+    else
+    {
+        deleteBalances(storageHelper);
+
+        assetHelper.storeDelete(asset->getKey());
+    }
 
     innerResult().code(RemoveAssetResultCode::SUCCESS);
     return true;
@@ -141,6 +179,43 @@ RemoveAssetOpFrame::deleteBalances(StorageHelper& storageHelper)
     {
         balanceHelper.storeDelete(holder->getKey());
     }
+}
+
+bool
+RemoveAssetOpFrame::deleteBalancesWithCheck(StorageHelper& storageHelper)
+{
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+
+    auto holders = balanceHelper.loadBalancesForAsset(mRemoveAsset.code);
+
+    for (auto& holder : holders)
+    {
+        if (holder->getLocked() != 0)
+        {
+            return false;
+        }
+
+        balanceHelper.storeDelete(holder->getKey());
+    }
+
+    return true;
+}
+
+
+void
+RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
+{
+    auto limitsHelper = LimitsV2Helper::Instance();
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
+
+    auto limits = limitsHelper->loadLimitsForAsset(db, mRemoveAsset.code);
+
+    for (auto limit : limits)
+    {
+        limitsHelper->storeDelete(delta, db, limit->getKey());
+    }
+
 }
 
 }

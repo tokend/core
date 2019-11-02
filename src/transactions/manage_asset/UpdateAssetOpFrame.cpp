@@ -44,7 +44,8 @@ bool
 UpdateAssetOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                              std::vector<SignerRequirement>& result) const
 {
-    auto asset = storageHelper.getAssetHelper().loadAsset(mAssetUpdateRequest.code);
+    auto asset = storageHelper.getAssetHelper().loadActiveAsset(
+        mAssetUpdateRequest.code);
     if (!asset)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);

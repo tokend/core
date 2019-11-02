@@ -35,7 +35,7 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
         return;
     }
     issuanceRequest = std::make_shared<IssuanceRequest>(request->getRequestEntry().body.issuanceRequest());
-    assetFrameBeforeTx = assetHelper.loadAsset(issuanceRequest->asset);
+    assetFrameBeforeTx = assetHelper.loadActiveAsset(issuanceRequest->asset);
     balanceBeforeTx = balanceHelper.loadBalance(issuanceRequest->receiver);
     commissionBalanceBeforeTx = balanceHelper.loadBalance(testManager->getApp().getAdminID(),
                                                           issuanceRequest->asset);
@@ -50,7 +50,7 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
     auto& balanceHelper = storageHelper.getBalanceHelper();
 
     issuanceRequest = request;
-    assetFrameBeforeTx = assetHelper.loadAsset(issuanceRequest->asset);
+    assetFrameBeforeTx = assetHelper.loadActiveAsset(issuanceRequest->asset);
     balanceBeforeTx = balanceHelper.loadBalance(issuanceRequest->receiver);
     commissionBalanceBeforeTx = balanceHelper.loadBalance(testManager->getApp().getAdminID(),
                                                           issuanceRequest->asset);
@@ -77,7 +77,8 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
     // check asset
     REQUIRE(!!issuanceRequest);
     REQUIRE(!!assetFrameBeforeTx);
-    auto assetFrameAfterTx = assetHelper.loadAsset(issuanceRequest->asset);
+    auto assetFrameAfterTx =
+        assetHelper.loadActiveAsset(issuanceRequest->asset);
     REQUIRE(!!assetFrameAfterTx);
     REQUIRE(assetFrameAfterTx->getAvailableForIssuance()
             == assetFrameBeforeTx->getAvailableForIssuance() - issuanceRequest->amount);

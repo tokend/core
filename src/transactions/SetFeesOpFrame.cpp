@@ -7,7 +7,6 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/AssetHelperLegacy.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AccountRoleHelper.h"
 #include "medida/meter.h"
@@ -46,17 +45,18 @@ SetFeesOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     return true;
 }
 
-bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, Database& db, LedgerDelta& delta)
+bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& storageHelper)
 {
+    auto& db = storageHelper.getDatabase();
+    auto& delta = storageHelper.mustGetLedgerDelta();
     assert(mSetFees.fee);
-    if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(db, delta))
+    if (mSetFees.fee->feeType == FeeType::WITHDRAWAL_FEE && !doCheckForfeitFee(storageHelper))
         return false;
 
-    if (mSetFees.fee->feeType == FeeType::PAYMENT_FEE && !doCheckPaymentFee(db, delta))
+    if (mSetFees.fee->feeType == FeeType::PAYMENT_FEE && !doCheckPaymentFee(storageHelper))
         return false;
 
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    if (!checkAccountRoleExisting(storageHelperImpl, ledgerManager))
+    if (!checkAccountRoleExisting(storageHelper, ledgerManager))
     {
         return false;
     }
@@ -98,8 +98,8 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, Database& db, Ledge
     }
 
     // create
-    auto assetHelper = AssetHelperLegacy::Instance();
-    if (!assetHelper->exists(db, mSetFees.fee->asset))
+    auto& assetHelper = storageHelper.getAssetHelper();
+    if (!assetHelper.existActive(mSetFees.fee->asset))
     {
         innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
         return false;
@@ -116,8 +116,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, Database& db, Ledge
     le.data.feeState() = *mSetFees.fee;
     feeFrame = make_shared<FeeFrame>(le);
 
-    StorageHelper& storageHelper = storageHelperImpl;
-    if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+    if (!assetHelper.doesAmountFitAssetPrecision(
         feeFrame->getFeeAsset(), feeFrame->getFixedFee()))
     {
         innerResult().code(SetFeesResultCode::INVALID_AMOUNT_PRECISION);
@@ -165,9 +164,9 @@ SetFeesOpFrame::checkAccountRoleExisting(StorageHelper& storageHelper,
     return true;
 }
 
-bool SetFeesOpFrame::doCheckForfeitFee(Database& db, LedgerDelta& delta)
+bool SetFeesOpFrame::doCheckForfeitFee(StorageHelper& storageHelper)
 {
-    auto asset = AssetHelperLegacy::Instance()->loadAsset(mSetFees.fee->asset, db);
+    auto asset = storageHelper.getAssetHelper().loadAsset(mSetFees.fee->asset);
     if (!asset)
     {
         innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
@@ -177,9 +176,9 @@ bool SetFeesOpFrame::doCheckForfeitFee(Database& db, LedgerDelta& delta)
     return true;
 }
 
-bool SetFeesOpFrame::doCheckPaymentFee(stellar::Database& db, stellar::LedgerDelta& delta)
+bool SetFeesOpFrame::doCheckPaymentFee(StorageHelper& storageHelper)
 {
-    if (!AssetHelperLegacy::Instance()->exists(db, mSetFees.fee->asset))
+    if (!storageHelper.getAssetHelper().existActive(mSetFees.fee->asset))
     {
         innerResult().code(SetFeesResultCode::ASSET_NOT_FOUND);
         return false;
@@ -199,15 +198,18 @@ SetFeesOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerMa
 
     LedgerHeader& ledgerHeader = setFeesDelta.getHeader();
 
+    StorageHelperImpl localStorageHelperImpl(db, &setFeesDelta);
+    StorageHelper& localStorageHelper = localStorageHelperImpl;
+
     if (mSetFees.fee)
     {
-        if (!trySetFee(ledgerManager, db, setFeesDelta))
+        if (!trySetFee(ledgerManager, localStorageHelper))
             return false;
     }
 
     app.getMetrics().NewMeter({"op-set-fees", "success", "apply"}, "operation").Mark();
 
-    setFeesDelta.commit();
+    localStorageHelper.commit();
 
     return true;
 }
@@ -231,22 +233,6 @@ bool SetFeesOpFrame::mustDefaultSubtype(FeeEntry const& fee, medida::MetricsRegi
 
     innerResult().code(SetFeesResultCode::SUB_TYPE_NOT_EXIST);
     metrics.NewMeter({"op-set-fees", "invalid", "invalid-sub-type-not-exist"}, "operation").Mark();
-    return false;
-}
-
-bool SetFeesOpFrame::mustBaseAsset(FeeEntry const& fee, Application& app)
-{
-    vector<AssetFrame::pointer> baseAssets;
-    auto assetHelper = AssetHelperLegacy::Instance();
-    assetHelper->loadBaseAssets(baseAssets, app.getDatabase());
-    if (baseAssets.empty())
-        throw std::runtime_error("Unable to create referral fee - there is no base assets in the system");
-
-    if (fee.asset == baseAssets[0]->getCode())
-        return true;
-
-    innerResult().code(SetFeesResultCode::SUB_TYPE_NOT_EXIST);
-    app.getMetrics().NewMeter({"op-set-fees", "invalid", "must-be-base-asset"}, "operation").Mark();
     return false;
 }
 

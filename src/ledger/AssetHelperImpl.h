@@ -37,8 +37,9 @@ private:
     bool
     exists(LedgerKey const& key) override;
 
-    bool
-    exists(const AssetCode &code) override;
+    bool exists(const AssetCode &code) override;
+
+    bool existActive(const AssetCode &code) override;
 
     LedgerKey
     getLedgerKey(LedgerEntry const& from) override;
@@ -52,8 +53,8 @@ private:
     uint64_t
     countObjects() override;
 
-    AssetFrame::pointer
-    loadAsset(AssetCode assetCode) override;
+    AssetFrame::pointer loadActiveAsset(AssetCode assetCode) override;
+    AssetFrame::pointer loadAsset(AssetCode assetCode) override;
 
     AssetFrame::pointer
     mustLoadAsset(AssetCode assetCode) override;
@@ -64,12 +65,19 @@ private:
     AssetFrame::pointer
     loadStatsAsset() override;
 
+    std::map<AssetCode, uint64_t>
+    loadIssuedForAssets() override;
+
     void
     loadAssets(StatementContext& prep,
                std::function<void(LedgerEntry const&)> assetProcessor) override;
 
     std::vector<AssetFrame::pointer>
     loadBaseAssets() override;
+
+    void addAssetState() override;
+
+    void markDeleted(LedgerEntry const& entry) override;
 
     bool
     doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) override;

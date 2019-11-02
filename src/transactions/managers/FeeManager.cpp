@@ -1,13 +1,14 @@
 #include "FeeManager.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
 
 namespace stellar
 {
 
-FeeManager::FeeManager(Application &app, Database &db)
-        : mApp(app) , mDb(db)
+FeeManager::FeeManager(Application &app, StorageHelper& storageHelper)
+        : mApp(app) , mSh(storageHelper)
 {
 }
 
@@ -23,7 +24,9 @@ FeeManager::calculateFeeForAccount(const AccountFrame::pointer account,
         return result;
     }
 
-    auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(asset, db);
+    StorageHelperImpl storageHelperImpl(db, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto feeAssetFrame = storageHelper.getAssetHelper().mustLoadAsset(asset);
     const uint64_t feeAssetPrecision = feeAssetFrame->getMinimumAmount();
 
     result.fixedFee = feeFrame->getFixedFee();
@@ -42,7 +45,7 @@ FeeManager::isFeeMatches(const AccountFrame::pointer account, const Fee fee,
         return fee.fixed == 0 && fee.percent == 0;
     }
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(feeType, assetCode, subtype, account, amount, mDb);
+    auto feeFrame = FeeHelper::Instance()->loadForAccount(feeType, assetCode, subtype, account, amount, mSh.getDatabase());
     if (!feeFrame)
     {
         return fee.fixed == 0 && fee.percent == 0;
@@ -53,7 +56,7 @@ FeeManager::isFeeMatches(const AccountFrame::pointer account, const Fee fee,
         return false;
     }
 
-    auto feeAssetFrame = AssetHelperLegacy::Instance()->mustLoadAsset(assetCode, mDb);
+    auto feeAssetFrame = mSh.getAssetHelper().mustLoadAsset(assetCode);
 
     // if we have overflow - fee does not match
     uint64_t expectedPercentFee = 0;

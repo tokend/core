@@ -56,6 +56,8 @@ private:
     void
     load(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
 
+    bool
+    existForAsset(const AssetCode& assetCode) override;
 
     bool
     exists(uint64_t swapID) override;

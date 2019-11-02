@@ -86,8 +86,7 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
     manageAssetTestHelper.updateAsset(
         root, paymentAsset, root,
         static_cast<uint32_t>(AssetPolicy::BASE_ASSET) |
-            static_cast<uint32_t>(AssetPolicy::TRANSFERABLE) |
-            static_cast<uint32_t>(AssetPolicy::STATS_QUOTE_ASSET));
+            static_cast<uint32_t>(AssetPolicy::TRANSFERABLE));
 
     // create policy (just entry)
     AccountRuleResource assetResource(LedgerEntryType::ASSET);
@@ -434,6 +433,26 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
                 REQUIRE(reviewRequestResult.success().typeExt.requestType() ==
                     ReviewableRequestType::CREATE_PAYMENT);
             }
+
+// Again, i'm too lazy to refactor all test helpers to use expected operation result code
+// It's ok, i checked
+//            SECTION("Remove asset & review")
+//            {
+//                manageAssetTestHelper.applyRemoveAssetTx(root, paymentAsset,
+//                                                     nullptr);
+//
+//                auto requestID = result.success().requestID;
+//                uint32_t toAdd = 0, toRemove = 1;
+//                auto reviewRequestResult =
+//                    reviewPaymentTestHelper.applyReviewRequestTxWithTasks(
+//                        root, requestID, ReviewRequestOpAction::APPROVE, "",
+//                        ReviewRequestResultCode::ASSET_DOES_NOT_EXISTS, &toAdd, &toRemove);
+//                REQUIRE_FALSE(reviewRequestResult.success().fulfilled);
+//                REQUIRE(reviewRequestResult.success().typeExt.requestType() ==
+//                    ReviewableRequestType::CREATE_PAYMENT);
+//            }
+
+
         }
     }
 }

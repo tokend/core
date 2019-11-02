@@ -36,7 +36,6 @@ class SetFeesOpFrame : public OperationFrame {
 
     bool mustDefaultSubtype(FeeEntry const& fee, medida::MetricsRegistry& metrics);
 
-    bool mustBaseAsset(FeeEntry const& fee, Application& app);
 
     bool isPaymentFeeValid(FeeEntry const& fee, medida::MetricsRegistry& media);
 
@@ -56,11 +55,11 @@ class SetFeesOpFrame : public OperationFrame {
 
     bool isPayoutFeeValid(FeeEntry const& fee, medida::MetricsRegistry& metrics);
 
-    bool trySetFee(LedgerManager& ledgerManager, Database& db, LedgerDelta& delta);
+    bool trySetFee(LedgerManager& ledgerManager, StorageHelper& storageHelper);
 
-    bool doCheckForfeitFee(Database& db, LedgerDelta& delta);
+    bool doCheckForfeitFee(StorageHelper& storageHelper);
 
-    bool doCheckPaymentFee(Database& db, LedgerDelta& delta);
+    bool doCheckPaymentFee(StorageHelper& storageHelper);
 
     bool checkAccountRoleExisting(StorageHelper& storageHelper,
                                   LedgerManager& ledgerManager);

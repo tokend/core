@@ -65,7 +65,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
                                                                    ManageAssetResultCode::SUCCESS);
         REQUIRE(creationResult.success().fulfilled);
 
-        auto assetFrame = assetHelper.loadAsset(assetCode);
+        auto assetFrame = assetHelper.loadActiveAsset(assetCode);
         REQUIRE(!!assetFrame);
 
         SECTION("Able to change max issuance with fork")
@@ -81,7 +81,7 @@ TEST_CASE("manage asset", "[tx][manage_asset]")
                                   app.getDatabase());
             applyCheck(txFrame, delta, app);
 
-            assetFrame = assetHelper.loadAsset(assetCode);
+            assetFrame = assetHelper.loadActiveAsset(assetCode);
             REQUIRE(!!assetFrame);
             REQUIRE(assetFrame->getMaxIssuanceAmount() == maxIssuanceAmount);
         }
@@ -421,6 +421,10 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
     uint32_t zeroTasks = 0;
     uint32_t tasks = 1;
 
+    auto& storageHelper = testManager->getStorageHelper();
+    auto& assetHelper = storageHelper.getAssetHelper();
+
+
     SECTION("Can create asset")
     {
 
@@ -499,7 +503,7 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
                 const auto opResult = txResult.result.results()[0];
                 auto actualResultCode = ManageAssetOpFrame::getInnerCode(opResult);
                 REQUIRE(actualResultCode == ManageAssetResultCode::SUCCESS);
-                auto assetFrame = assetHelper.loadAsset(assetCode);
+                auto assetFrame = assetHelper.loadActiveAsset(assetCode);
                 REQUIRE(assetFrame->getPreIssuedAssetSigner() == newPreIssuanceSigner.getPublicKey());
                 SECTION("Owner is not able to change signer")
                 {
@@ -622,6 +626,20 @@ void testManageAssetHappyPath(TestManager::pointer testManager,
             {
                 manageAssetHelper.applyRemoveAssetTx(root, assetCode,
                                                    nullptr);
+
+                REQUIRE(assetHelper.exists(assetCode));
+                REQUIRE_FALSE(assetHelper.existActive(assetCode));
+
+                SECTION("Create again")
+                {
+                    auto req = manageAssetHelper.
+                        createAssetCreationRequest(assetCode,
+                                                   preissuedSigner.getPublicKey(),
+                                                   "{}", maxIssuance, 0, &tasks, initialPreIssuedAmount);
+                    manageAssetHelper.applyManageAssetTx(account, 0,
+                                                                               req, ManageAssetResultCode::ASSET_ALREADY_EXISTS);
+                }
+
             }
 
         }

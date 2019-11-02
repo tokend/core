@@ -4,7 +4,8 @@
 
 #include "ReviewAssetRequestHelper.h"
 #include "ledger/AssetFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
 
 
@@ -15,9 +16,8 @@ namespace txtest
 void AssetReviewChecker::checkApproval(AssetCreationRequest const& request,
     AccountID const& requestor) const
 {
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto assetFrame = assetHelper->loadAsset(request.code,
-        mTestManager->getDB(), nullptr);
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+    auto assetFrame = assetHelper.loadAsset(request.code);
     REQUIRE(!!assetFrame);
     auto assetEntry = assetFrame->getAsset();
     REQUIRE(assetEntry.availableForIssueance == request.initialPreissuedAmount);
@@ -33,9 +33,8 @@ void AssetReviewChecker::checkApproval(AssetCreationRequest const& request,
 void AssetReviewChecker::checkApproval(AssetUpdateRequest const& request,
     AccountID const& requestor)
 {
-    auto assetHelper = AssetHelperLegacy::Instance();
-    auto assetFrame = assetHelper->loadAsset(request.code,
-        mTestManager->getDB(), nullptr);
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+    auto assetFrame = assetHelper.loadAsset(request.code);
     REQUIRE(!!assetFrame);
     auto assetEntry = assetFrame->getAsset();
     REQUIRE(assetEntry.code == request.code);

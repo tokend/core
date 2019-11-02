@@ -2,10 +2,9 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/StatisticsHelper.h>
 #include "ReviewWithdrawalRequestHelper.h"
-#include "ledger/AssetFrame.h"
-#include "ledger/AssetHelperLegacy.h"
+#include "ledger/AssetHelper.h"
+#include "ledger/StorageHelper.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelperLegacy.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
@@ -19,6 +18,8 @@ namespace txtest
 WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, const uint64_t requestID)
     : ReviewChecker(testManager)
 {
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
     auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
     if (!request || request->getType() != ReviewableRequestType::CREATE_WITHDRAW)
@@ -28,7 +29,7 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
     withdrawalRequest = std::make_shared<WithdrawalRequest>(request->getRequestEntry().body.withdrawalRequest());
     balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(withdrawalRequest->balance, mTestManager->getDB());
     auto assetCode = balanceBeforeTx->getAsset();
-    assetBeforeTx = AssetHelperLegacy::Instance()->loadAsset(assetCode, mTestManager->getDB());
+    assetBeforeTx = assetHelper.loadAsset(assetCode);
     commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
                                                                              assetCode, testManager->getDB(),
                                                                              nullptr);
@@ -36,6 +37,8 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
 
 void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
 {
+    auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
+
     REQUIRE(!!withdrawalRequest);
     // check balance
     REQUIRE(!!balanceBeforeTx);
@@ -57,7 +60,7 @@ void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
 
     // check asset
     REQUIRE(!!assetBeforeTx);
-    auto assetAfterTx = AssetHelperLegacy::Instance()->loadAsset(balanceAfterTx->getAsset(), mTestManager->getDB());
+    auto assetAfterTx = assetHelper.loadAsset(balanceAfterTx->getAsset());
     REQUIRE(!!assetAfterTx);
     REQUIRE(assetBeforeTx->getIssued() == assetAfterTx->getIssued() + withdrawalRequest->amount);
     REQUIRE(assetBeforeTx->getAvailableForIssuance() == assetAfterTx->getAvailableForIssuance());
