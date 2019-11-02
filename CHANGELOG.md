@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Changed
+
+* `RemoveAssetOp` now changes asset status to deleted but not delete it
+
 ## 3.6.1
 
 ### Fixed
