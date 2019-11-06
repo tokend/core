@@ -100,6 +100,9 @@ AssetHelperImpl::storeDelete(LedgerKey const& key)
 void
 AssetHelperImpl::markDeleted(LedgerEntry const& entry)
 {
+
+    flushCachedEntry(getLedgerKey(entry));
+
     Database& db = getDatabase();
 
     auto assetFrame = make_shared<AssetFrame>(entry);
