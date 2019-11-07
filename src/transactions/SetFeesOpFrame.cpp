@@ -194,12 +194,10 @@ SetFeesOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerMa
     innerResult().code(SetFeesResultCode::SUCCESS);
 
     LedgerDeltaImpl setFeesDeltaImpl(delta);
-    LedgerDelta& setFeesDelta = setFeesDeltaImpl;
 
-    LedgerHeader& ledgerHeader = setFeesDelta.getHeader();
-
-    StorageHelperImpl localStorageHelperImpl(db, &setFeesDelta);
+    StorageHelperImpl localStorageHelperImpl(db, &setFeesDeltaImpl);
     StorageHelper& localStorageHelper = localStorageHelperImpl;
+    localStorageHelper.begin();
 
     if (mSetFees.fee)
     {

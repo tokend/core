@@ -2,9 +2,13 @@
 
 ## Unreleased
 
-## Changed
+### Changed
 
 * `RemoveAssetOp` now changes asset status to deleted but not delete it
+
+### Fixed
+
+* internal error on set fee op application
 
 ## 3.6.1
 
