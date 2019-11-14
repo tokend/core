@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.6.2-x.0
 
 ### Changed
 
