@@ -156,6 +156,8 @@ class MockApplication : public Application
                        size_t());
     MOCK_CONST_METHOD0(isCheckingPolicies,
                        bool());
+    MOCK_CONST_METHOD0(getMaxSigns,
+                       uint32());
     MOCK_METHOD0(stopCheckingPolicies,
                  void());
     MOCK_METHOD0(resumeCheckingPolicies,

@@ -165,6 +165,8 @@ public:
 
     uint32_t getMaxSaleRulesLength() const override;
 
+    uint32 getMaxSigns() const override;
+
 protected:
     std::unique_ptr<LedgerManager> mLedgerManager; // allow to change that for tests
     std::unique_ptr<Herder> mHerder; // allow to change that for tests

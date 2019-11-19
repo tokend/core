@@ -837,4 +837,8 @@ ApplicationImpl::createLedgerManager()
 {
     return LedgerManager::create(*this);
 }
+
+    uint32 ApplicationImpl::getMaxSigns() const {
+        return Config().MAX_SIGNS;
+    }
 }
