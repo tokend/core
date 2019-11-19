@@ -215,7 +215,6 @@ class Application
     virtual BanManager& getBanManager() = 0;
     virtual StatusManager& getStatusManager() = 0;
 
-
     // Get the worker IO service, served by background threads. Work posted to
     // this io_service will execute in parallel with the calling thread, so use
     // with caution.

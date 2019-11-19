@@ -73,7 +73,6 @@ TestApplication::createInvariantManager()
 {
     return std::make_unique<TestInvariantManager>(getMetrics());
 }
-
     uint32 TestApplication::getMaxSigns() const {
         return Config().MAX_SIGNS;
     }
