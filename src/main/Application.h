@@ -215,6 +215,7 @@ class Application
     virtual BanManager& getBanManager() = 0;
     virtual StatusManager& getStatusManager() = 0;
 
+
     // Get the worker IO service, served by background threads. Work posted to
     // this io_service will execute in parallel with the calling thread, so use
     // with caution.
@@ -294,6 +295,7 @@ class Application
     virtual int32 getKYCSuperAdminMask() const = 0;
     virtual size_t getSignerRuleIDsMaxCount() const = 0;
     virtual uint32_t getMaxSaleRulesLength() const = 0;
+    virtual uint32_t getMaxSigns() const = 0;
 
     // Factory: create a new Application object bound to `clock`, with a local
     // copy made of `cfg`.

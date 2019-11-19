@@ -49,6 +49,7 @@ class TestApplication : public ApplicationImpl
 {
   public:
     TestApplication(VirtualClock& clock, Config const& cfg);
+    uint32  getMaxSigns() const override;
 
   private:
     std::unique_ptr<InvariantManager> createInvariantManager() override;

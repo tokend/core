@@ -183,6 +183,16 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                      invalidReference, nullptr,
                                                      PaymentResultCode::MALFORMED);
             }
+
+            SECTION("Too much signs"){
+                auto invalidSubject = "1111аааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааааа";
+                paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(), destination,
+                                                      paymentAmount, paymentFeeData, invalidSubject,
+                                                      "", nullptr,
+                                                     PaymentResultCode::TOO_MUCH_SIGNS);
+
+            }
+
             SECTION("Send to self by balance") {
                 auto balanceDestination = paymentV2TestHelper.createDestinationForBalance(payerBalance->getBalanceID());
                 paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(),
@@ -350,6 +360,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                          paymentAmount - 1, paymentFeeData, "", "",
                                                          nullptr, PaymentResultCode::INCORRECT_AMOUNT_PRECISION);
                 }
+
             }
         }
     }

@@ -115,23 +115,20 @@ PaymentOpFrame::tryLoadDestinationAccount(StorageHelper& storageHelper) const
 bool
 PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::pointer payer,
                                 BalanceFrame::pointer from, BalanceFrame::pointer to,
-                                uint64_t amount, uint64_t& universalAmount, LedgerManager& lm)
-{
+                                uint64_t amount, uint64_t& universalAmount, LedgerManager& lm) {
     auto transferResult = balanceManager.transfer(payer, from, to, amount);
-    if (transferResult != BalanceManager::Result::SUCCESS)
-    {
+    if (transferResult != BalanceManager::Result::SUCCESS) {
         setErrorCode(transferResult);
         return false;
     }
 
-    if (!lm.shouldUse(LedgerVersion::FIX_PAYMENT_STATS))
-    {
-        if (!safeSum(universalAmount, balanceManager.getUniversalAmount(), universalAmount))
-        {
+    if (!lm.shouldUse(LedgerVersion::FIX_PAYMENT_STATS)) {
+        if (!safeSum(universalAmount, balanceManager.getUniversalAmount(), universalAmount)) {
             innerResult().code(PaymentResultCode::STATS_OVERFLOW);
             return false;
         }
     }
+
 
     return true;
 }
@@ -419,6 +416,15 @@ bool PaymentOpFrame::isDestinationFeeValid()
 
 bool PaymentOpFrame::doCheckValid(Application& app)
 {
+
+    if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_MAX_SUBJECT_SIZE)) {
+
+        if (mPayment.subject.size() > app.getMaxSigns()) {
+            innerResult().code(PaymentResultCode::TOO_MUCH_SIGNS);
+            return false;
+        }
+    }
+
     if (mPayment.reference.length() > 64)
     {
         innerResult().code(PaymentResultCode::MALFORMED);

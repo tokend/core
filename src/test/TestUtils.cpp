@@ -74,7 +74,11 @@ TestApplication::createInvariantManager()
     return std::make_unique<TestInvariantManager>(getMetrics());
 }
 
-time_t
+    uint32 TestApplication::getMaxSigns() const {
+        return Config().MAX_SIGNS;
+    }
+
+    time_t
 getTestDate(int day, int month, int year)
 {
     auto tm = getTestDateTime(day, month, year, 0, 0, 0);

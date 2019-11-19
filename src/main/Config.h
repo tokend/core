@@ -38,6 +38,7 @@ class Config : public std::enable_shared_from_this<Config>
 
     std::string expandNodeID(std::string const& s) const;
 
+
   public:
     static const uint32_t CURRENT_LEDGER_PROTOCOL_VERSION;
     
@@ -174,6 +175,7 @@ class Config : public std::enable_shared_from_this<Config>
     uint64 MAX_CONTRACTS_FOR_CONTRACTOR = 20;
     uint64 MAX_CONTRACT_DETAIL_LENGTH = 256;
     uint64 MAX_CONTRACT_INITIAL_DETAIL_LENGTH = 1000;
+    uint32 MAX_SIGNS = 1024;
 
     uint64 LICENSE_FREE_PERIOD_NUM_BLOCKS = 600000;
 
@@ -281,5 +283,6 @@ class Config : public std::enable_shared_from_this<Config>
     {
         return adminRoleID;
     }
+
 };
 }

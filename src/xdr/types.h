@@ -33,6 +33,7 @@ enum class LedgerVersion : std::int32_t {
   CLEAR_DATABASE_CACHE = 20,
   FIX_ISSUANCE_REVIEWER = 21,
   MARK_ASSET_AS_DELETED = 22,
+  FIX_MAX_SUBJECT_SIZE = 23,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerVersion>
@@ -88,6 +89,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       return "FIX_ISSUANCE_REVIEWER";
     case ::stellar::LedgerVersion::MARK_ASSET_AS_DELETED:
       return "MARK_ASSET_AS_DELETED";
+    case ::stellar::LedgerVersion::FIX_MAX_SUBJECT_SIZE:
+      return "FIX_MAX_SUBJECT_SIZE";
     default:
       return nullptr;
     }
@@ -116,7 +119,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       (int32_t)::stellar::LedgerVersion::FIX_CREATE_KYC_RECOVERY_PERMISSIONS,
       (int32_t)::stellar::LedgerVersion::CLEAR_DATABASE_CACHE,
       (int32_t)::stellar::LedgerVersion::FIX_ISSUANCE_REVIEWER,
-      (int32_t)::stellar::LedgerVersion::MARK_ASSET_AS_DELETED
+      (int32_t)::stellar::LedgerVersion::MARK_ASSET_AS_DELETED,
+      (int32_t)::stellar::LedgerVersion::FIX_MAX_SUBJECT_SIZE
     };
     return _xdr_enum_vec;
   }
