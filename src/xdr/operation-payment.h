@@ -615,7 +615,7 @@ enum class PaymentResultCode : std::int32_t {
   PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE = -13,
   DESTINATION_ACCOUNT_NOT_FOUND = -14,
   INCORRECT_AMOUNT_PRECISION = -15,
-  TOO_MUCH_SIGNS = -16,
+  INVALID_SUBJECT = -16,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::PaymentResultCode>
@@ -657,8 +657,8 @@ template<> struct xdr_traits<::stellar::PaymentResultCode>
       return "DESTINATION_ACCOUNT_NOT_FOUND";
     case ::stellar::PaymentResultCode::INCORRECT_AMOUNT_PRECISION:
       return "INCORRECT_AMOUNT_PRECISION";
-    case ::stellar::PaymentResultCode::TOO_MUCH_SIGNS:
-      return "TOO_MUCH_SIGNS";
+    case ::stellar::PaymentResultCode::INVALID_SUBJECT:
+      return "INVALID_SUBJECT";
     default:
       return nullptr;
     }
@@ -681,7 +681,7 @@ template<> struct xdr_traits<::stellar::PaymentResultCode>
       (int32_t)::stellar::PaymentResultCode::PAYMENT_AMOUNT_IS_LESS_THAN_DEST_FEE,
       (int32_t)::stellar::PaymentResultCode::DESTINATION_ACCOUNT_NOT_FOUND,
       (int32_t)::stellar::PaymentResultCode::INCORRECT_AMOUNT_PRECISION,
-      (int32_t)::stellar::PaymentResultCode::TOO_MUCH_SIGNS
+      (int32_t)::stellar::PaymentResultCode::INVALID_SUBJECT
     };
     return _xdr_enum_vec;
   }

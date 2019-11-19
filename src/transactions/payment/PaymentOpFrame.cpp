@@ -136,8 +136,7 @@ PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::po
 bool
 PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
                                    AccountFrame::pointer payer, BalanceFrame::pointer chargeFrom,
-                                   Fee expectedFee, Fee actualFee, uint64_t& universalAmount, LedgerManager& lm)
-{
+                                   Fee expectedFee, Fee actualFee, uint64_t& universalAmount, LedgerManager& lm) {
     if ((actualFee.fixed == 0) && (actualFee.percent == 0))
     {
         return true;
@@ -420,7 +419,7 @@ bool PaymentOpFrame::doCheckValid(Application& app)
     if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_MAX_SUBJECT_SIZE)) {
 
         if (mPayment.subject.size() > app.getMaxSigns()) {
-            innerResult().code(PaymentResultCode::TOO_MUCH_SIGNS);
+            innerResult().code(PaymentResultCode::INVALID_SUBJECT);
             return false;
         }
     }

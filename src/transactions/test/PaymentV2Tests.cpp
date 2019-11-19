@@ -189,7 +189,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                 paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(), destination,
                                                       paymentAmount, paymentFeeData, invalidSubject,
                                                       "", nullptr,
-                                                     PaymentResultCode::TOO_MUCH_SIGNS);
+                                                     PaymentResultCode::INVALID_SUBJECT);
 
             }
 
