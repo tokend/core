@@ -65,6 +65,7 @@ public:
     MOCK_METHOD0(getAccountSpecificRuleHelper, AccountSpecificRuleHelper&());
     MOCK_METHOD0(getReviewableRequestHelper, ReviewableRequestHelper & ());
     MOCK_METHOD0(getSwapHelper, SwapHelper&());
+    MOCK_METHOD0(getLimitsV2HelperImpl, LimitsV2HelperImpl& ());
 };
 
 }  // namespace stellar

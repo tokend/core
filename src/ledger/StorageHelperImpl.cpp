@@ -6,6 +6,7 @@
 #include "ledger/LicenseHelperImpl.h"
 #include "ledger/StampHelperImpl.h"
 #include "ledger/LicenseSignatureHelperImpl.h"
+#include "ledger/LimitsV2HelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -403,6 +404,17 @@ StorageHelperImpl::getReviewableRequestHelper()
     }
 
     return *mReviewableRequestHelper;
+}
+
+LimitsV2HelperImpl&
+StorageHelperImpl::getLimitsV2HelperImpl()
+{
+    if(!mLimitsV2HelperImpl)
+    {
+        mLimitsV2HelperImpl = std::make_unique<LimitsV2HelperImpl>(*this);
+    }
+
+    return *mLimitsV2HelperImpl;
 }
 
 } // namespace stellar

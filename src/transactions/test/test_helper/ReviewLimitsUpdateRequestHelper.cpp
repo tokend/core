@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/LimitsV2Helper.h>
+#include <ledger/LimitsV2HelperImpl.h>
 #include "ReviewLimitsUpdateRequestHelper.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
@@ -32,7 +32,7 @@ LimitsUpdateReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
     REQUIRE(!!manageLimitsRequest);
 
     // check accountLimits
-    auto limitsHelper = LimitsV2Helper::Instance();
+    auto limitsHelper = LimitsV2HelperImpl::Instance();
     auto limitsEntry = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;
     auto limitsAfterTx = limitsHelper->loadLimits(db, limitsEntry.statsOpType, limitsEntry.assetCode,
             limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded, nullptr);

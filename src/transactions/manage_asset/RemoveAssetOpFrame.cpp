@@ -4,7 +4,7 @@
 #include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/LimitsV2Helper.h"
+#include "ledger/LimitsV2HelperImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"
@@ -205,15 +205,15 @@ RemoveAssetOpFrame::deleteBalancesWithCheck(StorageHelper& storageHelper)
 void
 RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
 {
-    auto limitsHelper = LimitsV2Helper::Instance();
+    auto& limitsHelper =  storageHelper.getLimitsV2HelperImpl();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
-    auto limits = limitsHelper->loadLimitsForAsset(db, mRemoveAsset.code);
+    auto limits = limitsHelper.loadLimitsForAsset(db, mRemoveAsset.code);
 
-    for (auto limit : limits)
+    for (auto& limit : limits)
     {
-        limitsHelper->storeDelete(delta, db, limit->getKey());
+        limitsHelper.storeDelete(limit->getKey());
     }
 
 }

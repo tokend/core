@@ -35,7 +35,7 @@
 #include <ledger/AssetHelperImpl.h>
 #include <ledger/ContractHelper.h>
 #include <ledger/KeyValueHelperLegacy.h>
-#include <ledger/LimitsV2Helper.h>
+#include <ledger/LimitsV2HelperImpl.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StatisticsV2Helper.h>
@@ -158,7 +158,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
             break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
-            LimitsV2Helper::Instance()->dropAll(*this);
+            sh.getLimitsV2HelperImpl().dropAll();
             StatisticsV2Helper::Instance()->dropAll(*this);
             PendingStatisticsHelper::Instance()->dropAll(*this);
             break;

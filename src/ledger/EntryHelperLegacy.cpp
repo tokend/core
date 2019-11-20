@@ -30,7 +30,7 @@
 #include "xdrpp/marshal.h"
 #include "SaleHelper.h"
 #include "AccountKYCHelper.h"
-#include "LimitsV2Helper.h"
+#include "LimitsV2HelperImpl.h"
 #include "StatisticsV2Helper.h"
 #include "PendingStatisticsHelper.h"
 #include "ContractHelper.h"
@@ -186,7 +186,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::ACCOUNT_KYC,                           AccountKYCHelper::Instance()},
     {LedgerEntryType::SALE,                                  SaleHelper::Instance()},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()},
-    {LedgerEntryType::LIMITS_V2,                             LimitsV2Helper::Instance()},
+    {LedgerEntryType::LIMITS_V2,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::LIMITS_V2) },
     {LedgerEntryType::STATISTICS_V2,                         StatisticsV2Helper::Instance()},
     {LedgerEntryType::PENDING_STATISTICS,                    PendingStatisticsHelper::Instance()},
     {LedgerEntryType::CONTRACT,                              ContractHelper::Instance()},

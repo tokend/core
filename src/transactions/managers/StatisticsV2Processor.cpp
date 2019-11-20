@@ -1,5 +1,5 @@
 #include "ledger/StatisticsV2Helper.h"
-#include "ledger/LimitsV2Helper.h"
+#include "ledger/LimitsV2HelperImpl.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/PendingStatisticsFrame.h"
 #include "ledger/PendingStatisticsHelper.h"
@@ -68,8 +68,8 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
 
     auto& db = mStorageHelper.getDatabase();
     auto& delta = mStorageHelper.mustGetLedgerDelta();
-    auto limitsV2Helper = LimitsV2Helper::Instance();
-    auto limitsV2Frames = limitsV2Helper->loadLimits(db, statsOpTypes, assetCode, accountID, &accountRole);
+    auto& limitsV2Helper = mStorageHelper.getLimitsV2HelperImpl();
+    auto limitsV2Frames = limitsV2Helper.loadLimits(db, statsOpTypes, assetCode, accountID, &accountRole);
 
     auto& assetHelper = mStorageHelper.getAssetHelper();
 

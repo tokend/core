@@ -4,7 +4,7 @@
 
 #include "ledger/StatisticsHelper.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/LimitsV2Helper.h"
+#include "ledger/LimitsV2HelperImpl.h"
 #include "ledger/StatisticsV2Helper.h"
 #include "WithdrawRequestHelper.h"
 #include "ledger/AssetHelper.h"
@@ -41,9 +41,9 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     if (!!balanceBeforeRequest)
         asset = balanceBeforeRequest->getAsset();
 
-    auto limitsV2Frames = LimitsV2Helper::Instance()->loadLimits(db, {StatsOpType::WITHDRAW},
-                                                                 asset,
-                                                                 accountID);
+    auto limitsV2Frames = LimitsV2HelperImpl::Instance()->loadLimits(db, {StatsOpType::WITHDRAW},
+                                                                     asset,
+                                                                     accountID);
     std::vector<StatisticsV2Frame::pointer> statsBeforeRequestVector;
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {

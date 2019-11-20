@@ -1,4 +1,4 @@
-#include <ledger/LimitsV2Helper.h>
+#include <ledger/LimitsV2HelperImpl.h>
 #include "ledger/LedgerDeltaImpl.h"
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
@@ -11,6 +11,7 @@
 #include "TxTests.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
+#include "src/ledger/StorageHelperImpl.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -83,7 +84,9 @@ TEST_CASE("manage limits", "[tx][manage_limits]")
     manageLimitsOp.details.limitsCreateDetails().monthlyOut = 300;
     manageLimitsOp.details.limitsCreateDetails().annualOut = 500;
 
-	auto limitsV2Helper = LimitsV2Helper::Instance();
+    auto& db = app.getDatabase();
+    StorageHelperImpl mStorageHelperImpl(db,delta);
+	auto limitsV2Helper = LimitsV2HelperImpl::Instance();
 
     ManageLimitsTestHelper manageLimitsTestHelper(testManager);
 

@@ -6,7 +6,9 @@
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
-#include <ledger/LimitsV2Helper.h>
+#include <ledger/LimitsV2HelperImpl.h>
+#include "ledger/EntryHelper.h"
+#include "ledger/EntryHelperLegacyImpl.h"
 
 namespace stellar
 {
@@ -65,7 +67,7 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         }
     }
 
-    auto limitsV2Helper = LimitsV2Helper::Instance();
+    auto& LimitsV2HelperImpl =  storageHelper.getLimitsV2HelperImpl();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
     switch (mManageLimits.details.action())
@@ -77,7 +79,7 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
             return false;
         }
 
-        auto limitsV2Frame = limitsV2Helper->loadLimits(
+        auto limitsV2Frame = LimitsV2HelperImpl.loadLimits(
             db, mManageLimits.details.limitsCreateDetails().statsOpType,
             mManageLimits.details.limitsCreateDetails().assetCode,
             mManageLimits.details.limitsCreateDetails().accountID,
@@ -89,12 +91,12 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
             uint64_t id =
                 delta.getHeaderFrame().generateID(LedgerEntryType::LIMITS_V2);
             limitsV2Frame = LimitsV2Frame::createNew(id, mManageLimits);
-            limitsV2Helper->storeAdd(delta, db, limitsV2Frame->mEntry);
+            LimitsV2HelperImpl.storeAdd(limitsV2Frame->mEntry);
         }
         else
         {
             limitsV2Frame->changeLimits(mManageLimits);
-            limitsV2Helper->storeChange(delta, db, limitsV2Frame->mEntry);
+            LimitsV2HelperImpl.storeChange(limitsV2Frame->mEntry);
         }
 
         innerResult().success().details.action(ManageLimitsAction::CREATE);
@@ -104,13 +106,13 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     case ManageLimitsAction::REMOVE:
     {
         auto limitsV2FrameToRemove =
-            limitsV2Helper->loadLimits(mManageLimits.details.id(), db, &delta);
+            LimitsV2HelperImpl.loadLimits(mManageLimits.details.id(), db, &delta);
         if (!limitsV2FrameToRemove)
         {
             innerResult().code(ManageLimitsResultCode::NOT_FOUND);
             return false;
         }
-        limitsV2Helper->storeDelete(delta, db, limitsV2FrameToRemove->getKey());
+        LimitsV2HelperImpl.storeDelete(limitsV2FrameToRemove->getKey());
         innerResult().success().details.action(ManageLimitsAction::REMOVE);
         break;
     }
