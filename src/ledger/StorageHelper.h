@@ -28,7 +28,7 @@ class PollHelper;
 class AccountSpecificRuleHelper;
 class ReviewableRequestHelper;
 class SwapHelper;
-class LimitsV2HelperImpl;
+class LimitsV2Helper;
 
 class StorageHelper
 {
@@ -75,7 +75,7 @@ class StorageHelper
     virtual AccountSpecificRuleHelper& getAccountSpecificRuleHelper() = 0;
     virtual ReviewableRequestHelper& getReviewableRequestHelper() = 0;
     virtual SwapHelper& getSwapHelper() = 0;
-    virtual LimitsV2HelperImpl& getLimitsV2HelperImpl() = 0;
+    virtual LimitsV2Helper& getLimitsV2Helper() = 0;
 
 };
 } // namespace stellar

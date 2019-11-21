@@ -67,7 +67,7 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         }
     }
 
-    auto& LimitsV2HelperImpl =  storageHelper.getLimitsV2HelperImpl();
+    auto& LimitsV2HelperImpl =  storageHelper.getLimitsV2Helper();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
     switch (mManageLimits.details.action())
@@ -80,12 +80,11 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         }
 
         auto limitsV2Frame = LimitsV2HelperImpl.loadLimits(
-            db, mManageLimits.details.limitsCreateDetails().statsOpType,
+            mManageLimits.details.limitsCreateDetails().statsOpType,
             mManageLimits.details.limitsCreateDetails().assetCode,
             mManageLimits.details.limitsCreateDetails().accountID,
             mManageLimits.details.limitsCreateDetails().accountRole.get(),
-            mManageLimits.details.limitsCreateDetails().isConvertNeeded,
-            &delta);
+            mManageLimits.details.limitsCreateDetails().isConvertNeeded);
         if (!limitsV2Frame)
         {
             uint64_t id =
@@ -106,7 +105,7 @@ ManageLimitsOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     case ManageLimitsAction::REMOVE:
     {
         auto limitsV2FrameToRemove =
-            LimitsV2HelperImpl.loadLimits(mManageLimits.details.id(), db, &delta);
+            LimitsV2HelperImpl.loadLimits(mManageLimits.details.id());
         if (!limitsV2FrameToRemove)
         {
             innerResult().code(ManageLimitsResultCode::NOT_FOUND);

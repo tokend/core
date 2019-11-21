@@ -6,6 +6,8 @@
 #include "ReviewLimitsUpdateRequestHelper.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
+#include "src/ledger/StorageHelperImpl.h"
+#include "ledger/LedgerDeltaImpl.h"
 
 namespace stellar
 {
@@ -28,14 +30,17 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 void
 LimitsUpdateReviewChecker::checkApprove(ReviewableRequestFrame::pointer request) {
     Database& db = mTestManager->getDB();
-
-    REQUIRE(!!manageLimitsRequest);
+    REQUIRE(!!manageLimitsRequest); //LedgerDeltaImpl
 
     // check accountLimits
-    auto limitsHelper = LimitsV2HelperImpl::Instance();
+    LedgerHeader lh;
+    LedgerDeltaImpl delta(lh, db, false);
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto& limitsHelper = storageHelper.getLimitsV2Helper();
     auto limitsEntry = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;
-    auto limitsAfterTx = limitsHelper->loadLimits(db, limitsEntry.statsOpType, limitsEntry.assetCode,
-            limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded, nullptr);
+    auto limitsAfterTx = limitsHelper.loadLimits(limitsEntry.statsOpType, limitsEntry.assetCode,
+            limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded);
     REQUIRE(!!limitsAfterTx);
     auto limitsEntryAfterTx = limitsAfterTx->getLimits();
     auto reviewRequestLimits = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;

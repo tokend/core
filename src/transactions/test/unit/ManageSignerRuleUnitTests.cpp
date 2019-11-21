@@ -45,6 +45,7 @@
 #include "transactions/test/mocks/MockPollHelper.h"
 #include "transactions/test/mocks/MockSwapHelper.h"
 #include "transactions/test/mocks/MockReviewableRequestHelper.h"
+#include "transactions/test/mocks/MockLimitsV2Helper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"

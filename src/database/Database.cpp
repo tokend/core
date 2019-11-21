@@ -158,7 +158,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
             break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
-            sh.getLimitsV2HelperImpl().dropAll();
+            sh.getLimitsV2Helper().dropAll();
             StatisticsV2Helper::Instance()->dropAll(*this);
             PendingStatisticsHelper::Instance()->dropAll(*this);
             break;

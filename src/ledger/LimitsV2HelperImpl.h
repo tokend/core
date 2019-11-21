@@ -4,10 +4,10 @@
 #include <functional>
 #include <unordered_map>
 #include "AccountLimitsFrame.h"
-#include "LimitsV2Frame.h"
 #include "AccountFrame.h"
 #include "BalanceFrame.h"
 #include "StorageHelper.h"
+#include "LimitsV2Helper.h"
 
 namespace soci
 {
@@ -19,7 +19,7 @@ namespace stellar
 class StatementContext;
 
 
-class LimitsV2HelperImpl : public EntryHelper
+class LimitsV2HelperImpl : public LimitsV2Helper
 {
 public:
     explicit LimitsV2HelperImpl(StorageHelper &storageHelper);
@@ -39,14 +39,14 @@ public:
     Database& getDatabase() override;
     LedgerDelta* getLedgerDelta() override;
 
-    std::vector<LimitsV2Frame::pointer> loadLimits(Database &db, std::vector<StatsOpType> statsOpTypes,
+    std::vector<LimitsV2Frame::pointer> loadLimits(std::vector<StatsOpType> statsOpTypes,
                                       AssetCode assetCode, xdr::pointer<AccountID> accountID = nullptr,
-                                      uint64_t* accountType = nullptr);
-    LimitsV2Frame::pointer loadLimits(Database &db, StatsOpType statsOpType, AssetCode assetCode,
+                                      uint64_t* accountType = nullptr) override;
+    LimitsV2Frame::pointer loadLimits(StatsOpType statsOpType, AssetCode assetCode,
                                       xdr::pointer<AccountID> accountID, uint64_t* accountType,
-                                      bool isConvertNeeded, LedgerDelta *delta = nullptr);
-    LimitsV2Frame::pointer loadLimits(uint64_t id, Database& db, LedgerDelta* delta = nullptr);
-    std::vector<LimitsV2Frame::pointer> loadLimitsForAsset(Database& db, AssetCode const& code);
+                                      bool isConvertNeeded) override;
+    LimitsV2Frame::pointer loadLimits(uint64_t id) override;
+    std::vector<LimitsV2Frame::pointer> loadLimitsForAsset(AssetCode const& code);
 
 private:
     StorageHelper& mStorageHelper;

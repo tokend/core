@@ -41,7 +41,7 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     if (!!balanceBeforeRequest)
         asset = balanceBeforeRequest->getAsset();
 
-    auto limitsV2Frames = LimitsV2HelperImpl::Instance()->loadLimits(db, {StatsOpType::WITHDRAW},
+    auto limitsV2Frames = mTestManager->getStorageHelper().getLimitsV2Helper().loadLimits({StatsOpType::WITHDRAW},
                                                                      asset,
                                                                      accountID);
     std::vector<StatisticsV2Frame::pointer> statsBeforeRequestVector;

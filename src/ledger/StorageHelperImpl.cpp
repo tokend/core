@@ -406,15 +406,15 @@ StorageHelperImpl::getReviewableRequestHelper()
     return *mReviewableRequestHelper;
 }
 
-LimitsV2HelperImpl&
-StorageHelperImpl::getLimitsV2HelperImpl()
+LimitsV2Helper&
+StorageHelperImpl::getLimitsV2Helper()
 {
-    if(!mLimitsV2HelperImpl)
+    if(!mLimitsV2Helper)
     {
-        mLimitsV2HelperImpl = std::make_unique<LimitsV2HelperImpl>(*this);
+        mLimitsV2Helper = std::make_unique<LimitsV2HelperImpl>(*this);
     }
 
-    return *mLimitsV2HelperImpl;
+    return *mLimitsV2Helper;
 }
 
 } // namespace stellar

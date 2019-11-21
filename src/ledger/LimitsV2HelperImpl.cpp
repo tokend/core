@@ -205,14 +205,15 @@ namespace  stellar
     EntryFrame::pointer
     LimitsV2HelperImpl::storeLoad(LedgerKey const &key)
     {
-        Database& db = getDatabase();
         auto const &limitsV2Entry = key.limitsV2();
-        return loadLimits(limitsV2Entry.id, db);
+        return loadLimits(limitsV2Entry.id);
     }
 
     LimitsV2Frame::pointer
-    LimitsV2HelperImpl::loadLimits(uint64_t id, Database &db, LedgerDelta *delta)
+    LimitsV2HelperImpl::loadLimits(uint64_t id)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         string sql = limitsV2Selector;
         sql += " where id = :id";
 
@@ -251,8 +252,9 @@ namespace  stellar
 
 
 std::vector<LimitsV2Frame::pointer>
-LimitsV2HelperImpl::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
+LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
    {
+       Database &db = getDatabase();
        string sql = limitsV2Selector;
        sql += " WHERE asset_code = :asset_c ";
 
@@ -271,9 +273,10 @@ LimitsV2HelperImpl::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
     }
 
     std::vector<LimitsV2Frame::pointer>
-    LimitsV2HelperImpl::loadLimits(Database &db, vector<StatsOpType> statsOpTypes, AssetCode assetCode,
+    LimitsV2HelperImpl::loadLimits(vector<StatsOpType> statsOpTypes, AssetCode assetCode,
                                    xdr::pointer<AccountID> accountID, uint64_t* roleID)
     {
+        Database &db = getDatabase();
         uint64_t accountRole = 0;
         indicator accountTypeIndicator = i_null;
         if (roleID != nullptr)
@@ -319,10 +322,12 @@ LimitsV2HelperImpl::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
     }
 
     LimitsV2Frame::pointer
-    LimitsV2HelperImpl::loadLimits(Database &db, StatsOpType statsOpType, AssetCode assetCode,
+    LimitsV2HelperImpl::loadLimits(StatsOpType statsOpType, AssetCode assetCode,
                                    xdr::pointer<AccountID> accountID, uint64_t* roleID,
-                                   bool isConvertNeeded, LedgerDelta *delta)
+                                   bool isConvertNeeded)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         uint64_t accountRole = 0;
         indicator accountTypeIndicator = i_null;
         if (roleID != nullptr)

@@ -205,11 +205,11 @@ RemoveAssetOpFrame::deleteBalancesWithCheck(StorageHelper& storageHelper)
 void
 RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
 {
-    auto& limitsHelper =  storageHelper.getLimitsV2HelperImpl();
+    auto& limitsHelper =  storageHelper.getLimitsV2Helper();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
-    auto limits = limitsHelper.loadLimitsForAsset(db, mRemoveAsset.code);
+    auto limits = limitsHelper.loadLimitsForAsset(mRemoveAsset.code);
 
     for (auto& limit : limits)
     {
