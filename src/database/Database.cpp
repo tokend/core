@@ -35,7 +35,7 @@
 #include <ledger/AssetHelperImpl.h>
 #include <ledger/ContractHelper.h>
 #include <ledger/KeyValueHelperLegacy.h>
-#include <ledger/LimitsV2HelperImpl.h>
+#include <ledger/LimitsV2Helper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StatisticsV2Helper.h>

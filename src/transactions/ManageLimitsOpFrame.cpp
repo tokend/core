@@ -8,7 +8,6 @@
 #include "main/Application.h"
 #include <ledger/LimitsV2HelperImpl.h>
 #include "ledger/EntryHelper.h"
-#include "ledger/EntryHelperLegacyImpl.h"
 
 namespace stellar
 {

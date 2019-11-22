@@ -50,12 +50,12 @@ public:
 
 private:
     StorageHelper& mStorageHelper;
-    const char* mAssetColumnSelector;
+    const char* mLimitsV2ColumnSelector;
 
 
     std::string obtainSqlStatsOpTypesString(std::vector<StatsOpType> stats);
     void load(StatementContext &prep, std::function<void(LedgerEntry const &)> processor);
-    void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert, LedgerEntry const& entry);
+    void storeUpdateHelper(bool insert, LedgerEntry const& entry);
 };
 
 }

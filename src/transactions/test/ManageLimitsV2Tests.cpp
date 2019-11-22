@@ -1,4 +1,4 @@
-#include <ledger/LimitsV2HelperImpl.h>
+#include <ledger/LimitsV2Helper.h>
 #include "ledger/LedgerDeltaImpl.h"
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
@@ -6,7 +6,6 @@
 #include "main/Application.h"
 #include "main/Config.h"
 #include "util/Timer.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "TxTests.h"
 #include "test/test_marshaler.h"

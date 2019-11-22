@@ -4,7 +4,7 @@
 #include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/LimitsV2HelperImpl.h"
+#include "ledger/LimitsV2Helper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ledger/StorageHelper.h"

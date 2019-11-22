@@ -42,12 +42,13 @@ namespace  stellar
     }
 
     void
-    LimitsV2HelperImpl::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, LedgerEntry const &entry)
+    LimitsV2HelperImpl::storeUpdateHelper(bool insert, LedgerEntry const &entry)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         auto limitsV2Frame = make_shared<LimitsV2Frame>(entry);
         auto limitsV2Entry = limitsV2Frame->getLimits();
-
-        limitsV2Frame->touch(delta);
+        limitsV2Frame->touch(*delta);
 
         auto key = limitsV2Frame->getKey();
         flushCachedEntry(key);
@@ -124,35 +125,31 @@ namespace  stellar
 
         if (insert)
         {
-            delta.addEntry(*limitsV2Frame);
+            delta->addEntry(*limitsV2Frame);
         }
         else
         {
-            delta.modEntry(*limitsV2Frame);
+            delta->modEntry(*limitsV2Frame);
         }
     }
 
     void
     LimitsV2HelperImpl::storeAdd(LedgerEntry const& entry)
     {
-        Database& db = getDatabase();
-        LedgerDelta* delta = getLedgerDelta();
-        storeUpdateHelper(*delta, db, true, entry);
+        storeUpdateHelper(true, entry);
     }
 
     void
     LimitsV2HelperImpl::storeChange(LedgerEntry const& entry)
     {
-        Database& db = getDatabase();
-        LedgerDelta* delta = getLedgerDelta();
-        storeUpdateHelper(*delta, db, false, entry);
+        storeUpdateHelper(false, entry);
     }
 
     void
     LimitsV2HelperImpl::storeDelete(LedgerKey const& key)
     {
         Database& db = getDatabase();
-        LedgerDelta* delta = getLedgerDelta();
+        LedgerDelta* delta = mStorageHelper.getLedgerDelta();
         auto timer = db.getDeleteTimer("limits-v2");
         auto prep = db.getPreparedStatement("DELETE FROM limits_v2 WHERE id = :id");
         auto& st = prep.statement();
@@ -443,7 +440,7 @@ LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
     LimitsV2HelperImpl::LimitsV2HelperImpl(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
             {
-        mAssetColumnSelector =
+            mLimitsV2ColumnSelector =
                 "SELECT code, owner, preissued_asset_signer, "
                 "details, max_issuance_amount, "
                 "available_for_issueance, issued, pending_issuance, "
