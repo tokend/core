@@ -27,8 +27,7 @@ public:
                  xdr::pointer<AccountID> accountID, uint64_t* accountType,
                  bool isConvertNeeded));
     MOCK_METHOD1(loadLimits, LimitsV2Frame::pointer(uint64_t id));
-    MOCK_METHOD2(loadLimitsForAsset,std::vector<LimitsV2Frame::pointer>(Database& db, AssetCode const& code));
-    MOCK_METHOD1(obtainSqlStatsOpTypesString, std::string(std::vector<StatsOpType> stats));
+    MOCK_METHOD1(loadLimitsForAsset,std::vector<LimitsV2Frame::pointer>(AssetCode const& code));
 };
 
 }  // namespace stellar

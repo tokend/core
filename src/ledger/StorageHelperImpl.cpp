@@ -53,7 +53,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()},
         {LedgerEntryType::REVIEWABLE_REQUEST,                    &getReviewableRequestHelper()},
         {LedgerEntryType::SWAP, &getSwapHelper()},
-
+        {LedgerEntryType::LIMITS_V2, &getLimitsV2Helper()},
 
     };
 }

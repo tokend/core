@@ -30,14 +30,10 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 void
 LimitsUpdateReviewChecker::checkApprove(ReviewableRequestFrame::pointer request) {
     Database& db = mTestManager->getDB();
-    REQUIRE(!!manageLimitsRequest); //LedgerDeltaImpl
+    REQUIRE(!!manageLimitsRequest);
 
     // check accountLimits
-    LedgerHeader lh;
-    LedgerDeltaImpl delta(lh, db, false);
-    StorageHelperImpl storageHelperImpl(db, &delta);
-    StorageHelper& storageHelper = storageHelperImpl;
-    auto& limitsHelper = storageHelper.getLimitsV2Helper();
+    auto& limitsHelper = mTestManager->getStorageHelper().getLimitsV2Helper();
     auto limitsEntry = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;
     auto limitsAfterTx = limitsHelper.loadLimits(limitsEntry.statsOpType, limitsEntry.assetCode,
             limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded);
