@@ -60,8 +60,8 @@ ManageAssetPairOpFrame::createNewAssetPair(Application& app, StorageHelper& stor
     auto& delta = storageHelper.mustGetLedgerDelta();
     // already exists or reverced already exists
 
-    auto assetPairHelper = AssetPairHelper::Instance();
-    if (assetPair || assetPairHelper->exists(db, mManageAssetPair.quote, mManageAssetPair.base))
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    if (assetPair || assetPairHelper.exists(mManageAssetPair.quote, mManageAssetPair.base))
     {
         app.getMetrics().NewMeter({"op-manage-asset-pair", "invalid", "already-exists"},
                                   "operation").Mark();
@@ -101,8 +101,8 @@ ManageAssetPairOpFrame::doApply(Application& app,
     Database& db = ledgerManager.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
-    auto assetPairHelper = AssetPairHelper::Instance();
-    AssetPairFrame::pointer assetPair = assetPairHelper->loadAssetPair(mManageAssetPair.base, mManageAssetPair.quote, db, &delta);
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    AssetPairFrame::pointer assetPair = assetPairHelper.loadAssetPair(mManageAssetPair.base, mManageAssetPair.quote);
     if (mManageAssetPair.action == ManageAssetPairAction::CREATE)
     {
         return createNewAssetPair(app, storageHelper, ledgerManager, assetPair);

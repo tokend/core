@@ -107,8 +107,8 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
         return false;
     }
 
-    auto assetPairHelper = AssetPairHelper::Instance();
-    if (assetPairHelper->existsForAsset(db, mRemoveAsset.code))
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    if (assetPairHelper.existsForAsset(mRemoveAsset.code))
     {
         innerResult().code(RemoveAssetResultCode::HAS_PAIR);
         return false;

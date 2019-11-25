@@ -17,7 +17,6 @@
 #include "ledger/LedgerHeaderUtils.h"
 #include "ledger/PollHelper.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/SaleHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/SwapHelper.h"
 #include "ledger/VoteHelper.h"
@@ -146,7 +145,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             ReferenceHelper::addVersion(*this);
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
-            AccountKYCHelper::Instance()->dropAll(*this);
+            sh.getAccountKYCHelper().dropAll();
+            StatisticsV2Helper::Instance()->dropAll(*this);
+            PendingStatisticsHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_MIGRATION:
             ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->dropAll(*this);

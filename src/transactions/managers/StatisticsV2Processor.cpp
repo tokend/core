@@ -98,9 +98,8 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
 
         if (statisticsV2Frame->getConvertNeeded() && (assetCode != statisticsV2Frame->getAsset()))
         {
-            auto statsAssetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(assetCode,
-                                                                                         statisticsV2Frame->getAsset(),
-                                                                                         db);
+            auto statsAssetPair = mStorageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(assetCode,
+                                                                                         statisticsV2Frame->getAsset());
             if (!statsAssetPair)
             {
                 CLOG(WARNING, Logging::OPERATION_LOGGER) << "Not found such asset pair: " << assetCode << " and "
@@ -110,8 +109,8 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
             }
 
             auto statsAssetFrame = assetHelper.mustLoadAsset(statisticsV2Frame->getAsset());
-            if (!AssetPairHelper::Instance()->convertAmount(statsAssetPair, statisticsV2Frame->getAsset(), amountToAdd,
-                                                            ROUND_UP, db, universalAmount))
+            if (!mStorageHelper.getAssetPairHelper().convertAmount(statsAssetPair, statisticsV2Frame->getAsset(), amountToAdd,
+                                                            ROUND_UP, universalAmount))
                 return STATS_V2_OVERFLOW;
         }
 

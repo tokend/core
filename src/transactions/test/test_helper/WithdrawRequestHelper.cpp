@@ -2,10 +2,10 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/StatisticsHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/LimitsV2Helper.h"
 #include "ledger/StatisticsV2Helper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "WithdrawRequestHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
@@ -174,8 +174,7 @@ bool WithdrawRequestHelper::canCalculateStats(AssetCode baseAsset)
     if (!statsAsset)
         return false;
 
-    auto statsAssetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(statsAsset->getCode(), baseAsset,
-                                                                                 mTestManager->getDB());
+    auto statsAssetPair = mTestManager->getStorageHelper().getAssetPairHelper().tryLoadAssetPairForAssets(statsAsset->getCode(), baseAsset);
 
     return !!statsAssetPair;
 }

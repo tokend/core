@@ -18,6 +18,7 @@
 #include "test_helper/ManageOfferTestHelper.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelperImpl.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -201,7 +202,9 @@ TEST_CASE("manage offer", "[tx][offer]")
                                              quoteSellerBalance->getBalanceID(),
                                              baseAssetAmount / 2, 5 * ONE, false, 0);
 
-            auto assetPair = AssetPairHelper::Instance()->loadAssetPair(base, quote, db);
+            StorageHelperImpl storageHelperImpl(db, nullptr);
+            StorageHelper& storageHelper = storageHelperImpl;
+            auto assetPair = storageHelper.getAssetPairHelper().loadAssetPair(base, quote);
 
             REQUIRE(assetPair->getCurrentPrice() == 5 * ONE);
 

@@ -109,10 +109,9 @@ AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(StorageHelper&
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto assetPairHelper = AssetPairHelper::Instance();
-    AssetPairFrame::pointer assetPair = assetPairHelper->
-        loadAssetPair(mBaseBalance->getAsset(), mQuoteBalance->getAsset(), db,
-                      &delta);
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    AssetPairFrame::pointer assetPair = assetPairHelper.
+        loadAssetPair(mBaseBalance->getAsset(), mQuoteBalance->getAsset());
     if (!assetPair)
         return nullptr;
 

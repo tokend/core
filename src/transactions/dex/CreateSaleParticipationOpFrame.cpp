@@ -18,6 +18,7 @@
 #include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/marshal.h"
 #include "xdrpp/printer.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
@@ -357,9 +358,8 @@ CreateSaleParticipationOpFrame::getSaleCurrentCap(
             continue;
         }
 
-        const auto assetPair =
-            AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
-                quoteAsset.quoteAsset, saleEntry.defaultQuoteAsset, db);
+        const auto assetPair = storageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(
+                quoteAsset.quoteAsset, saleEntry.defaultQuoteAsset);
         if (!assetPair)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -372,9 +372,9 @@ CreateSaleParticipationOpFrame::getSaleCurrentCap(
         auto defaultQuoteAssetFrame =
             assetHelper.mustLoadAsset(saleEntry.defaultQuoteAsset);
         uint64_t currentCapInDefaultQuote = 0;
-        if (!AssetPairHelper::Instance()->convertAmount(
+        if (!storageHelper.getAssetPairHelper().convertAmount(
                 assetPair, saleEntry.defaultQuoteAsset, quoteAsset.currentCap,
-                ROUND_UP, db, currentCapInDefaultQuote))
+                ROUND_UP, currentCapInDefaultQuote))
         {
             return false;
         }

@@ -177,15 +177,15 @@ BalanceManager::calculateUniversalAmount(AssetCode transferAsset, uint64_t amoun
         return true;
     }
 
-    auto assetPairFrame = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
-        transferAsset, statsAssetFrame->getCode(), db, mSh.getLedgerDelta());
+    auto assetPairFrame = mSh.getAssetPairHelper().tryLoadAssetPairForAssets(
+        transferAsset, statsAssetFrame->getCode());
     if (!assetPairFrame)
     {
         return true;
     }
 
-    return AssetPairHelper::Instance()->convertAmount(assetPairFrame, transferAsset,
-                                                      amount, Rounding::ROUND_UP, db, mUniversalAmount);
+    return mSh.getAssetPairHelper().convertAmount(assetPairFrame, transferAsset,
+                                                      amount, Rounding::ROUND_UP, mUniversalAmount);
 }
 
 }

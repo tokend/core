@@ -104,9 +104,8 @@ areQuoteAssetsValid(StorageHelper& storageHelper,
         if (defaultQuoteAsset == quoteAsset.quoteAsset)
             continue;
 
-        const auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(defaultQuoteAsset,
-                                                                                      quoteAsset.quoteAsset,
-                                                                                      db);
+        const auto assetPair = storageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(defaultQuoteAsset,
+                                                                                      quoteAsset.quoteAsset);
         if (!assetPair)
         {
             return false;
@@ -455,7 +454,7 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
         auto& db = storageHelper.getDatabase();
         for (auto const& quoteAsset : sale.quoteAssets)
         {
-            if (AssetPairHelper::Instance()->exists(db, quoteAsset.quoteAsset, sale.baseAsset))
+            if (storageHelper.getAssetPairHelper().exists(quoteAsset.quoteAsset, sale.baseAsset))
             {
                 innerResult().code(CreateSaleCreationRequestResultCode::INVALID_ASSET_PAIR);
                 return false;

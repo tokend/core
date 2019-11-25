@@ -5,7 +5,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "AssetPairFrame.h"
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 #include "ledger/LedgerManager.h"
 #include <functional>
 #include <unordered_map>
@@ -19,83 +19,33 @@ namespace stellar
 {
 class StatementContext;
 
-class AssetPairHelper : public EntryHelperLegacy
+class AssetPairHelper : public EntryHelper
 {
   public:
-    static AssetPairHelper*
-    Instance()
-    {
-        static AssetPairHelper singleton;
-        return &singleton;
-    }
 
-    void dropAll(Database& db) override;
-    void storeAdd(LedgerDelta& delta, Database& db,
-                  LedgerEntry const& entry) override;
-    void storeChange(LedgerDelta& delta, Database& db,
-                     LedgerEntry const& entry) override;
-    void storeDelete(LedgerDelta& delta, Database& db,
-                     LedgerKey const& key) override;
-    bool exists(Database& db, LedgerKey const& key) override;
-    LedgerKey getLedgerKey(LedgerEntry const& from) override;
-    EntryFrame::pointer storeLoad(LedgerKey const& key, Database& db) override;
-    EntryFrame::pointer fromXDR(LedgerEntry const& from) override;
-    uint64_t countObjects(soci::session& sess) override;
+    virtual bool existsForAsset(AssetCode code) = 0;
+    virtual bool exists(AssetCode base, AssetCode quote) = 0;
+    virtual AssetPairFrame::pointer loadAssetPair(AssetCode base, AssetCode quote) = 0;
 
-    bool exists(Database& db, AssetCode base, AssetCode quote);
-    bool existsForAsset(Database& db, AssetCode code);
-
-    AssetPairFrame::pointer loadAssetPair(AssetCode base, AssetCode quote,
-                                          Database& db,
-                                          LedgerDelta* delta = nullptr);
-
-    AssetPairFrame::pointer
-    mustLoadAssetPair(AssetCode base, AssetCode quote, Database& db,
-                      LedgerDelta* delta = nullptr)
-    {
-        auto result = loadAssetPair(base, quote, db, delta);
-        if (!result)
-        {
-            CLOG(ERROR, "EntryFrame")
-                << "Unexpected db state. Expected asset pair to exists. Base "
-                << std::string(base) << " Quote " << std::string(quote);
-            throw std::runtime_error(
-                "Unexpected db state. Expected asset pair to exist");
-        }
-        return result;
-    }
+    virtual AssetPairFrame::pointer
+    mustLoadAssetPair(AssetCode base, AssetCode quote) = 0;
 
     // tryLoadAssetPairForAssets - tries to load code1/code2 asset pair, if not
     // found loads code2/code1
-    AssetPairFrame::pointer
-    tryLoadAssetPairForAssets(AssetCode code1, AssetCode code2, Database& db,
-                              LedgerDelta* delta = nullptr);
+    virtual AssetPairFrame::pointer
+    tryLoadAssetPairForAssets(AssetCode code1, AssetCode code2) = 0;
 
     // convertAmount - converts amount to opposite of asset passed
     // Returns false on overflow or incorrect destination code
-    bool convertAmount(const AssetPairFrame::pointer& assetPair,
+    virtual bool convertAmount(const AssetPairFrame::pointer& assetPair,
                        const AssetCode& destCode, uint64_t amount,
-                       Rounding rounding, Database& db, uint64_t& result) const;
+                       Rounding rounding, uint64_t& result) = 0;
 
-  private:
-    AssetPairHelper()
-    {
-        ;
-    }
-    ~AssetPairHelper()
-    {
-        ;
-    }
-
-    AssetPairHelper(AssetPairHelper const&) = delete;
-    AssetPairHelper& operator=(AssetPairHelper const&) = delete;
-
-    void
+    virtual void
     loadAssetPairs(StatementContext& prep,
-                   std::function<void(LedgerEntry const&)> AssetPairProcessor);
+                   std::function<void(LedgerEntry const&)> AssetPairProcessor) = 0;
 
-    void storeUpdateHelper(LedgerDelta& delta, Database& db, bool insert,
-                           LedgerEntry const& entry);
+    virtual void storeUpdateHelper(bool insert, LedgerEntry const& entry) = 0;
 };
 
 }

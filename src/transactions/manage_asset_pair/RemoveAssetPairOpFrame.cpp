@@ -42,8 +42,8 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application& app, stellar::Storage
 {
     Database& db = ledgerManager.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto assetPairHelper = AssetPairHelper::Instance();
-    auto assetPair = assetPairHelper->loadAssetPair(mRemoveAssetPair.base, mRemoveAssetPair.quote, db, &delta);
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    auto assetPair = assetPairHelper.loadAssetPair(mRemoveAssetPair.base, mRemoveAssetPair.quote);
     if (assetPair == nullptr)
     {
         innerResult().code(RemoveAssetPairResultCode::NOT_FOUND);
@@ -65,7 +65,7 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application& app, stellar::Storage
         return false;
     }
 
-    assetPairHelper->storeDelete(delta, db, assetPair->getKey());
+    assetPairHelper.storeDelete(assetPair->getKey());
 
     innerResult().code(RemoveAssetPairResultCode::SUCCESS);
     return true;

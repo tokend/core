@@ -7,6 +7,7 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/StorageHelperImpl.h"
 #include "test/test_marshaler.h"
 #include "transactions/review_request/ReviewSaleCreationRequestOpFrame.h"
 
@@ -46,8 +47,7 @@ void SaleReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
     // check if asset pair was created
     for (auto saleQuoteAsset : saleRequest.quoteAssets)
     {
-        auto assetPair = AssetPairHelper::Instance()->loadAssetPair(saleRequest.baseAsset, saleQuoteAsset.quoteAsset,
-            mTestManager->getDB());
+        auto assetPair = mTestManager->getStorageHelper().getAssetPairHelper().loadAssetPair(saleRequest.baseAsset, saleQuoteAsset.quoteAsset);
         REQUIRE(!!assetPair);
         REQUIRE(assetPair->getCurrentPrice() == saleQuoteAsset.price);
     }

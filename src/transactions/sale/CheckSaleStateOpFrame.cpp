@@ -11,7 +11,8 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/LedgerDeltaImpl.h"
 #include "xdrpp/printer.h"
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/dex/CreateSaleParticipationOpFrame.h"
@@ -504,7 +505,10 @@ int64_t CheckSaleStateOpFrame::getPriceInQuoteAsset(
     {
         return salePriceInDefaultQuote;
     }
-    auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getDefaultQuoteAsset(), quoteAsset, db);
+
+    StorageHelperImpl storageHelperImpl(db,nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto assetPair = storageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(sale->getDefaultQuoteAsset(), quoteAsset);
     if (!assetPair)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to load asset pair for quote asset and default quote asset. SaleID: "

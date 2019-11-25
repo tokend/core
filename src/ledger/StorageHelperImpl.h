@@ -27,6 +27,8 @@ class PollHelper;
 class ReviewableRequestHelper;
 class SwapHelper;
 class LimitsV2Helper;
+class AccountKYCHelper;
+class AssetPairHelper;
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -73,6 +75,8 @@ private:
     ReviewableRequestHelper& getReviewableRequestHelper() override;
     SwapHelper& getSwapHelper() override;
     LimitsV2Helper& getLimitsV2Helper() override;
+    AccountKYCHelper& getAccountKYCHelper() override;
+    AssetPairHelper& getAssetPairHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -104,5 +108,7 @@ private:
     std::unique_ptr<ReviewableRequestHelper> mReviewableRequestHelper;
     std::unique_ptr<SwapHelper> mSwapHelper;
     std::unique_ptr<LimitsV2Helper> mLimitsV2Helper;
+    std::unique_ptr<AccountKYCHelper> mAccountKYCHelper;
+    std::unique_ptr<AssetPairHelper> mAssetPairHelper;
 };
 } // namespace stellar

@@ -17,7 +17,6 @@
 #include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/StatisticsHelper.h"
 #include "crypto/SHA.h"
 #include "test_helper/TestManager.h"
 #include "ledger/AccountFrame.h"
@@ -36,7 +35,6 @@ auto accountHelper = EntryHelperProvider::getHelper(LedgerEntryType::ACCOUNT);
 auto assetHelper = EntryHelperProvider::getHelper(LedgerEntryType::ASSET);
 auto balanceHelper = BalanceHelperLegacy::Instance();
 auto feeHelper = FeeHelper::Instance();
-auto statisticsHelper = StatisticsHelper::Instance();
 
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
@@ -116,11 +114,7 @@ bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app)
         {
             REQUIRE(checkResult == tx->getResult());
         }
-
-        if (res)
-        {
-            delta.commit();
-        }
+        
     }
     else
     {
@@ -407,14 +401,6 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     else
     {
         REQUIRE(toAccountAfter);
-
-        auto statisticsFrame = statisticsHelper->loadStatistics(to.getPublicKey(), app.getDatabase());
-        REQUIRE(statisticsFrame);
-        auto statistics = statisticsFrame->getStatistics();
-        REQUIRE(statistics.dailyOutcome == 0);
-        REQUIRE(statistics.weeklyOutcome == 0);
-        REQUIRE(statistics.monthlyOutcome == 0);
-        REQUIRE(statistics.annualOutcome == 0);
 
         if (!toAccount)
         {

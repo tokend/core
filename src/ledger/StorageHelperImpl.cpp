@@ -7,6 +7,8 @@
 #include "ledger/StampHelperImpl.h"
 #include "ledger/LicenseSignatureHelperImpl.h"
 #include "ledger/LimitsV2HelperImpl.h"
+#include "ledger/AccountKYCHelperImpl.h"
+#include "ledger/AssetPairHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -17,8 +19,6 @@
 #include "SignerRoleHelperImpl.h"
 #include "VoteHelperImpl.h"
 #include "PollHelperImpl.h"
-#include "LicenseHelperImpl.h"
-#include "StampHelperImpl.h"
 #include "AccountSpecificRuleHelperImpl.h"
 #include "ReviewableRequestHelperImpl.h"
 #include "SwapHelperImpl.h"
@@ -54,6 +54,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::REVIEWABLE_REQUEST,                    &getReviewableRequestHelper()},
         {LedgerEntryType::SWAP, &getSwapHelper()},
         {LedgerEntryType::LIMITS_V2, &getLimitsV2Helper()},
+        {LedgerEntryType::ACCOUNT_KYC, &getAccountKYCHelper()},
+        {LedgerEntryType ::ASSET_PAIR, &getAssetPairHelper()},
 
     };
 }
@@ -415,6 +417,28 @@ StorageHelperImpl::getLimitsV2Helper()
     }
 
     return *mLimitsV2Helper;
+}
+
+AccountKYCHelper&
+StorageHelperImpl::getAccountKYCHelper()
+{
+    if(!mAccountKYCHelper)
+    {
+        mAccountKYCHelper = std::make_unique<AccountKYCHelperImpl>(*this);
+    }
+
+    return *mAccountKYCHelper;
+}
+
+AssetPairHelper&
+StorageHelperImpl::getAssetPairHelper()
+{
+    if(!mAssetPairHelper)
+    {
+        mAssetPairHelper = std::make_unique<AssetPairHelperImpl>(*this);
+    }
+
+    return *mAssetPairHelper;
 }
 
 } // namespace stellar

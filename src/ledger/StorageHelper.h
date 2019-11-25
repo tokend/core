@@ -29,6 +29,8 @@ class AccountSpecificRuleHelper;
 class ReviewableRequestHelper;
 class SwapHelper;
 class LimitsV2Helper;
+class AccountKYCHelper;
+class AssetPairHelper;
 
 class StorageHelper
 {
@@ -76,6 +78,8 @@ class StorageHelper
     virtual ReviewableRequestHelper& getReviewableRequestHelper() = 0;
     virtual SwapHelper& getSwapHelper() = 0;
     virtual LimitsV2Helper& getLimitsV2Helper() = 0;
+    virtual AccountKYCHelper& getAccountKYCHelper() = 0;
+    virtual AssetPairHelper& getAssetPairHelper() = 0;
 
 };
 } // namespace stellar

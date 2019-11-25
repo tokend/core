@@ -2,26 +2,14 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/EntryHelper.h"
 #include "LedgerManager.h"
-#include "ledger/AccountHelper.h"
-#include "ledger/AccountRoleHelperImpl.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/StatisticsFrame.h"
-#include "ledger/StatisticsHelper.h"
-#include "ledger/AccountLimitsFrame.h"
-#include "ledger/AccountLimitsHelper.h"
-#include "ledger/AssetPairFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/AtomicSwapAskHelper.h"
-#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/ReviewableRequestFrame.h"
-#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelperImpl.h"
-#include "ledger/OfferFrame.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/ExternalSystemAccountIDHelperLegacy.h"
 #include "ledger/KeyValueHelperLegacy.h"
@@ -29,11 +17,9 @@
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
 #include "SaleHelper.h"
-#include "AccountKYCHelper.h"
 #include "StatisticsV2Helper.h"
 #include "PendingStatisticsHelper.h"
 #include "ContractHelper.h"
-#include "AccountRuleHelperImpl.h"
 #include "EntryHelperLegacyImpl.h"
 
 namespace stellar
@@ -171,18 +157,16 @@ void EntryHelperProvider::dropAll(Database& db)
 
 EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::ACCOUNT,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT)},
-    {LedgerEntryType::ACCOUNT_LIMITS,                        AccountLimitsHelper::Instance()},
     {LedgerEntryType::ASSET,                                 EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET)},
-    {LedgerEntryType::ASSET_PAIR,                            AssetPairHelper::Instance()},
+    {LedgerEntryType::ASSET_PAIR,                            EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET_PAIR)},
     {LedgerEntryType::BALANCE,                               BalanceHelperLegacy::Instance()},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            ExternalSystemAccountIDHelperLegacy::Instance()},
     {LedgerEntryType::FEE,                                   FeeHelper::Instance()},
     {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
     {LedgerEntryType::REFERENCE_ENTRY,                       ReferenceHelper::Instance()},
     {LedgerEntryType::REVIEWABLE_REQUEST,                    EntryHelperLegacyImpl::Instance(LedgerEntryType::REVIEWABLE_REQUEST)},
-    {LedgerEntryType::STATISTICS,                            StatisticsHelper::Instance()},
     {LedgerEntryType::KEY_VALUE,                             KeyValueHelperLegacy::Instance()},
-    {LedgerEntryType::ACCOUNT_KYC,                           AccountKYCHelper::Instance()},
+    {LedgerEntryType::ACCOUNT_KYC,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_KYC)},
     {LedgerEntryType::SALE,                                  SaleHelper::Instance()},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()},
     {LedgerEntryType::LIMITS_V2,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::LIMITS_V2) },

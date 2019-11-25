@@ -7,7 +7,6 @@
 #include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
 #include <ledger/LimitsV2HelperImpl.h>
-#include "ledger/EntryHelper.h"
 
 namespace stellar
 {
