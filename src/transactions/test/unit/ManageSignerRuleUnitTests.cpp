@@ -47,6 +47,8 @@
 #include "transactions/test/mocks/MockLimitsV2Helper.h"
 #include "transactions/test/mocks/MockAccountKYCHelper.h"
 #include "transactions/test/mocks/MockAssetPairHelper.h"
+#include "transactions/test/mocks/MockAtomicSwapAskHelper.h"
+#include "transactions/test/mocks/MockContractHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"

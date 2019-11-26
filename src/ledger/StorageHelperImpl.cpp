@@ -9,6 +9,8 @@
 #include "ledger/LimitsV2HelperImpl.h"
 #include "ledger/AccountKYCHelperImpl.h"
 #include "ledger/AssetPairHelperImpl.h"
+#include "ledger/AtomicSwapAskHelperImpl.h"
+#include "ledger/ContractHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -56,6 +58,8 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::LIMITS_V2, &getLimitsV2Helper()},
         {LedgerEntryType::ACCOUNT_KYC, &getAccountKYCHelper()},
         {LedgerEntryType ::ASSET_PAIR, &getAssetPairHelper()},
+        {LedgerEntryType ::ATOMIC_SWAP_ASK, &getAtomicSwapAskHelper()},
+        {LedgerEntryType::CONTRACT, &getContractHelper()},
 
     };
 }
@@ -439,6 +443,28 @@ StorageHelperImpl::getAssetPairHelper()
     }
 
     return *mAssetPairHelper;
+}
+
+AtomicSwapAskHelper&
+StorageHelperImpl::getAtomicSwapAskHelper()
+{
+    if(!mAtomicSwapAskHelper)
+    {
+        mAtomicSwapAskHelper = std::make_unique<AtomicSwapAskHelperImpl>(*this);
+    }
+
+    return *mAtomicSwapAskHelper;
+}
+
+ContractHelper&
+StorageHelperImpl::getContractHelper()
+{
+    if(!mContractHelper)
+    {
+        mContractHelper = std::make_unique<ContractHelperImpl>(*this);
+    }
+
+    return *mContractHelper;
 }
 
 } // namespace stellar

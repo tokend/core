@@ -6,10 +6,11 @@
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "ledger/OfferHelper.h"
 #include "util/Logging.h"
 #include "xdrpp/printer.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
@@ -192,9 +193,10 @@ void OfferExchange::unlockBalancesForTakenOffer(OfferFrame& offer,
 BalanceFrame::pointer OfferExchange::loadBalance(
     BalanceID& balanceID, Database& db)
 {
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    BalanceFrame::pointer balance = balanceHelper->loadBalance(balanceID, db,
-                                                               &mDelta);
+    StorageHelperImpl storageHelperImpl(db,&mDelta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    BalanceFrame::pointer balance = balanceHelper.loadBalance(balanceID);
     if (!balance)
     {
         throw std::runtime_error(

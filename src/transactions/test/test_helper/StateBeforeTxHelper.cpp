@@ -1,7 +1,5 @@
 #include "StateBeforeTxHelper.h"
-
-#include "WithdrawRequestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
 #include "test/test_marshaler.h"
 

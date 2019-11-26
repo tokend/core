@@ -1,6 +1,5 @@
 #include <ledger/ReviewableRequestFrame.h>
 #include "ManageInvoiceRequestOpFrame.h"
-#include "database/Database.h"
 #include "main/Application.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/ContractHelper.h>
@@ -8,7 +7,6 @@
 #include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/managers/BalanceManager.h"
 
@@ -61,8 +59,8 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper& storageHel
 
     if (!!invoiceRequest.contractID)
     {
-        auto contractHelper = ContractHelper::Instance();
-        auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, &delta);
+        auto& contractHelper = storageHelper.getContractHelper();
+        auto contractFrame = contractHelper.loadContract(*invoiceRequest.contractID);
 
         if (!contractFrame)
         {
@@ -85,7 +83,7 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper& storageHel
         }
 
         invoices.erase(invoicePos);
-        contractHelper->storeChange(delta, db, contractFrame->mEntry);
+        contractHelper.storeChange(contractFrame->mEntry);
     }
 
     requestHelper.storeDelete(reviewableRequest->getKey());
@@ -143,8 +141,8 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
 
     if (invoiceCreationRequest.contractID)
     {
-        auto contractHelper = ContractHelper::Instance();
-        auto contractFrame = contractHelper->loadContract(*invoiceCreationRequest.contractID, db, &delta);
+        auto& contractHelper = storageHelper.getContractHelper();
+        auto contractFrame = contractHelper.loadContract(*invoiceCreationRequest.contractID);
 
         if (!contractFrame)
         {
@@ -165,7 +163,7 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
         }
 
         contractFrame->addInvoice(request->getRequestID());
-        contractHelper->storeChange(delta, db, contractFrame->mEntry);
+        contractHelper.storeChange(contractFrame->mEntry);
     }
 
     uint32_t allTasks = 0;

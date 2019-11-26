@@ -1,8 +1,9 @@
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/FeeHelper.h>
 #include "PayoutTestHelper.h"
 #include "transactions/deprecated/PayoutOpFrame.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -39,16 +40,16 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
             PayoutResultCode expectedResult)
 {
     Database& db = mTestManager->getDB();
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto ownerBalanceBefore = balanceHelper->loadBalance(sourceBalanceID, db);
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
+    auto ownerBalanceBefore = balanceHelper.loadBalance(sourceBalanceID);
     BalanceFrame::pointer commissionBalanceBefore;
     if (ownerBalanceBefore)
-        commissionBalanceBefore = balanceHelper->
+        commissionBalanceBefore = balanceHelper.
             loadBalance(mTestManager->getApp().getAdminID(),
-                        ownerBalanceBefore->getAsset(), db);
+                        ownerBalanceBefore->getAsset());
 
-    auto assetHoldersBefore = balanceHelper->loadAssetHolders(asset,
-            source.key.getPublicKey(), minAssetHolderAmount, db);
+    auto assetHoldersBefore = balanceHelper.loadAssetHolders(asset,
+            source.key.getPublicKey(), minAssetHolderAmount);
 
     TransactionFramePtr txFrame;
     txFrame = createPayoutTx(source, asset, sourceBalanceID,
@@ -77,12 +78,12 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
     }
 
 
-    auto ownerBalanceAfter = balanceHelper->loadBalance(sourceBalanceID, db);
+    auto ownerBalanceAfter = balanceHelper.loadBalance(sourceBalanceID);
     REQUIRE(ownerBalanceBefore->getAmount() ==
             ownerBalanceAfter->getAmount() + actualPayoutAmount + totalFee);
 
-    auto assetHoldersAfter = balanceHelper->loadAssetHolders(asset,
-            source.key.getPublicKey(), minAssetHolderAmount, db);
+    auto assetHoldersAfter = balanceHelper.loadAssetHolders(asset,
+            source.key.getPublicKey(), minAssetHolderAmount);
 
     for (auto response : result.success().payoutResponses)
     {
@@ -105,9 +106,9 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
 
     BalanceFrame::pointer commissionBalanceAfter;
     if (ownerBalanceBefore != nullptr)
-        commissionBalanceAfter = balanceHelper->
+        commissionBalanceAfter = balanceHelper.
             loadBalance(mTestManager->getApp().getAdminID(),
-                        ownerBalanceBefore->getAsset(), db);
+                        ownerBalanceBefore->getAsset());
 
     uint64_t commissionAmountBefore = 0;
     if (commissionBalanceBefore != nullptr)

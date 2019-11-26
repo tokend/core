@@ -3,18 +3,21 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "OfferManager.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "xdrpp/printer.h"
 #include "ledger/FeeHelper.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
 void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
     LedgerDelta& delta)
 {
+    StorageHelperImpl storageHelperImpl(db,&delta);
+    StorageHelper& storageHelper = storageHelperImpl;
     const auto balanceID = offerFrame->getLockedBalance();
-    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(balanceID, db, &delta);
+    auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(balanceID);
     if (!balanceFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Invalid database state: failed to load balance to cancel order: " << xdr::xdr_to_string(offerFrame->getOffer());

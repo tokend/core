@@ -97,8 +97,8 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
         AccountID accountID = account.key.getPublicKey();
         createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
 
-        auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(
-                account.key.getPublicKey(), quoteAsset, testManager->getDB(), nullptr);
+        auto quoteBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(
+                account.key.getPublicKey(), quoteAsset);
         auto baseBalance = manageBalanceTestHelper.applyManageBalanceTx(
                 account, accountID, baseAsset).success().balanceID;
 

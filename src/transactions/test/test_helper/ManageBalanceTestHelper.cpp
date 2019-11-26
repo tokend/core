@@ -1,6 +1,6 @@
 #include "ManageBalanceTestHelper.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
 #include "transactions/ManageBalanceOpFrame.h"
 #include "test/test_marshaler.h"
@@ -43,11 +43,11 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
 
     auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
 
     std::vector<BalanceFrame::pointer> balances;
     Database& db = mTestManager->getDB();
-    balanceHelper->loadBalances(account, balances, db);
+    balanceHelper.loadBalances(account, balances);
 
     txFrame = createManageBalanceTx(from, account, asset, action, signer);
 
@@ -60,7 +60,7 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
     REQUIRE(actualResultCode == expectedResultCode);
 
     std::vector<BalanceFrame::pointer> balancesAfter;
-    balanceHelper->loadBalances(account, balancesAfter, db);
+    balanceHelper.loadBalances(account, balancesAfter);
 
     auto opResult = txResult.result.results()[0].tr().manageBalanceResult();
 
@@ -77,8 +77,8 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
         {
             auto assetFrame = assetHelper.loadAsset(asset);
             REQUIRE(balances.size() == balancesAfter.size() - 1);
-            auto balance = balanceHelper->
-                loadBalance(opResult.success().balanceID, db);
+            auto balance = balanceHelper.
+                loadBalance(opResult.success().balanceID);
             REQUIRE(balance);
             REQUIRE(balance->getBalance().accountID == account);
             REQUIRE(balance->getBalance().amount == 0);
@@ -87,8 +87,7 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
         }
         case ManageBalanceAction::DELETE_BALANCE:
             REQUIRE(balances.size() == balancesAfter.size() + 1);
-            REQUIRE(!balanceHelper->loadBalance(opResult.success().balanceID, db
-            ));
+            REQUIRE(!balanceHelper.loadBalance(opResult.success().balanceID));
         default:
             throw std::runtime_error("Unexpected manage balance action");
         }

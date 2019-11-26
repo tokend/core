@@ -2,7 +2,6 @@
 #include "LedgerDelta.h"
 #include "database/Database.h"
 #include "AccountHelperImpl.h"
-#include "StorageHelper.h"
 #include <xdrpp/marshal.h>
 #include <lib/util/basen.h>
 

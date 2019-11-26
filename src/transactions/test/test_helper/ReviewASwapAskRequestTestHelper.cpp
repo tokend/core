@@ -1,9 +1,10 @@
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/AtomicSwapAskHelper.h>
 #include <ledger/ReviewableRequestHelperLegacy.h>
 #include "ReviewRequestTestHelper.h"
 #include "ReviewASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -19,8 +20,8 @@ ASwapAskRequestReviewChecker::ASwapAskRequestReviewChecker(
     auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.createAtomicSwapAskRequest();
-    mBaseBalanceBeforeTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
-            aSwapCreationRequest.baseBalance, db);
+    mBaseBalanceBeforeTx = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
+            aSwapCreationRequest.baseBalance);
 }
 
 void ASwapAskRequestReviewChecker::checkPermanentReject(
@@ -35,8 +36,8 @@ void ASwapAskRequestReviewChecker::checkPermanentReject(
 
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.createAtomicSwapAskRequest();
-    auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(
-            aSwapCreationRequest.baseBalance, db);
+    auto baseBalanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(
+            aSwapCreationRequest.baseBalance);
 
     REQUIRE(baseBalanceAfterTx->getAmount() - aSwapCreationRequest.amount ==
             mBaseBalanceBeforeTx->getAmount());

@@ -6,10 +6,10 @@
 #include <ledger/StorageHelperImpl.h>
 #include "TestManager.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "invariant/Invariants.h"
 #include "ledger/AssetHelper.h"
 #include "test/test_marshaler.h"
 #include "xdrpp/marshal.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar {
 
@@ -119,8 +119,7 @@ namespace stellar {
 
             for (const auto& item : allAssetsWithIssued)
             {
-                auto totalAssetAmount = BalanceHelperLegacy::Instance()->loadTotalAssetAmount(
-                        db, item.first);
+                auto totalAssetAmount = getStorageHelper().getBalanceHelper().loadTotalAssetAmount(item.first);
 
                 if (totalAssetAmount != item.second)
                 {

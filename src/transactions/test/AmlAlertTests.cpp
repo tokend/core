@@ -6,11 +6,12 @@
 #include "test_helper/ManageAMLAlertTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/ReviewAMLAlertRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -92,7 +93,8 @@ TEST_CASE("Aml alert", "[tx][aml_alert]")
                                                 .setToPublicKey(account.getPublicKey())
                                                 .addBasicSigner()
                                                 .setRoleID(1));
-        auto balance = BalanceHelperLegacy::Instance()->loadBalance(account.getPublicKey(), asset, testManager->getDB(), nullptr);
+
+        auto balance = testManager->getStorageHelper().getBalanceHelper().loadBalance(account.getPublicKey(), asset);
         REQUIRE(!!balance);
         uint32_t allTasks = 0;
         issuanceHelper.applyCreateIssuanceRequest(root, asset, preIssuedAmount, balance->getBalanceID(),

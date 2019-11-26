@@ -5,8 +5,6 @@
 #include "LedgerManager.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/AssetPairHelper.h"
-#include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/StorageHelperImpl.h"
@@ -19,7 +17,6 @@
 #include "SaleHelper.h"
 #include "StatisticsV2Helper.h"
 #include "PendingStatisticsHelper.h"
-#include "ContractHelper.h"
 #include "EntryHelperLegacyImpl.h"
 
 namespace stellar
@@ -159,7 +156,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::ACCOUNT,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT)},
     {LedgerEntryType::ASSET,                                 EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET)},
     {LedgerEntryType::ASSET_PAIR,                            EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET_PAIR)},
-    {LedgerEntryType::BALANCE,                               BalanceHelperLegacy::Instance()},
+    {LedgerEntryType::BALANCE,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::BALANCE)},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            ExternalSystemAccountIDHelperLegacy::Instance()},
     {LedgerEntryType::FEE,                                   FeeHelper::Instance()},
     {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
@@ -172,8 +169,8 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::LIMITS_V2,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::LIMITS_V2) },
     {LedgerEntryType::STATISTICS_V2,                         StatisticsV2Helper::Instance()},
     {LedgerEntryType::PENDING_STATISTICS,                    PendingStatisticsHelper::Instance()},
-    {LedgerEntryType::CONTRACT,                              ContractHelper::Instance()},
-    {LedgerEntryType::ATOMIC_SWAP_ASK,                       AtomicSwapAskHelper::Instance()},
+    {LedgerEntryType::CONTRACT,                              EntryHelperLegacyImpl::Instance(LedgerEntryType::CONTRACT)},
+    {LedgerEntryType::ATOMIC_SWAP_ASK,                       EntryHelperLegacyImpl::Instance(LedgerEntryType::ATOMIC_SWAP_ASK)},
     {LedgerEntryType::SIGNER,                                EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER)},
     {LedgerEntryType::ACCOUNT_RULE,                          EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_RULE)},
     {LedgerEntryType::ACCOUNT_ROLE,                          EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_ROLE)},

@@ -1,3 +1,4 @@
+#include <ledger/EntryHelperLegacy.h>
 #include "ledger/ContractHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
@@ -49,7 +50,7 @@ ManageContractOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     auto& delta = storageHelper.mustGetLedgerDelta();
     innerResult().code(ManageContractResultCode::SUCCESS);
 
-    auto contractFrame = ContractHelper::Instance()->loadContract(mManageContract.contractID, db, &delta);
+    auto contractFrame = storageHelper.getContractHelper().loadContract(mManageContract.contractID);
 
     if (!contractFrame)
     {
@@ -240,7 +241,7 @@ ManageContractOpFrame::tryStartDispute(ContractFrame::pointer contractFrame,
 
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    ContractHelper::Instance()->storeChange(delta, db, contractFrame->mEntry);
+    storageHelper.getContractHelper().storeChange(contractFrame->mEntry);
 
     return true;
 }

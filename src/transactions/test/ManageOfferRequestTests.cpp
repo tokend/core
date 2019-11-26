@@ -1,5 +1,4 @@
 #include "ledger/BalanceHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/StorageHelper.h"
@@ -156,7 +155,7 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     auto createAccountBuilder =
         CreateAccountTestBuilder().setSource(rootAccount).setRoleID(1);
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
     auto offerHelper = OfferHelper::Instance();
 
     auto buyer = Account{SecretKey::random(), 0};
@@ -165,10 +164,10 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             .addBasicSigner()
             .setRoleID(exchangeRoleID));
     auto baseBuyerBalance =
-        balanceHelper->loadBalance(buyer.key.getPublicKey(), base, db, &delta);
+        balanceHelper.loadBalance(buyer.key.getPublicKey(), base);
     REQUIRE(baseBuyerBalance);
     auto quoteBuyerBalance =
-        balanceHelper->loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
+        balanceHelper.loadBalance(buyer.key.getPublicKey(), quote);
     REQUIRE(quoteBuyerBalance);
 
     auto quoteAssetAmount = 1000 * ONE;
@@ -189,10 +188,10 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             .addBasicSigner()
             .setRoleID(exchangeRoleID));
     auto baseSellerBalance =
-        balanceHelper->loadBalance(seller.key.getPublicKey(), base, db, &delta);
+        balanceHelper.loadBalance(seller.key.getPublicKey(), base);
     REQUIRE(baseSellerBalance);
-    auto quoteSellerBalance = balanceHelper->loadBalance(
-        seller.key.getPublicKey(), quote, db, &delta);
+    auto quoteSellerBalance = balanceHelper.loadBalance(
+        seller.key.getPublicKey(), quote);
     REQUIRE(quoteSellerBalance);
 
     issuanceHelper.authorizePreIssuedAmount(rootAccount, rootAccount.key, base,

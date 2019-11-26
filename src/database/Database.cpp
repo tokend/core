@@ -167,13 +167,13 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
             break;
         case databaseSchemaVersion::ADD_CONTRACTS:
-            ContractHelper::Instance()->dropAll(*this);
+            sh.getContractHelper().dropAll();
             break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
-            ContractHelper::Instance()->addCustomerDetails(*this);
+            sh.getContractHelper().addCustomerDetails();
             break;
         case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
-            AtomicSwapAskHelper::Instance()->dropAll(*this);
+            sh.getAtomicSwapAskHelper().dropAll();
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
@@ -194,7 +194,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             Upgrades::createIfNotExists(*this);
             break;
         case ENABLE_ATOMIC_SWAP:
-            AtomicSwapAskHelper::Instance()->dropAll(*this);
+            sh.getAtomicSwapAskHelper().dropAll();
             break;
         case SWAPS:
             sh.getSwapHelper().dropAll();

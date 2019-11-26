@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ledger/StorageHelper.h"
-#include "BalanceHelperLegacy.h"
+#include "ledger/EntryHelperLegacy.h"
+#include <unordered_map>
 #include <memory>
 
 namespace soci
@@ -17,6 +18,7 @@ class BalanceHelper;
 class AssetHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
+class EntryHelper;
 class AccountRoleHelper;
 class AccountRuleHelper;
 class LicenseHelper;
@@ -29,6 +31,8 @@ class SwapHelper;
 class LimitsV2Helper;
 class AccountKYCHelper;
 class AssetPairHelper;
+class AtomicSwapAskHelper;
+class ContractHelper;
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -77,6 +81,8 @@ private:
     LimitsV2Helper& getLimitsV2Helper() override;
     AccountKYCHelper& getAccountKYCHelper() override;
     AssetPairHelper& getAssetPairHelper() override;
+    AtomicSwapAskHelper& getAtomicSwapAskHelper() override;
+    ContractHelper& getContractHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -110,5 +116,7 @@ private:
     std::unique_ptr<LimitsV2Helper> mLimitsV2Helper;
     std::unique_ptr<AccountKYCHelper> mAccountKYCHelper;
     std::unique_ptr<AssetPairHelper> mAssetPairHelper;
+    std::unique_ptr<AtomicSwapAskHelper> mAtomicSwapAskHelper;
+    std::unique_ptr<ContractHelper> mContractHelper;
 };
 } // namespace stellar

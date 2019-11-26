@@ -1,8 +1,9 @@
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/AtomicSwapAskHelper.h>
 #include <transactions/atomic_swap/CancelAtomicSwapAskOpFrame.h>
 #include "CancelASwapAskTestHelper.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -31,19 +32,16 @@ CancelASwapAskHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
                                           CancelAtomicSwapAskResultCode expectedResult,
                                           OperationResultCode expectedOpCode)
 {
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto aSwapBidHelper = AtomicSwapAskHelper::Instance();
-
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
+    auto& aSwapBidHelper = mTestManager->getStorageHelper().getAtomicSwapAskHelper();
     Database& db = mTestManager->getDB();
 
     AtomicSwapAskFrame::pointer askBeforeTx = nullptr;
     BalanceFrame::pointer baseBalanceBeforeTx = nullptr;
 
-    askBeforeTx = aSwapBidHelper->loadAtomicSwapAsk(bidID, db);
+    askBeforeTx = aSwapBidHelper.loadAtomicSwapAsk(bidID);
     if (askBeforeTx != nullptr)
-        baseBalanceBeforeTx = balanceHelper->mustLoadBalance(askBeforeTx->getOwnerID(),
-                                                             askBeforeTx->getBaseAsset(),
-                                                             db);
+        baseBalanceBeforeTx = balanceHelper.mustLoadBalance(askBeforeTx->getOwnerID());
 
     auto txFrame = createCancelASwapAskTx(source, bidID);
     mTestManager->applyCheck(txFrame);
@@ -67,7 +65,7 @@ CancelASwapAskHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
         return cancelASwapBidResult;
     }
 
-    auto bidFrameAfterTx = aSwapBidHelper->loadAtomicSwapAsk(bidID, db);
+    auto bidFrameAfterTx = aSwapBidHelper.loadAtomicSwapAsk(bidID);
 
     if (bidFrameAfterTx != nullptr)
     {
@@ -78,9 +76,7 @@ CancelASwapAskHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
 
     REQUIRE(baseBalanceBeforeTx != nullptr);
 
-    auto baseBalanceAfterTx = balanceHelper->mustLoadBalance(askBeforeTx->getOwnerID(),
-                                                             askBeforeTx->getBaseAsset(),
-                                                             db);
+    auto baseBalanceAfterTx = balanceHelper.mustLoadBalance(askBeforeTx->getOwnerID());
     REQUIRE(baseBalanceAfterTx != nullptr);
 
     REQUIRE(baseBalanceAfterTx->getAmount() - askBeforeTx->getAmount() ==

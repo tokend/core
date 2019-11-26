@@ -1,9 +1,10 @@
 #include "ManageOfferTestHelper.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/dex/OfferManager.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -34,8 +35,8 @@ ManageOfferTestHelper::ensureDeleteSuccess(
 
     auto sellingBalanceBefore =
         stateBeforeTx[balanceKey]->mEntry.data.balance();
-    auto sellingBalanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(
-        offer->getLockedBalance(), mTestManager->getDB());
+    auto sellingBalanceAfter = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
+        offer->getLockedBalance());
 
     REQUIRE(sellingBalanceAfter->getLocked() ==
             sellingBalanceBefore.locked - offer->getLockedAmount());
@@ -69,8 +70,8 @@ ManageOfferTestHelper::ensureCreateSuccess(
         balanceKey.type(LedgerEntryType::BALANCE);
         balanceKey.balance().balanceID = offer->getLockedBalance();
         auto balanceBefore = stateBeforeTx[balanceKey]->mEntry.data.balance();
-        auto balanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(
-            offer->getLockedBalance(), db);
+        auto balanceAfter = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
+            offer->getLockedBalance());
 
         REQUIRE(balanceAfter->getLocked() ==
                 balanceBefore.locked + offer->getLockedAmount());

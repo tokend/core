@@ -9,7 +9,7 @@
 #include "test/test.h"
 #include "transactions/dex/OfferExchange.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
@@ -133,7 +133,7 @@ TEST_CASE("manage offer", "[tx][offer]")
         issuanceHelper.applyCreateIssuanceRequest(rootAccount, code, amount, receiver, SecretKey::random().getStrKeyPublic());
     };
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
     auto offerHelper = OfferHelper::Instance();
 
     SECTION("basics")
@@ -142,11 +142,11 @@ TEST_CASE("manage offer", "[tx][offer]")
         createAccountTestHelper.applyTx(createAccountBuilder
                                     .setToPublicKey(buyer.key.getPublicKey())
                                     .addBasicSigner());
-        auto baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
-                                                           base, db, &delta);
+        auto baseBuyerBalance = balanceHelper.loadBalance(buyer.key.getPublicKey(), base);
+
         REQUIRE(baseBuyerBalance);
-        auto quoteBuyerBalance = balanceHelper->
-            loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
+        auto quoteBuyerBalance = balanceHelper.
+            loadBalance(buyer.key.getPublicKey(), quote);
         REQUIRE(quoteBuyerBalance);
         auto quoteAssetAmount = 1000 * ONE;
         fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
@@ -156,11 +156,11 @@ TEST_CASE("manage offer", "[tx][offer]")
                                     .setRoleID(1)
                                     .setToPublicKey(seller.key.getPublicKey())
                                     .addBasicSigner());
-        auto baseSellerBalance = balanceHelper->
-            loadBalance(seller.key.getPublicKey(), base, db, &delta);
+        auto baseSellerBalance = balanceHelper.
+            loadBalance(seller.key.getPublicKey(), base);
         REQUIRE(baseBuyerBalance);
-        auto quoteSellerBalance = balanceHelper->
-            loadBalance(seller.key.getPublicKey(), quote, db, &delta);
+        auto quoteSellerBalance = balanceHelper.
+            loadBalance(seller.key.getPublicKey(), quote);
         REQUIRE(quoteSellerBalance);
         auto baseAssetAmount = 200 * ONE;
         fundAccount(base, baseAssetAmount, baseSellerBalance->getBalanceID());
@@ -676,8 +676,8 @@ TEST_CASE("manage offer", "[tx][offer]")
                 REQUIRE(quoteSellerBalance->getAmount() == quoteAssetMatchAmount
                     - sellerMatchFee);
 
-                auto commissionQuoteBalance = balanceHelper->
-                    loadBalance(app.getAdminID(), quote, db, &delta);
+                auto commissionQuoteBalance = balanceHelper.
+                    loadBalance(app.getAdminID(), quote);
                 REQUIRE(commissionQuoteBalance);
                 REQUIRE(commissionQuoteBalance->getAmount() == buyerOfferFee +
                     sellerMatchFee);
@@ -696,11 +696,11 @@ TEST_CASE("manage offer", "[tx][offer]")
         createAccountTestHelper.applyTx(createAccountBuilder
                                     .setToPublicKey(buyer.key.getPublicKey())
                                     .addBasicSigner());
-        auto baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
-                                                           base, db, &delta);
+        auto baseBuyerBalance = balanceHelper.loadBalance(buyer.key.getPublicKey(),
+                                                           base);
         REQUIRE(baseBuyerBalance);
-        auto quoteBuyerBalance = balanceHelper->
-            loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
+        auto quoteBuyerBalance = balanceHelper.
+            loadBalance(buyer.key.getPublicKey(), quote);
         REQUIRE(quoteBuyerBalance);
         auto quoteAssetAmount = 10000 * ONE;
         fundAccount(quote, quoteAssetAmount, quoteBuyerBalance->getBalanceID());
@@ -709,11 +709,11 @@ TEST_CASE("manage offer", "[tx][offer]")
         createAccountTestHelper.applyTx(createAccountBuilder
                                     .setToPublicKey(seller.key.getPublicKey())
                                     .addBasicSigner());
-        auto baseSellerBalance = balanceHelper->
-            loadBalance(seller.key.getPublicKey(), base, db, &delta);
+        auto baseSellerBalance = balanceHelper.
+            loadBalance(seller.key.getPublicKey(), base);
         REQUIRE(baseSellerBalance);
-        auto quoteSellerBalance = balanceHelper->
-            loadBalance(seller.key.getPublicKey(), quote, db, &delta);
+        auto quoteSellerBalance = balanceHelper.
+            loadBalance(seller.key.getPublicKey(), quote);
         REQUIRE(quoteSellerBalance);
         auto baseAssetAmount = 1000 * ONE;
         fundAccount(base, baseAssetAmount, baseSellerBalance->getBalanceID());
@@ -744,8 +744,8 @@ TEST_CASE("manage offer", "[tx][offer]")
         {
             int64_t buyerAmount = randomAmount();
             int64_t buyerPrice = randomPrice(true);
-            quoteBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
-                                                           quote, db, &delta);
+            quoteBuyerBalance = balanceHelper.loadBalance(buyer.key.getPublicKey(),
+                                                           quote);
             int64_t buyerOfferAmount = buyerAmount * buyerPrice;
             assert(buyerOfferAmount > 0);
 
@@ -768,8 +768,8 @@ TEST_CASE("manage offer", "[tx][offer]")
             matchesLeft -= offerResult.success().offersClaimed.size();
 
             int64_t sellerAmount = randomAmount();
-            baseSellerBalance = balanceHelper->
-                loadBalance(seller.key.getPublicKey(), base, db, &delta);
+            baseSellerBalance = balanceHelper.
+                loadBalance(seller.key.getPublicKey(), base);
             if (baseSellerBalance->getAmount() < sellerAmount)
             {
                 baseAssetAmount += sellerAmount;
@@ -813,22 +813,22 @@ TEST_CASE("manage offer", "[tx][offer]")
         offersByAccount = offerHelper->loadAllOffers(app.getDatabase());
         REQUIRE(offersByAccount.size() == 0);
 
-        baseBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
-                                                      base, db, &delta);
+        baseBuyerBalance = balanceHelper.loadBalance(buyer.key.getPublicKey(),
+                                                      base);
         // there must be matches
         REQUIRE(baseBuyerBalance->getAmount() != 0);
         REQUIRE(baseBuyerBalance->getLocked() == 0);
 
-        quoteBuyerBalance = balanceHelper->loadBalance(buyer.key.getPublicKey(),
-                                                       quote, db, &delta);
+        quoteBuyerBalance = balanceHelper.loadBalance(buyer.key.getPublicKey(),
+                                                       quote);
         REQUIRE(quoteBuyerBalance->getLocked() == 0);
 
-        baseSellerBalance = balanceHelper->loadBalance(seller.key.getPublicKey(),
-                                                       base, db, &delta);
+        baseSellerBalance = balanceHelper.loadBalance(seller.key.getPublicKey(),
+                                                       base);
         REQUIRE(baseSellerBalance->getLocked() == 0);
 
-        quoteSellerBalance = balanceHelper->loadBalance(seller.key.getPublicKey(),
-                                                        quote, db, &delta);
+        quoteSellerBalance = balanceHelper.loadBalance(seller.key.getPublicKey(),
+                                                        quote);
         // there must be matches
         REQUIRE(quoteSellerBalance->getAmount() != 0);
         REQUIRE(quoteSellerBalance->getLocked() == 0);
@@ -836,8 +836,8 @@ TEST_CASE("manage offer", "[tx][offer]")
         REQUIRE(baseBuyerBalance->getAmount() + baseSellerBalance->getAmount()
             == baseAssetAmount);
 
-        auto comissionAccount = balanceHelper->
-            loadBalance(app.getAdminID(), quote, db, nullptr);
+        auto comissionAccount = balanceHelper.
+            loadBalance(app.getAdminID(), quote);
         REQUIRE(comissionAccount);
         REQUIRE(comissionAccount->getAmount() + quoteBuyerBalance->getAmount() +
             quoteSellerBalance->getAmount() == quoteAssetAmount);

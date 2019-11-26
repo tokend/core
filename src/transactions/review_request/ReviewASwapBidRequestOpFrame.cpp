@@ -1,4 +1,5 @@
 #include <main/Application.h>
+#include <ledger/EntryHelperLegacy.h>
 #include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/BalanceHelper.h"
@@ -84,8 +85,8 @@ ReviewASwapBidRequestOpFrame::handlePermanentReject(Application& app, StorageHel
     auto& delta = storageHelper.mustGetLedgerDelta();
     auto& aSwapCreationRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
 
-    auto askFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        aSwapCreationRequest.askID, db, &delta);
+    auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        aSwapCreationRequest.askID);
 
     if (askFrame == nullptr)
     {
@@ -184,8 +185,8 @@ bool ReviewASwapBidRequestOpFrame::handleApprove(Application& app, StorageHelper
     requestHelper.storeDelete(request->getKey());
 
     auto aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
-    auto askFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        aSwapRequest.askID, db, &delta);
+    auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        aSwapRequest.askID);
     if (askFrame == nullptr)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)

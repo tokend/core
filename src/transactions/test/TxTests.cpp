@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelperImpl.h>
 #include "main/Application.h"
 #include "invariant/Invariants.h"
 #include "overlay/LoopbackPeer.h"
@@ -20,6 +20,8 @@
 #include "crypto/SHA.h"
 #include "test_helper/TestManager.h"
 #include "ledger/AccountFrame.h"
+#include "ledger/StorageHelperImpl.h"
+#include "database/Database.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -33,9 +35,14 @@ namespace txtest
 {
 auto accountHelper = EntryHelperProvider::getHelper(LedgerEntryType::ACCOUNT);
 auto assetHelper = EntryHelperProvider::getHelper(LedgerEntryType::ASSET);
-auto balanceHelper = BalanceHelperLegacy::Instance();
 auto feeHelper = FeeHelper::Instance();
 
+BalanceHelper*
+balanceHelper(Database& db)
+{
+    std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(db, nullptr);
+    return &storageHelper->getBalanceHelper();
+}
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
                         AssetCode asset, AccountID *accountID, uint64_t *accountType, int64_t subtype,
@@ -290,7 +297,7 @@ BalanceFrame::pointer
 loadBalance(BalanceID bid, Application& app, bool mustExist)
 {
     BalanceFrame::pointer res =
-        balanceHelper->loadBalance(bid, app.getDatabase());
+        balanceHelper(app.getDatabase())->loadBalance(bid);
     if (mustExist)
     {
         REQUIRE(res);
@@ -302,7 +309,7 @@ int64_t
 getBalance(BalanceID const& k, Application& app)
 {
 
-    auto balance = balanceHelper->loadBalance(k, app.getDatabase());
+    auto balance = balanceHelper(app.getDatabase())->loadBalance(k);
     assert(balance);
     return balance->getAmount();
 }
@@ -405,7 +412,7 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
         if (!toAccount)
         {
             std::vector<BalanceFrame::pointer> balances;
-            balanceHelper->loadBalances(toAccountAfter->getAccount().accountID, balances, app.getDatabase());
+            balanceHelper(app.getDatabase())->loadBalances(toAccountAfter->getAccount().accountID, balances);
             for (BalanceFrame::pointer balance : balances)
             {
                 REQUIRE(balance->getBalance().amount == 0);

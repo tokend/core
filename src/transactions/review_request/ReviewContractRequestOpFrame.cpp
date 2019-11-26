@@ -4,6 +4,7 @@
 
 #include <transactions/payment/PaymentOpFrame.h>
 #include <transactions/deprecated/ManageContractOpFrame.h>
+#include <ledger/EntryHelperLegacy.h>
 #include "util/asio.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "database/Database.h"

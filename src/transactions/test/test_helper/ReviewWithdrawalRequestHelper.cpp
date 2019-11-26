@@ -6,7 +6,7 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/BalanceFrame.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/ReviewableRequestHelperLegacy.h"
 #include "test/test_marshaler.h"
 #include "ReviewRequestTestHelper.h"
@@ -27,12 +27,11 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
         return;
     }
     withdrawalRequest = std::make_shared<WithdrawalRequest>(request->getRequestEntry().body.withdrawalRequest());
-    balanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(withdrawalRequest->balance, mTestManager->getDB());
+    balanceBeforeTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(withdrawalRequest->balance);
     auto assetCode = balanceBeforeTx->getAsset();
     assetBeforeTx = assetHelper.loadAsset(assetCode);
-    commissionBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(testManager->getApp().getAdminID(),
-                                                                             assetCode, testManager->getDB(),
-                                                                             nullptr);
+    commissionBalanceBeforeTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(testManager->getApp().getAdminID(),
+                                                                             assetCode);
 }
 
 void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
@@ -42,9 +41,8 @@ void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
     REQUIRE(!!withdrawalRequest);
     // check balance
     REQUIRE(!!balanceBeforeTx);
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto balanceAfterTx = balanceHelper->loadBalance(withdrawalRequest->balance,
-                                                     mTestManager->getDB());
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
+    auto balanceAfterTx = balanceHelper.loadBalance(withdrawalRequest->balance);
     REQUIRE(!!balanceAfterTx);
     REQUIRE(balanceAfterTx->getAmount() == balanceBeforeTx->getAmount());
     REQUIRE(balanceBeforeTx->getLocked() == balanceAfterTx->getLocked() +
@@ -53,7 +51,7 @@ void WithdrawReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
 
     // check commission
     REQUIRE(!!commissionBalanceBeforeTx);
-    auto commissionBalanceAfterTx = balanceHelper->loadBalance(commissionBalanceBeforeTx->getBalanceID(), mTestManager->getDB());
+    auto commissionBalanceAfterTx = balanceHelper.loadBalance(commissionBalanceBeforeTx->getBalanceID());
     REQUIRE(!!commissionBalanceAfterTx);
     REQUIRE(commissionBalanceAfterTx->getAmount()
             == commissionBalanceBeforeTx->getAmount() + withdrawalRequest->fee.fixed + withdrawalRequest->fee.percent);

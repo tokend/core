@@ -1,12 +1,10 @@
 #include <ledger/ReviewableRequestFrame.h>
 #include "ManageContractRequestOpFrame.h"
-#include "database/Database.h"
 #include "main/Application.h"
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/ContractHelper.h>
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "ledger/KeyValueHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
@@ -122,7 +120,7 @@ ManageContractRequestOpFrame::checkMaxContractsForContractor(Application& app, S
 {
     auto& db = storageHelper.getDatabase();
     auto maxContractsCount = obtainMaxContractsForContractor(app, storageHelper);
-    auto contractsCount = ContractHelper::Instance()->countContracts(getSourceID(), db);
+    auto contractsCount = storageHelper.getContractHelper().countContracts(getSourceID());
 
     auto allRequests = storageHelper.
         getReviewableRequestHelper().

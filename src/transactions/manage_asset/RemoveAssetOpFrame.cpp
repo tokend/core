@@ -115,8 +115,7 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
     }
     if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
     {
-        if (AtomicSwapAskHelper::Instance()->existForAsset(db,
-                                                           mRemoveAsset.code))
+        if (storageHelper.getAtomicSwapAskHelper().existForAsset(mRemoveAsset.code))
         {
             innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_ATOMIC_SWAPS);
             return false;

@@ -1,7 +1,8 @@
 #include "PaymentTestHelper.h"
 #include "test/test_marshaler.h"
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <transactions/payment/PaymentOpFrame.h>
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -94,21 +95,21 @@ PaymentTestHelper::applyPaymentTx(Account& source, BalanceID sourceBalanceID,
                                   OperationResultCode expectedOpResultCode)
 {
     auto& db = mTestManager->getDB();
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
 
     auto sourceBalanceBeforeTx =
-        balanceHelper->loadBalance(sourceBalanceID, db);
+        balanceHelper.loadBalance(sourceBalanceID);
 
     BalanceFrame::pointer destBalanceBeforeTx;
     if (destination.type() == PaymentDestinationType::BALANCE)
     {
         destBalanceBeforeTx =
-            balanceHelper->loadBalance(destination.balanceID(), db);
+            balanceHelper.loadBalance(destination.balanceID());
     }
 
     std::vector<BalanceFrame::pointer> commissionBalancesBeforeTx;
-    balanceHelper->loadBalances(mTestManager->getApp().getAdminID(),
-                                commissionBalancesBeforeTx, db);
+    balanceHelper.loadBalances(mTestManager->getApp().getAdminID(),
+                                commissionBalancesBeforeTx);
 
     std::unordered_map<std::string, BalanceFrame::pointer>
         commissionBalancesBeforeTxByAsset;
@@ -160,7 +161,7 @@ PaymentTestHelper::applyPaymentTx(Account& source, BalanceID sourceBalanceID,
         if (item.asset == sourceBalanceBeforeTx->getAsset())
         {
             auto sourceBalanceAfterTx =
-                balanceHelper->loadBalance(sourceBalanceID, db);
+                balanceHelper.loadBalance(sourceBalanceID);
             REQUIRE(sourceBalanceAfterTx->getAmount() ==
                     sourceBalanceBeforeTx->getAmount() + item.amountDelta);
             continue;
@@ -177,14 +178,14 @@ PaymentTestHelper::applyPaymentTx(Account& source, BalanceID sourceBalanceID,
         {
         case PaymentDestinationType::ACCOUNT:
         {
-            destBalanceAfterTx = balanceHelper->loadBalance(
-                destination.accountID(), item.asset, db, nullptr);
+            destBalanceAfterTx = balanceHelper.loadBalance(
+                destination.accountID(), item.asset);
             break;
         }
         case PaymentDestinationType::BALANCE:
         {
             destBalanceAfterTx =
-                balanceHelper->loadBalance(destination.balanceID(), db);
+                balanceHelper.loadBalance(destination.balanceID());
             break;
         }
         }
@@ -207,8 +208,8 @@ PaymentTestHelper::applyPaymentTx(Account& source, BalanceID sourceBalanceID,
             commissionBalanceBeforeTx =
                 commissionBalancesBeforeTxByAsset[item.asset];
 
-        auto commissionBalanceAfterTx = balanceHelper->loadBalance(
-            mTestManager->getApp().getAdminID(), item.asset, db, nullptr);
+        auto commissionBalanceAfterTx = balanceHelper.loadBalance(
+            mTestManager->getApp().getAdminID(), item.asset);
         if (!commissionBalanceBeforeTx)
         {
             REQUIRE(commissionBalanceAfterTx->getAmount() == item.amountDelta);

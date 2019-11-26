@@ -70,8 +70,8 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, StorageHelper& stor
 
     auto& delta = storageHelper.mustGetLedgerDelta();
     auto& db = storageHelper.getDatabase();
-    auto contractHelper = ContractHelper::Instance();
-    auto contractFrame = contractHelper->loadContract(*invoiceRequest.contractID, db, &delta);
+    auto& contractHelper = storageHelper.getContractHelper();
+    auto contractFrame = contractHelper.loadContract(*invoiceRequest.contractID);
 
     if (!contractFrame)
     {

@@ -31,6 +31,8 @@ class SwapHelper;
 class LimitsV2Helper;
 class AccountKYCHelper;
 class AssetPairHelper;
+class AtomicSwapAskHelper;
+class ContractHelper;
 
 class StorageHelper
 {
@@ -80,6 +82,8 @@ class StorageHelper
     virtual LimitsV2Helper& getLimitsV2Helper() = 0;
     virtual AccountKYCHelper& getAccountKYCHelper() = 0;
     virtual AssetPairHelper& getAssetPairHelper() = 0;
+    virtual AtomicSwapAskHelper& getAtomicSwapAskHelper() = 0;
+    virtual ContractHelper& getContractHelper() = 0;
 
 };
 } // namespace stellar

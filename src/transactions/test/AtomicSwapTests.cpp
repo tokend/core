@@ -8,11 +8,12 @@
 #include <transactions/test/test_helper/CreateASwapBidRequestTestHelper.h>
 #include <transactions/test/test_helper/ReviewASwapBidRequestTestHelper.h>
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "test/test_marshaler.h"
 #include "test/test.h"
+#include "ledger/StorageHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -125,7 +126,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
             root, createReceiverAccountRoleOp).success().roleID;
 
     // db helpers
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper =testManager->getStorageHelper().getBalanceHelper();
 
     auto createAccountTestBuilder = CreateAccountTestBuilder()
             .setSource(root)
@@ -177,8 +178,7 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
 
     // fund seller account
     manageBalanceTestHelper.createBalance(seller, sellerPubKey, baseAsset);
-    auto sellerBalance = balanceHelper->loadBalance(sellerPubKey, baseAsset,
-                                                    db, nullptr);
+    auto sellerBalance = balanceHelper.loadBalance(sellerPubKey, baseAsset);
     REQUIRE(!!sellerBalance);
     auto sellerBalanceID = sellerBalance->getBalanceID();
 
