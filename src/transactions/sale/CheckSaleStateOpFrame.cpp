@@ -414,9 +414,7 @@ cleanSale(SaleFrame::pointer sale, Application& app, StorageHelper& storageHelpe
 
         // cancel all offers which are less than minAllowedQuoteAmount
         auto offersToCancel =
-            OfferHelper::
-            Instance()
-                ->loadOffers(sale->getBaseAsset(), quoteAsset.quoteAsset, sale->getID(), minAllowedQuoteAmount, db);
+                storageHelper.getOfferHelper().loadOffers(sale->getBaseAsset(), quoteAsset.quoteAsset, sale->getID(), minAllowedQuoteAmount);
         for (const auto offerToCancel : offersToCancel)
         {
             DeleteSaleParticipationOpFrame::
@@ -455,9 +453,8 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
     for (auto& quoteAsset : saleEntry.quoteAssets)
     {
         quoteAsset.price = getPriceInQuoteAsset(priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset, db);
-        const auto offersToUpdate = OfferHelper::
-        Instance()->
-            loadOffersWithFilters(sale->getBaseAsset(), quoteAsset.quoteAsset, &saleEntry.saleID, nullptr, db);
+        const auto offersToUpdate = storageHelper.getOfferHelper().
+            loadOffersWithFilters(sale->getBaseAsset(), quoteAsset.quoteAsset, &saleEntry.saleID, nullptr);
         for (auto& offerToUpdate : offersToUpdate)
         {
             auto& offerEntry = offerToUpdate->getOffer();
@@ -469,7 +466,7 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
                 throw runtime_error("Failed to update price for offer on check state");
             }
             offerEntry.baseAmount -= offerEntry.baseAmount % getMinimumAssetAmount(saleEntry.baseAsset, storageHelper);
-            OfferHelper::Instance()->storeChange(delta, db, offerToUpdate->mEntry);
+            storageHelper.getOfferHelper().storeChange(offerToUpdate->mEntry);
         }
     }
     SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);

@@ -36,8 +36,9 @@ bool
 DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                              std::vector<SignerRequirement>& result) const
 {
-    auto offerFrame = OfferHelper::Instance()->loadOffer(getSourceID(),
-                                                         mManageOffer.offerID, storageHelper.getDatabase());
+
+    auto offerFrame = storageHelper.getOfferHelper().loadOffer(getSourceID(),
+                                                         mManageOffer.offerID);
     if (!offerFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -66,9 +67,8 @@ DeleteOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto offer = OfferHelper::Instance()->loadOffer(
-        getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID, db,
-        &delta);
+    const auto offer = storageHelper.getOfferHelper().loadOffer(
+        getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID);
     if (!offer)
     {
         innerResult().code(ManageOfferResultCode::NOT_FOUND);

@@ -291,8 +291,8 @@ TEST_CASE("Sale", "[tx][sale]")
                                                       feeToPay, ROUND_UP, 1);
             auto offerResult = participationHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, quoteAssetAmount, price, feeToPay);
             auto offerID = offerResult.success().offer.offer().offerID;
-            auto offer = OfferHelper::Instance()->loadOffer(
-                account.key.getPublicKey(), offerID, testManager->getDB());
+            auto offer = storageHelper.getOfferHelper().loadOffer(
+                account.key.getPublicKey(), offerID);
             REQUIRE(!!offer);
             const auto offerEntry = offer->getOffer();
             auto manageOfferOp = OfferManager::buildManageOfferOp(offerEntry.baseBalance, offerEntry.quoteBalance,
@@ -560,7 +560,7 @@ TEST_CASE("Sale", "[tx][sale]")
             {
                 participateHelper.applyManageOffer(participant, manageOffer);
 
-                auto offers = OfferHelper::Instance()->loadOffersWithFilters(baseAsset, quoteAsset, &saleID, nullptr, db);
+                auto offers = storageHelper.getOfferHelper().loadOffersWithFilters(baseAsset, quoteAsset, &saleID, nullptr);
                 REQUIRE(offers.size() == 1);
 
                 manageOffer.amount = 0;
@@ -691,7 +691,7 @@ TEST_CASE("Sale", "[tx][sale]")
                 // create sale participation:
                 int64_t initialAmount = manageOffer.amount;
                 participateHelper.applyManageOffer(participant, manageOffer);
-                auto offers = OfferHelper::Instance()->loadOffersWithFilters(baseAsset, quoteAsset, &saleID, nullptr, db);
+                auto offers = storageHelper.getOfferHelper().loadOffersWithFilters(baseAsset, quoteAsset, &saleID, nullptr);
                 REQUIRE(offers.size() == 1);
                 uint64_t offerID = offers[0]->getOfferID();
 

@@ -24,8 +24,8 @@ ManageOfferTestHelper::ensureDeleteSuccess(
     auto offer = std::make_shared<OfferFrame>(stateBeforeTx[offerKey]->mEntry);
 
     // ensure offer was removed
-    auto removedOfferFrame = OfferHelper::Instance()->loadOffer(
-        offer->getOffer().ownerID, offer->getOfferID(), mTestManager->getDB());
+    auto removedOfferFrame = mTestManager->getStorageHelper().getOfferHelper().loadOffer(
+        offer->getOffer().ownerID, offer->getOfferID());
     REQUIRE(!removedOfferFrame);
 
     // check if balance unlocked
@@ -57,8 +57,8 @@ ManageOfferTestHelper::ensureCreateSuccess(
     case ManageOfferEffect::CREATED:
     {
         REQUIRE(op.offerID == 0);
-        auto offer = OfferHelper::Instance()->loadOffer(
-            source.key.getPublicKey(), offerResult.offer().offerID, db);
+        auto offer = mTestManager->getStorageHelper().getOfferHelper().loadOffer(
+            source.key.getPublicKey(), offerResult.offer().offerID);
         REQUIRE(!!offer);
         auto& offerEntry = offer->getOffer();
         REQUIRE(offerEntry == offerResult.offer());
@@ -84,8 +84,8 @@ ManageOfferTestHelper::ensureCreateSuccess(
     {
         if (op.offerID == 0)
             break;
-        auto offer = OfferHelper::Instance()->loadOffer(
-            source.key.getPublicKey(), op.offerID, mTestManager->getDB());
+        auto offer = mTestManager->getStorageHelper().getOfferHelper().loadOffer(
+            source.key.getPublicKey(), op.offerID);
         REQUIRE(!offer);
         break;
     }

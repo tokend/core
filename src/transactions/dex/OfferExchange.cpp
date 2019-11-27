@@ -377,12 +377,14 @@ OfferExchange::convertWithOffers(
 
     while (offerNeedsMore(offerA, quoteBalanceA->getMinimumAmount()))
     {
+        StorageHelperImpl storageHelperImpl(db,nullptr);
+        StorageHelper& storageHelper = storageHelperImpl;
         std::vector<OfferFrame::pointer> retList;
-        auto offerHelper = OfferHelper::Instance();
-        offerHelper->loadBestOffers(OFFERS_TO_TAKE, offerOffset,
+        auto& offerHelper = storageHelper.getOfferHelper();
+        offerHelper.loadBestOffers(OFFERS_TO_TAKE, offerOffset,
                                     mAssetPair->getBaseAsset(),
                                     mAssetPair->getQuoteAsset(), mOrderBookID, !offerA.isBuy,
-                                    retList, db);
+                                    retList);
 
         offerOffset += retList.size();
 

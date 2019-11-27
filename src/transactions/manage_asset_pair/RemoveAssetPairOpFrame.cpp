@@ -50,9 +50,9 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application& app, stellar::Storage
         return false;
     }
 
-    auto offerHelper = OfferHelper::Instance();
+    auto& offerHelper = storageHelper.getOfferHelper();
     auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
-    if (offerHelper->exists(db, mRemoveAssetPair.base, mRemoveAssetPair.quote, &orderBookID))
+    if (offerHelper.exists(mRemoveAssetPair.base, mRemoveAssetPair.quote, &orderBookID))
     {
         innerResult().code(RemoveAssetPairResultCode::HAS_ACTIVE_OFFERS);
         return false;

@@ -156,7 +156,7 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
         CreateAccountTestBuilder().setSource(rootAccount).setRoleID(1);
 
     auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
-    auto offerHelper = OfferHelper::Instance();
+    auto& offerHelper = testManager->getStorageHelper().getOfferHelper();
 
     auto buyer = Account{SecretKey::random(), 0};
     createAccountTestHelper.applyTx(
@@ -300,9 +300,9 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
                                .offer.offer()
                                .offerID;
 
-            auto offer = OfferHelper::Instance()->loadOffer(
+            auto offer = testManager->getStorageHelper().getOfferHelper().loadOffer(
                 buyer.key.getPublicKey(), offerID,
-                ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID, db, &delta);
+                ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID);
             REQUIRE(offer->getOffer().baseAmount == baseAssetAmount);
 
             buyOp.offerID = offerID;

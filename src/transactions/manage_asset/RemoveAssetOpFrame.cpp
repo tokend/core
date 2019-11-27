@@ -101,7 +101,7 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
         return false;
     }
 
-    if (OfferHelper::Instance()->exists(db, mRemoveAsset.code, nullptr))
+    if (storageHelper.getOfferHelper().exists(mRemoveAsset.code, nullptr))
     {
         innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_OFFERS);
         return false;

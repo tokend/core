@@ -122,8 +122,8 @@ void CheckSaleStateHelper::ensureNoOffersLeft(CheckSaleStateSuccess result, Stat
     auto saleBeforeTx = stateBeforeTx.getSale(result.saleID);
     for (auto saleQuoteAsset : saleBeforeTx->getSaleEntry().quoteAssets)
     {
-        auto offers = OfferHelper::Instance()->loadOffersWithFilters(saleBeforeTx->getBaseAsset(), saleQuoteAsset.quoteAsset,
-                                                                     &result.saleID, nullptr, mTestManager->getDB());
+        auto offers = mTestManager->getStorageHelper().getOfferHelper().loadOffersWithFilters(saleBeforeTx->getBaseAsset(), saleQuoteAsset.quoteAsset,
+                                                                     &result.saleID, nullptr);
         REQUIRE(offers.empty());
     }
 }
@@ -132,7 +132,7 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
                                                       SaleQuoteAsset const& saleQuoteAsset,
                                                       CheckSubSaleClosedResult result) const
 {
-    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& storageHelper = mTestManager->getStorageHelper();;
     auto& balanceHelper = storageHelper.getBalanceHelper();
 
     auto ownerQuoteBalanceBefore = stateBeforeTx.getBalance(saleQuoteAsset.quoteBalance);

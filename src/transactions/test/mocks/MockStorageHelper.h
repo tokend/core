@@ -26,6 +26,7 @@ class AssetPairHelper;
 class AtomicSwapAskHelper;
 class ContractHelper;
 class FeeHelper;
+class OfferHelper;
 
 enum class LedgerEntryType;
 
@@ -77,6 +78,7 @@ public:
     MOCK_METHOD0(getAtomicSwapAskHelper, AtomicSwapAskHelper&());
     MOCK_METHOD0(getContractHelper, ContractHelper&());
     MOCK_METHOD0(getFeeHelper, FeeHelper&());
+    MOCK_METHOD0(getOfferHelper, OfferHelper&());
 };
 
 }  // namespace stellar

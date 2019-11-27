@@ -155,7 +155,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::BALANCE,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::BALANCE)},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID)},
     {LedgerEntryType::FEE,                                   EntryHelperLegacyImpl::Instance(LedgerEntryType::FEE)},
-    {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
+    {LedgerEntryType::OFFER_ENTRY,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::OFFER_ENTRY)},
     {LedgerEntryType::REFERENCE_ENTRY,                       ReferenceHelper::Instance()},
     {LedgerEntryType::REVIEWABLE_REQUEST,                    EntryHelperLegacyImpl::Instance(LedgerEntryType::REVIEWABLE_REQUEST)},
     {LedgerEntryType::KEY_VALUE,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::KEY_VALUE)},

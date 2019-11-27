@@ -119,8 +119,8 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
 
     if (!ruleFrame->forbids()) // accountID existing was checked above
     {
-        auto offerHelper = OfferHelper::Instance();
-        auto offersToDelete = offerHelper->loadOffers(*ruleFrame->getEntry().accountID, sale->getID(), db);
+        auto& offerHelper = storageHelper.getOfferHelper();
+        auto offersToDelete = offerHelper.loadOffers(*ruleFrame->getEntry().accountID, sale->getID());
         for (auto const& offerToCancel : offersToDelete)
         {
             DeleteSaleParticipationOpFrame::deleteSaleParticipation(app, storageHelper,

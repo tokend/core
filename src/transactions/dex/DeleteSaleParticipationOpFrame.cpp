@@ -43,8 +43,7 @@ bool DeleteSaleParticipationOpFrame::doApply(Application& app,
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto offer = OfferHelper::Instance()->loadOffer(getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID, db,
-                                                    &delta);
+    auto offer = storageHelper.getOfferHelper().loadOffer(getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID);
     if (!offer)
     {
         innerResult().code(ManageOfferResultCode::NOT_FOUND);

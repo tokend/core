@@ -12,6 +12,7 @@
 #include "ledger/AtomicSwapAskHelperImpl.h"
 #include "ledger/ContractHelperImpl.h"
 #include "ledger/FeeHelperImpl.h"
+#include "ledger/OfferHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -62,6 +63,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType ::ATOMIC_SWAP_ASK, &getAtomicSwapAskHelper()},
         {LedgerEntryType::CONTRACT, &getContractHelper()},
         {LedgerEntryType::FEE, &getFeeHelper()},
+        {LedgerEntryType::OFFER_ENTRY, &getOfferHelper()},
 
     };
 }
@@ -479,5 +481,18 @@ StorageHelperImpl::getFeeHelper()
 
     return *mFeeHelper;
 }
+
+
+OfferHelper&
+StorageHelperImpl::getOfferHelper()
+{
+    if(!mOfferHelper)
+    {
+        mOfferHelper = std::make_unique<OfferHelperImpl>(*this);
+    }
+
+    return *mOfferHelper;
+}
+
 
 } // namespace stellar

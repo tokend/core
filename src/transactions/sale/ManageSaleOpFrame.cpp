@@ -198,9 +198,9 @@ void ManageSaleOpFrame::cancelAllOffersForQuoteAsset(SaleFrame::pointer sale, Sa
     auto orderBookID = sale->getID();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto offersToCancel = OfferHelper::Instance()->loadOffersWithFilters(sale->getBaseAsset(),
+    const auto offersToCancel = storageHelper.getOfferHelper().loadOffersWithFilters(sale->getBaseAsset(),
                                                                                saleQuoteAsset.quoteAsset,
-                                                                               &orderBookID, nullptr, db);
+                                                                               &orderBookID, nullptr);
     OfferManager::deleteOffers(offersToCancel, db, delta);
 }
 

@@ -134,7 +134,7 @@ TEST_CASE("manage offer", "[tx][offer]")
     };
 
     auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
-    auto offerHelper = OfferHelper::Instance();
+    auto& offerHelper = testManager->getStorageHelper().getOfferHelper();
 
     SECTION("basics")
     {
@@ -495,8 +495,8 @@ TEST_CASE("manage offer", "[tx][offer]")
                                    0, 0, 0,
                                    ManageAssetPairAction::UPDATE_POLICIES);
             // offer was deleted
-            auto offer = OfferHelper::Instance()->loadOffer(seller.key.getPublicKey(),
-                              offerResult.success().offer.offer().offerID, testManager->getDB());
+            auto offer = testManager->getStorageHelper().getOfferHelper().loadOffer(seller.key.getPublicKey(),
+                              offerResult.success().offer.offer().offerID);
             REQUIRE(!offer);
             // can place offer
             offerTestHelper.applyManageOffer(seller, 0,
@@ -722,7 +722,7 @@ TEST_CASE("manage offer", "[tx][offer]")
         {
             std::vector<OfferFrame::pointer> offers;
             const int maxOrders = 10;
-            OfferHelper::Instance()->loadBestOffers(maxOrders, 0, base, quote, 0, !isBuy, offers, testManager->getDB());
+            testManager->getStorageHelper().getOfferHelper().loadBestOffers(maxOrders, 0, base, quote, 0, !isBuy, offers);
             if (offers.size() == maxOrders)
             {
                 return offers[offers.size() - 1]->getPrice();
@@ -791,7 +791,7 @@ TEST_CASE("manage offer", "[tx][offer]")
             LOG(INFO) << "matches left: " << matchesLeft;
         }
 
-        auto offersByAccount = offerHelper->loadAllOffers(app.getDatabase());
+        auto offersByAccount = offerHelper.loadAllOffers();
         // delete all buyers offers
         auto buyersOffers = offersByAccount[buyer.key.getPublicKey()];
         for (auto buyerOffer : buyersOffers)
@@ -810,7 +810,7 @@ TEST_CASE("manage offer", "[tx][offer]")
                                quoteSellerBalance->getBalanceID(), 0, 1, false, 0);
         }
 
-        offersByAccount = offerHelper->loadAllOffers(app.getDatabase());
+        offersByAccount = offerHelper.loadAllOffers();
         REQUIRE(offersByAccount.size() == 0);
 
         baseBuyerBalance = balanceHelper.loadBalance(buyer.key.getPublicKey(),

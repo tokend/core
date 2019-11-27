@@ -2,6 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include <ledger/EntryHelperLegacy.h>
 #include "ManageAssetPairOpFrame.h"
 #include "transactions/dex/ManageOfferOpFrame.h"
 #include "transactions/managers/BalanceManager.h"
@@ -127,7 +128,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         if (!assetPair->checkPolicy(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET))
         {
             auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
-            const auto offersToRemove = OfferHelper::Instance()->loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, nullptr, db);
+            const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, nullptr);
             OfferManager::deleteOffers(offersToRemove, db, delta);
         }
     }
@@ -142,7 +143,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         assetPairEntry.currentPrice = mManageAssetPair.physicalPrice + premium;
         auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
         uint64_t minAllowedPrice = assetPair->getMinAllowedPrice();
-        const auto offersToRemove = OfferHelper::Instance()->loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, &minAllowedPrice, db);
+        const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, &minAllowedPrice);
         OfferManager::deleteOffers(offersToRemove, db, delta);
     }
 

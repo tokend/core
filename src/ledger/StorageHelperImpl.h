@@ -34,6 +34,7 @@ class AssetPairHelper;
 class AtomicSwapAskHelper;
 class ContractHelper;
 class FeeHelper;
+class OfferHelper;
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -85,6 +86,7 @@ private:
     AtomicSwapAskHelper& getAtomicSwapAskHelper() override;
     ContractHelper& getContractHelper() override;
     FeeHelper& getFeeHelper() override;
+    OfferHelper& getOfferHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -121,5 +123,6 @@ private:
     std::unique_ptr<AtomicSwapAskHelper> mAtomicSwapAskHelper;
     std::unique_ptr<ContractHelper> mContractHelper;
     std::unique_ptr<FeeHelper> mFeeHelper;
+    std::unique_ptr<OfferHelper> mOfferHelper;
 };
 } // namespace stellar
