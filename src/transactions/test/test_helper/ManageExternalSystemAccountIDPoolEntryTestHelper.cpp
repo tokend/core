@@ -1,8 +1,9 @@
-#include <ledger/ExternalSystemAccountIDHelperLegacy.h>
+#include <ledger/ExternalSystemAccountIDHelper.h>
 #include "ManageExternalSystemAccountIDPoolEntryTestHelper.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "transactions/external_system_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -125,9 +126,9 @@ namespace txtest
         REQUIRE(poolEntryFrame->getExternalSystemAccountIDPoolEntry().isDeleted);
 
         auto poolEntry = poolEntryFrame->getExternalSystemAccountIDPoolEntry();
-        auto externalSystemAccountIDHelper = ExternalSystemAccountIDHelperLegacy::Instance();
-        auto externalSystemAccountIDFrame = externalSystemAccountIDHelper->load(
-                *poolEntry.accountID, poolEntry.externalSystemType, db);
+        auto& externalSystemAccountIDHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDHelper();
+        auto externalSystemAccountIDFrame = externalSystemAccountIDHelper.load(
+                *poolEntry.accountID, poolEntry.externalSystemType);
 
         REQUIRE(!!externalSystemAccountIDFrame);
 

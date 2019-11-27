@@ -7,9 +7,7 @@
 #include "ledger/ReferenceHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/StorageHelperImpl.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/ExternalSystemAccountIDHelperLegacy.h"
 #include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "xdrpp/printer.h"
@@ -157,7 +155,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::ASSET,                                 EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET)},
     {LedgerEntryType::ASSET_PAIR,                            EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET_PAIR)},
     {LedgerEntryType::BALANCE,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::BALANCE)},
-    {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            ExternalSystemAccountIDHelperLegacy::Instance()},
+    {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID)},
     {LedgerEntryType::FEE,                                   FeeHelper::Instance()},
     {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
     {LedgerEntryType::REFERENCE_ENTRY,                       ReferenceHelper::Instance()},
