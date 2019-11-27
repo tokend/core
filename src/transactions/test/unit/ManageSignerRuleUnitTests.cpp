@@ -49,6 +49,7 @@
 #include "transactions/test/mocks/MockAssetPairHelper.h"
 #include "transactions/test/mocks/MockAtomicSwapAskHelper.h"
 #include "transactions/test/mocks/MockContractHelper.h"
+#include "transactions/test/mocks/MockFeeHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"

@@ -8,7 +8,6 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/OfferHelper.h"
-#include "ledger/KeyValueHelperLegacy.h"
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
 #include "SaleHelper.h"
@@ -155,11 +154,11 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::ASSET_PAIR,                            EntryHelperLegacyImpl::Instance(LedgerEntryType::ASSET_PAIR)},
     {LedgerEntryType::BALANCE,                               EntryHelperLegacyImpl::Instance(LedgerEntryType::BALANCE)},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID,            EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID)},
-    {LedgerEntryType::FEE,                                   FeeHelper::Instance()},
+    {LedgerEntryType::FEE,                                   EntryHelperLegacyImpl::Instance(LedgerEntryType::FEE)},
     {LedgerEntryType::OFFER_ENTRY,                           OfferHelper::Instance()},
     {LedgerEntryType::REFERENCE_ENTRY,                       ReferenceHelper::Instance()},
     {LedgerEntryType::REVIEWABLE_REQUEST,                    EntryHelperLegacyImpl::Instance(LedgerEntryType::REVIEWABLE_REQUEST)},
-    {LedgerEntryType::KEY_VALUE,                             KeyValueHelperLegacy::Instance()},
+    {LedgerEntryType::KEY_VALUE,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::KEY_VALUE)},
     {LedgerEntryType::ACCOUNT_KYC,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_KYC)},
     {LedgerEntryType::SALE,                                  SaleHelper::Instance()},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY)},

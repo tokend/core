@@ -2,9 +2,10 @@
 #include <transactions/test/test_helper/ManageKeyValueTestHelper.h>
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
-#include "ledger/KeyValueHelperLegacy.h"
+#include "ledger/KeyValueHelper.h"
 #include "test/test_marshaler.h"
 #include "TxTests.h"
+#include "ledger/StorageHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -29,7 +30,7 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
     testHelper.setKey(key);
     testHelper.setUi32Value(30);
 
-    auto keyValueHelper = KeyValueHelperLegacy::Instance();
+    auto& keyValueHelper = testManager->getStorageHelper().getKeyValueHelper();
 
     SECTION("Can`t delete before create"){
         testHelper.setResult(ManageKeyValueResultCode::NOT_FOUND);
@@ -37,13 +38,13 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
     }
 
     SECTION("Can`t load before create"){
-        auto kvFrame = keyValueHelper->loadKeyValue(key,testManager->getDB());
+        auto kvFrame = keyValueHelper.loadKeyValue(key);
         REQUIRE(!kvFrame);
     }
 
     SECTION("Invalid type KYCRuleKey"){
         testHelper.setResult(ManageKeyValueResultCode::INVALID_TYPE);
-        auto kvFrame = keyValueHelper->loadKeyValue(key,testManager->getDB());
+        auto kvFrame = keyValueHelper.loadKeyValue(key);
         REQUIRE(!kvFrame);
         longstring localKey = ManageKeyValueOpFrame::makeChangeRoleKey(std::to_string(3), std::to_string(5));
         testHelper.setKey(localKey);
@@ -58,25 +59,25 @@ TEST_CASE("manage KeyValue", "[tx][manage_key_value]") {
         testHelper.doApply(app, ManageKVAction::PUT, true);
 
         SECTION("Can load after create") {
-            auto kvFrame = keyValueHelper->loadKeyValue(key, testManager->getDB());
+            auto kvFrame = keyValueHelper.loadKeyValue(key);
             REQUIRE(!!kvFrame);
         }
 
         SECTION("Can update after create") {
-            auto kvFrame = keyValueHelper->loadKeyValue(key, testManager->getDB());
+            auto kvFrame = keyValueHelper.loadKeyValue(key);
             REQUIRE(!!kvFrame);
             testHelper.setUi32Value(40);
             testHelper.doApply(app, ManageKVAction::PUT, true);
         }
 
         SECTION("Can delete after create") {
-            auto kvFrame = keyValueHelper->loadKeyValue(key, testManager->getDB());
+            auto kvFrame = keyValueHelper.loadKeyValue(key);
             REQUIRE(!!kvFrame);
             testHelper.doApply(app, ManageKVAction::REMOVE, true);
 
 
             SECTION("Can`t load after delete") {
-                auto kvFrame = keyValueHelper->loadKeyValue(key, testManager->getDB());
+                auto kvFrame = keyValueHelper.loadKeyValue(key);
                 REQUIRE(!kvFrame);
             }
 

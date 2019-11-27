@@ -17,15 +17,16 @@ FeeManager::calculateFeeForAccount(const AccountFrame::pointer account,
                                    FeeType const feeType, AssetCode const &asset,
                                    int64_t const subtype, uint64_t const amount, Database &db)
 {
+    StorageHelperImpl storageHelperImpl(db, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+
     auto result = FeeResult{ 0, 0, 0, false };
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(feeType, asset, subtype, account, amount, db);
+    auto feeFrame = storageHelper.getFeeHelper().loadForAccount(feeType, asset, subtype, account, amount);
     if (!feeFrame)
     {
         return result;
     }
 
-    StorageHelperImpl storageHelperImpl(db, nullptr);
-    StorageHelper& storageHelper = storageHelperImpl;
     auto feeAssetFrame = storageHelper.getAssetHelper().mustLoadAsset(asset);
     const uint64_t feeAssetPrecision = feeAssetFrame->getMinimumAmount();
 
@@ -40,12 +41,15 @@ FeeManager::isFeeMatches(const AccountFrame::pointer account, const Fee fee,
         const FeeType feeType, const int64_t subtype, const AssetCode assetCode,
         const uint64_t amount) const
 {
+    StorageHelperImpl storageHelperImpl(mApp.getDatabase(), nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+
     if (mApp.getAdminID() == account->getID())
     {
         return fee.fixed == 0 && fee.percent == 0;
     }
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(feeType, assetCode, subtype, account, amount, mSh.getDatabase());
+    auto feeFrame = mSh.getFeeHelper().loadForAccount(feeType, assetCode, subtype, account, amount);
     if (!feeFrame)
     {
         return fee.fixed == 0 && fee.percent == 0;

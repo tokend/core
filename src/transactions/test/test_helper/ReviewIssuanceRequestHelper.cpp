@@ -85,9 +85,8 @@ void ReviewIssuanceChecker::checkApprove(ReviewableRequestFrame::pointer request
     REQUIRE(assetFrameAfterTx->getIssued() == assetFrameBeforeTx->getIssued() + issuanceRequest->amount);
     REQUIRE(!!balanceBeforeTx);
     auto receiverFrame = accountHelper.loadAccount(balanceBeforeTx->getAccountID());
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, issuanceRequest->asset,
-                                                          FeeFrame::SUBTYPE_ANY, receiverFrame, issuanceRequest->amount,
-                                                          mTestManager->getDB());
+    auto feeFrame = mTestManager->getStorageHelper().getFeeHelper().loadForAccount(FeeType::ISSUANCE_FEE, issuanceRequest->asset,
+                                                          FeeFrame::SUBTYPE_ANY, receiverFrame, issuanceRequest->amount);
     uint64_t totalFee = 0;
     if (feeFrame)
     {

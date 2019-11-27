@@ -2,7 +2,7 @@
 #include "PayoutOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include <ledger/LedgerHeaderFrame.h>
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include <ledger/FeeHelper.h>
 #include "main/Application.h"
 #include "transactions/managers/BalanceManager.h"
@@ -30,9 +30,10 @@ PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
     Fee actualFee;
     actualFee.fixed = 0;
     actualFee.percent = 0;
-
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYOUT_FEE,
-            asset, FeeFrame::SUBTYPE_ANY, mSourceAccount, amount, db);
+    StorageHelperImpl storageHelperImpl(db, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::PAYOUT_FEE,
+            asset, FeeFrame::SUBTYPE_ANY, mSourceAccount, amount);
     if (!feeFrame)
     {
         return actualFee;

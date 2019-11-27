@@ -2,11 +2,10 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/EntryHelperLegacy.h>
+#include "ledger/EntryHelperLegacy.h"
 #include "bucket/Bucket.h"
 #include "bucket/BucketApplicator.h"
 #include "ledger/LedgerDeltaImpl.h"
-//#include "ledger/LedgerTxnEntry.h"
 #include "main/Application.h"
 
 namespace stellar

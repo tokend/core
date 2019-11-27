@@ -2,9 +2,8 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "FeeHelper.h"
+#include "FeeHelperImpl.h"
 #include "LedgerDelta.h"
-#include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "xdrpp/printer.h"
 
@@ -17,38 +16,40 @@ namespace stellar {
     const uint64_t EMPTY_VALUE = 0;
 
     static const char* feeColumnSelector = "SELECT fee_type, asset, fixed, percent, account_id, account_role, subtype, "
-            "lower_bound, upper_bound, hash, lastmodified, version "
-            "FROM   fee_state";
+                                           "lower_bound, upper_bound, hash, lastmodified, version "
+                                           "FROM   fee_state";
 
-    void FeeHelper::dropAll(Database &db) {
+    void FeeHelperImpl::dropAll() {
+        Database& db = getDatabase();
         db.getSession() << "DROP TABLE IF EXISTS fee_state;";
         db.getSession() << "CREATE TABLE fee_state"
-                "("
-                "fee_type       INT          NOT NULL,"
-                "asset          VARCHAR(16)  NOT NULL,"
-                "fixed          BIGINT       NOT NULL,"
-                "percent        BIGINT       NOT NULL,"
-                "account_id     VARCHAR(56),"
-                "account_role   BIGINT,"
-                "subtype        BIGINT       NOT NULL,"
-                "lower_bound    BIGINT,"
-                "upper_bound    BIGINT,"
-                "hash           VARCHAR(256) NOT NULL,"
-                "lastmodified   INT          NOT NULL,"
-                "version        INT          NOT NULL   DEFAULT 0,"
-                "PRIMARY KEY(hash, lower_bound, upper_bound)"
-                ");";
+                           "("
+                           "fee_type       INT          NOT NULL,"
+                           "asset          VARCHAR(16)  NOT NULL,"
+                           "fixed          BIGINT       NOT NULL,"
+                           "percent        BIGINT       NOT NULL,"
+                           "account_id     VARCHAR(56),"
+                           "account_role   BIGINT,"
+                           "subtype        BIGINT       NOT NULL,"
+                           "lower_bound    BIGINT,"
+                           "upper_bound    BIGINT,"
+                           "hash           VARCHAR(256) NOT NULL,"
+                           "lastmodified   INT          NOT NULL,"
+                           "version        INT          NOT NULL   DEFAULT 0,"
+                           "PRIMARY KEY(hash, lower_bound, upper_bound)"
+                           ");";
     }
 
-    void FeeHelper::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
-        storeUpdateHelper(delta, db, true, entry);
+    void FeeHelperImpl::storeAdd(LedgerEntry const &entry) {
+        storeUpdateHelper(true, entry);
     }
 
-    void FeeHelper::storeChange(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
-        storeUpdateHelper(delta, db, false, entry);
+    void FeeHelperImpl::storeChange(LedgerEntry const &entry) {
+        storeUpdateHelper(false, entry);
     }
 
-    void FeeHelper::storeDelete(LedgerDelta &delta, Database &db, LedgerKey const &key) {
+    void FeeHelperImpl::storeDelete(LedgerKey const &key) {
+        Database& db = getDatabase();
         auto timer = db.getDeleteTimer("fee");
         auto prep = db.getPreparedStatement("DELETE FROM fee_state WHERE hash=:hash AND lower_bound=:lb AND upper_bound=:ub");
         auto& st = prep.statement();
@@ -60,10 +61,11 @@ namespace stellar {
 
         st.define_and_bind();
         st.execute(true);
-        delta.deleteEntry(key);
+        mStorageHelper.mustGetLedgerDelta().deleteEntry(key);
     }
 
-    bool FeeHelper::exists(Database &db, LedgerKey const &key) {
+    bool FeeHelperImpl::exists(LedgerKey const &key) {
+        Database& db = getDatabase();
         int exists = 0;
         auto timer = db.getSelectTimer("fee-exists");
         auto prep =
@@ -81,7 +83,7 @@ namespace stellar {
         return exists != 0;
     }
 
-    LedgerKey FeeHelper::getLedgerKey(LedgerEntry const &from) {
+    LedgerKey FeeHelperImpl::getLedgerKey(LedgerEntry const &from) {
         LedgerKey ledgerKey;
         ledgerKey.type(from.data.type());
         ledgerKey.feeState().hash = from.data.feeState().hash;
@@ -90,26 +92,29 @@ namespace stellar {
         return ledgerKey;
     }
 
-    EntryFrame::pointer FeeHelper::storeLoad(LedgerKey const &key, Database &db) {
-        return loadFee(key.feeState().hash, key.feeState().lowerBound, key.feeState().upperBound, db);
+    EntryFrame::pointer FeeHelperImpl::storeLoad(LedgerKey const &key) {
+        return loadFee(key.feeState().hash, key.feeState().lowerBound, key.feeState().upperBound);
     }
 
-    EntryFrame::pointer FeeHelper::fromXDR(LedgerEntry const &from) {
+    EntryFrame::pointer FeeHelperImpl::fromXDR(LedgerEntry const &from) {
         return make_shared<FeeFrame>(from);
     }
 
-    uint64_t FeeHelper::countObjects(soci::session &sess) {
+    uint64_t FeeHelperImpl::countObjects() {
         uint64_t count = 0;
-        sess << "SELECT COUNT(*) FROM fee_state;", into(count);
+        Database &db = getDatabase();
+        db.getSession() << "SELECT COUNT(*) FROM fee_state;", into(count);
         return count;
     }
 
-    void FeeHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, LedgerEntry const &entry) {
+    void FeeHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const &entry) {
 
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         auto feeFrame = make_shared<FeeFrame>(entry);
-		auto feeEntry = feeFrame->getFee();
+        auto feeEntry = feeFrame->getFee();
 
-        feeFrame->touch(delta);
+        feeFrame->touch(mStorageHelper.mustGetLedgerDelta());
 
         if (!feeFrame->isValid())
         {
@@ -118,22 +123,22 @@ namespace stellar {
                     << xdr::xdr_to_string(feeEntry);
             throw std::runtime_error("Unexpected state - fee is invalid");
         }
-        checkAmounts(feeFrame, db, delta);
+        checkAmounts(feeFrame);
 
         string sql;
 
         if (insert)
         {
             sql = "INSERT INTO fee_state (fee_type, asset, fixed, percent, account_id, account_role, subtype, "
-                    "lastmodified, lower_bound, upper_bound, hash, version) "
-                    "VALUES (:ft, :as, :f, :p, :aid, :at, :subt, :lm, :lb, :ub, :hash, :v)";
+                  "lastmodified, lower_bound, upper_bound, hash, version) "
+                  "VALUES (:ft, :as, :f, :p, :aid, :at, :subt, :lm, :lb, :ub, :hash, :v)";
         }
         else
         {
             sql = "UPDATE fee_state "
-                    "SET    fee_type=:ft, asset=:as, fixed=:f, percent=:p, account_id=:aid, "
-                    "account_role=:at, subtype=:subt, lastmodified=:lm, version=:v "
-                    "WHERE  lower_bound=:lb AND upper_bound=:ub AND hash=:hash";
+                  "SET    fee_type=:ft, asset=:as, fixed=:f, percent=:p, account_id=:aid, "
+                  "account_role=:at, subtype=:subt, lastmodified=:lm, version=:v "
+                  "WHERE  lower_bound=:lb AND upper_bound=:ub AND hash=:hash";
         }
 
         auto prep = db.getPreparedStatement(sql);
@@ -181,22 +186,22 @@ namespace stellar {
 
         if (insert)
         {
-            delta.addEntry(*feeFrame);
+            delta->addEntry(*feeFrame);
         }
         else
         {
-            delta.modEntry(*feeFrame);
+            delta->modEntry(*feeFrame);
         }
     }
 
     FeeFrame::pointer
-    FeeHelper::loadFee(FeeType feeType, AssetCode asset, AccountID *accountID, uint64_t* accountRole,
-                       int64_t subtype, int64_t lowerBound, int64_t upperBound, Database &db, LedgerDelta *delta) {
+    FeeHelperImpl::loadFee(FeeType feeType, AssetCode asset, AccountID *accountID, uint64_t* accountRole,
+                       int64_t subtype, int64_t lowerBound, int64_t upperBound) {
         Hash hash = FeeFrame::calcHash(feeType, asset, accountID, accountRole, subtype);
-        return loadFee(hash, lowerBound, upperBound, db, delta);
+        return loadFee(hash, lowerBound, upperBound);
     }
 
-    void FeeHelper::loadFees(StatementContext &prep, function<void(const LedgerEntry &)> feeProcessor) {
+    void FeeHelperImpl::loadFees(StatementContext &prep, function<void(const LedgerEntry &)> feeProcessor) {
         LedgerEntry le;
         le.data.type(LedgerEntryType::FEE);
 
@@ -250,7 +255,9 @@ namespace stellar {
     }
 
     FeeFrame::pointer
-    FeeHelper::loadFee(Hash hash, int64_t lowerBound, int64_t upperBound, Database &db, LedgerDelta *delta) {
+    FeeHelperImpl::loadFee(Hash hash, int64_t lowerBound, int64_t upperBound) {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         std::string sql = feeColumnSelector;
         sql += " WHERE hash = :h AND lower_bound=:lb AND upper_bound=:ub";
         auto prep = db.getPreparedStatement(sql);
@@ -277,7 +284,8 @@ namespace stellar {
         return result;
     }
 
-    std::vector<FeeFrame::pointer> FeeHelper::loadFees(Hash hash, Database &db) {
+    std::vector<FeeFrame::pointer> FeeHelperImpl::loadFees(Hash hash) {
+        Database& db = getDatabase();
         std::vector<FeeFrame::pointer> fees;
         std::string sql = feeColumnSelector;
         sql += " WHERE hash = :h";
@@ -294,18 +302,20 @@ namespace stellar {
         return fees;
     }
 
-    bool FeeHelper::exists(Database &db, Hash hash, int64_t lowerBound, int64_t upperBound) {
+    bool FeeHelperImpl::exists(Hash hash, int64_t lowerBound, int64_t upperBound) {
         LedgerKey key;
         key.type(LedgerEntryType::FEE);
         key.feeState().hash = hash;
         key.feeState().lowerBound = lowerBound;
         key.feeState().upperBound = upperBound;
-        return exists(db, key);
+        return exists(key);
     }
 
     FeeFrame::pointer
-    FeeHelper::loadForAccount(FeeType feeType, AssetCode asset, int64_t subtype, AccountFrame::pointer accountFrame,
-                              int64_t amount, Database &db, LedgerDelta *delta) {
+    FeeHelperImpl::loadForAccount(FeeType feeType, AssetCode asset, int64_t subtype, AccountFrame::pointer accountFrame,
+                              int64_t amount) {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         if (!accountFrame)
             throw std::runtime_error("Expected accountFrame not to be nullptr");
         auto accountRole = accountFrame->getAccountRole();
@@ -316,7 +326,7 @@ namespace stellar {
 
         std::string sql = feeColumnSelector;
         sql += " WHERE hash IN (:h1, :h2, :h3) AND lower_bound <= :am1 AND :am2 <= upper_bound "
-                " ORDER BY hash=:h4 DESC, hash=:h5 DESC, hash=:h6 DESC LIMIT 1";
+               " ORDER BY hash=:h4 DESC, hash=:h5 DESC, hash=:h6 DESC LIMIT 1";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
         string strHash1 = binToHex(hash1);
@@ -349,8 +359,8 @@ namespace stellar {
         return result;
     }
 
-    bool FeeHelper::isBoundariesOverlap(Hash hash, int64_t lowerBound, int64_t upperBound, Database &db) {
-        auto fees = loadFees(hash, db);
+    bool FeeHelperImpl::isBoundariesOverlap(Hash hash, int64_t lowerBound, int64_t upperBound) {
+        auto fees = loadFees(hash);
         for (FeeFrame::pointer feeFrame : fees)
         {
             auto fee = feeFrame->getFee();
@@ -365,15 +375,31 @@ namespace stellar {
         return false;
     }
 
-    void FeeHelper::checkAmounts(const FeeFrame::pointer& frame, Database& db, LedgerDelta& delta) const
+    void FeeHelperImpl::checkAmounts(const FeeFrame::pointer& frame) const
     {
-        StorageHelperImpl storageHelperImpl(db, &delta);
-        StorageHelper& storageHelper = storageHelperImpl;
-
-        if (!storageHelper.getAssetHelper().doesAmountFitAssetPrecision(
+        if (!mStorageHelper.getAssetHelper().doesAmountFitAssetPrecision(
                 frame->getFeeAsset(), frame->getFixedFee()))
         {
             throw std::runtime_error("Fixed fee amount does not fit asset precision");
         }
+    }
+
+    LedgerDelta *FeeHelperImpl::getLedgerDelta() {
+        return mStorageHelper.getLedgerDelta();
+    }
+
+    Database &FeeHelperImpl::getDatabase() {
+        return mStorageHelper.getDatabase();
+    }
+
+    FeeHelperImpl::FeeHelperImpl(StorageHelper &storageHelper)
+            : mStorageHelper(storageHelper)
+    {
+        mFeeColumnSelector =
+                "SELECT code, owner, preissued_asset_signer, "
+                "details, max_issuance_amount, "
+                "available_for_issueance, issued, pending_issuance, "
+                "policies, type, trailing_digits, lastmodified, version "
+                "FROM asset ";
     }
 }

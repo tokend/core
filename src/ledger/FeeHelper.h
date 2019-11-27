@@ -1,78 +1,43 @@
-#pragma once
-
-// Copyright 2014 Stellar Development Foundation and contributors. Licensed
-// under the Apache License, Version 2.0. See the COPYING file at the root
-// of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
-
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 #include "ledger/LedgerManager.h"
 #include <functional>
 #include <unordered_map>
 #include "FeeFrame.h"
 
-namespace soci {
-    class session;
+namespace soci
+{
+class session;
 }
 
 namespace stellar {
-    class StatementContext;
+class StatementContext;
 
-    class FeeHelper : public EntryHelperLegacy {
-    public:
+class FeeHelper : public EntryHelper
+{
+public:
 
-        FeeHelper(FeeHelper const &) = delete;
+    virtual FeeFrame::pointer
+    loadFee(FeeType feeType, AssetCode asset, AccountID *accountID,
+                              uint64_t* accountType, int64_t subtype, int64_t lowerBound,
+                              int64_t upperBound) = 0;
 
-        FeeHelper &operator=(FeeHelper const &) = delete;
+    virtual FeeFrame::pointer
+    loadFee(Hash hash, int64_t lowerBound, int64_t upperBound) = 0;
 
-        static FeeHelper *Instance() {
-            static FeeHelper singleton;
-            return &singleton;
-        }
+    virtual FeeFrame::pointer
+    loadForAccount(FeeType feeType, AssetCode asset, int64_t subtype,
+                                     AccountFrame::pointer accountFrame, int64_t amount) = 0;
 
-        void dropAll(Database &db) override;
+    virtual std::vector<FeeFrame::pointer> loadFees(Hash hash) = 0;
 
-        void storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) override;
+    virtual void storeUpdateHelper(bool insert, LedgerEntry const &entry) = 0;
 
-        void storeChange(LedgerDelta &delta, Database &db, LedgerEntry const &entry) override;
+    virtual void loadFees(StatementContext &prep, std::function<void(LedgerEntry const &)> feeProcessor) = 0;
 
-        void storeDelete(LedgerDelta &delta, Database &db, LedgerKey const &key) override;
+    virtual void checkAmounts(const FeeFrame::pointer &frame) const = 0;
 
-        bool exists(Database &db, LedgerKey const &key) override;
+    virtual bool isBoundariesOverlap(Hash hash, int64_t lowerBound, int64_t upperBound) = 0;
 
-        bool exists(Database &db, Hash hash, int64_t lowerBound, int64_t upperBound);
-
-        bool isBoundariesOverlap(Hash hash, int64_t lowerBound, int64_t upperBound, Database &db);
-
-        uint64_t countObjects(soci::session &sess) override;
-
-        LedgerKey getLedgerKey(LedgerEntry const &from) override;
-
-        EntryFrame::pointer fromXDR(LedgerEntry const &from) override;
-
-        EntryFrame::pointer storeLoad(LedgerKey const &key, Database &db) override;
-
-        FeeFrame::pointer loadFee(FeeType feeType, AssetCode asset, AccountID *accountID,
-                                  uint64_t* accountType, int64_t subtype, int64_t lowerBound,
-                                  int64_t upperBound, Database &db, LedgerDelta *delta = nullptr);
-
-        FeeFrame::pointer loadFee(Hash hash, int64_t lowerBound, int64_t upperBound,
-                                  Database &db, LedgerDelta *delta = nullptr);
-
-        FeeFrame::pointer loadForAccount(FeeType feeType, AssetCode asset, int64_t subtype,
-                                         AccountFrame::pointer accountFrame, int64_t amount,
-                                         Database &db, LedgerDelta *delta = nullptr);
-
-        std::vector<FeeFrame::pointer> loadFees(Hash hash, Database &db);
-
-    private:
-        FeeHelper() { ; }
-
-        ~FeeHelper() { ; }
-
-        void storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, LedgerEntry const &entry);
-
-        void loadFees(StatementContext &prep, std::function<void(LedgerEntry const &)> feeProcessor);
-
-        void checkAmounts(const FeeFrame::pointer &frame, Database& db, LedgerDelta& delta) const;
-    };
+    virtual  bool exists(Hash hash, int64_t lowerBound, int64_t upperBound) = 0;
+};
 }

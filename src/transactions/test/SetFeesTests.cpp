@@ -46,7 +46,7 @@ TEST_CASE("Set fee", "[tx][set_fees]")
     // set up world
     auto master = Account{getRoot(), Salt(1)};
 
-    auto feeHelper = FeeHelper::Instance();
+    auto& feeHelper = testManager->getStorageHelper().getFeeHelper();
 
     uint32_t zeroTasks = 0;
 
@@ -116,16 +116,16 @@ TEST_CASE("Set fee", "[tx][set_fees]")
     createAccountTestHelper.applyCreateAccountTx(master, account.getPublicKey(), 1);
     auto accountFrame = accountHelper.loadAccount(account.getPublicKey());
 
-    auto accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
-                                                accountFrame, 0, db);
+    auto accountFee = feeHelper.loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
+                                                accountFrame, 0);
     REQUIRE(!accountFee);
 
     SECTION("AccountID is set")
     {
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 1, 2);
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false);
-        accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
-                                               accountFrame, 0, db);
+        accountFee = feeHelper.loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
+                                               accountFrame, 0);
         REQUIRE(accountFee->getFee() == feeEntry);
     }
     SECTION("AccountType is set")
@@ -134,8 +134,8 @@ TEST_CASE("Set fee", "[tx][set_fees]")
         auto feeEntry = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, assetCode, 10, 20, nullptr,
                                                          &accountType);
         setFeesTestHelper.applySetFeesTx(master, &feeEntry, false);
-        accountFee = feeHelper->loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
-                                               accountFrame, 0, db);
+        accountFee = feeHelper.loadForAccount(FeeType::PAYMENT_FEE, assetCode, FeeFrame::SUBTYPE_ANY,
+                                               accountFrame, 0);
         REQUIRE(accountFee->getFee() == feeEntry);
     }
 

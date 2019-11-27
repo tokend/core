@@ -69,9 +69,9 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
     uint64_t totalFee = 0;
     if ((fee.fixed != 0) && (fee.percent != 0))
     {
-        auto feeEntry = FeeHelper::Instance()->loadFee(FeeType::PAYOUT_FEE,
+        auto feeEntry = mTestManager->getStorageHelper().getFeeHelper().loadFee(FeeType::PAYOUT_FEE,
                 ownerBalanceBefore->getAsset(), nullptr, nullptr,
-                FeeFrame::SUBTYPE_ANY, 0, INT64_MAX, db);
+                FeeFrame::SUBTYPE_ANY, 0, INT64_MAX);
         REQUIRE(bigDivide(totalFee, actualPayoutAmount,
                           feeEntry->getPercentFee(), 100*ONE, ROUND_UP));
         totalFee += fee.fixed;

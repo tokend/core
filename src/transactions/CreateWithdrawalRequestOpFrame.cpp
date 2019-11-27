@@ -9,7 +9,6 @@
 #include "ledger/ReviewableRequestFrame.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 #include "ledger/KeyValueHelper.h"
-#include "ledger/KeyValueHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"

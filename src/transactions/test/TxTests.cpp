@@ -29,7 +29,6 @@ namespace txtest
 {
 auto accountHelper = EntryHelperProvider::getHelper(LedgerEntryType::ACCOUNT);
 auto assetHelper = EntryHelperProvider::getHelper(LedgerEntryType::ASSET);
-auto feeHelper = FeeHelper::Instance();
 
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
@@ -475,8 +474,10 @@ applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry *fee, bool 
     {
         if (fee)
         {
-            auto storedFee = feeHelper->loadFee(fee->feeType, fee->asset,
-                                                fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound, app.getDatabase(), nullptr);
+            StorageHelperImpl storageHelperImpl(app.getDatabase(), &delta);
+            StorageHelper& storageHelper = storageHelperImpl;
+            auto storedFee = storageHelper.getFeeHelper().loadFee(fee->feeType, fee->asset,
+                                                fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound);
             if (isDelete)
                 REQUIRE(!storedFee);
             else

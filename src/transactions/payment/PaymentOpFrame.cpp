@@ -257,9 +257,9 @@ PaymentOpFrame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const
     actualFee.percent = 0;
     actualFee.fixed = 0;
     auto& db = storageHelper.getDatabase();
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
+    auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
                                                           static_cast<int64_t>(feeType),
-                                                          accountFrame, amount, db);
+                                                          accountFrame, amount);
     // if we do not have any fee frame - any fee is valid
     if (!feeFrame)
     {

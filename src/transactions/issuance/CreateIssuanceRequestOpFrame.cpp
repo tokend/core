@@ -332,9 +332,9 @@ CreateIssuanceRequestOpFrame::calculateFee(Application& app, StorageHelper& stor
         getAccountHelper().
         mustLoadAccount(receiver);
 
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
+    auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::ISSUANCE_FEE, mCreateIssuanceRequest.request.asset,
                                                           FeeFrame::SUBTYPE_ANY, receiverFrame,
-                                                          mCreateIssuanceRequest.request.amount, db);
+                                                          mCreateIssuanceRequest.request.amount);
     if (feeFrame)
     {
         fee.fixed = feeFrame->getFee().fixedFee;

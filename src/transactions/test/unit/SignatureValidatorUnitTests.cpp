@@ -33,6 +33,7 @@
 #include "transactions/test/mocks/MockAssetPairHelper.h"
 #include "transactions/test/mocks/MockAtomicSwapAskHelper.h"
 #include "transactions/test/mocks/MockContractHelper.h"
+#include "transactions/test/mocks/MockFeeHelper.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"

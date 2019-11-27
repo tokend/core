@@ -244,9 +244,9 @@ OpenSwapOpFrame::getActualFee(AccountFrame::pointer accountFrame,
     actualFee.fixed = 0;
 
     auto& db = sh.getDatabase();
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(
+    auto feeFrame = sh.getFeeHelper().loadForAccount(
         FeeType::SWAP_FEE, transferAsset, static_cast<int64_t>(feeType),
-        accountFrame, amount, db);
+        accountFrame, amount);
     // if we do not have any fee frame - any fee is valid
     if (!feeFrame)
     {

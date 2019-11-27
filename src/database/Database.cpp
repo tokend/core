@@ -33,7 +33,7 @@
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AssetHelperImpl.h>
 #include <ledger/ContractHelper.h>
-#include <ledger/KeyValueHelperLegacy.h>
+#include <ledger/KeyValueHelper.h>
 #include <ledger/LimitsV2Helper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
@@ -153,7 +153,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             sh.getExternalSystemAccountIDPoolEntryHelper().dropAll();
             break;
         case databaseSchemaVersion::KEY_VALUE_FIX_MIGRATION:
-            KeyValueHelperLegacy::Instance()->dropAll(*this);
+            sh.getKeyValueHelper().dropAll();
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_PARENT_DB_TYPE:
             sh.getExternalSystemAccountIDPoolEntryHelper().parentToNumeric();

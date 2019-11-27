@@ -72,8 +72,9 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
     }
 
     auto sourceAccountFrame = storageHelper.getAccountHelper().loadAccount(source.key.getPublicKey());
-    auto investFee = FeeHelper::Instance()->loadForAccount(FeeType::INVEST_FEE, balanceBeforeTx.asset, 0,
-                                                           sourceAccountFrame, op.amount, db);
+
+    auto investFee = storageHelper.getFeeHelper().loadForAccount(FeeType::INVEST_FEE, balanceBeforeTx.asset, 0,
+                                                           sourceAccountFrame, op.amount);
     if (!!investFee)
     {
         auto balanceAfterTx = storageHelper.getBalanceHelper().loadBalance(balanceBeforeTx.balanceID);

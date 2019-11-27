@@ -71,8 +71,8 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         return false;
     }
 
-    auto feeHelper = FeeHelper::Instance();
-    auto feeFrame = feeHelper->loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db, &delta);
+    auto& feeHelper = storageHelper.getFeeHelper();
+    auto feeFrame = feeHelper.loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound);
 
     // delete
     if (mSetFees.isDelete)
@@ -105,7 +105,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         return false;
     }
 
-    if (feeHelper->isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db))
+    if (feeHelper.isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound))
     {
         innerResult().code(SetFeesResultCode::RANGE_OVERLAP);
         return false;
