@@ -9,7 +9,6 @@
 #include "ledger/FeeHelper.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/KeyValueHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
 #include "SaleHelper.h"
@@ -163,7 +162,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::KEY_VALUE,                             KeyValueHelperLegacy::Instance()},
     {LedgerEntryType::ACCOUNT_KYC,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_KYC)},
     {LedgerEntryType::SALE,                                  SaleHelper::Instance()},
-    {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()},
+    {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY)},
     {LedgerEntryType::LIMITS_V2,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::LIMITS_V2) },
     {LedgerEntryType::STATISTICS_V2,                         StatisticsV2Helper::Instance()},
     {LedgerEntryType::PENDING_STATISTICS,                    PendingStatisticsHelper::Instance()},

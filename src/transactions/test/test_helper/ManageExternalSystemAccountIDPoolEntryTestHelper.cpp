@@ -1,6 +1,6 @@
 #include <ledger/ExternalSystemAccountIDHelper.h>
 #include "ManageExternalSystemAccountIDPoolEntryTestHelper.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
 #include "transactions/external_system_pool/ManageExternalSystemAccountIDPoolEntryOpFrame.h"
 #include "test/test_marshaler.h"
 #include "ledger/StorageHelper.h"
@@ -36,11 +36,10 @@ namespace txtest
     {
         TransactionFramePtr txFrame;
 
-        auto poolEntryHelper = ExternalSystemAccountIDPoolEntryHelperLegacy::Instance();
+        auto& poolEntryHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDPoolEntryHelper();
 
         std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer> pool;
-        Database& db = mTestManager->getDB();
-        pool = poolEntryHelper->loadPool(db);
+        pool = poolEntryHelper.loadPool();
 
         txFrame = createManageExternalSystemAccountIDPoolEntryTx(source, actionInput, signer);
 
@@ -53,7 +52,7 @@ namespace txtest
         REQUIRE(actualResultCode == expectedResultCode);
 
         std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer> poolAfter;
-        poolAfter = poolEntryHelper->loadPool(db);
+        poolAfter = poolEntryHelper.loadPool();
 
         auto opResult = txResult.result.results()[0].tr().manageExternalSystemAccountIdPoolEntryResult();
 
@@ -64,7 +63,7 @@ namespace txtest
 
         REQUIRE(pool.size() == poolAfter.size() - 1);
 
-        auto poolEntryFrame = poolEntryHelper->load(opResult.success().poolEntryID, db);
+        auto poolEntryFrame = poolEntryHelper.load(opResult.success().poolEntryID);
         REQUIRE(poolEntryFrame);
 
         auto poolEntry = poolEntryFrame->getExternalSystemAccountIDPoolEntry();
@@ -88,11 +87,10 @@ namespace txtest
     {
         TransactionFramePtr txFrame;
 
-        auto poolEntryHelper = ExternalSystemAccountIDPoolEntryHelperLegacy::Instance();
+        auto& poolEntryHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDPoolEntryHelper();
 
         std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer> pool;
-        Database& db = mTestManager->getDB();
-        pool = poolEntryHelper->loadPool(db);
+        pool = poolEntryHelper.loadPool();
 
         txFrame = createManageExternalSystemAccountIDPoolEntryTx(source, actionInput, signer);
 
@@ -105,7 +103,7 @@ namespace txtest
         REQUIRE(actualResultCode == expectedResultCode);
 
         std::vector<ExternalSystemAccountIDPoolEntryFrame::pointer> poolAfter;
-        poolAfter = poolEntryHelper->loadPool(db);
+        poolAfter = poolEntryHelper.loadPool();
 
         auto opResult = txResult.result.results()[0].tr().manageExternalSystemAccountIdPoolEntryResult();
 
@@ -114,7 +112,7 @@ namespace txtest
             return opResult;
         }
 
-        auto poolEntryFrame = poolEntryHelper->load(opResult.success().poolEntryID, db);
+        auto poolEntryFrame = poolEntryHelper.load(opResult.success().poolEntryID);
 
         if (!poolEntryFrame) {
             REQUIRE(pool.size() == poolAfter.size() + 1);

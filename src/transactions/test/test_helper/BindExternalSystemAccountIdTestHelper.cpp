@@ -1,6 +1,6 @@
 #include "BindExternalSystemAccountIdTestHelper.h"
 #include "ledger/ExternalSystemAccountIDHelper.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
 #include "ledger/KeyValueHelper.h"
@@ -38,12 +38,12 @@ namespace txtest
         TransactionFramePtr txFrame;
 
         auto& externalSystemAccountIDHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDHelper();
-        auto externalSystemAccountIDPoolEntryHelper = ExternalSystemAccountIDPoolEntryHelperLegacy::Instance();
+        auto& externalSystemAccountIDPoolEntryHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDPoolEntryHelper();
 
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDs;
         Database& db = mTestManager->getDB();
         externalSystemAccountIDs = externalSystemAccountIDHelper.loadAll();
-        auto poolEntryToBindFrame = externalSystemAccountIDPoolEntryHelper->loadAvailablePoolEntry(db, mTestManager->getLedgerManager(),
+        auto poolEntryToBindFrame = externalSystemAccountIDPoolEntryHelper.loadAvailablePoolEntry(mTestManager->getLedgerManager(),
                                                                                                    externalSystemType);
         bool rebinding = false;
         ExternalSystemAccountIDFrame::pointer externalSystemAccountIDBeforeTx;
@@ -89,8 +89,8 @@ namespace txtest
                 REQUIRE(externalSystemAccountIDs.size() == externalSystemAccountIDsAfter.size() - 1);
 
             auto boundPoolEntryData = innerResult.success().data;
-            auto boundPoolEntryFrame = externalSystemAccountIDPoolEntryHelper->load(externalSystemType,
-                                                                                    boundPoolEntryData, db);
+            auto boundPoolEntryFrame = externalSystemAccountIDPoolEntryHelper.load(externalSystemType,
+                                                                                    boundPoolEntryData);
             REQUIRE(!!boundPoolEntryFrame);
 
             auto boundPoolEntry = boundPoolEntryFrame->getExternalSystemAccountIDPoolEntry();

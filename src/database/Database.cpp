@@ -12,7 +12,7 @@
 #include "ledger/AccountSpecificRuleHelper.h"
 #include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/EntryHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/LedgerHeaderUtils.h"
 #include "ledger/PollHelper.h"
@@ -150,13 +150,13 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             PendingStatisticsHelper::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_MIGRATION:
-            ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->dropAll(*this);
+            sh.getExternalSystemAccountIDPoolEntryHelper().dropAll();
             break;
         case databaseSchemaVersion::KEY_VALUE_FIX_MIGRATION:
             KeyValueHelperLegacy::Instance()->dropAll(*this);
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_PARENT_DB_TYPE:
-            ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
+            sh.getExternalSystemAccountIDPoolEntryHelper().parentToNumeric();
             break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
             sh.getLimitsV2Helper().dropAll();
