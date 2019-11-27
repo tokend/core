@@ -142,7 +142,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             BanManager::dropAll(*this);
             break;
         case REFERENCE_VERSION:
-            ReferenceHelper::addVersion(*this);
+            sh.getReferenceHelper().addVersion();
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
             sh.getAccountKYCHelper().dropAll();

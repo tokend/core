@@ -13,6 +13,7 @@
 #include "ledger/ContractHelperImpl.h"
 #include "ledger/FeeHelperImpl.h"
 #include "ledger/OfferHelperImpl.h"
+#include "ledger/ReferenceHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -64,6 +65,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::CONTRACT, &getContractHelper()},
         {LedgerEntryType::FEE, &getFeeHelper()},
         {LedgerEntryType::OFFER_ENTRY, &getOfferHelper()},
+        {LedgerEntryType::REFERENCE_ENTRY, &getReferenceHelper()},
 
     };
 }
@@ -494,5 +496,15 @@ StorageHelperImpl::getOfferHelper()
     return *mOfferHelper;
 }
 
+ReferenceHelper&
+StorageHelperImpl::getReferenceHelper()
+{
+    if(!mReferenceHelper)
+    {
+        mReferenceHelper = std::make_unique<ReferenceHelperImpl>(*this);
+    }
+
+    return *mReferenceHelper;
+}
 
 } // namespace stellar

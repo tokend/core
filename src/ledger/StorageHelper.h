@@ -35,6 +35,7 @@ class AtomicSwapAskHelper;
 class ContractHelper;
 class FeeHelper;
 class OfferHelper;
+class ReferenceHelper;
 
 class StorageHelper
 {
@@ -88,6 +89,7 @@ class StorageHelper
     virtual ContractHelper& getContractHelper() = 0;
     virtual FeeHelper& getFeeHelper() = 0;
     virtual OfferHelper& getOfferHelper() = 0;
+    virtual ReferenceHelper& getReferenceHelper() = 0;
 
 };
 } // namespace stellar

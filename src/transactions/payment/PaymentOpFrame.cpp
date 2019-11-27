@@ -371,7 +371,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     {
         AccountID sourceAccountID = mSourceAccount->getID();
 
-        if (ReferenceHelper::Instance()->exists(db, mPayment.reference, sourceAccountID))
+        if (storageHelper.getReferenceHelper().exists(mPayment.reference, sourceAccountID))
         {
             innerResult().code(PaymentResultCode::REFERENCE_DUPLICATION);
             return false;

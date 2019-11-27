@@ -38,8 +38,8 @@ CreatePreIssuanceRequestResult IssuanceRequestHelper::applyCreatePreIssuanceRequ
     auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
     auto reviewableRequestCountBeforeTx = reviewableRequestHelper.countObjects();
 
-    auto referenceHelper = ReferenceHelper::Instance();
-    auto referenceBeforeTx = referenceHelper->loadReference(source.key.getPublicKey(), reference, mTestManager->getDB());
+    auto& referenceHelper = storageHelper.getReferenceHelper();
+    auto referenceBeforeTx = referenceHelper.loadReference(source.key.getPublicKey(), reference);
 
     auto preIssuanceRequest = createPreIssuanceRequest(preIssuedAssetSigner, assetCode, amount, reference);
     auto txFrame = createPreIssuanceRequestTx(source, preIssuanceRequest, allTasks);
@@ -131,8 +131,7 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account& source, AssetCode ass
     auto& db = mTestManager->getDB();
     auto expectedReviewableRequestAfterTx = reviewableRequestHelper.countObjects();
 
-    auto referenceBeforeTx = ReferenceHelper::Instance()->loadReference(source.key.getPublicKey(), reference,
-                                                                        db);
+    auto referenceBeforeTx = storageHelper.getReferenceHelper().loadReference(source.key.getPublicKey(), reference);
 
     auto assetBeforeTx = assetHelper.loadActiveAsset(assetCode);
 

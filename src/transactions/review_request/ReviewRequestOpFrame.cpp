@@ -2,6 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
+#include <ledger/EntryHelperLegacy.h>
 #include "util/asio.h"
 #include "ReviewRequestOpFrame.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
@@ -100,9 +101,9 @@ ReviewRequestOpFrame::createReference(StorageHelper& storageHelper, AccountID co
         throw std::invalid_argument("Expected reference not to be nullptr");
     }
 
-    auto referenceHelper = ReferenceHelper::Instance();
+    auto& referenceHelper = storageHelper.getReferenceHelper();
     auto& db = storageHelper.getDatabase();
-    auto isReferenceAlreadyExists = referenceHelper->exists(db, *reference, requestor);
+    auto isReferenceAlreadyExists = referenceHelper.exists(*reference, requestor);
     if (isReferenceAlreadyExists)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected state: reference already exists. requestID "

@@ -35,6 +35,7 @@
 #include "transactions/test/mocks/MockContractHelper.h"
 #include "transactions/test/mocks/MockFeeHelper.h"
 #include "transactions/test/mocks/MockOfferHelper.h"
+#include "transactions/test/mocks/MockReferenceHelper.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"
