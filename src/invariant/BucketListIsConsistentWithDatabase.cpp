@@ -8,8 +8,6 @@
 #include "crypto/Hex.h"
 #include "invariant/InvariantManager.h"
 #include "ledger/LedgerRange.h"
-//#include "ledger/LedgerTxn.h"
-//#include "ledger/LedgerTxnEntry.h"
 #include "lib/util/format.h"
 #include "main/Application.h"
 #include "xdrpp/printer.h"

@@ -37,6 +37,7 @@ class FeeHelper;
 class OfferHelper;
 class ReferenceHelper;
 class SaleHelper;
+class PendingStatisticsHelper;
 
 class StorageHelper
 {
@@ -92,6 +93,7 @@ class StorageHelper
     virtual OfferHelper& getOfferHelper() = 0;
     virtual ReferenceHelper& getReferenceHelper() = 0;
     virtual SaleHelper& getSaleHelper() = 0;
+    virtual PendingStatisticsHelper& getPendingStatisticsHelper() = 0;
 
 };
 } // namespace stellar

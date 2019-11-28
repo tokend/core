@@ -141,8 +141,8 @@ StatisticsV2Processor::revertStatsV2(uint64_t requestID)
     auto& db = mStorageHelper.getDatabase();
     auto& delta = mStorageHelper.mustGetLedgerDelta();
 
-    auto pendingStatisticsHelper = PendingStatisticsHelper::Instance();
-    auto pendingStatisticsVector = pendingStatisticsHelper->loadPendingStatistics(requestID, db, delta);
+    auto& pendingStatisticsHelper = mStorageHelper.getPendingStatisticsHelper();
+    auto pendingStatisticsVector = pendingStatisticsHelper.loadPendingStatistics(requestID);
 
     auto& requestHelper = mStorageHelper.getReviewableRequestHelper();
     for (PendingStatisticsFrame::pointer pendingStats : pendingStatisticsVector)
@@ -163,8 +163,7 @@ StatisticsV2Processor::revertStatsV2(uint64_t requestID)
 
         statisticsV2Helper->storeChange(delta, db, statisticsV2Frame->mEntry);
 
-        pendingStatisticsHelper->storeDelete(delta, db,
-                                             pendingStatisticsHelper->getLedgerKey(pendingStats->mEntry));
+        pendingStatisticsHelper.storeDelete(pendingStatisticsHelper.getLedgerKey(pendingStats->mEntry));
     }
 }
 }

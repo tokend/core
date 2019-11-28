@@ -53,6 +53,7 @@
 #include "transactions/test/mocks/MockOfferHelper.h"
 #include "transactions/test/mocks/MockReferenceHelper.h"
 #include "transactions/test/mocks/MockSaleHelper.h"
+#include "transactions/test/mocks/MockPendingStatisticsHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"

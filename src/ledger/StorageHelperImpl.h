@@ -37,6 +37,7 @@ class FeeHelper;
 class OfferHelper;
 class ReferenceHelper;
 class SaleHelper;
+class PendingStatisticsHelper;
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -91,6 +92,7 @@ private:
     OfferHelper& getOfferHelper() override;
     ReferenceHelper& getReferenceHelper() override;
     SaleHelper& getSaleHelper() override;
+    PendingStatisticsHelper& getPendingStatisticsHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -130,5 +132,6 @@ private:
     std::unique_ptr<OfferHelper> mOfferHelper;
     std::unique_ptr<ReferenceHelper> mReferenceHelper;
     std::unique_ptr<SaleHelper> mSaleHelper;
+    std::unique_ptr<PendingStatisticsHelper> mPendingStatisticsHelper;
 };
 } // namespace stellar

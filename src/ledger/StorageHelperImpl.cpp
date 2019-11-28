@@ -14,6 +14,7 @@
 #include "ledger/FeeHelperImpl.h"
 #include "ledger/OfferHelperImpl.h"
 #include "ledger/ReferenceHelperImpl.h"
+#include "ledger/PendingStatisticsHelperImpl.h"
 #include "ledger/SaleHelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
@@ -68,6 +69,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::OFFER_ENTRY, &getOfferHelper()},
         {LedgerEntryType::REFERENCE_ENTRY, &getReferenceHelper()},
         {LedgerEntryType::SALE, &getSaleHelper()},
+        {LedgerEntryType::PENDING_STATISTICS, &getPendingStatisticsHelper()},
 
     };
 }
@@ -519,4 +521,16 @@ StorageHelperImpl::getSaleHelper()
 
     return *mSaleHelper;
 }
+
+PendingStatisticsHelper&
+StorageHelperImpl::getPendingStatisticsHelper()
+{
+    if(!mPendingStatisticsHelper)
+    {
+        mPendingStatisticsHelper = std::make_unique<PendingStatisticsHelperImpl>(*this);
+    }
+
+    return *mPendingStatisticsHelper;
+}
+
 } // namespace stellar

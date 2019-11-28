@@ -10,9 +10,7 @@
 #include "ledger/OfferHelper.h"
 #include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
-#include "SaleHelper.h"
 #include "StatisticsV2Helper.h"
-#include "PendingStatisticsHelper.h"
 #include "EntryHelperLegacyImpl.h"
 
 namespace stellar
@@ -164,7 +162,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY)},
     {LedgerEntryType::LIMITS_V2,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::LIMITS_V2) },
     {LedgerEntryType::STATISTICS_V2,                         StatisticsV2Helper::Instance()},
-    {LedgerEntryType::PENDING_STATISTICS,                    PendingStatisticsHelper::Instance()},
+    {LedgerEntryType::PENDING_STATISTICS,                    EntryHelperLegacyImpl::Instance(LedgerEntryType::PENDING_STATISTICS)},
     {LedgerEntryType::CONTRACT,                              EntryHelperLegacyImpl::Instance(LedgerEntryType::CONTRACT)},
     {LedgerEntryType::ATOMIC_SWAP_ASK,                       EntryHelperLegacyImpl::Instance(LedgerEntryType::ATOMIC_SWAP_ASK)},
     {LedgerEntryType::SIGNER,                                EntryHelperLegacyImpl::Instance(LedgerEntryType::SIGNER)},

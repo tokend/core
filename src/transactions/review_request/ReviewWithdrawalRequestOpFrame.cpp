@@ -107,14 +107,14 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
     auto& delta = storageHelper.mustGetLedgerDelta();
     //Delete pending_statistics entries before reviewable request due to constraint change
     auto reqID = request->getRequestID();
-    auto pendingStats = PendingStatisticsHelper::Instance()->loadPendingStatistics(reqID, db, delta);
+    auto pendingStats = storageHelper.getPendingStatisticsHelper().loadPendingStatistics(reqID);
     for (auto& pending : pendingStats)
     {
         auto lk = request->getKey();
         lk = lk.type(LedgerEntryType::PENDING_STATISTICS);
         lk.pendingStatistics().statisticsID = pending->getStatsID();
         lk.pendingStatistics().requestID = reqID;
-        PendingStatisticsHelper::Instance()->storeDelete(delta, db, lk);
+        storageHelper.getPendingStatisticsHelper().storeDelete(lk);
     }
     requestHelper.storeDelete(request->getKey());
 
