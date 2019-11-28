@@ -160,7 +160,7 @@ EntryHelperProvider::helperMap EntryHelperProvider::helpers = {
     {LedgerEntryType::REVIEWABLE_REQUEST,                    EntryHelperLegacyImpl::Instance(LedgerEntryType::REVIEWABLE_REQUEST)},
     {LedgerEntryType::KEY_VALUE,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::KEY_VALUE)},
     {LedgerEntryType::ACCOUNT_KYC,                           EntryHelperLegacyImpl::Instance(LedgerEntryType::ACCOUNT_KYC)},
-    {LedgerEntryType::SALE,                                  SaleHelper::Instance()},
+    {LedgerEntryType::SALE,                                  EntryHelperLegacyImpl::Instance(LedgerEntryType::SALE)},
     {LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY, EntryHelperLegacyImpl::Instance(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY)},
     {LedgerEntryType::LIMITS_V2,                             EntryHelperLegacyImpl::Instance(LedgerEntryType::LIMITS_V2) },
     {LedgerEntryType::STATISTICS_V2,                         StatisticsV2Helper::Instance()},

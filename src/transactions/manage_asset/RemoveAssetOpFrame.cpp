@@ -94,8 +94,8 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
     // Asset existence was checked previously
     auto asset = assetHelper.mustLoadAsset(mRemoveAsset.code);
 
-    auto saleHelper = SaleHelper::Instance();
-    if (saleHelper->exists(db, mRemoveAsset.code))
+    auto& saleHelper = storageHelper.getSaleHelper();
+    if (saleHelper.exists(mRemoveAsset.code))
     {
         innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_SALES);
         return false;

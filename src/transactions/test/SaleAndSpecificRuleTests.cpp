@@ -172,7 +172,7 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
                 participateHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, 0);
                 specificRuleTestHelper.applyTx(root, createRuleResult.success().ruleID);
                 checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-                auto sale = SaleHelper::Instance()->loadSale(saleID, testManager->getDB());
+                auto sale = testManager->getStorageHelper().getSaleHelper().loadSale(saleID);
                 uint64_t currentCap(0);
                 REQUIRE(CreateSaleParticipationOpFrame::getSaleCurrentCap(testManager->getStorageHelper(), sale, currentCap));
                 REQUIRE(currentCap == 0);

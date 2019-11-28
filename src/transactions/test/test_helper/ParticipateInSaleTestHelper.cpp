@@ -38,7 +38,7 @@ void ParticipateInSaleTestHelper::ensureDeleteSuccess(Account& source,
     key.offer().offerID = op.offerID;
     key.offer().ownerID = source.key.getPublicKey();
     auto offerBeforeTx = stateBeforeTx[key]->mEntry.data.offer();
-    auto saleAfterTx = SaleHelper::Instance()->loadSale(op.orderBookID, mTestManager->getDB());
+    auto saleAfterTx = mTestManager->getStorageHelper().getSaleHelper().loadSale(op.orderBookID);
     auto balanceBeforeTx = getBalance(stateBeforeTx, offerBeforeTx.quoteBalance);
     SaleFrame saleBeforeTx(stateBeforeTx[saleAfterTx->getKey()]->mEntry);
     REQUIRE(saleBeforeTx.getSaleQuoteAsset(balanceBeforeTx.asset).currentCap
@@ -55,9 +55,7 @@ void ParticipateInSaleTestHelper::ensureCreateSuccess(Account& source,
 {
     auto& storageHelper = mTestManager->getStorageHelper();
 
-    auto& db = mTestManager->getDB();
-
-    auto saleAfterTx = SaleHelper::Instance()->loadSale(op.orderBookID, db);
+    auto saleAfterTx = storageHelper.getSaleHelper().loadSale(op.orderBookID);
     auto sale = stateBeforeTx.find(saleAfterTx->getKey());
     REQUIRE(sale != stateBeforeTx.end());
     SaleFrame saleBeforeTx(sale->second->mEntry);

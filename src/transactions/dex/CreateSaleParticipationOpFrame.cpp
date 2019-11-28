@@ -30,8 +30,7 @@ bool
 CreateSaleParticipationOpFrame::tryGetOperationConditions(
     StorageHelper& storageHelper, std::vector<OperationCondition>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-                                                 storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mManageOffer.orderBookID);
     if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -53,8 +52,7 @@ bool
 CreateSaleParticipationOpFrame::tryGetSignerRequirements(
     StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-                                                 storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mManageOffer.orderBookID);
     if (!sale)
     {
         throw std::runtime_error("Expected sale to exists");
@@ -88,9 +86,9 @@ CreateSaleParticipationOpFrame::loadSaleForOffer(StorageHelper& storageHelper)
 
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto sale = SaleHelper::Instance()->loadSale(
+    auto sale = storageHelper.getSaleHelper().loadSale(
         mManageOffer.orderBookID, baseBalance->getAsset(),
-        quoteBalance->getAsset(), db, &delta);
+        quoteBalance->getAsset());
     if (!sale)
     {
         innerResult().code(ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS);
@@ -326,10 +324,7 @@ CreateSaleParticipationOpFrame::doApply(Application& app,
             throw runtime_error("Order match on sale participation");
         }
     }
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
-
-    SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
+    storageHelper.getSaleHelper().storeChange(sale->mEntry);
     return true;
 }
 

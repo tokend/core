@@ -61,7 +61,7 @@ bool
 CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                                  std::vector<OperationCondition>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -79,7 +79,7 @@ bool
 CheckSaleStateOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                 std::vector<SignerRequirement>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {
         throw std::runtime_error("Expected sale to exists");
@@ -208,7 +208,7 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
 
     auto& delta = storageHelper.mustGetLedgerDelta();
     auto& db = storageHelper.getDatabase();
-    SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
+    storageHelper.getSaleHelper().storeDelete(sale->getKey());
 
     ManageSaleOpFrame::removeSaleRules(storageHelper, sale->getKey());
 
@@ -469,7 +469,7 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
             storageHelper.getOfferHelper().storeChange(offerToUpdate->mEntry);
         }
     }
-    SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
+    storageHelper.getSaleHelper().storeChange(sale->mEntry);
 }
 
 int64_t CheckSaleStateOpFrame::getSaleCurrentPriceInDefaultQuote(
@@ -542,7 +542,7 @@ bool CheckSaleStateOpFrame::doApply(Application& app, StorageHelper& storageHelp
 {
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, db, &delta);
+    const auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {
         innerResult().code(CheckSaleStateResultCode::NOT_FOUND);

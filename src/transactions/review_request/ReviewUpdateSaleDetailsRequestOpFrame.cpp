@@ -1,4 +1,5 @@
 #include <ledger/SaleHelper.h>
+#include <ledger/EntryHelperLegacy.h>
 #include "ReviewUpdateSaleDetailsRequestOpFrame.h"
 #include "transactions/sale/ManageSaleOpFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
@@ -34,7 +35,7 @@ bool ReviewUpdateSaleDetailsRequestOpFrame::handleApprove(Application& app, Stor
     auto& updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
     auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
-    auto saleFrame = SaleHelper::Instance()->loadSale(updateSaleDetailsRequest.saleID, db, &delta);
+    auto saleFrame = storageHelper.getSaleHelper().loadSale(updateSaleDetailsRequest.saleID);
 
     if (!saleFrame)
     {

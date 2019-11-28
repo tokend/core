@@ -9,6 +9,7 @@
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
 #include <transactions/sale/ManageSaleOpFrame.h>
+#include "ledger/StorageHelper.h"
 
 class pointer;
 namespace stellar
@@ -84,9 +85,9 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
 {
     auto& db = mTestManager->getDB();
     auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto saleHelper = SaleHelper::Instance();
+    auto& saleHelper = mTestManager->getStorageHelper().getSaleHelper();
 
-    auto saleBeforeOp = saleHelper->loadSale(saleID, db);
+    auto saleBeforeOp = saleHelper.loadSale(saleID);
 
     ReviewableRequestFrame::pointer requestBeforeTx;
 
@@ -125,7 +126,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     if (actualResultCode != ManageSaleResultCode::SUCCESS)
         return manageSaleResult;
 
-    auto saleAfterOp = saleHelper->loadSale(saleID, db);
+    auto saleAfterOp = saleHelper.loadSale(saleID);
 
     switch (data.action())
     {

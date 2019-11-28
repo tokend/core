@@ -46,8 +46,7 @@ bool
 ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                             std::vector<SignerRequirement>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mManageSaleOp.saleID,
-                                                 storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mManageSaleOp.saleID);
     if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -185,9 +184,7 @@ void ManageSaleOpFrame::cancelSale(SaleFrame::pointer sale, StorageHelper& stora
     }
 
     unlockPendingIssuance(storageHelper, sale->getBaseAsset(), sale->getMaxAmountToBeSold());
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
+    storageHelper.getSaleHelper().storeDelete(sale->getKey());
 
     removeSaleRules(storageHelper, sale->getKey());
 }
@@ -210,8 +207,8 @@ bool ManageSaleOpFrame::doApply(Application& app, StorageHelper& storageHelper, 
     auto delta = storageHelper.getLedgerDelta();
 
     auto saleFrame = getSourceID() == app.getAdminID()
-                     ? SaleHelper::Instance()->loadSale(mManageSaleOp.saleID, db, delta)
-                     : SaleHelper::Instance()->loadSale(mManageSaleOp.saleID, getSourceID(), db, delta);
+                     ? storageHelper.getSaleHelper().loadSale(mManageSaleOp.saleID)
+                     : storageHelper.getSaleHelper().loadSale(mManageSaleOp.saleID, getSourceID());
 
     if (!saleFrame)
     {

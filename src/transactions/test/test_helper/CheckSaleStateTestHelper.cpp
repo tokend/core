@@ -99,7 +99,7 @@ void CheckSaleStateHelper::ensureUpdated(const CheckSaleStateSuccess result,
                                          StateBeforeTxHelper& stateBeforeTx) const
 {
     auto saleBeforeTx = stateBeforeTx.getSale(result.saleID);
-    auto saleAfterTx = SaleHelper::Instance()->loadSale(result.saleID, mTestManager->getDB());
+    auto saleAfterTx = mTestManager->getStorageHelper().getSaleHelper().loadSale(result.saleID);
     REQUIRE(!!saleAfterTx);
     auto isUpdated = false;
     for (auto i = 0; i < saleBeforeTx->getSaleEntry().quoteAssets.size(); i++)

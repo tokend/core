@@ -98,9 +98,9 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
 
     Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-    auto saleHelper = SaleHelper::Instance();
+    auto& saleHelper = storageHelper.getSaleHelper();
 
-    auto sale = saleHelper->loadSale(ruleFrame->getEntry().ledgerKey.sale().saleID, db, &delta);
+    auto sale = saleHelper.loadSale(ruleFrame->getEntry().ledgerKey.sale().saleID);
     if (!sale)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected sale to exists on "

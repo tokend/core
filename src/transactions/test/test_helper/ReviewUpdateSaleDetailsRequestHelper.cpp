@@ -1,6 +1,7 @@
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
 #include "ReviewUpdateSaleDetailsRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar {
     namespace txtest {
@@ -11,7 +12,8 @@ namespace stellar {
 
         void ReviewUpdateSaleDetailsRequestChecker::checkApprove(ReviewableRequestFrame::pointer request) {
             auto updateSaleDetailsRequest = request->getRequestEntry().body.updateSaleDetailsRequest();
-            auto saleAfterTx = SaleHelper::Instance()->loadSale(updateSaleDetailsRequest.saleID, mTestManager->getDB());
+
+            auto saleAfterTx = mTestManager->getStorageHelper().getSaleHelper().loadSale(updateSaleDetailsRequest.saleID);
             REQUIRE(!!saleAfterTx);
             REQUIRE(saleAfterTx->getSaleEntry().details == updateSaleDetailsRequest.creatorDetails);
         }

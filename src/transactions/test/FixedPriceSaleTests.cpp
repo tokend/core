@@ -107,7 +107,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         saleRequestHelper.createApprovedSale(root, syndicate, fixedpriceReq);
 
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto fixedPriceID = sales[0]->getID();
 
@@ -134,7 +134,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
                                                                        hardCapInBase, crowdfund);
         saleRequestHelper.createApprovedSale(root, syndicate, crowdfundReq);
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
 
         const auto crowdfundID = sales[0]->getID();
@@ -178,7 +178,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         saleRequestHelper.createApprovedSale(root, syndicate, fixedpriceReq);
 
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto fixedPriceID = sales[0]->getID();
 
@@ -267,7 +267,7 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
                                                                  { saleRequestHelper.createSaleQuoteAsset(defaultQuoteAsset, ONE) },
                                                                  maxAmountToBeSold, saleType);
     saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-    auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+    auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
     REQUIRE(sales.size() == 1);
     const auto saleID = sales[0]->getID();
 

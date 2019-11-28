@@ -28,6 +28,7 @@ class ContractHelper;
 class FeeHelper;
 class OfferHelper;
 class ReferenceHelper;
+class SaleHelper;
 
 enum class LedgerEntryType;
 
@@ -81,6 +82,7 @@ public:
     MOCK_METHOD0(getFeeHelper, FeeHelper&());
     MOCK_METHOD0(getOfferHelper, OfferHelper&());
     MOCK_METHOD0(getReferenceHelper, ReferenceHelper&());
+    MOCK_METHOD0(getSaleHelper, SaleHelper&());
 };
 
 }  // namespace stellar

@@ -30,6 +30,7 @@
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
+#include "ledger/EntryHelperLegacy.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -223,7 +224,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto saleID = sales[0]->getID();
 

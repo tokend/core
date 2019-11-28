@@ -58,8 +58,8 @@ bool RemoveAssetPairOpFrame::doApply(stellar::Application& app, stellar::Storage
         return false;
     }
 
-    auto saleHelper = SaleHelper::Instance();
-    if (saleHelper->exists(db, mRemoveAssetPair.base, mRemoveAssetPair.quote))
+    auto& saleHelper = storageHelper.getSaleHelper();
+    if (saleHelper.exists(mRemoveAssetPair.base, mRemoveAssetPair.quote))
     {
         innerResult().code(RemoveAssetPairResultCode::HAS_ACTIVE_SALES);
         return false;

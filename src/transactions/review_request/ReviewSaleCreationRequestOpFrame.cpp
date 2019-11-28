@@ -121,7 +121,7 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     const auto saleFrame =
         SaleFrame::createNew(saleID, baseAsset->getOwner(), saleCreationRequest,
                              balances, requiredBaseAssetForHardCap);
-    SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
+    storageHelper.getSaleHelper().storeAdd(saleFrame->mEntry);
     createAssetPair(saleFrame, app, ledgerManager, storageHelper);
 
     createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest, saleFrame);

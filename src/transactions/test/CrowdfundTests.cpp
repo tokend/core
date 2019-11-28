@@ -117,7 +117,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
                                                                                                                      ONE)},
                                                                      maxAmountToBeSold, saleType);
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto saleID = sales[0]->getID();
 
