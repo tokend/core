@@ -38,6 +38,7 @@
 #include "transactions/test/mocks/MockReferenceHelper.h"
 #include "transactions/test/mocks/MockSaleHelper.h"
 #include "transactions/test/mocks/MockPendingStatisticsHelper.h"
+#include "transactions/test/mocks/MockStatisticsV2Helper.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"

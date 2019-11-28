@@ -1,3 +1,4 @@
+#include <ledger/EntryHelperLegacy.h>
 #include "ledger/StatisticsV2Helper.h"
 #include "ledger/LimitsV2Helper.h"
 #include "ledger/AccountFrame.h"
@@ -77,9 +78,9 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
 
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
-        auto statisticsV2Helper = StatisticsV2Helper::Instance();
-        auto statisticsV2Frame = statisticsV2Helper->loadStatistics(*accountID, limitsV2Frame->getStatsOpType(),
-                                                                    limitsV2Frame->getAsset(), limitsV2Frame->getConvertNeeded(), db, &delta);
+        auto& statisticsV2Helper = mStorageHelper.getStatisticsV2Helper();
+        auto statisticsV2Frame = statisticsV2Helper.loadStatistics(*accountID, limitsV2Frame->getStatsOpType(),
+                                                                    limitsV2Frame->getAsset(), limitsV2Frame->getConvertNeeded());
 
         if (!statisticsV2Frame)
         {
@@ -147,9 +148,8 @@ StatisticsV2Processor::revertStatsV2(uint64_t requestID)
     auto& requestHelper = mStorageHelper.getReviewableRequestHelper();
     for (PendingStatisticsFrame::pointer pendingStats : pendingStatisticsVector)
     {
-        auto statisticsV2Helper = StatisticsV2Helper::Instance();
-        auto statisticsV2Frame = statisticsV2Helper->mustLoadStatistics(pendingStats->getStatsID(),
-                                                                        db, &delta);
+        auto& statisticsV2Helper = mStorageHelper.getStatisticsV2Helper();
+        auto statisticsV2Frame = statisticsV2Helper.mustLoadStatistics(pendingStats->getStatsID());
         auto reviewableRequestFrame = requestHelper.loadRequest(requestID);
         if (!reviewableRequestFrame)
         {
@@ -161,7 +161,7 @@ StatisticsV2Processor::revertStatsV2(uint64_t requestID)
         auto currentTime = mLm.getCloseTime();
         statisticsV2Frame->revert(pendingStats->getAmount(), currentTime, createdAt);
 
-        statisticsV2Helper->storeChange(delta, db, statisticsV2Frame->mEntry);
+        statisticsV2Helper.storeChange(statisticsV2Frame->mEntry);
 
         pendingStatisticsHelper.storeDelete(pendingStatisticsHelper.getLedgerKey(pendingStats->mEntry));
     }

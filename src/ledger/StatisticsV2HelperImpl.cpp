@@ -1,6 +1,7 @@
-#include "StatisticsV2Helper.h"
+#include "StatisticsV2HelperImpl.h"
 #include "LedgerDelta.h"
 #include <xdrpp/printer.h>
+#include "database/Database.h"
 
 using namespace std;
 using namespace soci;
@@ -11,7 +12,8 @@ namespace stellar {
             "daily_out, weekly_out, monthly_out, annual_out, updated_at, lastmodified, version "
             "FROM   statistics_v2";
 
-    void StatisticsV2Helper::dropAll(Database &db) {
+    void StatisticsV2HelperImpl::dropAll() {
+        Database& db = getDatabase();
         db.getSession() << "DROP TABLE IF EXISTS statistics_v2 CASCADE;";
         db.getSession() << "CREATE TABLE statistics_v2"
                            "("
@@ -31,17 +33,18 @@ namespace stellar {
                            ");";
     }
 
-    void StatisticsV2Helper::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
-        storeUpdateHelper(delta, db, true, entry);
+    void StatisticsV2HelperImpl::storeAdd(LedgerEntry const &entry) {
+        storeUpdateHelper(true, entry);
     }
 
-    void StatisticsV2Helper::storeChange(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
-        storeUpdateHelper(delta, db, false, entry);
+    void StatisticsV2HelperImpl::storeChange(LedgerEntry const &entry) {
+        storeUpdateHelper(false, entry);
     }
 
-    void StatisticsV2Helper::storeDelete(LedgerDelta &delta, Database &db, LedgerKey const &key) {}
+    void StatisticsV2HelperImpl::storeDelete(LedgerKey const &key) {}
 
-    bool StatisticsV2Helper::exists(Database &db, LedgerKey const &key) {
+    bool StatisticsV2HelperImpl::exists(LedgerKey const &key) {
+        Database& db = getDatabase();
         int exists = 0;
         auto timer = db.getSelectTimer("statistics_v2_exists");
         auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM statistics_v2 WHERE account_id=:id)");
@@ -53,33 +56,33 @@ namespace stellar {
         return exists != 0;
     }
 
-    LedgerKey StatisticsV2Helper::getLedgerKey(LedgerEntry const &from) {
+    LedgerKey StatisticsV2HelperImpl::getLedgerKey(LedgerEntry const &from) {
         LedgerKey ledgerKey;
         ledgerKey.type(from.data.type());
         ledgerKey.statisticsV2().id = from.data.statisticsV2().id;
         return ledgerKey;
     }
 
-    EntryFrame::pointer StatisticsV2Helper::storeLoad(LedgerKey const &key, Database &db) {
-        return loadStatistics(key.statisticsV2().id, db);
+    EntryFrame::pointer StatisticsV2HelperImpl::storeLoad(LedgerKey const &key) {
+        return loadStatistics(key.statisticsV2().id);
     }
 
-    EntryFrame::pointer StatisticsV2Helper::fromXDR(LedgerEntry const &from) {
+    EntryFrame::pointer StatisticsV2HelperImpl::fromXDR(LedgerEntry const &from) {
         return std::make_shared<StatisticsV2Frame>(from);
     }
 
-    uint64_t StatisticsV2Helper::countObjects(soci::session &sess) {
+    uint64_t StatisticsV2HelperImpl::countObjects() {
         uint64_t count = 0;
-        sess << "SELECT COUNT(*) FROM statistics_v2;", into(count);
+        getDatabase().getSession() << "SELECT COUNT(*) FROM statistics_v2;", into(count);
         return count;
     }
 
-    void StatisticsV2Helper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, const LedgerEntry &entry)
+    void StatisticsV2HelperImpl::storeUpdateHelper(bool insert, const LedgerEntry &entry)
     {
         auto statisticsV2Frame = make_shared<StatisticsV2Frame>(entry);
         auto statisticsV2Entry = statisticsV2Frame->getStatistics();
 
-        statisticsV2Frame->touch(delta);
+        statisticsV2Frame->touch(mStorageHelper.mustGetLedgerDelta());
 
         if (!statisticsV2Frame->isValid()) {
             CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected state - statisticsV2 is invalid: "
@@ -110,6 +113,8 @@ namespace stellar {
                   "WHERE  id=:id";
         }
 
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         auto prep = db.getPreparedStatement(sql);
         auto &st = prep.statement();
 
@@ -136,14 +141,14 @@ namespace stellar {
         }
 
         if (insert)
-            delta.addEntry(*statisticsV2Frame);
+            delta->addEntry(*statisticsV2Frame);
         else
-            delta.modEntry(*statisticsV2Frame);
+            delta->modEntry(*statisticsV2Frame);
 
     }
 
-    void StatisticsV2Helper::loadStatistics(StatementContext &prep,
-                                            function<void(LedgerEntry const &)> processor)
+    void StatisticsV2HelperImpl::loadStatistics(StatementContext &prep,
+                                                function<void(LedgerEntry const &)> processor)
     {
         LedgerEntry le;
         le.data.type(LedgerEntryType::STATISTICS_V2);
@@ -192,9 +197,11 @@ namespace stellar {
     }
 
     StatisticsV2Frame::pointer
-    StatisticsV2Helper::loadStatistics(AccountID& accountID, StatsOpType statsOpType, AssetCode const& assetCode,
-                                       bool isConvertNeeded, Database &db, LedgerDelta *delta)
+    StatisticsV2HelperImpl::loadStatistics(AccountID& accountID, StatsOpType statsOpType, AssetCode const& assetCode,
+                                           bool isConvertNeeded)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         string strAccountID = PubKeyUtils::toStrKey(accountID);
         auto intStatsOpType = static_cast<int32_t>(statsOpType);
         int intIsConvertNeeded = isConvertNeeded ? 1 : 0;
@@ -227,8 +234,10 @@ namespace stellar {
     }
 
     StatisticsV2Frame::pointer
-    StatisticsV2Helper::loadStatistics(uint64_t id, Database &db, LedgerDelta *delta)
+    StatisticsV2HelperImpl::loadStatistics(uint64_t id)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         string sql = statisticsColumnSelector;
         sql += " WHERE id = :id";
         auto prep = db.getPreparedStatement(sql);
@@ -252,9 +261,9 @@ namespace stellar {
     }
 
     StatisticsV2Frame::pointer
-    StatisticsV2Helper::mustLoadStatistics(uint64_t id, Database &db, LedgerDelta *delta)
+    StatisticsV2HelperImpl::mustLoadStatistics(uint64_t id)
     {
-        auto result = loadStatistics(id, db, delta);
+        auto result = loadStatistics(id);
         if (!result)
         {
             CLOG(ERROR, Logging::ENTRY_LOGGER)
@@ -267,10 +276,10 @@ namespace stellar {
     }
 
     StatisticsV2Frame::pointer
-    StatisticsV2Helper::mustLoadStatistics(AccountID& accountID, StatsOpType statsOpType, AssetCode const& assetCode,
-                                           bool isConvertNeeded, Database &db, LedgerDelta *delta)
+    StatisticsV2HelperImpl::mustLoadStatistics(AccountID& accountID, StatsOpType statsOpType, AssetCode const& assetCode,
+                                               bool isConvertNeeded)
     {
-        auto result = loadStatistics(accountID, statsOpType, assetCode, isConvertNeeded, db, delta);
+        auto result = loadStatistics(accountID, statsOpType, assetCode, isConvertNeeded);
         if (!result)
         {
             CLOG(ERROR, Logging::ENTRY_LOGGER)
@@ -280,6 +289,26 @@ namespace stellar {
         }
 
         return result;
+    }
+
+
+    LedgerDelta *StatisticsV2HelperImpl::getLedgerDelta() {
+        return mStorageHelper.getLedgerDelta();
+    }
+
+    Database &StatisticsV2HelperImpl::getDatabase() {
+        return mStorageHelper.getDatabase();
+    }
+
+    StatisticsV2HelperImpl::StatisticsV2HelperImpl(StorageHelper &storageHelper)
+            : mStorageHelper(storageHelper)
+    {
+        mStatisticsV2ColumnSelector =
+                "SELECT code, owner, preissued_asset_signer, "
+                "details, max_issuance_amount, "
+                "available_for_issueance, issued, pending_issuance, "
+                "policies, type, trailing_digits, lastmodified, version "
+                "FROM asset ";
     }
 
 }

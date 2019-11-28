@@ -47,10 +47,9 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     std::vector<StatisticsV2Frame::pointer> statsBeforeRequestVector;
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
-        auto statsBeforeRequest = StatisticsV2Helper::Instance()->loadStatistics(*accountID, StatsOpType::WITHDRAW,
+        auto statsBeforeRequest = mTestManager->getStorageHelper().getStatisticsV2Helper().loadStatistics(*accountID, StatsOpType::WITHDRAW,
                                                                                  limitsV2Frame->getAsset(),
-                                                                                 limitsV2Frame->getConvertNeeded(),
-                                                                                 db);
+                                                                                 limitsV2Frame->getConvertNeeded());
         statsBeforeRequestVector.emplace_back(statsBeforeRequest);
     }
 
@@ -93,10 +92,9 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
         asset = balanceAfterRequest->getAsset();
-        auto statsAfterRequest = StatisticsV2Helper::Instance()->mustLoadStatistics(*accountID, StatsOpType::WITHDRAW,
+        auto statsAfterRequest = mTestManager->getStorageHelper().getStatisticsV2Helper().mustLoadStatistics(*accountID, StatsOpType::WITHDRAW,
                                                                                     limitsV2Frame->getAsset(),
-                                                                                    limitsV2Frame->getConvertNeeded(),
-                                                                                    db);
+                                                                                    limitsV2Frame->getConvertNeeded());
         validateStatsChange(statsBeforeRequestVector.at(iterator), statsAfterRequest, withdrawRequest);
         iterator++;
     }

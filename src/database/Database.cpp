@@ -146,7 +146,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
             sh.getAccountKYCHelper().dropAll();
-            StatisticsV2Helper::Instance()->dropAll(*this);
+            sh.getStatisticsV2Helper().dropAll();
             sh.getPendingStatisticsHelper().dropAll();
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_MIGRATION:
@@ -160,7 +160,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
             sh.getLimitsV2Helper().dropAll();
-            StatisticsV2Helper::Instance()->dropAll(*this);
+            sh.getStatisticsV2Helper().dropAll();
             sh.getPendingStatisticsHelper().dropAll();
             break;
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
