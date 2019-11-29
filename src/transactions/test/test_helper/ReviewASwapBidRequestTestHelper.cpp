@@ -49,8 +49,8 @@ ASwapBidRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::point
         return;
     }
 
-    auto baseBalanceAfterTx =mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
-            mAskBeforeTx->getOwnerID());
+    auto baseBalanceAfterTx =mTestManager->getStorageHelper().getBalanceHelper().loadBalance(
+            mAskBeforeTx->getOwnerID(), mAskBeforeTx->getBaseAsset());
 
     REQUIRE(baseBalanceAfterTx->getAmount() - mAskBeforeTx->getTotalAmount() ==
             mAskOwnerBalanceBeforeTx->getAmount());
@@ -88,8 +88,8 @@ ASwapBidRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer reque
     auto bidAfterTx = mTestManager->getStorageHelper().getAtomicSwapAskHelper().loadAtomicSwapAsk(
             mAskBeforeTx->getID());
 
-    auto baseBalanceAfterTx = balanceHelper.mustLoadBalance(
-            mAskBeforeTx->getOwnerID());
+    auto baseBalanceAfterTx = balanceHelper.loadBalance(
+            mAskBeforeTx->getOwnerID(), mAskBeforeTx->getBaseAsset());
 
     if (bidAfterTx == nullptr)
     {

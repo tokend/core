@@ -40,8 +40,12 @@ CancelASwapAskHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
     BalanceFrame::pointer baseBalanceBeforeTx = nullptr;
 
     askBeforeTx = aSwapBidHelper.loadAtomicSwapAsk(bidID);
-    if (askBeforeTx != nullptr)
-        baseBalanceBeforeTx = balanceHelper.mustLoadBalance(askBeforeTx->getOwnerID());
+    if (askBeforeTx != nullptr){
+        baseBalanceBeforeTx = balanceHelper.loadBalance(askBeforeTx->getOwnerID(), askBeforeTx->getBaseAsset());
+        if (baseBalanceBeforeTx == nullptr) {
+            throw std::runtime_error("baseBalanceBeforeTx is nullptr");
+        }
+    }
 
     auto txFrame = createCancelASwapAskTx(source, bidID);
     mTestManager->applyCheck(txFrame);
@@ -76,7 +80,7 @@ CancelASwapAskHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
 
     REQUIRE(baseBalanceBeforeTx != nullptr);
 
-    auto baseBalanceAfterTx = balanceHelper.mustLoadBalance(askBeforeTx->getOwnerID());
+    auto baseBalanceAfterTx = balanceHelper.loadBalance(askBeforeTx->getOwnerID(), askBeforeTx->getBaseAsset());
     REQUIRE(baseBalanceAfterTx != nullptr);
 
     REQUIRE(baseBalanceAfterTx->getAmount() - askBeforeTx->getAmount() ==

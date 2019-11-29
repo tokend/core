@@ -256,7 +256,7 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
         return balanceFrame;
     }
 
-    Database& db = getDatabase();
+     Database& db = mStorageHelper.getDatabase();
 
     auto balIDStrKey = BalanceKeyUtils::toStrKey(balanceID);
 
