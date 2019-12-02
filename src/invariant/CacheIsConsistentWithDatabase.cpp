@@ -4,9 +4,10 @@
 
 #include "CacheIsConsistentWithDatabase.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 #include "lib/util/format.h"
 #include "xdrpp/printer.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
@@ -26,17 +27,38 @@ namespace stellar
 
     std::string
     CacheIsConsistentWithDatabase::check(LedgerDelta const &delta) const {
+        StorageHelperImpl storageHelperImpl(mDb, nullptr);
+        StorageHelper& storageHelper = storageHelperImpl;
         for (auto const &l : delta.getLiveEntries()) {
-            EntryHelperProvider::checkAgainstDatabase(l, mDb);
+            checkAgainstDatabase(l);
         }
 
         for (auto const &d : delta.getDeadEntries()) {
-            if (EntryHelperProvider::existsEntry(mDb, d)) {
+            if (storageHelper.getHelper(d.type())->exists(d)) {
                 return fmt::format("Inconsistent state; entry should not exist in database: {}",
                                    xdr::xdr_to_string(d));
             }
         }
 
+        return {};
+    }
+
+    std::string CacheIsConsistentWithDatabase::checkAgainstDatabase(LedgerEntry const &entry) const{
+        StorageHelperImpl storageHelperImpl(mDb, nullptr);
+        StorageHelper& storageHelper = storageHelperImpl;
+        LedgerKey key = storageHelper.getHelper(entry.data.type())->getLedgerKey(entry);
+        auto legacyHelper = storageHelper.getHelper(entry.data.type()); // helper existing handled above
+        legacyHelper->flushCachedEntry(key);
+        EntryFrame::pointer fromDb = legacyHelper->storeLoad(key);
+
+        if (!fromDb || !(fromDb->mEntry == entry))
+        {
+            std::string s;
+            s = "Inconsistent state between objects: ";
+            s += !!fromDb ? xdr::xdr_to_string(fromDb->mEntry, "db") : "db: nullptr\n";
+            s += xdr::xdr_to_string(entry, "live");
+            throw std::runtime_error(s);
+        }
         return {};
     }
 }

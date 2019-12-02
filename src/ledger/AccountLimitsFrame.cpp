@@ -71,4 +71,15 @@ AccountLimitsFrame::createNew(AccountID accountID, Limits limits)
     return accountLimitsFrame;
 }
 
+LedgerKey const &
+AccountLimitsFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::ACCOUNT_LIMITS);
+        mKey.accountLimits().accountID = mAccountLimits.accountID,
+                mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

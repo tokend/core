@@ -1,4 +1,4 @@
-#include <ledger/EntryHelperLegacy.h>
+#include <ledger/EntryHelper.h>
 #include "ledger/StatisticsV2Helper.h"
 #include "ledger/LimitsV2Helper.h"
 #include "ledger/AccountFrame.h"
@@ -69,8 +69,6 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
             throw std::runtime_error("Unexpected spend type");
     }
 
-    auto& db = mStorageHelper.getDatabase();
-    auto& delta = mStorageHelper.mustGetLedgerDelta();
     auto& limitsV2Helper = mStorageHelper.getLimitsV2Helper();
     auto limitsV2Frames = limitsV2Helper.loadLimits(statsOpTypes, assetCode, accountID, &accountRole);
 
@@ -92,7 +90,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
                                                                    limitsV2Frame->getStatsOpType(),
                                                                    limitsV2Frame->getAsset(),
                                                                    limitsV2Frame->getConvertNeeded());
-            EntryHelperProvider::storeAddEntry(delta, db, statisticsV2Frame->mEntry);
+            mStorageHelper.getHelper(statisticsV2Frame->mEntry.data.type())->storeAdd(statisticsV2Frame->mEntry);
         }
 
         universalAmount = amountToAdd;
@@ -122,7 +120,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         if (!validateStats(limitsV2Frame, statisticsV2Frame))
             return LIMITS_V2_EXCEEDED;
 
-        EntryHelperProvider::storeChangeEntry(delta, db, statisticsV2Frame->mEntry);
+        mStorageHelper.getHelper(statisticsV2Frame->mEntry.data.type())->storeChange(statisticsV2Frame->mEntry);
 
         if (!requestID)
             continue;
@@ -130,7 +128,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         uint64_t statsID = statisticsV2Frame->getID();
         auto pendingStatisticsFrame = PendingStatisticsFrame::createNew(*requestID, statsID, universalAmount);
 
-        EntryHelperProvider::storeAddEntry(delta, db, pendingStatisticsFrame->mEntry);
+        mStorageHelper.getHelper(pendingStatisticsFrame->mEntry.data.type())->storeAdd(pendingStatisticsFrame->mEntry);
     }
 
     return SUCCESS;

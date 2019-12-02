@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/EntryHelperLegacy.h>
+#include <ledger/EntryHelper.h>
 #include "util/asio.h"
 #include "ReviewRequestOpFrame.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
@@ -102,7 +102,6 @@ ReviewRequestOpFrame::createReference(StorageHelper& storageHelper, AccountID co
     }
 
     auto& referenceHelper = storageHelper.getReferenceHelper();
-    auto& db = storageHelper.getDatabase();
     auto isReferenceAlreadyExists = referenceHelper.exists(*reference, requestor);
     if (isReferenceAlreadyExists)
     {
@@ -112,8 +111,7 @@ ReviewRequestOpFrame::createReference(StorageHelper& storageHelper, AccountID co
     }
 
     auto referenceFrame = ReferenceFrame::create(requestor, *reference);
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    EntryHelperProvider::storeAddEntry(delta, db, referenceFrame->mEntry);
+    storageHelper.getHelper(referenceFrame->mEntry.data.type())->storeAdd(referenceFrame->mEntry);
 }
 
 ReviewRequestOpFrame::ReviewRequestOpFrame(Operation const& op,

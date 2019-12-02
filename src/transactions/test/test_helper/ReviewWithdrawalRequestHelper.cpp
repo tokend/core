@@ -7,7 +7,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 #include "ReviewRequestTestHelper.h"
 
@@ -20,8 +20,8 @@ WithdrawReviewChecker::WithdrawReviewChecker(TestManager::pointer testManager, c
 {
     auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::CREATE_WITHDRAW)
     {
         return;

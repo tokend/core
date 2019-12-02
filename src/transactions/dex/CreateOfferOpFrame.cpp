@@ -344,10 +344,8 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     {
         const int64_t currentPrice = takenOffers[takenOffers.size() - 1].currentPrice;
         mAssetPair->setCurrentPrice(currentPrice);
-        EntryHelperProvider::storeChangeEntry(delta, db, mAssetPair->mEntry);
-
-        EntryHelperProvider::storeChangeEntry(delta, db,
-                                              commissionBalance->mEntry);
+        storageHelper.getHelper(mAssetPair->mEntry.data.type())->storeChange(mAssetPair->mEntry);
+        storageHelper.getHelper(commissionBalance->mEntry.data.type())->storeChange(commissionBalance->mEntry);
     }
 
     if (oe.offerNeedsMore(offer, mQuoteBalance->getMinimumAmount()))
@@ -357,7 +355,7 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                        ::
                        OFFER_ENTRY);
         innerResult().success().offer.effect(ManageOfferEffect::CREATED);
-        EntryHelperProvider::storeAddEntry(delta, db, offerFrame->mEntry);
+        storageHelper.getHelper(offerFrame->mEntry.data.type())->storeAdd(offerFrame->mEntry);
         innerResult().success().offer.offer() = offer;
     }
     else

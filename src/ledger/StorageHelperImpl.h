@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ledger/StorageHelper.h"
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 #include <unordered_map>
 #include <memory>
 

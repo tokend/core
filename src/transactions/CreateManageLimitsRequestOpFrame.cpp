@@ -1,4 +1,4 @@
-#include <ledger/EntryHelperLegacy.h>
+#include <ledger/EntryHelper.h>
 #include "ledger/KeyValueHelper.h"
 #include <ledger/ReviewableRequestFrame.h>
 #include <ledger/ReviewableRequestHelper.h>

@@ -2,11 +2,12 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/EntryHelperLegacy.h"
 #include "bucket/Bucket.h"
 #include "bucket/BucketApplicator.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "main/Application.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/EntryFrame.h"
 
 namespace stellar
 {
@@ -47,14 +48,25 @@ BucketApplicator::advance()
     {
         LedgerHeader lh;
         LedgerDeltaImpl delta(lh, db, false);
+        StorageHelperImpl storageHelperImpl(db, &delta);
+        StorageHelper& storageHelper = storageHelperImpl;
         BucketEntry const& e = *mBucketIter;
         if (e.type() == BucketEntryType::LIVEENTRY)
         {
-            EntryHelperProvider::storeAddOrChangeEntry(delta, db, e.liveEntry());
+            auto key = storageHelper.getHelper(e.liveEntry().data.type())->getLedgerKey(e.liveEntry());
+            if(storageHelper.getHelper(key.type())->exists(key))
+            {
+                storageHelper.getHelper(e.liveEntry().data.type())->storeChange(e.liveEntry());
+            }
+            else
+            {
+                storageHelper.getHelper(e.liveEntry().data.type())->storeAdd(e.liveEntry());
+            }
+
         }
         else
         {
-            EntryHelperProvider::storeDeleteEntry(delta, db, e.deadEntry());
+            storageHelper.getHelper(e.deadEntry().type())->storeDelete(e.deadEntry());
         }
 
         // No-op, just to avoid needless rollback.

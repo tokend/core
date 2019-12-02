@@ -29,7 +29,7 @@
 #include <ledger/OfferHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -164,7 +164,7 @@ TEST_CASE("Sale", "[tx][sale]")
         // TODO: use set fees
         auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
+        storageHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                                                     nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
@@ -210,7 +210,7 @@ TEST_CASE("Sale", "[tx][sale]")
         auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(
             1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
+        storageHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                                                     nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);

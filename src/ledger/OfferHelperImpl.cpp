@@ -8,6 +8,7 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "xdrpp/printer.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;

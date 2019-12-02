@@ -374,9 +374,7 @@ OperationFrame::createReferenceEntry(string reference, AccountID sender, Storage
     entry.reference = reference;
     entry.sender = sender;
     auto referenceFrame = std::make_shared<ReferenceFrame>(le);
-    EntryHelperProvider::storeAddEntry(*storageHelper.getLedgerDelta(),
-                                       storageHelper.getDatabase(),
-                                       referenceFrame->mEntry);
+    storageHelper.getHelper(referenceFrame->mEntry.data.type())->storeAdd(referenceFrame->mEntry);
 }
 
 OperationResultCode

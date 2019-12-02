@@ -4,7 +4,7 @@
 
 #include <ledger/LimitsV2Helper.h>
 #include "ReviewLimitsUpdateRequestHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 #include "src/ledger/StorageHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
@@ -18,8 +18,8 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 {
     Database& db = mTestManager->getDB();
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, db);
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
     {
         return;

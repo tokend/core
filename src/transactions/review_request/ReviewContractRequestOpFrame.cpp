@@ -4,7 +4,7 @@
 
 #include <transactions/payment/PaymentOpFrame.h>
 #include <transactions/deprecated/ManageContractOpFrame.h>
-#include <ledger/EntryHelperLegacy.h>
+#include <ledger/EntryHelper.h>
 #include "util/asio.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "database/Database.h"
@@ -68,8 +68,7 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
 
     contractEntry.customerDetails = mReviewRequest.requestDetails.contract().details;
 
-    auto& db = storageHelper.getDatabase();
-    EntryHelperProvider::storeAddEntry(delta, db, contractFrame->mEntry);
+    storageHelper.getHelper(contractFrame->mEntry.data.type())->storeAdd(contractFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = false;

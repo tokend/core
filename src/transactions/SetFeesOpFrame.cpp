@@ -83,7 +83,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
             return false;
         }
 
-        EntryHelperProvider::storeDeleteEntry(delta, db, feeFrame->getKey());
+        storageHelper.getHelper(feeFrame->getKey().type())->storeDelete(feeFrame->getKey());
         return true;
     }
 
@@ -93,7 +93,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         auto& fee = feeFrame->getFee();
         fee.percentFee = mSetFees.fee->percentFee;
         fee.fixedFee = mSetFees.fee->fixedFee;
-        EntryHelperProvider::storeChangeEntry(delta, db, feeFrame->mEntry);
+        storageHelper.getHelper(feeFrame->mEntry.data.type())->storeChange(feeFrame->mEntry);
         return true;
     }
 
@@ -123,7 +123,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         return false;
     }
 
-    EntryHelperProvider::storeAddEntry(delta, db, feeFrame->mEntry);
+    storageHelper.getHelper(feeFrame->mEntry.data.type())->storeAdd(feeFrame->mEntry);
     return true;
 }
 

@@ -16,6 +16,7 @@
 #include "test_helper/TestManager.h"
 #include "ledger/AccountFrame.h"
 #include "ledger/StorageHelperImpl.h"
+#include "ledger/AccountHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -27,9 +28,6 @@ using xdr::operator==;
 
 namespace txtest
 {
-auto accountHelper = EntryHelperProvider::getHelper(LedgerEntryType::ACCOUNT);
-auto assetHelper = EntryHelperProvider::getHelper(LedgerEntryType::ASSET);
-
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
                         AssetCode asset, AccountID *accountID, uint64_t *accountType, int64_t subtype,
@@ -155,8 +153,9 @@ checkAccount(AccountID const& id, Application& app)
 {
     LedgerKey key(LedgerEntryType::ACCOUNT);
     key.account().accountID = id;
-    auto entry =
-        accountHelper->storeLoad(key, app.getDatabase());
+    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto entry = storageHelper.getAccountHelper().storeLoad(key);
     REQUIRE(entry);
 }
 
@@ -266,11 +265,11 @@ loadAccount(SecretKey const& k, Application& app, bool mustExist)
 AccountFrame::pointer
 loadAccount(PublicKey const& k, Application& app, bool mustExist)
 {
-
+    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
     LedgerKey key(LedgerEntryType::ACCOUNT);
     key.account().accountID = k;
-    auto entry =
-        accountHelper->storeLoad(key, app.getDatabase());
+    auto entry = storageHelper.getAccountHelper().storeLoad(key);
     if (mustExist)
     {
         REQUIRE(entry);

@@ -62,4 +62,16 @@ AccountRoleFrame::createNew(uint64_t id, CreateAccountRoleData data)
 
     return make_shared<AccountRoleFrame>(entry);
 }
+
+LedgerKey const &
+AccountRoleFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::ACCOUNT_ROLE);
+        mKey.accountRole().id = mAccountRole.id,
+                mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 } // namespace stellar

@@ -2,7 +2,7 @@
 #include <database/Database.h>
 #include <ledger/AtomicSwapAskHelper.h>
 #include <ledger/BalanceHelper.h>
-#include <ledger/EntryHelperLegacy.h>
+#include <ledger/EntryHelper.h>
 #include "CancelAtomicSwapAskOpFrame.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
@@ -60,7 +60,6 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
                                          LedgerManager& ledgerManager)
 {
     innerResult().code(CancelAtomicSwapAskResultCode::SUCCESS);
-    Database& db = app.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
@@ -81,7 +80,7 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
     if (askFrame->getLockedAmount() != 0)
     {
         askFrame->setIsCancelled(true);
-        EntryHelperProvider::storeChangeEntry(delta, db, askFrame->mEntry);
+        storageHelper.getHelper(askFrame->mEntry.data.type())->storeChange(askFrame->mEntry);
         return true;
     }
 
@@ -103,8 +102,8 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
             "Unexpected state: failed to unlock amount in ask owner balance");
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
-    EntryHelperProvider::storeDeleteEntry(delta, db, askFrame->getKey());
+    storageHelper.getHelper(bidOwnerBalanceFrame->mEntry.data.type())->storeChange(bidOwnerBalanceFrame->mEntry);
+    storageHelper.getHelper(askFrame->getKey().type())->storeDelete(askFrame->getKey());
 
     return true;
 }

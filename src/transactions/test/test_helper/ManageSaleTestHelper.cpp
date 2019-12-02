@@ -5,7 +5,7 @@
 #include "TestManager.h"
 #include "TxHelper.h"
 #include "test/test_marshaler.h"
-#include <ledger/ReviewableRequestHelperLegacy.h>
+#include <ledger/ReviewableRequestHelper.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
 #include <transactions/sale/ManageSaleOpFrame.h>
@@ -84,7 +84,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         OperationResultCode opExpectedCode)
 {
     auto& db = mTestManager->getDB();
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
     auto& saleHelper = mTestManager->getStorageHelper().getSaleHelper();
 
     auto saleBeforeOp = saleHelper.loadSale(saleID);
@@ -95,8 +95,8 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     {
         case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
         {
-            requestBeforeTx = reviewableRequestHelper->loadRequest(
-                data.updateSaleDetailsData().requestID, db);
+            requestBeforeTx = reviewableRequestHelper.loadRequest(
+                data.updateSaleDetailsData().requestID);
             break;
         }
         default:
@@ -134,8 +134,8 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
         {
             if (!manageSaleResult.success().fulfilled)
             {
-                auto requestAfterTx = reviewableRequestHelper->loadRequest(
-                    manageSaleResult.success().response.requestID(), db);
+                auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
+                    manageSaleResult.success().response.requestID());
                 REQUIRE(!!requestAfterTx);
 
                 auto requestAfterTxEntry = requestAfterTx->getRequestEntry();

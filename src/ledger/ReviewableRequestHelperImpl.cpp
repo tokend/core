@@ -6,7 +6,7 @@
 #include "ReferenceFrame.h"
 #include "StorageHelper.h"
 #include "database/Database.h"
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 
 using namespace soci;
 using namespace std;
@@ -365,7 +365,8 @@ bool ReviewableRequestHelperImpl::isReferenceExist(AccountID const& requestor, s
     key.reference().reference = reference;
     key.reference().sender = requestor;
     auto& db = getDatabase();
-    return EntryHelperProvider::existsEntry(db, key);
+
+    return mStorageHelper.getReviewableRequestHelper().exists(key);
 }
 
 string

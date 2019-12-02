@@ -6,6 +6,7 @@
 #include "LedgerDelta.h"
 #include "ledger/AssetHelper.h"
 #include "xdrpp/printer.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;

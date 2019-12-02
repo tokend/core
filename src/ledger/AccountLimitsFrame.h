@@ -64,5 +64,8 @@ class AccountLimitsFrame : public EntryFrame
     
     static AccountLimitsFrame::pointer createNew(AccountID accountID, Limits limits);
 
+    LedgerKey const&
+    getKey() const override ;
+
 };
 }

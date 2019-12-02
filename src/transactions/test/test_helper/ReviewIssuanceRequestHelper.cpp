@@ -11,7 +11,7 @@
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 
 
@@ -28,8 +28,8 @@ ReviewIssuanceChecker::ReviewIssuanceChecker(
     auto& assetHelper = storageHelper.getAssetHelper();
     auto& balanceHelper = storageHelper.getBalanceHelper();
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::CREATE_ISSUANCE)
     {
         return;
@@ -146,8 +146,8 @@ ReviewIssuanceRequestHelper::createReviewRequestTx(Account& source, uint64_t req
 ReviewRequestResult
 ReviewIssuanceRequestHelper::applyReviewRequestTx(Account& source, uint64_t requestID, ReviewRequestOpAction action, std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     REQUIRE(request);
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);
 }

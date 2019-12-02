@@ -32,8 +32,8 @@ void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
         throw std::runtime_error("Invalid database state: failed to unlocked locked amount for offer");
     }
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, offerFrame->getKey());
-    EntryHelperProvider::storeChangeEntry(delta, db, balanceFrame->mEntry);
+    storageHelper.getHelper(offerFrame->getKey().type())->storeDelete(offerFrame->getKey());
+    storageHelper.getHelper(balanceFrame->mEntry.data.type())->storeChange(balanceFrame->mEntry);
 }
 
 void OfferManager::deleteOffers(std::vector<OfferFrame::pointer> offers,

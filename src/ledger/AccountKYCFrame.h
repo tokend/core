@@ -57,6 +57,8 @@ public:
 
     static AccountKYCFrame::pointer createNew(AccountID accountID, std::string KYCData);
 
+    LedgerKey const&
+    getKey() const override;
 };
 
 }

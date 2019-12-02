@@ -4,6 +4,7 @@
 #include "SaleQuoteAssetHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelperImpl.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;

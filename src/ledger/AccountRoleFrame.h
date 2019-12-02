@@ -67,5 +67,8 @@ public:
 
     static pointer
     createNew(uint64_t id, CreateAccountRoleData data);
+
+    LedgerKey const&
+    getKey() const override;
 };
 } // namespace stellar

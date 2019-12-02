@@ -11,9 +11,7 @@
 #include "history/HistoryManager.h"
 #include "ledger/AccountSpecificRuleHelper.h"
 #include "ledger/AtomicSwapAskHelper.h"
-#include "ledger/EntryHelperLegacy.h"
 #include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
-#include "ledger/LedgerHeaderFrame.h"
 #include "ledger/LedgerHeaderUtils.h"
 #include "ledger/PollHelper.h"
 #include "ledger/ReferenceHelper.h"
@@ -38,6 +36,7 @@
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StatisticsV2Helper.h>
+#include "xdr/ledger-entries.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -368,7 +367,6 @@ DatabaseImpl::initialize()
         helper->dropAll();
     }
 
-    EntryHelperProvider::dropAll(*this);
     OverlayManager::dropAll(*this);
     PersistentState::dropAll(*this);
     ExternalQueue::dropAll(*this);

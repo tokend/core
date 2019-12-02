@@ -1,6 +1,6 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/AtomicSwapAskHelper.h>
-#include <ledger/ReviewableRequestHelperLegacy.h>
+#include <ledger/ReviewableRequestHelper.h>
 #include "ReviewRequestTestHelper.h"
 #include "ReviewASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"
@@ -17,7 +17,7 @@ ASwapAskRequestReviewChecker::ASwapAskRequestReviewChecker(
         : ReviewChecker(testManager)
 {
     auto& db = mTestManager->getDB();
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
+    auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.createAtomicSwapAskRequest();
     mBaseBalanceBeforeTx = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
@@ -29,8 +29,8 @@ void ASwapAskRequestReviewChecker::checkPermanentReject(
 {
     auto& db = mTestManager->getDB();
 
-    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            request->getRequestID(), db);
+    auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
+            request->getRequestID());
 
     REQUIRE(requestAfterTx == nullptr);
 
@@ -49,8 +49,7 @@ void ASwapAskRequestReviewChecker::checkPermanentReject(
 void ASwapAskRequestReviewChecker::checkApprove(
         ReviewableRequestFrame::pointer request)
 {
-    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            request->getRequestID(), mTestManager->getDB());
+    auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(request->getRequestID());
 
     REQUIRE(requestAfterTx == nullptr);
 }
@@ -101,8 +100,7 @@ ReviewASwapAskRequestHelper::applyReviewRequestTx(
         Account &source, uint64_t requestID, ReviewRequestOpAction action,
         std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            requestID, mTestManager->getDB());
+    auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     REQUIRE(request != nullptr);
     return applyReviewRequestTx(source, requestID, request->getHash(),
                                 request->getRequestType(), action, rejectReason,

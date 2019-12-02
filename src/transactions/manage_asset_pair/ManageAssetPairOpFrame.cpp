@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/EntryHelperLegacy.h>
+#include <ledger/EntryHelper.h>
 #include "ManageAssetPairOpFrame.h"
 #include "transactions/dex/ManageOfferOpFrame.h"
 #include "transactions/managers/BalanceManager.h"
@@ -84,7 +84,7 @@ ManageAssetPairOpFrame::createNewAssetPair(Application& app, StorageHelper& stor
     assetPair = AssetPairFrame::create(mManageAssetPair.base, mManageAssetPair.quote, mManageAssetPair.physicalPrice,
                                        mManageAssetPair.physicalPrice, mManageAssetPair.physicalPriceCorrection,
                                        mManageAssetPair.maxPriceStep, mManageAssetPair.policies);
-    EntryHelperProvider::storeAddEntry(delta, db, assetPair->mEntry);
+    storageHelper.getHelper(assetPair->mEntry.data.type())->storeAdd(assetPair->mEntry);
     BalanceManager balanceManager(app, storageHelper);
     balanceManager.loadOrCreateBalanceForAdmin(assetPair->getQuoteAsset());
 
@@ -147,7 +147,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         OfferManager::deleteOffers(offersToRemove, db, delta);
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, assetPair->mEntry);
+    storageHelper.getHelper(assetPair->mEntry.data.type())->storeChange(assetPair->mEntry);
 
     app.getMetrics().NewMeter({"op-manage-asset-pair", "success", "apply"},
                               "operation").Mark();

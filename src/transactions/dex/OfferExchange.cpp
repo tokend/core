@@ -164,7 +164,10 @@ void OfferExchange::markOfferAsTaken(OfferFrame& offer,
                                      BalanceFrame::pointer quoteBalance,
                                      Database& db)
 {
-    EntryHelperProvider::storeDeleteEntry(mDelta, db, offer.getKey());
+    StorageHelperImpl storageHelperImpl(db,&mDelta);
+    StorageHelper& storageHelper = storageHelperImpl;
+
+    storageHelper.getHelper(offer.getKey().type())->storeDelete(offer.getKey());
     unlockBalancesForTakenOffer(offer, baseBalance, quoteBalance);
 }
 
@@ -279,6 +282,8 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     mDelta.recordEntry(offerFrameB);
 
     Database& db = mLedgerManager.getDatabase();
+    StorageHelperImpl storageHelperImpl(db, &mDelta);
+    StorageHelper& storageHelper = storageHelperImpl;
 
     OfferEntry& offerB = offerFrameB.getOffer();
     BalanceFrame::pointer baseBalanceB = loadBalance(offerB.baseBalance, db);
@@ -295,8 +300,7 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     if (!isOfferValid)
     {
         markOfferAsTaken(offerFrameB, baseBalanceB, quoteBalanceB, db);
-        EntryHelperProvider::storeChangeEntry(mDelta, db, baseBalanceB->mEntry);
-        EntryHelperProvider::storeChangeEntry(mDelta, db, baseBalanceB->mEntry);
+        storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
         return eOfferTaken;
     }
 
@@ -332,15 +336,13 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     {
         // entire offer is taken
         markOfferAsTaken(offerFrameB, baseBalanceB, quoteBalanceB, db);
-        EntryHelperProvider::storeChangeEntry(mDelta, db, baseBalanceB->mEntry);
-        EntryHelperProvider::
-            storeChangeEntry(mDelta, db, quoteBalanceB->mEntry);
+        storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
+        storageHelper.getHelper(quoteBalanceB->mEntry.data.type())->storeChange(quoteBalanceB->mEntry);
         return eOfferTaken;
     }
-
-    EntryHelperProvider::storeChangeEntry(mDelta, db, offerFrameB.mEntry);
-    EntryHelperProvider::storeChangeEntry(mDelta, db, baseBalanceB->mEntry);
-    EntryHelperProvider::storeChangeEntry(mDelta, db, quoteBalanceB->mEntry);
+    storageHelper.getHelper(offerFrameB.mEntry.data.type())->storeChange(offerFrameB.mEntry);
+    storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
+    storageHelper.getHelper(quoteBalanceB->mEntry.data.type())->storeChange(quoteBalanceB->mEntry);
     return eOfferPartial;
 }
 

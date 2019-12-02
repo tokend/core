@@ -4,8 +4,8 @@
 
 #include "ledger/EntryFrame.h"
 #include "ledger/LedgerDelta.h"
-#include "xdrpp/printer.h"
 #include "xdrpp/marshal.h"
+#include "main/Application.h"
 
 namespace stellar {
     using xdr::operator==;
@@ -16,15 +16,6 @@ namespace stellar {
 
 	EntryFrame::EntryFrame(LedgerEntry const &from)
 		: mKeyCalculated(false), mEntry(from) {
-	}
-
-	LedgerKey const &
-		EntryFrame::getKey() const {
-		if (!mKeyCalculated) {
-			mKey = LedgerEntryKey(mEntry);
-			mKeyCalculated = true;
-		}
-		return mKey;
 	}
 
     uint32

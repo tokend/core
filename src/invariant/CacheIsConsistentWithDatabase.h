@@ -15,6 +15,10 @@ namespace stellar {
 
     class LedgerDelta;
 
+    class LedgerEntry;
+
+    class LedgerKey;
+
     class CacheIsConsistentWithDatabase : public Invariant {
     public:
         explicit CacheIsConsistentWithDatabase(Database &db);
@@ -24,6 +28,9 @@ namespace stellar {
         virtual std::string getName() const override;
 
         virtual std::string check(LedgerDelta const &delta) const override;
+
+        std::string
+        checkAgainstDatabase(LedgerEntry const& entry) const override;
 
     private:
         Database &mDb;
