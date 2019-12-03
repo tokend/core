@@ -7,6 +7,7 @@
 #include "StorageHelper.h"
 #include "database/Database.h"
 #include "ledger/EntryHelper.h"
+#include "ledger/ReferenceHelper.h"
 
 using namespace soci;
 using namespace std;
@@ -366,7 +367,7 @@ bool ReviewableRequestHelperImpl::isReferenceExist(AccountID const& requestor, s
     key.reference().sender = requestor;
     auto& db = getDatabase();
 
-    return mStorageHelper.getReviewableRequestHelper().exists(key);
+    return mStorageHelper.getReferenceHelper().exists(key);
 }
 
 string

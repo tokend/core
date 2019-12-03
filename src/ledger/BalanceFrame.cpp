@@ -232,8 +232,8 @@ BalanceFrame::getKey() const
 {
     if (!mKeyCalculated) {
         mKey = LedgerKey(LedgerEntryType::BALANCE);
-        mKey.balance().balanceID = mBalance.accountID,
-                mKeyCalculated = true;
+        mKey.balance().balanceID = mBalance.balanceID;
+        mKeyCalculated = true;
     }
     return mKey;
 }

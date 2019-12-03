@@ -111,11 +111,11 @@ namespace stellar {
     void FeeHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const &entry) {
 
         Database& db = getDatabase();
-        LedgerDelta* delta = getLedgerDelta();
+        auto& delta = mStorageHelper.mustGetLedgerDelta();
         auto feeFrame = make_shared<FeeFrame>(entry);
         auto feeEntry = feeFrame->getFee();
 
-        feeFrame->touch(mStorageHelper.mustGetLedgerDelta());
+        feeFrame->touch(delta);
 
         if (!feeFrame->isValid())
         {
@@ -187,11 +187,11 @@ namespace stellar {
 
         if (insert)
         {
-            delta->addEntry(*feeFrame);
+            delta.addEntry(*feeFrame);
         }
         else
         {
-            delta->modEntry(*feeFrame);
+            delta.modEntry(*feeFrame);
         }
     }
 

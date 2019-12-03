@@ -5,19 +5,17 @@
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CheckSaleStateTestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
-#include "test_helper/ManageAssetPairTestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ManageBalanceTestHelper.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/ManageSaleTestHelper.h"
 #include "test_helper/ParticipateInSaleTestHelper.h"
-#include "test_helper/ReviewAssetRequestHelper.h"
 #include "test_helper/ReviewSaleRequestHelper.h"
 #include "test_helper/ReviewUpdateSaleDetailsRequestHelper.h"
 #include "test_helper/SaleRequestHelper.h"
@@ -164,7 +162,9 @@ TEST_CASE("Sale", "[tx][sale]")
         // TODO: use set fees
         auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        storageHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
+        StorageHelperImpl sHelperImpl(db, &delta);
+        StorageHelper& sHelper = sHelperImpl;
+        sHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                                                     nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);
@@ -210,7 +210,9 @@ TEST_CASE("Sale", "[tx][sale]")
         auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(
             1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        storageHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
+        StorageHelperImpl sHelperImpl(db, &delta);
+        StorageHelper& sHelper = sHelperImpl;
+        sHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
         auto fee = setFeesTestHelper.createFeeEntry(FeeType::CAPITAL_DEPLOYMENT_FEE, quoteAsset, 0, 1 * ONE,
                                                     nullptr, nullptr, FeeFrame::SUBTYPE_ANY, 0, maxNonDividedAmount);
         setFeesTestHelper.applySetFeesTx(root, &fee, false);

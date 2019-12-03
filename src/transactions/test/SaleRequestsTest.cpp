@@ -5,7 +5,7 @@
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "ledger/AssetHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "test/test.h"
@@ -214,8 +214,10 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
         auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(
             1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        storageHelper.getHelper(sellerFeeFrame->mEntry.data.type())->storeAdd(sellerFeeFrame->mEntry);
-        storageHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
+        StorageHelperImpl sHelperImpl(db, &delta);
+        StorageHelper& sHelper = sHelperImpl;
+        sHelper.getHelper(sellerFeeFrame->mEntry.data.type())->storeAdd(sellerFeeFrame->mEntry);
+        sHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
 
         uint64_t quotePreIssued(0);
         participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
