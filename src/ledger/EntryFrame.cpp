@@ -5,7 +5,6 @@
 #include "ledger/EntryFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "xdrpp/marshal.h"
-#include "main/Application.h"
 
 namespace stellar {
     using xdr::operator==;
