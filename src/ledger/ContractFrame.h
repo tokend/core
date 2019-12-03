@@ -100,10 +100,9 @@ public:
     longstring getCustomerDetails();
 
     static void setCustomerDetails(ContractEntry& contract, longstring customerDetails);
+
+    LedgerKey const&
+    getKey() const override;
 };
 
 }
-
-
-
-

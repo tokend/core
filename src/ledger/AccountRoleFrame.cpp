@@ -68,8 +68,8 @@ AccountRoleFrame::getKey() const
 {
     if (!mKeyCalculated) {
         mKey = LedgerKey(LedgerEntryType::ACCOUNT_ROLE);
-        mKey.accountRole().id = mAccountRole.id,
-                mKeyCalculated = true;
+        mKey.accountRole().id = mAccountRole.id;
+        mKeyCalculated = true;
     }
     return mKey;
 }

@@ -43,5 +43,8 @@ public:
 
     static void ensureValid(ExternalSystemAccountIDPoolEntry const& p);
     void ensureValid() const;
+
+    LedgerKey const&
+    getKey() const override;
 };
 }

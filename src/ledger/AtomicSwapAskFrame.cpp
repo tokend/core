@@ -207,4 +207,16 @@ AtomicSwapAskFrame::getQuoteAssetPrice(AssetCode const &quoteAssetCode) const
 
     return 0;
 }
+
+LedgerKey const &
+AtomicSwapAskFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::ATOMIC_SWAP_ASK);
+        mKey.atomicSwapAsk().id = mAtomicSwapAsk.id,
+                mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

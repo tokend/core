@@ -143,4 +143,16 @@ bool AssetPairFrame::getCurrentPriceCoridor(int64_t& min, int64_t& max) const
 		&& bigDivide(max, mAssetPair.currentPrice, maxInPercent, 100 * ONE, ROUND_DOWN);
 }
 
+LedgerKey const &
+AssetPairFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::ASSET_PAIR);
+        mKey.assetPair().base = mAssetPair.base;
+        mKey.assetPair().quote = mAssetPair.quote;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

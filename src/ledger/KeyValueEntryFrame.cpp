@@ -42,4 +42,15 @@ namespace stellar{
                                  mKeyEntry.key + "key to be UINT32 type");
     }
 
+    LedgerKey const &
+    KeyValueEntryFrame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::KEY_VALUE);
+            mKey.keyValue().key = mKeyEntry.key;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
+
 }

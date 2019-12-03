@@ -21,6 +21,9 @@ class BalanceFrame : public EntryFrame
     BalanceFrame();
     BalanceFrame(LedgerEntry const& from);
 
+    LedgerKey const&
+    getKey() const override;
+
     BalanceFrame& operator=(BalanceFrame const& other);
 
     EntryFrame::pointer

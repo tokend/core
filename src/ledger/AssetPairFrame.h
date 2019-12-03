@@ -85,6 +85,9 @@ class AssetPairFrame : public EntryFrame
     static bool isValid(AssetPairEntry const& oe);
     bool isValid() const;
 
+    LedgerKey const&
+    getKey() const override;
+
 	static pointer create(AssetCode base, AssetCode quote, int64_t currentPrice, int64_t physicalPrice, int64_t physicalPriceCorrection, int64_t maxPriceStep, int32_t policies);
 };
 }

@@ -41,5 +41,8 @@ public:
         return EntryFrame::pointer(new StampFrame(*this));
     }
     StampEntry& getStampEntry();
+
+    LedgerKey const&
+    getKey() const override;
 };
 }

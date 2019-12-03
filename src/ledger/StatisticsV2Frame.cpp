@@ -157,4 +157,15 @@ namespace stellar
         return StatisticsV2Frame::pointer(result);
     }
 
+    LedgerKey const &
+    StatisticsV2Frame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::STATISTICS_V2);
+            mKey.statisticsV2().id = mStatistics.id;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
+
 }

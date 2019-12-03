@@ -146,4 +146,15 @@ void StatisticsFrame::revert(uint64_t outcome, time_t rawCurrentTime, time_t raw
     mStatistics.dailyOutcome -= outcome;
 }
 
+LedgerKey const &
+StatisticsFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::STATISTICS);
+        mKey.stats().accountID = mStatistics.accountID;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

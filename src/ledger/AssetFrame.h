@@ -154,5 +154,8 @@ public:
     
     static void ensureValid(AssetEntry const& oe);
     void ensureValid() const;
+
+    LedgerKey const&
+    getKey() const override;
 };
 }

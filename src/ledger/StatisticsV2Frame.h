@@ -99,6 +99,7 @@ namespace stellar
         static StatisticsV2Frame::pointer newStatisticsV2(uint64_t id, AccountID const& accountID,
                                                           StatsOpType statsOpType, AssetCode assetCode,
                                                           bool isConvertNeeded);
+        LedgerKey const&
+        getKey() const override;
     };
 }
-

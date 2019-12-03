@@ -109,3 +109,15 @@ BalanceID const& OfferFrame::getLockedBalance() const
     return mOffer.isBuy ? mOffer.quoteBalance : mOffer.baseBalance;
 }
 }
+
+LedgerKey const &
+OfferFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::OFFER_ENTRY);
+        mKey.offer().offerID = mOffer.offerID;
+        mKey.offer().ownerID = mOffer.ownerID;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}

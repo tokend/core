@@ -61,5 +61,16 @@ bool ExternalSystemAccountIDFrame::isValid() const
     return isValid(mExternalSystemAccountID);
 }
 
+LedgerKey const &
+ExternalSystemAccountIDFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID);
+        mKey.externalSystemAccountID().accountID = mExternalSystemAccountID.accountID;
+        mKey.externalSystemAccountID().externalSystemType = mExternalSystemAccountID.externalSystemType;
+        mKeyCalculated = true;
+    }
+    return mKey;
 }
 
+}

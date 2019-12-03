@@ -76,8 +76,8 @@ AccountLimitsFrame::getKey() const
 {
     if (!mKeyCalculated) {
         mKey = LedgerKey(LedgerEntryType::ACCOUNT_LIMITS);
-        mKey.accountLimits().accountID = mAccountLimits.accountID,
-                mKeyCalculated = true;
+        mKey.accountLimits().accountID = mAccountLimits.accountID;
+        mKeyCalculated = true;
     }
     return mKey;
 }

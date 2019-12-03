@@ -139,4 +139,17 @@ void FeeFrame::checkFeeType(FeeEntry const& feeEntry, FeeType feeType)
     }
 }
 
+LedgerKey const &
+FeeFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::FEE);
+        mKey.feeState().hash = mFee.hash;
+        mKey.feeState().lowerBound = mFee.lowerBound;
+        mKey.feeState().upperBound = mFee.upperBound;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }
