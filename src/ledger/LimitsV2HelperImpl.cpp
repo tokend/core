@@ -149,14 +149,14 @@ namespace  stellar
     LimitsV2HelperImpl::storeDelete(LedgerKey const& key)
     {
         Database& db = getDatabase();
-        LedgerDelta* delta = mStorageHelper.getLedgerDelta();
+        LedgerDelta& delta = mStorageHelper.mustGetLedgerDelta();
         auto timer = db.getDeleteTimer("limits-v2");
         auto prep = db.getPreparedStatement("DELETE FROM limits_v2 WHERE id = :id");
         auto& st = prep.statement();
         st.exchange(use(key.limitsV2().id, "id"));
         st.define_and_bind();
         st.execute(true);
-        delta->deleteEntry(key);
+        delta.deleteEntry(key);
     }
 
     bool
@@ -211,7 +211,7 @@ namespace  stellar
     {
         Database& db = getDatabase();
         LedgerDelta* delta = getLedgerDelta();
-        string sql = limitsV2Selector;
+        string sql = mLimitsV2ColumnSelector;
         sql += " where id = :id";
 
         auto prep = db.getPreparedStatement(sql);
@@ -442,7 +442,7 @@ LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
             {
             mLimitsV2ColumnSelector =
                 "SELECT code, owner, preissued_asset_signer, "
-                "details, max_issuance_amount, "
+                "details, mace_amount, "
                 "available_for_issueance, issued, pending_issuance, "
                 "policies, type, trailing_digits, lastmodified, version "
                 "FROM asset ";

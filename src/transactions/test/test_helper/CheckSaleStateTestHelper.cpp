@@ -139,9 +139,9 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
     REQUIRE(ownerQuoteBalanceBefore);
     auto ownerQuoteBalanceAfter = balanceHelper.mustLoadBalance(saleQuoteAsset.quoteBalance);
     auto ownerFrame = storageHelper.getAccountHelper().mustLoadAccount(sale->getOwnerID());
-    auto totalSellerFee = FeeManager::calculateFeeForAccount(ownerFrame, FeeType::CAPITAL_DEPLOYMENT_FEE,
+    auto totalSellerFee = FeeManager::calculateFeeForAccount(storageHelper, ownerFrame, FeeType::CAPITAL_DEPLOYMENT_FEE,
                                                              saleQuoteAsset.quoteAsset, FeeFrame::SUBTYPE_ANY,
-                                                             saleQuoteAsset.currentCap, mTestManager->getDB())
+                                                             saleQuoteAsset.currentCap)
         .calculatedPercentFee;
     // TODO: currently it's possible to go a bit below currentCap
     REQUIRE(ownerQuoteBalanceAfter->getAmount()

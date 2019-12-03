@@ -41,11 +41,6 @@ class AssetPairHelper : public EntryHelper
                        const AssetCode& destCode, uint64_t amount,
                        Rounding rounding, uint64_t& result) = 0;
 
-    virtual void
-    loadAssetPairs(StatementContext& prep,
-                   std::function<void(LedgerEntry const&)> AssetPairProcessor) = 0;
-
-    virtual void storeUpdateHelper(bool insert, LedgerEntry const& entry) = 0;
 };
 
 }

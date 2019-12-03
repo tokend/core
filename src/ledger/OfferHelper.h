@@ -40,9 +40,6 @@ public:
                         bool isBuy,
                         std::vector<OfferFrame::pointer>& retOffers) = 0;
 
-    virtual void storeUpdateHelper(bool insert, LedgerEntry const& entry) = 0;
-
-    virtual void loadOffers(StatementContext& prep, std::function<void(LedgerEntry const&)> offerProcessor) = 0;
 
     virtual void checkAmounts(const OfferFrame::pointer& frame) const = 0;
 };

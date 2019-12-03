@@ -42,8 +42,8 @@ public:
                        Rounding rounding, uint64_t& result) override;
     void
     loadAssetPairs(StatementContext& prep,
-                   std::function<void(LedgerEntry const&)> AssetPairProcessor) override;
-    void storeUpdateHelper(bool insert, LedgerEntry const& entry) override;
+                   std::function<void(LedgerEntry const&)> AssetPairProcessor);
+    void storeUpdateHelper(bool insert, LedgerEntry const& entry);
 
 private:
     StorageHelper& mStorageHelper;

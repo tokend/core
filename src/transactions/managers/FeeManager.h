@@ -24,11 +24,11 @@ public:
     FeeManager(Application& app, StorageHelper& sh);
 
     static FeeResult
-    calculateFeeForAccount(const AccountFrame::pointer account, FeeType const feeType,
-            AssetCode const &asset, int64_t const subtype, uint64_t const amount, Database &db);
+    calculateFeeForAccount(StorageHelper& storageHelper, const AccountFrame::pointer account, FeeType const feeType,
+            AssetCode const &asset, int64_t const subtype, uint64_t const amount);
 
     bool
-    isFeeMatches(AccountFrame::pointer account, Fee fee, FeeType feeType,
+    isFeeMatches(StorageHelper& storageHelper, AccountFrame::pointer account, Fee fee, FeeType feeType,
             int64_t subtype, AssetCode assetCode, uint64_t amount) const;
 
 };

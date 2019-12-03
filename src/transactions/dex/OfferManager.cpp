@@ -11,11 +11,8 @@
 
 namespace stellar
 {
-void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
-    LedgerDelta& delta)
+void OfferManager::deleteOffer(StorageHelper& storageHelper, OfferFrame::pointer offerFrame)
 {
-    StorageHelperImpl storageHelperImpl(db,&delta);
-    StorageHelper& storageHelper = storageHelperImpl;
     const auto balanceID = offerFrame->getLockedBalance();
     auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(balanceID);
     if (!balanceFrame)
@@ -36,13 +33,12 @@ void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
     storageHelper.getHelper(balanceFrame->mEntry.data.type())->storeChange(balanceFrame->mEntry);
 }
 
-void OfferManager::deleteOffers(std::vector<OfferFrame::pointer> offers,
-    Database& db, LedgerDelta& delta)
+void OfferManager::deleteOffers(StorageHelper& storageHelper, std::vector<OfferFrame::pointer> offers, LedgerDelta& delta)
 {
     for (auto& offer : offers)
     {
         delta.recordEntry(*offer);
-        deleteOffer(offer, db, delta);
+        deleteOffer(storageHelper, offer);
     }
 }
 

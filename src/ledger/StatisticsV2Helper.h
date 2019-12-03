@@ -24,8 +24,5 @@ public:
     virtual StatisticsV2Frame::pointer mustLoadStatistics(uint64_t id) = 0;
     virtual StatisticsV2Frame::pointer mustLoadStatistics(AccountID& accountID, StatsOpType statsOpType,
                                                   AssetCode const& assetCode, bool isConvertNeeded) = 0;
-private:
-    virtual void loadStatistics(StatementContext& prep, std::function<void(LedgerEntry const&)> processor) = 0;
-    virtual void storeUpdateHelper(bool insert, LedgerEntry const& entry) = 0;
 };
 }

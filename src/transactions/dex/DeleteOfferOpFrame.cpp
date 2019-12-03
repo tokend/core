@@ -75,7 +75,7 @@ DeleteOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         return false;
     }
 
-    OfferManager::deleteOffer(offer, db, delta);
+    OfferManager::deleteOffer(storageHelper, offer);
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto baseBalance = balanceHelper.mustLoadBalance(offer->getOffer().baseBalance);
     auto quoteBalance = balanceHelper.mustLoadBalance(offer->getOffer().quoteBalance);

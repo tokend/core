@@ -215,11 +215,5 @@ namespace stellar {
     ReferenceHelperImpl::ReferenceHelperImpl(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
     {
-        mReferenceColumnSelector =
-                "SELECT code, owner, preissued_asset_signer, "
-                "details, max_issuance_amount, "
-                "available_for_issueance, issued, pending_issuance, "
-                "policies, type, trailing_digits, lastmodified, version "
-                "FROM asset ";
     }
 }

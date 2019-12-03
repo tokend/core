@@ -129,7 +129,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         {
             auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
             const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, nullptr);
-            OfferManager::deleteOffers(offersToRemove, db, delta);
+            OfferManager::deleteOffers(storageHelper, offersToRemove, delta);
         }
     }
     else
@@ -144,7 +144,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
         uint64_t minAllowedPrice = assetPair->getMinAllowedPrice();
         const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, &minAllowedPrice);
-        OfferManager::deleteOffers(offersToRemove, db, delta);
+        OfferManager::deleteOffers(storageHelper, offersToRemove, delta);
     }
 
     storageHelper.getHelper(assetPair->mEntry.data.type())->storeChange(assetPair->mEntry);

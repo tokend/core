@@ -50,8 +50,8 @@ private:
     StorageHelper& mStorageHelper;
     const char* mSaleColumnSelector;
 
-    void storeUpdateHelper(bool insert, LedgerEntry const& entry) override;
-    void loadSales(StatementContext & prep, std::function<void(LedgerEntry const&)> requestsProcessor) const override;
+    void storeUpdateHelper(bool insert, LedgerEntry const& entry);
+    void loadSales(StatementContext & prep, std::function<void(LedgerEntry const&)> requestsProcessor) const;
 };
 
 }

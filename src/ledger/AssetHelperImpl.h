@@ -70,7 +70,7 @@ private:
 
     void
     loadAssets(StatementContext& prep,
-               std::function<void(LedgerEntry const&)> assetProcessor) override;
+               std::function<void(LedgerEntry const&)> assetProcessor);
 
     std::vector<AssetFrame::pointer>
     loadBaseAssets() override;

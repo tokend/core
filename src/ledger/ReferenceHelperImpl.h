@@ -38,8 +38,8 @@ private:
     StorageHelper& mStorageHelper;
     const char* mReferenceColumnSelector;
     ReferenceFrame::pointer loadReference(AccountID exchange, std::string reference) override;
-    void storeUpdateHelper(bool insert, const LedgerEntry& entry) override;
-    void loadReferences(StatementContext &prep, std::function<void(LedgerEntry const &)> referenceProcessor) override;
+    void storeUpdateHelper(bool insert, const LedgerEntry& entry);
+    void loadReferences(StatementContext &prep, std::function<void(LedgerEntry const &)> referenceProcessor);
     bool exists(std::string reference, AccountID exchange) override;
 };
 

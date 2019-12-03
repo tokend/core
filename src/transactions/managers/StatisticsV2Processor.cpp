@@ -90,7 +90,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
                                                                    limitsV2Frame->getStatsOpType(),
                                                                    limitsV2Frame->getAsset(),
                                                                    limitsV2Frame->getConvertNeeded());
-            mStorageHelper.getHelper(statisticsV2Frame->mEntry.data.type())->storeAdd(statisticsV2Frame->mEntry);
+            mStorageHelper.getStatisticsV2Helper().storeAdd(statisticsV2Frame->mEntry);
         }
 
         universalAmount = amountToAdd;

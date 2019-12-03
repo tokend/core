@@ -51,9 +51,6 @@ CancelPollRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper
 {
     innerResult().code(ManageCreatePollRequestResultCode::SUCCESS);
 
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-    Database& db = storageHelper.getDatabase();
-
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
     auto requestFrame = requestHelper.loadRequest(mCancelPollRequestData.requestID,
                                                    getSourceID(), ReviewableRequestType::CREATE_POLL);

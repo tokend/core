@@ -9,7 +9,6 @@
 #include "ledger/OfferHelper.h"
 #include "util/Logging.h"
 #include "xdrpp/printer.h"
-#include "ledger/StorageHelperImpl.h"
 #include "ledger/BalanceHelper.h"
 
 namespace stellar
@@ -159,14 +158,11 @@ ExchangeResult OfferExchange::exchange(int64_t buyerBase, int64_t buyerQuote,
     return result;
 }
 
-void OfferExchange::markOfferAsTaken(OfferFrame& offer,
+void OfferExchange::markOfferAsTaken(StorageHelper& storageHelper, OfferFrame& offer,
                                      BalanceFrame::pointer baseBalance,
                                      BalanceFrame::pointer quoteBalance,
                                      Database& db)
 {
-    StorageHelperImpl storageHelperImpl(db,&mDelta);
-    StorageHelper& storageHelper = storageHelperImpl;
-
     storageHelper.getHelper(offer.getKey().type())->storeDelete(offer.getKey());
     unlockBalancesForTakenOffer(offer, baseBalance, quoteBalance);
 }
@@ -299,7 +295,7 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     // one of the balances is not valid for trading or offer does not meet asset pair restrictions, so canceling offer
     if (!isOfferValid)
     {
-        markOfferAsTaken(offerFrameB, baseBalanceB, quoteBalanceB, db);
+        markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB, db);
         storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
         return eOfferTaken;
     }
@@ -335,7 +331,7 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     if (!offerNeedsMore(offerB, quoteBalanceB->getMinimumAmount()))
     {
         // entire offer is taken
-        markOfferAsTaken(offerFrameB, baseBalanceB, quoteBalanceB, db);
+        markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB, db);
         storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
         storageHelper.getHelper(quoteBalanceB->mEntry.data.type())->storeChange(quoteBalanceB->mEntry);
         return eOfferTaken;

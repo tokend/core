@@ -4,11 +4,6 @@
 #include "AccountKYCFrame.h"
 #include "LedgerDelta.h"
 
-namespace soci
-{
-    class session;
-}
-
 namespace stellar
 {
 class StatementContext;

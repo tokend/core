@@ -29,10 +29,5 @@ public:
     virtual SaleFrame::pointer loadSale(uint64_t saleID, AssetCode const& base, AssetCode const& quote) = 0;
 
     virtual std::vector<SaleFrame::pointer> loadSalesForOwner(AccountID owner) = 0;
-
-private:
-
-    virtual void storeUpdateHelper(bool insert, LedgerEntry const& entry) = 0;
-    virtual void loadSales(StatementContext & prep, std::function<void(LedgerEntry const&)> requestsProcessor) const = 0;
 };
 }

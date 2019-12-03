@@ -354,12 +354,6 @@ namespace stellar
     AtomicSwapAskHelperImpl::AtomicSwapAskHelperImpl(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
     {
-        mAtomicSwapColumnSelector =
-                "SELECT code, owner, preissued_asset_signer, "
-                "details, max_issuance_amount, "
-                "available_for_issueance, issued, pending_issuance, "
-                "policies, type, trailing_digits, lastmodified, version "
-                "FROM asset ";
     }
 
 }

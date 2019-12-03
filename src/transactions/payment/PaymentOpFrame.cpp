@@ -256,7 +256,6 @@ PaymentOpFrame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const
     Fee actualFee;
     actualFee.percent = 0;
     actualFee.fixed = 0;
-    auto& db = storageHelper.getDatabase();
     auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
                                                           static_cast<int64_t>(feeType),
                                                           accountFrame, amount);

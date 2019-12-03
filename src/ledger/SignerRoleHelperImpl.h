@@ -63,4 +63,3 @@ private:
     const char* mSignerRoleColumnSelector;
 };
 }
-

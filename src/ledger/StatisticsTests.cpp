@@ -20,7 +20,7 @@ void validateStats(StatisticsFrame& statsFrame, uint64_t amount)
     REQUIRE(statsFrame.getDailyOutcome() == amount);
 }
 
-TEST_CASE("Statistics tests", "[dep_tx][stats]")
+TEST_CASE("Statistics tests", "[dep_tx][stats][!hide]")
 {
     Config cfg(getTestConfig(0, Config::TESTDB_POSTGRESQL));
     VirtualClock clock;

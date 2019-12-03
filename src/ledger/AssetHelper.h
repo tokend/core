@@ -50,11 +50,6 @@ public:
         virtual void
         markDeleted(LedgerEntry const& entry) = 0;
 
-  private:
-
-	virtual void
-	loadAssets(StatementContext& prep,
-			   std::function<void(LedgerEntry const&)> assetProcessor) = 0;
 
 };
 }

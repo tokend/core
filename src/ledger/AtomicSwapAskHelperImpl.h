@@ -32,10 +32,6 @@ public:
     Database& getDatabase() override;
     LedgerDelta* getLedgerDelta() override;
 
-private:
-    StorageHelper& mStorageHelper;
-    const char* mAtomicSwapColumnSelector;
-
     AtomicSwapAskFrame::pointer
     loadAtomicSwapAsk(AccountID const& ownerID, uint64_t bidID) override;
 
@@ -48,10 +44,14 @@ private:
     bool
     existForAsset(const AssetCode& code) override;
 
-    void storeUpdateHelper(bool insert, LedgerEntry const& entry) override;
+private:
+    StorageHelper& mStorageHelper;
+    const char* mAtomicSwapColumnSelector;
+
+    void storeUpdateHelper(bool insert, LedgerEntry const& entry);
 
     void loadAtomicSwapAsks(StatementContext& prep,std::function<void(LedgerEntry const&)>
-                                    atomicSwapBidProcessor) override;
+                                    atomicSwapBidProcessor);
 };
 
 }

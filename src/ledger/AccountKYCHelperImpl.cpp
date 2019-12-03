@@ -30,10 +30,10 @@ namespace stellar
     void AccountKYCHelperImpl::storeUpdate(const LedgerEntry &entry, bool insert)
     {
         Database &db = getDatabase();
-        LedgerDelta* delta = getLedgerDelta();
+        LedgerDelta& delta = mStorageHelper.mustGetLedgerDelta();
         auto accountKYCFrame = std::make_shared<AccountKYCFrame>(entry);
 
-        accountKYCFrame->touch(*delta);
+        accountKYCFrame->touch(delta);
 
         auto key = accountKYCFrame->getKey();
         flushCachedEntry(key);
@@ -70,9 +70,9 @@ namespace stellar
         }
 
         if (insert)
-            delta->addEntry(*accountKYCFrame);
+            delta.addEntry(*accountKYCFrame);
         else
-            delta->modEntry(*accountKYCFrame);
+            delta.modEntry(*accountKYCFrame);
 
     }
 
@@ -97,7 +97,7 @@ namespace stellar
     void AccountKYCHelperImpl::storeDelete(LedgerKey const &key)
     {
         Database &db = getDatabase();
-        LedgerDelta* delta = getLedgerDelta();
+        LedgerDelta& delta = mStorageHelper.mustGetLedgerDelta();
         flushCachedEntry(key);
         std::string sqlQuery = std::string("DELETE FROM account_kyc "
                                            "WHERE accountid=:id ");
@@ -112,7 +112,7 @@ namespace stellar
         auto timer = db.getDeleteTimer("account_kyc");
         st.execute(true);
 
-        delta->deleteEntry(key);
+        delta.deleteEntry(key);
     }
 
     bool AccountKYCHelperImpl::exists(LedgerKey const &key)
@@ -221,12 +221,6 @@ namespace stellar
     AccountKYCHelperImpl::AccountKYCHelperImpl(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
     {
-        mAccountKYCHColumnSelector =
-                "SELECT code, owner, preissued_asset_signer, "
-                "details, max_issuance_amount, "
-                "available_for_issueance, issued, pending_issuance, "
-                "policies, type, trailing_digits, lastmodified, version "
-                "FROM asset ";
     }
 
 }

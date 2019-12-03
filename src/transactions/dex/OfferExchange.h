@@ -7,6 +7,7 @@
 #include "ledger/OfferFrame.h"
 #include "ledger/AssetPairFrame.h"
 #include "ledger/BalanceFrame.h"
+#include "ledger/StorageHelperImpl.h"
 #include <functional>
 #include <vector>
 
@@ -74,7 +75,8 @@ private:
     BalanceFrame::pointer loadBalance(BalanceID& balanceID, Database& db);
 
     // deletes offer and unlockes locked amount
-    void markOfferAsTaken(OfferFrame& offer, BalanceFrame::pointer baseBalance,
+    void markOfferAsTaken(StorageHelper& storageHelper,
+            OfferFrame& offer, BalanceFrame::pointer baseBalance,
                           BalanceFrame::pointer quoteBalance, Database& db);
 
 public:

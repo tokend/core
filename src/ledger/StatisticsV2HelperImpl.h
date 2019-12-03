@@ -46,8 +46,8 @@ private:
     StorageHelper& mStorageHelper;
     const char* mStatisticsV2ColumnSelector;
 
-    void loadStatistics(StatementContext& prep, std::function<void(LedgerEntry const&)> processor) override;
-    void storeUpdateHelper(bool insert, LedgerEntry const& entry) override;
+    void loadStatistics(StatementContext& prep, std::function<void(LedgerEntry const&)> processor);
+    void storeUpdateHelper(bool insert, LedgerEntry const& entry);
 };
 
 }

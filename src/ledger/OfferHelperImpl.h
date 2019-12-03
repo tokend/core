@@ -61,9 +61,9 @@ private:
                                 bool isBuy,
                                 std::vector<OfferFrame::pointer>& retOffers) override;
 
-    void storeUpdateHelper(bool insert, LedgerEntry const& entry) override;
+    void storeUpdateHelper(bool insert, LedgerEntry const& entry);
 
-    void loadOffers(StatementContext& prep, std::function<void(LedgerEntry const&)> offerProcessor) override;
+    void loadOffers(StatementContext& prep, std::function<void(LedgerEntry const&)> offerProcessor);
 
     void checkAmounts(const OfferFrame::pointer& frame) const override;
 

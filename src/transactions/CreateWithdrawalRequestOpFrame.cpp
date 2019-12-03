@@ -84,7 +84,7 @@ CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, StorageHelper& sh
     Database& db = app.getDatabase();
     FeeManager feeManager(app, sh);
 
-    return feeManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee,
+    return feeManager.isFeeMatches(sh, mSourceAccount, mCreateWithdrawalRequest.request.fee,
                                    FeeType::WITHDRAWAL_FEE, FeeFrame::SUBTYPE_ANY, balance->getAsset(),
                                    mCreateWithdrawalRequest.request.amount);
 }

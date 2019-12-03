@@ -53,9 +53,9 @@ private:
 
     std::vector<FeeFrame::pointer> loadFees(Hash hash) override;
 
-    void storeUpdateHelper(bool insert, LedgerEntry const &entry) override;
+    void storeUpdateHelper(bool insert, LedgerEntry const &entry);
 
-    void loadFees(StatementContext &prep, std::function<void(LedgerEntry const &)> feeProcessor) override;
+    void loadFees(StatementContext &prep, std::function<void(LedgerEntry const &)> feeProcessor);
 
     void checkAmounts(const FeeFrame::pointer &frame) const override;
 

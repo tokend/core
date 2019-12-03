@@ -13,10 +13,6 @@ namespace stellar
 {
     using xdr::operator<;
 
-    const char* selectorSale =
-            "SELECT id, type, owner_id, base_asset, default_quote_asset, start_time, "
-            "end_time, soft_cap, hard_cap, details, base_balance, version, lastmodified, current_cap_in_base, hard_cap_in_base, sale_type FROM sale";
-
     void SaleHelperImpl::dropAll()
     {
         Database& db = getDatabase();
@@ -351,7 +347,7 @@ namespace stellar
             return result;
         }
 
-        string sql = selectorSale;
+        string sql = mSaleColumnSelector;
         sql += +" WHERE id = :id";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
@@ -407,7 +403,7 @@ namespace stellar
     std::vector<SaleFrame::pointer> SaleHelperImpl::loadSalesForOwner(AccountID owner)
     {
         Database& db = getDatabase();
-        string sql = selectorSale;
+        string sql = mSaleColumnSelector;
         sql += +" WHERE owner_id = :owner_id";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
@@ -444,11 +440,8 @@ namespace stellar
             : mStorageHelper(storageHelper)
     {
         mSaleColumnSelector =
-                "SELECT code, owner, preissued_asset_signer, "
-                "details, max_issuance_amount, "
-                "available_for_issueance, issued, pending_issuance, "
-                "policies, type, trailing_digits, lastmodified, version "
-                "FROM asset ";
+                "SELECT id, type, owner_id, base_asset, default_quote_asset, start_time, "
+                "end_time, soft_cap, hard_cap, details, base_balance, version, lastmodified, current_cap_in_base, hard_cap_in_base, sale_type FROM sale";
     }
 
 

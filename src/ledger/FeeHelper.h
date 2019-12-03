@@ -30,10 +30,6 @@ public:
 
     virtual std::vector<FeeFrame::pointer> loadFees(Hash hash) = 0;
 
-    virtual void storeUpdateHelper(bool insert, LedgerEntry const &entry) = 0;
-
-    virtual void loadFees(StatementContext &prep, std::function<void(LedgerEntry const &)> feeProcessor) = 0;
-
     virtual void checkAmounts(const FeeFrame::pointer &frame) const = 0;
 
     virtual bool isBoundariesOverlap(Hash hash, int64_t lowerBound, int64_t upperBound) = 0;

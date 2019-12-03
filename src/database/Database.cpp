@@ -145,8 +145,6 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
             sh.getAccountKYCHelper().dropAll();
-            sh.getStatisticsV2Helper().dropAll();
-            sh.getPendingStatisticsHelper().dropAll();
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_MIGRATION:
             sh.getExternalSystemAccountIDPoolEntryHelper().dropAll();

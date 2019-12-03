@@ -124,8 +124,7 @@ CreateSaleParticipationOpFrame::isPriceValid(
         CheckSaleStateOpFrame::getSalePriceForCap(sale->getSoftCap(), sale);
     auto& db = storageHelper.getDatabase();
     const int64_t priceInQuoteAsset =
-        CheckSaleStateOpFrame::getPriceInQuoteAsset(
-            priceForSoftCap, sale, quoteBalance->getAsset(), db);
+        CheckSaleStateOpFrame::getPriceInQuoteAsset(storageHelper, priceForSoftCap, sale, quoteBalance->getAsset());
     const uint64_t baseStep = storageHelper.getAssetHelper()
                                   .mustLoadAsset(sale->getBaseAsset())
                                   ->getMinimumAmount();
@@ -484,9 +483,9 @@ CreateSaleParticipationOpFrame::createImmediateSaleCounterOffer(
     auto& saleQuoteAsset = sale->getSaleQuoteAsset(quoteBalance->getAsset());
 
     auto& db = storageHelper.getDatabase();
-    auto const feeResult = FeeManager::calculateFeeForAccount(
-        saleOwner, FeeType::CAPITAL_DEPLOYMENT_FEE, saleQuoteAsset.quoteAsset,
-        FeeFrame::SUBTYPE_ANY, quoteAmount, db);
+    auto const feeResult = FeeManager::calculateFeeForAccount(storageHelper,
+                                                                 saleOwner, FeeType::CAPITAL_DEPLOYMENT_FEE, saleQuoteAsset.quoteAsset,
+                                                                 FeeFrame::SUBTYPE_ANY, quoteAmount);
 
     CheckSaleStateOpFrame::createCounterOffer(
         app, storageHelper, lm, mParentTx, sale, saleOwner, saleQuoteAsset,

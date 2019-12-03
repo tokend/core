@@ -229,16 +229,16 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 }
 
 FeeManager::FeeResult
-CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const
+CreateOfferOpFrame::obtainCalculatedFeeForAccount(StorageHelper& storageHelper, int64_t amount, LedgerManager& lm) const
 {
     if (!lm.shouldUse(LedgerVersion::ADD_INVEST_FEE) && feeType == FeeType::INVEST_FEE)
     {
-        return FeeManager::calculateFeeForAccount(mSourceAccount, FeeType::OFFER_FEE, mQuoteBalance->getAsset(),
-                                                  FeeFrame::SUBTYPE_ANY, amount, db);
+        return FeeManager::calculateFeeForAccount(storageHelper, mSourceAccount, FeeType::OFFER_FEE, mQuoteBalance->getAsset(),
+                                                  FeeFrame::SUBTYPE_ANY, amount);
     }
 
-    return FeeManager::calculateFeeForAccount(mSourceAccount, feeType, mQuoteBalance->getAsset(),
-                                              FeeFrame::SUBTYPE_ANY, amount, db);
+    return FeeManager::calculateFeeForAccount(storageHelper, mSourceAccount, feeType, mQuoteBalance->getAsset(),
+                                              FeeFrame::SUBTYPE_ANY, amount);
 }
 
 bool
@@ -258,10 +258,9 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         throw std::runtime_error("Unexpected state: quote amount overflows");
     }
 
-    auto& db = storageHelper.getDatabase();
     auto& offer = offerFrame->getOffer();
     offer.createdAt = ledgerManager.getCloseTime();
-    auto const feeResult = obtainCalculatedFeeForAccount(offer.quoteAmount, ledgerManager, db);
+    auto const feeResult = obtainCalculatedFeeForAccount(storageHelper, offer.quoteAmount, ledgerManager);
 
     if (feeResult.isOverflow)
     {

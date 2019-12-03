@@ -19,8 +19,5 @@ public:
     virtual bool exists(LedgerKey const &key) = 0;
     virtual bool exists(std::string reference, AccountID exchange) = 0;
     virtual void addVersion() = 0;
-private:
-    virtual void storeUpdateHelper(bool insert, const LedgerEntry& entry) = 0;
-    virtual void loadReferences(StatementContext &prep, std::function<void(LedgerEntry const &)> referenceProcessor) = 0;
 };
 }
