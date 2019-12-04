@@ -101,7 +101,8 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
         throw runtime_error(
             "Unexpected state: failed to unlock amount in ask owner balance");
     }
-    storageHelper.getAtomicSwapAskHelper().storeChange(bidOwnerBalanceFrame->mEntry);
+
+    storageHelper.getBalanceHelper().storeChange(bidOwnerBalanceFrame->mEntry);
     storageHelper.getAtomicSwapAskHelper().storeDelete(askFrame->getKey());
 
     return true;

@@ -12,11 +12,6 @@ using namespace soci;
 
 namespace  stellar
 {
-    const char* limitsV2Selector = "select id, account_type, account_id, stats_op_type, asset_code,"
-                                   " is_convert_needed, daily_out, weekly_out, monthly_out, annual_out,"
-                                   " lastmodified, version "
-                                   "from limits_v2 ";
-
     void LimitsV2HelperImpl::dropAll()
     {
         Database &db = getDatabase();
@@ -252,7 +247,7 @@ std::vector<LimitsV2Frame::pointer>
 LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
    {
        Database &db = getDatabase();
-       string sql = limitsV2Selector;
+       string sql = mLimitsV2ColumnSelector;
        sql += " WHERE asset_code = :asset_c ";
 
        auto prep = db.getPreparedStatement(sql);
@@ -344,7 +339,7 @@ LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
         auto statsOpTypeInt = static_cast<int32_t>(statsOpType);
         int isConvertNeededInt = isConvertNeeded ? 1 : 0;
 
-        string sql = limitsV2Selector;
+        string sql = mLimitsV2ColumnSelector;
         sql += " WHERE (account_id = :acc_id or (:acc_id::text is null and account_id is null)) AND "
                "       (account_type = :acc_t or (:acc_t::int is null and account_type is null)) AND "
                "       asset_code = :asset_c AND "
@@ -441,11 +436,10 @@ LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
             : mStorageHelper(storageHelper)
             {
             mLimitsV2ColumnSelector =
-                "SELECT code, owner, preissued_asset_signer, "
-                "details, mace_amount, "
-                "available_for_issueance, issued, pending_issuance, "
-                "policies, type, trailing_digits, lastmodified, version "
-                "FROM asset ";
+                    "select id, account_type, account_id, stats_op_type, asset_code,"
+                    " is_convert_needed, daily_out, weekly_out, monthly_out, annual_out,"
+                    " lastmodified, version "
+                    "from limits_v2 ";
     }
 
 }
