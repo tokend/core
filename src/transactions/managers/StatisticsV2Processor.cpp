@@ -69,14 +69,13 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
             throw std::runtime_error("Unexpected spend type");
     }
 
-    auto& limitsV2Helper = mStorageHelper.getLimitsV2Helper();
-    auto limitsV2Frames = limitsV2Helper.loadLimits(statsOpTypes, assetCode, accountID, &accountRole);
+    auto& statisticsV2Helper = mStorageHelper.getStatisticsV2Helper();
+    auto limitsV2Frames = mStorageHelper.getLimitsV2Helper().loadLimits(statsOpTypes, assetCode, accountID, &accountRole);
 
     auto& assetHelper = mStorageHelper.getAssetHelper();
 
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
-        auto& statisticsV2Helper = mStorageHelper.getStatisticsV2Helper();
         auto statisticsV2Frame = statisticsV2Helper.loadStatistics(*accountID, limitsV2Frame->getStatsOpType(),
                                                                     limitsV2Frame->getAsset(), limitsV2Frame->getConvertNeeded());
 
@@ -90,7 +89,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
                                                                    limitsV2Frame->getStatsOpType(),
                                                                    limitsV2Frame->getAsset(),
                                                                    limitsV2Frame->getConvertNeeded());
-            mStorageHelper.getStatisticsV2Helper().storeAdd(statisticsV2Frame->mEntry);
+            statisticsV2Helper.storeAdd(statisticsV2Frame->mEntry);
         }
 
         universalAmount = amountToAdd;
@@ -120,7 +119,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         if (!validateStats(limitsV2Frame, statisticsV2Frame))
             return LIMITS_V2_EXCEEDED;
 
-        limitsV2Helper.storeChange(statisticsV2Frame->mEntry);
+        statisticsV2Helper.storeChange(statisticsV2Frame->mEntry);
 
         if (!requestID)
             continue;

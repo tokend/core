@@ -81,7 +81,6 @@ BalanceFrame::pointer CreateWithdrawalRequestOpFrame::tryLoadBalance(StorageHelp
 bool
 CreateWithdrawalRequestOpFrame::isFeeMatches(Application& app, StorageHelper& sh, BalanceFrame::pointer balance) const
 {
-    Database& db = app.getDatabase();
     FeeManager feeManager(app, sh);
 
     return feeManager.isFeeMatches(mSourceAccount, mCreateWithdrawalRequest.request.fee,
@@ -204,7 +203,6 @@ CreateWithdrawalRequestOpFrame::storeChangeRequest(StorageHelper& storageHelper,
 bool CreateWithdrawalRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                              LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
     auto balanceFrame = tryLoadBalance(storageHelper);
     if (!balanceFrame)
     {
