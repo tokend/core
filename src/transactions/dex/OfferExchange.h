@@ -72,19 +72,19 @@ private:
                             int64_t matchPrice, uint64_t basePrecisionStep,
                             uint64_t quotePrecisionStep);
 
-    BalanceFrame::pointer loadBalance(BalanceID& balanceID, Database& db);
+    BalanceFrame::pointer loadBalance(StorageHelper& storageHelper, BalanceID& balanceID);
 
     // deletes offer and unlockes locked amount
     void markOfferAsTaken(StorageHelper& storageHelper,
             OfferFrame& offer, BalanceFrame::pointer baseBalance,
-                          BalanceFrame::pointer quoteBalance, Database& db);
+                          BalanceFrame::pointer quoteBalance);
 
 public:
     OfferExchange(LedgerDelta& delta,LedgerManager& ledgerManager,
                   AssetPairFrame::pointer assetPair,
                   BalanceFrame::pointer commissionBalance, uint64_t orderBookID);
 
-    CrossOfferResult crossOffer(OfferEntry& offerA,
+    CrossOfferResult crossOffer(StorageHelper& storageHelper, OfferEntry& offerA,
                                 BalanceFrame::pointer baseBalanceA,
                                 BalanceFrame::pointer quoteBalanceA,
                                 OfferFrame& offerB);
@@ -104,7 +104,8 @@ public:
     };
 
     // buys wheat with sheep, crossing as many offers as necessary
-    ConvertResult convertWithOffers(OfferEntry& offerA,
+    ConvertResult convertWithOffers(StorageHelper& storageHelper,
+                                    OfferEntry& offerA,
                                     BalanceFrame::pointer baseBalanceA,
                                     BalanceFrame::pointer quoteBalanceA,
                                     std::function<OfferFilterResult(

@@ -84,7 +84,6 @@ CreatePollRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper
         return false;
     }
 
-    Database& db = storageHelper.getDatabase();
     storageHelper.getReviewableRequestHelper().storeAdd(requestFrame->mEntry);
 
     innerResult().success().details.action(ManageCreatePollRequestAction::CREATE);

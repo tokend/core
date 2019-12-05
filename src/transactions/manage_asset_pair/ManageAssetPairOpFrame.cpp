@@ -2,7 +2,6 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/EntryHelper.h>
 #include "ManageAssetPairOpFrame.h"
 #include "transactions/dex/ManageOfferOpFrame.h"
 #include "transactions/managers/BalanceManager.h"
@@ -57,10 +56,7 @@ ManageAssetPairOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 bool
 ManageAssetPairOpFrame::createNewAssetPair(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     // already exists or reverced already exists
-
     auto& assetPairHelper = storageHelper.getAssetPairHelper();
     if (assetPair || assetPairHelper.exists(mManageAssetPair.quote, mManageAssetPair.base))
     {
@@ -99,9 +95,6 @@ bool
 ManageAssetPairOpFrame::doApply(Application& app,
                                 StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
     auto& assetPairHelper = storageHelper.getAssetPairHelper();
     AssetPairFrame::pointer assetPair = assetPairHelper.loadAssetPair(mManageAssetPair.base, mManageAssetPair.quote);
     if (mManageAssetPair.action == ManageAssetPairAction::CREATE)
@@ -129,7 +122,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         {
             auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
             const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, nullptr);
-            OfferManager::deleteOffers(storageHelper, offersToRemove, delta);
+            OfferManager::deleteOffers(storageHelper, offersToRemove);
         }
     }
     else
@@ -144,7 +137,7 @@ ManageAssetPairOpFrame::doApply(Application& app,
         auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
         uint64_t minAllowedPrice = assetPair->getMinAllowedPrice();
         const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, &minAllowedPrice);
-        OfferManager::deleteOffers(storageHelper, offersToRemove, delta);
+        OfferManager::deleteOffers(storageHelper, offersToRemove);
     }
 
     storageHelper.getHelper(assetPair->mEntry.data.type())->storeChange(assetPair->mEntry);

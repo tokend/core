@@ -50,8 +50,6 @@ CreateASwapBidRequestTestHelper::applyCreateASwapRequest(
     txtest::Account& source, CreateAtomicSwapBidRequestOp& createASwapRequestOp,
     CreateAtomicSwapBidRequestResultCode expectedResult, OperationResultCode expectedOpRes)
 {
-    Database& db = mTestManager->getDB();
-
     auto& aSwapBidHelper = mTestManager->getStorageHelper().getAtomicSwapAskHelper();
     auto bidFrameBeforeTx = aSwapBidHelper.loadAtomicSwapAsk(
         createASwapRequestOp.request.askID);

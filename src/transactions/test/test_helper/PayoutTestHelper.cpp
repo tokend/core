@@ -39,7 +39,6 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
             uint64_t minPayOutAmount, uint64_t minAssetHolderAmount, Fee &fee,
             PayoutResultCode expectedResult)
 {
-    Database& db = mTestManager->getDB();
     auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
     auto ownerBalanceBefore = balanceHelper.loadBalance(sourceBalanceID);
     BalanceFrame::pointer commissionBalanceBefore;

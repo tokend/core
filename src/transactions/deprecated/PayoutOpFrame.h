@@ -37,7 +37,7 @@ class PayoutOpFrame : public OperationFrame
     }
 
     Fee
-    getActualFee(AssetCode const& asset, uint64_t amount, uint64_t precisionStep, Database& db);
+    getActualFee(StorageHelper& storageHelper, AssetCode const& asset, uint64_t amount, uint64_t precisionStep);
 
     bool
     isFeeAppropriate(Fee const& actualFee) const;

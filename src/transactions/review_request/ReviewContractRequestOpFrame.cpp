@@ -5,7 +5,6 @@
 #include <transactions/payment/PaymentOpFrame.h>
 #include <transactions/deprecated/ManageContractOpFrame.h>
 #include <ledger/EntryHelper.h>
-#include "util/asio.h"
 #include "ReviewContractRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
@@ -52,9 +51,8 @@ ReviewContractRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
     auto& contractEntry = contractFrame->getContract();
     auto contractRequest = request->getRequestEntry().body.contractRequest();
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
-    contractEntry.contractID = delta.getHeaderFrame().generateID(LedgerEntryType::CONTRACT);
+    contractEntry.contractID = storageHelper.mustGetLedgerDelta().
+            getHeaderFrame().generateID(LedgerEntryType::CONTRACT);
     contractEntry.contractor = request->getRequestor();
     contractEntry.customer = request->getReviewer();
     contractEntry.escrow = contractRequest.escrow;

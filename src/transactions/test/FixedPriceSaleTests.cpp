@@ -67,8 +67,6 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     ManageBalanceTestHelper balanceTestHelper(testManager);
     ManageOfferTestHelper offerTestHelper(testManager);
 
-    Database& db = app.getDatabase();
-
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();
 

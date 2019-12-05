@@ -33,8 +33,9 @@ void OfferManager::deleteOffer(StorageHelper& storageHelper, OfferFrame::pointer
     storageHelper.getHelper(balanceFrame->mEntry.data.type())->storeChange(balanceFrame->mEntry);
 }
 
-void OfferManager::deleteOffers(StorageHelper& storageHelper, std::vector<OfferFrame::pointer> offers, LedgerDelta& delta)
+void OfferManager::deleteOffers(StorageHelper& storageHelper, std::vector<OfferFrame::pointer> offers)
 {
+    auto& delta = storageHelper.mustGetLedgerDelta();
     for (auto& offer : offers)
     {
         delta.recordEntry(*offer);

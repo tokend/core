@@ -163,7 +163,6 @@ bool
 BalanceManager::calculateUniversalAmount(AssetCode transferAsset, uint64_t amount)
 {
     mUniversalAmount = 0;
-    Database& db = mSh.getDatabase();
 
     auto statsAssetFrame = mSh.getAssetHelper().loadStatsAsset();
     if (!statsAssetFrame)

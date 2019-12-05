@@ -1,5 +1,4 @@
 #include "RemoveAccountSpecificRuleOpFrame.h"
-#include "transactions/dex/OfferManager.h"
 #include "transactions/dex/DeleteSaleParticipationOpFrame.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/SaleHelper.h"
@@ -96,8 +95,6 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
         return false;
     }
 
-    Database& db = storageHelper.getDatabase();
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto& saleHelper = storageHelper.getSaleHelper();
 
     auto sale = saleHelper.loadSale(ruleFrame->getEntry().ledgerKey.sale().saleID);

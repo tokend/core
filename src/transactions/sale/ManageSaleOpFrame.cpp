@@ -112,8 +112,6 @@ bool
 ManageSaleOpFrame::createUpdateSaleDetailsRequest(Application& app, StorageHelper& storageHelper,
                                                   LedgerManager& ledgerManager)
 {
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-
     auto reference = getUpdateSaleDetailsRequestReference();
     auto const referencePtr = xdr::pointer<string64>(new string64(reference));
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
@@ -123,7 +121,7 @@ ManageSaleOpFrame::createUpdateSaleDetailsRequest(Application& app, StorageHelpe
         return false;
     }
 
-    auto request = ReviewableRequestFrame::createNew(delta, getSourceID(),
+    auto request = ReviewableRequestFrame::createNew(storageHelper.mustGetLedgerDelta(), getSourceID(),
                                                      app.getAdminID(),
                                                      referencePtr, ledgerManager.getCloseTime());
     auto& requestEntry = request->getRequestEntry();
@@ -193,19 +191,14 @@ void ManageSaleOpFrame::cancelAllOffersForQuoteAsset(SaleFrame::pointer sale, Sa
                                                      StorageHelper& storageHelper)
 {
     auto orderBookID = sale->getID();
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     const auto offersToCancel = storageHelper.getOfferHelper().loadOffersWithFilters(sale->getBaseAsset(),
                                                                                saleQuoteAsset.quoteAsset,
                                                                                &orderBookID, nullptr);
-    OfferManager::deleteOffers(storageHelper, offersToCancel, delta);
+    OfferManager::deleteOffers(storageHelper, offersToCancel);
 }
 
 bool ManageSaleOpFrame::doApply(Application& app, StorageHelper& storageHelper, LedgerManager& lm)
 {
-    auto& db = storageHelper.getDatabase();
-    auto delta = storageHelper.getLedgerDelta();
-
     auto saleFrame = getSourceID() == app.getAdminID()
                      ? storageHelper.getSaleHelper().loadSale(mManageSaleOp.saleID)
                      : storageHelper.getSaleHelper().loadSale(mManageSaleOp.saleID, getSourceID());

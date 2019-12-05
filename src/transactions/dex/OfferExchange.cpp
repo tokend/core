@@ -160,8 +160,7 @@ ExchangeResult OfferExchange::exchange(int64_t buyerBase, int64_t buyerQuote,
 
 void OfferExchange::markOfferAsTaken(StorageHelper& storageHelper, OfferFrame& offer,
                                      BalanceFrame::pointer baseBalance,
-                                     BalanceFrame::pointer quoteBalance,
-                                     Database& db)
+                                     BalanceFrame::pointer quoteBalance)
 {
     storageHelper.getHelper(offer.getKey().type())->storeDelete(offer.getKey());
     unlockBalancesForTakenOffer(offer, baseBalance, quoteBalance);
@@ -189,11 +188,9 @@ void OfferExchange::unlockBalancesForTakenOffer(OfferFrame& offer,
         throw std::runtime_error("Failed to mark offer as taken");
 }
 
-BalanceFrame::pointer OfferExchange::loadBalance(
-    BalanceID& balanceID, Database& db)
+BalanceFrame::pointer OfferExchange::loadBalance(StorageHelper& storageHelper,
+    BalanceID& balanceID)
 {
-    StorageHelperImpl storageHelperImpl(db,&mDelta);
-    StorageHelper& storageHelper = storageHelperImpl;
     auto& balanceHelper = storageHelper.getBalanceHelper();
     BalanceFrame::pointer balance = balanceHelper.loadBalance(balanceID);
     if (!balance)
@@ -270,23 +267,19 @@ ClaimOfferAtom OfferExchange::createOfferClaim(OfferEntry const& offerB,
     return result;
 }
 
-OfferExchange::CrossOfferResult OfferExchange::crossOffer(
+OfferExchange::CrossOfferResult OfferExchange::crossOffer(StorageHelper& storageHelper,
     OfferEntry& offerA, BalanceFrame::pointer baseBalanceA,
     BalanceFrame::pointer quoteBalanceA, OfferFrame& offerFrameB)
 {
     // we're about to make changes to the offer
     mDelta.recordEntry(offerFrameB);
 
-    Database& db = mLedgerManager.getDatabase();
-    StorageHelperImpl storageHelperImpl(db, &mDelta);
-    StorageHelper& storageHelper = storageHelperImpl;
-
     OfferEntry& offerB = offerFrameB.getOffer();
-    BalanceFrame::pointer baseBalanceB = loadBalance(offerB.baseBalance, db);
+    BalanceFrame::pointer baseBalanceB = loadBalance(storageHelper, offerB.baseBalance);
     bool isOfferValid = true;
 
     // if first balance is not valid - no need to load second
-    BalanceFrame::pointer quoteBalanceB = loadBalance(offerB.quoteBalance, db);
+    BalanceFrame::pointer quoteBalanceB = loadBalance(storageHelper, offerB.quoteBalance);
 
     isOfferValid = isOfferValid &&
                    isOfferPriceMeetAssetPairRestrictions(mAssetPair,
@@ -295,7 +288,7 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     // one of the balances is not valid for trading or offer does not meet asset pair restrictions, so canceling offer
     if (!isOfferValid)
     {
-        markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB, db);
+        markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB);
         storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
         return eOfferTaken;
     }
@@ -331,7 +324,7 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(
     if (!offerNeedsMore(offerB, quoteBalanceB->getMinimumAmount()))
     {
         // entire offer is taken
-        markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB, db);
+        markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB);
         storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
         storageHelper.getHelper(quoteBalanceB->mEntry.data.type())->storeChange(quoteBalanceB->mEntry);
         return eOfferTaken;
@@ -364,19 +357,17 @@ bool OfferExchange::offerNeedsMore(OfferEntry& offer, uint64_t quotePrecisionSte
 
 OfferExchange::ConvertResult
 OfferExchange::convertWithOffers(
+    StorageHelper& storageHelper,
     OfferEntry& offerA, BalanceFrame::pointer baseBalanceA,
     BalanceFrame::pointer quoteBalanceA,
     std::function<OfferFilterResult(OfferFrame const&)> filter)
 {
     const size_t OFFERS_TO_TAKE = 5;
-    Database& db = mLedgerManager.getDatabase();
 
     size_t offerOffset = 0;
 
     while (offerNeedsMore(offerA, quoteBalanceA->getMinimumAmount()))
     {
-        StorageHelperImpl storageHelperImpl(db,nullptr);
-        StorageHelper& storageHelper = storageHelperImpl;
         std::vector<OfferFrame::pointer> retList;
         auto& offerHelper = storageHelper.getOfferHelper();
         offerHelper.loadBestOffers(OFFERS_TO_TAKE, offerOffset,
@@ -402,7 +393,7 @@ OfferExchange::convertWithOffers(
                 }
             }
 
-            CrossOfferResult cor = crossOffer(offerA, baseBalanceA,
+            CrossOfferResult cor = crossOffer(storageHelper, offerA, baseBalanceA,
                                               quoteBalanceA, *offerB);
 
             switch (cor)

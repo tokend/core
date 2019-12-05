@@ -2,8 +2,6 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/EntryHelper.h>
-#include "util/asio.h"
 #include "ReviewRequestOpFrame.h"
 #include "ReviewAssetCreationRequestOpFrame.h"
 #include "ReviewAssetUpdateRequestOpFrame.h"
@@ -15,7 +13,6 @@
 #include "util/Logging.h"
 #include "util/types.h"
 #include "database/Database.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/ReviewableRequestFrame.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/AccountHelper.h"
@@ -170,7 +167,6 @@ bool
 ReviewRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
     request->setRejectReason(mReviewRequest.reason);
-    Database& db = ledgerManager.getDatabase();
     storageHelper.getReviewableRequestHelper().storeChange(request->mEntry);
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;
@@ -179,7 +175,6 @@ ReviewRequestOpFrame::handleReject(Application& app, StorageHelper& storageHelpe
 bool
 ReviewRequestOpFrame::handlePermanentReject(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-    Database& db = ledgerManager.getDatabase();
     storageHelper.getReviewableRequestHelper().storeDelete(request->getKey());
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     return true;

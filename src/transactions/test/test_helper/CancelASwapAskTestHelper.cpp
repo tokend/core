@@ -34,7 +34,6 @@ CancelASwapAskHelper::applyCancelASwapBid(Account &source, uint64_t bidID,
 {
     auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
     auto& aSwapBidHelper = mTestManager->getStorageHelper().getAtomicSwapAskHelper();
-    Database& db = mTestManager->getDB();
 
     AtomicSwapAskFrame::pointer askBeforeTx = nullptr;
     BalanceFrame::pointer baseBalanceBeforeTx = nullptr;

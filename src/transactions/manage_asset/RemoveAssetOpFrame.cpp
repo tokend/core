@@ -87,8 +87,6 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
                             stellar::StorageHelper& storageHelper,
                             stellar::LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-
     auto& assetHelper = storageHelper.getAssetHelper();
 
     // Asset existence was checked previously
@@ -205,9 +203,6 @@ void
 RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
 {
     auto& limitsHelper =  storageHelper.getLimitsV2Helper();
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
     auto limits = limitsHelper.loadLimitsForAsset(mRemoveAsset.code);
 
     for (auto& limit : limits)

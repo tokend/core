@@ -30,7 +30,6 @@ TEST_CASE("atomic swap", "[tx][atomic_swap]")
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
     auto testManager = TestManager::make(app);
-    Database &db = testManager->getDB();
 
     // test helpers
     CreateAccountTestHelper createAccountHelper(testManager);

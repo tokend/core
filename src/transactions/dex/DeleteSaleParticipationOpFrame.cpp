@@ -41,8 +41,6 @@ bool DeleteSaleParticipationOpFrame::doCheckValid(Application& app)
 bool DeleteSaleParticipationOpFrame::doApply(Application& app,
                                              StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     auto offer = storageHelper.getOfferHelper().loadOffer(getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID);
     if (!offer)
     {

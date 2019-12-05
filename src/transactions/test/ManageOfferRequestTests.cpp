@@ -1,8 +1,6 @@
 #include "ledger/BalanceHelper.h"
-#include "ledger/LedgerDeltaImpl.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/StorageHelper.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
@@ -35,10 +33,6 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     app.start();
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
-    auto& db = testManager->getDB();
-    LedgerDeltaImpl delta(
-        testManager->getLedgerManager().getCurrentLedgerHeader(),
-        testManager->getDB());
 
     // set up world
     SecretKey root = getRoot();

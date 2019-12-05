@@ -105,9 +105,6 @@ AtomicSwapAskFrame::pointer
 CreateAtomicSwapBidRequestOpFrame::loadAtomicSwapAsk(CreateAtomicSwapBidRequest atomicSwapRequest,
                                                      StorageHelper& storageHelper)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
     auto bidFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
         atomicSwapRequest.askID);
     if (!bidFrame)

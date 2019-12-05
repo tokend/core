@@ -10,7 +10,6 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/OfferHelper.h"
 #include "main/Application.h"
-#include "OfferManager.h"
 
 namespace stellar
 {
@@ -65,8 +64,6 @@ bool
 DeleteOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                             LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     const auto offer = storageHelper.getOfferHelper().loadOffer(
         getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID);
     if (!offer)

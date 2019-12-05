@@ -14,7 +14,6 @@ ASwapBidRequestReviewChecker::ASwapBidRequestReviewChecker(TestManager::pointer 
                                                      uint64_t requestID)
         : ReviewChecker(testManager)
 {
-    auto& db = mTestManager->getDB();
     auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     auto& aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
     mAskBeforeTx = mTestManager->getStorageHelper().getAtomicSwapAskHelper().loadAtomicSwapAsk(
@@ -28,8 +27,6 @@ ASwapBidRequestReviewChecker::ASwapBidRequestReviewChecker(TestManager::pointer 
 void
 ASwapBidRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer request)
 {
-    auto& db = mTestManager->getDB();
-
     auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
             request->getRequestID());
 
@@ -61,8 +58,6 @@ ASwapBidRequestReviewChecker::checkPermanentReject(ReviewableRequestFrame::point
 void
 ASwapBidRequestReviewChecker::checkApprove(ReviewableRequestFrame::pointer request)
 {
-    auto& db = mTestManager->getDB();
-
     auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
             request->getRequestID());
 

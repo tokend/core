@@ -4,11 +4,9 @@
 
 #include "transactions/payment/PaymentOpFrame.h"
 #include "ledger/StorageHelper.h"
-#include "util/asio.h"
 #include "ReviewInvoiceRequestOpFrame.h"
 #include "database/Database.h"
 #include "ledger/ReviewableRequestHelper.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/ContractHelper.h"
 #include "ledger/BalanceHelper.h"
@@ -68,8 +66,6 @@ ReviewInvoiceRequestOpFrame::handleApprove(Application& app, StorageHelper& stor
         return true;
     }
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
     auto& contractHelper = storageHelper.getContractHelper();
     auto contractFrame = contractHelper.loadContract(*invoiceRequest.contractID);
 

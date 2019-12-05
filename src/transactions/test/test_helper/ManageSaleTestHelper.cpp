@@ -1,6 +1,5 @@
 #include "ManageSaleTestHelper.h"
 #include "CheckSaleStateTestHelper.h"
-#include "ManageAssetTestHelper.h"
 #include "StateBeforeTxHelper.h"
 #include "TestManager.h"
 #include "TxHelper.h"
@@ -83,7 +82,6 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         ManageSaleResultCode expectedResultCode,
                                         OperationResultCode opExpectedCode)
 {
-    auto& db = mTestManager->getDB();
     auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
     auto& saleHelper = mTestManager->getStorageHelper().getSaleHelper();
 

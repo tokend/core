@@ -113,8 +113,6 @@ namespace stellar {
         void
         TestManager::checkDbState()
         {
-            Database& db = mDB;
-
             auto allAssetsWithIssued = getStorageHelper().getAssetHelper().loadIssuedForAssets();
 
             for (const auto& item : allAssetsWithIssued)

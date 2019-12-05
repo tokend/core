@@ -28,7 +28,6 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     CreateWithdrawalRequestResultCode expectedResult,
     OperationResultCode expectedOpResultCode)
 {
-    Database& db = mTestManager->getDB();
     auto& requestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
     auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
 

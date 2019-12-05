@@ -32,7 +32,6 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
     auto testManager = TestManager::make(app);
-    Database& db = testManager->getDB();
 
     // test helpers
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);

@@ -5,7 +5,6 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AccountRoleHelper.h"
 #include "ledger/AccountKYCHelper.h"
-#include "ledger/LedgerDeltaImpl.h"
 
 namespace stellar
 {
@@ -57,8 +56,6 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application& app, StorageHelper& s
 
     // set KYC Data
     auto& kycHelper = storageHelper.getAccountKYCHelper();
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     auto updatedKYC = kycHelper.loadAccountKYC(destinationAccount);
     if (!updatedKYC)
     {

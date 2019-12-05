@@ -156,9 +156,6 @@ OpenSwapOpFrame::checkFee(BalanceManager& balanceManager,
         throw std::runtime_error("Total sum of fees to be charged overflows");
     }
 
-    auto& db = sh.getDatabase();
-    auto& delta = sh.mustGetLedgerDelta();
-
     // load commission balance
     auto commissionBalance =
         balanceManager.loadOrCreateBalanceForAdmin(chargeFrom->getAsset());
@@ -243,7 +240,6 @@ OpenSwapOpFrame::getActualFee(AccountFrame::pointer accountFrame,
     actualFee.percent = 0;
     actualFee.fixed = 0;
 
-    auto& db = sh.getDatabase();
     auto feeFrame = sh.getFeeHelper().loadForAccount(
         FeeType::SWAP_FEE, transferAsset, static_cast<int64_t>(feeType),
         accountFrame, amount);
@@ -280,7 +276,6 @@ OpenSwapOpFrame::isSendToSelf(BalanceID sourceBalanceID,
 bool
 OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
 {
-    Database& db = sh.getDatabase();
     auto& balanceHelper = sh.getBalanceHelper();
     auto& accountHelper = sh.getAccountHelper();
     auto sourceBalance =
@@ -315,8 +310,6 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     {
         return false;
     }
-
-    auto& delta = sh.mustGetLedgerDelta();
 
     BalanceManager balanceManager(app, sh);
 
@@ -381,7 +374,7 @@ OpenSwapOpFrame::doApply(Application& app, StorageHelper& sh, LedgerManager& lm)
     }
     balanceHelper.storeChange(sourceBalance->mEntry);
 
-    uint64 swapID = delta.getHeaderFrame().generateID(LedgerEntryType::SWAP);
+    uint64 swapID = sh.mustGetLedgerDelta().getHeaderFrame().generateID(LedgerEntryType::SWAP);
 
     LedgerEntry entry;
     entry.data.type(LedgerEntryType::SWAP);

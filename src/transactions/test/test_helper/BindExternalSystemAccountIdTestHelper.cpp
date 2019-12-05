@@ -41,7 +41,6 @@ namespace txtest
         auto& externalSystemAccountIDPoolEntryHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDPoolEntryHelper();
 
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDs;
-        Database& db = mTestManager->getDB();
         externalSystemAccountIDs = externalSystemAccountIDHelper.loadAll();
         auto poolEntryToBindFrame = externalSystemAccountIDPoolEntryHelper.loadAvailablePoolEntry(mTestManager->getLedgerManager(),
                                                                                                    externalSystemType);

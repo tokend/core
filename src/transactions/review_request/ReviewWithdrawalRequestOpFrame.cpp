@@ -2,10 +2,8 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "util/asio.h"
 #include "ReviewWithdrawalRequestOpFrame.h"
 #include "database/Database.h"
-#include "ledger/LedgerDelta.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/PendingStatisticsHelper.h"
 #include "transactions/CreateWithdrawalRequestOpFrame.h"
@@ -103,8 +101,6 @@ bool ReviewWithdrawalRequestOpFrame::handleApprove(
         return true;
     }
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     //Delete pending_statistics entries before reviewable request due to constraint change
     auto reqID = request->getRequestID();
     auto pendingStats = storageHelper.getPendingStatisticsHelper().loadPendingStatistics(reqID);

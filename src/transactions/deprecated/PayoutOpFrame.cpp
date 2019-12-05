@@ -24,14 +24,12 @@ PayoutOpFrame::isSupported(LedgerManager& lm) const
 }
 
 Fee
-PayoutOpFrame::getActualFee(AssetCode const& asset, uint64_t amount,
-                            uint64_t precisionStep, Database& db)
+PayoutOpFrame::getActualFee(StorageHelper& storageHelper, AssetCode const& asset, uint64_t amount,
+                            uint64_t precisionStep)
 {
     Fee actualFee;
     actualFee.fixed = 0;
     actualFee.percent = 0;
-    StorageHelperImpl storageHelperImpl(db, nullptr);
-    StorageHelper& storageHelper = storageHelperImpl;
     auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::PAYOUT_FEE,
             asset, FeeFrame::SUBTYPE_ANY, mSourceAccount, amount);
     if (!feeFrame)
@@ -63,9 +61,12 @@ PayoutOpFrame::tryProcessTransferFee(BalanceManager& accountManager,
                                      Database& db, uint64_t actualTotalAmount,
                                      BalanceFrame::pointer sourceBalance)
 {
-    auto actualFee = getActualFee(sourceBalance->getAsset(),
+    StorageHelperImpl storageHelperImpl(db, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto actualFee = getActualFee(storageHelper,
+                                  sourceBalance->getAsset(),
                                   actualTotalAmount,
-                                  sourceBalance->getMinimumAmount(), db);
+                                  sourceBalance->getMinimumAmount());
 
     if (!isFeeAppropriate(actualFee))
     {

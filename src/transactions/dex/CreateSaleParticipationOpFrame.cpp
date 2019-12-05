@@ -84,8 +84,6 @@ CreateSaleParticipationOpFrame::loadSaleForOffer(StorageHelper& storageHelper)
         return nullptr;
     }
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     auto sale = storageHelper.getSaleHelper().loadSale(
         mManageOffer.orderBookID, baseBalance->getAsset(),
         quoteBalance->getAsset());

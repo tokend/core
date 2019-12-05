@@ -107,8 +107,6 @@ CreateOfferOpFrame::loadBalanceValidForTrading(StorageHelper& storageHelper, Bal
 
 AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(StorageHelper& storageHelper)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     auto& assetPairHelper = storageHelper.getAssetPairHelper();
     AssetPairFrame::pointer assetPair = assetPairHelper.
         loadAssetPair(mBaseBalance->getAsset(), mQuoteBalance->getAsset());
@@ -304,7 +302,8 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                      mManageOffer.orderBookID);
 
     int64_t price = offer.price;
-    const OfferExchange::ConvertResult r = oe.convertWithOffers(offer,
+    const OfferExchange::ConvertResult r = oe.convertWithOffers(storageHelper,
+                                                                offer,
                                                                 mBaseBalance,
                                                                 mQuoteBalance,
                                                                 [this, &price](

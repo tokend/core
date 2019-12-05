@@ -7,7 +7,6 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 #include "src/ledger/StorageHelperImpl.h"
-#include "ledger/LedgerDeltaImpl.h"
 
 namespace stellar
 {
@@ -16,8 +15,6 @@ namespace txtest
 LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testManager,
                                                      uint64_t requestID) : ReviewChecker(testManager)
 {
-    Database& db = mTestManager->getDB();
-
     auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
     auto request = reviewableRequestHelper.loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
@@ -29,7 +26,6 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 
 void
 LimitsUpdateReviewChecker::checkApprove(ReviewableRequestFrame::pointer request) {
-    Database& db = mTestManager->getDB();
     REQUIRE(!!manageLimitsRequest);
 
     // check accountLimits

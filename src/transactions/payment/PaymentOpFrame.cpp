@@ -9,7 +9,6 @@
 #include "ledger/FeeHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
@@ -290,7 +289,6 @@ bool
 PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                         LedgerManager& ledgerManager)
 {
-    Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto sourceBalance = balanceHelper.loadBalance(mPayment.sourceBalanceID, getSourceID());

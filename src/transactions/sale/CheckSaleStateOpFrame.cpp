@@ -11,8 +11,7 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/StorageHelperImpl.h"
-#include "ledger/LedgerDeltaImpl.h"
+#include "ledger/StorageHelper.h"
 #include "xdrpp/printer.h"
 #include "transactions/issuance/CreateIssuanceRequestOpFrame.h"
 #include "transactions/dex/CreateSaleParticipationOpFrame.h"
@@ -206,8 +205,6 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     }
     }
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
     storageHelper.getSaleHelper().storeDelete(sale->getKey());
 
     ManageSaleOpFrame::removeSaleRules(storageHelper, sale->getKey());
@@ -299,7 +296,6 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
     auto baseAsset = sale->getBaseAsset();
     auto price = saleQuoteAsset.price;
 
-    auto& db = storageHelper.getDatabase();
     auto const feeResult = obtainCalculatedFeeForAccount(storageHelper,
         saleOwnerAccount, saleQuoteAsset.quoteAsset, quoteAmount, lm);
 
@@ -392,7 +388,6 @@ cleanSale(SaleFrame::pointer sale, Application& app, StorageHelper& storageHelpe
 
     bool wasUpdated = false;
     const int64_t priceInDefaultQuoteAsset = getSaleCurrentPriceInDefaultQuote(sale, storageHelper);
-    auto& db = storageHelper.getDatabase();
     for (auto const& quoteAsset : sale->getSaleEntry().quoteAssets)
     {
         const int64_t priceInQuoteAsset = getPriceInQuoteAsset(storageHelper, priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset);
@@ -448,8 +443,6 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
     }
     auto& saleEntry = sale->getSaleEntry();
     uint64_t priceInDefaultQuoteAsset = getSaleCurrentPriceInDefaultQuote(sale, storageHelper);
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     for (auto& quoteAsset : saleEntry.quoteAssets)
     {
         quoteAsset.price = getPriceInQuoteAsset(storageHelper, priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset);
@@ -538,8 +531,6 @@ CheckSaleStateOpFrame::CheckSaleStateOpFrame(Operation const& op,
 bool CheckSaleStateOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     const auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {

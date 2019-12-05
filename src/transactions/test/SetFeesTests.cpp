@@ -3,12 +3,9 @@
 // this distribution or at http://opensource.org/licenses/ISC
 
 #include "main/Application.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "TxTests.h"
-#include "ledger/LedgerDeltaImpl.h"
 #include "ledger/FeeHelper.h"
-#include "transactions/SetFeesOpFrame.h"
 #include "crypto/SHA.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
@@ -33,12 +30,7 @@ TEST_CASE("Set fee", "[tx][set_fees]")
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
 
-    Database& db = app.getDatabase();
-
     auto testManager = TestManager::make(app);
-
-    LedgerDeltaImpl delta(app.getLedgerManager().getCurrentLedgerHeader(),
-                          app.getDatabase());
 
     auto& storageHelper = testManager->getStorageHelper();
     auto& accountHelper = storageHelper.getAccountHelper();

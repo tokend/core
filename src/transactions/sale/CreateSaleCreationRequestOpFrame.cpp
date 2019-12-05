@@ -93,7 +93,7 @@ areQuoteAssetsValid(StorageHelper& storageHelper,
     {
         return false;
     }
-    auto& db = storageHelper.getDatabase();
+
     for (auto const& quoteAsset : quoteAssets)
     {
         if (!assetHelper.existActive(quoteAsset.quoteAsset))
@@ -240,10 +240,10 @@ CreateSaleCreationRequestOpFrame::createRequest(Application& app,
                                                 StorageHelper& storageHelper,
                                                 LedgerManager& ledgerManager)
 {
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto request = ReviewableRequestFrame::createNew(
-        delta.getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST),
-        getSourceID(), app.getAdminID(), nullptr, ledgerManager.getCloseTime());
+            storageHelper.mustGetLedgerDelta().getHeaderFrame().generateID(LedgerEntryType::REVIEWABLE_REQUEST),
+                                                                 getSourceID(), app.getAdminID(),
+                                                                 nullptr, ledgerManager.getCloseTime());
 
     auto& requestEntry = request->getRequestEntry();
     requestEntry.body.type(ReviewableRequestType::CREATE_SALE);
@@ -451,7 +451,6 @@ CreateSaleCreationRequestOpFrame::isRequestValid(Application& app,
 
     if (ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR))
     {
-        auto& db = storageHelper.getDatabase();
         for (auto const& quoteAsset : sale.quoteAssets)
         {
             if (storageHelper.getAssetPairHelper().exists(quoteAsset.quoteAsset, sale.baseAsset))

@@ -8,7 +8,6 @@
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "transactions/dex/OfferExchange.h"
-#include "ledger/LedgerDeltaImpl.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/AssetPairHelper.h"
@@ -42,8 +41,6 @@ TEST_CASE("manage offer", "[tx][offer]")
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
     auto& db = testManager->getDB();
-    LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(),
-                          testManager->getDB());
 
     // set up world
     SecretKey root = getRoot();

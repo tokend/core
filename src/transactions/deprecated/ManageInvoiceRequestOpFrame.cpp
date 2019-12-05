@@ -54,9 +54,6 @@ ManageInvoiceRequestOpFrame::doApply(Application& app, StorageHelper& storageHel
     }
 
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
     if (!!invoiceRequest.contractID)
     {
         auto& contractHelper = storageHelper.getContractHelper();
@@ -131,7 +128,6 @@ ManageInvoiceRequestOpFrame::createManageInvoiceRequest(Application& app, Storag
     body.type(ReviewableRequestType::CREATE_INVOICE);
     body.invoiceRequest() = invoiceRequest;
 
-    auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
     auto request = ReviewableRequestFrame::createNewWithHash(delta, getSourceID(), invoiceCreationRequest.sender,
                                                              nullptr, body, ledgerManager.getCloseTime());

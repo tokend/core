@@ -137,9 +137,6 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
 void
 StatisticsV2Processor::revertStatsV2(uint64_t requestID)
 {
-    auto& db = mStorageHelper.getDatabase();
-    auto& delta = mStorageHelper.mustGetLedgerDelta();
-
     auto& pendingStatisticsHelper = mStorageHelper.getPendingStatisticsHelper();
     auto pendingStatisticsVector = pendingStatisticsHelper.loadPendingStatistics(requestID);
 

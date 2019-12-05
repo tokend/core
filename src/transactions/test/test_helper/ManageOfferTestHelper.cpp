@@ -47,8 +47,6 @@ ManageOfferTestHelper::ensureCreateSuccess(
     Account& source, ManageOfferOp op, ManageOfferSuccessResult success,
     LedgerDelta::KeyEntryMap& stateBeforeTx)
 {
-    auto& db = mTestManager->getDB();
-
     auto& offerResult = success.offer;
     auto claimedOffers = success.offersClaimed;
 

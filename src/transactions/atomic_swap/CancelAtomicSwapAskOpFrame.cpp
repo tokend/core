@@ -60,7 +60,6 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
                                          LedgerManager& ledgerManager)
 {
     innerResult().code(CancelAtomicSwapAskResultCode::SUCCESS);
-    auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
         getSourceID(), mCancelASwapBid.askID);

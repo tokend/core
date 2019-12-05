@@ -46,7 +46,6 @@ ManageBalanceTestHelper::applyManageBalanceTx(Account& from, AccountID& account,
     auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
 
     std::vector<BalanceFrame::pointer> balances;
-    Database& db = mTestManager->getDB();
     balanceHelper.loadBalances(account, balances);
 
     txFrame = createManageBalanceTx(from, account, asset, action, signer);

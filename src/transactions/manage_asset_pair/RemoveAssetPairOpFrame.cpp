@@ -40,8 +40,6 @@ bool RemoveAssetPairOpFrame::tryGetSignerRequirements(stellar::StorageHelper& st
 bool RemoveAssetPairOpFrame::doApply(stellar::Application& app, stellar::StorageHelper& storageHelper,
                                      stellar::LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     auto& assetPairHelper = storageHelper.getAssetPairHelper();
     auto assetPair = assetPairHelper.loadAssetPair(mRemoveAssetPair.base, mRemoveAssetPair.quote);
     if (assetPair == nullptr)

@@ -16,7 +16,6 @@ ASwapAskRequestReviewChecker::ASwapAskRequestReviewChecker(
         TestManager::pointer testManager, uint64_t requestID)
         : ReviewChecker(testManager)
 {
-    auto& db = mTestManager->getDB();
     auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.createAtomicSwapAskRequest();
@@ -27,8 +26,6 @@ ASwapAskRequestReviewChecker::ASwapAskRequestReviewChecker(
 void ASwapAskRequestReviewChecker::checkPermanentReject(
         ReviewableRequestFrame::pointer request)
 {
-    auto& db = mTestManager->getDB();
-
     auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
             request->getRequestID());
 

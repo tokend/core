@@ -94,7 +94,6 @@ PaymentTestHelper::applyPaymentTx(Account& source, BalanceID sourceBalanceID,
                                   PaymentResultCode expectedResultCode,
                                   OperationResultCode expectedOpResultCode)
 {
-    auto& db = mTestManager->getDB();
     auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
 
     auto sourceBalanceBeforeTx =

@@ -128,7 +128,6 @@ IssuanceRequestHelper::applyCreateIssuanceRequest(Account& source, AssetCode ass
     auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
     auto& assetHelper = storageHelper.getAssetHelper();
 
-    auto& db = mTestManager->getDB();
     auto expectedReviewableRequestAfterTx = reviewableRequestHelper.countObjects();
 
     auto referenceBeforeTx = storageHelper.getReferenceHelper().loadReference(source.key.getPublicKey(), reference);

@@ -116,8 +116,6 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     const auto balances =
         loadBalances(balanceManager, request, saleCreationRequest);
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
     const auto saleFrame =
         SaleFrame::createNew(saleID, baseAsset->getOwner(), saleCreationRequest,
                              balances, requiredBaseAssetForHardCap);
@@ -208,8 +206,8 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
 
     requestHelper.storeDelete(request->getKey());
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto newSaleID = delta.getHeaderFrame().generateID(LedgerEntryType::SALE);
+    auto newSaleID = storageHelper.mustGetLedgerDelta()
+            .getHeaderFrame().generateID(LedgerEntryType::SALE);
 
     ReviewRequestResultCode saleCreationResult =
         tryCreateSale(app, storageHelper, ledgerManager, request, newSaleID);

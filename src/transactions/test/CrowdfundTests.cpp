@@ -129,7 +129,6 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
         // create base balance for participant:
         auto manageBalanceRes = ManageBalanceTestHelper(testManager).applyManageBalanceTx(participant, participantID, baseAsset);
         BalanceID baseBalance = manageBalanceRes.success().balanceID;
-        Database& db = testManager->getDB();
         BalanceID quoteBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(participantID, quoteAsset)->getBalanceID();
 
         // pre-issue quote amount

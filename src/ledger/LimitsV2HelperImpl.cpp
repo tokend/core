@@ -189,8 +189,7 @@ namespace  stellar
     LimitsV2HelperImpl::countObjects()
     {
         uint64_t count = 0;
-        Database &db = getDatabase();
-        db.getSession() << "SELECT COUNT(*) FROM limits_v2;", into(count);
+        getDatabase().getSession() << "SELECT COUNT(*) FROM limits_v2;", into(count);
         return count;
     }
 
