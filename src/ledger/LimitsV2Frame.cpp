@@ -65,4 +65,15 @@ namespace stellar
 
         return limitsV2Frame;
     }
+
+    LedgerKey const &
+    LimitsV2Frame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::LIMITS_V2);
+            mKey.limitsV2().id = mLimitsV2.id;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
 }

@@ -26,7 +26,7 @@ class CreateOfferOpFrame : public ManageOfferOpFrame {
 
     bool lockSellingAmount(OfferEntry const& offer);
 
-    FeeManager::FeeResult obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const;
+    FeeManager::FeeResult obtainCalculatedFeeForAccount(StorageHelper& storageHelper, int64_t amount, LedgerManager& lm) const;
 
     bool currentPriceRestrictionsMet(LedgerManager& lm);
 

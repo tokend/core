@@ -1,6 +1,6 @@
 #include <transactions/test/test_helper/SetFeesTestHelper.h>
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/LedgerDeltaImpl.h>
 #include <ledger/StorageHelperImpl.h>
 #include "main/Application.h"
@@ -9,7 +9,6 @@
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "TxTests.h"
-#include "ledger/BalanceHelper.h"
 #include "ledger/AssetHelper.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"

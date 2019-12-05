@@ -6,7 +6,8 @@
 #include "ReviewSaleRequestHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "test/test_marshaler.h"
 #include "transactions/review_request/ReviewSaleCreationRequestOpFrame.h"
 
@@ -20,7 +21,7 @@ SaleReviewChecker::SaleReviewChecker(const TestManager::pointer testManager,
 {
     auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
 
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, mTestManager->getDB());
+    auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::CREATE_SALE)
     {
         return;
@@ -46,8 +47,7 @@ void SaleReviewChecker::checkApprove(ReviewableRequestFrame::pointer)
     // check if asset pair was created
     for (auto saleQuoteAsset : saleRequest.quoteAssets)
     {
-        auto assetPair = AssetPairHelper::Instance()->loadAssetPair(saleRequest.baseAsset, saleQuoteAsset.quoteAsset,
-            mTestManager->getDB());
+        auto assetPair = mTestManager->getStorageHelper().getAssetPairHelper().loadAssetPair(saleRequest.baseAsset, saleQuoteAsset.quoteAsset);
         REQUIRE(!!assetPair);
         REQUIRE(assetPair->getCurrentPrice() == saleQuoteAsset.price);
     }

@@ -256,7 +256,7 @@ BalanceHelperImpl::loadBalance(BalanceID balanceID)
         return balanceFrame;
     }
 
-    Database& db = getDatabase();
+     Database& db = mStorageHelper.getDatabase();
 
     auto balIDStrKey = BalanceKeyUtils::toStrKey(balanceID);
 
@@ -548,5 +548,21 @@ BalanceHelperImpl::obtainStrAccountIDs(vector<AccountID> accountIDs)
 
     return result.substr(0, result.size() - 3);
 }
-} // namespace stellar
 
+uint64_t BalanceHelperImpl::loadTotalAssetAmount(AssetCode assetCode)
+{
+    Database &db = getDatabase();
+    uint64_t assetTotalAmount = 0;
+
+    auto timer = db.getSelectTimer("total-asset-amount");
+    auto prep = db.getPreparedStatement("SELECT SUM(amount + locked) FROM balance "
+                                        "WHERE asset = :asset_code");
+    auto& st = prep.statement();
+    st.exchange(use(assetCode, "asset_code"));
+    st.exchange(into(assetTotalAmount));
+    st.define_and_bind();
+    st.execute(true);
+
+    return assetTotalAmount;
+}
+} // namespace stellar

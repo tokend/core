@@ -1,3 +1,4 @@
+#include <ledger/EntryHelper.h>
 #include "ledger/ContractHelper.h"
 #include "ledger/KeyValueHelper.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
@@ -45,11 +46,9 @@ ManageContractOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 {
     AccountEntry& account = mSourceAccount->getAccount();
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     innerResult().code(ManageContractResultCode::SUCCESS);
 
-    auto contractFrame = ContractHelper::Instance()->loadContract(mManageContract.contractID, db, &delta);
+    auto contractFrame = storageHelper.getContractHelper().loadContract(mManageContract.contractID);
 
     if (!contractFrame)
     {
@@ -151,9 +150,8 @@ ManageContractOpFrame::tryConfirmCompleted(ContractFrame::pointer contractFrame,
         innerResult().code(ManageContractResultCode::ALREADY_CONFIRMED);
         return false;
     }
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    EntryHelperProvider::storeChangeEntry(delta, db, contractFrame->mEntry);
+
+    storageHelper.getHelper(contractFrame->mEntry.data.type())->storeChange(contractFrame->mEntry);
 
     return tryCompleted(contractFrame, invoiceRequests, storageHelper);
 }
@@ -190,9 +188,7 @@ ManageContractOpFrame::tryCompleted(ContractFrame::pointer contractFrame,
         requestHelper.storeDelete(invoiceRequest->getKey());
     }
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    EntryHelperProvider::storeDeleteEntry(delta, db, contractFrame->getKey());
+    storageHelper.getHelper(contractFrame->getKey().type())->storeDelete(contractFrame->getKey());
 
     return true;
 }
@@ -238,9 +234,7 @@ ManageContractOpFrame::tryStartDispute(ContractFrame::pointer contractFrame,
 
     contractFrame->addState(ContractState::DISPUTING);
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    ContractHelper::Instance()->storeChange(delta, db, contractFrame->mEntry);
+    storageHelper.getContractHelper().storeChange(contractFrame->mEntry);
 
     return true;
 }
@@ -254,9 +248,7 @@ ManageContractOpFrame::tryResolveDispute(ContractFrame::pointer contractFrame,
 
     innerResult().response().data.action(ManageContractAction::RESOLVE_DISPUTE);
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    EntryHelperProvider::storeDeleteEntry(delta, db, contractFrame->getKey());
+    storageHelper.getHelper(contractFrame->getKey().type())->storeDelete(contractFrame->getKey());
 
     if (mManageContract.data.isRevert())
     {

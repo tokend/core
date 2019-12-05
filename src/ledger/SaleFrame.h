@@ -101,5 +101,7 @@ class SaleFrame : public EntryFrame
 
     State getState(int64_t currentTime);
 
+    LedgerKey const&
+    getKey() const override;
 };
 }

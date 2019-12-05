@@ -53,6 +53,9 @@ public:
     bool isValid() const;
 
     static bool isValid(AtomicSwapAskEntry const& atomicSwapBidEntry);
+
+    LedgerKey const&
+    getKey() const override;
 };
 
 }

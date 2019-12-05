@@ -59,6 +59,9 @@ public:
     }
 
     static pointer createNew(uint64& requestID, uint64& statisticsID, uint64& amount);
+
+    LedgerKey const&
+    getKey() const override;
 };
 
 }

@@ -73,9 +73,10 @@ class CheckSaleStateOpFrame : public OperationFrame
                      AccountFrame::pointer owner);
 
     FeeManager::FeeResult
-    obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
+    obtainCalculatedFeeForAccount(StorageHelper& storageHelper,
+                                  const AccountFrame::pointer saleOwnerAccount,
                                   AssetCode const& asset, int64_t amount,
-                                  LedgerManager& lm, Database& db) const;
+                                  LedgerManager& lm) const;
 
     ManageOfferSuccessResult
     applySaleOffer(AccountFrame::pointer saleOwner, SaleFrame::pointer sale,
@@ -117,10 +118,10 @@ class CheckSaleStateOpFrame : public OperationFrame
     static int64_t getSalePriceForCap(int64_t const cap,
                                       SaleFrame::pointer sale);
 
-    static int64_t getPriceInQuoteAsset(int64_t const salePriceInDefaultQuote,
+    static int64_t getPriceInQuoteAsset(StorageHelper& storageHelper,
+                                        int64_t const salePriceInDefaultQuote,
                                         SaleFrame::pointer sale,
-                                        AssetCode const quoteAsset,
-                                        Database& db);
+                                        AssetCode const quoteAsset);
 
     static CheckSaleStateResultCode
     getInnerCode(OperationResult const& res)

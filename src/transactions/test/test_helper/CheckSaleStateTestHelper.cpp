@@ -99,7 +99,7 @@ void CheckSaleStateHelper::ensureUpdated(const CheckSaleStateSuccess result,
                                          StateBeforeTxHelper& stateBeforeTx) const
 {
     auto saleBeforeTx = stateBeforeTx.getSale(result.saleID);
-    auto saleAfterTx = SaleHelper::Instance()->loadSale(result.saleID, mTestManager->getDB());
+    auto saleAfterTx = mTestManager->getStorageHelper().getSaleHelper().loadSale(result.saleID);
     REQUIRE(!!saleAfterTx);
     auto isUpdated = false;
     for (auto i = 0; i < saleBeforeTx->getSaleEntry().quoteAssets.size(); i++)
@@ -122,8 +122,8 @@ void CheckSaleStateHelper::ensureNoOffersLeft(CheckSaleStateSuccess result, Stat
     auto saleBeforeTx = stateBeforeTx.getSale(result.saleID);
     for (auto saleQuoteAsset : saleBeforeTx->getSaleEntry().quoteAssets)
     {
-        auto offers = OfferHelper::Instance()->loadOffersWithFilters(saleBeforeTx->getBaseAsset(), saleQuoteAsset.quoteAsset,
-                                                                     &result.saleID, nullptr, mTestManager->getDB());
+        auto offers = mTestManager->getStorageHelper().getOfferHelper().loadOffersWithFilters(saleBeforeTx->getBaseAsset(), saleQuoteAsset.quoteAsset,
+                                                                     &result.saleID, nullptr);
         REQUIRE(offers.empty());
     }
 }
@@ -132,16 +132,16 @@ void CheckSaleStateHelper::checkBalancesAfterApproval(StateBeforeTxHelper& state
                                                       SaleQuoteAsset const& saleQuoteAsset,
                                                       CheckSubSaleClosedResult result) const
 {
-    auto& storageHelper = mTestManager->getStorageHelper();
+    auto& storageHelper = mTestManager->getStorageHelper();;
     auto& balanceHelper = storageHelper.getBalanceHelper();
 
     auto ownerQuoteBalanceBefore = stateBeforeTx.getBalance(saleQuoteAsset.quoteBalance);
     REQUIRE(ownerQuoteBalanceBefore);
     auto ownerQuoteBalanceAfter = balanceHelper.mustLoadBalance(saleQuoteAsset.quoteBalance);
     auto ownerFrame = storageHelper.getAccountHelper().mustLoadAccount(sale->getOwnerID());
-    auto totalSellerFee = FeeManager::calculateFeeForAccount(ownerFrame, FeeType::CAPITAL_DEPLOYMENT_FEE,
+    auto totalSellerFee = FeeManager::calculateFeeForAccount(storageHelper, ownerFrame, FeeType::CAPITAL_DEPLOYMENT_FEE,
                                                              saleQuoteAsset.quoteAsset, FeeFrame::SUBTYPE_ANY,
-                                                             saleQuoteAsset.currentCap, mTestManager->getDB())
+                                                             saleQuoteAsset.currentCap)
         .calculatedPercentFee;
     // TODO: currently it's possible to go a bit below currentCap
     REQUIRE(ownerQuoteBalanceAfter->getAmount()

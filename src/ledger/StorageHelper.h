@@ -28,6 +28,17 @@ class PollHelper;
 class AccountSpecificRuleHelper;
 class ReviewableRequestHelper;
 class SwapHelper;
+class LimitsV2Helper;
+class AccountKYCHelper;
+class AssetPairHelper;
+class AtomicSwapAskHelper;
+class ContractHelper;
+class FeeHelper;
+class OfferHelper;
+class ReferenceHelper;
+class SaleHelper;
+class PendingStatisticsHelper;
+class StatisticsV2Helper;
 
 class StorageHelper
 {
@@ -74,6 +85,17 @@ class StorageHelper
     virtual AccountSpecificRuleHelper& getAccountSpecificRuleHelper() = 0;
     virtual ReviewableRequestHelper& getReviewableRequestHelper() = 0;
     virtual SwapHelper& getSwapHelper() = 0;
+    virtual LimitsV2Helper& getLimitsV2Helper() = 0;
+    virtual AccountKYCHelper& getAccountKYCHelper() = 0;
+    virtual AssetPairHelper& getAssetPairHelper() = 0;
+    virtual AtomicSwapAskHelper& getAtomicSwapAskHelper() = 0;
+    virtual ContractHelper& getContractHelper() = 0;
+    virtual FeeHelper& getFeeHelper() = 0;
+    virtual OfferHelper& getOfferHelper() = 0;
+    virtual ReferenceHelper& getReferenceHelper() = 0;
+    virtual SaleHelper& getSaleHelper() = 0;
+    virtual PendingStatisticsHelper& getPendingStatisticsHelper() = 0;
+    virtual StatisticsV2Helper& getStatisticsV2Helper() = 0;
 
 };
 } // namespace stellar

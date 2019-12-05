@@ -2,25 +2,21 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelperImpl.h>
 #include "main/Application.h"
 #include "invariant/Invariants.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
 #include "TxTests.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "transactions/CreateAccountOpFrame.h"
-#include "transactions/ManageBalanceOpFrame.h"
-#include "transactions/payment/PaymentOpFrame.h"
-#include "transactions/ManageLimitsOpFrame.h"
-#include "transactions/deprecated/ManageInvoiceRequestOpFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/FeeHelper.h"
-#include "ledger/StatisticsHelper.h"
 #include "crypto/SHA.h"
 #include "test_helper/TestManager.h"
 #include "ledger/AccountFrame.h"
+#include "ledger/StorageHelperImpl.h"
+#include "ledger/AccountHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -32,12 +28,6 @@ using xdr::operator==;
 
 namespace txtest
 {
-auto accountHelper = EntryHelperProvider::getHelper(LedgerEntryType::ACCOUNT);
-auto assetHelper = EntryHelperProvider::getHelper(LedgerEntryType::ASSET);
-auto balanceHelper = BalanceHelperLegacy::Instance();
-auto feeHelper = FeeHelper::Instance();
-auto statisticsHelper = StatisticsHelper::Instance();
-
 
 FeeEntry createFeeEntry(FeeType type, int64_t fixed, int64_t percent,
                         AssetCode asset, AccountID *accountID, uint64_t *accountType, int64_t subtype,
@@ -116,11 +106,7 @@ bool applyCheck(TransactionFramePtr tx, LedgerDelta& delta, Application& app)
         {
             REQUIRE(checkResult == tx->getResult());
         }
-
-        if (res)
-        {
-            delta.commit();
-        }
+        
     }
     else
     {
@@ -167,8 +153,9 @@ checkAccount(AccountID const& id, Application& app)
 {
     LedgerKey key(LedgerEntryType::ACCOUNT);
     key.account().accountID = id;
-    auto entry =
-        accountHelper->storeLoad(key, app.getDatabase());
+    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto entry = storageHelper.getAccountHelper().storeLoad(key);
     REQUIRE(entry);
 }
 
@@ -278,11 +265,11 @@ loadAccount(SecretKey const& k, Application& app, bool mustExist)
 AccountFrame::pointer
 loadAccount(PublicKey const& k, Application& app, bool mustExist)
 {
-
+    StorageHelperImpl storageHelperImpl(app.getDatabase(), nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
     LedgerKey key(LedgerEntryType::ACCOUNT);
     key.account().accountID = k;
-    auto entry =
-        accountHelper->storeLoad(key, app.getDatabase());
+    auto entry = storageHelper.getAccountHelper().storeLoad(key);
     if (mustExist)
     {
         REQUIRE(entry);
@@ -295,8 +282,9 @@ loadAccount(PublicKey const& k, Application& app, bool mustExist)
 BalanceFrame::pointer
 loadBalance(BalanceID bid, Application& app, bool mustExist)
 {
+    std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(app.getDatabase(), nullptr);
     BalanceFrame::pointer res =
-        balanceHelper->loadBalance(bid, app.getDatabase());
+            storageHelper->getBalanceHelper().loadBalance(bid);
     if (mustExist)
     {
         REQUIRE(res);
@@ -307,8 +295,8 @@ loadBalance(BalanceID bid, Application& app, bool mustExist)
 int64_t
 getBalance(BalanceID const& k, Application& app)
 {
-
-    auto balance = balanceHelper->loadBalance(k, app.getDatabase());
+    std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(app.getDatabase(), nullptr);
+    auto balance = storageHelper->getBalanceHelper().loadBalance(k);
     assert(balance);
     return balance->getAmount();
 }
@@ -408,18 +396,11 @@ applyCreateAccountTx(Application& app, SecretKey& from, SecretKey& to,
     {
         REQUIRE(toAccountAfter);
 
-        auto statisticsFrame = statisticsHelper->loadStatistics(to.getPublicKey(), app.getDatabase());
-        REQUIRE(statisticsFrame);
-        auto statistics = statisticsFrame->getStatistics();
-        REQUIRE(statistics.dailyOutcome == 0);
-        REQUIRE(statistics.weeklyOutcome == 0);
-        REQUIRE(statistics.monthlyOutcome == 0);
-        REQUIRE(statistics.annualOutcome == 0);
-
         if (!toAccount)
         {
+            std::unique_ptr<StorageHelper> storageHelper = std::make_unique<StorageHelperImpl>(app.getDatabase(), nullptr);
             std::vector<BalanceFrame::pointer> balances;
-            balanceHelper->loadBalances(toAccountAfter->getAccount().accountID, balances, app.getDatabase());
+            storageHelper->getBalanceHelper().loadBalances(toAccountAfter->getAccount().accountID, balances);
             for (BalanceFrame::pointer balance : balances)
             {
                 REQUIRE(balance->getBalance().amount == 0);
@@ -492,8 +473,10 @@ applySetFees(Application& app, SecretKey& source, Salt seq, FeeEntry *fee, bool 
     {
         if (fee)
         {
-            auto storedFee = feeHelper->loadFee(fee->feeType, fee->asset,
-                                                fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound, app.getDatabase(), nullptr);
+            StorageHelperImpl storageHelperImpl(app.getDatabase(), &delta);
+            StorageHelper& storageHelper = storageHelperImpl;
+            auto storedFee = storageHelper.getFeeHelper().loadFee(fee->feeType, fee->asset,
+                                                fee->accountID.get(), fee->accountRole.get(), fee->subtype, fee->lowerBound, fee->upperBound);
             if (isDelete)
                 REQUIRE(!storedFee);
             else

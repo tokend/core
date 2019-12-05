@@ -9,6 +9,7 @@
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
+#include "ledger/OfferHelper.h"
 #include "main/Application.h"
 #include "OfferManager.h"
 #include "transactions/managers/BalanceManager.h"
@@ -107,12 +108,9 @@ CreateOfferOpFrame::loadBalanceValidForTrading(StorageHelper& storageHelper, Bal
 
 AssetPairFrame::pointer CreateOfferOpFrame::loadTradableAssetPair(StorageHelper& storageHelper)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto assetPairHelper = AssetPairHelper::Instance();
-    AssetPairFrame::pointer assetPair = assetPairHelper->
-        loadAssetPair(mBaseBalance->getAsset(), mQuoteBalance->getAsset(), db,
-                      &delta);
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    AssetPairFrame::pointer assetPair = assetPairHelper.
+        loadAssetPair(mBaseBalance->getAsset(), mQuoteBalance->getAsset());
     if (!assetPair)
         return nullptr;
 
@@ -230,16 +228,16 @@ bool CreateOfferOpFrame::lockSellingAmount(OfferEntry const& offer)
 }
 
 FeeManager::FeeResult
-CreateOfferOpFrame::obtainCalculatedFeeForAccount(int64_t amount, LedgerManager& lm, Database& db) const
+CreateOfferOpFrame::obtainCalculatedFeeForAccount(StorageHelper& storageHelper, int64_t amount, LedgerManager& lm) const
 {
     if (!lm.shouldUse(LedgerVersion::ADD_INVEST_FEE) && feeType == FeeType::INVEST_FEE)
     {
-        return FeeManager::calculateFeeForAccount(mSourceAccount, FeeType::OFFER_FEE, mQuoteBalance->getAsset(),
-                                                  FeeFrame::SUBTYPE_ANY, amount, db);
+        return FeeManager::calculateFeeForAccount(storageHelper, mSourceAccount, FeeType::OFFER_FEE, mQuoteBalance->getAsset(),
+                                                  FeeFrame::SUBTYPE_ANY, amount);
     }
 
-    return FeeManager::calculateFeeForAccount(mSourceAccount, feeType, mQuoteBalance->getAsset(),
-                                              FeeFrame::SUBTYPE_ANY, amount, db);
+    return FeeManager::calculateFeeForAccount(storageHelper, mSourceAccount, feeType, mQuoteBalance->getAsset(),
+                                              FeeFrame::SUBTYPE_ANY, amount);
 }
 
 bool
@@ -259,10 +257,9 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         throw std::runtime_error("Unexpected state: quote amount overflows");
     }
 
-    auto& db = storageHelper.getDatabase();
     auto& offer = offerFrame->getOffer();
     offer.createdAt = ledgerManager.getCloseTime();
-    auto const feeResult = obtainCalculatedFeeForAccount(offer.quoteAmount, ledgerManager, db);
+    auto const feeResult = obtainCalculatedFeeForAccount(storageHelper, offer.quoteAmount, ledgerManager);
 
     if (feeResult.isOverflow)
     {
@@ -306,7 +303,8 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                      mManageOffer.orderBookID);
 
     int64_t price = offer.price;
-    const OfferExchange::ConvertResult r = oe.convertWithOffers(offer,
+    const OfferExchange::ConvertResult r = oe.convertWithOffers(storageHelper,
+                                                                offer,
                                                                 mBaseBalance,
                                                                 mQuoteBalance,
                                                                 [this, &price](
@@ -345,10 +343,8 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     {
         const int64_t currentPrice = takenOffers[takenOffers.size() - 1].currentPrice;
         mAssetPair->setCurrentPrice(currentPrice);
-        EntryHelperProvider::storeChangeEntry(delta, db, mAssetPair->mEntry);
-
-        EntryHelperProvider::storeChangeEntry(delta, db,
-                                              commissionBalance->mEntry);
+        storageHelper.getAssetPairHelper().storeChange(mAssetPair->mEntry);
+        storageHelper.getBalanceHelper().storeChange(commissionBalance->mEntry);
     }
 
     if (oe.offerNeedsMore(offer, mQuoteBalance->getMinimumAmount()))
@@ -358,7 +354,7 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                        ::
                        OFFER_ENTRY);
         innerResult().success().offer.effect(ManageOfferEffect::CREATED);
-        EntryHelperProvider::storeAddEntry(delta, db, offerFrame->mEntry);
+        storageHelper.getOfferHelper().storeAdd(offerFrame->mEntry);
         innerResult().success().offer.offer() = offer;
     }
     else

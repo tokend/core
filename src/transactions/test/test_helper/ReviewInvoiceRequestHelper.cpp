@@ -2,9 +2,10 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 #include "ReviewInvoiceRequestHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -35,7 +36,7 @@ ReviewInvoiceRequestHelper::applyReviewRequestTx(Account &source, uint64_t reque
 {
     auto checker = InvoiceReviewChecker(mTestManager, requestID);
     requestMustBeDeletedAfterApproval = true;
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, mTestManager->getDB());
+    auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     if (request && (request->getType() == ReviewableRequestType::CREATE_INVOICE) &&
         request->getRequestEntry().body.invoiceRequest().contractID)
         requestMustBeDeletedAfterApproval = false;

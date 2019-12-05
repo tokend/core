@@ -11,13 +11,10 @@
 #include "history/HistoryManager.h"
 #include "ledger/AccountSpecificRuleHelper.h"
 #include "ledger/AtomicSwapAskHelper.h"
-#include "ledger/EntryHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
-#include "ledger/LedgerHeaderFrame.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
 #include "ledger/LedgerHeaderUtils.h"
 #include "ledger/PollHelper.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/SaleHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/SwapHelper.h"
 #include "ledger/VoteHelper.h"
@@ -34,11 +31,12 @@
 #include <ledger/AccountKYCHelper.h>
 #include <ledger/AssetHelperImpl.h>
 #include <ledger/ContractHelper.h>
-#include <ledger/KeyValueHelperLegacy.h>
+#include <ledger/KeyValueHelper.h>
 #include <ledger/LimitsV2Helper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StatisticsV2Helper.h>
+#include "xdr/ledger-entries.h"
 
 // NOTE: soci will just crash and not throw
 //  if you misname a column in a query. yay!
@@ -143,36 +141,36 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             BanManager::dropAll(*this);
             break;
         case REFERENCE_VERSION:
-            ReferenceHelper::addVersion(*this);
+            sh.getReferenceHelper().addVersion();
             break;
         case databaseSchemaVersion::ADD_ACCOUNT_KYC:
-            AccountKYCHelper::Instance()->dropAll(*this);
+            sh.getAccountKYCHelper().dropAll();
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_MIGRATION:
-            ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->dropAll(*this);
+            sh.getExternalSystemAccountIDPoolEntryHelper().dropAll();
             break;
         case databaseSchemaVersion::KEY_VALUE_FIX_MIGRATION:
-            KeyValueHelperLegacy::Instance()->dropAll(*this);
+            sh.getKeyValueHelper().dropAll();
             break;
         case databaseSchemaVersion::EXTERNAL_POOL_FIX_PARENT_DB_TYPE:
-            ExternalSystemAccountIDPoolEntryHelperLegacy::Instance()->parentToNumeric(*this);
+            sh.getExternalSystemAccountIDPoolEntryHelper().parentToNumeric();
             break;
         case databaseSchemaVersion::ADD_LIMITS_V2:
-            LimitsV2Helper::Instance()->dropAll(*this);
-            StatisticsV2Helper::Instance()->dropAll(*this);
-            PendingStatisticsHelper::Instance()->dropAll(*this);
+            sh.getLimitsV2Helper().dropAll();
+            sh.getStatisticsV2Helper().dropAll();
+            sh.getPendingStatisticsHelper().dropAll();
             break;
         case databaseSchemaVersion::ADD_REVIEWABLE_REQUEST_TASKS:
-            PendingStatisticsHelper::Instance()->restrictUpdateDelete(*this);
+            sh.getPendingStatisticsHelper().restrictUpdateDelete();
             break;
         case databaseSchemaVersion::ADD_CONTRACTS:
-            ContractHelper::Instance()->dropAll(*this);
+            sh.getContractHelper().dropAll();
             break;
         case databaseSchemaVersion::ADD_CUSTOMER_DETAILS_TO_CONTRACT:
-            ContractHelper::Instance()->addCustomerDetails(*this);
+            sh.getContractHelper().addCustomerDetails();
             break;
         case databaseSchemaVersion::ADD_ATOMIC_SWAP_BID:
-            AtomicSwapAskHelper::Instance()->dropAll(*this);
+            sh.getAtomicSwapAskHelper().dropAll();
             break;
         case databaseSchemaVersion::ADD_ASSET_CUSTOM_PRECISION:
             std::unique_ptr<AssetHelper>(new AssetHelperImpl(storageHelper))->addTrailingDigits();
@@ -193,7 +191,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             Upgrades::createIfNotExists(*this);
             break;
         case ENABLE_ATOMIC_SWAP:
-            AtomicSwapAskHelper::Instance()->dropAll(*this);
+            sh.getAtomicSwapAskHelper().dropAll();
             break;
         case SWAPS:
             sh.getSwapHelper().dropAll();
@@ -367,7 +365,6 @@ DatabaseImpl::initialize()
         helper->dropAll();
     }
 
-    EntryHelperProvider::dropAll(*this);
     OverlayManager::dropAll(*this);
     PersistentState::dropAll(*this);
     ExternalQueue::dropAll(*this);

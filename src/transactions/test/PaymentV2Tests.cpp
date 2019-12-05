@@ -1,4 +1,5 @@
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
+#include "ledger/StorageHelper.h"
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
 #include <transactions/test/test_helper/ManageAssetTestHelper.h>
@@ -35,7 +36,6 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
     auto testManager = TestManager::make(app);
-    Database &db = testManager->getDB();
 
     // test helpers
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
@@ -49,7 +49,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     // db helpers
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
 
     auto root = Account{getRoot(), Salt(0)};
     auto payer = Account{SecretKey::random(), Salt(1)};
@@ -155,7 +155,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
 
     // find payer
-    auto payerBalance = balanceHelper->loadBalance(payer.key.getPublicKey(), paymentAsset, db, nullptr);
+    auto payerBalance = balanceHelper.loadBalance(payer.key.getPublicKey(), paymentAsset);
     REQUIRE(payerBalance);
 
     int64_t paymentAmount = 100 * ONE;

@@ -58,4 +58,15 @@ namespace stellar
     {
         contract.customerDetails = customerDetails;
     }
+
+    LedgerKey const &
+    ContractFrame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::CONTRACT);
+            mKey.contract().contractID = mContract.contractID;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
 }

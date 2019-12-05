@@ -40,5 +40,8 @@ public:
     static bool isValid(ExternalSystemAccountID const& oe);
     bool isValid() const;
 
+    LedgerKey const&
+    getKey() const override;
+
 };
 }

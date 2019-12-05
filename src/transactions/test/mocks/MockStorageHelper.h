@@ -20,6 +20,17 @@ class VoteHelper;
 class AccountSpecificRuleHelper;
 class ReviewableRequestHelper;
 class SwapHelper;
+class LimitsV2Helper;
+class AccountKYCHelper;
+class AssetPairHelper;
+class AtomicSwapAskHelper;
+class ContractHelper;
+class FeeHelper;
+class OfferHelper;
+class ReferenceHelper;
+class SaleHelper;
+class PendingStatisticsHelper;
+class StatisticsV2Helper;
 
 enum class LedgerEntryType;
 
@@ -65,6 +76,17 @@ public:
     MOCK_METHOD0(getAccountSpecificRuleHelper, AccountSpecificRuleHelper&());
     MOCK_METHOD0(getReviewableRequestHelper, ReviewableRequestHelper & ());
     MOCK_METHOD0(getSwapHelper, SwapHelper&());
+    MOCK_METHOD0(getLimitsV2Helper, LimitsV2Helper&());
+    MOCK_METHOD0(getAccountKYCHelper, AccountKYCHelper&());
+    MOCK_METHOD0(getAssetPairHelper, AssetPairHelper&());
+    MOCK_METHOD0(getAtomicSwapAskHelper, AtomicSwapAskHelper&());
+    MOCK_METHOD0(getContractHelper, ContractHelper&());
+    MOCK_METHOD0(getFeeHelper, FeeHelper&());
+    MOCK_METHOD0(getOfferHelper, OfferHelper&());
+    MOCK_METHOD0(getReferenceHelper, ReferenceHelper&());
+    MOCK_METHOD0(getSaleHelper, SaleHelper&());
+    MOCK_METHOD0(getPendingStatisticsHelper, PendingStatisticsHelper&());
+    MOCK_METHOD0(getStatisticsV2Helper, StatisticsV2Helper&());
 };
 
 }  // namespace stellar

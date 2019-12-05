@@ -1,10 +1,7 @@
-//
-// Created by kirill on 05.12.17.
-//
-
-#include "ReferenceHelper.h"
+#include "ReferenceHelperImpl.h"
 #include "LedgerDelta.h"
 #include "xdrpp/printer.h"
+#include "database/Database.h"
 
 using namespace soci;
 using namespace std;
@@ -12,26 +9,29 @@ using namespace std;
 namespace stellar {
     using xdr::operator<;
 
-    void ReferenceHelper::dropAll(Database &db) {
+    void ReferenceHelperImpl::dropAll() {
+        Database& db = getDatabase();
         db.getSession() << "DROP TABLE IF EXISTS reference;";
         db.getSession() << "CREATE TABLE reference"
-                "("
-                "sender       VARCHAR(64) NOT NULL,"
-                "reference    VARCHAR(64) NOT NULL,"
-                "lastmodified INT         NOT NULL,"
-                "PRIMARY KEY (sender, reference)"
-                ");";
+                           "("
+                           "sender       VARCHAR(64) NOT NULL,"
+                           "reference    VARCHAR(64) NOT NULL,"
+                           "lastmodified INT         NOT NULL,"
+                           "PRIMARY KEY (sender, reference)"
+                           ");";
     }
 
-    void ReferenceHelper::storeAdd(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
-        storeUpdateHelper(delta, db, true, entry);
+    void ReferenceHelperImpl::storeAdd(LedgerEntry const &entry) {
+        storeUpdateHelper(true, entry);
     }
 
-    void ReferenceHelper::storeChange(LedgerDelta &delta, Database &db, LedgerEntry const &entry) {
-        storeUpdateHelper(delta, db, false, entry);
+    void ReferenceHelperImpl::storeChange(LedgerEntry const &entry) {
+        storeUpdateHelper(false, entry);
     }
 
-    void ReferenceHelper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, const LedgerEntry &entry) {
+    void ReferenceHelperImpl::storeUpdateHelper(bool insert, const LedgerEntry &entry) {
+        Database& db = getDatabase();
+        auto& delta = mStorageHelper.mustGetLedgerDelta();
         auto referenceFrame = make_shared<ReferenceFrame>(entry);
         auto referenceEntry = referenceFrame->getReference();
 
@@ -82,7 +82,9 @@ namespace stellar {
         }
     }
 
-    void ReferenceHelper::storeDelete(LedgerDelta &delta, Database &db, LedgerKey const &key) {
+    void ReferenceHelperImpl::storeDelete(LedgerKey const &key) {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         auto timer = db.getDeleteTimer("reference");
         auto prep = db.getPreparedStatement("DELETE FROM reference WHERE reference=:r AND sender=:se");
         auto& st = prep.statement();
@@ -91,14 +93,14 @@ namespace stellar {
         st.exchange(use(sender));
         st.define_and_bind();
         st.execute(true);
-        delta.deleteEntry(key);
+        delta->deleteEntry(key);
     }
 
-    bool ReferenceHelper::exists(Database &db, LedgerKey const &key) {
-        return exists(db, key.reference().reference, key.reference().sender);
+    bool ReferenceHelperImpl::exists(LedgerKey const &key) {
+        return exists(key.reference().reference, key.reference().sender);
     }
 
-    LedgerKey ReferenceHelper::getLedgerKey(LedgerEntry const &from) {
+    LedgerKey ReferenceHelperImpl::getLedgerKey(LedgerEntry const &from) {
         LedgerKey ledgerKey;
         ledgerKey.type(from.data.type());
         ledgerKey.reference().reference = from.data.reference().reference;
@@ -106,22 +108,23 @@ namespace stellar {
         return ledgerKey;
     }
 
-    EntryFrame::pointer ReferenceHelper::storeLoad(LedgerKey const &key, Database &db) {
-        return loadReference(key.reference().sender,key.reference().reference, db);
+    EntryFrame::pointer ReferenceHelperImpl::storeLoad(LedgerKey const &key) {
+        return loadReference(key.reference().sender,key.reference().reference);
     }
 
-    EntryFrame::pointer ReferenceHelper::fromXDR(LedgerEntry const &from) {
+    EntryFrame::pointer ReferenceHelperImpl::fromXDR(LedgerEntry const &from) {
         return std::make_shared<ReferenceFrame>(from);
     }
 
-    uint64_t ReferenceHelper::countObjects(soci::session &sess) {
+    uint64_t ReferenceHelperImpl::countObjects() {
         uint64_t count = 0;
-        sess << "SELECT COUNT(*) FROM reference;", into(count);
+        Database &db = getDatabase();
+        db.getSession() << "SELECT COUNT(*) FROM reference;", into(count);
         return count;
     }
 
     void
-    ReferenceHelper::loadReferences(StatementContext &prep, function<void(const LedgerEntry &)> referenceProcessor) {
+    ReferenceHelperImpl::loadReferences(StatementContext &prep, function<void(const LedgerEntry &)> referenceProcessor) {
         LedgerEntry le;
         le.data.type(LedgerEntryType::REFERENCE_ENTRY);
         ReferenceEntry& oe = le.data.reference();
@@ -152,7 +155,8 @@ namespace stellar {
         }
     }
 
-    bool ReferenceHelper::exists(Database &db, std::string reference, AccountID rawSender) {
+    bool ReferenceHelperImpl::exists(std::string reference, AccountID rawSender) {
+        Database& db = getDatabase();
         int exists = 0;
         auto timer = db.getSelectTimer("reference-exists");
         auto prep =
@@ -169,7 +173,9 @@ namespace stellar {
     }
 
     ReferenceFrame::pointer
-    ReferenceHelper::loadReference(AccountID rawSender, std::string reference, Database &db, LedgerDelta *delta) {
+    ReferenceHelperImpl::loadReference(AccountID rawSender, std::string reference) {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         std::string sql = "SELECT sender, reference, lastmodified, version FROM reference";
         sql += " WHERE reference = :ref AND sender = :sender";
         auto prep = db.getPreparedStatement(sql);
@@ -193,8 +199,21 @@ namespace stellar {
         return retReference;
     }
 
-void ReferenceHelper::addVersion(Database& db)
-{
-    db.getSession() << "ALTER TABLE reference ADD COLUMN version INT NOT NULL DEFAULT 0";
-}
+    void ReferenceHelperImpl::addVersion()
+    {
+       getDatabase().getSession() << "ALTER TABLE reference ADD COLUMN version INT NOT NULL DEFAULT 0";
+    }
+
+    LedgerDelta *ReferenceHelperImpl::getLedgerDelta() {
+        return mStorageHelper.getLedgerDelta();
+    }
+
+    Database &ReferenceHelperImpl::getDatabase() {
+        return mStorageHelper.getDatabase();
+    }
+
+    ReferenceHelperImpl::ReferenceHelperImpl(StorageHelper &storageHelper)
+            : mStorageHelper(storageHelper)
+    {
+    }
 }

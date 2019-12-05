@@ -11,22 +11,12 @@
 
 namespace stellar
 {
-    class StatementContext;
+class StampHelper : public EntryHelper {
 
-
-    class StampHelper : public EntryHelper {
-
-    public:
-        virtual void dropAll() = 0;
-        virtual uint64_t countObjects() = 0;
-        virtual bool exists(LedgerKey const &key) = 0;
-        virtual bool exists(Hash ledgerHash, Hash licenseHash) = 0;
-        virtual LedgerKey getLedgerKey(LedgerEntry const &from) = 0;
-        virtual EntryFrame::pointer fromXDR(LedgerEntry const &from) = 0;
-        virtual Database &getDatabase() = 0;
-        virtual void storeAdd(LedgerEntry const &entry) = 0;
-        virtual void storeChange(LedgerEntry const& entry) = 0;
-        virtual void storeLoad(LedgerEntry const& entry) = 0;
-        virtual void storeDelete(LedgerEntry const& entry) = 0;
-    };
+public:
+    bool exists(LedgerKey const &key) override = 0;
+    virtual bool exists(Hash ledgerHash, Hash licenseHash) = 0;
+    virtual void storeLoad(LedgerEntry const& entry) = 0;
+    virtual void storeDelete(LedgerEntry const& entry) = 0;
+};
 }

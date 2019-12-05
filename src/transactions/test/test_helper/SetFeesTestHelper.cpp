@@ -1,6 +1,7 @@
 #include <lib/catch.hpp>
 #include "SetFeesTestHelper.h"
 #include "ledger/FeeHelper.h"
+#include "ledger/StorageHelper.h"
 #include "transactions/SetFeesOpFrame.h"
 
 namespace stellar {
@@ -36,10 +37,9 @@ namespace stellar {
             }
 
             if (fee) {
-                auto storedFee = FeeHelper::Instance()->loadFee(fee->feeType, fee->asset,
+                auto storedFee = mTestManager->getStorageHelper().getFeeHelper().loadFee(fee->feeType, fee->asset,
                                                                 fee->accountID.get(), fee->accountRole.get(),
-                                                                fee->subtype, fee->lowerBound, fee->upperBound,
-                                                                mTestManager->getDB());
+                                                                fee->subtype, fee->lowerBound, fee->upperBound);
                 if (isDelete)
                     REQUIRE(!storedFee);
                 else {

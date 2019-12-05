@@ -44,6 +44,7 @@ public:
                                    AccountID owner, uint64_t minTotalAmount));
     MOCK_METHOD1(loadBalancesForAsset,
             std::vector<BalanceFrame::pointer>(AssetCode assetCode));
+    MOCK_METHOD1(loadTotalAssetAmount, uint64_t(AssetCode assetCode));
 };
 
 }  // namespace stellar

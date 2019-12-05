@@ -32,6 +32,7 @@
 //#include "xdrpp/autocheck.h"
 #include <algorithm>
 #include <future>
+#include "ledger/StorageHelperImpl.h"
 
 using namespace stellar;
 
@@ -1032,7 +1033,9 @@ TEST_CASE("bucket apply", "[bucket]")
         e.data.type(LedgerEntryType::ACCOUNT);
         auto& a = e.data.account();
         a = LedgerTestUtils::generateValidAccountEntry(5);
-        dead.emplace_back(LedgerEntryKey(e));
+        StorageHelperImpl storageHelperImpl(app->getDatabase(), nullptr);
+        StorageHelper& storageHelper = storageHelperImpl;
+        dead.emplace_back(storageHelper.getHelper(e.data.type())->getLedgerKey(e));
     }
 
     std::shared_ptr<Bucket> birth =

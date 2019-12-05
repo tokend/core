@@ -47,5 +47,8 @@ namespace stellar
 
 		bool isValid() const;
 		static bool isValid(OfferEntry const& oe);
+
+        LedgerKey const&
+        getKey() const override;
 	};
 }

@@ -60,7 +60,7 @@ bool
 CheckSaleStateOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                                  std::vector<OperationCondition>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -78,7 +78,7 @@ bool
 CheckSaleStateOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                 std::vector<SignerRequirement>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {
         throw std::runtime_error("Expected sale to exists");
@@ -205,9 +205,7 @@ bool CheckSaleStateOpFrame::handleClose(SaleFrame::pointer sale, Application& ap
     }
     }
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
-    SaleHelper::Instance()->storeDelete(delta, db, sale->getKey());
+    storageHelper.getSaleHelper().storeDelete(sale->getKey());
 
     ManageSaleOpFrame::removeSaleRules(storageHelper, sale->getKey());
 
@@ -270,12 +268,12 @@ CreateIssuanceRequestResult CheckSaleStateOpFrame::applyCreateIssuanceRequest(
 }
 
 FeeManager::FeeResult
-CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(const AccountFrame::pointer saleOwnerAccount,
+CheckSaleStateOpFrame::obtainCalculatedFeeForAccount(StorageHelper& storageHelper,const AccountFrame::pointer saleOwnerAccount,
                                                      AssetCode const& asset, int64_t amount,
-                                                     LedgerManager& lm, Database& db) const
+                                                     LedgerManager& lm) const
 {
-    return FeeManager::calculateFeeForAccount(saleOwnerAccount, FeeType::CAPITAL_DEPLOYMENT_FEE, asset,
-                                              FeeFrame::SUBTYPE_ANY, amount, db);
+    return FeeManager::calculateFeeForAccount(storageHelper, saleOwnerAccount, FeeType::CAPITAL_DEPLOYMENT_FEE, asset,
+                                              FeeFrame::SUBTYPE_ANY, amount);
 }
 
 ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
@@ -298,9 +296,8 @@ ManageOfferSuccessResult CheckSaleStateOpFrame::applySaleOffer(
     auto baseAsset = sale->getBaseAsset();
     auto price = saleQuoteAsset.price;
 
-    auto& db = storageHelper.getDatabase();
-    auto const feeResult = obtainCalculatedFeeForAccount(
-        saleOwnerAccount, saleQuoteAsset.quoteAsset, quoteAmount, lm, db);
+    auto const feeResult = obtainCalculatedFeeForAccount(storageHelper,
+        saleOwnerAccount, saleQuoteAsset.quoteAsset, quoteAmount, lm);
 
     if (feeResult.isOverflow)
     {
@@ -391,10 +388,9 @@ cleanSale(SaleFrame::pointer sale, Application& app, StorageHelper& storageHelpe
 
     bool wasUpdated = false;
     const int64_t priceInDefaultQuoteAsset = getSaleCurrentPriceInDefaultQuote(sale, storageHelper);
-    auto& db = storageHelper.getDatabase();
     for (auto const& quoteAsset : sale->getSaleEntry().quoteAssets)
     {
-        const int64_t priceInQuoteAsset = getPriceInQuoteAsset(priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset, db);
+        const int64_t priceInQuoteAsset = getPriceInQuoteAsset(storageHelper, priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset);
         const uint64 minimumBaseAmount = getMinimumAssetAmount(sale->getSaleEntry().baseAsset, storageHelper);
         int64_t minAllowedQuoteAmount = 0;
         if (!bigDivide(minAllowedQuoteAmount, priceInQuoteAsset, minimumBaseAmount, ONE, ROUND_UP))
@@ -413,9 +409,7 @@ cleanSale(SaleFrame::pointer sale, Application& app, StorageHelper& storageHelpe
 
         // cancel all offers which are less than minAllowedQuoteAmount
         auto offersToCancel =
-            OfferHelper::
-            Instance()
-                ->loadOffers(sale->getBaseAsset(), quoteAsset.quoteAsset, sale->getID(), minAllowedQuoteAmount, db);
+                storageHelper.getOfferHelper().loadOffers(sale->getBaseAsset(), quoteAsset.quoteAsset, sale->getID(), minAllowedQuoteAmount);
         for (const auto offerToCancel : offersToCancel)
         {
             DeleteSaleParticipationOpFrame::
@@ -449,14 +443,12 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
     }
     auto& saleEntry = sale->getSaleEntry();
     uint64_t priceInDefaultQuoteAsset = getSaleCurrentPriceInDefaultQuote(sale, storageHelper);
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& OfferHelper = storageHelper.getOfferHelper();
     for (auto& quoteAsset : saleEntry.quoteAssets)
     {
-        quoteAsset.price = getPriceInQuoteAsset(priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset, db);
-        const auto offersToUpdate = OfferHelper::
-        Instance()->
-            loadOffersWithFilters(sale->getBaseAsset(), quoteAsset.quoteAsset, &saleEntry.saleID, nullptr, db);
+        quoteAsset.price = getPriceInQuoteAsset(storageHelper, priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset);
+        const auto offersToUpdate = OfferHelper.
+            loadOffersWithFilters(sale->getBaseAsset(), quoteAsset.quoteAsset, &saleEntry.saleID, nullptr);
         for (auto& offerToUpdate : offersToUpdate)
         {
             auto& offerEntry = offerToUpdate->getOffer();
@@ -468,10 +460,10 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
                 throw runtime_error("Failed to update price for offer on check state");
             }
             offerEntry.baseAmount -= offerEntry.baseAmount % getMinimumAssetAmount(saleEntry.baseAsset, storageHelper);
-            OfferHelper::Instance()->storeChange(delta, db, offerToUpdate->mEntry);
+            OfferHelper.storeChange(offerToUpdate->mEntry);
         }
     }
-    SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
+    storageHelper.getSaleHelper().storeChange(sale->mEntry);
 }
 
 int64_t CheckSaleStateOpFrame::getSaleCurrentPriceInDefaultQuote(
@@ -496,15 +488,16 @@ int64_t CheckSaleStateOpFrame::getSaleCurrentPriceInDefaultQuote(
     return getSalePriceForCap(currentCap, sale);
 }
 
-int64_t CheckSaleStateOpFrame::getPriceInQuoteAsset(
+int64_t CheckSaleStateOpFrame::getPriceInQuoteAsset(StorageHelper& storageHelper,
     int64_t const salePriceInDefaultQuote, const SaleFrame::pointer sale,
-    AssetCode const quoteAsset, Database& db)
+    AssetCode const quoteAsset)
 {
     if (sale->getDefaultQuoteAsset() == quoteAsset)
     {
         return salePriceInDefaultQuote;
     }
-    auto assetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getDefaultQuoteAsset(), quoteAsset, db);
+
+    auto assetPair = storageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(sale->getDefaultQuoteAsset(), quoteAsset);
     if (!assetPair)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Failed to load asset pair for quote asset and default quote asset. SaleID: "
@@ -539,9 +532,7 @@ CheckSaleStateOpFrame::CheckSaleStateOpFrame(Operation const& op,
 bool CheckSaleStateOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto sale = SaleHelper::Instance()->loadSale(mCheckSaleState.saleID, db, &delta);
+    const auto sale = storageHelper.getSaleHelper().loadSale(mCheckSaleState.saleID);
     if (!sale)
     {
         innerResult().code(CheckSaleStateResultCode::NOT_FOUND);

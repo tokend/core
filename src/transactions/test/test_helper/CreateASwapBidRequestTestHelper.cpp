@@ -50,11 +50,9 @@ CreateASwapBidRequestTestHelper::applyCreateASwapRequest(
     txtest::Account& source, CreateAtomicSwapBidRequestOp& createASwapRequestOp,
     CreateAtomicSwapBidRequestResultCode expectedResult, OperationResultCode expectedOpRes)
 {
-    Database& db = mTestManager->getDB();
-
-    auto aSwapBidHelper = AtomicSwapAskHelper::Instance();
-    auto bidFrameBeforeTx = aSwapBidHelper->loadAtomicSwapAsk(
-        createASwapRequestOp.request.askID, db);
+    auto& aSwapBidHelper = mTestManager->getStorageHelper().getAtomicSwapAskHelper();
+    auto bidFrameBeforeTx = aSwapBidHelper.loadAtomicSwapAsk(
+        createASwapRequestOp.request.askID);
 
     auto& storageHelper = mTestManager->getStorageHelper();
     auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
@@ -94,8 +92,8 @@ CreateASwapBidRequestTestHelper::applyCreateASwapRequest(
 
     REQUIRE(reviewableRequestCountBeforeTx + 1 == reviewableRequestCountAfterTx);
 
-    auto bidFrameAfterTx = aSwapBidHelper->loadAtomicSwapAsk(
-        createASwapRequestOp.request.askID, db);
+    auto bidFrameAfterTx = aSwapBidHelper.loadAtomicSwapAsk(
+        createASwapRequestOp.request.askID);
 
     REQUIRE(bidFrameAfterTx->getLockedAmount() -
             createASwapRequestOp.request.baseAmount ==

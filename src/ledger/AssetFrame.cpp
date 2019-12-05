@@ -285,4 +285,16 @@ void AssetFrame::ensureValid() const
 {
     ensureValid(mAsset);
 }
+
+LedgerKey const &
+AssetFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::ASSET);
+        mKey.asset().code = mAsset.code;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

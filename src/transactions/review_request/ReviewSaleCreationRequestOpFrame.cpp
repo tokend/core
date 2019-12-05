@@ -116,12 +116,10 @@ ReviewSaleCreationRequestOpFrame::tryCreateSale(
     const auto balances =
         loadBalances(balanceManager, request, saleCreationRequest);
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
     const auto saleFrame =
         SaleFrame::createNew(saleID, baseAsset->getOwner(), saleCreationRequest,
                              balances, requiredBaseAssetForHardCap);
-    SaleHelper::Instance()->storeAdd(delta, db, saleFrame->mEntry);
+    storageHelper.getSaleHelper().storeAdd(saleFrame->mEntry);
     createAssetPair(saleFrame, app, ledgerManager, storageHelper);
 
     createSaleRules(app, storageHelper, ledgerManager, saleCreationRequest, saleFrame);
@@ -208,8 +206,8 @@ ReviewSaleCreationRequestOpFrame::handleApprove(
 
     requestHelper.storeDelete(request->getKey());
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto newSaleID = delta.getHeaderFrame().generateID(LedgerEntryType::SALE);
+    auto newSaleID = storageHelper.mustGetLedgerDelta()
+            .getHeaderFrame().generateID(LedgerEntryType::SALE);
 
     ReviewRequestResultCode saleCreationResult =
         tryCreateSale(app, storageHelper, ledgerManager, request, newSaleID);
@@ -243,10 +241,8 @@ ReviewSaleCreationRequestOpFrame::createAssetPair(SaleFrame::pointer sale,
     for (const auto quoteAsset : sale->getSaleEntry().quoteAssets)
     {
         const auto assetPair = ledgerManager.shouldUse(LedgerVersion::FIX_REVERSE_SALE_PAIR)
-                               ? AssetPairHelper::Instance()->loadAssetPair(sale->getBaseAsset(), quoteAsset.quoteAsset,
-                                                                            ledgerManager.getDatabase())
-                               : AssetPairHelper::Instance()->tryLoadAssetPairForAssets(sale->getBaseAsset(), quoteAsset.quoteAsset,
-                                                                                        ledgerManager.getDatabase());
+                               ? storageHelper.getAssetPairHelper().loadAssetPair(sale->getBaseAsset(), quoteAsset.quoteAsset)
+                               : storageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(sale->getBaseAsset(), quoteAsset.quoteAsset);
         if (!!assetPair)
         {
             continue;

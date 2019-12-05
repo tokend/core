@@ -7,7 +7,6 @@
 #include "overlay/StellarXDR.h"
 #include "ReviewRequestTestHelper.h"
 #include "ledger/AccountLimitsFrame.h"
-#include "ledger/AccountLimitsHelper.h"
 #include "ledger/ReviewableRequestFrame.h"
 
 namespace stellar

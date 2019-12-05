@@ -39,4 +39,16 @@ namespace stellar
 
         return make_shared<PendingStatisticsFrame>(le);
     }
+
+    LedgerKey const &
+    PendingStatisticsFrame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::PENDING_STATISTICS);
+            mKey.pendingStatistics().requestID = mPendingStatistics.requestID;
+            mKey.pendingStatistics().statisticsID = mPendingStatistics.statisticsID;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
 }

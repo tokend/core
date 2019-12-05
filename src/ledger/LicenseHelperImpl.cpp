@@ -13,11 +13,10 @@ using namespace std;
 namespace stellar
 {
 
-    const char* selectorLicense = "SELECT admin_count, due_date, ledger_hash, prev_hash, hash FROM license";
-
     LicenseHelperImpl::LicenseHelperImpl(StorageHelper &storageHelper)
             : mStorageHelper(storageHelper)
     {
+        selectorLicense = "SELECT admin_count, due_date, ledger_hash, prev_hash, hash FROM license";
     }
 
     LedgerKey LicenseHelperImpl::getLedgerKey(LedgerEntry const &from) {

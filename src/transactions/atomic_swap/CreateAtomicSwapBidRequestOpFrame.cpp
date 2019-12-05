@@ -25,8 +25,8 @@ bool
 CreateAtomicSwapBidRequestOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                                              std::vector<OperationCondition>& result) const
 {
-    auto bid = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        mCreateASwapRequest.request.askID, storageHelper.getDatabase());
+    auto bid = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        mCreateASwapRequest.request.askID);
     if (!bid)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -105,11 +105,8 @@ AtomicSwapAskFrame::pointer
 CreateAtomicSwapBidRequestOpFrame::loadAtomicSwapAsk(CreateAtomicSwapBidRequest atomicSwapRequest,
                                                      StorageHelper& storageHelper)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
-    auto bidFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        atomicSwapRequest.askID, db, &delta);
+    auto bidFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        atomicSwapRequest.askID);
     if (!bidFrame)
     {
         innerResult().code(CreateAtomicSwapBidRequestResultCode::ASK_NOT_FOUND);
@@ -204,7 +201,7 @@ CreateAtomicSwapBidRequestOpFrame::doApply(Application& app, StorageHelper& stor
     requestFrame->recalculateHashRejectReason();
 
     Database& db = storageHelper.getDatabase();
-    AtomicSwapAskHelper::Instance()->storeChange(delta, db, bid->mEntry);
+    storageHelper.getAtomicSwapAskHelper().storeChange(bid->mEntry);
     storageHelper.getReviewableRequestHelper().storeAdd(requestFrame->mEntry);
 
     innerResult().success().requestID = requestFrame->getRequestID();

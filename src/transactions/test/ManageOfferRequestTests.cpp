@@ -1,9 +1,6 @@
 #include "ledger/BalanceHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
-#include "ledger/LedgerDeltaImpl.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/StorageHelper.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
@@ -36,10 +33,6 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     app.start();
     auto testManager = TestManager::make(app);
     TestManager::upgradeToCurrentLedgerVersion(app);
-    auto& db = testManager->getDB();
-    LedgerDeltaImpl delta(
-        testManager->getLedgerManager().getCurrentLedgerHeader(),
-        testManager->getDB());
 
     // set up world
     SecretKey root = getRoot();
@@ -156,8 +149,8 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     auto createAccountBuilder =
         CreateAccountTestBuilder().setSource(rootAccount).setRoleID(1);
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto offerHelper = OfferHelper::Instance();
+    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
+    auto& offerHelper = testManager->getStorageHelper().getOfferHelper();
 
     auto buyer = Account{SecretKey::random(), 0};
     createAccountTestHelper.applyTx(
@@ -165,10 +158,10 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             .addBasicSigner()
             .setRoleID(exchangeRoleID));
     auto baseBuyerBalance =
-        balanceHelper->loadBalance(buyer.key.getPublicKey(), base, db, &delta);
+        balanceHelper.loadBalance(buyer.key.getPublicKey(), base);
     REQUIRE(baseBuyerBalance);
     auto quoteBuyerBalance =
-        balanceHelper->loadBalance(buyer.key.getPublicKey(), quote, db, &delta);
+        balanceHelper.loadBalance(buyer.key.getPublicKey(), quote);
     REQUIRE(quoteBuyerBalance);
 
     auto quoteAssetAmount = 1000 * ONE;
@@ -189,10 +182,10 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             .addBasicSigner()
             .setRoleID(exchangeRoleID));
     auto baseSellerBalance =
-        balanceHelper->loadBalance(seller.key.getPublicKey(), base, db, &delta);
+        balanceHelper.loadBalance(seller.key.getPublicKey(), base);
     REQUIRE(baseSellerBalance);
-    auto quoteSellerBalance = balanceHelper->loadBalance(
-        seller.key.getPublicKey(), quote, db, &delta);
+    auto quoteSellerBalance = balanceHelper.loadBalance(
+        seller.key.getPublicKey(), quote);
     REQUIRE(quoteSellerBalance);
 
     issuanceHelper.authorizePreIssuedAmount(rootAccount, rootAccount.key, base,
@@ -301,9 +294,9 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
                                .offer.offer()
                                .offerID;
 
-            auto offer = OfferHelper::Instance()->loadOffer(
+            auto offer = testManager->getStorageHelper().getOfferHelper().loadOffer(
                 buyer.key.getPublicKey(), offerID,
-                ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID, db, &delta);
+                ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID);
             REQUIRE(offer->getOffer().baseAmount == baseAssetAmount);
 
             buyOp.offerID = offerID;

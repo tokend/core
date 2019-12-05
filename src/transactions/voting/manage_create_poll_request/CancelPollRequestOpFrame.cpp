@@ -1,6 +1,6 @@
 #include "CancelPollRequestOpFrame.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 
 namespace stellar
 {
@@ -23,8 +23,8 @@ bool
 CancelPollRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                    std::vector<SignerRequirement>& result) const
 {
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-        mCancelPollRequestData.requestID, storageHelper.getDatabase());
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(
+        mCancelPollRequestData.requestID);
     if (!request || (request->getType() != ReviewableRequestType::CREATE_POLL))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -51,19 +51,16 @@ CancelPollRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper
 {
     innerResult().code(ManageCreatePollRequestResultCode::SUCCESS);
 
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-    Database& db = storageHelper.getDatabase();
-
-    auto requestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto requestFrame = requestHelper->loadRequest(mCancelPollRequestData.requestID,
-                                                   getSourceID(), ReviewableRequestType::CREATE_POLL, db, &delta);
+    auto& requestHelper = storageHelper.getReviewableRequestHelper();
+    auto requestFrame = requestHelper.loadRequest(mCancelPollRequestData.requestID,
+                                                   getSourceID(), ReviewableRequestType::CREATE_POLL);
     if (!requestFrame)
     {
         innerResult().code(ManageCreatePollRequestResultCode::NOT_FOUND);
         return false;
     }
 
-    ReviewableRequestHelperLegacy::Instance()->storeDelete(delta, db, requestFrame->getKey());
+    storageHelper.getReviewableRequestHelper().storeDelete(requestFrame->getKey());
 
     return true;
 }

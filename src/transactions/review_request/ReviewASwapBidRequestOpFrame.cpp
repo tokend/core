@@ -1,4 +1,5 @@
 #include <main/Application.h>
+#include <ledger/EntryHelper.h>
 #include "ledger/AtomicSwapAskHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/BalanceHelper.h"
@@ -70,9 +71,7 @@ void ReviewASwapBidRequestOpFrame::removeAsk(StorageHelper& storageHelper,
             "Unexpected state: failed to unlock amount in ask owner balance");
     }
     storageHelper.getBalanceHelper().storeChange(askOwnerBalance->mEntry);
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    EntryHelperProvider::storeDeleteEntry(delta, db, ask->getKey());
+    storageHelper.getHelper(ask->getKey().type())->storeDelete(ask->getKey());
 }
 
 bool
@@ -80,12 +79,10 @@ ReviewASwapBidRequestOpFrame::handlePermanentReject(Application& app, StorageHel
                                                     LedgerManager& ledgerManager,
                                                     ReviewableRequestFrame::pointer request)
 {
-    Database& db = app.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     auto& aSwapCreationRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
 
-    auto askFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        aSwapCreationRequest.askID, db, &delta);
+    auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        aSwapCreationRequest.askID);
 
     if (askFrame == nullptr)
     {
@@ -104,8 +101,7 @@ ReviewASwapBidRequestOpFrame::handlePermanentReject(Application& app, StorageHel
         throw runtime_error(
             "Unexpected state: failed to unlock amount in atomic swap bid");
     }
-
-    EntryHelperProvider::storeChangeEntry(delta, db, askFrame->mEntry);
+    storageHelper.getHelper(askFrame->mEntry.data.type())->storeChange(askFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_ATOMIC_SWAP_BID);
@@ -168,8 +164,6 @@ bool ReviewASwapBidRequestOpFrame::handleApprove(Application& app, StorageHelper
     const auto newHash = ReviewableRequestFrame::calculateHash(requestEntry.body);
     requestEntry.hash = newHash;
 
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
     requestHelper.storeChange(request->mEntry);
@@ -184,8 +178,8 @@ bool ReviewASwapBidRequestOpFrame::handleApprove(Application& app, StorageHelper
     requestHelper.storeDelete(request->getKey());
 
     auto aSwapRequest = request->getRequestEntry().body.createAtomicSwapBidRequest();
-    auto askFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        aSwapRequest.askID, db, &delta);
+    auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        aSwapRequest.askID);
     if (askFrame == nullptr)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -201,7 +195,7 @@ bool ReviewASwapBidRequestOpFrame::handleApprove(Application& app, StorageHelper
         throw runtime_error("Unexpected state. Expected bid has enough locked amount");
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, askFrame->mEntry);
+    storageHelper.getHelper(askFrame->mEntry.data.type())->storeChange(askFrame->mEntry);
 
     BalanceManager balanceManager(app, storageHelper);
     BalanceFrame::pointer purchaserBalanceFrame =

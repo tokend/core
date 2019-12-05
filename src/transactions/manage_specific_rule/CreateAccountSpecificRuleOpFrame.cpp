@@ -98,8 +98,8 @@ CreateAccountSpecificRuleOpFrame::checkSaleRule(Application &app,
 {
     if (!mSale)
     {
-        auto saleHelper = SaleHelper::Instance();
-        mSale = saleHelper->loadSale(saleID, sh.getDatabase(), sh.getLedgerDelta());
+        auto& saleHelper = sh.getSaleHelper();
+        mSale = saleHelper.loadSale(saleID);
         if (!mSale)
         {
             innerResult().code(ManageAccountSpecificRuleResultCode::SALE_NOT_FOUND);

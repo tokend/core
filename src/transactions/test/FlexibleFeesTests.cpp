@@ -42,7 +42,7 @@ TEST_CASE("Flexible fees", "[!hide][dep_tx][flexible_fees]")
 	applySetFees(app, root, rootSeq, nullptr, false, nullptr);
 	closeLedgerOn(app, 4, 1, 7, 2014);
 
-	auto feeHelper = FeeHelper::Instance();
+	auto& feeHelper = testManager->getStorageHelper().getFeeHelper();
 
         auto baseAssets = assetHelper.loadBaseAssets();
         REQUIRE(!baseAssets.empty());
@@ -59,11 +59,11 @@ TEST_CASE("Flexible fees", "[!hide][dep_tx][flexible_fees]")
 		auto accountFee = createFeeEntry(FeeType::OFFER_FEE, 0, 10 * ONE, asset->getCode(), &aPubKey, nullptr);
 		applySetFees(app, root, rootSeq++, &accountFee, false, nullptr);
 
-		auto globalFeeFrame = feeHelper->loadFee(FeeType::OFFER_FEE, asset->getCode(), nullptr, nullptr, 0, 0, INT64_MAX, app.getDatabase());
+		auto globalFeeFrame = feeHelper.loadFee(FeeType::OFFER_FEE, asset->getCode(), nullptr, nullptr, 0, 0, INT64_MAX);
 		REQUIRE(globalFeeFrame);
 		REQUIRE(globalFeeFrame->getFee() == globalFee);
 
-		auto accountFeeFrame = feeHelper->loadFee(FeeType::OFFER_FEE, asset->getCode(), &aPubKey, nullptr, 0, 0, INT64_MAX, app.getDatabase());
+		auto accountFeeFrame = feeHelper.loadFee(FeeType::OFFER_FEE, asset->getCode(), &aPubKey, nullptr, 0, 0, INT64_MAX);
 		REQUIRE(accountFeeFrame);
 		REQUIRE(accountFeeFrame->getFee() == accountFee);
 	}

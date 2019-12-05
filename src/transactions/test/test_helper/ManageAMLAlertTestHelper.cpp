@@ -1,7 +1,8 @@
 #include "ManageAMLAlertTestHelper.h"
 #include "test/test_marshaler.h"
 #include "CheckSaleStateTestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -59,7 +60,7 @@ CreateAMLAlertRequestResult ManageAMLAlertTestHelper::applyCreateAmlAlert(
     const auto stateBeforeOp = stateBeforeOps[0];
     auto stateHelper = StateBeforeTxHelper(stateBeforeOp);
     auto balanceBeforeTx = stateHelper.getBalance(balance);
-    auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(balance, mTestManager->getDB());
+    auto balanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(balance);
     REQUIRE(balanceBeforeTx->getAmount() == balanceAfterTx->getAmount() + amount);
     if (!amlAlertResult.success().fulfilled)
     {

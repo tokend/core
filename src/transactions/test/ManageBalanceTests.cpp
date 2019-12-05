@@ -7,13 +7,14 @@
 #include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "TxTests.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "test_helper/TestManager.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/ManageAssetTestHelper.h"
 #include "test_helper/ManageBalanceTestHelper.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -37,7 +38,7 @@ TEST_CASE("manage balance", "[tx][manage_balance]")
 
     uint32_t zeroTasks = 0;
 
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
     ManageBalanceTestHelper manageBalanceTestHelper(testManager);
 
     auto account = Account{SecretKey::random() , 0};

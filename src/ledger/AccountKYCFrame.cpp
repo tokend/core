@@ -32,6 +32,16 @@ namespace stellar {
         return std::make_shared<AccountKYCFrame>(ledgerEntry);
     }
 
+    LedgerKey const &
+    AccountKYCFrame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::ACCOUNT_KYC);
+            mKey.accountKYC().accountID = mAccountKYCEntry.accountID;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
 }
 
 

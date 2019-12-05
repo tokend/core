@@ -71,8 +71,8 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         return false;
     }
 
-    auto feeHelper = FeeHelper::Instance();
-    auto feeFrame = feeHelper->loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db, &delta);
+    auto& feeHelper = storageHelper.getFeeHelper();
+    auto feeFrame = feeHelper.loadFee(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound);
 
     // delete
     if (mSetFees.isDelete)
@@ -83,7 +83,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
             return false;
         }
 
-        EntryHelperProvider::storeDeleteEntry(delta, db, feeFrame->getKey());
+        storageHelper.getFeeHelper().storeDelete(feeFrame->getKey());
         return true;
     }
 
@@ -93,7 +93,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         auto& fee = feeFrame->getFee();
         fee.percentFee = mSetFees.fee->percentFee;
         fee.fixedFee = mSetFees.fee->fixedFee;
-        EntryHelperProvider::storeChangeEntry(delta, db, feeFrame->mEntry);
+        storageHelper.getFeeHelper().storeChange(feeFrame->mEntry);
         return true;
     }
 
@@ -105,7 +105,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         return false;
     }
 
-    if (feeHelper->isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound, db))
+    if (feeHelper.isBoundariesOverlap(hash, mSetFees.fee->lowerBound, mSetFees.fee->upperBound))
     {
         innerResult().code(SetFeesResultCode::RANGE_OVERLAP);
         return false;
@@ -123,7 +123,7 @@ bool SetFeesOpFrame::trySetFee(LedgerManager& ledgerManager, StorageHelper& stor
         return false;
     }
 
-    EntryHelperProvider::storeAddEntry(delta, db, feeFrame->mEntry);
+    storageHelper.getFeeHelper().storeAdd(feeFrame->mEntry);
     return true;
 }
 

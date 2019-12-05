@@ -18,6 +18,7 @@
 #include "transactions/sale/CheckSaleStateOpFrame.h"
 #include "xdrpp/marshal.h"
 #include "xdrpp/printer.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
@@ -29,8 +30,7 @@ bool
 CreateSaleParticipationOpFrame::tryGetOperationConditions(
     StorageHelper& storageHelper, std::vector<OperationCondition>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-                                                 storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mManageOffer.orderBookID);
     if (!sale)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -52,8 +52,7 @@ bool
 CreateSaleParticipationOpFrame::tryGetSignerRequirements(
     StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID,
-                                                 storageHelper.getDatabase());
+    auto sale = storageHelper.getSaleHelper().loadSale(mManageOffer.orderBookID);
     if (!sale)
     {
         throw std::runtime_error("Expected sale to exists");
@@ -85,11 +84,9 @@ CreateSaleParticipationOpFrame::loadSaleForOffer(StorageHelper& storageHelper)
         return nullptr;
     }
 
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto sale = SaleHelper::Instance()->loadSale(
+    auto sale = storageHelper.getSaleHelper().loadSale(
         mManageOffer.orderBookID, baseBalance->getAsset(),
-        quoteBalance->getAsset(), db, &delta);
+        quoteBalance->getAsset());
     if (!sale)
     {
         innerResult().code(ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS);
@@ -125,8 +122,7 @@ CreateSaleParticipationOpFrame::isPriceValid(
         CheckSaleStateOpFrame::getSalePriceForCap(sale->getSoftCap(), sale);
     auto& db = storageHelper.getDatabase();
     const int64_t priceInQuoteAsset =
-        CheckSaleStateOpFrame::getPriceInQuoteAsset(
-            priceForSoftCap, sale, quoteBalance->getAsset(), db);
+        CheckSaleStateOpFrame::getPriceInQuoteAsset(storageHelper, priceForSoftCap, sale, quoteBalance->getAsset());
     const uint64_t baseStep = storageHelper.getAssetHelper()
                                   .mustLoadAsset(sale->getBaseAsset())
                                   ->getMinimumAmount();
@@ -325,10 +321,7 @@ CreateSaleParticipationOpFrame::doApply(Application& app,
             throw runtime_error("Order match on sale participation");
         }
     }
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto& db = storageHelper.getDatabase();
-
-    SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
+    storageHelper.getSaleHelper().storeChange(sale->mEntry);
     return true;
 }
 
@@ -357,9 +350,8 @@ CreateSaleParticipationOpFrame::getSaleCurrentCap(
             continue;
         }
 
-        const auto assetPair =
-            AssetPairHelper::Instance()->tryLoadAssetPairForAssets(
-                quoteAsset.quoteAsset, saleEntry.defaultQuoteAsset, db);
+        const auto assetPair = storageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(
+                quoteAsset.quoteAsset, saleEntry.defaultQuoteAsset);
         if (!assetPair)
         {
             CLOG(ERROR, Logging::OPERATION_LOGGER)
@@ -372,9 +364,9 @@ CreateSaleParticipationOpFrame::getSaleCurrentCap(
         auto defaultQuoteAssetFrame =
             assetHelper.mustLoadAsset(saleEntry.defaultQuoteAsset);
         uint64_t currentCapInDefaultQuote = 0;
-        if (!AssetPairHelper::Instance()->convertAmount(
+        if (!storageHelper.getAssetPairHelper().convertAmount(
                 assetPair, saleEntry.defaultQuoteAsset, quoteAsset.currentCap,
-                ROUND_UP, db, currentCapInDefaultQuote))
+                ROUND_UP, currentCapInDefaultQuote))
         {
             return false;
         }
@@ -489,9 +481,9 @@ CreateSaleParticipationOpFrame::createImmediateSaleCounterOffer(
     auto& saleQuoteAsset = sale->getSaleQuoteAsset(quoteBalance->getAsset());
 
     auto& db = storageHelper.getDatabase();
-    auto const feeResult = FeeManager::calculateFeeForAccount(
-        saleOwner, FeeType::CAPITAL_DEPLOYMENT_FEE, saleQuoteAsset.quoteAsset,
-        FeeFrame::SUBTYPE_ANY, quoteAmount, db);
+    auto const feeResult = FeeManager::calculateFeeForAccount(storageHelper,
+                                                                 saleOwner, FeeType::CAPITAL_DEPLOYMENT_FEE, saleQuoteAsset.quoteAsset,
+                                                                 FeeFrame::SUBTYPE_ANY, quoteAmount);
 
     CheckSaleStateOpFrame::createCounterOffer(
         app, storageHelper, lm, mParentTx, sale, saleOwner, saleQuoteAsset,

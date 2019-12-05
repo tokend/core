@@ -30,8 +30,6 @@ AccountRoleHelperImpl::dropAll()
 AccountRoleHelperImpl::AccountRoleHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper), mAccountRoleRulesHelper(storageHelper)
 {
-    mAccountRoleSelector = "SELECT id, details, lastmodified, version "
-                           "FROM   account_roles ";
 }
 
 void
@@ -190,7 +188,8 @@ AccountRoleHelperImpl::loadAccountRole(uint64_t const roleID)
         return result;
     }
 
-    std::string sql = mAccountRoleSelector;
+    std::string sql = "SELECT id, details, lastmodified, version "
+                      "FROM   account_roles ";
     sql += " WHERE id = :id";
     auto prep = mStorageHelper.getDatabase().getPreparedStatement(sql);
     auto& st = prep.statement();

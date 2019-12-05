@@ -9,7 +9,6 @@
 #include "ledger/FeeHelper.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/ReferenceHelper.h"
-#include "ledger/BalanceHelper.h"
 
 namespace stellar
 {
@@ -256,10 +255,9 @@ PaymentOpFrame::getActualFee(AccountFrame::pointer accountFrame, AssetCode const
     Fee actualFee;
     actualFee.percent = 0;
     actualFee.fixed = 0;
-    auto& db = storageHelper.getDatabase();
-    auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
+    auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::PAYMENT_FEE, transferAsset,
                                                           static_cast<int64_t>(feeType),
-                                                          accountFrame, amount, db);
+                                                          accountFrame, amount);
     // if we do not have any fee frame - any fee is valid
     if (!feeFrame)
     {
@@ -291,7 +289,6 @@ bool
 PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                         LedgerManager& ledgerManager)
 {
-    Database& db = storageHelper.getDatabase();
     LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto sourceBalance = balanceHelper.loadBalance(mPayment.sourceBalanceID, getSourceID());
@@ -371,7 +368,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     {
         AccountID sourceAccountID = mSourceAccount->getID();
 
-        if (ReferenceHelper::Instance()->exists(db, mPayment.reference, sourceAccountID))
+        if (storageHelper.getReferenceHelper().exists(mPayment.reference, sourceAccountID))
         {
             innerResult().code(PaymentResultCode::REFERENCE_DUPLICATION);
             return false;

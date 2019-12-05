@@ -227,4 +227,15 @@ std::ostream& operator<<(std::ostream& stream, const BalanceFrame::Result& resul
     }
 }
 
+LedgerKey const &
+BalanceFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::BALANCE);
+        mKey.balance().balanceID = mBalance.balanceID;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 } // namespace stellar

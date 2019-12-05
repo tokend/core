@@ -87,36 +87,33 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
                             stellar::StorageHelper& storageHelper,
                             stellar::LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-
     auto& assetHelper = storageHelper.getAssetHelper();
 
     // Asset existence was checked previously
     auto asset = assetHelper.mustLoadAsset(mRemoveAsset.code);
 
-    auto saleHelper = SaleHelper::Instance();
-    if (saleHelper->exists(db, mRemoveAsset.code))
+    auto& saleHelper = storageHelper.getSaleHelper();
+    if (saleHelper.exists(mRemoveAsset.code))
     {
         innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_SALES);
         return false;
     }
 
-    if (OfferHelper::Instance()->exists(db, mRemoveAsset.code, nullptr))
+    if (storageHelper.getOfferHelper().exists(mRemoveAsset.code, nullptr))
     {
         innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_OFFERS);
         return false;
     }
 
-    auto assetPairHelper = AssetPairHelper::Instance();
-    if (assetPairHelper->existsForAsset(db, mRemoveAsset.code))
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    if (assetPairHelper.existsForAsset(mRemoveAsset.code))
     {
         innerResult().code(RemoveAssetResultCode::HAS_PAIR);
         return false;
     }
     if (ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED))
     {
-        if (AtomicSwapAskHelper::Instance()->existForAsset(db,
-                                                           mRemoveAsset.code))
+        if (storageHelper.getAtomicSwapAskHelper().existForAsset(mRemoveAsset.code))
         {
             innerResult().code(RemoveAssetResultCode::HAS_ACTIVE_ATOMIC_SWAPS);
             return false;
@@ -205,15 +202,12 @@ RemoveAssetOpFrame::deleteBalancesWithCheck(StorageHelper& storageHelper)
 void
 RemoveAssetOpFrame::deleteLimits(StorageHelper& storageHelper)
 {
-    auto limitsHelper = LimitsV2Helper::Instance();
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
+    auto& limitsHelper =  storageHelper.getLimitsV2Helper();
+    auto limits = limitsHelper.loadLimitsForAsset(mRemoveAsset.code);
 
-    auto limits = limitsHelper->loadLimitsForAsset(db, mRemoveAsset.code);
-
-    for (auto limit : limits)
+    for (auto& limit : limits)
     {
-        limitsHelper->storeDelete(delta, db, limit->getKey());
+        limitsHelper.storeDelete(limit->getKey());
     }
 
 }

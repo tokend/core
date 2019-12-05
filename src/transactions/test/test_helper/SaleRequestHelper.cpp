@@ -4,10 +4,11 @@
 
 #include <transactions/sale/CancelSaleCreationRequestOpFrame.h>
 #include "SaleRequestHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "ledger/SaleHelper.h"
 #include "ReviewSaleRequestHelper.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -50,8 +51,8 @@ CreateSaleCreationRequestResult
 SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t requestID, const SaleCreationRequest request,
                                           uint32_t *allTasks, CreateSaleCreationRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto reviewableRequestCountBeforeTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto reviewableRequestCountBeforeTx = reviewableRequestHelper.countObjects();
 
 
     auto txFrame = createSaleRequestTx(source, requestID, request, allTasks);
@@ -61,7 +62,7 @@ SaleRequestHelper::applyCreateSaleRequest(Account &source, const uint64_t reques
     auto actualResultCode = CreateSaleCreationRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
-    auto reviewableRequestCountAfterTx = reviewableRequestHelper->countObjects(mTestManager->getDB().getSession());
+    auto reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
     if (expectedResult != CreateSaleCreationRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);
@@ -75,9 +76,8 @@ CancelSaleCreationRequestResult
 SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
         CancelSaleCreationRequestResultCode expectedResult, OperationResultCode opExpectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto reviewableRequestCountBeforeTx = reviewableRequestHelper->
-            countObjects(mTestManager->getDB().getSession());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto reviewableRequestCountBeforeTx = reviewableRequestHelper.countObjects();
 
 
     auto txFrame = cancelSaleRequestTx(source, requestID);
@@ -95,8 +95,7 @@ SaleRequestHelper::applyCancelSaleRequest(Account &source, uint64_t requestID,
             CancelSaleCreationRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
-    auto reviewableRequestCountAfterTx = reviewableRequestHelper->
-            countObjects(mTestManager->getDB().getSession());
+    auto reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
     if (expectedResult != CancelSaleCreationRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx == reviewableRequestCountAfterTx);

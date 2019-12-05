@@ -56,12 +56,9 @@ ManageAssetPairOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
 bool
 ManageAssetPairOpFrame::createNewAssetPair(Application& app, StorageHelper& storageHelper, LedgerManager& ledgerManager, AssetPairFrame::pointer assetPair)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
     // already exists or reverced already exists
-
-    auto assetPairHelper = AssetPairHelper::Instance();
-    if (assetPair || assetPairHelper->exists(db, mManageAssetPair.quote, mManageAssetPair.base))
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    if (assetPair || assetPairHelper.exists(mManageAssetPair.quote, mManageAssetPair.base))
     {
         app.getMetrics().NewMeter({"op-manage-asset-pair", "invalid", "already-exists"},
                                   "operation").Mark();
@@ -83,7 +80,7 @@ ManageAssetPairOpFrame::createNewAssetPair(Application& app, StorageHelper& stor
     assetPair = AssetPairFrame::create(mManageAssetPair.base, mManageAssetPair.quote, mManageAssetPair.physicalPrice,
                                        mManageAssetPair.physicalPrice, mManageAssetPair.physicalPriceCorrection,
                                        mManageAssetPair.maxPriceStep, mManageAssetPair.policies);
-    EntryHelperProvider::storeAddEntry(delta, db, assetPair->mEntry);
+    storageHelper.getHelper(assetPair->mEntry.data.type())->storeAdd(assetPair->mEntry);
     BalanceManager balanceManager(app, storageHelper);
     balanceManager.loadOrCreateBalanceForAdmin(assetPair->getQuoteAsset());
 
@@ -98,11 +95,8 @@ bool
 ManageAssetPairOpFrame::doApply(Application& app,
                                 StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-
-    auto assetPairHelper = AssetPairHelper::Instance();
-    AssetPairFrame::pointer assetPair = assetPairHelper->loadAssetPair(mManageAssetPair.base, mManageAssetPair.quote, db, &delta);
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    AssetPairFrame::pointer assetPair = assetPairHelper.loadAssetPair(mManageAssetPair.base, mManageAssetPair.quote);
     if (mManageAssetPair.action == ManageAssetPairAction::CREATE)
     {
         return createNewAssetPair(app, storageHelper, ledgerManager, assetPair);
@@ -127,8 +121,8 @@ ManageAssetPairOpFrame::doApply(Application& app,
         if (!assetPair->checkPolicy(AssetPairPolicy::TRADEABLE_SECONDARY_MARKET))
         {
             auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
-            const auto offersToRemove = OfferHelper::Instance()->loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, nullptr, db);
-            OfferManager::deleteOffers(offersToRemove, db, delta);
+            const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, nullptr);
+            OfferManager::deleteOffers(storageHelper, offersToRemove);
         }
     }
     else
@@ -142,11 +136,11 @@ ManageAssetPairOpFrame::doApply(Application& app,
         assetPairEntry.currentPrice = mManageAssetPair.physicalPrice + premium;
         auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
         uint64_t minAllowedPrice = assetPair->getMinAllowedPrice();
-        const auto offersToRemove = OfferHelper::Instance()->loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, &minAllowedPrice, db);
-        OfferManager::deleteOffers(offersToRemove, db, delta);
+        const auto offersToRemove = storageHelper.getOfferHelper().loadOffersWithFilters(assetPair->getBaseAsset(), assetPair->getQuoteAsset(), &orderBookID, &minAllowedPrice);
+        OfferManager::deleteOffers(storageHelper, offersToRemove);
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, assetPair->mEntry);
+    storageHelper.getHelper(assetPair->mEntry.data.type())->storeChange(assetPair->mEntry);
 
     app.getMetrics().NewMeter({"op-manage-asset-pair", "success", "apply"},
                               "operation").Mark();

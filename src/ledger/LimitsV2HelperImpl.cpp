@@ -1,19 +1,21 @@
 #include <xdrpp/printer.h>
-#include "LimitsV2Helper.h"
+#include "LimitsV2HelperImpl.h"
 #include "LedgerDelta.h"
+#include "database/Database.h"
+#include "AccountHelperImpl.h"
+#include "StorageHelper.h"
+#include <xdrpp/marshal.h>
+#include <lib/util/basen.h>
 
 using namespace std;
 using namespace soci;
 
 namespace  stellar
 {
-    const char* limitsV2Selector = "select id, account_type, account_id, stats_op_type, asset_code,"
-                                   " is_convert_needed, daily_out, weekly_out, monthly_out, annual_out,"
-                                   " lastmodified, version "
-                                   "from limits_v2 ";
-
-    void LimitsV2Helper::dropAll(Database &db)
+    void LimitsV2HelperImpl::dropAll()
     {
+        Database &db = getDatabase();
+
         db.getSession() << "DROP TABLE IF EXISTS limits_v2;";
         db.getSession() << "CREATE TABLE limits_v2"
                    "("
@@ -35,15 +37,16 @@ namespace  stellar
     }
 
     void
-    LimitsV2Helper::storeUpdateHelper(LedgerDelta &delta, Database &db, bool insert, LedgerEntry const &entry)
+    LimitsV2HelperImpl::storeUpdateHelper(bool insert, LedgerEntry const &entry)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         auto limitsV2Frame = make_shared<LimitsV2Frame>(entry);
         auto limitsV2Entry = limitsV2Frame->getLimits();
-
-        limitsV2Frame->touch(delta);
+        limitsV2Frame->touch(*delta);
 
         auto key = limitsV2Frame->getKey();
-        flushCachedEntry(key, db);
+        flushCachedEntry(key);
 
         if (!limitsV2Frame->isValid())
         {
@@ -117,29 +120,31 @@ namespace  stellar
 
         if (insert)
         {
-            delta.addEntry(*limitsV2Frame);
+            delta->addEntry(*limitsV2Frame);
         }
         else
         {
-            delta.modEntry(*limitsV2Frame);
+            delta->modEntry(*limitsV2Frame);
         }
     }
 
     void
-    LimitsV2Helper::storeAdd(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
+    LimitsV2HelperImpl::storeAdd(LedgerEntry const& entry)
     {
-        storeUpdateHelper(delta, db, true, entry);
+        storeUpdateHelper(true, entry);
     }
 
     void
-    LimitsV2Helper::storeChange(LedgerDelta& delta, Database& db, LedgerEntry const& entry)
+    LimitsV2HelperImpl::storeChange(LedgerEntry const& entry)
     {
-        storeUpdateHelper(delta, db, false, entry);
+        storeUpdateHelper(false, entry);
     }
 
     void
-    LimitsV2Helper::storeDelete(LedgerDelta& delta, Database& db, LedgerKey const& key)
+    LimitsV2HelperImpl::storeDelete(LedgerKey const& key)
     {
+        Database& db = getDatabase();
+        LedgerDelta& delta = mStorageHelper.mustGetLedgerDelta();
         auto timer = db.getDeleteTimer("limits-v2");
         auto prep = db.getPreparedStatement("DELETE FROM limits_v2 WHERE id = :id");
         auto& st = prep.statement();
@@ -150,8 +155,9 @@ namespace  stellar
     }
 
     bool
-    LimitsV2Helper::exists(Database& db, LedgerKey const& key)
+    LimitsV2HelperImpl::exists(LedgerKey const& key)
     {
+        Database& db = getDatabase();
         int exists = 0;
         auto timer = db.getSelectTimer("limits_v2_exists");
         auto prep = db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM limits_v2 WHERE id = :id)");
@@ -165,7 +171,7 @@ namespace  stellar
     }
 
     LedgerKey
-    LimitsV2Helper::getLedgerKey(LedgerEntry const& from)
+    LimitsV2HelperImpl::getLedgerKey(LedgerEntry const& from)
     {
         LedgerKey ledgerKey;
         ledgerKey.type(from.data.type());
@@ -174,30 +180,32 @@ namespace  stellar
     }
 
     EntryFrame::pointer
-    LimitsV2Helper::fromXDR(LedgerEntry const &from)
+    LimitsV2HelperImpl::fromXDR(LedgerEntry const &from)
     {
         return std::make_shared<LimitsV2Frame>(from);
     }
 
     uint64_t
-    LimitsV2Helper::countObjects(soci::session &sess)
+    LimitsV2HelperImpl::countObjects()
     {
         uint64_t count = 0;
-        sess << "SELECT COUNT(*) FROM limits_v2;", into(count);
+        getDatabase().getSession() << "SELECT COUNT(*) FROM limits_v2;", into(count);
         return count;
     }
 
     EntryFrame::pointer
-    LimitsV2Helper::storeLoad(LedgerKey const &key, Database &db)
+    LimitsV2HelperImpl::storeLoad(LedgerKey const &key)
     {
         auto const &limitsV2Entry = key.limitsV2();
-        return loadLimits(limitsV2Entry.id, db);
+        return loadLimits(limitsV2Entry.id);
     }
 
     LimitsV2Frame::pointer
-    LimitsV2Helper::loadLimits(uint64_t id, Database &db, LedgerDelta *delta)
+    LimitsV2HelperImpl::loadLimits(uint64_t id)
     {
-        string sql = limitsV2Selector;
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
+        string sql = mLimitsV2ColumnSelector;
         sql += " where id = :id";
 
         auto prep = db.getPreparedStatement(sql);
@@ -221,7 +229,7 @@ namespace  stellar
     }
 
     string
-    LimitsV2Helper::obtainSqlStatsOpTypesString(std::vector<StatsOpType> stats)
+    LimitsV2HelperImpl::obtainSqlStatsOpTypesString(std::vector<StatsOpType> stats)
     {
         string result;
         for (auto stat : stats)
@@ -235,9 +243,10 @@ namespace  stellar
 
 
 std::vector<LimitsV2Frame::pointer>
-LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
+LimitsV2HelperImpl::loadLimitsForAsset(AssetCode const& assetCode)
    {
-       string sql = limitsV2Selector;
+       Database &db = getDatabase();
+       string sql = mLimitsV2ColumnSelector;
        sql += " WHERE asset_code = :asset_c ";
 
        auto prep = db.getPreparedStatement(sql);
@@ -255,9 +264,10 @@ LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
     }
 
     std::vector<LimitsV2Frame::pointer>
-    LimitsV2Helper::loadLimits(Database &db, vector<StatsOpType> statsOpTypes, AssetCode assetCode,
-                               xdr::pointer<AccountID> accountID, uint64_t* roleID)
+    LimitsV2HelperImpl::loadLimits(vector<StatsOpType> statsOpTypes, AssetCode assetCode,
+                                   xdr::pointer<AccountID> accountID, uint64_t* roleID)
     {
+        Database &db = getDatabase();
         uint64_t accountRole = 0;
         indicator accountTypeIndicator = i_null;
         if (roleID != nullptr)
@@ -303,10 +313,12 @@ LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
     }
 
     LimitsV2Frame::pointer
-    LimitsV2Helper::loadLimits(Database &db, StatsOpType statsOpType, AssetCode assetCode,
-                               xdr::pointer<AccountID> accountID, uint64_t* roleID,
-                               bool isConvertNeeded, LedgerDelta *delta)
+    LimitsV2HelperImpl::loadLimits(StatsOpType statsOpType, AssetCode assetCode,
+                                   xdr::pointer<AccountID> accountID, uint64_t* roleID,
+                                   bool isConvertNeeded)
     {
+        Database& db = getDatabase();
+        LedgerDelta* delta = getLedgerDelta();
         uint64_t accountRole = 0;
         indicator accountTypeIndicator = i_null;
         if (roleID != nullptr)
@@ -326,7 +338,7 @@ LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
         auto statsOpTypeInt = static_cast<int32_t>(statsOpType);
         int isConvertNeededInt = isConvertNeeded ? 1 : 0;
 
-        string sql = limitsV2Selector;
+        string sql = mLimitsV2ColumnSelector;
         sql += " WHERE (account_id = :acc_id or (:acc_id::text is null and account_id is null)) AND "
                "       (account_type = :acc_t or (:acc_t::int is null and account_type is null)) AND "
                "       asset_code = :asset_c AND "
@@ -357,7 +369,7 @@ LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
     }
 
     void
-    LimitsV2Helper::load(StatementContext &prep, function<void(LedgerEntry const &)> processor)
+    LimitsV2HelperImpl::load(StatementContext &prep, function<void(LedgerEntry const &)> processor)
     {
         try
         {
@@ -409,6 +421,24 @@ LimitsV2Helper::loadLimitsForAsset(Database &db, AssetCode const& assetCode)
         {
             throw_with_nested(runtime_error("Failed to load limits v2"));
         }
+    }
+
+    LedgerDelta *LimitsV2HelperImpl::getLedgerDelta() {
+        return mStorageHelper.getLedgerDelta();
+    }
+
+    Database &LimitsV2HelperImpl::getDatabase() {
+        return mStorageHelper.getDatabase();
+    }
+
+    LimitsV2HelperImpl::LimitsV2HelperImpl(StorageHelper &storageHelper)
+            : mStorageHelper(storageHelper)
+            {
+            mLimitsV2ColumnSelector =
+                    "select id, account_type, account_id, stats_op_type, asset_code,"
+                    " is_convert_needed, daily_out, weekly_out, monthly_out, annual_out,"
+                    " lastmodified, version "
+                    "from limits_v2 ";
     }
 
 }

@@ -61,5 +61,8 @@ class ReferenceFrame : public EntryFrame
 
     static bool isValid(ReferenceEntry const& oe);
     bool isValid() const;
+
+    LedgerKey const&
+    getKey() const override;
 };
 }

@@ -6,7 +6,7 @@
 #include "ledger/AssetFrame.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
 
 
@@ -21,8 +21,8 @@ ReviewPreIssuanceChecker::ReviewPreIssuanceChecker(
 {
     auto& assetHelper = mTestManager->getStorageHelper().getAssetHelper();
 
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::CREATE_PRE_ISSUANCE) {
         return;
     }
@@ -62,8 +62,8 @@ ReviewRequestResult ReviewPreIssuanceRequestHelper::applyReviewRequestTx(Account
                                                                          ReviewRequestOpAction action, std::string rejectReason,
                                                                          ReviewRequestResultCode expectedResult)
 {
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, mTestManager->getDB());
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     REQUIRE(request);
     return applyReviewRequestTx(source, requestID, request->getHash(), request->getRequestType(), action, rejectReason, expectedResult);
 }

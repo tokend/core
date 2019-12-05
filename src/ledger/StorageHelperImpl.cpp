@@ -6,6 +6,17 @@
 #include "ledger/LicenseHelperImpl.h"
 #include "ledger/StampHelperImpl.h"
 #include "ledger/LicenseSignatureHelperImpl.h"
+#include "ledger/LimitsV2HelperImpl.h"
+#include "ledger/AccountKYCHelperImpl.h"
+#include "ledger/AssetPairHelperImpl.h"
+#include "ledger/AtomicSwapAskHelperImpl.h"
+#include "ledger/ContractHelperImpl.h"
+#include "ledger/FeeHelperImpl.h"
+#include "ledger/OfferHelperImpl.h"
+#include "ledger/ReferenceHelperImpl.h"
+#include "ledger/PendingStatisticsHelperImpl.h"
+#include "ledger/SaleHelperImpl.h"
+#include "ledger/StatisticsV2HelperImpl.h"
 #include "BalanceHelperImpl.h"
 #include "AssetHelperImpl.h"
 #include "AccountRuleHelperImpl.h"
@@ -16,8 +27,6 @@
 #include "SignerRoleHelperImpl.h"
 #include "VoteHelperImpl.h"
 #include "PollHelperImpl.h"
-#include "LicenseHelperImpl.h"
-#include "StampHelperImpl.h"
 #include "AccountSpecificRuleHelperImpl.h"
 #include "ReviewableRequestHelperImpl.h"
 #include "SwapHelperImpl.h"
@@ -52,7 +61,17 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType ::ACCOUNT_SPECIFIC_RULE, &getAccountSpecificRuleHelper()},
         {LedgerEntryType::REVIEWABLE_REQUEST,                    &getReviewableRequestHelper()},
         {LedgerEntryType::SWAP, &getSwapHelper()},
-
+        {LedgerEntryType::LIMITS_V2, &getLimitsV2Helper()},
+        {LedgerEntryType::ACCOUNT_KYC, &getAccountKYCHelper()},
+        {LedgerEntryType ::ASSET_PAIR, &getAssetPairHelper()},
+        {LedgerEntryType ::ATOMIC_SWAP_ASK, &getAtomicSwapAskHelper()},
+        {LedgerEntryType::CONTRACT, &getContractHelper()},
+        {LedgerEntryType::FEE, &getFeeHelper()},
+        {LedgerEntryType::OFFER_ENTRY, &getOfferHelper()},
+        {LedgerEntryType::REFERENCE_ENTRY, &getReferenceHelper()},
+        {LedgerEntryType::SALE, &getSaleHelper()},
+        {LedgerEntryType::PENDING_STATISTICS, &getPendingStatisticsHelper()},
+        {LedgerEntryType::STATISTICS_V2, &getStatisticsV2Helper()},
 
     };
 }
@@ -403,6 +422,128 @@ StorageHelperImpl::getReviewableRequestHelper()
     }
 
     return *mReviewableRequestHelper;
+}
+
+LimitsV2Helper&
+StorageHelperImpl::getLimitsV2Helper()
+{
+    if(!mLimitsV2Helper)
+    {
+        mLimitsV2Helper = std::make_unique<LimitsV2HelperImpl>(*this);
+    }
+
+    return *mLimitsV2Helper;
+}
+
+AccountKYCHelper&
+StorageHelperImpl::getAccountKYCHelper()
+{
+    if(!mAccountKYCHelper)
+    {
+        mAccountKYCHelper = std::make_unique<AccountKYCHelperImpl>(*this);
+    }
+
+    return *mAccountKYCHelper;
+}
+
+AssetPairHelper&
+StorageHelperImpl::getAssetPairHelper()
+{
+    if(!mAssetPairHelper)
+    {
+        mAssetPairHelper = std::make_unique<AssetPairHelperImpl>(*this);
+    }
+
+    return *mAssetPairHelper;
+}
+
+AtomicSwapAskHelper&
+StorageHelperImpl::getAtomicSwapAskHelper()
+{
+    if(!mAtomicSwapAskHelper)
+    {
+        mAtomicSwapAskHelper = std::make_unique<AtomicSwapAskHelperImpl>(*this);
+    }
+
+    return *mAtomicSwapAskHelper;
+}
+
+ContractHelper&
+StorageHelperImpl::getContractHelper()
+{
+    if(!mContractHelper)
+    {
+        mContractHelper = std::make_unique<ContractHelperImpl>(*this);
+    }
+
+    return *mContractHelper;
+}
+
+FeeHelper&
+StorageHelperImpl::getFeeHelper()
+{
+    if(!mFeeHelper)
+    {
+        mFeeHelper = std::make_unique<FeeHelperImpl>(*this);
+    }
+
+    return *mFeeHelper;
+}
+
+
+OfferHelper&
+StorageHelperImpl::getOfferHelper()
+{
+    if(!mOfferHelper)
+    {
+        mOfferHelper = std::make_unique<OfferHelperImpl>(*this);
+    }
+
+    return *mOfferHelper;
+}
+
+ReferenceHelper&
+StorageHelperImpl::getReferenceHelper()
+{
+    if(!mReferenceHelper)
+    {
+        mReferenceHelper = std::make_unique<ReferenceHelperImpl>(*this);
+    }
+
+    return *mReferenceHelper;
+}
+
+SaleHelper&
+StorageHelperImpl::getSaleHelper()
+{
+    if(!mSaleHelper)
+    {
+        mSaleHelper = std::make_unique<SaleHelperImpl>(*this);
+    }
+
+    return *mSaleHelper;
+}
+
+PendingStatisticsHelper&
+StorageHelperImpl::getPendingStatisticsHelper()
+{
+    if(!mPendingStatisticsHelper)
+    {
+        mPendingStatisticsHelper = std::make_unique<PendingStatisticsHelperImpl>(*this);
+    }
+
+    return *mPendingStatisticsHelper;
+}
+
+StatisticsV2Helper&
+StorageHelperImpl::getStatisticsV2Helper()
+{
+    if(!mStatisticsV2Helper)
+    {
+        mStatisticsV2Helper = std::make_unique<StatisticsV2HelperImpl>(*this);
+    }
+
+    return *mStatisticsV2Helper;
 }
 
 } // namespace stellar

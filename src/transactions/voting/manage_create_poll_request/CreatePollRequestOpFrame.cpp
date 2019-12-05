@@ -3,7 +3,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/KeyValueHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "transactions/review_request/ReviewRequestHelper.h"
 
@@ -84,8 +84,7 @@ CreatePollRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper
         return false;
     }
 
-    Database& db = storageHelper.getDatabase();
-    ReviewableRequestHelperLegacy::Instance()->storeAdd(delta, db, requestFrame->mEntry);
+    storageHelper.getReviewableRequestHelper().storeAdd(requestFrame->mEntry);
 
     innerResult().success().details.action(ManageCreatePollRequestAction::CREATE);
     innerResult().success().details.response().fulfilled = false;

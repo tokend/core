@@ -6,7 +6,6 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDelta.h"
-#include "ledger/EntryHelperLegacy.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "main/Application.h"
 

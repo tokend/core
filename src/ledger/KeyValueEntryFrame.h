@@ -4,63 +4,66 @@
 #include <iostream>
 
 namespace stellar {
-    class KeyValueEntryFrame : public EntryFrame {
+class KeyValueEntryFrame : public EntryFrame {
 
-        KeyValueEntry& mKeyEntry;
-        KeyValueEntryFrame(KeyValueEntryFrame const& from);
+    KeyValueEntry& mKeyEntry;
+    KeyValueEntryFrame(KeyValueEntryFrame const& from);
 
-    public:
+public:
 
-        typedef std::shared_ptr<KeyValueEntryFrame> pointer;
+    typedef std::shared_ptr<KeyValueEntryFrame> pointer;
 
-        KeyValueEntryFrame();
-        KeyValueEntryFrame(LedgerEntry const& from);
+    KeyValueEntryFrame();
+    KeyValueEntryFrame(LedgerEntry const& from);
 
-        KeyValueEntryFrame& operator=(KeyValueEntryFrame const& other);
+    KeyValueEntryFrame& operator=(KeyValueEntryFrame const& other);
 
-        EntryFrame::pointer copy() const override
-        {
-            return EntryFrame::pointer(new KeyValueEntryFrame(*this));
-        }
+    EntryFrame::pointer copy() const override
+    {
+        return EntryFrame::pointer(new KeyValueEntryFrame(*this));
+    }
 
-        KeyValueEntry const& getKeyValue() const
-        {
-            return mKeyEntry;
-        }
+    KeyValueEntry const& getKeyValue() const
+    {
+        return mKeyEntry;
+    }
 
-        KeyValueEntry& getKeyValue()
-        {
-            return mKeyEntry;
-        }
+    KeyValueEntry& getKeyValue()
+    {
+        return mKeyEntry;
+    }
 
-        longstring getEntryKey()
-        {
-            return mKeyEntry.key;
-        }
+    longstring getEntryKey()
+    {
+        return mKeyEntry.key;
+    }
 
-        KeyValueEntryType const
-        getKeyValueEntryType() const
-        {
-            return mKeyEntry.value.type();
-        }
+    KeyValueEntryType const
+    getKeyValueEntryType() const
+    {
+        return mKeyEntry.value.type();
+    }
 
-        void setKey(string256 newKey)
-        {
-            mKeyEntry.key = newKey;
-        }
+    void setKey(string256 newKey)
+    {
+        mKeyEntry.key = newKey;
+    }
 
-        string256 getPrefix()
-        {
-            string256 prefix;
-            std::istringstream from(mKeyEntry.key);
-            std::getline(from,prefix,':');
+    string256 getPrefix()
+    {
+        string256 prefix;
+        std::istringstream from(mKeyEntry.key);
+        std::getline(from,prefix,':');
 
-            return prefix;
-        }
+        return prefix;
+    }
 
-        uint32_t const
-        mustGetUint32Value() const;
+    uint32_t const
+    mustGetUint32Value() const;
 
-    };
+    LedgerKey const&
+    getKey() const override;
+
+};
 
 }

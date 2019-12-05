@@ -1,6 +1,6 @@
 #include "BindExternalSystemAccountIdTestHelper.h"
-#include "ledger/ExternalSystemAccountIDHelperLegacy.h"
-#include "ledger/ExternalSystemAccountIDPoolEntryHelperLegacy.h"
+#include "ledger/ExternalSystemAccountIDHelper.h"
+#include "ledger/ExternalSystemAccountIDPoolEntryHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
 #include "ledger/KeyValueHelper.h"
@@ -37,24 +37,23 @@ namespace txtest
     {
         TransactionFramePtr txFrame;
 
-        auto externalSystemAccountIDHelper = ExternalSystemAccountIDHelperLegacy::Instance();
-        auto externalSystemAccountIDPoolEntryHelper = ExternalSystemAccountIDPoolEntryHelperLegacy::Instance();
+        auto& externalSystemAccountIDHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDHelper();
+        auto& externalSystemAccountIDPoolEntryHelper = mTestManager->getStorageHelper().getExternalSystemAccountIDPoolEntryHelper();
 
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDs;
-        Database& db = mTestManager->getDB();
-        externalSystemAccountIDs = externalSystemAccountIDHelper->loadAll(db);
-        auto poolEntryToBindFrame = externalSystemAccountIDPoolEntryHelper->loadAvailablePoolEntry(db, mTestManager->getLedgerManager(),
+        externalSystemAccountIDs = externalSystemAccountIDHelper.loadAll();
+        auto poolEntryToBindFrame = externalSystemAccountIDPoolEntryHelper.loadAvailablePoolEntry(mTestManager->getLedgerManager(),
                                                                                                    externalSystemType);
         bool rebinding = false;
         ExternalSystemAccountIDFrame::pointer externalSystemAccountIDBeforeTx;
-        bool prolongation = externalSystemAccountIDHelper->exists(db, source.key.getPublicKey(), externalSystemType);
+        bool prolongation = externalSystemAccountIDHelper.exists(source.key.getPublicKey(), externalSystemType);
         if (!prolongation)
         {
             if (!!poolEntryToBindFrame && !!poolEntryToBindFrame->getExternalSystemAccountIDPoolEntry().accountID)
             {
                 auto poolEntryToBind = poolEntryToBindFrame->getExternalSystemAccountIDPoolEntry();
-                externalSystemAccountIDBeforeTx = externalSystemAccountIDHelper->load(*poolEntryToBind.accountID,
-                                                                                      externalSystemType, db);
+                externalSystemAccountIDBeforeTx = externalSystemAccountIDHelper.load(*poolEntryToBind.accountID,
+                                                                                      externalSystemType);
                 if (!!externalSystemAccountIDBeforeTx)
                     rebinding = true;
             }
@@ -73,7 +72,7 @@ namespace txtest
         REQUIRE(actualResultCode == expectedResultCode);
 
         std::vector<ExternalSystemAccountIDFrame::pointer> externalSystemAccountIDsAfter;
-        externalSystemAccountIDsAfter = externalSystemAccountIDHelper->loadAll(db);
+        externalSystemAccountIDsAfter = externalSystemAccountIDHelper.loadAll();
 
         auto innerResult = opResult.tr().bindExternalSystemAccountIdResult();
 
@@ -89,8 +88,8 @@ namespace txtest
                 REQUIRE(externalSystemAccountIDs.size() == externalSystemAccountIDsAfter.size() - 1);
 
             auto boundPoolEntryData = innerResult.success().data;
-            auto boundPoolEntryFrame = externalSystemAccountIDPoolEntryHelper->load(externalSystemType,
-                                                                                    boundPoolEntryData, db);
+            auto boundPoolEntryFrame = externalSystemAccountIDPoolEntryHelper.load(externalSystemType,
+                                                                                    boundPoolEntryData);
             REQUIRE(!!boundPoolEntryFrame);
 
             auto boundPoolEntry = boundPoolEntryFrame->getExternalSystemAccountIDPoolEntry();
@@ -101,11 +100,11 @@ namespace txtest
             REQUIRE(boundPoolEntry.expiresAt == mTestManager->getLedgerManager().getCloseTime() + getExpireAt(externalSystemType));
 
             if (rebinding)
-                REQUIRE(!externalSystemAccountIDHelper->exists(db, externalSystemAccountIDBeforeTx->getExternalSystemAccountID().accountID,
+                REQUIRE(!externalSystemAccountIDHelper.exists(externalSystemAccountIDBeforeTx->getExternalSystemAccountID().accountID,
                                                                externalSystemType));
 
-            auto externalSystemAccountIDFrame = externalSystemAccountIDHelper->load(source.key.getPublicKey(),
-                                                                               externalSystemType, db);
+            auto externalSystemAccountIDFrame = externalSystemAccountIDHelper.load(source.key.getPublicKey(),
+                                                                               externalSystemType);
             REQUIRE(!!externalSystemAccountIDFrame);
 
             auto externalSystemAccountID = externalSystemAccountIDFrame->getExternalSystemAccountID();

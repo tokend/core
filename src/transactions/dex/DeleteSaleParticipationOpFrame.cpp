@@ -41,17 +41,14 @@ bool DeleteSaleParticipationOpFrame::doCheckValid(Application& app)
 bool DeleteSaleParticipationOpFrame::doApply(Application& app,
                                              StorageHelper& storageHelper, LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto offer = OfferHelper::Instance()->loadOffer(getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID, db,
-                                                    &delta);
+    auto offer = storageHelper.getOfferHelper().loadOffer(getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID);
     if (!offer)
     {
         innerResult().code(ManageOfferResultCode::NOT_FOUND);
         return false;
     }
 
-    auto sale = SaleHelper::Instance()->loadSale(mManageOffer.orderBookID, db, &delta);
+    auto sale = storageHelper.getSaleHelper().loadSale(mManageOffer.orderBookID);
     if (!sale)
     {
         innerResult().code(ManageOfferResultCode::ORDER_BOOK_DOES_NOT_EXISTS);
@@ -70,7 +67,7 @@ bool DeleteSaleParticipationOpFrame::doApply(Application& app,
     auto balance = storageHelper.getBalanceHelper().mustLoadBalance(quoteBalanceID);
     sale->subCurrentCap(balance->getAsset(), offer->getOffer().quoteAmount);
     sale->unlockBaseAsset(offer->getOffer().baseAmount);
-    SaleHelper::Instance()->storeChange(delta, db, sale->mEntry);
+    storageHelper.getSaleHelper().storeChange(sale->mEntry);
     return DeleteOfferOpFrame::doApply(app, storageHelper, ledgerManager);
 }
 

@@ -1,9 +1,10 @@
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/AtomicSwapAskHelper.h>
-#include <ledger/ReviewableRequestHelperLegacy.h>
+#include <ledger/ReviewableRequestHelper.h>
 #include "ReviewRequestTestHelper.h"
 #include "ReviewASwapAskRequestTestHelper.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -15,28 +16,25 @@ ASwapAskRequestReviewChecker::ASwapAskRequestReviewChecker(
         TestManager::pointer testManager, uint64_t requestID)
         : ReviewChecker(testManager)
 {
-    auto& db = mTestManager->getDB();
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(requestID, db);
+    auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.createAtomicSwapAskRequest();
-    mBaseBalanceBeforeTx = BalanceHelperLegacy::Instance()->mustLoadBalance(
-            aSwapCreationRequest.baseBalance, db);
+    mBaseBalanceBeforeTx = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
+            aSwapCreationRequest.baseBalance);
 }
 
 void ASwapAskRequestReviewChecker::checkPermanentReject(
         ReviewableRequestFrame::pointer request)
 {
-    auto& db = mTestManager->getDB();
-
-    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            request->getRequestID(), db);
+    auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
+            request->getRequestID());
 
     REQUIRE(requestAfterTx == nullptr);
 
     auto& aSwapCreationRequest =
             request->getRequestEntry().body.createAtomicSwapAskRequest();
-    auto baseBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(
-            aSwapCreationRequest.baseBalance, db);
+    auto baseBalanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(
+            aSwapCreationRequest.baseBalance);
 
     REQUIRE(baseBalanceAfterTx->getAmount() - aSwapCreationRequest.amount ==
             mBaseBalanceBeforeTx->getAmount());
@@ -48,8 +46,7 @@ void ASwapAskRequestReviewChecker::checkPermanentReject(
 void ASwapAskRequestReviewChecker::checkApprove(
         ReviewableRequestFrame::pointer request)
 {
-    auto requestAfterTx = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            request->getRequestID(), mTestManager->getDB());
+    auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(request->getRequestID());
 
     REQUIRE(requestAfterTx == nullptr);
 }
@@ -100,8 +97,7 @@ ReviewASwapAskRequestHelper::applyReviewRequestTx(
         Account &source, uint64_t requestID, ReviewRequestOpAction action,
         std::string rejectReason, ReviewRequestResultCode expectedResult)
 {
-    auto request = ReviewableRequestHelperLegacy::Instance()->loadRequest(
-            requestID, mTestManager->getDB());
+    auto request = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(requestID);
     REQUIRE(request != nullptr);
     return applyReviewRequestTx(source, requestID, request->getHash(),
                                 request->getRequestType(), action, rejectReason,

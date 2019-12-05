@@ -21,7 +21,7 @@ void ReviewChangeRoleRequestChecker::checkApprove(ReviewableRequestFrame::pointe
     REQUIRE(!!accountAfterTx);
     REQUIRE(accountAfterTx->getAccountRole() == updateKYCRequest.accountRoleToSet);
 
-    auto accountKYCAfterTx = AccountKYCHelper::Instance()->loadAccountKYC(updateKYCRequest.destinationAccount, mTestManager->getDB());
+    auto accountKYCAfterTx = storageHelper.getAccountKYCHelper().loadAccountKYC(updateKYCRequest.destinationAccount);
     REQUIRE(!!accountKYCAfterTx);
     REQUIRE(accountKYCAfterTx->getKYCData() == updateKYCRequest.creatorDetails);
 }

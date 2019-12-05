@@ -16,7 +16,7 @@
 #include "test/test_marshaler.h"
 #include "ledger/SaleHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "test_helper/ManageBalanceTestHelper.h"
 #include "transactions/dex/OfferManager.h"
 #include "test_helper/ParticipateInSaleTestHelper.h"
@@ -117,7 +117,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
                                                                                                                      ONE)},
                                                                      maxAmountToBeSold, saleType);
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto saleID = sales[0]->getID();
 
@@ -129,9 +129,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
         // create base balance for participant:
         auto manageBalanceRes = ManageBalanceTestHelper(testManager).applyManageBalanceTx(participant, participantID, baseAsset);
         BalanceID baseBalance = manageBalanceRes.success().balanceID;
-        Database& db = testManager->getDB();
-        BalanceID quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(participantID, quoteAsset, db,
-            nullptr)->getBalanceID();
+        BalanceID quoteBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(participantID, quoteAsset)->getBalanceID();
 
         // pre-issue quote amount
         issuanceHelper.authorizePreIssuedAmount(root, root.key, quoteAsset, INT64_MAX, root);
@@ -158,7 +156,7 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
         SECTION("Participation amount is too small")
         {
             // able to invest 10^-6 when price for quote and default quote is 1
-            auto quoteBalanceBeforeTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
+            auto quoteBalanceBeforeTx = testManager->getStorageHelper().getBalanceHelper().loadBalance(quoteBalance);
             quoteDefaultQuotePrice = 1000 * ONE;
             assetPairHelper.applyManageAssetPairTx(root, quoteAsset, defaultQuoteAsset, quoteDefaultQuotePrice, 0, 0, 0, ManageAssetPairAction::UPDATE_PRICE);
             auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, 1,
@@ -174,13 +172,13 @@ TEST_CASE("Crowdfunding", "[tx][crowdfunding]")
                 ONE, 0, 0, saleID);
             ParticipateInSaleTestHelper(testManager).applyManageOffer(participant, manageOffer);
             // now we should have two rders
-            auto quoteBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
+            auto quoteBalanceAfterTx = testManager->getStorageHelper().getBalanceHelper().loadBalance(quoteBalance);
             REQUIRE(quoteBalanceAfterTx->getAmount() == quoteBalanceBeforeTx->getAmount() - hardCapInQuoteAsset - 1);
             // Check state and make sure first order was canceled
             CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
             // we had two offers one with amount so small that base amount is 0, so it should have been canceled
             // so quote balance should be charged with only second order
-            quoteBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(quoteBalance, db);
+            quoteBalanceAfterTx = testManager->getStorageHelper().getBalanceHelper().loadBalance(quoteBalance);
             REQUIRE(quoteBalanceAfterTx->getAmount() == quoteBalanceBeforeTx->getAmount() - hardCapInQuoteAsset);
             // close the sale
             CheckSaleStateHelper(testManager).applyCheckSaleStateTx(root, saleID);
