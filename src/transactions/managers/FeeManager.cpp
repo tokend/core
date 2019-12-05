@@ -33,7 +33,7 @@ FeeManager::calculateFeeForAccount(StorageHelper& storageHelper, const AccountFr
 }
 
 bool
-FeeManager::isFeeMatches(StorageHelper& storageHelper, const AccountFrame::pointer account, const Fee fee,
+FeeManager::isFeeMatches(const AccountFrame::pointer account, const Fee fee,
         const FeeType feeType, const int64_t subtype, const AssetCode assetCode,
         const uint64_t amount) const
 {

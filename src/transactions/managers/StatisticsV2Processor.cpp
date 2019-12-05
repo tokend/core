@@ -120,7 +120,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         if (!validateStats(limitsV2Frame, statisticsV2Frame))
             return LIMITS_V2_EXCEEDED;
 
-        mStorageHelper.getHelper(statisticsV2Frame->mEntry.data.type())->storeChange(statisticsV2Frame->mEntry);
+        limitsV2Helper.storeChange(statisticsV2Frame->mEntry);
 
         if (!requestID)
             continue;
@@ -128,7 +128,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         uint64_t statsID = statisticsV2Frame->getID();
         auto pendingStatisticsFrame = PendingStatisticsFrame::createNew(*requestID, statsID, universalAmount);
 
-        mStorageHelper.getHelper(pendingStatisticsFrame->mEntry.data.type())->storeAdd(pendingStatisticsFrame->mEntry);
+        mStorageHelper.getPendingStatisticsHelper().storeAdd(pendingStatisticsFrame->mEntry);
     }
 
     return SUCCESS;

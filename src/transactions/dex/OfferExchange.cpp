@@ -162,7 +162,7 @@ void OfferExchange::markOfferAsTaken(StorageHelper& storageHelper, OfferFrame& o
                                      BalanceFrame::pointer baseBalance,
                                      BalanceFrame::pointer quoteBalance)
 {
-    storageHelper.getHelper(offer.getKey().type())->storeDelete(offer.getKey());
+    storageHelper.getOfferHelper().storeDelete(offer.getKey());
     unlockBalancesForTakenOffer(offer, baseBalance, quoteBalance);
 }
 
@@ -289,7 +289,7 @@ OfferExchange::CrossOfferResult OfferExchange::crossOffer(StorageHelper& storage
     if (!isOfferValid)
     {
         markOfferAsTaken(storageHelper, offerFrameB, baseBalanceB, quoteBalanceB);
-        storageHelper.getHelper(baseBalanceB->mEntry.data.type())->storeChange(baseBalanceB->mEntry);
+        storageHelper.getBalanceHelper().storeChange(baseBalanceB->mEntry);
         return eOfferTaken;
     }
 

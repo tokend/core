@@ -9,6 +9,7 @@
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
+#include "ledger/OfferHelper.h"
 #include "main/Application.h"
 #include "OfferManager.h"
 #include "transactions/managers/BalanceManager.h"
@@ -342,8 +343,8 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     {
         const int64_t currentPrice = takenOffers[takenOffers.size() - 1].currentPrice;
         mAssetPair->setCurrentPrice(currentPrice);
-        storageHelper.getHelper(mAssetPair->mEntry.data.type())->storeChange(mAssetPair->mEntry);
-        storageHelper.getHelper(commissionBalance->mEntry.data.type())->storeChange(commissionBalance->mEntry);
+        storageHelper.getAssetPairHelper().storeChange(mAssetPair->mEntry);
+        storageHelper.getBalanceHelper().storeChange(commissionBalance->mEntry);
     }
 
     if (oe.offerNeedsMore(offer, mQuoteBalance->getMinimumAmount()))
@@ -353,7 +354,7 @@ CreateOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                        ::
                        OFFER_ENTRY);
         innerResult().success().offer.effect(ManageOfferEffect::CREATED);
-        storageHelper.getHelper(offerFrame->mEntry.data.type())->storeAdd(offerFrame->mEntry);
+        storageHelper.getOfferHelper().storeAdd(offerFrame->mEntry);
         innerResult().success().offer.offer() = offer;
     }
     else

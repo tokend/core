@@ -443,10 +443,11 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
     }
     auto& saleEntry = sale->getSaleEntry();
     uint64_t priceInDefaultQuoteAsset = getSaleCurrentPriceInDefaultQuote(sale, storageHelper);
+    auto& OfferHelper = storageHelper.getOfferHelper();
     for (auto& quoteAsset : saleEntry.quoteAssets)
     {
         quoteAsset.price = getPriceInQuoteAsset(storageHelper, priceInDefaultQuoteAsset, sale, quoteAsset.quoteAsset);
-        const auto offersToUpdate = storageHelper.getOfferHelper().
+        const auto offersToUpdate = OfferHelper.
             loadOffersWithFilters(sale->getBaseAsset(), quoteAsset.quoteAsset, &saleEntry.saleID, nullptr);
         for (auto& offerToUpdate : offersToUpdate)
         {
@@ -459,7 +460,7 @@ void CheckSaleStateOpFrame::updateOfferPrices(SaleFrame::pointer sale, StorageHe
                 throw runtime_error("Failed to update price for offer on check state");
             }
             offerEntry.baseAmount -= offerEntry.baseAmount % getMinimumAssetAmount(saleEntry.baseAsset, storageHelper);
-            storageHelper.getOfferHelper().storeChange(offerToUpdate->mEntry);
+            OfferHelper.storeChange(offerToUpdate->mEntry);
         }
     }
     storageHelper.getSaleHelper().storeChange(sale->mEntry);

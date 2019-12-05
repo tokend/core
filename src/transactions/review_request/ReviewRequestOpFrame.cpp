@@ -108,7 +108,7 @@ ReviewRequestOpFrame::createReference(StorageHelper& storageHelper, AccountID co
     }
 
     auto referenceFrame = ReferenceFrame::create(requestor, *reference);
-    storageHelper.getHelper(referenceFrame->mEntry.data.type())->storeAdd(referenceFrame->mEntry);
+    referenceHelper.storeAdd(referenceFrame->mEntry);
 }
 
 ReviewRequestOpFrame::ReviewRequestOpFrame(Operation const& op,

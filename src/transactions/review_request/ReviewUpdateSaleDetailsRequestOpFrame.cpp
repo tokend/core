@@ -42,7 +42,7 @@ bool ReviewUpdateSaleDetailsRequestOpFrame::handleApprove(Application& app, Stor
     }
 
     saleFrame->getSaleEntry().details = updateSaleDetailsRequest.creatorDetails;
-    storageHelper.getHelper(saleFrame->mEntry.data.type())->storeChange(saleFrame->mEntry);
+    storageHelper.getSaleHelper().storeChange(saleFrame->mEntry);
     requestHelper.storeDelete(request->getKey());
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);

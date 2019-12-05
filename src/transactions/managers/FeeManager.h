@@ -28,7 +28,7 @@ public:
             AssetCode const &asset, int64_t const subtype, uint64_t const amount);
 
     bool
-    isFeeMatches(StorageHelper& storageHelper, AccountFrame::pointer account, Fee fee, FeeType feeType,
+    isFeeMatches(AccountFrame::pointer account, Fee fee, FeeType feeType,
             int64_t subtype, AssetCode assetCode, uint64_t amount) const;
 
 };

@@ -4,6 +4,7 @@
 
 #include "OfferManager.h"
 #include "ledger/BalanceHelper.h"
+#include "ledger/OfferHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "xdrpp/printer.h"
 #include "ledger/FeeHelper.h"
@@ -29,8 +30,8 @@ void OfferManager::deleteOffer(StorageHelper& storageHelper, OfferFrame::pointer
         throw std::runtime_error("Invalid database state: failed to unlocked locked amount for offer");
     }
 
-    storageHelper.getHelper(offerFrame->getKey().type())->storeDelete(offerFrame->getKey());
-    storageHelper.getHelper(balanceFrame->mEntry.data.type())->storeChange(balanceFrame->mEntry);
+    storageHelper.getOfferHelper().storeDelete(offerFrame->getKey());
+    storageHelper.getBalanceHelper().storeChange(balanceFrame->mEntry);
 }
 
 void OfferManager::deleteOffers(StorageHelper& storageHelper, std::vector<OfferFrame::pointer> offers)
