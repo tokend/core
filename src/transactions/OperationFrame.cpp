@@ -62,6 +62,7 @@
 #include "transactions/manage_asset/RemoveAssetOpFrame.h"
 #include "swap/OpenSwapOpFrame.h"
 #include "swap/CloseSwapOpFrame.h"
+#include "CreateRedemptionRequestOpFrame.h"
 
 namespace stellar
 {
@@ -172,6 +173,8 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<OpenSwapOpFrame>(op, res, tx);
         case OperationType::CLOSE_SWAP:
             return make_shared<CloseSwapOpFrame>(op, res, tx);
+        case OperationType::CREATE_REDEMPTION_REQUEST:
+            return make_shared<CreateRedemptionRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

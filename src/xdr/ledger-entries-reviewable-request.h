@@ -24,6 +24,7 @@
 #include "xdr/reviewable-request-kyc-recovery.h"
 #include "xdr/reviewable-request-manage-offer.h"
 #include "xdr/reviewable-request-payment.h"
+#include "xdr/reviewable-request-redemption.h"
 
 namespace stellar {
 
@@ -48,6 +49,7 @@ enum class ReviewableRequestType : std::int32_t {
   KYC_RECOVERY = 18,
   MANAGE_OFFER = 19,
   CREATE_PAYMENT = 20,
+  PERFORM_REDEMPTION = 21,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ReviewableRequestType>
@@ -97,6 +99,8 @@ template<> struct xdr_traits<::stellar::ReviewableRequestType>
       return "MANAGE_OFFER";
     case ::stellar::ReviewableRequestType::CREATE_PAYMENT:
       return "CREATE_PAYMENT";
+    case ::stellar::ReviewableRequestType::PERFORM_REDEMPTION:
+      return "PERFORM_REDEMPTION";
     default:
       return nullptr;
     }
@@ -122,7 +126,8 @@ template<> struct xdr_traits<::stellar::ReviewableRequestType>
       (int32_t)::stellar::ReviewableRequestType::CREATE_ATOMIC_SWAP_BID,
       (int32_t)::stellar::ReviewableRequestType::KYC_RECOVERY,
       (int32_t)::stellar::ReviewableRequestType::MANAGE_OFFER,
-      (int32_t)::stellar::ReviewableRequestType::CREATE_PAYMENT
+      (int32_t)::stellar::ReviewableRequestType::CREATE_PAYMENT,
+      (int32_t)::stellar::ReviewableRequestType::PERFORM_REDEMPTION
     };
     return _xdr_enum_vec;
   }
@@ -325,6 +330,7 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
       KYCRecoveryRequest kycRecoveryRequest_;
       ManageOfferRequest manageOfferRequest_;
       CreatePaymentRequest createPaymentRequest_;
+      RedemptionRequest redemptionRequest_;
     };
 
   public:
@@ -348,7 +354,8 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         ReviewableRequestType::CREATE_POLL,
         ReviewableRequestType::KYC_RECOVERY,
         ReviewableRequestType::MANAGE_OFFER,
-        ReviewableRequestType::CREATE_PAYMENT
+        ReviewableRequestType::CREATE_PAYMENT,
+        ReviewableRequestType::PERFORM_REDEMPTION
       };
       return _xdr_disc_vec;
     }
@@ -371,6 +378,7 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::KYC_RECOVERY ? 16
         : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 17
         : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 18
+        : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 19
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -429,6 +437,9 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
         _f(&_body_t::createPaymentRequest_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+        _f(&_body_t::redemptionRequest_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -497,6 +508,9 @@ break;
         case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&createPaymentRequest_) CreatePaymentRequest{};
 break;
+        case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&redemptionRequest_) RedemptionRequest{};
+break;
 }
 
       }
@@ -560,6 +574,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&createPaymentRequest_) CreatePaymentRequest{};
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&redemptionRequest_) RedemptionRequest{};
+break;
 }
 
     }
@@ -619,6 +636,9 @@ new(&manageOfferRequest_) ManageOfferRequest(source.manageOfferRequest_);
 break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&createPaymentRequest_) CreatePaymentRequest(source.createPaymentRequest_);
+break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&redemptionRequest_) RedemptionRequest(source.redemptionRequest_);
 break;
 }
 
@@ -680,6 +700,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&createPaymentRequest_) CreatePaymentRequest(std::move(source.createPaymentRequest_));
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&redemptionRequest_) RedemptionRequest(std::move(source.redemptionRequest_));
+break;
 }
 
     }
@@ -739,6 +762,9 @@ manageOfferRequest_.~ManageOfferRequest();
 break;
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 createPaymentRequest_.~CreatePaymentRequest();
+break;
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+redemptionRequest_.~RedemptionRequest();
 break;
 }
 }
@@ -802,6 +828,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 createPaymentRequest_ = source.createPaymentRequest_;
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+redemptionRequest_ = source.redemptionRequest_;
+break;
 }
 }
 else {this->~_body_t();
@@ -861,6 +890,9 @@ new(&manageOfferRequest_) ManageOfferRequest(source.manageOfferRequest_);
 break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&createPaymentRequest_) CreatePaymentRequest(source.createPaymentRequest_);
+break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&redemptionRequest_) RedemptionRequest(source.redemptionRequest_);
 break;
 }
 }
@@ -925,6 +957,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 createPaymentRequest_ = std::move(source.createPaymentRequest_);
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+redemptionRequest_ = std::move(source.redemptionRequest_);
+break;
 }
 }
 else {this->~_body_t();
@@ -984,6 +1019,9 @@ new(&manageOfferRequest_) ManageOfferRequest(std::move(source.manageOfferRequest
 break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&createPaymentRequest_) CreatePaymentRequest(std::move(source.createPaymentRequest_));
+break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&redemptionRequest_) RedemptionRequest(std::move(source.redemptionRequest_));
 break;
 }
 }
@@ -1175,6 +1213,16 @@ break;
       if (_xdr_field_number(type_) == 18)
         return createPaymentRequest_;
       throw xdr::xdr_wrong_union("_body_t: createPaymentRequest accessed when not selected");
+    }
+    RedemptionRequest &redemptionRequest() {
+      if (_xdr_field_number(type_) == 19)
+        return redemptionRequest_;
+      throw xdr::xdr_wrong_union("_body_t: redemptionRequest accessed when not selected");
+    }
+    const RedemptionRequest &redemptionRequest() const {
+      if (_xdr_field_number(type_) == 19)
+        return redemptionRequest_;
+      throw xdr::xdr_wrong_union("_body_t: redemptionRequest accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

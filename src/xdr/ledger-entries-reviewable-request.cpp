@@ -218,6 +218,8 @@ return u.from_bytes(kycRecoveryRequest_);
 return u.from_bytes(manageOfferRequest_);
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return u.from_bytes(createPaymentRequest_);
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return u.from_bytes(redemptionRequest_);
 }
 return false;
 }
@@ -268,6 +270,8 @@ return m.to_bytes(kycRecoveryRequest_);
 return m.to_bytes(manageOfferRequest_);
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return m.to_bytes(createPaymentRequest_);
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return m.to_bytes(redemptionRequest_);
 }
 return false;
 }
@@ -314,6 +318,8 @@ return m.count_size(kycRecoveryRequest_);
 return m.count_size(manageOfferRequest_);
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return m.count_size(createPaymentRequest_);
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return m.count_size(redemptionRequest_);
 }
 }
 bool
@@ -363,6 +369,8 @@ return kycRecoveryRequest_ == other.kycRecoveryRequest_;
 return manageOfferRequest_ == other.manageOfferRequest_;
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return createPaymentRequest_ == other.createPaymentRequest_;
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return redemptionRequest_ == other.redemptionRequest_;
 }
 return false;
 }
@@ -414,6 +422,8 @@ return kycRecoveryRequest_ < other.kycRecoveryRequest_;
 return manageOfferRequest_ < other.manageOfferRequest_;
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return createPaymentRequest_ < other.createPaymentRequest_;
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return redemptionRequest_ < other.redemptionRequest_;
 }
 return false;
 }
