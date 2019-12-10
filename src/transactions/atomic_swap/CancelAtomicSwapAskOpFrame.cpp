@@ -2,6 +2,7 @@
 #include <database/Database.h>
 #include <ledger/AtomicSwapAskHelper.h>
 #include <ledger/BalanceHelper.h>
+#include <ledger/EntryHelper.h>
 #include "CancelAtomicSwapAskOpFrame.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
@@ -29,8 +30,8 @@ bool
 CancelAtomicSwapAskOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                                      std::vector<SignerRequirement>& result) const
 {
-    auto ask = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        mCancelASwapBid.askID, storageHelper.getDatabase());
+    auto ask = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        mCancelASwapBid.askID);
     if (!ask)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -59,11 +60,9 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
                                          LedgerManager& ledgerManager)
 {
     innerResult().code(CancelAtomicSwapAskResultCode::SUCCESS);
-    Database& db = app.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
 
-    auto askFrame = AtomicSwapAskHelper::Instance()->loadAtomicSwapAsk(
-        getSourceID(), mCancelASwapBid.askID, db, &delta);
+    auto askFrame = storageHelper.getAtomicSwapAskHelper().loadAtomicSwapAsk(
+        getSourceID(), mCancelASwapBid.askID);
     if (askFrame == nullptr)
     {
         innerResult().code(CancelAtomicSwapAskResultCode::NOT_FOUND);
@@ -80,7 +79,7 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
     if (askFrame->getLockedAmount() != 0)
     {
         askFrame->setIsCancelled(true);
-        EntryHelperProvider::storeChangeEntry(delta, db, askFrame->mEntry);
+        storageHelper.getAtomicSwapAskHelper().storeChange(askFrame->mEntry);
         return true;
     }
 
@@ -102,8 +101,8 @@ bool CancelAtomicSwapAskOpFrame::doApply(Application& app, StorageHelper& storag
             "Unexpected state: failed to unlock amount in ask owner balance");
     }
 
-    EntryHelperProvider::storeChangeEntry(delta, db, bidOwnerBalanceFrame->mEntry);
-    EntryHelperProvider::storeDeleteEntry(delta, db, askFrame->getKey());
+    storageHelper.getBalanceHelper().storeChange(bidOwnerBalanceFrame->mEntry);
+    storageHelper.getAtomicSwapAskHelper().storeDelete(askFrame->getKey());
 
     return true;
 }

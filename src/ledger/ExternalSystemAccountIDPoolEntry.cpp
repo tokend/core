@@ -81,4 +81,15 @@ using xdr::operator<;
     {
         mExternalSystemAccountIDPoolEntry.isDeleted = true;
     }
+
+    LedgerKey const &
+    ExternalSystemAccountIDPoolEntryFrame::getKey() const
+    {
+        if (!mKeyCalculated) {
+            mKey = LedgerKey(LedgerEntryType::EXTERNAL_SYSTEM_ACCOUNT_ID_POOL_ENTRY);
+            mKey.externalSystemAccountIDPoolEntry().poolEntryID = mExternalSystemAccountIDPoolEntry.poolEntryID;
+            mKeyCalculated = true;
+        }
+        return mKey;
+    }
 }

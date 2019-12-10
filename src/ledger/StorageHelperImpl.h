@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ledger/StorageHelper.h"
-#include "BalanceHelperLegacy.h"
+#include "ledger/EntryHelper.h"
+#include <unordered_map>
 #include <memory>
 
 namespace soci
@@ -17,6 +18,7 @@ class BalanceHelper;
 class AssetHelper;
 class ExternalSystemAccountIDHelper;
 class ExternalSystemAccountIDPoolEntryHelper;
+class EntryHelper;
 class AccountRoleHelper;
 class AccountRuleHelper;
 class LicenseHelper;
@@ -26,7 +28,17 @@ class VoteHelper;
 class PollHelper;
 class ReviewableRequestHelper;
 class SwapHelper;
-
+class LimitsV2Helper;
+class AccountKYCHelper;
+class AssetPairHelper;
+class AtomicSwapAskHelper;
+class ContractHelper;
+class FeeHelper;
+class OfferHelper;
+class ReferenceHelper;
+class SaleHelper;
+class PendingStatisticsHelper;
+class StatisticsV2Helper;
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -72,6 +84,17 @@ private:
     AccountSpecificRuleHelper& getAccountSpecificRuleHelper() override;
     ReviewableRequestHelper& getReviewableRequestHelper() override;
     SwapHelper& getSwapHelper() override;
+    LimitsV2Helper& getLimitsV2Helper() override;
+    AccountKYCHelper& getAccountKYCHelper() override;
+    AssetPairHelper& getAssetPairHelper() override;
+    AtomicSwapAskHelper& getAtomicSwapAskHelper() override;
+    ContractHelper& getContractHelper() override;
+    FeeHelper& getFeeHelper() override;
+    OfferHelper& getOfferHelper() override;
+    ReferenceHelper& getReferenceHelper() override;
+    SaleHelper& getSaleHelper() override;
+    PendingStatisticsHelper& getPendingStatisticsHelper() override;
+    StatisticsV2Helper& getStatisticsV2Helper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -102,5 +125,16 @@ private:
     std::unique_ptr<AccountSpecificRuleHelper> mAccountSpecificRuleHelper;
     std::unique_ptr<ReviewableRequestHelper> mReviewableRequestHelper;
     std::unique_ptr<SwapHelper> mSwapHelper;
+    std::unique_ptr<LimitsV2Helper> mLimitsV2Helper;
+    std::unique_ptr<AccountKYCHelper> mAccountKYCHelper;
+    std::unique_ptr<AssetPairHelper> mAssetPairHelper;
+    std::unique_ptr<AtomicSwapAskHelper> mAtomicSwapAskHelper;
+    std::unique_ptr<ContractHelper> mContractHelper;
+    std::unique_ptr<FeeHelper> mFeeHelper;
+    std::unique_ptr<OfferHelper> mOfferHelper;
+    std::unique_ptr<ReferenceHelper> mReferenceHelper;
+    std::unique_ptr<SaleHelper> mSaleHelper;
+    std::unique_ptr<PendingStatisticsHelper> mPendingStatisticsHelper;
+    std::unique_ptr<StatisticsV2Helper> mStatisticsV2Helper;
 };
 } // namespace stellar

@@ -88,8 +88,8 @@ void createIssuanceRequestHappyPath(TestManager::pointer testManager, Account& a
         applySetFees(testManager->getApp(), root.key, root.getNextSalt(), &feeEntry, false);
 
         auto accountFrame = accountHelper.loadAccount(account);
-        auto feeFrame = FeeHelper::Instance()->loadForAccount(FeeType::ISSUANCE_FEE, assetToBeIssued, FeeFrame::SUBTYPE_ANY,
-                                                              accountFrame, preIssuedAmount, testManager->getDB());
+        auto feeFrame = storageHelper.getFeeHelper().loadForAccount(FeeType::ISSUANCE_FEE, assetToBeIssued, FeeFrame::SUBTYPE_ANY,
+                                                              accountFrame, preIssuedAmount);
         REQUIRE(feeFrame);
 
         SECTION("successful issuance")

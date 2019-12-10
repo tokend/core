@@ -5,8 +5,9 @@
 #include <main/Application.h>
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/LedgerManager.h"
+#include "ledger/StorageHelperImpl.h"
 #include "StatisticsFrame.h"
-#include "EntryHelperLegacy.h"
+#include "EntryHelper.h"
 #include <src/transactions/test/TxTests.h>
 
 using namespace stellar;
@@ -19,7 +20,7 @@ void validateStats(StatisticsFrame& statsFrame, uint64_t amount)
     REQUIRE(statsFrame.getDailyOutcome() == amount);
 }
 
-TEST_CASE("Statistics tests", "[dep_tx][stats]")
+TEST_CASE("Statistics tests", "[dep_tx][stats][!hide]")
 {
     Config cfg(getTestConfig(0, Config::TESTDB_POSTGRESQL));
     VirtualClock clock;
@@ -39,7 +40,9 @@ TEST_CASE("Statistics tests", "[dep_tx][stats]")
     uint64_t amount = UINT64_MAX/2;
     statisticsFrame.add(amount, startingPoint);
 
-    EntryHelperProvider::storeAddEntry(delta, db, statisticsFrame.mEntry);
+    StorageHelperImpl storageHelperImpl(db, &delta);
+    StorageHelper& storageHelper = storageHelperImpl;
+    storageHelper.getHelper(statisticsFrame.mEntry.data.type())->storeAdd(statisticsFrame.mEntry);
     delta.commit();
     uint32 ledgerSeq = 2;
     txtest::closeLedgerOn(*app, ledgerSeq++, startingPoint);

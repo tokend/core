@@ -49,4 +49,16 @@ AccountRuleFrame::operator=(const AccountRuleFrame& other)
     }
     return *this;
 }
+
+LedgerKey const &
+AccountRuleFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::ACCOUNT_RULE);
+        mKey.accountRule().id = mAccountRuleEntry.id;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 } // namespace stellar

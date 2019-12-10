@@ -2,17 +2,17 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "AssetPairHelper.h"
+#include "AssetPairHelperImpl.h"
 #include "LedgerDelta.h"
 #include "crypto/Hex.h"
 #include "crypto/SecretKey.h"
 #include "database/Database.h"
-#include "ledger/AssetHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "lib/util/format.h"
 #include "util/basen.h"
 #include "util/types.h"
 #include <algorithm>
+#include "ledger/AssetHelper.h"
 
 using namespace soci;
 using namespace std;
@@ -22,14 +22,15 @@ namespace stellar
 using xdr::operator<;
 
 static const char* assetPairColumnSelector =
-    "SELECT base, quote, current_price, physical_price, "
-    "physical_price_correction, max_price_step, policies, "
-    "lastmodified, version "
-    "FROM asset_pair";
+        "SELECT base, quote, current_price, physical_price, "
+        "physical_price_correction, max_price_step, policies, "
+        "lastmodified, version "
+        "FROM asset_pair";
 
 void
-AssetPairHelper::dropAll(Database& db)
+AssetPairHelperImpl::dropAll()
 {
+    Database &db = getDatabase();
     db.getSession() << "DROP TABLE IF EXISTS asset_pair;";
     db.getSession() << "CREATE TABLE asset_pair"
                        "("
@@ -52,13 +53,14 @@ AssetPairHelper::dropAll(Database& db)
 }
 
 void
-AssetPairHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
-                                   bool insert, LedgerEntry const& entry)
+AssetPairHelperImpl::storeUpdateHelper(bool insert, LedgerEntry const& entry)
 {
+    Database &db = getDatabase();
+    LedgerDelta* delta = getLedgerDelta();
     auto assetPairFrame = make_shared<AssetPairFrame>(entry);
     auto assetPairEntry = assetPairFrame->getAssetPair();
 
-    assetPairFrame->touch(delta);
+    assetPairFrame->touch(*delta);
 
     bool isValid = assetPairFrame->isValid();
     if (!isValid)
@@ -67,7 +69,7 @@ AssetPairHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     }
 
     auto key = assetPairFrame->getKey();
-    flushCachedEntry(key, db);
+    flushCachedEntry(key);
     string sql;
 
     if (insert)
@@ -80,11 +82,11 @@ AssetPairHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     else
     {
         sql =
-            "UPDATE asset_pair "
-            "SET 	  current_price=:cp, physical_price=:pp, "
-            "physical_price_correction=:ppc, max_price_step=:mps, policies=:p, "
-            "       lastmodified=:lm, version=:v "
-            "WHERE  base = :b AND quote=:q";
+                "UPDATE asset_pair "
+                "SET 	  current_price=:cp, physical_price=:pp, "
+                "physical_price_correction=:ppc, max_price_step=:mps, policies=:p, "
+                "       lastmodified=:lm, version=:v "
+                "WHERE  base = :b AND quote=:q";
     }
 
     auto prep = db.getPreparedStatement(sql);
@@ -93,7 +95,7 @@ AssetPairHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
     string base = assetPairFrame->getBaseAsset();
     string quote = assetPairFrame->getQuoteAsset();
     int32_t assetPairVersion =
-        static_cast<int32_t>(assetPairFrame->getAssetPair().ext.v());
+            static_cast<int32_t>(assetPairFrame->getAssetPair().ext.v());
 
     st.exchange(use(base, "b"));
     st.exchange(use(quote, "q"));
@@ -117,36 +119,35 @@ AssetPairHelper::storeUpdateHelper(LedgerDelta& delta, Database& db,
 
     if (insert)
     {
-        delta.addEntry(*assetPairFrame);
+        delta->addEntry(*assetPairFrame);
     }
     else
     {
-        delta.modEntry(*assetPairFrame);
+        delta->modEntry(*assetPairFrame);
     }
 }
 
 void
-AssetPairHelper::storeAdd(LedgerDelta& delta, Database& db,
-                          LedgerEntry const& entry)
+AssetPairHelperImpl::storeAdd(LedgerEntry const& entry)
 {
-    storeUpdateHelper(delta, db, true, entry);
+    storeUpdateHelper(true, entry);
 }
 
 void
-AssetPairHelper::storeChange(LedgerDelta& delta, Database& db,
-                             LedgerEntry const& entry)
+AssetPairHelperImpl::storeChange(LedgerEntry const& entry)
 {
-    storeUpdateHelper(delta, db, false, entry);
+    storeUpdateHelper(false, entry);
 }
 
 void
-AssetPairHelper::storeDelete(LedgerDelta& delta, Database& db,
-                             LedgerKey const& key)
+AssetPairHelperImpl::storeDelete(LedgerKey const& key)
 {
-    flushCachedEntry(key, db);
+    Database &db = getDatabase();
+    LedgerDelta* delta = getLedgerDelta();
+    flushCachedEntry(key);
     auto timer = db.getDeleteTimer("AssetPair");
     auto prep = db.getPreparedStatement(
-        "DELETE FROM asset_pair WHERE base=:base AND quote=:quote");
+            "DELETE FROM asset_pair WHERE base=:base AND quote=:quote");
     auto& st = prep.statement();
     string base = key.assetPair().base;
     string quote = key.assetPair().quote;
@@ -154,23 +155,24 @@ AssetPairHelper::storeDelete(LedgerDelta& delta, Database& db,
     st.exchange(use(quote));
     st.define_and_bind();
     st.execute(true);
-    delta.deleteEntry(key);
+    delta->deleteEntry(key);
 }
 
 bool
-AssetPairHelper::exists(Database& db, LedgerKey const& key)
+AssetPairHelperImpl::exists(LedgerKey const& key)
 {
-    return exists(db, key.assetPair().base, key.assetPair().quote);
+    return exists(key.assetPair().base, key.assetPair().quote);
 }
 
 bool
-AssetPairHelper::exists(Database& db, AssetCode base, AssetCode quote)
+AssetPairHelperImpl::exists(AssetCode base, AssetCode quote)
 {
+    Database &db = getDatabase();
     int exists = 0;
     auto timer = db.getSelectTimer("assetPair-exists");
     auto prep =
-        db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset_pair "
-                                "WHERE base=:base AND quote=:quote)");
+            db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset_pair "
+                                    "WHERE base=:base AND quote=:quote)");
     auto& st = prep.statement();
     string baseCode = base;
     string quoteCode = quote;
@@ -184,7 +186,7 @@ AssetPairHelper::exists(Database& db, AssetCode base, AssetCode quote)
 }
 
 LedgerKey
-AssetPairHelper::getLedgerKey(LedgerEntry const& from)
+AssetPairHelperImpl::getLedgerKey(LedgerEntry const& from)
 {
     LedgerKey ledgerKey;
     ledgerKey.type(from.data.type());
@@ -194,14 +196,15 @@ AssetPairHelper::getLedgerKey(LedgerEntry const& from)
 }
 
 EntryFrame::pointer
-AssetPairHelper::storeLoad(LedgerKey const& key, Database& db)
+AssetPairHelperImpl::storeLoad(LedgerKey const& key)
 {
-    if (cachedEntryExists(key, db))
+    if (cachedEntryExists(key))
     {
-        auto p = getCachedEntry(key, db);
+        auto p = getCachedEntry(key);
         return p ? std::make_shared<AssetPairFrame>(*p) : nullptr;
     }
 
+    Database &db = getDatabase();
     string baseCode = key.assetPair().base;
     string quoteCode = key.assetPair().quote;
     std::string sql = assetPairColumnSelector;
@@ -219,42 +222,44 @@ AssetPairHelper::storeLoad(LedgerKey const& key, Database& db)
 
     if (!retAssetPair)
     {
-        putCachedEntry(key, nullptr, db);
+        putCachedEntry(key, nullptr);
         return nullptr;
     }
     auto pEntry = std::make_shared<LedgerEntry const>(retAssetPair->mEntry);
-    putCachedEntry(key, pEntry, db);
+    putCachedEntry(key, pEntry);
     return retAssetPair;
 }
 
 EntryFrame::pointer
-AssetPairHelper::fromXDR(LedgerEntry const& from)
+AssetPairHelperImpl::fromXDR(LedgerEntry const& from)
 {
     return std::make_shared<AssetPairFrame>(from);
 }
 
 uint64_t
-AssetPairHelper::countObjects(soci::session& sess)
+AssetPairHelperImpl::countObjects()
 {
     uint64_t count = 0;
-    sess << "SELECT COUNT(*) FROM asset_pair;", into(count);
+    Database &db = getDatabase();
+    db.getSession() << "SELECT COUNT(*) FROM asset_pair;", into(count);
     return count;
 }
 
 AssetPairFrame::pointer
-AssetPairHelper::loadAssetPair(AssetCode base, AssetCode quote, Database& db,
-                               LedgerDelta* delta)
+AssetPairHelperImpl::loadAssetPair(AssetCode base, AssetCode quote)
 {
+    Database &db = getDatabase();
+    LedgerDelta* delta = getLedgerDelta();
     LedgerKey key;
     key.type(LedgerEntryType::ASSET_PAIR);
     key.assetPair().base = base;
     key.assetPair().quote = quote;
 
-    if (cachedEntryExists(key, db))
+    if (cachedEntryExists(key))
     {
-        auto p = getCachedEntry(key, db);
+        auto p = getCachedEntry(key);
         auto result = p ? std::make_shared<AssetPairFrame>(*p) : nullptr;
-        tryRecordEntry(result, delta);
+        tryRecordEntry(result);
         return result;
     }
 
@@ -275,7 +280,7 @@ AssetPairHelper::loadAssetPair(AssetCode base, AssetCode quote, Database& db,
 
     if (!retAssetPair)
     {
-        putCachedEntry(key, nullptr, db);
+        putCachedEntry(key, nullptr);
         return nullptr;
     }
 
@@ -284,28 +289,26 @@ AssetPairHelper::loadAssetPair(AssetCode base, AssetCode quote, Database& db,
         delta->recordEntry(*retAssetPair);
     }
     auto pEntry = std::make_shared<LedgerEntry const>(retAssetPair->mEntry);
-    putCachedEntry(key, pEntry, db);
+    putCachedEntry(key, pEntry);
     return retAssetPair;
 }
 
 AssetPairFrame::pointer
-AssetPairHelper::tryLoadAssetPairForAssets(const AssetCode code1,
-                                           const AssetCode code2, Database& db,
-                                           LedgerDelta* delta)
+AssetPairHelperImpl::tryLoadAssetPairForAssets(const AssetCode code1, const AssetCode code2)
 {
-    auto assetPair = loadAssetPair(code1, code2, db, delta);
+    auto assetPair = loadAssetPair(code1, code2);
     if (!!assetPair)
     {
         return assetPair;
     }
 
-    return loadAssetPair(code2, code1, db, delta);
+    return loadAssetPair(code2, code1);
 }
 
 void
-AssetPairHelper::loadAssetPairs(
-    StatementContext& prep,
-    std::function<void(LedgerEntry const&)> assetPairProcessor)
+AssetPairHelperImpl::loadAssetPairs(
+        StatementContext& prep,
+        std::function<void(LedgerEntry const&)> assetPairProcessor)
 {
     LedgerEntry le;
     le.data.type(LedgerEntryType::ASSET_PAIR);
@@ -343,13 +346,14 @@ AssetPairHelper::loadAssetPairs(
 }
 
 bool
-AssetPairHelper::existsForAsset(Database& db, AssetCode code)
+AssetPairHelperImpl::existsForAsset(AssetCode code)
 {
+    Database &db = getDatabase();
     int exists = 0;
     auto timer = db.getSelectTimer("asset-pair-exists");
     auto prep =
-        db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset_pair "
-                                "WHERE base=:code OR quote=:code)");
+            db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM asset_pair "
+                                    "WHERE base=:code OR quote=:code)");
     auto& st = prep.statement();
     string assetCode = code;
     st.exchange(use(assetCode, "code"));
@@ -361,15 +365,14 @@ AssetPairHelper::existsForAsset(Database& db, AssetCode code)
 }
 
 bool
-AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair,
+AssetPairHelperImpl::convertAmount(const AssetPairFrame::pointer& assetPair,
                                const AssetCode& destCode, uint64_t amount,
-                               const Rounding rounding, Database& db,
-                               uint64_t& result) const
+                               const Rounding rounding, uint64_t& result)
 {
     if (assetPair->getCurrentPrice() <= 0)
     {
         CLOG(ERROR, Logging::ENTRY_LOGGER)
-            << "Unexpected state. Current price is <= 0: " << destCode;
+                << "Unexpected state. Current price is <= 0: " << destCode;
         return false;
     }
 
@@ -377,12 +380,12 @@ AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair,
         destCode != assetPair->getQuoteAsset())
     {
         CLOG(ERROR, Logging::ENTRY_LOGGER)
-            << "Unknown asset code: " << destCode;
+                << "Unknown asset code: " << destCode;
         return false;
     }
 
     const int64_t currentPrice = assetPair->getCurrentPrice();
-
+    Database &db = getDatabase();
     auto storageHelper = std::unique_ptr<StorageHelper>(new StorageHelperImpl(db, nullptr));
     storageHelper->release();
     auto& assetHelper = storageHelper->getAssetHelper();
@@ -397,4 +400,33 @@ AssetPairHelper::convertAmount(const AssetPairFrame::pointer& assetPair,
     return bigDivide(result, amount, ONE, currentPrice, rounding,
                      destAssetMinimumAmount);
 }
+
+AssetPairFrame::pointer
+AssetPairHelperImpl::mustLoadAssetPair(AssetCode base, AssetCode quote)
+{
+    auto result = loadAssetPair(base, quote);
+    if (!result)
+    {
+        CLOG(ERROR, "EntryFrame")
+                << "Unexpected db state. Expected asset pair to exists. Base "
+                << std::string(base) << " Quote " << std::string(quote);
+        throw std::runtime_error(
+                "Unexpected db state. Expected asset pair to exist");
+    }
+    return result;
+}
+
+    LedgerDelta *AssetPairHelperImpl::getLedgerDelta() {
+        return mStorageHelper.getLedgerDelta();
+    }
+
+    Database &AssetPairHelperImpl::getDatabase() {
+        return mStorageHelper.getDatabase();
+    }
+
+    AssetPairHelperImpl::AssetPairHelperImpl(StorageHelper &storageHelper)
+            : mStorageHelper(storageHelper)
+    {
+    }
+
 }

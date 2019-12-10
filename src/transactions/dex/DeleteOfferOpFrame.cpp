@@ -10,7 +10,6 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/OfferHelper.h"
 #include "main/Application.h"
-#include "OfferManager.h"
 
 namespace stellar
 {
@@ -36,8 +35,9 @@ bool
 DeleteOfferOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
                                              std::vector<SignerRequirement>& result) const
 {
-    auto offerFrame = OfferHelper::Instance()->loadOffer(getSourceID(),
-                                                         mManageOffer.offerID, storageHelper.getDatabase());
+
+    auto offerFrame = storageHelper.getOfferHelper().loadOffer(getSourceID(),
+                                                         mManageOffer.offerID);
     if (!offerFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -64,18 +64,15 @@ bool
 DeleteOfferOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                             LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    const auto offer = OfferHelper::Instance()->loadOffer(
-        getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID, db,
-        &delta);
+    const auto offer = storageHelper.getOfferHelper().loadOffer(
+        getSourceID(), mManageOffer.offerID, mManageOffer.orderBookID);
     if (!offer)
     {
         innerResult().code(ManageOfferResultCode::NOT_FOUND);
         return false;
     }
 
-    OfferManager::deleteOffer(offer, db, delta);
+    OfferManager::deleteOffer(storageHelper, offer);
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto baseBalance = balanceHelper.mustLoadBalance(offer->getOffer().baseBalance);
     auto quoteBalance = balanceHelper.mustLoadBalance(offer->getOffer().quoteBalance);

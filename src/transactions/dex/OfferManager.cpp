@@ -3,18 +3,19 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "OfferManager.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/OfferHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "xdrpp/printer.h"
 #include "ledger/FeeHelper.h"
+#include "ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
-void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
-    LedgerDelta& delta)
+void OfferManager::deleteOffer(StorageHelper& storageHelper, OfferFrame::pointer offerFrame)
 {
     const auto balanceID = offerFrame->getLockedBalance();
-    auto balanceFrame = BalanceHelperLegacy::Instance()->loadBalance(balanceID, db, &delta);
+    auto balanceFrame = storageHelper.getBalanceHelper().loadBalance(balanceID);
     if (!balanceFrame)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Invalid database state: failed to load balance to cancel order: " << xdr::xdr_to_string(offerFrame->getOffer());
@@ -29,17 +30,17 @@ void OfferManager::deleteOffer(OfferFrame::pointer offerFrame, Database& db,
         throw std::runtime_error("Invalid database state: failed to unlocked locked amount for offer");
     }
 
-    EntryHelperProvider::storeDeleteEntry(delta, db, offerFrame->getKey());
-    EntryHelperProvider::storeChangeEntry(delta, db, balanceFrame->mEntry);
+    storageHelper.getOfferHelper().storeDelete(offerFrame->getKey());
+    storageHelper.getBalanceHelper().storeChange(balanceFrame->mEntry);
 }
 
-void OfferManager::deleteOffers(std::vector<OfferFrame::pointer> offers,
-    Database& db, LedgerDelta& delta)
+void OfferManager::deleteOffers(StorageHelper& storageHelper, std::vector<OfferFrame::pointer> offers)
 {
+    auto& delta = storageHelper.mustGetLedgerDelta();
     for (auto& offer : offers)
     {
         delta.recordEntry(*offer);
-        deleteOffer(offer, db, delta);
+        deleteOffer(storageHelper, offer);
     }
 }
 

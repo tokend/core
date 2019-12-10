@@ -5,26 +5,27 @@
 #include "invariant/BucketListIsConsistentWithDatabase.h"
 #include "bucket/Bucket.h"
 #include "bucket/BucketInputIterator.h"
-#include "crypto/Hex.h"
 #include "invariant/InvariantManager.h"
 #include "ledger/LedgerRange.h"
-//#include "ledger/LedgerTxn.h"
-//#include "ledger/LedgerTxnEntry.h"
-#include "lib/util/format.h"
 #include "main/Application.h"
 #include "xdrpp/printer.h"
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
+#include "ledger/StorageHelperImpl.h"
+#include "database/Database.h"
 
 namespace stellar
 {
 
-static std::string
-checkAgainstDatabase(Database& db, LedgerEntry const& entry)
+std::string
+BucketListIsConsistentWithDatabase::checkAgainstDatabase(LedgerEntry const& entry) const
 {
-    LedgerKey key = LedgerEntryKey(entry);
-    auto legacyHelper = EntryHelperProvider::getHelper(entry.data.type()); // helper existing handled above
-    legacyHelper->flushCachedEntry(key, db);
-    EntryFrame::pointer fromDb = legacyHelper->storeLoad(key, db);
+    Database& db = mApp.getDatabase();
+    StorageHelperImpl storageHelperImpl(db, nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    LedgerKey key = storageHelper.getHelper(entry.data.type())->getLedgerKey(entry);
+    auto legacyHelper = storageHelper.getHelper(entry.data.type()); // helper existing handled above
+    legacyHelper->flushCachedEntry(key);
+    EntryFrame::pointer fromDb = legacyHelper->storeLoad(key);
 
     if (!fromDb)
     {
@@ -47,12 +48,14 @@ checkAgainstDatabase(Database& db, LedgerEntry const& entry)
     }
 }
 
-static std::string
-checkAgainstDatabase(Database& db, LedgerKey const& key)
+std::string
+BucketListIsConsistentWithDatabase::checkAgainstDatabase(LedgerKey const& key)
 {
-    auto legacyHelper = EntryHelperProvider::getHelper(key.type()); // helper existing handled above
-    legacyHelper->flushCachedEntry(key, db);
-    EntryFrame::pointer fromDb = legacyHelper->storeLoad(key, db);
+    StorageHelperImpl storageHelperImpl(mApp.getDatabase(), nullptr);
+    StorageHelper& storageHelper = storageHelperImpl;
+    auto legacyHelper = storageHelper.getHelper(key.type()); // helper existing handled above
+    legacyHelper->flushCachedEntry(key);
+    EntryFrame::pointer fromDb = legacyHelper->storeLoad(key);
     if (!fromDb)
     {
         return {};
@@ -108,7 +111,7 @@ BucketListIsConsistentWithDatabase::checkOnBucketApply(
         {
             case  BucketEntryType::LIVEENTRY:
             {
-                auto s = checkAgainstDatabase(db, e.liveEntry());
+                auto s = checkAgainstDatabase(e.liveEntry());
                 if (!s.empty())
                 {
                     return s;
@@ -116,7 +119,7 @@ BucketListIsConsistentWithDatabase::checkOnBucketApply(
             }
             case BucketEntryType::DEADENTRY:
             {
-                auto s = checkAgainstDatabase(db, e.deadEntry());
+                auto s = checkAgainstDatabase(e.deadEntry());
                 if (!s.empty())
                 {
                     return s;

@@ -153,6 +153,9 @@ class ReviewableRequestFrame : public EntryFrame
 	void checkRequestType(ReviewableRequestType requestType) const;
 
 	bool canBeFulfilled(LedgerManager& lm) const;
+
+    LedgerKey const&
+    getKey() const override;
 };
 
 }

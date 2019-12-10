@@ -17,9 +17,9 @@ class BalanceHelperImpl : public BalanceHelper, NonCopyable
 
 public:
     explicit BalanceHelperImpl(StorageHelper& storageHelper);
-
+    uint64_t
+    loadTotalAssetAmount(AssetCode assetCode) override;
 private:
-
     void
     dropAll() override;
 

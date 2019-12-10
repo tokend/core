@@ -21,7 +21,6 @@ namespace stellar
 
     public:
         explicit StampHelperImpl(StorageHelper& storageHelper);
-    private:
         void dropAll() override;
         uint64_t countObjects() override;
         bool exists(LedgerKey const &key) override;

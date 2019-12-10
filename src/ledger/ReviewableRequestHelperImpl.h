@@ -44,7 +44,7 @@ private:
 
     uint64_t countObjects() override;
 
-    void loadRequests(StatementContext& prep, std::function<void(const LedgerEntry&)> requestsProcessor) override;
+    void loadRequests(StatementContext& prep, std::function<void(const LedgerEntry&)> requestsProcessor);
 
     ReviewableRequestFrame::pointer loadRequest(uint64 requestID) override;
 

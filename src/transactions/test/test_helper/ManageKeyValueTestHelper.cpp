@@ -1,6 +1,7 @@
 #include <transactions/test/TxTests.h>
 #include "ManageKeyValueTestHelper.h"
-#include "ledger/KeyValueHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/KeyValueHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "test/test_marshaler.h"
 #include "TxHelper.h"
@@ -71,7 +72,7 @@ namespace stellar {
             REQUIRE((isApplied && isValid) == require);
             REQUIRE(builder.kvManager->getInnerCode(builder.kvManager->getResult()) == expectedResult);
 
-            auto actualKeyValue = KeyValueHelperLegacy::Instance()->loadKeyValue(key, app.getDatabase());
+            auto actualKeyValue = mTestManager->getStorageHelper().getKeyValueHelper().loadKeyValue(key);
             switch (action) {
                 case ManageKVAction::PUT:
                 {

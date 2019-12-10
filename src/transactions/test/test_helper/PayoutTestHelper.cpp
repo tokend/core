@@ -1,8 +1,9 @@
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
 #include <ledger/FeeHelper.h>
 #include "PayoutTestHelper.h"
 #include "transactions/deprecated/PayoutOpFrame.h"
 #include "test/test_marshaler.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -38,17 +39,16 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
             uint64_t minPayOutAmount, uint64_t minAssetHolderAmount, Fee &fee,
             PayoutResultCode expectedResult)
 {
-    Database& db = mTestManager->getDB();
-    auto balanceHelper = BalanceHelperLegacy::Instance();
-    auto ownerBalanceBefore = balanceHelper->loadBalance(sourceBalanceID, db);
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
+    auto ownerBalanceBefore = balanceHelper.loadBalance(sourceBalanceID);
     BalanceFrame::pointer commissionBalanceBefore;
     if (ownerBalanceBefore)
-        commissionBalanceBefore = balanceHelper->
+        commissionBalanceBefore = balanceHelper.
             loadBalance(mTestManager->getApp().getAdminID(),
-                        ownerBalanceBefore->getAsset(), db);
+                        ownerBalanceBefore->getAsset());
 
-    auto assetHoldersBefore = balanceHelper->loadAssetHolders(asset,
-            source.key.getPublicKey(), minAssetHolderAmount, db);
+    auto assetHoldersBefore = balanceHelper.loadAssetHolders(asset,
+            source.key.getPublicKey(), minAssetHolderAmount);
 
     TransactionFramePtr txFrame;
     txFrame = createPayoutTx(source, asset, sourceBalanceID,
@@ -68,21 +68,21 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
     uint64_t totalFee = 0;
     if ((fee.fixed != 0) && (fee.percent != 0))
     {
-        auto feeEntry = FeeHelper::Instance()->loadFee(FeeType::PAYOUT_FEE,
+        auto feeEntry = mTestManager->getStorageHelper().getFeeHelper().loadFee(FeeType::PAYOUT_FEE,
                 ownerBalanceBefore->getAsset(), nullptr, nullptr,
-                FeeFrame::SUBTYPE_ANY, 0, INT64_MAX, db);
+                FeeFrame::SUBTYPE_ANY, 0, INT64_MAX);
         REQUIRE(bigDivide(totalFee, actualPayoutAmount,
                           feeEntry->getPercentFee(), 100*ONE, ROUND_UP));
         totalFee += fee.fixed;
     }
 
 
-    auto ownerBalanceAfter = balanceHelper->loadBalance(sourceBalanceID, db);
+    auto ownerBalanceAfter = balanceHelper.loadBalance(sourceBalanceID);
     REQUIRE(ownerBalanceBefore->getAmount() ==
             ownerBalanceAfter->getAmount() + actualPayoutAmount + totalFee);
 
-    auto assetHoldersAfter = balanceHelper->loadAssetHolders(asset,
-            source.key.getPublicKey(), minAssetHolderAmount, db);
+    auto assetHoldersAfter = balanceHelper.loadAssetHolders(asset,
+            source.key.getPublicKey(), minAssetHolderAmount);
 
     for (auto response : result.success().payoutResponses)
     {
@@ -105,9 +105,9 @@ PayoutTestHelper::applyPayoutTx(Account &source, AssetCode asset,
 
     BalanceFrame::pointer commissionBalanceAfter;
     if (ownerBalanceBefore != nullptr)
-        commissionBalanceAfter = balanceHelper->
+        commissionBalanceAfter = balanceHelper.
             loadBalance(mTestManager->getApp().getAdminID(),
-                        ownerBalanceBefore->getAsset(), db);
+                        ownerBalanceBefore->getAsset());
 
     uint64_t commissionAmountBefore = 0;
     if (commissionBalanceBefore != nullptr)

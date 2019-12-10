@@ -9,7 +9,6 @@
 #include "invariant/Invariant.h"
 #include "invariant/InvariantDoesNotHold.h"
 #include "invariant/InvariantManagerImpl.h"
-//#include "ledger/LedgerTxn.h"
 #include "lib/util/format.h"
 #include "main/Application.h"
 #include "util/Logging.h"

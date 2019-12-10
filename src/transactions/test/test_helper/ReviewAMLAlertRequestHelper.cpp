@@ -3,7 +3,7 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 
 
 namespace stellar
@@ -17,7 +17,7 @@ void AmlReviewChecker::checkApproval(AMLAlertRequest const& request,
 
     auto balanceBeforeTx = mStateBeforeTxHelper.getBalance(request.balanceID);
     REQUIRE(!!balanceBeforeTx);
-    auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(request.balanceID, mTestManager->getDB());
+    auto balanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(request.balanceID);
     REQUIRE(!!balanceAfterTx);
     REQUIRE(balanceBeforeTx->getAmount() == balanceAfterTx->getAmount());
     REQUIRE(balanceBeforeTx->getLocked() - request.amount == balanceAfterTx->getLocked());
@@ -35,7 +35,7 @@ void AmlReviewChecker::checkPermanentReject(AMLAlertRequest const& request,
 {
     auto balanceBeforeTx = mStateBeforeTxHelper.getBalance(request.balanceID);
     REQUIRE(balanceBeforeTx);
-    auto balanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(request.balanceID, mTestManager->getDB());
+    auto balanceAfterTx =mTestManager->getStorageHelper().getBalanceHelper().loadBalance(request.balanceID);
     REQUIRE(balanceAfterTx);
     REQUIRE(balanceBeforeTx->getAmount() + request.amount == balanceAfterTx->getAmount());
     REQUIRE(balanceBeforeTx->getLocked() - request.amount == balanceAfterTx->getLocked());

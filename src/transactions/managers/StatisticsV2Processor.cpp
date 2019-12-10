@@ -1,5 +1,8 @@
+#include <ledger/EntryHelper.h>
 #include "ledger/StatisticsV2Helper.h"
 #include "ledger/LimitsV2Helper.h"
+#include "ledger/AccountFrame.h"
+#include "ledger/BalanceFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/PendingStatisticsFrame.h"
 #include "ledger/PendingStatisticsHelper.h"
@@ -66,18 +69,15 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
             throw std::runtime_error("Unexpected spend type");
     }
 
-    auto& db = mStorageHelper.getDatabase();
-    auto& delta = mStorageHelper.mustGetLedgerDelta();
-    auto limitsV2Helper = LimitsV2Helper::Instance();
-    auto limitsV2Frames = limitsV2Helper->loadLimits(db, statsOpTypes, assetCode, accountID, &accountRole);
+    auto& statisticsV2Helper = mStorageHelper.getStatisticsV2Helper();
+    auto limitsV2Frames = mStorageHelper.getLimitsV2Helper().loadLimits(statsOpTypes, assetCode, accountID, &accountRole);
 
     auto& assetHelper = mStorageHelper.getAssetHelper();
 
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
-        auto statisticsV2Helper = StatisticsV2Helper::Instance();
-        auto statisticsV2Frame = statisticsV2Helper->loadStatistics(*accountID, limitsV2Frame->getStatsOpType(),
-                                                                    limitsV2Frame->getAsset(), limitsV2Frame->getConvertNeeded(), db, &delta);
+        auto statisticsV2Frame = statisticsV2Helper.loadStatistics(*accountID, limitsV2Frame->getStatsOpType(),
+                                                                    limitsV2Frame->getAsset(), limitsV2Frame->getConvertNeeded());
 
         if (!statisticsV2Frame)
         {
@@ -89,16 +89,15 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
                                                                    limitsV2Frame->getStatsOpType(),
                                                                    limitsV2Frame->getAsset(),
                                                                    limitsV2Frame->getConvertNeeded());
-            EntryHelperProvider::storeAddEntry(delta, db, statisticsV2Frame->mEntry);
+            statisticsV2Helper.storeAdd(statisticsV2Frame->mEntry);
         }
 
         universalAmount = amountToAdd;
 
         if (statisticsV2Frame->getConvertNeeded() && (assetCode != statisticsV2Frame->getAsset()))
         {
-            auto statsAssetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(assetCode,
-                                                                                         statisticsV2Frame->getAsset(),
-                                                                                         db);
+            auto statsAssetPair = mStorageHelper.getAssetPairHelper().tryLoadAssetPairForAssets(assetCode,
+                                                                                         statisticsV2Frame->getAsset());
             if (!statsAssetPair)
             {
                 CLOG(WARNING, Logging::OPERATION_LOGGER) << "Not found such asset pair: " << assetCode << " and "
@@ -108,8 +107,8 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
             }
 
             auto statsAssetFrame = assetHelper.mustLoadAsset(statisticsV2Frame->getAsset());
-            if (!AssetPairHelper::Instance()->convertAmount(statsAssetPair, statisticsV2Frame->getAsset(), amountToAdd,
-                                                            ROUND_UP, db, universalAmount))
+            if (!mStorageHelper.getAssetPairHelper().convertAmount(statsAssetPair, statisticsV2Frame->getAsset(), amountToAdd,
+                                                            ROUND_UP, universalAmount))
                 return STATS_V2_OVERFLOW;
         }
 
@@ -120,7 +119,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         if (!validateStats(limitsV2Frame, statisticsV2Frame))
             return LIMITS_V2_EXCEEDED;
 
-        EntryHelperProvider::storeChangeEntry(delta, db, statisticsV2Frame->mEntry);
+        statisticsV2Helper.storeChange(statisticsV2Frame->mEntry);
 
         if (!requestID)
             continue;
@@ -128,7 +127,7 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
         uint64_t statsID = statisticsV2Frame->getID();
         auto pendingStatisticsFrame = PendingStatisticsFrame::createNew(*requestID, statsID, universalAmount);
 
-        EntryHelperProvider::storeAddEntry(delta, db, pendingStatisticsFrame->mEntry);
+        mStorageHelper.getPendingStatisticsHelper().storeAdd(pendingStatisticsFrame->mEntry);
     }
 
     return SUCCESS;
@@ -137,18 +136,14 @@ StatisticsV2Processor::addStatsV2(SpendType spendType, uint64_t amountToAdd, uin
 void
 StatisticsV2Processor::revertStatsV2(uint64_t requestID)
 {
-    auto& db = mStorageHelper.getDatabase();
-    auto& delta = mStorageHelper.mustGetLedgerDelta();
-
-    auto pendingStatisticsHelper = PendingStatisticsHelper::Instance();
-    auto pendingStatisticsVector = pendingStatisticsHelper->loadPendingStatistics(requestID, db, delta);
+    auto& pendingStatisticsHelper = mStorageHelper.getPendingStatisticsHelper();
+    auto pendingStatisticsVector = pendingStatisticsHelper.loadPendingStatistics(requestID);
 
     auto& requestHelper = mStorageHelper.getReviewableRequestHelper();
     for (PendingStatisticsFrame::pointer pendingStats : pendingStatisticsVector)
     {
-        auto statisticsV2Helper = StatisticsV2Helper::Instance();
-        auto statisticsV2Frame = statisticsV2Helper->mustLoadStatistics(pendingStats->getStatsID(),
-                                                                        db, &delta);
+        auto& statisticsV2Helper = mStorageHelper.getStatisticsV2Helper();
+        auto statisticsV2Frame = statisticsV2Helper.mustLoadStatistics(pendingStats->getStatsID());
         auto reviewableRequestFrame = requestHelper.loadRequest(requestID);
         if (!reviewableRequestFrame)
         {
@@ -160,10 +155,9 @@ StatisticsV2Processor::revertStatsV2(uint64_t requestID)
         auto currentTime = mLm.getCloseTime();
         statisticsV2Frame->revert(pendingStats->getAmount(), currentTime, createdAt);
 
-        statisticsV2Helper->storeChange(delta, db, statisticsV2Frame->mEntry);
+        statisticsV2Helper.storeChange(statisticsV2Frame->mEntry);
 
-        pendingStatisticsHelper->storeDelete(delta, db,
-                                             pendingStatisticsHelper->getLedgerKey(pendingStats->mEntry));
+        pendingStatisticsHelper.storeDelete(pendingStatisticsHelper.getLedgerKey(pendingStats->mEntry));
     }
 }
 }

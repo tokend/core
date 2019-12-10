@@ -328,5 +328,14 @@ void SaleFrame::normalize()
     sort(mSale.quoteAssets.begin(), mSale.quoteAssets.end(), &quoteAssetCompare);
 }
 
+LedgerKey const &
+SaleFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::SALE);
+        mKey.sale().saleID= mSale.saleID;
+        mKeyCalculated = true;
+    }
+    return mKey;
 }
-
+}

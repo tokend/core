@@ -1,7 +1,8 @@
 #include "test/test.h"
 #include "test/test_marshaler.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
-#include <ledger/BalanceHelperLegacy.h>
+#include <ledger/BalanceHelper.h>
+#include "ledger/StorageHelper.h"
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
@@ -31,7 +32,6 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
     app.start();
     TestManager::upgradeToCurrentLedgerVersion(app);
     auto testManager = TestManager::make(app);
-    Database& db = testManager->getDB();
 
     // test helpers
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
@@ -47,7 +47,7 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
     // db helpers
-    auto balanceHelper = BalanceHelperLegacy::Instance();
+    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
 
     auto root = Account{getRoot(), Salt(0)};
     auto payer = Account{SecretKey::random(), Salt(1)};
@@ -197,8 +197,8 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
     setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
 
     // find payer
-    auto payerBalance = balanceHelper->loadBalance(payer.key.getPublicKey(),
-                                                   paymentAsset, db, nullptr);
+    auto payerBalance = balanceHelper.loadBalance(payer.key.getPublicKey(),
+                                                   paymentAsset);
     REQUIRE(payerBalance);
 
     int64_t paymentAmount = 100 * ONE;

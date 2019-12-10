@@ -1,11 +1,8 @@
-#include <ledger/ExternalSystemAccountIDPoolEntry.h>
 #include "main/Application.h"
 #include "util/Timer.h"
 #include "main/Config.h"
-#include "overlay/LoopbackPeer.h"
 #include "test/test.h"
 #include "TxTests.h"
-#include "ledger/BalanceHelperLegacy.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "test_helper/BindExternalSystemAccountIdTestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"

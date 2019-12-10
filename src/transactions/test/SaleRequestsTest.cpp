@@ -5,7 +5,7 @@
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include "ledger/AssetHelper.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ledger/LedgerDeltaImpl.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "test/test.h"
@@ -30,6 +30,7 @@
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
+#include "ledger/EntryHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -213,8 +214,10 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
         auto participantsFeeFrame = FeeFrame::create(FeeType::INVEST_FEE, 0, int64_t(
             1 * ONE), quoteAsset, nullptr, precision);
         LedgerDeltaImpl delta(testManager->getLedgerManager().getCurrentLedgerHeader(), db);
-        EntryHelperProvider::storeAddEntry(delta, db, sellerFeeFrame->mEntry);
-        EntryHelperProvider::storeAddEntry(delta, db, participantsFeeFrame->mEntry);
+        StorageHelperImpl sHelperImpl(db, &delta);
+        StorageHelper& sHelper = sHelperImpl;
+        sHelper.getHelper(sellerFeeFrame->mEntry.data.type())->storeAdd(sellerFeeFrame->mEntry);
+        sHelper.getHelper(participantsFeeFrame->mEntry.data.type())->storeAdd(participantsFeeFrame->mEntry);
 
         uint64_t quotePreIssued(0);
         participantsFeeFrame->calculatePercentFee(hardCap, quotePreIssued, ROUND_UP, 1);
@@ -223,7 +226,7 @@ TEST_CASE("Sale Requests", "[tx][sale_requests]")
 
         saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto saleID = sales[0]->getID();
 

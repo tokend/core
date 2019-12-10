@@ -9,7 +9,7 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 #include "ledger/AssetHelper.h"
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 
 using namespace std;
 
@@ -174,7 +174,6 @@ ReviewASwapAskRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
         throw runtime_error("Unexpected state: expected base balance to exist");
     }
 
-    auto& db = storageHelper.getDatabase();
     auto validationResultCode = CreateAtomicSwapAskRequestOpFrame::areAllAssetsValid(
         storageHelper, requestBody.amount, baseBalanceFrame->getAsset(), requestBody.quoteAssets);
     if (validationResultCode != CreateAtomicSwapAskRequestResultCode::SUCCESS)
@@ -191,7 +190,7 @@ ReviewASwapAskRequestOpFrame::handleApprove(Application& app, StorageHelper& sto
                                 delta);
 
     requestHelper.storeDelete(request->getKey());
-    EntryHelperProvider::storeAddEntry(delta, db, askFrame->mEntry);
+    storageHelper.getHelper(askFrame->mEntry.data.type())->storeAdd(askFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;

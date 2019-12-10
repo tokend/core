@@ -2,10 +2,10 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "ledger/StatisticsHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/LimitsV2Helper.h"
 #include "ledger/StatisticsV2Helper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "WithdrawRequestHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/BalanceHelper.h"
@@ -28,7 +28,6 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     CreateWithdrawalRequestResultCode expectedResult,
     OperationResultCode expectedOpResultCode)
 {
-    Database& db = mTestManager->getDB();
     auto& requestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
     auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
 
@@ -41,16 +40,15 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     if (!!balanceBeforeRequest)
         asset = balanceBeforeRequest->getAsset();
 
-    auto limitsV2Frames = LimitsV2Helper::Instance()->loadLimits(db, {StatsOpType::WITHDRAW},
-                                                                 asset,
-                                                                 accountID);
+    auto limitsV2Frames = mTestManager->getStorageHelper().getLimitsV2Helper().loadLimits({StatsOpType::WITHDRAW},
+                                                                     asset,
+                                                                     accountID);
     std::vector<StatisticsV2Frame::pointer> statsBeforeRequestVector;
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
-        auto statsBeforeRequest = StatisticsV2Helper::Instance()->loadStatistics(*accountID, StatsOpType::WITHDRAW,
+        auto statsBeforeRequest = mTestManager->getStorageHelper().getStatisticsV2Helper().loadStatistics(*accountID, StatsOpType::WITHDRAW,
                                                                                  limitsV2Frame->getAsset(),
-                                                                                 limitsV2Frame->getConvertNeeded(),
-                                                                                 db);
+                                                                                 limitsV2Frame->getConvertNeeded());
         statsBeforeRequestVector.emplace_back(statsBeforeRequest);
     }
 
@@ -93,10 +91,9 @@ CreateWithdrawalRequestResult WithdrawRequestHelper::applyCreateWithdrawRequest(
     for (LimitsV2Frame::pointer limitsV2Frame : limitsV2Frames)
     {
         asset = balanceAfterRequest->getAsset();
-        auto statsAfterRequest = StatisticsV2Helper::Instance()->mustLoadStatistics(*accountID, StatsOpType::WITHDRAW,
+        auto statsAfterRequest = mTestManager->getStorageHelper().getStatisticsV2Helper().mustLoadStatistics(*accountID, StatsOpType::WITHDRAW,
                                                                                     limitsV2Frame->getAsset(),
-                                                                                    limitsV2Frame->getConvertNeeded(),
-                                                                                    db);
+                                                                                    limitsV2Frame->getConvertNeeded());
         validateStatsChange(statsBeforeRequestVector.at(iterator), statsAfterRequest, withdrawRequest);
         iterator++;
     }
@@ -174,8 +171,7 @@ bool WithdrawRequestHelper::canCalculateStats(AssetCode baseAsset)
     if (!statsAsset)
         return false;
 
-    auto statsAssetPair = AssetPairHelper::Instance()->tryLoadAssetPairForAssets(statsAsset->getCode(), baseAsset,
-                                                                                 mTestManager->getDB());
+    auto statsAssetPair = mTestManager->getStorageHelper().getAssetPairHelper().tryLoadAssetPairForAssets(statsAsset->getCode(), baseAsset);
 
     return !!statsAssetPair;
 }

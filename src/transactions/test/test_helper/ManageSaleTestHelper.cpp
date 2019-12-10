@@ -1,14 +1,14 @@
 #include "ManageSaleTestHelper.h"
 #include "CheckSaleStateTestHelper.h"
-#include "ManageAssetTestHelper.h"
 #include "StateBeforeTxHelper.h"
 #include "TestManager.h"
 #include "TxHelper.h"
 #include "test/test_marshaler.h"
-#include <ledger/ReviewableRequestHelperLegacy.h>
+#include <ledger/ReviewableRequestHelper.h>
 #include <ledger/SaleHelper.h>
 #include <lib/catch.hpp>
 #include <transactions/sale/ManageSaleOpFrame.h>
+#include "ledger/StorageHelper.h"
 
 class pointer;
 namespace stellar
@@ -82,11 +82,10 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
                                         ManageSaleResultCode expectedResultCode,
                                         OperationResultCode opExpectedCode)
 {
-    auto& db = mTestManager->getDB();
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto saleHelper = SaleHelper::Instance();
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto& saleHelper = mTestManager->getStorageHelper().getSaleHelper();
 
-    auto saleBeforeOp = saleHelper->loadSale(saleID, db);
+    auto saleBeforeOp = saleHelper.loadSale(saleID);
 
     ReviewableRequestFrame::pointer requestBeforeTx;
 
@@ -94,8 +93,8 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     {
         case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
         {
-            requestBeforeTx = reviewableRequestHelper->loadRequest(
-                data.updateSaleDetailsData().requestID, db);
+            requestBeforeTx = reviewableRequestHelper.loadRequest(
+                data.updateSaleDetailsData().requestID);
             break;
         }
         default:
@@ -125,7 +124,7 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
     if (actualResultCode != ManageSaleResultCode::SUCCESS)
         return manageSaleResult;
 
-    auto saleAfterOp = saleHelper->loadSale(saleID, db);
+    auto saleAfterOp = saleHelper.loadSale(saleID);
 
     switch (data.action())
     {
@@ -133,8 +132,8 @@ ManageSaleTestHelper::applyManageSaleTx(Account& source, uint64_t saleID,
         {
             if (!manageSaleResult.success().fulfilled)
             {
-                auto requestAfterTx = reviewableRequestHelper->loadRequest(
-                    manageSaleResult.success().response.requestID(), db);
+                auto requestAfterTx = mTestManager->getStorageHelper().getReviewableRequestHelper().loadRequest(
+                    manageSaleResult.success().response.requestID());
                 REQUIRE(!!requestAfterTx);
 
                 auto requestAfterTxEntry = requestAfterTx->getRequestEntry();

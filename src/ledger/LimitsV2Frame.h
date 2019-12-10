@@ -84,6 +84,9 @@ public:
     static LimitsV2Frame::pointer createNew(uint64_t id, ManageLimitsOp const& manageLimitsOp);
 
     void changeLimits(ManageLimitsOp const& manageLimitsOp);
+
+    LedgerKey const&
+    getKey() const override;
 };
 
 }

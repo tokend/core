@@ -55,19 +55,17 @@ ReviewChangeRoleRequestOpFrame::handleApprove(Application& app, StorageHelper& s
     auto destinationAccountFrame = accountHelper.mustLoadAccount(destinationAccount);
 
     // set KYC Data
-    auto kycHelper = AccountKYCHelper::Instance();
-    auto& db = storageHelper.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto updatedKYC = kycHelper->loadAccountKYC(destinationAccount, db, &delta);
+    auto& kycHelper = storageHelper.getAccountKYCHelper();
+    auto updatedKYC = kycHelper.loadAccountKYC(destinationAccount);
     if (!updatedKYC)
     {
         auto updatedKYCAccountFrame = AccountKYCFrame::createNew(destinationAccount, changeRoleRequest.creatorDetails);
-        kycHelper->storeAdd(delta, db, updatedKYCAccountFrame->mEntry);
+        kycHelper.storeAdd(updatedKYCAccountFrame->mEntry);
     }
     else
     {
         updatedKYC->setKYCData(changeRoleRequest.creatorDetails);
-        kycHelper->storeChange(delta, db, updatedKYC->mEntry);
+        kycHelper.storeChange(updatedKYC->mEntry);
     }
 
     destinationAccountFrame->setAccountRole(changeRoleRequest.accountRoleToSet);

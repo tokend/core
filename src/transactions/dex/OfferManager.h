@@ -6,6 +6,7 @@
 
 #include "ledger/OfferFrame.h"
 #include "ledger/AssetPairFrame.h"
+#include "ledger/StorageHelper.h"
 #include <functional>
 #include <vector>
 
@@ -16,9 +17,9 @@ class OfferManager
 {
 public:
     // delets offer and unlock locked assets by that offer
-    static void deleteOffer(OfferFrame::pointer offerFrame, Database& db, LedgerDelta& delta);
+    static void deleteOffer(StorageHelper& storageHelper, OfferFrame::pointer offerFrame);
     // delets all offers and unlocks locked assets by that offers   
-    static void deleteOffers(std::vector<OfferFrame::pointer> offers, Database& db, LedgerDelta& delta);
+    static void deleteOffers(StorageHelper& storageHelper, std::vector<OfferFrame::pointer> offers);
     // Builds offer frame base on ManageOfferOp
     static OfferFrame::pointer buildOffer(AccountID const& sourceID, ManageOfferOp const& op, AssetCode const& base,
             AssetCode const& quote, uint64_t quotePrecisionStep);

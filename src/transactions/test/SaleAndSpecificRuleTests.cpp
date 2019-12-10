@@ -97,8 +97,8 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
         AccountID accountID = account.key.getPublicKey();
         createAccountTestHelper.applyCreateAccountTx(root, accountID, 1);
 
-        auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(
-                account.key.getPublicKey(), quoteAsset, testManager->getDB(), nullptr);
+        auto quoteBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(
+                account.key.getPublicKey(), quoteAsset);
         auto baseBalance = manageBalanceTestHelper.applyManageBalanceTx(
                 account, accountID, baseAsset).success().balanceID;
 
@@ -172,7 +172,7 @@ TEST_CASE("Sale and specific rules", "[tx][sale][specific_rule]")
                 participateHelper.addNewParticipant(root, account, saleID, baseAsset, quoteAsset, saleRequest.hardCap, price, 0);
                 specificRuleTestHelper.applyTx(root, createRuleResult.success().ruleID);
                 checkStateHelper.applyCheckSaleStateTx(root, saleID, CheckSaleStateResultCode::NOT_READY);
-                auto sale = SaleHelper::Instance()->loadSale(saleID, testManager->getDB());
+                auto sale = testManager->getStorageHelper().getSaleHelper().loadSale(saleID);
                 uint64_t currentCap(0);
                 REQUIRE(CreateSaleParticipationOpFrame::getSaleCurrentCap(testManager->getStorageHelper(), sale, currentCap));
                 REQUIRE(currentCap == 0);

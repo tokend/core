@@ -332,7 +332,7 @@
     <ClCompile Include="..\..\src\ledger\LicenseHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\LicenseSignatureHelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\LimitsV2Frame.cpp" />
-    <ClCompile Include="..\..\src\ledger\LimitsV2Helper.cpp" />
+    <ClCompile Include="..\..\src\ledger\LimitsV2HelperImpl.cpp" />
     <ClCompile Include="..\..\src\ledger\OfferFrame.cpp" />
     <ClCompile Include="..\..\src\ledger\OfferHelper.cpp" />
     <ClCompile Include="..\..\src\ledger\PendingStatisticsFrame.cpp" />
@@ -768,7 +768,7 @@
     <ClInclude Include="..\..\src\ledger\LicenseSignatureHelper.h" />
     <ClInclude Include="..\..\src\ledger\LicenseSignatureHelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\LimitsV2Frame.h" />
-    <ClInclude Include="..\..\src\ledger\LimitsV2Helper.h" />
+    <ClInclude Include="..\..\src\ledger\LimitsV2HelperImpl.h" />
     <ClInclude Include="..\..\src\ledger\OfferFrame.h" />
     <ClInclude Include="..\..\src\ledger\OfferHelper.h" />
     <ClInclude Include="..\..\src\ledger\PendingStatisticsFrame.h" />

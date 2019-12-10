@@ -61,4 +61,17 @@ ReferenceFrame::isValid() const
 {
     return isValid(mReference);
 }
+
+LedgerKey const &
+ReferenceFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::REFERENCE_ENTRY);
+        mKey.reference().reference = mReference.reference;
+        mKey.reference().sender = mReference.sender;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

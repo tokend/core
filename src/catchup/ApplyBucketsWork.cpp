@@ -9,7 +9,6 @@
 #include "bucket/BucketManager.h"
 #include "catchup/CatchupManager.h"
 #include "crypto/Hex.h"
-#include "crypto/SecretKey.h"
 #include "history/HistoryArchive.h"
 #include "historywork/Progress.h"
 #include "invariant/InvariantManager.h"
@@ -17,7 +16,7 @@
 #include "util/format.h"
 #include <medida/meter.h>
 #include <medida/metrics_registry.h>
-#include "ledger/EntryHelperLegacy.h"
+#include "ledger/EntryHelper.h"
 
 namespace stellar
 {

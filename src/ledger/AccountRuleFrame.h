@@ -57,6 +57,9 @@ class AccountRuleFrame : public EntryFrame
 
     static void ensureValid(const AccountRuleEntry& entry);
     void ensureValid() const;
+
+    LedgerKey const&
+    getKey() const override;
 };
 
 } // namespace stellar

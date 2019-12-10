@@ -119,4 +119,15 @@ Hash LicenseFrame::getSignatureData(Hash rawLedgerHash, Hash rawPrevLicenseHash,
     return Hash(sha256(rawSignatureData));
 }
 
+LedgerKey const &
+LicenseFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::LICENSE);
+        mKey.license().licenseHash = mLicense.ledgerHash;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

@@ -612,7 +612,7 @@
     <ClCompile Include="..\..\src\ledger\LimitsV2Frame.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ledger\LimitsV2Helper.cpp">
+    <ClCompile Include="..\..\src\ledger\LimitsV2HelperImpl.cpp">
       <Filter>ledger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ledger\OfferFrame.cpp">
@@ -2133,7 +2133,7 @@
     <ClInclude Include="..\..\src\ledger\LimitsV2Frame.h">
       <Filter>ledger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ledger\LimitsV2Helper.h">
+    <ClInclude Include="..\..\src\ledger\LimitsV2HelperImpl.h">
       <Filter>ledger</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ledger\OfferFrame.h">

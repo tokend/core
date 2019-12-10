@@ -15,6 +15,8 @@ class Bucket;
 class LedgerDelta;
 struct Operation;
 struct OperationResult;
+class LedgerEntry;
+class LedgerKey;
 
 // NOTE: The checkOn* functions should have a default implementation so that
 //       more can be added in the future without requiring changes to all
@@ -33,6 +35,8 @@ public:
     }
 
     virtual std::string getName() const = 0;
+    virtual std::string
+    checkAgainstDatabase(LedgerEntry const& entry) const = 0;
 
     virtual std::string check(LedgerDelta const& delta) const
     {

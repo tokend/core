@@ -4,8 +4,9 @@
 
 #include <ledger/LimitsV2Helper.h>
 #include "ReviewLimitsUpdateRequestHelper.h"
-#include "ledger/ReviewableRequestHelperLegacy.h"
+#include "ledger/ReviewableRequestHelper.h"
 #include "test/test_marshaler.h"
+#include "src/ledger/StorageHelperImpl.h"
 
 namespace stellar
 {
@@ -14,10 +15,8 @@ namespace txtest
 LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testManager,
                                                      uint64_t requestID) : ReviewChecker(testManager)
 {
-    Database& db = mTestManager->getDB();
-
-    auto reviewableRequestHelper = ReviewableRequestHelperLegacy::Instance();
-    auto request = reviewableRequestHelper->loadRequest(requestID, db);
+    auto& reviewableRequestHelper = mTestManager->getStorageHelper().getReviewableRequestHelper();
+    auto request = reviewableRequestHelper.loadRequest(requestID);
     if (!request || request->getType() != ReviewableRequestType::UPDATE_LIMITS)
     {
         return;
@@ -27,15 +26,13 @@ LimitsUpdateReviewChecker::LimitsUpdateReviewChecker(TestManager::pointer testMa
 
 void
 LimitsUpdateReviewChecker::checkApprove(ReviewableRequestFrame::pointer request) {
-    Database& db = mTestManager->getDB();
-
     REQUIRE(!!manageLimitsRequest);
 
     // check accountLimits
-    auto limitsHelper = LimitsV2Helper::Instance();
+    auto& limitsHelper = mTestManager->getStorageHelper().getLimitsV2Helper();
     auto limitsEntry = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;
-    auto limitsAfterTx = limitsHelper->loadLimits(db, limitsEntry.statsOpType, limitsEntry.assetCode,
-            limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded, nullptr);
+    auto limitsAfterTx = limitsHelper.loadLimits(limitsEntry.statsOpType, limitsEntry.assetCode,
+            limitsEntry.accountID, limitsEntry.accountRole.get(), limitsEntry.isConvertNeeded);
     REQUIRE(!!limitsAfterTx);
     auto limitsEntryAfterTx = limitsAfterTx->getLimits();
     auto reviewRequestLimits = mOperation.body.reviewRequestOp().requestDetails.limitsUpdate().newLimitsV2;

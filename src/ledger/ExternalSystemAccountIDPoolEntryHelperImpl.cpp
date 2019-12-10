@@ -11,15 +11,13 @@ namespace stellar
 {
 using xdr::operator<;
 
-const char* ExternalSystemAccountIDPoolEntryHelperImpl::select =
-    "SELECT id, external_system_type, data, parent, "
-    "is_deleted, account_id, expires_at, binded_at, lastmodified, version FROM "
-    "external_system_account_id_pool";
-
 ExternalSystemAccountIDPoolEntryHelperImpl::
     ExternalSystemAccountIDPoolEntryHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
+        select = "SELECT id, external_system_type, data, parent, "
+                "is_deleted, account_id, expires_at, binded_at, lastmodified, version FROM "
+                "external_system_account_id_pool";
 }
 
 void

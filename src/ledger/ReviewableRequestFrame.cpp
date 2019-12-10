@@ -362,4 +362,15 @@ bool ReviewableRequestFrame::canBeFulfilled(LedgerManager& lm) const
     return mRequest.tasks.pendingTasks == 0;
 }
 
+LedgerKey const &
+ReviewableRequestFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::REVIEWABLE_REQUEST);
+        mKey.reviewableRequest().requestID = mRequest.requestID;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+
 }

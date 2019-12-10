@@ -14,6 +14,7 @@
 #include "ledger/StorageHelper.h"
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/LicenseHelper.h"
+#include "ledger/ReferenceHelper.h"
 #include "transactions/TransactionFrame.h"
 #include "transactions/CreateAccountOpFrame.h"
 #include "transactions/payment/PaymentOpFrame.h"
@@ -377,9 +378,7 @@ OperationFrame::createReferenceEntry(string reference, AccountID sender, Storage
     entry.reference = reference;
     entry.sender = sender;
     auto referenceFrame = std::make_shared<ReferenceFrame>(le);
-    EntryHelperProvider::storeAddEntry(*storageHelper.getLedgerDelta(),
-                                       storageHelper.getDatabase(),
-                                       referenceFrame->mEntry);
+    storageHelper.getReferenceHelper().storeAdd(referenceFrame->mEntry);
 }
 
 OperationResultCode

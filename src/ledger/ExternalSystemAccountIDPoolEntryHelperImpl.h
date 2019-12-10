@@ -59,7 +59,7 @@ class ExternalSystemAccountIDPoolEntryHelperImpl : public ExternalSystemAccountI
     getLedgerDelta() override;
 
   private:
-    static const char* select;
+    const char* select;
 
     void storeUpdateHelper(bool insert, LedgerEntry const& entry);
     void load(StatementContext& prep,

@@ -11,11 +11,10 @@ using namespace std;
 namespace stellar
 {
 
-const char *selectorSignatures = "SELECT signature, hint FROM license_signatures";
-
 LicenseSignatureHelperImpl::LicenseSignatureHelperImpl(StorageHelper& storageHelper)
     : mStorageHelper(storageHelper)
 {
+        selectorSignatures = "SELECT signature, hint FROM license_signatures";
 }
 
 void LicenseSignatureHelperImpl::dropAll()

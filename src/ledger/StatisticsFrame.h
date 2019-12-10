@@ -83,5 +83,8 @@ class StatisticsFrame : public EntryFrame
 
     static bool isValid(StatisticsEntry const& oe);
     bool isValid() const;
+
+    LedgerKey const&
+    getKey() const override;
 };
 }

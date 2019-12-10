@@ -21,66 +21,70 @@ namespace soci
 
 namespace stellar
 {
-    class StatementContext;
-    
-    class FeeFrame : public EntryFrame{
-        
-        FeeEntry& mFee;
-        FeeFrame(FeeFrame const& from);
-    	
-    public:
+class StatementContext;
 
-        static const int64_t SUBTYPE_ANY = 0;
+class FeeFrame : public EntryFrame{
 
-        typedef std::shared_ptr<FeeFrame> pointer;
-        
-        FeeFrame();
-        FeeFrame(LedgerEntry const& from);
-        
-        FeeFrame& operator=(FeeFrame const& other);
+    FeeEntry& mFee;
+    FeeFrame(FeeFrame const& from);
 
-		static pointer create(FeeType feeType, int64_t fixedFee, int64_t percentFee, AssetCode asset, 
-            AccountID* accountID = nullptr, uint64_t assetPrecision = 1);
-        
-        EntryFrame::pointer
-        copy() const override
-        {
-            return EntryFrame::pointer(new FeeFrame(*this));
-        }
+public:
 
-        bool calculatePercentFee(uint64_t amount, uint64_t& result, Rounding rounding, uint64_t roundingStep) const;
-        
-        FeeEntry const&
-        getFee() const
-        {
-            return mFee;
-        }
-        FeeEntry&
-        getFee()
-        {
-            return mFee;
-        }
+    static const int64_t SUBTYPE_ANY = 0;
 
-		int64_t getPercentFee()
-		{
-			return mFee.percentFee;
-		}
+    typedef std::shared_ptr<FeeFrame> pointer;
 
-        int64_t getFixedFee()
-        {
-            return mFee.fixedFee;
-        }
+    FeeFrame();
+    FeeFrame(LedgerEntry const& from);
 
-        static void checkFeeType(FeeEntry const& feeEntry, FeeType feeType);
+    FeeFrame& operator=(FeeFrame const& other);
 
-        AssetCode getFeeAsset() const;
-        
-        static bool isValid(FeeEntry const& oe);
-        bool isValid() const;
+    static pointer create(FeeType feeType, int64_t fixedFee, int64_t percentFee, AssetCode asset,
+        AccountID* accountID = nullptr, uint64_t assetPrecision = 1);
 
-		static bool isInRange(int64_t a, int64_t b, int64_t point);
+    EntryFrame::pointer
+    copy() const override
+    {
+        return EntryFrame::pointer(new FeeFrame(*this));
+    }
 
-        static Hash calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, uint64_t* accountType, int64_t subtype);
+    bool calculatePercentFee(uint64_t amount, uint64_t& result, Rounding rounding, uint64_t roundingStep) const;
 
-    };
+    FeeEntry const&
+    getFee() const
+    {
+        return mFee;
+    }
+    FeeEntry&
+    getFee()
+    {
+        return mFee;
+    }
+
+    int64_t getPercentFee()
+    {
+        return mFee.percentFee;
+    }
+
+    int64_t getFixedFee()
+    {
+        return mFee.fixedFee;
+    }
+
+    static void checkFeeType(FeeEntry const& feeEntry, FeeType feeType);
+
+    AssetCode getFeeAsset() const;
+
+    static bool isValid(FeeEntry const& oe);
+    bool isValid() const;
+
+    static bool isInRange(int64_t a, int64_t b, int64_t point);
+
+    static Hash calcHash(FeeType feeType, AssetCode asset, AccountID* accountID, uint64_t* accountType, int64_t subtype);
+
+    LedgerKey const&
+    getKey() const override;
+
+};
+
 }

@@ -40,32 +40,30 @@ bool RemoveAssetPairOpFrame::tryGetSignerRequirements(stellar::StorageHelper& st
 bool RemoveAssetPairOpFrame::doApply(stellar::Application& app, stellar::StorageHelper& storageHelper,
                                      stellar::LedgerManager& ledgerManager)
 {
-    Database& db = ledgerManager.getDatabase();
-    auto& delta = storageHelper.mustGetLedgerDelta();
-    auto assetPairHelper = AssetPairHelper::Instance();
-    auto assetPair = assetPairHelper->loadAssetPair(mRemoveAssetPair.base, mRemoveAssetPair.quote, db, &delta);
+    auto& assetPairHelper = storageHelper.getAssetPairHelper();
+    auto assetPair = assetPairHelper.loadAssetPair(mRemoveAssetPair.base, mRemoveAssetPair.quote);
     if (assetPair == nullptr)
     {
         innerResult().code(RemoveAssetPairResultCode::NOT_FOUND);
         return false;
     }
 
-    auto offerHelper = OfferHelper::Instance();
+    auto& offerHelper = storageHelper.getOfferHelper();
     auto orderBookID = ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID;
-    if (offerHelper->exists(db, mRemoveAssetPair.base, mRemoveAssetPair.quote, &orderBookID))
+    if (offerHelper.exists(mRemoveAssetPair.base, mRemoveAssetPair.quote, &orderBookID))
     {
         innerResult().code(RemoveAssetPairResultCode::HAS_ACTIVE_OFFERS);
         return false;
     }
 
-    auto saleHelper = SaleHelper::Instance();
-    if (saleHelper->exists(db, mRemoveAssetPair.base, mRemoveAssetPair.quote))
+    auto& saleHelper = storageHelper.getSaleHelper();
+    if (saleHelper.exists(mRemoveAssetPair.base, mRemoveAssetPair.quote))
     {
         innerResult().code(RemoveAssetPairResultCode::HAS_ACTIVE_SALES);
         return false;
     }
 
-    assetPairHelper->storeDelete(delta, db, assetPair->getKey());
+    assetPairHelper.storeDelete(assetPair->getKey());
 
     innerResult().code(RemoveAssetPairResultCode::SUCCESS);
     return true;

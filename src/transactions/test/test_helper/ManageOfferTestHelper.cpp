@@ -1,9 +1,10 @@
 #include "ManageOfferTestHelper.h"
 #include "ledger/AssetPairHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/OfferHelper.h"
 #include "test/test_marshaler.h"
 #include "transactions/dex/OfferManager.h"
+#include "ledger/StorageHelper.h"
 
 namespace stellar
 {
@@ -23,8 +24,8 @@ ManageOfferTestHelper::ensureDeleteSuccess(
     auto offer = std::make_shared<OfferFrame>(stateBeforeTx[offerKey]->mEntry);
 
     // ensure offer was removed
-    auto removedOfferFrame = OfferHelper::Instance()->loadOffer(
-        offer->getOffer().ownerID, offer->getOfferID(), mTestManager->getDB());
+    auto removedOfferFrame = mTestManager->getStorageHelper().getOfferHelper().loadOffer(
+        offer->getOffer().ownerID, offer->getOfferID());
     REQUIRE(!removedOfferFrame);
 
     // check if balance unlocked
@@ -34,8 +35,8 @@ ManageOfferTestHelper::ensureDeleteSuccess(
 
     auto sellingBalanceBefore =
         stateBeforeTx[balanceKey]->mEntry.data.balance();
-    auto sellingBalanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(
-        offer->getLockedBalance(), mTestManager->getDB());
+    auto sellingBalanceAfter = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
+        offer->getLockedBalance());
 
     REQUIRE(sellingBalanceAfter->getLocked() ==
             sellingBalanceBefore.locked - offer->getLockedAmount());
@@ -46,8 +47,6 @@ ManageOfferTestHelper::ensureCreateSuccess(
     Account& source, ManageOfferOp op, ManageOfferSuccessResult success,
     LedgerDelta::KeyEntryMap& stateBeforeTx)
 {
-    auto& db = mTestManager->getDB();
-
     auto& offerResult = success.offer;
     auto claimedOffers = success.offersClaimed;
 
@@ -56,8 +55,8 @@ ManageOfferTestHelper::ensureCreateSuccess(
     case ManageOfferEffect::CREATED:
     {
         REQUIRE(op.offerID == 0);
-        auto offer = OfferHelper::Instance()->loadOffer(
-            source.key.getPublicKey(), offerResult.offer().offerID, db);
+        auto offer = mTestManager->getStorageHelper().getOfferHelper().loadOffer(
+            source.key.getPublicKey(), offerResult.offer().offerID);
         REQUIRE(!!offer);
         auto& offerEntry = offer->getOffer();
         REQUIRE(offerEntry == offerResult.offer());
@@ -69,8 +68,8 @@ ManageOfferTestHelper::ensureCreateSuccess(
         balanceKey.type(LedgerEntryType::BALANCE);
         balanceKey.balance().balanceID = offer->getLockedBalance();
         auto balanceBefore = stateBeforeTx[balanceKey]->mEntry.data.balance();
-        auto balanceAfter = BalanceHelperLegacy::Instance()->mustLoadBalance(
-            offer->getLockedBalance(), db);
+        auto balanceAfter = mTestManager->getStorageHelper().getBalanceHelper().mustLoadBalance(
+            offer->getLockedBalance());
 
         REQUIRE(balanceAfter->getLocked() ==
                 balanceBefore.locked + offer->getLockedAmount());
@@ -83,8 +82,8 @@ ManageOfferTestHelper::ensureCreateSuccess(
     {
         if (op.offerID == 0)
             break;
-        auto offer = OfferHelper::Instance()->loadOffer(
-            source.key.getPublicKey(), op.offerID, mTestManager->getDB());
+        auto offer = mTestManager->getStorageHelper().getOfferHelper().loadOffer(
+            source.key.getPublicKey(), op.offerID);
         REQUIRE(!offer);
         break;
     }

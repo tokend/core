@@ -57,5 +57,16 @@ StampFrame::pointer StampFrame::createNew(Hash ledgerHash, Hash licenseHash)
         throw_with_nested(runtime_error("Failed to create stamp"));
     }
 }
-}
 
+LedgerKey const &
+StampFrame::getKey() const
+{
+    if (!mKeyCalculated) {
+        mKey = LedgerKey(LedgerEntryType::STAMP);
+        mKey.stamp().ledgerHash = mStamp.ledgerHash;
+        mKey.stamp().licenseHash = mStamp.licenseHash;
+        mKeyCalculated = true;
+    }
+    return mKey;
+}
+}

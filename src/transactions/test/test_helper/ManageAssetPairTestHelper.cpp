@@ -1,6 +1,6 @@
 #include "ManageAssetPairTestHelper.h"
 #include "test/test_marshaler.h"
-
+#include "ledger/StorageHelperImpl.h"
 namespace stellar
 {
 
@@ -37,10 +37,9 @@ namespace txtest
                                                       ManageAssetPairAction action, Account *signer,
                                                       ManageAssetPairResultCode expectedResult)
     {
-        auto assetPairHelper = AssetPairHelper::Instance();
-        Database& db = mTestManager->getDB();
-        auto assetPairFrameBefore = assetPairHelper->loadAssetPair(base, quote, db);
-        auto countBefore = assetPairHelper->countObjects(db.getSession());
+        auto& assetPairHelper = mTestManager->getStorageHelper().getAssetPairHelper();
+        auto assetPairFrameBefore = assetPairHelper.loadAssetPair(base, quote);
+        auto countBefore = assetPairHelper.countObjects();
 
         TransactionFramePtr txFrame;
         txFrame = createManageAssetPairTx(source, base, quote, physicalPrice, physicalPriceCorrection, maxPriceStep,
@@ -53,8 +52,8 @@ namespace txtest
 
         REQUIRE(expectedResult == actualResultCode);
 
-        auto countAfter = assetPairHelper->countObjects(db.getSession());
-        auto assetPairFrameAfter = assetPairHelper->loadAssetPair(base, quote, db);
+        auto countAfter = assetPairHelper.countObjects();
+        auto assetPairFrameAfter = assetPairHelper.loadAssetPair(base, quote);
 
         if (actualResultCode != ManageAssetPairResultCode::SUCCESS)
         {
@@ -142,9 +141,8 @@ namespace txtest
                                                                             RemoveAssetPairResultCode expectedResult,
                                                                             OperationResultCode expectedOpResult)
     {
-        auto assetPairHelper = AssetPairHelper::Instance();
-        Database& db = mTestManager->getDB();
-        auto countBefore = assetPairHelper->countObjects(db.getSession());
+        auto& assetPairHelper = mTestManager->getStorageHelper().getAssetPairHelper();
+        auto countBefore = assetPairHelper.countObjects();
 
         TransactionFramePtr txFrame;
         txFrame = createRemoveAssetPairTx(source, base, quote, signer);
@@ -162,8 +160,8 @@ namespace txtest
 
         REQUIRE(expectedResult == actualResultCode);
 
-        auto countAfter = assetPairHelper->countObjects(db.getSession());
-        auto assetPairFrameAfter = assetPairHelper->loadAssetPair(base, quote, db);
+        auto countAfter = assetPairHelper.countObjects();
+        auto assetPairFrameAfter = assetPairHelper.loadAssetPair(base, quote);
 
         if (actualResultCode != RemoveAssetPairResultCode::SUCCESS)
         {

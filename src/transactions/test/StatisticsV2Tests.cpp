@@ -8,11 +8,9 @@
 #include <util/Timer.h>
 #include <main/Application.h>
 #include "ledger/LedgerDeltaImpl.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/StorageHelperImpl.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/LedgerManager.h"
-#include "ledger/StatisticsFrame.h"
-#include "ledger/EntryHelperLegacy.h"
 #include "src/transactions/test/TxTests.h"
 #include "transactions/test/test_helper/TestManager.h"
 #include "transactions/test/test_helper/ManageKeyValueTestHelper.h"
@@ -42,6 +40,7 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
     Application::pointer app = Application::create(clock, cfg);
     app->start();
     TestManager::upgradeToCurrentLedgerVersion(*app);
+    auto testManager = TestManager::make(*app);
 
     Database& db = app->getDatabase();
     LedgerManager& ledgerManager(app->getLedgerManager());
@@ -55,7 +54,9 @@ TEST_CASE("StatisticsV2 tests", "[tx][stats_v2]")
     uint64_t amount = UINT64_MAX / 2;
     statisticsV2Frame.add(amount, startingPoint);
 
-    EntryHelperProvider::storeAddEntry(delta, db, statisticsV2Frame.mEntry);
+    StorageHelperImpl sHelperImpl(db, &delta);
+    StorageHelper& sHelper = sHelperImpl;
+    sHelper.getHelper(statisticsV2Frame.mEntry.data.type())->storeAdd(statisticsV2Frame.mEntry);
     static_cast<LedgerDelta&>(delta).commit();
     uint32 ledgerSeq = 3;
     txtest::closeLedgerOn(*app, ledgerSeq++, startingPoint);

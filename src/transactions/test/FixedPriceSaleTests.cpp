@@ -14,7 +14,7 @@
 #include "test/test_marshaler.h"
 #include "ledger/SaleHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/BalanceHelper.h"
 #include "test_helper/ManageBalanceTestHelper.h"
 #include "transactions/dex/OfferManager.h"
 #include "test_helper/ParticipateInSaleTestHelper.h"
@@ -67,8 +67,6 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     ManageBalanceTestHelper balanceTestHelper(testManager);
     ManageOfferTestHelper offerTestHelper(testManager);
 
-    Database& db = app.getDatabase();
-
     auto syndicate = Account{ SecretKey::random(), 0 };
     const auto syndicatePubKey = syndicate.key.getPublicKey();
 
@@ -88,7 +86,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
     auto account = Account{ SecretKey::random(), 0 };
     auto accountID = account.key.getPublicKey();
     createAccountTestHelper.applyCreateAccountTx(root, account.key.getPublicKey());
-    auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(accountID, defaultQuoteAsset, db, nullptr);
+    auto quoteBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(accountID, defaultQuoteAsset);
     issuanceHelper.applyCreateIssuanceRequest(root, defaultQuoteAsset, 100 * ONE, quoteBalance->getBalanceID(),
                                                      SecretKey::random().getStrKeyPublic(), &allTasks);
 
@@ -107,7 +105,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         saleRequestHelper.createApprovedSale(root, syndicate, fixedpriceReq);
 
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto fixedPriceID = sales[0]->getID();
 
@@ -119,7 +117,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         testManager->advanceToTime(testManager->getLedgerManager().getCloseTime() + (endTime - currentTime));
 
         checkSaleStateHelper.applyCheckSaleStateTx(root, fixedPriceID);
-        REQUIRE(BalanceHelperLegacy::Instance()->loadBalance(balanceID, db, nullptr)->getAmount() == ONE);
+        REQUIRE(testManager->getStorageHelper().getBalanceHelper().loadBalance(balanceID)->getAmount() == ONE);
 
     }
     SECTION("crowd"){
@@ -134,7 +132,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
                                                                        hardCapInBase, crowdfund);
         saleRequestHelper.createApprovedSale(root, syndicate, crowdfundReq);
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
 
         const auto crowdfundID = sales[0]->getID();
@@ -147,7 +145,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
 
         checkSaleStateHelper.applyCheckSaleStateTx(root, crowdfundID);
 
-        REQUIRE(BalanceHelperLegacy::Instance()->loadBalance(balanceID, db, nullptr)->getAmount() == 100 * ONE);
+        REQUIRE(testManager->getStorageHelper().getBalanceHelper().loadBalance(balanceID)->getAmount() == 100 * ONE);
     }
     SECTION("Hard Path")
     {
@@ -178,12 +176,12 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         saleRequestHelper.createApprovedSale(root, syndicate, fixedpriceReq);
 
 
-        auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+        auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
         REQUIRE(sales.size() == 1);
         const auto fixedPriceID = sales[0]->getID();
 
         auto balanceCreationResult = balanceTestHelper.applyManageBalanceTx(account, accountID, QuoteAsset);
-        auto quoteBalance = BalanceHelperLegacy::Instance()->loadBalance(accountID, QuoteAsset, db, nullptr);
+        auto quoteBalance = testManager->getStorageHelper().getBalanceHelper().loadBalance(accountID, QuoteAsset);
 
         issuanceHelper.authorizePreIssuedAmount(root, root.key, QuoteAsset, amountToInvest, root);
         issuanceHelper.applyCreateIssuanceRequest(root, QuoteAsset, amountToInvest, quoteBalance->getBalanceID(),
@@ -196,7 +194,7 @@ TEST_CASE("Crowdfunding vs fixed price", "[tx][fixedprice][crowdfund]"){
         testManager->advanceToTime(testManager->getLedgerManager().getCloseTime() + (endTime - currentTime));
 
         checkSaleStateHelper.applyCheckSaleStateTx(root, fixedPriceID);
-        REQUIRE(BalanceHelperLegacy::Instance()->loadBalance(balanceID, db, nullptr)->getAmount() == expectedBalanceInBase);
+        REQUIRE(testManager->getStorageHelper().getBalanceHelper().loadBalance(balanceID)->getAmount() == expectedBalanceInBase);
     }
 }
 
@@ -267,7 +265,7 @@ TEST_CASE("Fixed Price Sale", "[tx][fixedprice]") {
                                                                  { saleRequestHelper.createSaleQuoteAsset(defaultQuoteAsset, ONE) },
                                                                  maxAmountToBeSold, saleType);
     saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
-    auto sales = SaleHelper::Instance()->loadSalesForOwner(syndicate.key.getPublicKey(), testManager->getDB());
+    auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(syndicate.key.getPublicKey());
     REQUIRE(sales.size() == 1);
     const auto saleID = sales[0]->getID();
 

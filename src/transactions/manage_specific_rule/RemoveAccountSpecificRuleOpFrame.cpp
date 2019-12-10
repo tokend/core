@@ -1,5 +1,4 @@
 #include "RemoveAccountSpecificRuleOpFrame.h"
-#include "transactions/dex/OfferManager.h"
 #include "transactions/dex/DeleteSaleParticipationOpFrame.h"
 #include "ledger/OfferHelper.h"
 #include "ledger/SaleHelper.h"
@@ -96,11 +95,9 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
         return false;
     }
 
-    Database& db = storageHelper.getDatabase();
-    LedgerDelta& delta = storageHelper.mustGetLedgerDelta();
-    auto saleHelper = SaleHelper::Instance();
+    auto& saleHelper = storageHelper.getSaleHelper();
 
-    auto sale = saleHelper->loadSale(ruleFrame->getEntry().ledgerKey.sale().saleID, db, &delta);
+    auto sale = saleHelper.loadSale(ruleFrame->getEntry().ledgerKey.sale().saleID);
     if (!sale)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER) << "Expected sale to exists on "
@@ -119,8 +116,8 @@ RemoveAccountSpecificRuleOpFrame::tryRemoveSaleRule(Application& app,
 
     if (!ruleFrame->forbids()) // accountID existing was checked above
     {
-        auto offerHelper = OfferHelper::Instance();
-        auto offersToDelete = offerHelper->loadOffers(*ruleFrame->getEntry().accountID, sale->getID(), db);
+        auto& offerHelper = storageHelper.getOfferHelper();
+        auto offersToDelete = offerHelper.loadOffers(*ruleFrame->getEntry().accountID, sale->getID());
         for (auto const& offerToCancel : offersToDelete)
         {
             DeleteSaleParticipationOpFrame::deleteSaleParticipation(app, storageHelper,
