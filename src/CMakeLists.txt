@@ -49,7 +49,7 @@ set(NOT_COMMON_SOURCE_FILES
         transactions/rule_verifing/SignerRuleVerifier.h)
 
 # mocks
-set(MOCKS_FILES transactions/test/mocks/ transactions/CreateRedemptionRequestOpFrame.cpp transactions/CreateRedemptionRequestOpFrame.h transactions/review_request/ReviewRedemptionRequestOpFrame.cpp transactions/review_request/ReviewRedemptionRequestOpFrame.h transactions/test/RedemptionTests.cpp transactions/test/test_helper/ManageRedemptionTestHelper.cpp transactions/test/test_helper/ManageRedemptionTestHelper.h)
+set(MOCKS_FILES transactions/test/mocks/ transactions/CreateRedemptionRequestOpFrame.cpp transactions/CreateRedemptionRequestOpFrame.h transactions/review_request/ReviewRedemptionRequestOpFrame.cpp transactions/review_request/ReviewRedemptionRequestOpFrame.h transactions/test/RedemptionTests.cpp transactions/test/test_helper/ManageRedemptionTestHelper.cpp transactions/test/test_helper/ManageRedemptionTestHelper.h transactions/test/test_helper/ReviewRedemptionRequestTestHelper.cpp transactions/test/test_helper/ReviewRedemptionRequestTestHelper.h)
 
 
 #find source files

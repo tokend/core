@@ -1,7 +1,7 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/AccountHelper.h>
-#include "ledger/AssetHelper.h">
+#include "ledger/AssetHelper.h"
 #include "CreateRedemptionRequestOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
@@ -178,6 +178,12 @@ CreateRedemptionRequestOpFrame::doApply(Application & app,StorageHelper & storag
         pickResultCode(CreateRedemptionRequestResultCode::REDEMPTION_TASKS_NOT_FOUND);
         return false;
     }
+    if (allTasks == 0)
+    {
+        pickResultCode(CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED);
+        return false;
+    }
+
     request->setTasks(allTasks);
     requestHelper.storeChange(request->mEntry);
 

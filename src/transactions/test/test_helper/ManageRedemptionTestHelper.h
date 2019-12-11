@@ -16,16 +16,15 @@ namespace stellar
         public:
             explicit ManageRedemptionTestHelper(TestManager::pointer testManager);
 
-            TransactionFramePtr createRedemptionTx(Account& opSource, BalanceID sourceBalanceID, BalanceID destinationBalanceID, uint64 amount,
+            TransactionFramePtr createRedemptionTx(Account& opSource, BalanceID sourceBalanceID, AccountID destinationAccountID, uint64 amount,
                                                  std::string reason, std::string reference, uint32_t *allTasks = nullptr);
 
             CreateRedemptionRequestResult applyCreateRedemption(Account& opSource,
-                                                            BalanceID sourceBalanceID, BalanceID destinationBalanceID,
+                                                            BalanceID sourceBalanceID, AccountID destinationAccountID,
                                                             uint64 amount, std::string reason,
                                                             std::string reference, uint32_t *allTasks = nullptr,
                                                             CreateRedemptionRequestResultCode expectedResultCode = CreateRedemptionRequestResultCode::SUCCESS,
                                                             OperationResultCode expectedOpResult = OperationResultCode::opINNER);
-
         };
     }
 

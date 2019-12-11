@@ -172,7 +172,7 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::REMOVE_ASSET,
         OperationType::OPEN_SWAP,
         OperationType::CLOSE_SWAP,
-        OperationType::CREATE_PAYMENT_REQUEST
+        OperationType::CREATE_REDEMPTION_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -226,7 +226,7 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::REMOVE_ASSET ? 47
         : which == (int32_t)OperationType::OPEN_SWAP ? 48
         : which == (int32_t)OperationType::CLOSE_SWAP ? 49
-        : which == (int32_t)OperationType::CREATE_PAYMENT_REQUEST ? 50
+        : which == (int32_t)OperationType::CREATE_REDEMPTION_REQUEST ? 50
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -379,7 +379,7 @@ struct Operation  : xdr::xdr_abstract {
       case (int32_t)OperationType::CLOSE_SWAP:
         _f(&_body_t::closeSwapOp_, std::forward<_A>(_a)...);
         return true;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
         _f(&_body_t::createRedemptionRequestOp_, std::forward<_A>(_a)...);
         return true;
       }
@@ -542,7 +542,7 @@ break;
         case (int32_t)OperationType::CLOSE_SWAP:
 new(&closeSwapOp_) CloseSwapOp{};
 break;
-        case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+        case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp{};
 break;
 }
@@ -701,7 +701,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 new(&closeSwapOp_) CloseSwapOp{};
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp{};
 break;
 }
@@ -857,7 +857,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(source.createRedemptionRequestOp_);
 break;
 }
@@ -1013,7 +1013,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(std::move(source.createRedemptionRequestOp_));
 break;
 }
@@ -1169,7 +1169,7 @@ break;
     case (int32_t)OperationType::CLOSE_SWAP:
 closeSwapOp_.~CloseSwapOp();
 break;
-    case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestOp_.~CreateRedemptionRequestOp();
 break;
 }
@@ -1327,7 +1327,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 closeSwapOp_ = source.closeSwapOp_;
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestOp_ = source.createRedemptionRequestOp_;
 break;
 }
@@ -1483,7 +1483,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(source.createRedemptionRequestOp_);
 break;
 }
@@ -1642,7 +1642,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 closeSwapOp_ = std::move(source.closeSwapOp_);
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestOp_ = std::move(source.createRedemptionRequestOp_);
 break;
 }
@@ -1798,7 +1798,7 @@ break;
       case (int32_t)OperationType::CLOSE_SWAP:
 new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
 break;
-      case (int32_t)OperationType::CREATE_PAYMENT_REQUEST:
+      case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(std::move(source.createRedemptionRequestOp_));
 break;
 }

@@ -110,4 +110,17 @@ bool ReviewRedemptionRequestOpFrame::handlePermanentReject(stellar::Application 
     return true;
 }
 
+RedemptionRequest
+ReviewRedemptionRequestOpFrame::getRedemption(stellar::ReviewableRequestFrame::pointer request)
+{
+    auto requestEntry = request->getRequestEntry();
+    if (requestEntry.body.type() != ReviewableRequestType::PERFORM_REDEMPTION)
+    {
+        CLOG(ERROR, Logging::OPERATION_LOGGER) << "Review redemption: expected redemption but got "
+                                               << xdr::xdr_to_string(requestEntry.body.type());
+        throw runtime_error("Expected request to be redemption");
+    }
+    return requestEntry.body.redemptionRequest();
+}
+
 }

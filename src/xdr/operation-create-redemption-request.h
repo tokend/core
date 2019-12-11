@@ -195,6 +195,7 @@ enum class CreateRedemptionRequestResultCode : std::int32_t {
   UNDERFUNDED = -8,
   REFERENCE_DUPLICATION = -9,
   DST_ACCOUNT_NOT_FOUND = -10,
+  REDEMPTION_ZERO_TASKS_NOT_ALLOWED = -11,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
@@ -226,6 +227,8 @@ template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
       return "REFERENCE_DUPLICATION";
     case ::stellar::CreateRedemptionRequestResultCode::DST_ACCOUNT_NOT_FOUND:
       return "DST_ACCOUNT_NOT_FOUND";
+    case ::stellar::CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED:
+      return "REDEMPTION_ZERO_TASKS_NOT_ALLOWED";
     default:
       return nullptr;
     }
@@ -242,7 +245,8 @@ template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
       (int32_t)::stellar::CreateRedemptionRequestResultCode::INCORRECT_PRECISION,
       (int32_t)::stellar::CreateRedemptionRequestResultCode::UNDERFUNDED,
       (int32_t)::stellar::CreateRedemptionRequestResultCode::REFERENCE_DUPLICATION,
-      (int32_t)::stellar::CreateRedemptionRequestResultCode::DST_ACCOUNT_NOT_FOUND
+      (int32_t)::stellar::CreateRedemptionRequestResultCode::DST_ACCOUNT_NOT_FOUND,
+      (int32_t)::stellar::CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED
     };
     return _xdr_enum_vec;
   }

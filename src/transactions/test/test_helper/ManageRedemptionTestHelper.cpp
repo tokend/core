@@ -1,7 +1,8 @@
 #include "ManageRedemptionTestHelper.h"
 #include "test/test_marshaler.h"
 #include "StateBeforeTxHelper.h"
-#include "ledger/BalanceHelperLegacy.h"
+#include "ledger/StorageHelper.h"
+#include "ledger/BalanceHelper.h"
 
 namespace stellar {
 
@@ -61,20 +62,21 @@ CreateRedemptionRequestResult ManageRedemptionTestHelper::applyCreateRedemption(
     const auto stateBeforeOp = stateBeforeOps[0];
     auto stateHelper = StateBeforeTxHelper(stateBeforeOp);
 
-    REQUIRE(createRedemptionRequestResult.success().fulfilled);
+    REQUIRE(!createRedemptionRequestResult.success().fulfilled);
 
     auto srcBalanceBeforeTx = stateHelper.getBalance(sourceBalanceID);
-    auto srcBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(sourceBalanceID,
-                                                                          mTestManager->getDB());
+
+    auto& balanceHelper = mTestManager->getStorageHelper().getBalanceHelper();
+
+    auto srcBalanceAfterTx = balanceHelper.loadBalance(sourceBalanceID);
     REQUIRE(srcBalanceBeforeTx->getLocked() == srcBalanceAfterTx->getLocked() - amount);
 
-    auto dstBalance = BalanceHelperLegacy::Instance()->loadBalance(destinationAccountID, srcBalanceBeforeTx->getAsset(), mTestManager->getDB());
+    auto dstBalance = balanceHelper.loadBalance(destinationAccountID, srcBalanceBeforeTx->getAsset());
     auto destinationBalanceID = dstBalance->getBalanceID();
     auto dstBalanceBeforeTx = stateHelper.getBalance(destinationBalanceID);
-    auto dstBalanceAfterTx = BalanceHelperLegacy::Instance()->loadBalance(destinationBalanceID,
-                                                                          mTestManager->getDB());
+    auto dstBalanceAfterTx = balanceHelper.loadBalance(destinationBalanceID);
 
-    REQUIRE(dstBalanceBeforeTx->getAmount() + amount == dstBalanceAfterTx->getAmount());
+    REQUIRE(dstBalanceBeforeTx->getAmount() == dstBalanceAfterTx->getAmount());
 
     return createRedemptionRequestResult;
 }
