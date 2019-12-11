@@ -69,6 +69,11 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
     handleTasks(requestHelper, request);
     requestHelper.storeDelete(request->getKey());
     innerResult().success().fulfilled = true;
+    innerResult().success().typeExt.requestType(ReviewableRequestType::PERFORM_REDEMPTION);
+    innerResult().success().typeExt.createRedemptionResult().redemptionResponse().requestID = request->getRequestID();
+    innerResult().success().typeExt.createRedemptionResult().redemptionResponse().asset = srcBalanceFrame->getAsset();
+    innerResult().success().typeExt.createRedemptionResult().redemptionResponse().destinationBalanceID = dstBalanceFrame->getBalanceID();
+
     return true;
 }
 

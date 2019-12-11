@@ -173,7 +173,7 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
-CreateRedemptionRequestSuccess::_ext_t::from_bytes(xdr::unmarshaler& u) 
+RedemptionRequestResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -189,7 +189,7 @@ _xdr_discriminant(disc, true);switch (v_)
 return false;
 }
 bool
-CreateRedemptionRequestSuccess::_ext_t::to_bytes(xdr::marshaler& m) const
+RedemptionRequestResponse::_ext_t::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(v_);
 if (!ok)
@@ -205,7 +205,7 @@ switch (v_)
 return false;
 }
 void
-CreateRedemptionRequestSuccess::_ext_t::count_size(xdr::measurer& m) const
+RedemptionRequestResponse::_ext_t::count_size(xdr::measurer& m) const
 {
 m.count_size(v_);
 switch (v_)
@@ -217,7 +217,7 @@ switch (v_)
 }
 }
 bool
-CreateRedemptionRequestSuccess::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+RedemptionRequestResponse::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -234,7 +234,7 @@ switch (v_)
 return false;
 }
 bool
-CreateRedemptionRequestSuccess::_ext_t::operator<(xdr_abstract const& other_abstract) const
+RedemptionRequestResponse::_ext_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -251,7 +251,7 @@ switch (v_)
 return false;
 }
 bool
-CreateRedemptionRequestSuccess::from_bytes(xdr::unmarshaler& u) 
+RedemptionRequestResponse::from_bytes(xdr::unmarshaler& u) 
 {
 bool okrequestID = u.from_bytes(requestID);
 if (!okrequestID)
@@ -263,6 +263,21 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okdestinationBalanceID = u.from_bytes(destinationBalanceID);
+if (!okdestinationBalanceID)
+{
+return false;
+}
+bool okasset = u.from_bytes(asset);
+if (!okasset)
+{
+return false;
+}
+bool oksourceSentUniversal = u.from_bytes(sourceSentUniversal);
+if (!oksourceSentUniversal)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -271,7 +286,7 @@ return false;
 return true;
 }
 bool
-CreateRedemptionRequestSuccess::to_bytes(xdr::marshaler& m) const 
+RedemptionRequestResponse::to_bytes(xdr::marshaler& m) const 
 {
 bool okrequestID = m.to_bytes(requestID);
 if (!okrequestID)
@@ -283,6 +298,21 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okdestinationBalanceID = m.to_bytes(destinationBalanceID);
+if (!okdestinationBalanceID)
+{
+return false;
+}
+bool okasset = m.to_bytes(asset);
+if (!okasset)
+{
+return false;
+}
+bool oksourceSentUniversal = m.to_bytes(sourceSentUniversal);
+if (!oksourceSentUniversal)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -291,35 +321,47 @@ return false;
 return true;
 }
 void
-CreateRedemptionRequestSuccess::count_size(xdr::measurer& m) const 
+RedemptionRequestResponse::count_size(xdr::measurer& m) const 
 {
 m.count_size(requestID);
 m.count_size(fulfilled);
+m.count_size(destinationBalanceID);
+m.count_size(asset);
+m.count_size(sourceSentUniversal);
 m.count_size(ext);
 }
 bool
-CreateRedemptionRequestSuccess::operator==(xdr::xdr_abstract const& other_abstract) const 
+RedemptionRequestResponse::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<CreateRedemptionRequestSuccess const&>(other_abstract);return true
+}auto& other = dynamic_cast<RedemptionRequestResponse const&>(other_abstract);return true
 && (requestID== other.requestID)
 && (fulfilled== other.fulfilled)
+&& (destinationBalanceID== other.destinationBalanceID)
+&& (asset== other.asset)
+&& (sourceSentUniversal== other.sourceSentUniversal)
 && (ext== other.ext)
 ;}
 bool
-CreateRedemptionRequestSuccess::operator<(xdr_abstract const& other_abstract) const
+RedemptionRequestResponse::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<CreateRedemptionRequestSuccess const&>(other_abstract);
+auto& other = dynamic_cast<RedemptionRequestResponse const&>(other_abstract);
 if (requestID < other.requestID) return true;
 if (other.requestID < requestID) return false;
 if (fulfilled < other.fulfilled) return true;
 if (other.fulfilled < fulfilled) return false;
+if (destinationBalanceID < other.destinationBalanceID) return true;
+if (other.destinationBalanceID < destinationBalanceID) return false;
+if (asset < other.asset) return true;
+if (other.asset < asset) return false;
+if (sourceSentUniversal < other.sourceSentUniversal) return true;
+if (other.sourceSentUniversal < sourceSentUniversal) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
@@ -334,7 +376,7 @@ return false;
 _xdr_discriminant(disc, true);switch (code_)
 {
   case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-return u.from_bytes(success_);
+return u.from_bytes(redemptionResponse_);
   default:
   
   return true;
@@ -353,7 +395,7 @@ switch (code_)
 {
 
   case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-return m.to_bytes(success_);
+return m.to_bytes(redemptionResponse_);
   default:
     return true;
 }
@@ -367,7 +409,7 @@ switch (code_)
 {
 
   case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-return m.count_size(success_);
+return m.count_size(redemptionResponse_);
   default:
   
   return;
@@ -385,7 +427,7 @@ if (other.code_ != code_) return false;
 switch (code_)
 {
   case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-return success_ == other.success_;
+return redemptionResponse_ == other.redemptionResponse_;
   default:
   
   return true;
@@ -405,7 +447,7 @@ if (other.code_ < code_) return false;
 switch (code_)
 {
   case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-return success_ < other.success_;
+return redemptionResponse_ < other.redemptionResponse_;
   default:
     return false;
 }

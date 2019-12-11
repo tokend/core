@@ -253,7 +253,7 @@ template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
 };
 } namespace stellar {
 
-struct CreateRedemptionRequestSuccess  : xdr::xdr_abstract {
+struct RedemptionRequestResponse  : xdr::xdr_abstract {
   struct _ext_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<LedgerVersion>::case_type;
   private:
@@ -391,22 +391,37 @@ count_size(xdr::measurer& m) const override;
 
   uint64 requestID{};
   bool fulfilled{};
+  BalanceID destinationBalanceID{};
+  AssetCode asset{};
+  uint64 sourceSentUniversal{};
   _ext_t ext{};
 
-  CreateRedemptionRequestSuccess() = default;
+  RedemptionRequestResponse() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
+           typename _destinationBalanceID_T,
+           typename _asset_T,
+           typename _sourceSentUniversal_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _requestID_T>::value
                           && std::is_constructible<bool, _fulfilled_T>::value
+                          && std::is_constructible<BalanceID, _destinationBalanceID_T>::value
+                          && std::is_constructible<AssetCode, _asset_T>::value
+                          && std::is_constructible<uint64, _sourceSentUniversal_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
-  explicit CreateRedemptionRequestSuccess(_requestID_T &&_requestID,
-                                          _fulfilled_T &&_fulfilled,
-                                          _ext_T &&_ext)
+  explicit RedemptionRequestResponse(_requestID_T &&_requestID,
+                                     _fulfilled_T &&_fulfilled,
+                                     _destinationBalanceID_T &&_destinationBalanceID,
+                                     _asset_T &&_asset,
+                                     _sourceSentUniversal_T &&_sourceSentUniversal,
+                                     _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
+      destinationBalanceID(std::forward<_destinationBalanceID_T>(_destinationBalanceID)),
+      asset(std::forward<_asset_T>(_asset)),
+      sourceSentUniversal(std::forward<_sourceSentUniversal_T>(_sourceSentUniversal)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
@@ -425,7 +440,7 @@ struct CreateRedemptionRequestResult : xdr::xdr_abstract {
 private:
   _xdr_case_type code_;
   union {
-    CreateRedemptionRequestSuccess success_;
+    RedemptionRequestResponse redemptionResponse_;
   };
 
 public:
@@ -442,7 +457,7 @@ public:
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
     switch (_which) {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-      _f(&CreateRedemptionRequestResult::success_, std::forward<_A>(_a)...);
+      _f(&CreateRedemptionRequestResult::redemptionResponse_, std::forward<_A>(_a)...);
       return true;
     default:
       return true;
@@ -459,7 +474,7 @@ public:
       code_ = which;switch (code_)
 {
       case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-new(&success_) CreateRedemptionRequestSuccess{};
+new(&redemptionResponse_) RedemptionRequestResponse{};
 break;
       default:
         break;
@@ -473,7 +488,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-new(&success_) CreateRedemptionRequestSuccess{};
+new(&redemptionResponse_) RedemptionRequestResponse{};
 break;
     default:
       break;
@@ -484,7 +499,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-new(&success_) CreateRedemptionRequestSuccess(source.success_);
+new(&redemptionResponse_) RedemptionRequestResponse(source.redemptionResponse_);
 break;
     default:
       break;
@@ -495,7 +510,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-new(&success_) CreateRedemptionRequestSuccess(std::move(source.success_));
+new(&redemptionResponse_) RedemptionRequestResponse(std::move(source.redemptionResponse_));
 break;
     default:
       break;
@@ -506,7 +521,7 @@ break;
 switch (code_)
 {
   case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-success_.~CreateRedemptionRequestSuccess();
+redemptionResponse_.~RedemptionRequestResponse();
 break;
   default:
     break;
@@ -519,7 +534,7 @@ break;
 switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-success_ = source.success_;
+redemptionResponse_ = source.redemptionResponse_;
 break;
     default:
       break;
@@ -530,7 +545,7 @@ else {this->~CreateRedemptionRequestResult();
 switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-new(&success_) CreateRedemptionRequestSuccess(source.success_);
+new(&redemptionResponse_) RedemptionRequestResponse(source.redemptionResponse_);
 break;
     default:
       break;
@@ -544,7 +559,7 @@ break;
 switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-success_ = std::move(source.success_);
+redemptionResponse_ = std::move(source.redemptionResponse_);
 break;
     default:
       break;
@@ -555,7 +570,7 @@ else {this->~CreateRedemptionRequestResult();
 switch (code_)
 {
     case (int32_t)CreateRedemptionRequestResultCode::SUCCESS:
-new(&success_) CreateRedemptionRequestSuccess(std::move(source.success_));
+new(&redemptionResponse_) RedemptionRequestResponse(std::move(source.redemptionResponse_));
 break;
     default:
       break;
@@ -570,15 +585,15 @@ break;
     return *this;
   }
 
-  CreateRedemptionRequestSuccess &success() {
+  RedemptionRequestResponse &redemptionResponse() {
     if (_xdr_field_number(code_) == 1)
-      return success_;
-    throw xdr::xdr_wrong_union("CreateRedemptionRequestResult: success accessed when not selected");
+      return redemptionResponse_;
+    throw xdr::xdr_wrong_union("CreateRedemptionRequestResult: redemptionResponse accessed when not selected");
   }
-  const CreateRedemptionRequestSuccess &success() const {
+  const RedemptionRequestResponse &redemptionResponse() const {
     if (_xdr_field_number(code_) == 1)
-      return success_;
-    throw xdr::xdr_wrong_union("CreateRedemptionRequestResult: success accessed when not selected");
+      return redemptionResponse_;
+    throw xdr::xdr_wrong_union("CreateRedemptionRequestResult: redemptionResponse accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

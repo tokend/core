@@ -1570,6 +1570,8 @@ return u.from_bytes(createPoll_);
 return u.from_bytes(manageOfferResult_);
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return u.from_bytes(paymentResult_);
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return u.from_bytes(createRedemptionResult_);
 }
 return false;
 }
@@ -1598,6 +1600,8 @@ return m.to_bytes(createPoll_);
 return m.to_bytes(manageOfferResult_);
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return m.to_bytes(paymentResult_);
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return m.to_bytes(createRedemptionResult_);
 }
 return false;
 }
@@ -1623,6 +1627,8 @@ return m.count_size(createPoll_);
 return m.count_size(manageOfferResult_);
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return m.count_size(paymentResult_);
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return m.count_size(createRedemptionResult_);
 }
 }
 bool
@@ -1651,6 +1657,8 @@ return createPoll_ == other.createPoll_;
 return manageOfferResult_ == other.manageOfferResult_;
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return paymentResult_ == other.paymentResult_;
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return createRedemptionResult_ == other.createRedemptionResult_;
 }
 return false;
 }
@@ -1680,6 +1688,8 @@ return createPoll_ < other.createPoll_;
 return manageOfferResult_ < other.manageOfferResult_;
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 return paymentResult_ < other.paymentResult_;
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+return createRedemptionResult_ < other.createRedemptionResult_;
 }
 return false;
 }
