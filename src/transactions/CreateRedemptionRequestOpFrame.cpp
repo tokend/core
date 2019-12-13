@@ -187,16 +187,10 @@ CreateRedemptionRequestOpFrame::doApply(Application & app,StorageHelper & storag
     request->setTasks(allTasks);
     requestHelper.storeChange(request->mEntry);
 
-    if (!request->canBeFulfilled(ledgerManager))
-    {
-        innerResult().success().requestID = request->getRequestEntry().requestID;
-        innerResult().success().fulfilled = false;
-    }
-
     pickResultCode(CreateRedemptionRequestResultCode::SUCCESS);
-    innerResult().success().requestID = requestID;
-    innerResult().success().fulfilled = false; // approve by admin is mandatory
-    innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
+    innerResult().redemptionResponse().requestID = requestID;
+    innerResult().redemptionResponse().fulfilled = false; // approve by admin is mandatory
+    innerResult().redemptionResponse().ext.v(LedgerVersion::EMPTY_VERSION);
     return true;
 }
 

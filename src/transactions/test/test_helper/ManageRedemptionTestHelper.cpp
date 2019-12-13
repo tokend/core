@@ -62,7 +62,7 @@ CreateRedemptionRequestResult ManageRedemptionTestHelper::applyCreateRedemption(
     const auto stateBeforeOp = stateBeforeOps[0];
     auto stateHelper = StateBeforeTxHelper(stateBeforeOp);
 
-    REQUIRE(!createRedemptionRequestResult.success().fulfilled);
+    REQUIRE(!createRedemptionRequestResult.redemptionResponse().fulfilled);
 
     auto srcBalanceBeforeTx = stateHelper.getBalance(sourceBalanceID);
 

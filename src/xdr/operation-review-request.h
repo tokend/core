@@ -10,6 +10,7 @@
 #include "xdr/ledger-entries.h"
 #include "xdr/operation-payment.h"
 #include "xdr/operation-manage-offer.h"
+#include "xdr/operation-create-redemption-request.h"
 
 namespace stellar {
 

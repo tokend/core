@@ -208,12 +208,13 @@ TEST_CASE("Redemption", "[tx][redemption]") {
                                                                  CreateRedemptionRequestResultCode::SUCCESS);
             SECTION("OK but not fulfilled because only admin can fulfill")
             {
-                REQUIRE(!result.success().fulfilled);
+                REQUIRE(!result.redemptionResponse().fulfilled);
             }
 
             SECTION("approve & fulfill request")
             {
-                auto request = requestHelper.loadRequest(result.success().requestID);
+                auto request = requestHelper.loadRequest(result.redemptionResponse().requestID);
+                REQUIRE(request->getReviewer() == app.getAdminID());
                 auto reviewResult = reviewRedemptionHelper.applyReviewRequestTx( root,
                         request->getRequestID(), request->getHash(), ReviewableRequestType::PERFORM_REDEMPTION,
                         ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS);
