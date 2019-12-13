@@ -26,25 +26,18 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
     createReference(storageHelper, request->getRequestor(), request->getReference());
-    BalanceFrame::pointer srcBalanceFrame, dstBalanceFrame;
-    if (!ledgerManager.shouldUse(LedgerVersion::MARK_ASSET_AS_DELETED)) {
-        srcBalanceFrame = balanceHelper.mustLoadBalance(redemption.sourceBalanceID);
-    } else {
-        //it is safe to check for balance existence only, as balances are being removed on
-        // asset removal
-        srcBalanceFrame = balanceHelper.loadBalance(redemption.sourceBalanceID);
-        if (!srcBalanceFrame) {
-            innerResult().code(ReviewRequestResultCode::SRC_BALANCE_NOT_FOUND);
-            return false;
-        }
+
+    auto srcBalanceFrame = balanceHelper.loadBalance(redemption.sourceBalanceID);
+    if (!srcBalanceFrame) {
+        innerResult().code(ReviewRequestResultCode::SRC_BALANCE_NOT_FOUND);
+        return false;
     }
 
-    dstBalanceFrame = balanceHelper.loadBalance(redemption.destination, srcBalanceFrame->getAsset());
+    auto dstBalanceFrame = balanceHelper.loadBalance(redemption.destination, srcBalanceFrame->getAsset());
     if (!dstBalanceFrame) {
         innerResult().code(ReviewRequestResultCode::DESTINATION_BALANCE_NOT_FOUND);
         return false;
     }
-
 
     const BalanceFrame::Result chargeResult = srcBalanceFrame->tryChargeFromLocked(redemption.amount);
     if (chargeResult != BalanceFrame::Result::SUCCESS)

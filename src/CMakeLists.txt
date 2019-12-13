@@ -49,14 +49,14 @@ set(NOT_COMMON_SOURCE_FILES
         transactions/rule_verifing/SignerRuleVerifier.h)
 
 # mocks
-set(MOCKS_FILES transactions/test/mocks/ transactions/CreateRedemptionRequestOpFrame.cpp transactions/CreateRedemptionRequestOpFrame.h transactions/review_request/ReviewRedemptionRequestOpFrame.cpp transactions/review_request/ReviewRedemptionRequestOpFrame.h transactions/test/RedemptionTests.cpp transactions/test/test_helper/ManageRedemptionTestHelper.cpp transactions/test/test_helper/ManageRedemptionTestHelper.h transactions/test/test_helper/ReviewRedemptionRequestTestHelper.cpp transactions/test/test_helper/ReviewRedemptionRequestTestHelper.h)
+set(MOCKS_FILES transactions/test/mocks/)
 
 
 #find source files
 file(GLOB STELLAR_CORE_SOURCE_FILES **/*.cpp **/**/*.cpp **/**/**/*.cpp)
 
 #create executeble file "core"
-add_executable(core ${STELLAR_CORE_SOURCE_FILES} ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES} ${MOCKS_FILES} transactions/CreateRedemptionRequestOpFrame.cpp transactions/CreateRedemptionRequestOpFrame.h transactions/review_request/ReviewRedemptionRequestOpFrame.cpp transactions/review_request/ReviewRedemptionRequestOpFrame.h transactions/test/RedemptionTests.cpp transactions/test/test_helper/ManageRedemptionTestHelper.cpp transactions/test/test_helper/ManageRedemptionTestHelper.h)
+add_executable(core ${STELLAR_CORE_SOURCE_FILES} ${XDRS_PATH} ${H_GENERATE_FILES} ${NOT_COMMON_SOURCE_FILES} ${MOCKS_FILES})
 
 #link libs
 include(platform_libs.cmake)
