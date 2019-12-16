@@ -41,6 +41,7 @@ namespace stellar
     char const* ManageKeyValueOpFrame::createSaleParticipationTasks = "create_sale_participation_tasks";
     char const* ManageKeyValueOpFrame::removeSaleParticipationTasks = "remove_sale_participation_tasks";
     char const* ManageKeyValueOpFrame::paymentTasks = "payment_tasks";
+    char const* ManageKeyValueOpFrame::redemptionTasks = "redemption_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -76,6 +77,7 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {createSaleParticipationTasks, KeyValueEntryType::UINT32},
         {removeSaleParticipationTasks, KeyValueEntryType::UINT32},
         {paymentTasks, KeyValueEntryType::UINT32},
+        {redemptionTasks, KeyValueEntryType::UINT32},
     };
 }
 
@@ -334,5 +336,11 @@ ManageKeyValueOpFrame::makeKYCRecoveryKey()
     ManageKeyValueOpFrame::makePaymentTasksKey(AssetCode const& code)
     {
         return string(paymentTasks) + ":" + code;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeRedemptionTasksKey()
+    {
+        return string(redemptionTasks);
     }
 }

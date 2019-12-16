@@ -10,6 +10,7 @@
 #include "xdr/ledger-entries.h"
 #include "xdr/operation-payment.h"
 #include "xdr/operation-manage-offer.h"
+#include "xdr/operation-create-redemption-request.h"
 
 namespace stellar {
 
@@ -1739,6 +1740,7 @@ struct ExtendedResult  : xdr::xdr_abstract {
       CreatePollExtended createPoll_;
       ManageOfferResult manageOfferResult_;
       PaymentResult paymentResult_;
+      CreateRedemptionRequestResult createRedemptionResult_;
     };
 
   public:
@@ -1751,7 +1753,8 @@ struct ExtendedResult  : xdr::xdr_abstract {
         ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK,
         ReviewableRequestType::CREATE_POLL,
         ReviewableRequestType::MANAGE_OFFER,
-        ReviewableRequestType::CREATE_PAYMENT
+        ReviewableRequestType::CREATE_PAYMENT,
+        ReviewableRequestType::PERFORM_REDEMPTION
       };
       return _xdr_disc_vec;
     }
@@ -1763,6 +1766,7 @@ struct ExtendedResult  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::CREATE_POLL ? 4
         : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 5
         : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 6
+        : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 7
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -1787,6 +1791,9 @@ struct ExtendedResult  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
         _f(&_typeExt_t::paymentResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+        _f(&_typeExt_t::createRedemptionResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -1821,6 +1828,9 @@ break;
         case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&paymentResult_) PaymentResult{};
 break;
+        case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&createRedemptionResult_) CreateRedemptionRequestResult{};
+break;
 }
 
       }
@@ -1850,6 +1860,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&paymentResult_) PaymentResult{};
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&createRedemptionResult_) CreateRedemptionRequestResult{};
+break;
 }
 
     }
@@ -1875,6 +1888,9 @@ new(&manageOfferResult_) ManageOfferResult(source.manageOfferResult_);
 break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&paymentResult_) PaymentResult(source.paymentResult_);
+break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&createRedemptionResult_) CreateRedemptionRequestResult(source.createRedemptionResult_);
 break;
 }
 
@@ -1902,6 +1918,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&paymentResult_) PaymentResult(std::move(source.paymentResult_));
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&createRedemptionResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionResult_));
+break;
 }
 
     }
@@ -1927,6 +1946,9 @@ manageOfferResult_.~ManageOfferResult();
 break;
     case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 paymentResult_.~PaymentResult();
+break;
+    case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+createRedemptionResult_.~CreateRedemptionRequestResult();
 break;
 }
 }
@@ -1956,6 +1978,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 paymentResult_ = source.paymentResult_;
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+createRedemptionResult_ = source.createRedemptionResult_;
+break;
 }
 }
 else {this->~_typeExt_t();
@@ -1981,6 +2006,9 @@ new(&manageOfferResult_) ManageOfferResult(source.manageOfferResult_);
 break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&paymentResult_) PaymentResult(source.paymentResult_);
+break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&createRedemptionResult_) CreateRedemptionRequestResult(source.createRedemptionResult_);
 break;
 }
 }
@@ -2011,6 +2039,9 @@ break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 paymentResult_ = std::move(source.paymentResult_);
 break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+createRedemptionResult_ = std::move(source.createRedemptionResult_);
+break;
 }
 }
 else {this->~_typeExt_t();
@@ -2036,6 +2067,9 @@ new(&manageOfferResult_) ManageOfferResult(std::move(source.manageOfferResult_))
 break;
       case (int32_t)ReviewableRequestType::CREATE_PAYMENT:
 new(&paymentResult_) PaymentResult(std::move(source.paymentResult_));
+break;
+      case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
+new(&createRedemptionResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionResult_));
 break;
 }
 }
@@ -2107,6 +2141,16 @@ break;
       if (_xdr_field_number(requestType_) == 6)
         return paymentResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: paymentResult accessed when not selected");
+    }
+    CreateRedemptionRequestResult &createRedemptionResult() {
+      if (_xdr_field_number(requestType_) == 7)
+        return createRedemptionResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: createRedemptionResult accessed when not selected");
+    }
+    const CreateRedemptionRequestResult &createRedemptionResult() const {
+      if (_xdr_field_number(requestType_) == 7)
+        return createRedemptionResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: createRedemptionResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

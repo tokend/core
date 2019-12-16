@@ -152,7 +152,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
 
     auto outgoingFee = setFeesTestHelper.createFeeEntry(FeeType::PAYMENT_FEE, paymentAsset, 5 * ONE, 5 * ONE, nullptr, nullptr,
                                                         static_cast<int64_t>(PaymentFeeType::OUTGOING), 0, preIssuedAmount);
-    setFeesTestHelper.applySetFeesTx(root, &outgoingFee, false);
+    setFeesTestHelper.applySetFeesTx(root , &outgoingFee, false);
 
     // find payer
     auto payerBalance = balanceHelper.loadBalance(payer.key.getPublicKey(), paymentAsset);

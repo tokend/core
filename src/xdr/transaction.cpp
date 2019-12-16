@@ -115,6 +115,8 @@ return u.from_bytes(removeAssetOp_);
 return u.from_bytes(openSwapOp_);
     case (int32_t)OperationType::CLOSE_SWAP:
 return u.from_bytes(closeSwapOp_);
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return u.from_bytes(createRedemptionRequestOp_);
 }
 return false;
 }
@@ -227,6 +229,8 @@ return m.to_bytes(removeAssetOp_);
 return m.to_bytes(openSwapOp_);
     case (int32_t)OperationType::CLOSE_SWAP:
 return m.to_bytes(closeSwapOp_);
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return m.to_bytes(createRedemptionRequestOp_);
 }
 return false;
 }
@@ -335,6 +339,8 @@ return m.count_size(removeAssetOp_);
 return m.count_size(openSwapOp_);
     case (int32_t)OperationType::CLOSE_SWAP:
 return m.count_size(closeSwapOp_);
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return m.count_size(createRedemptionRequestOp_);
 }
 }
 bool
@@ -446,6 +452,8 @@ return removeAssetOp_ == other.removeAssetOp_;
 return openSwapOp_ == other.openSwapOp_;
     case (int32_t)OperationType::CLOSE_SWAP:
 return closeSwapOp_ == other.closeSwapOp_;
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return createRedemptionRequestOp_ == other.createRedemptionRequestOp_;
 }
 return false;
 }
@@ -559,6 +567,8 @@ return removeAssetOp_ < other.removeAssetOp_;
 return openSwapOp_ < other.openSwapOp_;
     case (int32_t)OperationType::CLOSE_SWAP:
 return closeSwapOp_ < other.closeSwapOp_;
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return createRedemptionRequestOp_ < other.createRedemptionRequestOp_;
 }
 return false;
 }
@@ -1245,6 +1255,8 @@ return u.from_bytes(removeAssetResult_);
 return u.from_bytes(openSwapResult_);
     case (int32_t)OperationType::CLOSE_SWAP:
 return u.from_bytes(closeSwapResult_);
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return u.from_bytes(createRedemptionRequestResult_);
 }
 return false;
 }
@@ -1357,6 +1369,8 @@ return m.to_bytes(removeAssetResult_);
 return m.to_bytes(openSwapResult_);
     case (int32_t)OperationType::CLOSE_SWAP:
 return m.to_bytes(closeSwapResult_);
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return m.to_bytes(createRedemptionRequestResult_);
 }
 return false;
 }
@@ -1465,6 +1479,8 @@ return m.count_size(removeAssetResult_);
 return m.count_size(openSwapResult_);
     case (int32_t)OperationType::CLOSE_SWAP:
 return m.count_size(closeSwapResult_);
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return m.count_size(createRedemptionRequestResult_);
 }
 }
 bool
@@ -1576,6 +1592,8 @@ return removeAssetResult_ == other.removeAssetResult_;
 return openSwapResult_ == other.openSwapResult_;
     case (int32_t)OperationType::CLOSE_SWAP:
 return closeSwapResult_ == other.closeSwapResult_;
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return createRedemptionRequestResult_ == other.createRedemptionRequestResult_;
 }
 return false;
 }
@@ -1689,6 +1707,8 @@ return removeAssetResult_ < other.removeAssetResult_;
 return openSwapResult_ < other.openSwapResult_;
     case (int32_t)OperationType::CLOSE_SWAP:
 return closeSwapResult_ < other.closeSwapResult_;
+    case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
+return createRedemptionRequestResult_ < other.createRedemptionRequestResult_;
 }
 return false;
 }

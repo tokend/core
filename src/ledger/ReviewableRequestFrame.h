@@ -41,6 +41,7 @@ class ReviewableRequestFrame : public EntryFrame
     static void ensureKYCRecoveryValid(KYCRecoveryRequest const& request);
 	static void ensureManageOfferValid(ManageOfferRequest const& request);
 	static void ensureCreatePaymentValid(CreatePaymentRequest const& request);
+	static void ensureRedemptionValid(RedemptionRequest const &request);
 
   public:
     typedef std::shared_ptr<ReviewableRequestFrame> pointer;

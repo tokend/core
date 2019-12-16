@@ -62,7 +62,6 @@ bool
 CreateAMLAlertRequestOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                       LedgerManager& ledgerManager)
 {
-    auto& db = storageHelper.getDatabase();
     auto& delta = storageHelper.mustGetLedgerDelta();
 
     auto& balanceHelper = storageHelper.getBalanceHelper();

@@ -963,6 +963,7 @@ enum class OperationType : std::int32_t {
   REMOVE_ASSET = 53,
   OPEN_SWAP = 54,
   CLOSE_SWAP = 55,
+  CREATE_REDEMPTION_REQUEST = 56,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1070,6 +1071,8 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "OPEN_SWAP";
     case ::stellar::OperationType::CLOSE_SWAP:
       return "CLOSE_SWAP";
+    case ::stellar::OperationType::CREATE_REDEMPTION_REQUEST:
+      return "CREATE_REDEMPTION_REQUEST";
     default:
       return nullptr;
     }
@@ -1124,7 +1127,8 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CREATE_PAYMENT_REQUEST,
       (int32_t)::stellar::OperationType::REMOVE_ASSET,
       (int32_t)::stellar::OperationType::OPEN_SWAP,
-      (int32_t)::stellar::OperationType::CLOSE_SWAP
+      (int32_t)::stellar::OperationType::CLOSE_SWAP,
+      (int32_t)::stellar::OperationType::CREATE_REDEMPTION_REQUEST
     };
     return _xdr_enum_vec;
   }

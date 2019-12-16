@@ -264,6 +264,15 @@ ReviewableRequestFrame::ensureCreatePaymentValid(CreatePaymentRequest const& req
     }
 }
 
+void
+ReviewableRequestFrame::ensureRedemptionValid(RedemptionRequest const &request)
+{
+    if (request.amount <= 0)
+    {
+        throw runtime_error("invalid redemption amount");
+    }
+}
+
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
 	return sha256(xdr::xdr_to_opaque(body));
@@ -323,6 +332,8 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureManageOfferValid(oe.body.manageOfferRequest());
         case ReviewableRequestType::CREATE_PAYMENT:
             return ensureCreatePaymentValid(oe.body.createPaymentRequest());
+        case ReviewableRequestType::PERFORM_REDEMPTION:
+            return ensureRedemptionValid(oe.body.redemptionRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }
