@@ -146,14 +146,11 @@ namespace stellar {
                                                          referencePtr,
                                                          ledgerManager.getCloseTime());
 
-        request->setTasks(*mCreateRedemptionRequest.allTasks);
-
         auto &requestEntry = request->getRequestEntry();
         requestEntry.body.type(ReviewableRequestType::PERFORM_REDEMPTION);
         requestEntry.body.redemptionRequest() = mCreateRedemptionRequest.redemptionRequest;
         request->recalculateHashRejectReason();
         balanceHelper.storeChange(sourceBalance->mEntry);
-        requestHelper.storeAdd(request->mEntry);
 
         auto &kvHelper = storageHelper.getKeyValueHelper();
         uint32_t allTasks;
@@ -168,7 +165,7 @@ namespace stellar {
         }
 
         request->setTasks(allTasks);
-        requestHelper.storeChange(request->mEntry);
+        requestHelper.storeAdd(request->mEntry);
 
         pickResultCode(CreateRedemptionRequestResultCode::SUCCESS);
 

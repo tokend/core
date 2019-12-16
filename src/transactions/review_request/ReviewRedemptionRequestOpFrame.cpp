@@ -41,10 +41,10 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
 
     handleTasks(requestHelper, request);
     if (!request->canBeFulfilled(ledgerManager)) {
-        CLOG(WARNING, Logging::OPERATION_LOGGER)
+        CLOG(DEBUG, Logging::OPERATION_LOGGER)
                 << "Unexpected state: pending tasks are not zero: request: "
                 << xdr::xdr_to_string(redemption) <<  "; tasks: " << request->getPendingTasks();
-
+        innerResult().success().fulfilled = false;
         return true;
     }
 
