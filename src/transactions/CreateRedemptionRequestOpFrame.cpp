@@ -179,7 +179,7 @@ namespace stellar {
     bool
     CreateRedemptionRequestOpFrame::doCheckValid(Application &app) {
         if (mCreateRedemptionRequest.redemptionRequest.creatorDetails.empty() ||
-            isValidJson(mCreateRedemptionRequest.redemptionRequest.creatorDetails)) {
+            !isValidJson(mCreateRedemptionRequest.redemptionRequest.creatorDetails)) {
             pickResultCode(CreateRedemptionRequestResultCode::INVALID_CREATOR_DETAILS);
             return false;
         }
