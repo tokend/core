@@ -14,10 +14,6 @@
 namespace stellar {
     using xdr::operator==;
 
-// TODO rm comments on merge
-//  as i can see we need to validate all  prerequisites here (src account, dst balance & asset existing)
-//  and then add account rule resources to result vector
-//  hope im right
     bool CreateRedemptionRequestOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
                                                                    std::vector<OperationCondition> &result,
                                                                    LedgerManager &ledgerManager) const {
@@ -183,9 +179,6 @@ namespace stellar {
         return true;
     }
 
-// TODO rm comments on merge
-//  as i can see we need to validate operation fields in this method
-//  hope im right
     bool
     CreateRedemptionRequestOpFrame::doCheckValid(Application &app) {
         if (mCreateRedemptionRequest.redemptionRequest.creatorDetails.empty() ||
