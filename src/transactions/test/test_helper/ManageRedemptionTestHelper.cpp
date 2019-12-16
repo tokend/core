@@ -8,6 +8,46 @@ namespace stellar {
 
 namespace txtest {
 
+void RedemptionReviewChecker::checkApproval(RedemptionRequest const &request, AccountID const &requestor) {
+    auto srcBalanceBeforeTx = mStateBeforeTxHelper.getBalance(request.sourceBalanceID);
+    REQUIRE(!!srcBalanceBeforeTx);
+
+    auto srcBalanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(request.destination, srcBalanceBeforeTx->getAsset());
+    REQUIRE(!!srcBalanceAfterTx);
+    REQUIRE(srcBalanceBeforeTx->getAmount() == srcBalanceAfterTx->getAmount());
+    REQUIRE(srcBalanceBeforeTx->getLocked() - request.amount == srcBalanceAfterTx->getLocked());
+
+    auto dstBalanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(request.destination, srcBalanceBeforeTx->getAsset());
+    REQUIRE(!!dstBalanceAfterTx);
+    auto dstBalanceBeforeTx = mStateBeforeTxHelper.getBalance(dstBalanceAfterTx->getBalanceID());
+    REQUIRE(!!dstBalanceBeforeTx);
+    REQUIRE(dstBalanceBeforeTx->getAmount() + request.amount == dstBalanceAfterTx->getAmount());
+}
+
+void RedemptionReviewChecker::checkPermanentReject(RedemptionRequest const &request, AccountID const &requestor) {
+    auto balanceBeforeTx = mStateBeforeTxHelper.getBalance(request.sourceBalanceID);
+    REQUIRE(balanceBeforeTx);
+    auto balanceAfterTx = mTestManager->getStorageHelper().getBalanceHelper().loadBalance(request.sourceBalanceID);
+    REQUIRE(balanceAfterTx);
+    REQUIRE(balanceBeforeTx->getAmount() + request.amount == balanceAfterTx->getAmount());
+    REQUIRE(balanceBeforeTx->getLocked() - request.amount == balanceAfterTx->getLocked());
+}
+
+void RedemptionReviewChecker::checkApprove(ReviewableRequestFrame::pointer request) {
+    if (request->getType() != ReviewableRequestType::PERFORM_REDEMPTION) {
+        throw std::runtime_error("Expected redemption request type");
+    }
+    return checkApproval(request->getRequestEntry().body.redemptionRequest(), request->getRequestor());
+}
+
+void RedemptionReviewChecker::checkPermanentReject(ReviewableRequestFrame::pointer request) {
+    if (request->getType() != ReviewableRequestType::PERFORM_REDEMPTION) {
+        throw std::runtime_error("Expected redemption request type");
+    }
+    return checkPermanentReject(request->getRequestEntry().body.redemptionRequest(), request->getRequestor());
+}
+
+
 ManageRedemptionTestHelper::ManageRedemptionTestHelper(TestManager::pointer testManager) : TxHelper(
     testManager) {}
 
@@ -80,6 +120,8 @@ CreateRedemptionRequestResult ManageRedemptionTestHelper::applyCreateRedemption(
 
     return createRedemptionRequestResult;
 }
+
+
 
 }
 }

@@ -131,6 +131,7 @@ TEST_CASE("Redemption", "[tx][redemption]") {
                                             .setRoleID(recipientAccountRoleID));
 
     uint32_t allTasks = 1;
+    uint32_t zeroTasks = 0;
 
     SECTION("empty reason is not allowed") {
         BalanceID srcBalanceID;
@@ -183,9 +184,8 @@ TEST_CASE("Redemption", "[tx][redemption]") {
                                                       srcBalance->getBalanceID(),
                                                       "RANDOM ISSUANCE REFERENCE AWARWAWRWARAWR", &issuanceTasks);
         SECTION("zero tasks not allowed") {
-            uint32_t  zero = 0;
             redemptionHelper.applyCreateRedemption(root, srcBalance->getBalanceID(), recipient.key.getPublicKey(),
-                                                   preIssuedAmount - 10, "because", reference, &zero,
+                                                   preIssuedAmount - 10, "because", reference, &zeroTasks,
                                                    CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED);
         }
         SECTION("Underfunded") {
@@ -215,9 +215,10 @@ TEST_CASE("Redemption", "[tx][redemption]") {
             {
                 auto request = requestHelper.loadRequest(result.redemptionResponse().requestID);
                 REQUIRE(request->getReviewer() == app.getAdminID());
-                auto reviewResult = reviewRedemptionHelper.applyReviewRequestTx( root,
-                        request->getRequestID(), request->getHash(), ReviewableRequestType::PERFORM_REDEMPTION,
-                        ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS);
+                uint32_t tasksToRemove = 1;
+                auto reviewResult = reviewRedemptionHelper.applyReviewRequestTxWithTasks(root,
+                        request->getRequestID(), ReviewRequestOpAction::APPROVE, "",
+                        ReviewRequestResultCode::SUCCESS, &zeroTasks, &tasksToRemove);
                 REQUIRE(reviewResult.success().fulfilled);
             }
         }

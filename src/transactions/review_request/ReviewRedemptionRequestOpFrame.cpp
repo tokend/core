@@ -39,13 +39,22 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
         return false;
     }
 
+    handleTasks(requestHelper, request);
+    if (!request->canBeFulfilled(ledgerManager)) {
+        CLOG(WARNING, Logging::OPERATION_LOGGER)
+                << "Unexpected state: pending tasks are not zero: request: "
+                << xdr::xdr_to_string(redemption) <<  "; tasks: " << request->getPendingTasks();
+
+        return true;
+    }
+
     const BalanceFrame::Result chargeResult = srcBalanceFrame->tryChargeFromLocked(redemption.amount);
     if (chargeResult != BalanceFrame::Result::SUCCESS)
     {
         CLOG(ERROR, Logging::OPERATION_LOGGER)
                 << "Unexpected state: failed to charge from locked specified amount in request: request"
                 << xdr::xdr_to_string(redemption) << "; balance: " << xdr::xdr_to_string(srcBalanceFrame->getBalance());
-        throw runtime_error("Unexpected state: failed to charge from unlock specified amount in aml request");
+        throw runtime_error("Unexpected state: failed to charge from unlock specified amount in redemption request");
     }
     balanceHelper.storeChange(srcBalanceFrame->mEntry);
 
@@ -59,7 +68,6 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
     }
     balanceHelper.storeChange(dstBalanceFrame->mEntry);
 
-    handleTasks(requestHelper, request);
     requestHelper.storeDelete(request->getKey());
     innerResult().success().fulfilled = true;
     innerResult().success().typeExt.requestType(ReviewableRequestType::PERFORM_REDEMPTION);
@@ -83,9 +91,6 @@ bool ReviewRedemptionRequestOpFrame::handlePermanentReject(stellar::Application 
                                                            stellar::LedgerManager &ledgerManager,
                                                            stellar::ReviewableRequestFrame::pointer request)
 {
-    auto& db = app.getDatabase();
-    // create reference to make sure that same alert will not be triggered again
-    createReference(storageHelper, request->getRequestor(), request->getReference());
     const auto redemption = getRedemption(request);
 
     auto& balanceHelper = storageHelper.getBalanceHelper();

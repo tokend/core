@@ -60,10 +60,6 @@ namespace stellar {
         return true;
     }
 
-// TODO rm comments on merge
-//  as i can see we need to validate all prerequisites here for signer (dst balance & asset existing)
-//  and then add signer rule resources to result vector
-//  hope im right
     bool CreateRedemptionRequestOpFrame::tryGetSignerRequirements(stellar::StorageHelper &storageHelper,
                                                                   std::vector<SignerRequirement> &result) const {
         auto &balanceHelper = storageHelper.getBalanceHelper();
@@ -101,9 +97,6 @@ namespace stellar {
             : OperationFrame(op, res, tx), mCreateRedemptionRequest(op.body.createRedemptionRequestOp()) {}
 
 
-// TODO rm comments on merge
-//  as i can see we need to do all operation's stuff in here
-//  hope im right
     bool
     CreateRedemptionRequestOpFrame::doApply(Application &app, StorageHelper &storageHelper,
                                             LedgerManager &ledgerManager) {
@@ -140,7 +133,7 @@ namespace stellar {
 
         const bool isReferenceExists = requestHelper.isReferenceExist(getSourceID(), mCreateRedemptionRequest.reference,
                                                                       0);
-        if (isReferenceExists) {
+        if (!mCreateRedemptionRequest.reference.empty() && isReferenceExists) {
             pickResultCode(CreateRedemptionRequestResultCode::REFERENCE_DUPLICATION);
             return false;
         }
@@ -156,6 +149,8 @@ namespace stellar {
                                                          app.getAdminID(),
                                                          referencePtr,
                                                          ledgerManager.getCloseTime());
+
+        request->setTasks(*mCreateRedemptionRequest.allTasks);
 
         auto &requestEntry = request->getRequestEntry();
         requestEntry.body.type(ReviewableRequestType::PERFORM_REDEMPTION);
