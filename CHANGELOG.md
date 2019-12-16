@@ -1,6 +1,12 @@
 # Changelog
 
-## 3.6.2-x.0
+## 3.6.3
+
+### Added
+
+* Redemption reviewable request
+
+## 3.6.2
 
 ### Changed
 
