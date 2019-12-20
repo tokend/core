@@ -103,6 +103,13 @@ namespace stellar {
             return false;
         }
 
+        auto redeemedAsset = storageHelper.getAssetHelper().loadActiveAsset(sourceBalance->getAsset());
+
+        if (!(getSourceID() == redeemedAsset->getOwner())) {
+            pickResultCode(CreateRedemptionRequestResultCode::REDEMPTION_NON_OWNED_ASSET_FORBIDDEN);
+            return false;
+        }
+
         if (!storageHelper.getAccountHelper().exists(mCreateRedemptionRequest.redemptionRequest.destination)) {
             pickResultCode(CreateRedemptionRequestResultCode::DST_ACCOUNT_NOT_FOUND);
             return false;

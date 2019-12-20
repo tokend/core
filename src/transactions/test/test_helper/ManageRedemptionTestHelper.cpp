@@ -111,13 +111,6 @@ CreateRedemptionRequestResult ManageRedemptionTestHelper::applyCreateRedemption(
     auto srcBalanceAfterTx = balanceHelper.loadBalance(sourceBalanceID);
     REQUIRE(srcBalanceBeforeTx->getLocked() == srcBalanceAfterTx->getLocked() - amount);
 
-    auto dstBalance = balanceHelper.loadBalance(destinationAccountID, srcBalanceBeforeTx->getAsset());
-    auto destinationBalanceID = dstBalance->getBalanceID();
-    auto dstBalanceBeforeTx = stateHelper.getBalance(destinationBalanceID);
-    auto dstBalanceAfterTx = balanceHelper.loadBalance(destinationBalanceID);
-
-    REQUIRE(dstBalanceBeforeTx->getAmount() == dstBalanceAfterTx->getAmount());
-
     return createRedemptionRequestResult;
 }
 

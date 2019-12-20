@@ -196,6 +196,7 @@ enum class CreateRedemptionRequestResultCode : std::int32_t {
   REFERENCE_DUPLICATION = -9,
   DST_ACCOUNT_NOT_FOUND = -10,
   REDEMPTION_ZERO_TASKS_NOT_ALLOWED = -11,
+  REDEMPTION_NON_OWNED_ASSET_FORBIDDEN = -12,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
@@ -229,6 +230,8 @@ template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
       return "DST_ACCOUNT_NOT_FOUND";
     case ::stellar::CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED:
       return "REDEMPTION_ZERO_TASKS_NOT_ALLOWED";
+    case ::stellar::CreateRedemptionRequestResultCode::REDEMPTION_NON_OWNED_ASSET_FORBIDDEN:
+      return "REDEMPTION_NON_OWNED_ASSET_FORBIDDEN";
     default:
       return nullptr;
     }
@@ -246,7 +249,8 @@ template<> struct xdr_traits<::stellar::CreateRedemptionRequestResultCode>
       (int32_t)::stellar::CreateRedemptionRequestResultCode::UNDERFUNDED,
       (int32_t)::stellar::CreateRedemptionRequestResultCode::REFERENCE_DUPLICATION,
       (int32_t)::stellar::CreateRedemptionRequestResultCode::DST_ACCOUNT_NOT_FOUND,
-      (int32_t)::stellar::CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED
+      (int32_t)::stellar::CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED,
+      (int32_t)::stellar::CreateRedemptionRequestResultCode::REDEMPTION_NON_OWNED_ASSET_FORBIDDEN
     };
     return _xdr_enum_vec;
   }
