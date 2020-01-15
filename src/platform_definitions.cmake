@@ -12,6 +12,7 @@ add_definitions(
 
 set(DISABLE_CONSESUS ${DISABLE_CONSESUS})
 if(DEFINED DISABLE_CONSESUS)
+    message("consensus is disabled")
     add_definitions(-DDISABLE_CONSESUS=1) 
 endif(DEFINED DISABLE_CONSESUS)
 

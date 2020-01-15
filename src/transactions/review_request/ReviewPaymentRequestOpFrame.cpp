@@ -116,6 +116,11 @@ ReviewPaymentRequestOpFrame::handleApprove(Application& app,  StorageHelper& sh,
         return false;
     }
 
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_MOVEMENT_REVIEW)) 
+    {
+        requestHelper.storeDelete(request->getKey());
+    }
+
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
     innerResult().success().typeExt.requestType(ReviewableRequestType::CREATE_PAYMENT);

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.6.4
+
+### Fixed
+
+* multiple time reviewing of movement request
+
 ## 3.6.3
 
 ### Added
