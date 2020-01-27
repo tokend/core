@@ -16,7 +16,7 @@ LicenseTestHelper::LicenseTestHelper(TestManager::pointer testManager)
 }
 
 TransactionFramePtr
-LicenseTestHelper::createLicenseOp(Account& source, SecretKey& wiredKey, Hash ledgerHash, Hash prevLicenseHash, uint64_t adminCount, uint64_t dueDate)
+LicenseTestHelper::createLicenseOp(Account& source, std::vector<SecretKey> wiredKeys, Hash ledgerHash, Hash prevLicenseHash, uint64_t adminCount, uint64_t dueDate)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::LICENSE);
@@ -26,8 +26,12 @@ LicenseTestHelper::createLicenseOp(Account& source, SecretKey& wiredKey, Hash le
     op.prevLicenseHash = prevLicenseHash;
     op.adminCount = adminCount;
     op.dueDate = dueDate;
-    auto sig = createLicenseSignature(wiredKey, signatureData);
-    op.signatures.push_back(sig);
+
+    for(auto key = wiredKeys.begin(); key != wiredKeys.end(); key++) {
+        auto sig = createLicenseSignature(*key, signatureData);
+        op.signatures.push_back(sig);
+    }
+
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);
 }
@@ -41,7 +45,7 @@ DecoratedSignature LicenseTestHelper::createLicenseSignature(SecretKey & wiredKe
 }
 
 LicenseResult
-LicenseTestHelper::applyLicenseOp(Account& source, SecretKey& wiredKey, Hash ledgerHash, Hash prevLicenseHash, uint64_t adminCount, uint64_t dueDate, LicenseResultCode expectedResult)
+LicenseTestHelper::applyLicenseOp(Account& source, std::vector<SecretKey> wiredKeys, Hash ledgerHash, Hash prevLicenseHash, uint64_t adminCount, uint64_t dueDate, LicenseResultCode expectedResult)
 {
 
     auto& licenseHelper = mTestManager->getStorageHelper().getLicenseHelper();
@@ -54,7 +58,7 @@ LicenseTestHelper::applyLicenseOp(Account& source, SecretKey& wiredKey, Hash led
         REQUIRE(actualPrevLicenseHash == prevLicenseHash);
 
     }
-    auto txFrame = createLicenseOp(source, wiredKey, ledgerHash, prevLicenseHash, adminCount, dueDate);
+    auto txFrame = createLicenseOp(source, wiredKeys, ledgerHash, prevLicenseHash, adminCount, dueDate);
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
