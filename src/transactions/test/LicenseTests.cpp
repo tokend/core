@@ -20,7 +20,9 @@ typedef std::unique_ptr<Application> appPtr;
 TEST_CASE("license", "[tx][license]")
 {
     auto wiredKey = SecretKey::random();
+    auto wiredKeys = std::vector<SecretKey>{wiredKey};
     auto devWiredKey = SecretKey::random();
+    auto devWiredKeys = std::vector<SecretKey>{devWiredKey};
 
     Config cfg = getTestConfig(0, Config::TESTDB_POSTGRESQL);
     cfg.WIRED_KEYS.emplace_back(wiredKey.getPublicKey());
@@ -45,7 +47,7 @@ TEST_CASE("license", "[tx][license]")
         auto stampResult = stampTestHelper.applyStamp(root);
         auto stampSuccess = stampResult.success();
         auto licenseResult = licenseTestHelper.applyLicenseOp(root,
-                                                              wiredKey,
+                                                              wiredKeys,
                                                               stampSuccess.ledgerHash,
                                                               stampSuccess.licenseHash,
                                                               adminCount,
@@ -59,7 +61,7 @@ TEST_CASE("license", "[tx][license]")
             auto stampResult = stampTestHelper.applyStamp(root);
             auto stampSuccess = stampResult.success();
             licenseTestHelper.applyLicenseOp(root,
-                                             wiredKey,
+                                             wiredKeys,
                                              stampSuccess.ledgerHash,
                                              stampSuccess.licenseHash,
                                              adminCount,
@@ -75,7 +77,7 @@ TEST_CASE("license", "[tx][license]")
         auto stampResult = stampTestHelper.applyStamp(root);
         auto stampSuccess = stampResult.success();
         auto licenseResult = licenseTestHelper.applyLicenseOp(root,
-                                                              devWiredKey,
+                                                              devWiredKeys,
                                                               stampSuccess.ledgerHash,
                                                               stampSuccess.licenseHash,
                                                               adminCount,
@@ -89,7 +91,7 @@ TEST_CASE("license", "[tx][license]")
             auto stampResult = stampTestHelper.applyStamp(root);
             auto stampSuccess = stampResult.success();
             licenseTestHelper.applyLicenseOp(root,
-                                             devWiredKey,
+                                             devWiredKeys,
                                              stampSuccess.ledgerHash,
                                              stampSuccess.licenseHash,
                                              adminCount,
@@ -106,7 +108,7 @@ TEST_CASE("license", "[tx][license]")
         auto stampResult = stampTestHelper.applyStamp(root);
         auto stampSuccess = stampResult.success();
         auto licenseResult = licenseTestHelper.applyLicenseOp(root,
-                                                              wiredKey,
+                                                              wiredKeys,
                                                               stampSuccess.ledgerHash,
                                                               stampSuccess.licenseHash,
                                                               adminCount,
@@ -117,12 +119,13 @@ TEST_CASE("license", "[tx][license]")
     SECTION("Bad signature")
     {
         auto wiredKey = SecretKey::random();
+        auto wiredKeys = std::vector<SecretKey>{wiredKey};
         uint64_t adminCount = 10;
         uint64_t dueDate = 1650928145L;
         auto stampResult = stampTestHelper.applyStamp(root);
         auto stampSuccess = stampResult.success();
         auto licenseResult = licenseTestHelper.applyLicenseOp(root,
-                                                              wiredKey,
+                                                              wiredKeys,
                                                               stampSuccess.ledgerHash,
                                                               stampSuccess.licenseHash,
                                                               adminCount,
@@ -141,13 +144,27 @@ TEST_CASE("license", "[tx][license]")
         Hash ledgerHash, licenseHash;
 
         auto licenseResult = licenseTestHelper.applyLicenseOp(root,
-                                                              wiredKey,
+                                                              wiredKeys,
                                                               ledgerHash,
                                                               licenseHash,
                                                               adminCount,
                                                               dueDate,
                                                               LicenseResultCode::INVALID_STAMP
         );
+    }
+
+    SECTION("Too many signatures")
+    {
+        uint64_t adminCount = 10;
+        uint64_t dueDate = 1650928145L;
+        auto stampResult = stampTestHelper.applyStamp(root);
+        auto stampSuccess = stampResult.success();
+
+        Hash ledgerHash, licenseHash;
+
+        auto licenseResult = licenseTestHelper.applyLicenseOp(
+            root, {wiredKey, wiredKey}, ledgerHash, licenseHash, adminCount,
+            dueDate, LicenseResultCode::EXTRA_SIGNATURES);
     }
 
 }
