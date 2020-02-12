@@ -129,7 +129,7 @@ bool CreateAssetOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     }
     else
     {
-        if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_AUTOREVIEW))
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_AUTOREVIEW))
         {
             autoreview = false;
         }

@@ -5,7 +5,7 @@
 ### Fixed
 
 * multiple time reviewing of movement request
-* create and update asset's operations don't return empty details if update request sent
+* autoreview in create asset/update asset operations
 
 ## 3.6.3
 
