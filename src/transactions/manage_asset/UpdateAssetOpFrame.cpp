@@ -143,6 +143,10 @@ bool UpdateAssetOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     }
     else
     {
+        if (app.getLedgerManager().shouldUse(LedgerVersion::FIX_AUTOREVIEW))
+        {
+            autoreview = false;
+        }
 
         if (!ensureUpdateRequestValid(request))
         {
