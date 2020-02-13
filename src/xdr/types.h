@@ -98,11 +98,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       return "FIX_MOVEMENT_REVIEW";
     case ::stellar::LedgerVersion::FIX_SIGNATURE_CHECK:
       return "FIX_SIGNATURE_CHECK";
-<<<<<<< HEAD
     case ::stellar::LedgerVersion::FIX_AUTOREVIEW:
       return "FIX_AUTOREVIEW";
-=======
->>>>>>> master
     default:
       return nullptr;
     }
@@ -134,12 +131,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       (int32_t)::stellar::LedgerVersion::MARK_ASSET_AS_DELETED,
       (int32_t)::stellar::LedgerVersion::FIX_MAX_SUBJECT_SIZE,
       (int32_t)::stellar::LedgerVersion::FIX_MOVEMENT_REVIEW,
-<<<<<<< HEAD
       (int32_t)::stellar::LedgerVersion::FIX_SIGNATURE_CHECK,
       (int32_t)::stellar::LedgerVersion::FIX_AUTOREVIEW
-=======
-      (int32_t)::stellar::LedgerVersion::FIX_SIGNATURE_CHECK
->>>>>>> master
     };
     return _xdr_enum_vec;
   }
