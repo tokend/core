@@ -129,6 +129,11 @@ bool CreateAssetOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     }
     else
     {
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_AUTOREVIEW))
+        {
+            autoreview = false;
+        }
+
         if (!ensureUpdateRequestValid(request))
         {
             return false;

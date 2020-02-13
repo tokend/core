@@ -5,6 +5,7 @@
 ### Fixed
 
 * multiple time reviewing of movement request
+* autoreview in create asset/update asset operations
 
 ## 3.6.3
 
