@@ -13,7 +13,7 @@ public:
     explicit LicenseTestHelper(TestManager::pointer testManager);
 
     TransactionFramePtr createLicenseOp(Account& source,
-                                        SecretKey& wiredKey,
+                                        std::vector<SecretKey> wiredKeys,
                                         Hash ledgerHash,
                                         Hash prevLicenseHash,
                                         uint64_t adminCount,
@@ -22,7 +22,7 @@ public:
     DecoratedSignature createLicenseSignature(SecretKey& wiredKey, Hash signatureData);
 
     LicenseResult applyLicenseOp(Account& source,
-                                 SecretKey& wiredKey,
+                                 std::vector<SecretKey> wiredKeys,
                                  Hash ledgerHash,
                                  Hash prevLicenseHash,
                                  uint64_t adminCount,

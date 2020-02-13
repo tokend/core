@@ -71,6 +71,7 @@ LicenseOpFrame::doApply(Application& app,
 }
 
 
+
 bool
 LicenseOpFrame::doCheckValid(Application& app)
 {
@@ -80,7 +81,31 @@ LicenseOpFrame::doCheckValid(Application& app)
         return false;
     }
 
+    if (app.getLedgerManager().shouldUse(
+        LedgerVersion::FIX_SIGNATURE_CHECK))
+    {
+        if (!signaturesUnique(app))
+        {
+            innerResult().code(LicenseResultCode::EXTRA_SIGNATURES);
+            return false;
+        }
+    }
+
     return true;
+}
+
+bool
+LicenseOpFrame::signaturesUnique(Application& app)
+{
+    set<Signature> usedKeys;
+
+    for (auto it = mLicense.signatures.begin(); it != mLicense.signatures.end();
+         ++it)
+    {
+        usedKeys.insert(it->signature);
+    }
+
+    return mLicense.signatures.size() == usedKeys.size();
 }
 
 } // namespace stellar

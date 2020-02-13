@@ -318,7 +318,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         auto stampResult = stampTestHelper.applyStamp(master);
         auto stampSuccess = stampResult.success();
         auto licenseResult = licenseTestHelper.applyLicenseOp(master,
-                                                              wiredKey,
+                                                              {wiredKey},
                                                               stampSuccess.ledgerHash,
                                                               stampSuccess.licenseHash,
                                                               adminCount,
@@ -383,7 +383,7 @@ TEST_CASE("Signer tests", "[tx][manage_signer]")
         auto stampResult = stampTestHelper.applyStamp(master);
         auto stampSuccess = stampResult.success();
         auto licenseResult = licenseTestHelper.applyLicenseOp(master,
-                                                              wiredKey,
+                                                              {wiredKey},
                                                               stampSuccess.ledgerHash,
                                                               stampSuccess.licenseHash,
                                                               adminCount,
