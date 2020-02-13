@@ -198,6 +198,7 @@ enum class LicenseResultCode : std::int32_t {
   INVALID_STAMP = -1,
   INVALID_DUE_DATE = -2,
   INVALID_SIGNATURE = -3,
+  EXTRA_SIGNATURES = -4,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LicenseResultCode>
@@ -215,6 +216,8 @@ template<> struct xdr_traits<::stellar::LicenseResultCode>
       return "INVALID_DUE_DATE";
     case ::stellar::LicenseResultCode::INVALID_SIGNATURE:
       return "INVALID_SIGNATURE";
+    case ::stellar::LicenseResultCode::EXTRA_SIGNATURES:
+      return "EXTRA_SIGNATURES";
     default:
       return nullptr;
     }
@@ -224,7 +227,8 @@ template<> struct xdr_traits<::stellar::LicenseResultCode>
       (int32_t)::stellar::LicenseResultCode::SUCCESS,
       (int32_t)::stellar::LicenseResultCode::INVALID_STAMP,
       (int32_t)::stellar::LicenseResultCode::INVALID_DUE_DATE,
-      (int32_t)::stellar::LicenseResultCode::INVALID_SIGNATURE
+      (int32_t)::stellar::LicenseResultCode::INVALID_SIGNATURE,
+      (int32_t)::stellar::LicenseResultCode::EXTRA_SIGNATURES
     };
     return _xdr_enum_vec;
   }
