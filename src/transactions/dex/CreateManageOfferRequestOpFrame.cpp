@@ -206,7 +206,7 @@ CreateManageOfferRequestOpFrame::doCheckValid(Application& app)
             }
             break;
         default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected payment request version"
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected manage offer request version"
                                                    << static_cast<int32_t>(mCreateManageOfferRequest.request.ext.v());
             throw std::runtime_error("Unexpected payment request version");
 
