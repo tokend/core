@@ -188,6 +188,31 @@ CreateManageOfferRequestOpFrame::doApply(Application& app, StorageHelper& sh,
 bool
 CreateManageOfferRequestOpFrame::doCheckValid(Application& app)
 {
+
+    if (app.getLedgerManager().shouldUse(
+            LedgerVersion::MOVEMENT_REQUESTS_DETAILS))
+    {
+        switch (mCreateManageOfferRequest.request.ext.v())
+        {
+        case LedgerVersion::EMPTY_VERSION:
+            break;
+        case LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+            if (!isValidJson(
+                    mCreateManageOfferRequest.request.ext.creatorDetails()))
+            {
+                innerResult().code(CreateManageOfferRequestResultCode ::
+                                       INVALID_CREATOR_DETAILS);
+                return false;
+            }
+            break;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected payment request version"
+                                                   << static_cast<int32_t>(mCreateManageOfferRequest.request.ext.v());
+            throw std::runtime_error("Unexpected payment request version");
+
+        }
+    }
+
     auto res = mValidator->validate(app);
     if (res == ManageOfferResultCode::SUCCESS)
     {

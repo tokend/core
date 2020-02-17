@@ -18,12 +18,19 @@ CreateManageOfferRequestTestHelper::CreateManageOfferRequestTestHelper(
 
 TransactionFramePtr
 CreateManageOfferRequestTestHelper::createManageOfferRequestTx(
-    Account& source, ManageOfferOp const& manageOfferOp, uint32* allTasks)
+    Account& source, ManageOfferOp const& manageOfferOp, uint32* allTasks,
+    longstring* creatorDetails)
 {
     Operation baseOp;
     baseOp.body.type(OperationType::CREATE_MANAGE_OFFER_REQUEST);
     auto& op = baseOp.body.createManageOfferRequestOp();
     op.request.op = manageOfferOp;
+
+    if (creatorDetails != nullptr) {
+        op.request.ext.v(LedgerVersion::MOVEMENT_REQUESTS_DETAILS);
+        op.request.ext.creatorDetails() = *creatorDetails;
+    }
+
     if (allTasks != nullptr)
     {
         op.allTasks.activate() = *allTasks;
@@ -35,9 +42,10 @@ CreateManageOfferRequestTestHelper::createManageOfferRequestTx(
 CreateManageOfferRequestResult
 CreateManageOfferRequestTestHelper::applyTx(
     Account& source, ManageOfferOp const& op, uint32* allTasks,
+    longstring* creatorDetails,
     CreateManageOfferRequestResultCode expectedResultCode)
 {
-    auto txFrame = createManageOfferRequestTx(source, op, allTasks);
+    auto txFrame = createManageOfferRequestTx(source, op, allTasks, creatorDetails);
 
     std::vector<LedgerDelta::KeyEntryMap> stateBeforeOps;
     mTestManager->applyCheck(txFrame, stateBeforeOps);

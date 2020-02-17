@@ -8,6 +8,94 @@
 using namespace xdr;
 namespace stellar {
 bool
+CreatePaymentRequest::_ext_t::from_bytes(xdr::unmarshaler& u) 
+{
+int32_t disc;bool ok = u.from_bytes(disc);
+if (!ok)
+{
+return false;
+}
+_xdr_discriminant(disc, true);switch (v_)
+{
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+    
+  return true;
+    case (int32_t)LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+return u.from_bytes(creatorDetails_);
+}
+return false;
+}
+bool
+CreatePaymentRequest::_ext_t::to_bytes(xdr::marshaler& m) const
+{
+bool ok = m.to_bytes(v_);
+if (!ok)
+{
+return false;
+}
+switch (v_)
+{
+
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+      return true;
+    case (int32_t)LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+return m.to_bytes(creatorDetails_);
+}
+return false;
+}
+void
+CreatePaymentRequest::_ext_t::count_size(xdr::measurer& m) const
+{
+m.count_size(v_);
+switch (v_)
+{
+
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+    
+  return;
+    case (int32_t)LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+return m.count_size(creatorDetails_);
+}
+}
+bool
+CreatePaymentRequest::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}
+auto& other = dynamic_cast<_ext_t const&>(other_abstract);
+if (other.v_ != v_) return false;
+switch (v_)
+{
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+    
+  return true;
+    case (int32_t)LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+return creatorDetails_ == other.creatorDetails_;
+}
+return false;
+}
+bool
+CreatePaymentRequest::_ext_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_ext_t const&>(other_abstract);
+if (v_ < other.v_) return true;
+if (other.v_ < v_) return false;
+switch (v_)
+{
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+      return false;
+    case (int32_t)LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+return creatorDetails_ < other.creatorDetails_;
+}
+return false;
+}
+bool
 CreatePaymentRequest::from_bytes(xdr::unmarshaler& u) 
 {
 bool okpaymentOp = u.from_bytes(paymentOp);

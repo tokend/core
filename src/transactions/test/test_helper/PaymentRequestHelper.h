@@ -28,7 +28,8 @@ class PaymentRequestHelper : TxHelper
 
     CreatePaymentRequest createPaymentRequest(
         BalanceID source, PaymentOp::_destination_t destination, int64_t amount,
-        PaymentFeeData feeData, std::string reference, std::string subject);
+        PaymentFeeData feeData, std::string reference, std::string subject,
+        longstring* creatorDetails = nullptr);
 
     TransactionFramePtr createPaymentRequestTx(Account& source,
                                                CreatePaymentRequest request,

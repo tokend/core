@@ -48,6 +48,7 @@ enum class CreateManageOfferRequestResultCode : std::int32_t {
   SUCCESS = 0,
   INVALID_OFFER = -1,
   MANAGE_OFFER_TASKS_NOT_FOUND = -2,
+  INVALID_CREATOR_DETAILS = -3,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreateManageOfferRequestResultCode>
@@ -63,6 +64,8 @@ template<> struct xdr_traits<::stellar::CreateManageOfferRequestResultCode>
       return "INVALID_OFFER";
     case ::stellar::CreateManageOfferRequestResultCode::MANAGE_OFFER_TASKS_NOT_FOUND:
       return "MANAGE_OFFER_TASKS_NOT_FOUND";
+    case ::stellar::CreateManageOfferRequestResultCode::INVALID_CREATOR_DETAILS:
+      return "INVALID_CREATOR_DETAILS";
     default:
       return nullptr;
     }
@@ -71,7 +74,8 @@ template<> struct xdr_traits<::stellar::CreateManageOfferRequestResultCode>
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::CreateManageOfferRequestResultCode::SUCCESS,
       (int32_t)::stellar::CreateManageOfferRequestResultCode::INVALID_OFFER,
-      (int32_t)::stellar::CreateManageOfferRequestResultCode::MANAGE_OFFER_TASKS_NOT_FOUND
+      (int32_t)::stellar::CreateManageOfferRequestResultCode::MANAGE_OFFER_TASKS_NOT_FOUND,
+      (int32_t)::stellar::CreateManageOfferRequestResultCode::INVALID_CREATOR_DETAILS
     };
     return _xdr_enum_vec;
   }

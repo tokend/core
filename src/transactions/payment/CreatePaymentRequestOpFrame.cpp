@@ -186,7 +186,8 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh,
 }
 
 bool
-CreatePaymentRequestOpFrame::tryAutoApprove(Application& app, StorageHelper& sh,
+CreatePaymentRequestOpFrame::tryAutoApprove(
+    Application& app, StorageHelper& sh,
     ReviewableRequestFrame::pointer request)
 {
     auto& ledgerManager = app.getLedgerManager();
@@ -267,6 +268,26 @@ CreatePaymentRequestOpFrame::doCheckValid(Application& app)
         innerResult().code(CreatePaymentRequestResultCode::INVALID_PAYMENT);
         innerResult().paymentCode() = PaymentResultCode::MALFORMED;
         return false;
+    }
+
+    if (app.getLedgerManager().shouldUse(
+            LedgerVersion::MOVEMENT_REQUESTS_DETAILS))
+    {
+        switch (mCreatePaymentRequest.request.ext.v()) {
+        case LedgerVersion::EMPTY_VERSION:
+            break;
+        case LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
+            if (!isValidJson(mCreatePaymentRequest.request.ext.creatorDetails())) {
+                innerResult().code(CreatePaymentRequestResultCode::INVALID_CREATOR_DETAILS);
+                return false;
+            }
+            break;
+        default:
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected payment request version"
+                << static_cast<int32_t>(mCreatePaymentRequest.request.ext.v());
+            throw std::runtime_error("Unexpected payment request version");
+
+        }
     }
 
     return true;
