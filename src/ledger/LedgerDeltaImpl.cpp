@@ -87,6 +87,7 @@ LedgerDeltaImpl::recordEntry(EntryFrame const &entry) {
 void
 LedgerDeltaImpl::deleteEntryDuplicate() {
       xdr::xvector<LedgerEntryChange> vector;
+      vector.reserve(mAllChanges.size());
       std::set<LedgerEntryChange> set;
       for(auto& changes : mAllChanges) {
           if (changes.type() == LedgerEntryChangeType::STATE) {
