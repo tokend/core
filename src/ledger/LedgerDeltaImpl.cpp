@@ -85,6 +85,21 @@ LedgerDeltaImpl::recordEntry(EntryFrame const &entry) {
 }
 
 void
+LedgerDeltaImpl::deleteEntryDuplicate() {
+    for (auto itBegin = mAllChanges.begin(); itBegin < mAllChanges.end(); ++itBegin) {
+        if (itBegin->type() == LedgerEntryChangeType::STATE) {
+            for(auto itEnd = mAllChanges.end() - 1; itEnd > itBegin; --itEnd) {
+                if (itEnd->type() == LedgerEntryChangeType::STATE) {
+                    if (itEnd->state() == itBegin->state()) {
+                        itEnd = mAllChanges.erase(itEnd);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void
 LedgerDeltaImpl::addEntry(EntryFrame::pointer entry, bool mustAddToAllChanges) {
     checkState();
     auto k = entry->getKey();

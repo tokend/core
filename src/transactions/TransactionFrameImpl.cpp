@@ -439,6 +439,7 @@ TransactionFrameImpl::applyTx(LedgerDelta& delta, TransactionMeta& meta,
                 errorEncountered = true;
             }
             stateBeforeOp.push_back(opDelta.getState());
+            opDelta.deleteEntryDuplicate();
             meta.operations().emplace_back(opDelta.getAllChanges());
 
             storageHelper.commit();

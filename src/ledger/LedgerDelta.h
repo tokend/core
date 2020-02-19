@@ -25,6 +25,7 @@ class LedgerDelta
     virtual void deleteEntry(LedgerKey const& key) = 0;
     virtual void modEntry(EntryFrame const& entry) = 0;
     virtual void recordEntry(EntryFrame const& entry) = 0;
+    virtual void deleteEntryDuplicate() = 0;
 
     virtual void mergeEntries(LedgerDelta& other) = 0;
 
