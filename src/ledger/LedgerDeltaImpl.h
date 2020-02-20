@@ -85,6 +85,7 @@ class LedgerDeltaImpl : public LedgerDelta
     void deleteEntry(LedgerKey const& key, bool mustAddToAllChanges = true);
     void modEntry(EntryFrame const& entry) override;
     void recordEntry(EntryFrame const& entry) override;
+    void deleteEntryDuplicate() override;
 
     // commits this delta into outer delta
     void commit() override;

@@ -6,6 +6,7 @@
 
 * multiple time reviewing of movement request
 * autoreview in create asset/update asset operations
+* entry duplicates in ledger changes
 
 ## 3.6.3
 
