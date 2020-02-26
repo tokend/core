@@ -6,6 +6,7 @@
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/CreateManageOfferRequestTestHelper.h"
 #include "test_helper/IssuanceRequestHelper.h"
+#include "test_helper/ManageAMLAlertTestHelper.h"
 #include "test_helper/ManageAccountRoleTestHelper.h"
 #include "test_helper/ManageAccountRuleTestHelper.h"
 #include "test_helper/ManageAssetPairTestHelper.h"
@@ -14,7 +15,6 @@
 #include "test_helper/ManageOfferTestHelper.h"
 #include "test_helper/ReviewManageOfferTestHelper.h"
 #include "transactions/dex/OfferExchange.h"
-#include "test_helper/ManageAMLAlertTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -184,8 +184,8 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
     auto baseSellerBalance =
         balanceHelper.loadBalance(seller.key.getPublicKey(), base);
     REQUIRE(baseSellerBalance);
-    auto quoteSellerBalance = balanceHelper.loadBalance(
-        seller.key.getPublicKey(), quote);
+    auto quoteSellerBalance =
+        balanceHelper.loadBalance(seller.key.getPublicKey(), quote);
     REQUIRE(quoteSellerBalance);
 
     issuanceHelper.authorizePreIssuedAmount(rootAccount, rootAccount.key, base,
@@ -207,6 +207,39 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
         SECTION("All ok")
         {
             manageOfferRequestTestHelper.applyTx(buyer, buyOp, &allTasks);
+            quoteBuyerBalance =
+                loadBalance(quoteBuyerBalance->getBalanceID(), app);
+            REQUIRE(quoteBuyerBalance->getLocked() == quoteAssetAmount);
+            REQUIRE(quoteBuyerBalance->getAmount() == 0);
+
+            baseBuyerBalance =
+                loadBalance(baseBuyerBalance->getBalanceID(), app);
+            REQUIRE(baseBuyerBalance->getLocked() == 0);
+            REQUIRE(baseBuyerBalance->getAmount() == 0);
+
+            manageOfferRequestTestHelper.applyTx(seller, sellOp, &allTasks);
+
+            baseBuyerBalance =
+                loadBalance(baseBuyerBalance->getBalanceID(), app);
+            REQUIRE(baseBuyerBalance->getLocked() == 0);
+            REQUIRE(baseBuyerBalance->getAmount() == baseAssetAmount);
+        }
+        SECTION("Invalid creator details")
+        {
+
+            longstring validDetails = "{ldkfjglkfdg}";
+
+            auto result = manageOfferRequestTestHelper.applyTx(
+                buyer, buyOp, &allTasks, &validDetails,
+                CreateManageOfferRequestResultCode::INVALID_CREATOR_DETAILS);
+        }
+
+        SECTION("Valid creator details")
+        {
+            longstring validDetails = "{}";
+
+            manageOfferRequestTestHelper.applyTx(buyer, buyOp, &allTasks,
+                                                 &validDetails);
             quoteBuyerBalance =
                 loadBalance(quoteBuyerBalance->getBalanceID(), app);
             REQUIRE(quoteBuyerBalance->getLocked() == quoteAssetAmount);
@@ -294,9 +327,10 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
                                .offer.offer()
                                .offerID;
 
-            auto offer = testManager->getStorageHelper().getOfferHelper().loadOffer(
-                buyer.key.getPublicKey(), offerID,
-                ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID);
+            auto offer =
+                testManager->getStorageHelper().getOfferHelper().loadOffer(
+                    buyer.key.getPublicKey(), offerID,
+                    ManageOfferOpFrame::SECONDARY_MARKET_ORDER_BOOK_ID);
             REQUIRE(offer->getOffer().baseAmount == baseAssetAmount);
 
             buyOp.offerID = offerID;
@@ -329,8 +363,9 @@ TEST_CASE("manage offer request", "[tx][manage_offer_request]")
             REQUIRE(reviewResult.success().typeExt.requestType() ==
                     ReviewableRequestType::MANAGE_OFFER);
 
-            amlAlertHelper.applyCreateAmlAlert(rootAccount, baseSellerBalance->getBalanceID(),
-                                               baseAssetAmount, "Inalid", "", &toAdd);
+            amlAlertHelper.applyCreateAmlAlert(
+                rootAccount, baseSellerBalance->getBalanceID(), baseAssetAmount,
+                "Inalid", "", &toAdd);
 
             reviewResult =
                 reviewManageOfferRequestHelper.applyReviewRequestTxWithTasks(

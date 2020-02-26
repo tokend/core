@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased 
+
+### Added 
+
+* Creator details handling & validation for manage offer and payment reviewable requests 
+
 ## 3.6.4
 
 ### Fixed

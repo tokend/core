@@ -90,7 +90,8 @@ PaymentRequestHelper::applyCreatePaymentRequest(
 CreatePaymentRequest
 PaymentRequestHelper::createPaymentRequest(
     BalanceID source, PaymentOp::_destination_t destination, int64_t amount,
-    PaymentFeeData feeData, std::string reference, std::string subject)
+    PaymentFeeData feeData, std::string reference, std::string subject,
+    longstring* creatorDetails)
 {
 
     PaymentOp payment;
@@ -103,6 +104,10 @@ PaymentRequestHelper::createPaymentRequest(
 
     CreatePaymentRequest request;
     request.paymentOp = payment;
+    if (creatorDetails != nullptr) {
+        request.ext.v(LedgerVersion::MOVEMENT_REQUESTS_DETAILS);
+        request.ext.creatorDetails() = *creatorDetails;
+    }
     return request;
 }
 

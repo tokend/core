@@ -49,6 +49,7 @@ enum class CreatePaymentRequestResultCode : std::int32_t {
   SUCCESS = 0,
   INVALID_PAYMENT = -1,
   PAYMENT_TASKS_NOT_FOUND = -2,
+  INVALID_CREATOR_DETAILS = -3,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreatePaymentRequestResultCode>
@@ -64,6 +65,8 @@ template<> struct xdr_traits<::stellar::CreatePaymentRequestResultCode>
       return "INVALID_PAYMENT";
     case ::stellar::CreatePaymentRequestResultCode::PAYMENT_TASKS_NOT_FOUND:
       return "PAYMENT_TASKS_NOT_FOUND";
+    case ::stellar::CreatePaymentRequestResultCode::INVALID_CREATOR_DETAILS:
+      return "INVALID_CREATOR_DETAILS";
     default:
       return nullptr;
     }
@@ -72,7 +75,8 @@ template<> struct xdr_traits<::stellar::CreatePaymentRequestResultCode>
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::CreatePaymentRequestResultCode::SUCCESS,
       (int32_t)::stellar::CreatePaymentRequestResultCode::INVALID_PAYMENT,
-      (int32_t)::stellar::CreatePaymentRequestResultCode::PAYMENT_TASKS_NOT_FOUND
+      (int32_t)::stellar::CreatePaymentRequestResultCode::PAYMENT_TASKS_NOT_FOUND,
+      (int32_t)::stellar::CreatePaymentRequestResultCode::INVALID_CREATOR_DETAILS
     };
     return _xdr_enum_vec;
   }

@@ -15,11 +15,13 @@ class CreateManageOfferRequestTestHelper : TxHelper
 
     TransactionFramePtr createManageOfferRequestTx(Account& source,
                                                    ManageOfferOp const& op,
-                                                   uint32* allTasks);
+                                                   uint32* allTasks,
+                                                   longstring* creatorDetails);
 
     CreateManageOfferRequestResult
     applyTx(Account& source, ManageOfferOp const& op,
             uint32* allTasks = nullptr,
+            longstring* creatorDetails = nullptr,
             CreateManageOfferRequestResultCode expectedResultCode =
                 CreateManageOfferRequestResultCode::SUCCESS);
 
