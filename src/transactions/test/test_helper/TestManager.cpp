@@ -31,6 +31,9 @@ namespace stellar {
 
         void TestManager::upgradeToCurrentLedgerVersion(Application& app) {
             upgradeToLedgerVersion(app, static_cast<LedgerVersion>(app.getConfig().LEDGER_PROTOCOL_VERSION));
+            //set last version for comparator
+            LedgerEntryIdCmp::currVersion = app.getLedgerManager().getLedgerVersion();
+
         }
 
         void TestManager::upgradeToLedgerVersion(Application& app, LedgerVersion ledgerVersion) {

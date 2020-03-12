@@ -37,6 +37,9 @@ getLicenseHash(LedgerKey::_license_t key);
 
 struct LedgerEntryIdCmp
 {
+    // This field is required for get correct history after change verification conditions of reference entry
+    static LedgerVersion currVersion;
+
     template <typename T, typename U>
     auto
     operator()(T const& a, U const& b) const
@@ -104,6 +107,13 @@ struct LedgerEntryIdCmp
         {
             auto const& ap = a.reference();
             auto const& bp = b.reference();
+            if (currVersion >= LedgerVersion::FIX_CRASH_CORE_WITH_PAYMENT) {
+                if (ap.reference < bp.reference)
+                    return true;
+                if (bp.reference < ap.reference)
+                    return false;
+                return ap.sender < bp.sender;
+            }
             return ap.reference < bp.reference;
         }
         case LedgerEntryType::ACCOUNT_LIMITS:

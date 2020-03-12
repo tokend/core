@@ -4,12 +4,12 @@
 
 #include "main/ApplicationUtils.h"
 #include "bucket/Bucket.h"
+#include "bucket/LedgerCmp.h"
 #include "catchup/CatchupConfiguration.h"
 #include "history/HistoryArchive.h"
 #include "history/HistoryArchiveManager.h"
 #include "historywork/GetHistoryArchiveStateWork.h"
 #include "ledger/LedgerManager.h"
-#include "main/ExternalQueue.h"
 #include "main/Maintainer.h"
 #include "main/PersistentState.h"
 #include "main/StellarCoreVersion.h"
@@ -80,6 +80,9 @@ runWithConfig(Config cfg)
             app->start();
 
             app->applyCfgCommands();
+
+            //set version for comparator
+            LedgerEntryIdCmp::currVersion = app->getLedgerManager().getLedgerVersion();
         }
     }
     catch (std::exception& e)

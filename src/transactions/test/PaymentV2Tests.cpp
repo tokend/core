@@ -9,6 +9,7 @@
 #include <transactions/test/test_helper/ManageLimitsTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRoleTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
+#include <transactions/test/test_helper/TxHelper.h>
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include "test/test_marshaler.h"
 #include "test/test.h"
@@ -45,6 +46,7 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
     auto paymentV2TestHelper = PaymentTestHelper(testManager);
     auto setFeesTestHelper = SetFeesTestHelper(testManager);
     auto manageLimitsTestHelper = ManageLimitsTestHelper(testManager);
+    auto txHelper = TxHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
@@ -207,6 +209,39 @@ TEST_CASE("payment v2", "[tx][payment_v2]") {
                                                      "", "", nullptr,
                                                      PaymentResultCode::MALFORMED);
             }
+        }
+        SECTION("Payer to recipient and recipient to payer in one tx with same reference")
+        {
+            Operation opFirst;
+            opFirst.body.type(OperationType::PAYMENT);
+            opFirst.body.paymentOp() = paymentV2TestHelper.makePayment(payerBalance->getBalanceID(), destination,
+                                                                       paymentAmount,
+                                                                       paymentFeeData, "", "qweqwe");
+            opFirst.sourceAccount.activate() = payer.key.getPublicKey();
+
+            auto recipientBalance = balanceHelper.loadBalance(recipient.key.getPublicKey(), paymentAsset);
+            auto payerDestination = paymentV2TestHelper.createDestinationForAccount(payer.key.getPublicKey());
+            int64_t recipientAmount = paymentAmount - 90000000;
+            auto sFeeData = paymentV2TestHelper.createFeeData(5000000, 4500000);
+            auto dFeeData = paymentV2TestHelper.createFeeData(5000000, 0);
+            auto recipientFeeData = paymentV2TestHelper.createPaymentFeeData(sFeeData, dFeeData, false);
+
+            Operation opSecond;
+            opSecond.body.type(OperationType::PAYMENT);
+            opSecond.body.paymentOp() = paymentV2TestHelper.makePayment(recipientBalance->getBalanceID(), payerDestination,
+                                                                        recipientAmount,
+                                                                        recipientFeeData, "", "qweqwe");
+            opSecond.sourceAccount.activate() = recipient.key.getPublicKey();
+
+            std::vector<Operation> ops;
+            ops.reserve(2);
+            ops.emplace_back(opFirst);
+            ops.emplace_back(opSecond);
+
+            auto res = txHelper.txFromOperations(payer, ops);
+            res->addSignature(recipient.key);
+            bool isApply = testManager->applyCheck(res);
+            REQUIRE(isApply);
         }
         SECTION("Amount is less than destination fee") {
             paymentV2TestHelper.applyPaymentTx(payer, payerBalance->getBalanceID(),

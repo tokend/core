@@ -38,6 +38,7 @@ enum class LedgerVersion : std::int32_t {
   FIX_SIGNATURE_CHECK = 25,
   FIX_AUTOREVIEW = 26,
   MOVEMENT_REQUESTS_DETAILS = 27,
+  FIX_CRASH_CORE_WITH_PAYMENT = 28,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerVersion>
@@ -103,6 +104,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       return "FIX_AUTOREVIEW";
     case ::stellar::LedgerVersion::MOVEMENT_REQUESTS_DETAILS:
       return "MOVEMENT_REQUESTS_DETAILS";
+    case ::stellar::LedgerVersion::FIX_CRASH_CORE_WITH_PAYMENT:
+      return "FIX_CRASH_CORE_WITH_PAYMENT";
     default:
       return nullptr;
     }
@@ -136,7 +139,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       (int32_t)::stellar::LedgerVersion::FIX_MOVEMENT_REVIEW,
       (int32_t)::stellar::LedgerVersion::FIX_SIGNATURE_CHECK,
       (int32_t)::stellar::LedgerVersion::FIX_AUTOREVIEW,
-      (int32_t)::stellar::LedgerVersion::MOVEMENT_REQUESTS_DETAILS
+      (int32_t)::stellar::LedgerVersion::MOVEMENT_REQUESTS_DETAILS,
+      (int32_t)::stellar::LedgerVersion::FIX_CRASH_CORE_WITH_PAYMENT
     };
     return _xdr_enum_vec;
   }

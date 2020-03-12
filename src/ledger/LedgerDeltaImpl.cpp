@@ -3,9 +3,7 @@
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
 #include "ledger/LedgerDeltaImpl.h"
-#include "LedgerDeltaImpl.h"
 #include "ledger/EntryHelper.h"
-#include "ledger/KeyValueEntryFrame.h"
 #include "ledger/StorageHelperImpl.h"
 #include "main/Application.h"
 #include "main/Config.h"
