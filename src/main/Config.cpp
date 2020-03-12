@@ -7,8 +7,6 @@
 #include "crypto/Hex.h"
 //#include "crypto/KeyUtils.h"
 #include "herder/Herder.h"
-#include "history/HistoryArchive.h"
-#include "ledger/LedgerManager.h"
 #include "main/ExternalQueue.h"
 #include "main/StellarCoreVersion.h"
 #include "scp/LocalNode.h"
@@ -25,7 +23,7 @@
 namespace stellar
 {
 const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION =
-        static_cast<uint32_t>(LedgerVersion::MOVEMENT_REQUESTS_DETAILS);
+        static_cast<uint32_t>(LedgerVersion::FIX_CRASH_CORE_WITH_PAYMENT);
 
 // Options that must only be used for testing
 static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {

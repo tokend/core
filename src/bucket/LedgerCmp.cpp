@@ -2,6 +2,8 @@
 
 namespace stellar
 {
+LedgerVersion LedgerEntryIdCmp::currVersion = LedgerVersion::EMPTY_VERSION;
+
 Hash
 getLicenseHash(LicenseEntry mLicense)
 {

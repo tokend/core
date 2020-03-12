@@ -125,6 +125,9 @@ Upgrades::applyTo(LedgerUpgrade const& upgrade, LedgerDelta& delta)
     {
     case LedgerUpgradeType::VERSION:
         delta.getHeader().ledgerVersion = upgrade.newLedgerVersion();
+
+        //set version for comparator
+        LedgerEntryIdCmp::currVersion = LedgerVersion(upgrade.newLedgerVersion());
         break;
     case LedgerUpgradeType::MAX_TX_SET_SIZE:
         delta.getHeader().maxTxSetSize = upgrade.newMaxTxSetSize();

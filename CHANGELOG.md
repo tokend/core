@@ -6,6 +6,10 @@
 
 * Creator details handling & validation for manage offer and payment reviewable requests 
 
+### Fixed
+
+* Crash core with payment transaction 
+
 ## 3.6.4
 
 ### Fixed
