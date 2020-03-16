@@ -288,6 +288,13 @@ struct LedgerEntryIdCmp
 
             return as.id < bs.id;
         }
+        case LedgerEntryType::DATA:
+        {
+            auto const& ad = a.data();
+            auto const& bd = b.data();
+
+            return ad.id < bd.id;
+        }
         default:
         {
             throw std::runtime_error(

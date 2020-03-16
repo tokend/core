@@ -534,6 +534,7 @@ enum class LedgerEntryType : std::int32_t {
   ACCOUNT_SPECIFIC_RULE = 36,
   INITIATE_KYC_RECOVERY = 37,
   SWAP = 38,
+  DATA = 39,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerEntryType>
@@ -615,6 +616,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       return "INITIATE_KYC_RECOVERY";
     case ::stellar::LedgerEntryType::SWAP:
       return "SWAP";
+    case ::stellar::LedgerEntryType::DATA:
+      return "DATA";
     default:
       return nullptr;
     }
@@ -656,7 +659,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       (int32_t)::stellar::LedgerEntryType::VOTE,
       (int32_t)::stellar::LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
       (int32_t)::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY,
-      (int32_t)::stellar::LedgerEntryType::SWAP
+      (int32_t)::stellar::LedgerEntryType::SWAP,
+      (int32_t)::stellar::LedgerEntryType::DATA
     };
     return _xdr_enum_vec;
   }
@@ -984,6 +988,9 @@ enum class OperationType : std::int32_t {
   OPEN_SWAP = 54,
   CLOSE_SWAP = 55,
   CREATE_REDEMPTION_REQUEST = 56,
+  CREATE_DATA = 57,
+  UPDATE_DATA = 58,
+  REMOVE_DATA = 59,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1093,6 +1100,12 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CLOSE_SWAP";
     case ::stellar::OperationType::CREATE_REDEMPTION_REQUEST:
       return "CREATE_REDEMPTION_REQUEST";
+    case ::stellar::OperationType::CREATE_DATA:
+      return "CREATE_DATA";
+    case ::stellar::OperationType::UPDATE_DATA:
+      return "UPDATE_DATA";
+    case ::stellar::OperationType::REMOVE_DATA:
+      return "REMOVE_DATA";
     default:
       return nullptr;
     }
@@ -1148,7 +1161,10 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::REMOVE_ASSET,
       (int32_t)::stellar::OperationType::OPEN_SWAP,
       (int32_t)::stellar::OperationType::CLOSE_SWAP,
-      (int32_t)::stellar::OperationType::CREATE_REDEMPTION_REQUEST
+      (int32_t)::stellar::OperationType::CREATE_REDEMPTION_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_DATA,
+      (int32_t)::stellar::OperationType::UPDATE_DATA,
+      (int32_t)::stellar::OperationType::REMOVE_DATA
     };
     return _xdr_enum_vec;
   }

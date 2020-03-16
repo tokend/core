@@ -1104,6 +1104,65 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+SignerRuleResource::_data_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+SignerRuleResource::_data_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+SignerRuleResource::_data_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+SignerRuleResource::_data_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_data_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+SignerRuleResource::_data_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_data_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 SignerRuleResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -1144,6 +1203,8 @@ return u.from_bytes(initiateKYCRecovery_);
 return u.from_bytes(accountSpecificRuleExt_);
   case (int32_t)LedgerEntryType::SWAP:
 return u.from_bytes(swap_);
+  case (int32_t)LedgerEntryType::DATA:
+return u.from_bytes(data_);
   default:
 return u.from_bytes(ext_);
 }
@@ -1190,6 +1251,8 @@ return m.to_bytes(initiateKYCRecovery_);
 return m.to_bytes(accountSpecificRuleExt_);
   case (int32_t)LedgerEntryType::SWAP:
 return m.to_bytes(swap_);
+  case (int32_t)LedgerEntryType::DATA:
+return m.to_bytes(data_);
   default:
 return m.to_bytes(ext_);
 }
@@ -1233,6 +1296,8 @@ return m.count_size(initiateKYCRecovery_);
 return m.count_size(accountSpecificRuleExt_);
   case (int32_t)LedgerEntryType::SWAP:
 return m.count_size(swap_);
+  case (int32_t)LedgerEntryType::DATA:
+return m.count_size(data_);
   default:
 return m.count_size(ext_);
 }
@@ -1279,6 +1344,8 @@ return initiateKYCRecovery_ == other.initiateKYCRecovery_;
 return accountSpecificRuleExt_ == other.accountSpecificRuleExt_;
   case (int32_t)LedgerEntryType::SWAP:
 return swap_ == other.swap_;
+  case (int32_t)LedgerEntryType::DATA:
+return data_ == other.data_;
   default:
 return ext_ == other.ext_;
 }
@@ -1326,6 +1393,8 @@ return initiateKYCRecovery_ < other.initiateKYCRecovery_;
 return accountSpecificRuleExt_ < other.accountSpecificRuleExt_;
   case (int32_t)LedgerEntryType::SWAP:
 return swap_ < other.swap_;
+  case (int32_t)LedgerEntryType::DATA:
+return data_ < other.data_;
   default:
 return ext_ < other.ext_;
 }

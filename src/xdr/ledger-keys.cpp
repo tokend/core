@@ -3991,6 +3991,65 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+LedgerKey::_data_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okid = u.from_bytes(id);
+if (!okid)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+LedgerKey::_data_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okid = m.to_bytes(id);
+if (!okid)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+LedgerKey::_data_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(id);
+m.count_size(ext);
+}
+bool
+LedgerKey::_data_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_data_t const&>(other_abstract);return true
+&& (id== other.id)
+&& (ext== other.ext)
+;}
+bool
+LedgerKey::_data_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_data_t const&>(other_abstract);
+if (id < other.id) return true;
+if (other.id < id) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 LedgerKey::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -4062,6 +4121,8 @@ return u.from_bytes(vote_);
 return u.from_bytes(accountSpecificRule_);
   case (int32_t)LedgerEntryType::SWAP:
 return u.from_bytes(swap_);
+  case (int32_t)LedgerEntryType::DATA:
+return u.from_bytes(data_);
 }
 return false;
 }
@@ -4138,6 +4199,8 @@ return m.to_bytes(vote_);
 return m.to_bytes(accountSpecificRule_);
   case (int32_t)LedgerEntryType::SWAP:
 return m.to_bytes(swap_);
+  case (int32_t)LedgerEntryType::DATA:
+return m.to_bytes(data_);
 }
 return false;
 }
@@ -4210,6 +4273,8 @@ return m.count_size(vote_);
 return m.count_size(accountSpecificRule_);
   case (int32_t)LedgerEntryType::SWAP:
 return m.count_size(swap_);
+  case (int32_t)LedgerEntryType::DATA:
+return m.count_size(data_);
 }
 }
 bool
@@ -4285,6 +4350,8 @@ return vote_ == other.vote_;
 return accountSpecificRule_ == other.accountSpecificRule_;
   case (int32_t)LedgerEntryType::SWAP:
 return swap_ == other.swap_;
+  case (int32_t)LedgerEntryType::DATA:
+return data_ == other.data_;
 }
 return false;
 }
@@ -4362,6 +4429,8 @@ return vote_ < other.vote_;
 return accountSpecificRule_ < other.accountSpecificRule_;
   case (int32_t)LedgerEntryType::SWAP:
 return swap_ < other.swap_;
+  case (int32_t)LedgerEntryType::DATA:
+return data_ < other.data_;
 }
 return false;
 }
