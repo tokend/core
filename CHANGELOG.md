@@ -8,7 +8,8 @@
 
 ### Fixed
 
-* Crash core with payment transaction 
+* Crash core with payment transaction
+* Exception during invest to immediate sale
 
 ## 3.6.4
 
