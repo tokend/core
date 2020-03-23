@@ -17,7 +17,6 @@ class MockLedgerDelta : public LedgerDelta
     MOCK_METHOD1(deleteEntry, void(LedgerKey const& key));
     MOCK_METHOD1(modEntry, void(EntryFrame const& entry));
     MOCK_METHOD1(recordEntry, void(EntryFrame const& entry));
-    MOCK_METHOD0(deleteEntryDuplicate, void());
     MOCK_METHOD1(mergeEntries, void(LedgerDelta& other));
     MOCK_METHOD0(commit, void());
     MOCK_METHOD0(rollback, void());
@@ -26,7 +25,9 @@ class MockLedgerDelta : public LedgerDelta
     MOCK_CONST_METHOD0(getLiveEntries, std::vector<LedgerEntry>());
     MOCK_CONST_METHOD0(getDeadEntries, std::vector<LedgerKey>());
     MOCK_CONST_METHOD0(getChanges, LedgerEntryChanges());
-    MOCK_CONST_METHOD0(getAllChanges, const LedgerEntryChanges&());
+    MOCK_CONST_METHOD0(getModChanges, const LedgerEntryChanges&());
+    MOCK_CONST_METHOD0(getStateChanges, const std::set<LedgerEntryChange>&());
+    MOCK_CONST_METHOD0(getAllChanges, LedgerEntryChanges());
     MOCK_CONST_METHOD1(checkAgainstDatabase, void(Application& app));
     MOCK_CONST_METHOD0(getState, KeyEntryMap());
     MOCK_CONST_METHOD0(isStateActive, bool());

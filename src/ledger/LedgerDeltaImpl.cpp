@@ -83,25 +83,6 @@ LedgerDeltaImpl::recordEntry(EntryFrame const &entry) {
 }
 
 void
-LedgerDeltaImpl::deleteEntryDuplicate() {
-      xdr::xvector<LedgerEntryChange> vector;
-      vector.reserve(mAllChanges.size());
-      std::set<LedgerEntryChange> set;
-      for(auto& changes : mAllChanges) {
-          if (changes.type() == LedgerEntryChangeType::STATE) {
-              set.emplace(changes);
-          } else {
-              vector.emplace_back(changes);
-          }
-      }
-
-      for(auto& s : set) {
-          vector.emplace_back(s);
-      }
-      mAllChanges = std::move(vector);
-}
-
-void
 LedgerDeltaImpl::addEntry(EntryFrame::pointer entry, bool mustAddToAllChanges) {
     checkState();
     auto k = entry->getKey();
@@ -118,8 +99,8 @@ LedgerDeltaImpl::addEntry(EntryFrame::pointer entry, bool mustAddToAllChanges) {
 
     if (mustAddToAllChanges) {
         // add to detailed changes
-        mAllChanges.emplace_back(LedgerEntryChangeType::CREATED);
-        mAllChanges.back().created() = entry->mEntry;
+        mModChanges.emplace_back(LedgerEntryChangeType::CREATED);
+        mModChanges.back().created() = entry->mEntry;
     }
 }
 
@@ -145,8 +126,8 @@ void LedgerDeltaImpl::deleteEntry(LedgerKey const &k, bool mustAddToAllChanges) 
 
     if (mustAddToAllChanges) {
         // add key to detailed changes
-        mAllChanges.emplace_back(LedgerEntryChangeType::REMOVED);
-        mAllChanges.back().removed() = k;
+        mModChanges.emplace_back(LedgerEntryChangeType::REMOVED);
+        mModChanges.back().removed() = k;
     }
 }
 
@@ -176,8 +157,8 @@ LedgerDeltaImpl::modEntry(EntryFrame::pointer entry, bool mustAddToAllChanges) {
 
     if (mustAddToAllChanges) {
         // add to detailed changes
-        mAllChanges.emplace_back(LedgerEntryChangeType::UPDATED);
-        mAllChanges.back().updated() = entry->mEntry;
+        mModChanges.emplace_back(LedgerEntryChangeType::UPDATED);
+        mModChanges.back().updated() = entry->mEntry;
     }
 }
 
@@ -187,8 +168,9 @@ LedgerDeltaImpl::recordEntry(EntryFrame::pointer entry) {
     // keeps the old one around
     mPrevious.insert(std::make_pair(entry->getKey(), entry));
 
-    mAllChanges.emplace_back(LedgerEntryChangeType::STATE);
-    mAllChanges.back().state() = entry->mEntry;
+    LedgerEntryChange state(LedgerEntryChangeType::STATE);
+    state.state() = entry->mEntry;
+    mStateChanges.emplace(state);
 }
 
 void
@@ -214,8 +196,12 @@ LedgerDeltaImpl::mergeEntries(LedgerDelta &other) {
         }
     }
 
-    for (auto &ch : other.getAllChanges()) {
-        mAllChanges.push_back(ch);
+    for (auto &ch : other.getModChanges()) {
+        mModChanges.push_back(ch);
+    }
+
+    for (auto &stateChanges : other.getStateChanges()) {
+        mStateChanges.emplace(stateChanges);
     }
 }
 
@@ -295,8 +281,22 @@ LedgerDeltaImpl::getChanges() const {
 }
 
 const LedgerEntryChanges &
+LedgerDeltaImpl::getModChanges() const {
+    return mModChanges;
+}
+
+const std::set<LedgerEntryChange> &
+LedgerDeltaImpl::getStateChanges() const {
+    return mStateChanges;
+}
+
+LedgerEntryChanges
 LedgerDeltaImpl::getAllChanges() const {
-    return mAllChanges;
+    LedgerEntryChanges changes;
+    changes.reserve(mModChanges.size() + mStateChanges.size());
+    changes = mModChanges;
+    changes.insert(changes.end(), mStateChanges.begin(), mStateChanges.end());
+    return changes;
 }
 
 std::vector<LedgerEntry>
