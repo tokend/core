@@ -10,6 +10,7 @@
 
 * Crash core with payment transaction
 * Exception during invest to immediate sale
+* Wildcard value does not work for the 'payment_tasks:*'
 
 ## 3.6.4
 

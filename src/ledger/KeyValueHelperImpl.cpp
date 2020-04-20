@@ -237,7 +237,6 @@ KeyValueHelperImpl::loadKeyValues(
     le.data.type(LedgerEntryType::KEY_VALUE);
     KeyValueEntry& oe = le.data.keyValue();
     std::string value;
-    string256 key;
     int version;
 
     statement& st = prep.statement();
