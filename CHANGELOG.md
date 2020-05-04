@@ -2,6 +2,8 @@
 
 ## Unreleased 
 
+## 3.6.5
+
 ### Added 
 
 * Creator details handling & validation for manage offer and payment reviewable requests 
