@@ -744,6 +744,33 @@ TEST_CASE("Sale", "[tx][sale]")
             }
         }
 
+        SECTION("pending issuance less then amount")
+        {
+            uint64_t startTime = testManager->getLedgerManager().getCloseTime();
+            uint64_t endTime = startTime + 1000;
+
+            int64_t amount = 1100000000;
+            int64_t fee = 1000;
+            uint64_t price = 2 * ONE;
+            int64_t cap = amount * 2;
+
+            auto saleRequest = saleRequestHelper.createSaleRequest(baseAsset, quoteAsset, startTime, endTime,
+                                                                   cap, cap, "{}",
+                                                                   {saleRequestHelper.createSaleQuoteAsset(quoteAsset, price)},
+                                                                   maxIssuanceAmount, SaleType::IMMEDIATE);
+            saleRequestHelper.applyCreateSaleRequest(owner, 0, saleRequest, 0);
+            auto sales = testManager->getStorageHelper().getSaleHelper().loadSalesForOwner(owner.key.getPublicKey());
+            uint64_t saleID = sales[0]->getID();
+
+            uint64_t quoteBalanceAmount = 1000000;
+            issuanceHelper.applyCreateIssuanceRequest(root, quoteAsset, quoteBalanceAmount, quoteBalance,
+                                                      SecretKey::random().getStrKeyPublic(), &issuanceTasks);
+
+            auto manageOffer = OfferManager::buildManageOfferOp(baseBalance, quoteBalance, true, amount,
+                                                                saleRequest.quoteAssets[0].price, fee, 0, saleID);
+            participateHelper.applyManageOffer(participant, manageOffer, ManageOfferResultCode::PENDING_ISSUANCE_LESS_THEN_AMOUNT);
+        }
+
         SECTION("invest fee")
         {
             auto offerFee = setFeesTestHelper.createFeeEntry(FeeType::OFFER_FEE, quoteAsset, 0, 2 * ONE,

@@ -25,7 +25,6 @@ class LedgerDelta
     virtual void deleteEntry(LedgerKey const& key) = 0;
     virtual void modEntry(EntryFrame const& entry) = 0;
     virtual void recordEntry(EntryFrame const& entry) = 0;
-    virtual void deleteEntryDuplicate() = 0;
 
     virtual void mergeEntries(LedgerDelta& other) = 0;
 
@@ -42,7 +41,9 @@ class LedgerDelta
     virtual std::vector<LedgerKey> getDeadEntries() const = 0;
 
     virtual LedgerEntryChanges getChanges() const = 0;
-    virtual const LedgerEntryChanges& getAllChanges() const = 0;
+    virtual const LedgerEntryChanges& getModChanges() const = 0;
+    virtual const std::set<LedgerEntryChange>& getStateChanges() const = 0;
+    virtual LedgerEntryChanges getAllChanges() const = 0;
 
     virtual KeyEntryMap getState() const = 0;
 

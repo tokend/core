@@ -32,7 +32,8 @@ class LedgerDeltaImpl : public LedgerDelta
     std::set<LedgerKey, LedgerEntryIdCmp> mDelete;
 
     // all created/changed ledger entries:
-    LedgerEntryChanges mAllChanges;
+    LedgerEntryChanges mModChanges;
+    std::set<LedgerEntryChange> mStateChanges;
 
     KeyEntryMap mPrevious;
 
@@ -85,7 +86,6 @@ class LedgerDeltaImpl : public LedgerDelta
     void deleteEntry(LedgerKey const& key, bool mustAddToAllChanges = true);
     void modEntry(EntryFrame const& entry) override;
     void recordEntry(EntryFrame const& entry) override;
-    void deleteEntryDuplicate() override;
 
     // commits this delta into outer delta
     void commit() override;
@@ -100,7 +100,9 @@ class LedgerDeltaImpl : public LedgerDelta
     std::vector<LedgerKey> getDeadEntries() const override;
 
     LedgerEntryChanges getChanges() const override;
-    const LedgerEntryChanges& getAllChanges() const override;
+    const LedgerEntryChanges& getModChanges() const override;
+    const std::set<LedgerEntryChange>& getStateChanges() const override;
+    LedgerEntryChanges getAllChanges() const override;
 
     KeyEntryMap
     getState() const override

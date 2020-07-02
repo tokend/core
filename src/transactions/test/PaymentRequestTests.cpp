@@ -2,6 +2,7 @@
 #include "test/test_marshaler.h"
 #include "test_helper/ManageKeyValueTestHelper.h"
 #include <ledger/BalanceHelper.h>
+#include <ledger/ReviewableRequestHelper.h>
 #include "ledger/StorageHelper.h"
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
@@ -46,8 +47,10 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
     ManageAccountRoleTestHelper manageAccountRoleTestHelper(testManager);
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
 
+    auto& storageHelper = testManager->getStorageHelper();
     // db helpers
-    auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
+    auto& balanceHelper = storageHelper.getBalanceHelper();
+    auto& reviewableRequestHelper = storageHelper.getReviewableRequestHelper();
 
     auto root = Account{getRoot(), Salt(0)};
     auto payer = Account{SecretKey::random(), Salt(1)};
@@ -453,6 +456,48 @@ TEST_CASE("payment requests", "[tx][payment][reviewable_request]")
 //            }
 
 
+        }
+    }
+
+    SECTION("Nullptr tasks")
+    {
+        uint32_t *nullptrTasks = nullptr;
+        uint32_t zeroTasksValue = 0;
+
+        SECTION("key 'payment_tasks:*' (in key_value_entry table) does not work for the wildcard value")
+        {
+            longstring paymentKey = ManageKeyValueOpFrame::makePaymentTasksKey("*");
+            manageKeyValueHelper.setKey(paymentKey)->setUi32Value(zeroTasksValue);
+            manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT,
+                                         true);
+
+            auto request = paymentRequestTestHelper.createPaymentRequest(
+                    payerBalance->getBalanceID(), destination, paymentAmount,
+                    paymentFeeData, "", "");
+
+            paymentRequestTestHelper.applyCreatePaymentRequest(
+                    payer, request, nullptrTasks);
+        }
+
+        SECTION("all tasks in response is equally tasks in key") {
+            uint32_t tasksValue = 2;
+            longstring paymentKey = ManageKeyValueOpFrame::makePaymentTasksKey(paymentAsset);
+            manageKeyValueHelper.setKey(paymentKey)->setUi32Value(tasksValue);
+            manageKeyValueHelper.doApply(testManager->getApp(), ManageKVAction::PUT,
+                                        true);
+
+            auto request = paymentRequestTestHelper.createPaymentRequest(
+                    payerBalance->getBalanceID(), destination, paymentAmount,
+                    paymentFeeData, "", "");
+
+            auto result = paymentRequestTestHelper.applyCreatePaymentRequest(
+                    payer, request, nullptrTasks);
+
+            auto requestID = result.success().requestID;
+            auto dbRequest = reviewableRequestHelper.loadRequest(requestID);
+
+            REQUIRE(dbRequest->getRequestEntry().tasks.allTasks == tasksValue);
+            REQUIRE(tasksValue != zeroTasksValue);
         }
     }
 }

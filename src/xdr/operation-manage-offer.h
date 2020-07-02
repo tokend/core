@@ -239,6 +239,7 @@ enum class ManageOfferResultCode : std::int32_t {
   REQUIRES_VERIFICATION = -27,
   INCORRECT_AMOUNT_PRECISION = -28,
   SPECIFIC_RULE_FORBIDS = -29,
+  PENDING_ISSUANCE_LESS_THEN_AMOUNT = -30,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ManageOfferResultCode>
@@ -308,6 +309,8 @@ template<> struct xdr_traits<::stellar::ManageOfferResultCode>
       return "INCORRECT_AMOUNT_PRECISION";
     case ::stellar::ManageOfferResultCode::SPECIFIC_RULE_FORBIDS:
       return "SPECIFIC_RULE_FORBIDS";
+    case ::stellar::ManageOfferResultCode::PENDING_ISSUANCE_LESS_THEN_AMOUNT:
+      return "PENDING_ISSUANCE_LESS_THEN_AMOUNT";
     default:
       return nullptr;
     }
@@ -343,7 +346,8 @@ template<> struct xdr_traits<::stellar::ManageOfferResultCode>
       (int32_t)::stellar::ManageOfferResultCode::SOURCE_BALANCE_LOCK_OVERFLOW,
       (int32_t)::stellar::ManageOfferResultCode::REQUIRES_VERIFICATION,
       (int32_t)::stellar::ManageOfferResultCode::INCORRECT_AMOUNT_PRECISION,
-      (int32_t)::stellar::ManageOfferResultCode::SPECIFIC_RULE_FORBIDS
+      (int32_t)::stellar::ManageOfferResultCode::SPECIFIC_RULE_FORBIDS,
+      (int32_t)::stellar::ManageOfferResultCode::PENDING_ISSUANCE_LESS_THEN_AMOUNT
     };
     return _xdr_enum_vec;
   }

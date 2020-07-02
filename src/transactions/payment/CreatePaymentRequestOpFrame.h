@@ -37,7 +37,7 @@ class CreatePaymentRequestOpFrame : public OperationFrame
     bool tryAutoApprove(Application& app, StorageHelper& sh,
                         ReviewableRequestFrame::pointer request);
 
-    std::vector<std::string> makeTasksKeyVector(AssetCode const& assetCode);
+    std::vector<std::string> makeTasksKeyVector(LedgerManager& lm, AssetCode const& assetCode);
 
   public:
     CreatePaymentRequestOpFrame(Operation const& op, OperationResult& res,

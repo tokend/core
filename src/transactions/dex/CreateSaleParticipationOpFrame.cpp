@@ -289,6 +289,13 @@ CreateSaleParticipationOpFrame::doApply(Application& app,
     // Only for `IMMEDIATE` sale we create counter offer immediately
     if (sale->getSaleType() == SaleType::IMMEDIATE)
     {
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_INVEST_TO_IMMEDIATE_SALE) &&
+            storageHelper.getAssetHelper().mustLoadAsset(sale->getBaseAsset())->getPendingIssuance() < mManageOffer.amount)
+        {
+            innerResult().code(ManageOfferResultCode::PENDING_ISSUANCE_LESS_THEN_AMOUNT);
+            return false;
+        }
+
         createImmediateSaleCounterOffer(app, storageHelper, ledgerManager, sale,
                                         quoteAmount);
     }

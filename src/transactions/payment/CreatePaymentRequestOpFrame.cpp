@@ -155,7 +155,7 @@ CreatePaymentRequestOpFrame::doApply(Application& app, StorageHelper& sh,
     auto& keyValueHelper = sh.getKeyValueHelper();
     uint32_t allTasks;
     if (!keyValueHelper.loadTasks(allTasks,
-                                  makeTasksKeyVector(sourceBalance->getAsset()),
+                                  makeTasksKeyVector(lm, sourceBalance->getAsset()),
                                   mCreatePaymentRequest.allTasks.get()))
     {
         innerResult().code(
@@ -211,9 +211,15 @@ CreatePaymentRequestOpFrame::tryAutoApprove(
 }
 
 std::vector<std::string>
-CreatePaymentRequestOpFrame::makeTasksKeyVector(AssetCode const& code)
+CreatePaymentRequestOpFrame::makeTasksKeyVector(LedgerManager& lm, AssetCode const& code)
 {
-    return {ManageKeyValueOpFrame::makePaymentTasksKey(code)};
+    std::vector<std::string> tasksKey;
+    tasksKey.emplace_back(ManageKeyValueOpFrame::makePaymentTasksKey(code));
+    if (lm.shouldUse(LedgerVersion::FIX_PAYMENT_TASKS_WILDCARD_VALUE)) {
+        tasksKey.emplace_back(ManageKeyValueOpFrame::makePaymentTasksKey("*"));
+    }
+
+    return tasksKey;
 }
 
 bool
