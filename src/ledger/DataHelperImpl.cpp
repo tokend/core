@@ -5,12 +5,12 @@
 
 using namespace soci;
 
-namespace stellar 
+namespace stellar
 {
-DataHelperImpl::DataHelperImpl(StorageHelper& storageHelper) 
-        : mStorageHelper(storageHelper) 
+DataHelperImpl::DataHelperImpl(StorageHelper& storageHelper)
+        : mStorageHelper(storageHelper)
 {
-    mDataColumnSelector = "select id, type, value, version, lastmodified from data ";
+    mDataColumnSelector = "select id, type, value, owner, version, lastmodified from data ";
 }
 
 void
@@ -24,13 +24,14 @@ DataHelperImpl::dropAll()
                        "id           BIGINT NOT NULL PRIMARY KEY,"
                        "type         NUMERIC(20,0) NOT NULL,"
                        "value        text   NOT NULL,"
+                       "owner        VARCHAR(56)   NOT NULL,"
                        "version      INT    NOT NULL,"
                        "lastmodified INT    NOT NULL"
                        ");";
 }
 
 void
-DataHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert) 
+DataHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 {
     auto dataFrame = std::make_shared<DataFrame>(entry);
     auto dataEntry = dataFrame->getData();
@@ -42,24 +43,25 @@ DataHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     auto version = static_cast<int32_t>(dataEntry.ext.v());
 
     std::string sql;
-    if (insert) 
+    if (insert)
     {
-        sql = "INSERT INTO data (id, type, value, version, lastmodified) "
-              "VALUES (:id, :t, :val, :v, :lm)";
+        sql = "INSERT INTO data (id, type, value, owner, version, lastmodified) "
+              "VALUES (:id, :t, :val, :o, :v, :lm)";
     }
-    else 
+    else
     {
-        sql = "UPDATE data SET type = :t, value = :val, version = :v, lastmodified = :lm"
+        sql = "UPDATE data SET type = :t, value = :val, owner = :o, version = :v, lastmodified = :lm"
               " WHERE id = :id";
     }
 
     Database& db = getDatabase();
     auto prep = db.getPreparedStatement(sql);
-
+    auto ownerID = PubKeyUtils::toStrKey(dataEntry.owner);
     statement& st = prep.statement();
     st.exchange(use(dataEntry.id, "id"));
     st.exchange(use(dataEntry.type, "t"));
     st.exchange(use(dataEntry.value, "val"));
+    st.exchange(use(ownerID, "o"));
     st.exchange(use(version, "v"));
     st.exchange(use(dataFrame->mEntry.lastModifiedLedgerSeq, "lm"));
 
@@ -70,15 +72,15 @@ DataHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
 
     st.execute(true);
 
-    if (st.get_affected_rows() != 1) 
+    if (st.get_affected_rows() != 1)
     {
         throw std::runtime_error("Could not update data in SQL");
-    }                        
-    if (insert) 
+    }
+    if (insert)
     {
         mStorageHelper.mustGetLedgerDelta().addEntry(*dataFrame);
     }
-    else 
+    else
     {
         mStorageHelper.mustGetLedgerDelta().modEntry(*dataFrame);
     }
@@ -91,7 +93,7 @@ DataHelperImpl::storeAdd(LedgerEntry const& entry)
 }
 
 void
-DataHelperImpl::storeChange(LedgerEntry const& entry) 
+DataHelperImpl::storeChange(LedgerEntry const& entry)
 {
     storeUpdate(entry, false);
 }
@@ -114,7 +116,7 @@ DataHelperImpl::storeDelete(LedgerKey const& key)
 }
 
 bool
-DataHelperImpl::exists(LedgerKey const& key) 
+DataHelperImpl::exists(LedgerKey const& key)
 {
     if (cachedEntryExists(key) && (getCachedEntry(key) != nullptr))
     {
@@ -138,20 +140,20 @@ DataHelperImpl::exists(LedgerKey const& key)
 }
 
 LedgerKey
-DataHelperImpl::getLedgerKey(LedgerEntry const& entry) 
+DataHelperImpl::getLedgerKey(LedgerEntry const& entry)
 {
     auto dataFrame = std::make_shared<DataFrame>(entry);
     return dataFrame->getKey();
 }
 
 EntryFrame::pointer
-DataHelperImpl::fromXDR(LedgerEntry const& entry) 
+DataHelperImpl::fromXDR(LedgerEntry const& entry)
 {
     return std::make_shared<DataFrame>(entry);
 }
 
 uint64_t
-DataHelperImpl::countObjects() 
+DataHelperImpl::countObjects()
 {
     session& sess = getDatabase().getSession();
     uint64_t count = 0;
@@ -161,13 +163,13 @@ DataHelperImpl::countObjects()
 }
 
 EntryFrame::pointer
-DataHelperImpl::storeLoad(LedgerKey const& key) 
+DataHelperImpl::storeLoad(LedgerKey const& key)
 {
     return loadData(key.data().id);
 }
 
 DataFrame::pointer
-DataHelperImpl::loadData(uint64_t const id) 
+DataHelperImpl::loadData(uint64_t const id)
 {
     LedgerKey key(LedgerEntryType::DATA);
     key.data().id = id;
@@ -220,10 +222,10 @@ DataHelperImpl::loadData(uint64_t const id)
 }
 
 void
-DataHelperImpl::load(StatementContext& prep, 
-                     std::function<void(LedgerEntry const&)> processor) 
+DataHelperImpl::load(StatementContext& prep,
+                     std::function<void(LedgerEntry const&)> processor)
 {
-    try 
+    try
     {
         LedgerEntry le;
         le.data.type(LedgerEntryType::DATA);
@@ -235,12 +237,13 @@ DataHelperImpl::load(StatementContext& prep,
         st.exchange(into(dataEntry.id));
         st.exchange(into(dataEntry.type));
         st.exchange(into(dataEntry.value));
+        st.exchange(into(dataEntry.owner));
         st.exchange(into(version));
         st.exchange(into(le.lastModifiedLedgerSeq));
         st.define_and_bind();
         st.execute(true);
 
-        while (st.got_data()) 
+        while (st.got_data())
         {
             dataEntry.ext.v(static_cast<LedgerVersion>(version));
 

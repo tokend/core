@@ -1,19 +1,20 @@
 #pragma once
 
+#include "ledger/DataFrame.h"
 #include "transactions/OperationFrame.h"
 
-namespace stellar 
+namespace stellar
 {
-class UpdateDataOpFrame : public OperationFrame 
+class UpdateDataOpFrame : public OperationFrame
 {
     UpdateDataOp const& mUpdateData;
 
-    bool
-    doCheckValid(Application &app) override;
+    bool isAuthorized(DataFrame::pointer dataFrame, AccountID admin);
 
-    bool
-    doApply(Application &app, StorageHelper& storageHelper,
-            LedgerManager &ledgerManager) override;
+    bool doCheckValid(Application& app) override;
+
+    bool doApply(Application& app, StorageHelper& storageHelper,
+                 LedgerManager& ledgerManager) override;
 
     UpdateDataResult&
     innerResult()
@@ -21,18 +22,17 @@ class UpdateDataOpFrame : public OperationFrame
         return mResult.tr().updateDataResult();
     }
 
-    bool
-    tryGetOperationConditions(StorageHelper& storageHelper,
-                              std::vector<OperationCondition>& result) const override;
+    bool tryGetOperationConditions(
+        StorageHelper& storageHelper,
+        std::vector<OperationCondition>& result) const override;
 
-    bool
-    tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result) const override;
+    bool tryGetSignerRequirements(
+        StorageHelper& storageHelper,
+        std::vector<SignerRequirement>& result) const override;
 
-    std::string 
-    getInnerResultCodeAsStr() override;                             
+    std::string getInnerResultCodeAsStr() override;
 
-public:
+  public:
     UpdateDataOpFrame(Operation const& op, OperationResult& res,
                       TransactionFrame& parentTx);
 };

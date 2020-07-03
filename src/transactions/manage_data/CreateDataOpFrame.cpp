@@ -1,21 +1,21 @@
 #include "CreateDataOpFrame.h"
-#include "ledger/StorageHelper.h"
+#include "ledger/DataHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
-#include "ledger/DataHelper.h"
+#include "ledger/StorageHelper.h"
 
-namespace stellar 
+namespace stellar
 {
-CreateDataOpFrame::CreateDataOpFrame(Operation const& op, 
-        OperationResult& res, TransactionFrame& parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mCreateData(mOperation.body.createDataOp())
+CreateDataOpFrame::CreateDataOpFrame(Operation const& op, OperationResult& res,
+                                     TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx)
+    , mCreateData(mOperation.body.createDataOp())
 {
 }
 
 bool
-CreateDataOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                    std::vector<OperationCondition> &result) const
+CreateDataOpFrame::tryGetOperationConditions(
+    StorageHelper& storageHelper, std::vector<OperationCondition>& result) const
 {
     AccountRuleResource resource(LedgerEntryType::DATA);
     resource.data().type = mCreateData.type;
@@ -25,8 +25,8 @@ CreateDataOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
 }
 
 bool
-CreateDataOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                   std::vector<SignerRequirement> &result) const
+CreateDataOpFrame::tryGetSignerRequirements(
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
     SignerRuleResource resource(LedgerEntryType::DATA);
     resource.data().type = mCreateData.type;
@@ -37,7 +37,7 @@ CreateDataOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 
 bool
 CreateDataOpFrame::doApply(Application& app, StorageHelper& storageHelper,
-                           LedgerManager& ledgerManager) 
+                           LedgerManager& ledgerManager)
 {
     innerResult().code(CreateDataResultCode::SUCCESS);
 
@@ -48,6 +48,7 @@ CreateDataOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     data.id = header.generateID(LedgerEntryType::DATA);
     data.type = mCreateData.type;
     data.value = mCreateData.value;
+    data.owner = getSourceID();
 
     storageHelper.getDataHelper().storeAdd(le);
 
@@ -56,9 +57,9 @@ CreateDataOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 }
 
 bool
-CreateDataOpFrame::doCheckValid(Application& app) 
+CreateDataOpFrame::doCheckValid(Application& app)
 {
-    if (!isValidJson(mCreateData.value)) 
+    if (!isValidJson(mCreateData.value))
     {
         innerResult().code(CreateDataResultCode::INVALID_DATA);
         return false;
@@ -67,10 +68,11 @@ CreateDataOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-std::string 
+std::string
 CreateDataOpFrame::getInnerResultCodeAsStr()
 {
-    return xdr::xdr_traits<CreateDataResultCode>::enum_name(innerResult().code());
+    return xdr::xdr_traits<CreateDataResultCode>::enum_name(
+        innerResult().code());
 }
 
 }

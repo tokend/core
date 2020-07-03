@@ -47,6 +47,7 @@ enum class UpdateDataResultCode : std::int32_t {
   SUCCESS = 0,
   INVALID_DATA = -1,
   NOT_FOUND = -2,
+  NOT_AUTHORIZED = -3,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::UpdateDataResultCode>
@@ -62,6 +63,8 @@ template<> struct xdr_traits<::stellar::UpdateDataResultCode>
       return "INVALID_DATA";
     case ::stellar::UpdateDataResultCode::NOT_FOUND:
       return "NOT_FOUND";
+    case ::stellar::UpdateDataResultCode::NOT_AUTHORIZED:
+      return "NOT_AUTHORIZED";
     default:
       return nullptr;
     }
@@ -70,7 +73,8 @@ template<> struct xdr_traits<::stellar::UpdateDataResultCode>
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::UpdateDataResultCode::SUCCESS,
       (int32_t)::stellar::UpdateDataResultCode::INVALID_DATA,
-      (int32_t)::stellar::UpdateDataResultCode::NOT_FOUND
+      (int32_t)::stellar::UpdateDataResultCode::NOT_FOUND,
+      (int32_t)::stellar::UpdateDataResultCode::NOT_AUTHORIZED
     };
     return _xdr_enum_vec;
   }

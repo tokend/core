@@ -1,6 +1,7 @@
 #include "RemoveDataOpFrame.h"
-#include "ledger/StorageHelper.h"
 #include "ledger/DataHelper.h"
+#include "ledger/StorageHelper.h"
+#include "main/Application.h"
 
 namespace stellar 
 {
@@ -53,18 +54,27 @@ RemoveDataOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
 
 bool
 RemoveDataOpFrame::doApply(Application& app, StorageHelper& storageHelper,
-                           LedgerManager& ledgerManager) 
+                           LedgerManager& ledgerManager)
 {
     innerResult().code(RemoveDataResultCode::SUCCESS);
 
     LedgerKey key(LedgerEntryType::DATA);
     key.data().id = mRemoveData.dataID;
     auto& helper = storageHelper.getDataHelper();
-    if (!helper.exists(key)) 
+
+    auto dataFrame = helper.loadData(mRemoveData.dataID);
+    if (!dataFrame)
     {
         innerResult().code(RemoveDataResultCode::NOT_FOUND);
         return false;
     }
+
+    if (!isAuthorized(dataFrame, app.getAdminID()))
+    {
+        innerResult().code(RemoveDataResultCode::NOT_AUTHORIZED);
+        return false;
+    }
+
 
     helper.storeDelete(key);
     
@@ -83,7 +93,14 @@ RemoveDataOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-std::string 
+bool
+RemoveDataOpFrame::isAuthorized(DataFrame::pointer dataFrame, AccountID admin)
+{
+    return (getSourceID() == dataFrame->getData().owner) ||
+           (getSourceID() == admin);
+}
+
+std::string
 RemoveDataOpFrame::getInnerResultCodeAsStr()
 {
     return xdr::xdr_traits<RemoveDataResultCode>::enum_name(innerResult().code());

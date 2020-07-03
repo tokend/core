@@ -1,12 +1,15 @@
 #pragma once
 
 #include "transactions/OperationFrame.h"
+#include "ledger/DataFrame.h"
 
-namespace stellar 
+namespace stellar
 {
-class RemoveDataOpFrame : public OperationFrame 
+class RemoveDataOpFrame : public OperationFrame
 {
     RemoveDataOp const& mRemoveData;
+
+    bool isAuthorized(DataFrame::pointer dataFrame, AccountID admin);
 
     bool
     doCheckValid(Application &app) override;
@@ -29,7 +32,7 @@ class RemoveDataOpFrame : public OperationFrame
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
 
-    std::string 
+    std::string
     getInnerResultCodeAsStr() override;
 
 public:
