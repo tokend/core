@@ -117,6 +117,12 @@ return u.from_bytes(openSwapOp_);
 return u.from_bytes(closeSwapOp_);
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return u.from_bytes(createRedemptionRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA:
+return u.from_bytes(createDataOp_);
+    case (int32_t)OperationType::UPDATE_DATA:
+return u.from_bytes(updateDataOp_);
+    case (int32_t)OperationType::REMOVE_DATA:
+return u.from_bytes(removeDataOp_);
 }
 return false;
 }
@@ -231,6 +237,12 @@ return m.to_bytes(openSwapOp_);
 return m.to_bytes(closeSwapOp_);
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return m.to_bytes(createRedemptionRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA:
+return m.to_bytes(createDataOp_);
+    case (int32_t)OperationType::UPDATE_DATA:
+return m.to_bytes(updateDataOp_);
+    case (int32_t)OperationType::REMOVE_DATA:
+return m.to_bytes(removeDataOp_);
 }
 return false;
 }
@@ -341,6 +353,12 @@ return m.count_size(openSwapOp_);
 return m.count_size(closeSwapOp_);
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return m.count_size(createRedemptionRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA:
+return m.count_size(createDataOp_);
+    case (int32_t)OperationType::UPDATE_DATA:
+return m.count_size(updateDataOp_);
+    case (int32_t)OperationType::REMOVE_DATA:
+return m.count_size(removeDataOp_);
 }
 }
 bool
@@ -454,6 +472,12 @@ return openSwapOp_ == other.openSwapOp_;
 return closeSwapOp_ == other.closeSwapOp_;
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return createRedemptionRequestOp_ == other.createRedemptionRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA:
+return createDataOp_ == other.createDataOp_;
+    case (int32_t)OperationType::UPDATE_DATA:
+return updateDataOp_ == other.updateDataOp_;
+    case (int32_t)OperationType::REMOVE_DATA:
+return removeDataOp_ == other.removeDataOp_;
 }
 return false;
 }
@@ -569,6 +593,12 @@ return openSwapOp_ < other.openSwapOp_;
 return closeSwapOp_ < other.closeSwapOp_;
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return createRedemptionRequestOp_ < other.createRedemptionRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA:
+return createDataOp_ < other.createDataOp_;
+    case (int32_t)OperationType::UPDATE_DATA:
+return updateDataOp_ < other.updateDataOp_;
+    case (int32_t)OperationType::REMOVE_DATA:
+return removeDataOp_ < other.removeDataOp_;
 }
 return false;
 }
@@ -1257,6 +1287,12 @@ return u.from_bytes(openSwapResult_);
 return u.from_bytes(closeSwapResult_);
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return u.from_bytes(createRedemptionRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA:
+return u.from_bytes(createDataResult_);
+    case (int32_t)OperationType::UPDATE_DATA:
+return u.from_bytes(updateDataResult_);
+    case (int32_t)OperationType::REMOVE_DATA:
+return u.from_bytes(removeDataResult_);
 }
 return false;
 }
@@ -1371,6 +1407,12 @@ return m.to_bytes(openSwapResult_);
 return m.to_bytes(closeSwapResult_);
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return m.to_bytes(createRedemptionRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA:
+return m.to_bytes(createDataResult_);
+    case (int32_t)OperationType::UPDATE_DATA:
+return m.to_bytes(updateDataResult_);
+    case (int32_t)OperationType::REMOVE_DATA:
+return m.to_bytes(removeDataResult_);
 }
 return false;
 }
@@ -1481,6 +1523,12 @@ return m.count_size(openSwapResult_);
 return m.count_size(closeSwapResult_);
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return m.count_size(createRedemptionRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA:
+return m.count_size(createDataResult_);
+    case (int32_t)OperationType::UPDATE_DATA:
+return m.count_size(updateDataResult_);
+    case (int32_t)OperationType::REMOVE_DATA:
+return m.count_size(removeDataResult_);
 }
 }
 bool
@@ -1594,6 +1642,12 @@ return openSwapResult_ == other.openSwapResult_;
 return closeSwapResult_ == other.closeSwapResult_;
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return createRedemptionRequestResult_ == other.createRedemptionRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA:
+return createDataResult_ == other.createDataResult_;
+    case (int32_t)OperationType::UPDATE_DATA:
+return updateDataResult_ == other.updateDataResult_;
+    case (int32_t)OperationType::REMOVE_DATA:
+return removeDataResult_ == other.removeDataResult_;
 }
 return false;
 }
@@ -1709,6 +1763,12 @@ return openSwapResult_ < other.openSwapResult_;
 return closeSwapResult_ < other.closeSwapResult_;
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 return createRedemptionRequestResult_ < other.createRedemptionRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA:
+return createDataResult_ < other.createDataResult_;
+    case (int32_t)OperationType::UPDATE_DATA:
+return updateDataResult_ < other.updateDataResult_;
+    case (int32_t)OperationType::REMOVE_DATA:
+return removeDataResult_ < other.removeDataResult_;
 }
 return false;
 }

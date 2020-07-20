@@ -1,1 +1,1 @@
-#define XDR_REVISION "6aad66c6eef09773be146b1f26cb6db8d33ef566"
+#define XDR_REVISION "b693339a65fcb188766e4ef86a32efa4b0b6f3bf"

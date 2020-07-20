@@ -79,6 +79,8 @@ return u.from_bytes(vote_);
 return u.from_bytes(accountSpecificRule_);
     case (int32_t)LedgerEntryType::SWAP:
 return u.from_bytes(swap_);
+    case (int32_t)LedgerEntryType::DATA:
+return u.from_bytes(data_);
 }
 return false;
 }
@@ -155,6 +157,8 @@ return m.to_bytes(vote_);
 return m.to_bytes(accountSpecificRule_);
     case (int32_t)LedgerEntryType::SWAP:
 return m.to_bytes(swap_);
+    case (int32_t)LedgerEntryType::DATA:
+return m.to_bytes(data_);
 }
 return false;
 }
@@ -227,6 +231,8 @@ return m.count_size(vote_);
 return m.count_size(accountSpecificRule_);
     case (int32_t)LedgerEntryType::SWAP:
 return m.count_size(swap_);
+    case (int32_t)LedgerEntryType::DATA:
+return m.count_size(data_);
 }
 }
 bool
@@ -302,6 +308,8 @@ return vote_ == other.vote_;
 return accountSpecificRule_ == other.accountSpecificRule_;
     case (int32_t)LedgerEntryType::SWAP:
 return swap_ == other.swap_;
+    case (int32_t)LedgerEntryType::DATA:
+return data_ == other.data_;
 }
 return false;
 }
@@ -379,6 +387,8 @@ return vote_ < other.vote_;
 return accountSpecificRule_ < other.accountSpecificRule_;
     case (int32_t)LedgerEntryType::SWAP:
 return swap_ < other.swap_;
+    case (int32_t)LedgerEntryType::DATA:
+return data_ < other.data_;
 }
 return false;
 }

@@ -58,6 +58,9 @@
 #include "xdr/operation-remove-asset.h"
 #include "xdr/operation-open-swap.h"
 #include "xdr/operation-close-swap.h"
+#include "xdr/operation-create-data.h"
+#include "xdr/operation-update-data.h"
+#include "xdr/operation-remove-data.h"
 
 namespace stellar {
 
@@ -117,6 +120,9 @@ struct Operation  : xdr::xdr_abstract {
       OpenSwapOp openSwapOp_;
       CloseSwapOp closeSwapOp_;
       CreateRedemptionRequestOp createRedemptionRequestOp_;
+      CreateDataOp createDataOp_;
+      UpdateDataOp updateDataOp_;
+      RemoveDataOp removeDataOp_;
     };
 
   public:
@@ -172,7 +178,10 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::REMOVE_ASSET,
         OperationType::OPEN_SWAP,
         OperationType::CLOSE_SWAP,
-        OperationType::CREATE_REDEMPTION_REQUEST
+        OperationType::CREATE_REDEMPTION_REQUEST,
+        OperationType::CREATE_DATA,
+        OperationType::UPDATE_DATA,
+        OperationType::REMOVE_DATA
       };
       return _xdr_disc_vec;
     }
@@ -227,6 +236,9 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::OPEN_SWAP ? 48
         : which == (int32_t)OperationType::CLOSE_SWAP ? 49
         : which == (int32_t)OperationType::CREATE_REDEMPTION_REQUEST ? 50
+        : which == (int32_t)OperationType::CREATE_DATA ? 51
+        : which == (int32_t)OperationType::UPDATE_DATA ? 52
+        : which == (int32_t)OperationType::REMOVE_DATA ? 53
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -381,6 +393,15 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
         _f(&_body_t::createRedemptionRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_DATA:
+        _f(&_body_t::createDataOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::UPDATE_DATA:
+        _f(&_body_t::updateDataOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::REMOVE_DATA:
+        _f(&_body_t::removeDataOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -545,6 +566,15 @@ break;
         case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp{};
 break;
+        case (int32_t)OperationType::CREATE_DATA:
+new(&createDataOp_) CreateDataOp{};
+break;
+        case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataOp_) UpdateDataOp{};
+break;
+        case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataOp_) RemoveDataOp{};
+break;
 }
 
       }
@@ -704,6 +734,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp{};
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataOp_) CreateDataOp{};
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataOp_) UpdateDataOp{};
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataOp_) RemoveDataOp{};
+break;
 }
 
     }
@@ -859,6 +898,15 @@ new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(source.createRedemptionRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataOp_) CreateDataOp(source.createDataOp_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataOp_) UpdateDataOp(source.updateDataOp_);
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataOp_) RemoveDataOp(source.removeDataOp_);
 break;
 }
 
@@ -1016,6 +1064,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(std::move(source.createRedemptionRequestOp_));
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataOp_) CreateDataOp(std::move(source.createDataOp_));
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataOp_) UpdateDataOp(std::move(source.updateDataOp_));
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataOp_) RemoveDataOp(std::move(source.removeDataOp_));
+break;
 }
 
     }
@@ -1171,6 +1228,15 @@ closeSwapOp_.~CloseSwapOp();
 break;
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestOp_.~CreateRedemptionRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_DATA:
+createDataOp_.~CreateDataOp();
+break;
+    case (int32_t)OperationType::UPDATE_DATA:
+updateDataOp_.~UpdateDataOp();
+break;
+    case (int32_t)OperationType::REMOVE_DATA:
+removeDataOp_.~RemoveDataOp();
 break;
 }
 }
@@ -1330,6 +1396,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestOp_ = source.createRedemptionRequestOp_;
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+createDataOp_ = source.createDataOp_;
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+updateDataOp_ = source.updateDataOp_;
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+removeDataOp_ = source.removeDataOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1485,6 +1560,15 @@ new(&closeSwapOp_) CloseSwapOp(source.closeSwapOp_);
 break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(source.createRedemptionRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataOp_) CreateDataOp(source.createDataOp_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataOp_) UpdateDataOp(source.updateDataOp_);
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataOp_) RemoveDataOp(source.removeDataOp_);
 break;
 }
 }
@@ -1645,6 +1729,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestOp_ = std::move(source.createRedemptionRequestOp_);
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+createDataOp_ = std::move(source.createDataOp_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+updateDataOp_ = std::move(source.updateDataOp_);
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+removeDataOp_ = std::move(source.removeDataOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -1800,6 +1893,15 @@ new(&closeSwapOp_) CloseSwapOp(std::move(source.closeSwapOp_));
 break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestOp_) CreateRedemptionRequestOp(std::move(source.createRedemptionRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataOp_) CreateDataOp(std::move(source.createDataOp_));
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataOp_) UpdateDataOp(std::move(source.updateDataOp_));
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataOp_) RemoveDataOp(std::move(source.removeDataOp_));
 break;
 }
 }
@@ -2311,6 +2413,36 @@ break;
       if (_xdr_field_number(type_) == 50)
         return createRedemptionRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: createRedemptionRequestOp accessed when not selected");
+    }
+    CreateDataOp &createDataOp() {
+      if (_xdr_field_number(type_) == 51)
+        return createDataOp_;
+      throw xdr::xdr_wrong_union("_body_t: createDataOp accessed when not selected");
+    }
+    const CreateDataOp &createDataOp() const {
+      if (_xdr_field_number(type_) == 51)
+        return createDataOp_;
+      throw xdr::xdr_wrong_union("_body_t: createDataOp accessed when not selected");
+    }
+    UpdateDataOp &updateDataOp() {
+      if (_xdr_field_number(type_) == 52)
+        return updateDataOp_;
+      throw xdr::xdr_wrong_union("_body_t: updateDataOp accessed when not selected");
+    }
+    const UpdateDataOp &updateDataOp() const {
+      if (_xdr_field_number(type_) == 52)
+        return updateDataOp_;
+      throw xdr::xdr_wrong_union("_body_t: updateDataOp accessed when not selected");
+    }
+    RemoveDataOp &removeDataOp() {
+      if (_xdr_field_number(type_) == 53)
+        return removeDataOp_;
+      throw xdr::xdr_wrong_union("_body_t: removeDataOp accessed when not selected");
+    }
+    const RemoveDataOp &removeDataOp() const {
+      if (_xdr_field_number(type_) == 53)
+        return removeDataOp_;
+      throw xdr::xdr_wrong_union("_body_t: removeDataOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -3107,6 +3239,9 @@ struct OperationResult : xdr::xdr_abstract {
       OpenSwapResult openSwapResult_;
       CloseSwapResult closeSwapResult_;
       CreateRedemptionRequestResult createRedemptionRequestResult_;
+      CreateDataResult createDataResult_;
+      UpdateDataResult updateDataResult_;
+      RemoveDataResult removeDataResult_;
     };
 
   public:
@@ -3162,7 +3297,10 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::REMOVE_ASSET,
         OperationType::OPEN_SWAP,
         OperationType::CLOSE_SWAP,
-        OperationType::CREATE_REDEMPTION_REQUEST
+        OperationType::CREATE_REDEMPTION_REQUEST,
+        OperationType::CREATE_DATA,
+        OperationType::UPDATE_DATA,
+        OperationType::REMOVE_DATA
       };
       return _xdr_disc_vec;
     }
@@ -3217,6 +3355,9 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::OPEN_SWAP ? 48
         : which == (int32_t)OperationType::CLOSE_SWAP ? 49
         : which == (int32_t)OperationType::CREATE_REDEMPTION_REQUEST ? 50
+        : which == (int32_t)OperationType::CREATE_DATA ? 51
+        : which == (int32_t)OperationType::UPDATE_DATA ? 52
+        : which == (int32_t)OperationType::REMOVE_DATA ? 53
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3371,6 +3512,15 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
         _f(&_tr_t::createRedemptionRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_DATA:
+        _f(&_tr_t::createDataResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::UPDATE_DATA:
+        _f(&_tr_t::updateDataResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::REMOVE_DATA:
+        _f(&_tr_t::removeDataResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -3535,6 +3685,15 @@ break;
         case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestResult_) CreateRedemptionRequestResult{};
 break;
+        case (int32_t)OperationType::CREATE_DATA:
+new(&createDataResult_) CreateDataResult{};
+break;
+        case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataResult_) UpdateDataResult{};
+break;
+        case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataResult_) RemoveDataResult{};
+break;
 }
 
       }
@@ -3694,6 +3853,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestResult_) CreateRedemptionRequestResult{};
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataResult_) CreateDataResult{};
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataResult_) UpdateDataResult{};
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataResult_) RemoveDataResult{};
+break;
 }
 
     }
@@ -3849,6 +4017,15 @@ new(&closeSwapResult_) CloseSwapResult(source.closeSwapResult_);
 break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestResult_) CreateRedemptionRequestResult(source.createRedemptionRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataResult_) CreateDataResult(source.createDataResult_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataResult_) UpdateDataResult(source.updateDataResult_);
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataResult_) RemoveDataResult(source.removeDataResult_);
 break;
 }
 
@@ -4006,6 +4183,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionRequestResult_));
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataResult_) CreateDataResult(std::move(source.createDataResult_));
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataResult_) UpdateDataResult(std::move(source.updateDataResult_));
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataResult_) RemoveDataResult(std::move(source.removeDataResult_));
+break;
 }
 
     }
@@ -4161,6 +4347,15 @@ closeSwapResult_.~CloseSwapResult();
 break;
     case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestResult_.~CreateRedemptionRequestResult();
+break;
+    case (int32_t)OperationType::CREATE_DATA:
+createDataResult_.~CreateDataResult();
+break;
+    case (int32_t)OperationType::UPDATE_DATA:
+updateDataResult_.~UpdateDataResult();
+break;
+    case (int32_t)OperationType::REMOVE_DATA:
+removeDataResult_.~RemoveDataResult();
 break;
 }
 }
@@ -4320,6 +4515,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestResult_ = source.createRedemptionRequestResult_;
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+createDataResult_ = source.createDataResult_;
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+updateDataResult_ = source.updateDataResult_;
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+removeDataResult_ = source.removeDataResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -4475,6 +4679,15 @@ new(&closeSwapResult_) CloseSwapResult(source.closeSwapResult_);
 break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestResult_) CreateRedemptionRequestResult(source.createRedemptionRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataResult_) CreateDataResult(source.createDataResult_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataResult_) UpdateDataResult(source.updateDataResult_);
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataResult_) RemoveDataResult(source.removeDataResult_);
 break;
 }
 }
@@ -4635,6 +4848,15 @@ break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 createRedemptionRequestResult_ = std::move(source.createRedemptionRequestResult_);
 break;
+      case (int32_t)OperationType::CREATE_DATA:
+createDataResult_ = std::move(source.createDataResult_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+updateDataResult_ = std::move(source.updateDataResult_);
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+removeDataResult_ = std::move(source.removeDataResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -4790,6 +5012,15 @@ new(&closeSwapResult_) CloseSwapResult(std::move(source.closeSwapResult_));
 break;
       case (int32_t)OperationType::CREATE_REDEMPTION_REQUEST:
 new(&createRedemptionRequestResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_DATA:
+new(&createDataResult_) CreateDataResult(std::move(source.createDataResult_));
+break;
+      case (int32_t)OperationType::UPDATE_DATA:
+new(&updateDataResult_) UpdateDataResult(std::move(source.updateDataResult_));
+break;
+      case (int32_t)OperationType::REMOVE_DATA:
+new(&removeDataResult_) RemoveDataResult(std::move(source.removeDataResult_));
 break;
 }
 }
@@ -5301,6 +5532,36 @@ break;
       if (_xdr_field_number(type_) == 50)
         return createRedemptionRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: createRedemptionRequestResult accessed when not selected");
+    }
+    CreateDataResult &createDataResult() {
+      if (_xdr_field_number(type_) == 51)
+        return createDataResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createDataResult accessed when not selected");
+    }
+    const CreateDataResult &createDataResult() const {
+      if (_xdr_field_number(type_) == 51)
+        return createDataResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createDataResult accessed when not selected");
+    }
+    UpdateDataResult &updateDataResult() {
+      if (_xdr_field_number(type_) == 52)
+        return updateDataResult_;
+      throw xdr::xdr_wrong_union("_tr_t: updateDataResult accessed when not selected");
+    }
+    const UpdateDataResult &updateDataResult() const {
+      if (_xdr_field_number(type_) == 52)
+        return updateDataResult_;
+      throw xdr::xdr_wrong_union("_tr_t: updateDataResult accessed when not selected");
+    }
+    RemoveDataResult &removeDataResult() {
+      if (_xdr_field_number(type_) == 53)
+        return removeDataResult_;
+      throw xdr::xdr_wrong_union("_tr_t: removeDataResult accessed when not selected");
+    }
+    const RemoveDataResult &removeDataResult() const {
+      if (_xdr_field_number(type_) == 53)
+        return removeDataResult_;
+      throw xdr::xdr_wrong_union("_tr_t: removeDataResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

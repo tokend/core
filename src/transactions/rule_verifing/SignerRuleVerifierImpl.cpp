@@ -336,6 +336,9 @@ SignerRuleVerifierImpl::isResourceMatches(
     case LedgerEntryType::INITIATE_KYC_RECOVERY:
         return isIDMatches(requiredResource.initiateKYCRecovery().roleID,
                            actualResource.initiateKYCRecovery().roleID);
+    case LedgerEntryType::DATA:
+        return isTypeMatches(requiredResource.data().type,
+                             actualResource.data().type);
     case LedgerEntryType::ACCOUNT_KYC:
     case LedgerEntryType::ACCOUNT:
     case LedgerEntryType::ACCOUNT_RULE:

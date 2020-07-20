@@ -30,6 +30,7 @@
 #include "AccountSpecificRuleHelperImpl.h"
 #include "ReviewableRequestHelperImpl.h"
 #include "SwapHelperImpl.h"
+#include "DataHelperImpl.h"
 
 
 namespace stellar
@@ -43,6 +44,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
 {
     mHelpers =
     {
+        {LedgerEntryType::DATA, &getDataHelper()},
         {LedgerEntryType::ACCOUNT, &getAccountHelper()},
         {LedgerEntryType::ACCOUNT_ROLE, &getAccountRoleHelper()},
         {LedgerEntryType::ACCOUNT_RULE, &getAccountRuleHelper()},
@@ -544,6 +546,16 @@ StorageHelperImpl::getStatisticsV2Helper()
     }
 
     return *mStatisticsV2Helper;
+}
+
+DataHelper&
+StorageHelperImpl::getDataHelper()
+{
+    if (!mDataHelper)
+    {
+        mDataHelper = std::make_unique<DataHelperImpl>(*this);
+    }
+    return *mDataHelper;
 }
 
 } // namespace stellar
