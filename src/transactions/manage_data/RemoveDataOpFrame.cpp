@@ -3,41 +3,46 @@
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
 
-namespace stellar 
+namespace stellar
 {
-RemoveDataOpFrame::RemoveDataOpFrame(Operation const& op, 
-        OperationResult& res, TransactionFrame& parentTx)
-        : OperationFrame(op, res, parentTx)
-        , mRemoveData(mOperation.body.removeDataOp())
+RemoveDataOpFrame::RemoveDataOpFrame(Operation const& op, OperationResult& res,
+                                     TransactionFrame& parentTx)
+    : OperationFrame(op, res, parentTx)
+    , mRemoveData(mOperation.body.removeDataOp())
 {
 }
 
 bool
-RemoveDataOpFrame::tryGetOperationConditions(StorageHelper &storageHelper,
-                                    std::vector<OperationCondition> &result) const
+RemoveDataOpFrame::tryGetOperationConditions(
+    StorageHelper& storageHelper, std::vector<OperationCondition>& result) const
 {
     auto dataFrame = storageHelper.getDataHelper().loadData(mRemoveData.dataID);
-    if (!dataFrame) 
+    if (!dataFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::DATA;
         return false;
     }
+    auto action = AccountRuleAction::REMOVE;
+    if (!(getSourceID() == dataFrame->getData().owner))
+    {
+        action = AccountRuleAction::REMOVE_FOR_OTHER;
+    }
 
     AccountRuleResource resource(LedgerEntryType::DATA);
     resource.data().type = dataFrame->getData().type;
 
-    result.emplace_back(resource, AccountRuleAction::REMOVE, mSourceAccount);
+    result.emplace_back(resource, action, mSourceAccount);
 
     return true;
 }
 
 bool
-RemoveDataOpFrame::tryGetSignerRequirements(StorageHelper &storageHelper,
-                                   std::vector<SignerRequirement> &result) const
+RemoveDataOpFrame::tryGetSignerRequirements(
+    StorageHelper& storageHelper, std::vector<SignerRequirement>& result) const
 {
     auto dataFrame = storageHelper.getDataHelper().loadData(mRemoveData.dataID);
-    if (!dataFrame) 
+    if (!dataFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::DATA;
@@ -69,22 +74,16 @@ RemoveDataOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         return false;
     }
 
-    if (!isAuthorized(dataFrame, app.getAdminID()))
-    {
-        innerResult().code(RemoveDataResultCode::NOT_AUTHORIZED);
-        return false;
-    }
-
 
     helper.storeDelete(key);
-    
+
     return true;
 }
 
 bool
-RemoveDataOpFrame::doCheckValid(Application& app) 
+RemoveDataOpFrame::doCheckValid(Application& app)
 {
-    if (mRemoveData.dataID == 0) 
+    if (mRemoveData.dataID == 0)
     {
         innerResult().code(RemoveDataResultCode::NOT_FOUND);
         return false;
@@ -93,17 +92,11 @@ RemoveDataOpFrame::doCheckValid(Application& app)
     return true;
 }
 
-bool
-RemoveDataOpFrame::isAuthorized(DataFrame::pointer dataFrame, AccountID admin)
-{
-    return (getSourceID() == dataFrame->getData().owner) ||
-           (getSourceID() == admin);
-}
-
 std::string
 RemoveDataOpFrame::getInnerResultCodeAsStr()
 {
-    return xdr::xdr_traits<RemoveDataResultCode>::enum_name(innerResult().code());
+    return xdr::xdr_traits<RemoveDataResultCode>::enum_name(
+        innerResult().code());
 }
 
 }

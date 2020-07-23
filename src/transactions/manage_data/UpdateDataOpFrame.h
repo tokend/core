@@ -9,8 +9,6 @@ class UpdateDataOpFrame : public OperationFrame
 {
     UpdateDataOp const& mUpdateData;
 
-    bool isAuthorized(DataFrame::pointer dataFrame, AccountID admin);
-
     bool doCheckValid(Application& app) override;
 
     bool doApply(Application& app, StorageHelper& storageHelper,

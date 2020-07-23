@@ -9,8 +9,6 @@ class RemoveDataOpFrame : public OperationFrame
 {
     RemoveDataOp const& mRemoveData;
 
-    bool isAuthorized(DataFrame::pointer dataFrame, AccountID admin);
-
     bool
     doCheckValid(Application &app) override;
 
