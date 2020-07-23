@@ -49,10 +49,16 @@ RemoveDataOpFrame::tryGetSignerRequirements(
         return false;
     }
 
+    auto action = SignerRuleAction::REMOVE;
+    if (!(getSourceID() == dataFrame->getData().owner))
+    {
+        action = SignerRuleAction::REMOVE_FOR_OTHER;
+    }
+
     SignerRuleResource resource(LedgerEntryType::DATA);
     resource.data().type = dataFrame->getData().type;
 
-    result.emplace_back(resource, SignerRuleAction::REMOVE);
+    result.emplace_back(resource, action);
 
     return true;
 }

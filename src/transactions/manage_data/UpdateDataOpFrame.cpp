@@ -50,10 +50,16 @@ UpdateDataOpFrame::tryGetSignerRequirements(
         return false;
     }
 
+    auto action = SignerRuleAction::UPDATE;
+    if (!(getSourceID() == dataFrame->getData().owner))
+    {
+        action = SignerRuleAction::UPDATE_FOR_OTHER;
+    }
+
     SignerRuleResource resource(LedgerEntryType::DATA);
     resource.data().type = dataFrame->getData().type;
 
-    result.emplace_back(resource, SignerRuleAction::UPDATE);
+    result.emplace_back(resource, action);
 
     return true;
 }
