@@ -2435,6 +2435,7 @@ enum class AccountRuleAction : std::int32_t {
   EXCHANGE = 21,
   RECEIVE_REDEMPTION = 22,
   UPDATE = 23,
+  UPDATE_FOR_OTHER = 24,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::AccountRuleAction>
@@ -2490,6 +2491,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       return "RECEIVE_REDEMPTION";
     case ::stellar::AccountRuleAction::UPDATE:
       return "UPDATE";
+    case ::stellar::AccountRuleAction::UPDATE_FOR_OTHER:
+      return "UPDATE_FOR_OTHER";
     default:
       return nullptr;
     }
@@ -2518,7 +2521,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       (int32_t)::stellar::AccountRuleAction::REMOVE_FOR_OTHER,
       (int32_t)::stellar::AccountRuleAction::EXCHANGE,
       (int32_t)::stellar::AccountRuleAction::RECEIVE_REDEMPTION,
-      (int32_t)::stellar::AccountRuleAction::UPDATE
+      (int32_t)::stellar::AccountRuleAction::UPDATE,
+      (int32_t)::stellar::AccountRuleAction::UPDATE_FOR_OTHER
     };
     return _xdr_enum_vec;
   }
