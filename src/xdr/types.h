@@ -999,6 +999,9 @@ enum class OperationType : std::int32_t {
   CREATE_DATA = 57,
   UPDATE_DATA = 58,
   REMOVE_DATA = 59,
+  CREATE_DATA_REQUEST = 60,
+  UPDATE_DATA_REQUEST = 61,
+  REMOVE_DATA_REQUEST = 62,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1114,6 +1117,12 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "UPDATE_DATA";
     case ::stellar::OperationType::REMOVE_DATA:
       return "REMOVE_DATA";
+    case ::stellar::OperationType::CREATE_DATA_REQUEST:
+      return "CREATE_DATA_REQUEST";
+    case ::stellar::OperationType::UPDATE_DATA_REQUEST:
+      return "UPDATE_DATA_REQUEST";
+    case ::stellar::OperationType::REMOVE_DATA_REQUEST:
+      return "REMOVE_DATA_REQUEST";
     default:
       return nullptr;
     }
@@ -1172,7 +1181,10 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CREATE_REDEMPTION_REQUEST,
       (int32_t)::stellar::OperationType::CREATE_DATA,
       (int32_t)::stellar::OperationType::UPDATE_DATA,
-      (int32_t)::stellar::OperationType::REMOVE_DATA
+      (int32_t)::stellar::OperationType::REMOVE_DATA,
+      (int32_t)::stellar::OperationType::CREATE_DATA_REQUEST,
+      (int32_t)::stellar::OperationType::UPDATE_DATA_REQUEST,
+      (int32_t)::stellar::OperationType::REMOVE_DATA_REQUEST
     };
     return _xdr_enum_vec;
   }

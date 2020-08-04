@@ -22,6 +22,8 @@ public:
         return EntryFrame::pointer(new DataFrame(*this));
     }
 
+    static pointer create(CreateDataRequest const& request);
+
     LedgerKey const&
     getKey() const override;
 

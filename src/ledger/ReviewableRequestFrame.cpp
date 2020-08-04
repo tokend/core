@@ -273,6 +273,38 @@ ReviewableRequestFrame::ensureRedemptionValid(RedemptionRequest const &request)
     }
 }
 
+void
+ReviewableRequestFrame::ensureCreateDataValid(CreateDataRequest const &request)
+{
+    if (request.value.empty()) {
+        throw runtime_error("invalid empty value");
+    }
+
+    if (request.type <= 0) {
+        throw runtime_error("invalid type");
+    }
+}
+
+void
+ReviewableRequestFrame::ensureUpdateDataValid(UpdateDataRequest const &request)
+{
+    if (request.value.empty()) {
+        throw runtime_error("invalid empty value");
+    }
+
+    if (request.id <= 0) {
+        throw runtime_error("invalid request id");
+    }
+}
+
+void
+ReviewableRequestFrame::ensureRemoveDataValid(RemoveDataRequest const &request)
+{
+    if (request.id <= 0) {
+        throw runtime_error("invalid request id");
+    }
+}
+
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
 	return sha256(xdr::xdr_to_opaque(body));
@@ -334,6 +366,12 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureCreatePaymentValid(oe.body.createPaymentRequest());
         case ReviewableRequestType::PERFORM_REDEMPTION:
             return ensureRedemptionValid(oe.body.redemptionRequest());
+        case ReviewableRequestType::CREATE_DATA:
+            return ensureCreateDataValid(oe.body.createDataRequest());
+        case ReviewableRequestType::UPDATE_DATA:
+            return ensureUpdateDataValid(oe.body.updateDataRequest());
+        case ReviewableRequestType::REMOVE_DATA:
+        return ensureRemoveDataValid(oe.body.removeDataRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

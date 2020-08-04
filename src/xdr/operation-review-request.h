@@ -2921,6 +2921,7 @@ enum class ReviewRequestResultCode : std::int32_t {
   INVALID_SIGNER_DATA = -1600,
   MANAGE_OFFER_FAILED = -1700,
   PAYMENT_FAILED = -1800,
+  DATA_NOT_FOUND = -1900,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
@@ -3056,6 +3057,8 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       return "MANAGE_OFFER_FAILED";
     case ::stellar::ReviewRequestResultCode::PAYMENT_FAILED:
       return "PAYMENT_FAILED";
+    case ::stellar::ReviewRequestResultCode::DATA_NOT_FOUND:
+      return "DATA_NOT_FOUND";
     default:
       return nullptr;
     }
@@ -3124,7 +3127,8 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       (int32_t)::stellar::ReviewRequestResultCode::ATOMIC_SWAP_BID_OWNER_FULL_LINE,
       (int32_t)::stellar::ReviewRequestResultCode::INVALID_SIGNER_DATA,
       (int32_t)::stellar::ReviewRequestResultCode::MANAGE_OFFER_FAILED,
-      (int32_t)::stellar::ReviewRequestResultCode::PAYMENT_FAILED
+      (int32_t)::stellar::ReviewRequestResultCode::PAYMENT_FAILED,
+      (int32_t)::stellar::ReviewRequestResultCode::DATA_NOT_FOUND
     };
     return _xdr_enum_vec;
   }

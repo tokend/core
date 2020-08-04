@@ -31,4 +31,16 @@ DataFrame::getKey() const
     return mKey;
 }
 
+DataFrame::pointer DataFrame::create(CreateDataRequest const& request)
+{
+    LedgerEntry le;
+    le.data.type(LedgerEntryType::DATA);
+    DataEntry& data = le.data.data();
+    data.value = request.value;
+    data.type = request.type;
+    data.owner = request.owner;
+
+    return std::make_shared<DataFrame>(le);
+}
+
 }
