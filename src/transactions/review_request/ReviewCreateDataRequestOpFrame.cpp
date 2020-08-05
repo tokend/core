@@ -25,7 +25,7 @@ ReviewCreateDataRequestOpFrame::handleApprove(Application& app, StorageHelper& s
     }
 
     auto& createDataRequest = request->getRequestEntry().body.createDataRequest();
-    auto dataFrame = DataFrame::create(createDataRequest);
+    auto dataFrame = DataFrame::create(createDataRequest); //todo get acc id from request
     storageHelper.getDataHelper().storeAdd(dataFrame->mEntry);
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);

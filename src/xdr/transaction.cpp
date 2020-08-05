@@ -123,6 +123,12 @@ return u.from_bytes(createDataOp_);
 return u.from_bytes(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return u.from_bytes(createDataRequestOp_);
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return u.from_bytes(updateDataRequestOp_);
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return u.from_bytes(removeDataRequestOp_);
 }
 return false;
 }
@@ -243,6 +249,12 @@ return m.to_bytes(createDataOp_);
 return m.to_bytes(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return m.to_bytes(createDataRequestOp_);
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return m.to_bytes(updateDataRequestOp_);
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return m.to_bytes(removeDataRequestOp_);
 }
 return false;
 }
@@ -359,6 +371,12 @@ return m.count_size(createDataOp_);
 return m.count_size(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return m.count_size(createDataRequestOp_);
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return m.count_size(updateDataRequestOp_);
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return m.count_size(removeDataRequestOp_);
 }
 }
 bool
@@ -478,6 +496,12 @@ return createDataOp_ == other.createDataOp_;
 return updateDataOp_ == other.updateDataOp_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataOp_ == other.removeDataOp_;
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return createDataRequestOp_ == other.createDataRequestOp_;
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return updateDataRequestOp_ == other.updateDataRequestOp_;
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return removeDataRequestOp_ == other.removeDataRequestOp_;
 }
 return false;
 }
@@ -599,6 +623,12 @@ return createDataOp_ < other.createDataOp_;
 return updateDataOp_ < other.updateDataOp_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataOp_ < other.removeDataOp_;
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return createDataRequestOp_ < other.createDataRequestOp_;
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return updateDataRequestOp_ < other.updateDataRequestOp_;
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return removeDataRequestOp_ < other.removeDataRequestOp_;
 }
 return false;
 }
@@ -1293,6 +1323,12 @@ return u.from_bytes(createDataResult_);
 return u.from_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return u.from_bytes(createDataRequestResult_);
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return u.from_bytes(updateDataRequestResult_);
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return u.from_bytes(removeDataRequestResult_);
 }
 return false;
 }
@@ -1413,6 +1449,12 @@ return m.to_bytes(createDataResult_);
 return m.to_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return m.to_bytes(createDataRequestResult_);
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return m.to_bytes(updateDataRequestResult_);
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return m.to_bytes(removeDataRequestResult_);
 }
 return false;
 }
@@ -1529,6 +1571,12 @@ return m.count_size(createDataResult_);
 return m.count_size(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return m.count_size(createDataRequestResult_);
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return m.count_size(updateDataRequestResult_);
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return m.count_size(removeDataRequestResult_);
 }
 }
 bool
@@ -1648,6 +1696,12 @@ return createDataResult_ == other.createDataResult_;
 return updateDataResult_ == other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ == other.removeDataResult_;
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return createDataRequestResult_ == other.createDataRequestResult_;
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return updateDataRequestResult_ == other.updateDataRequestResult_;
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return removeDataRequestResult_ == other.removeDataRequestResult_;
 }
 return false;
 }
@@ -1769,6 +1823,12 @@ return createDataResult_ < other.createDataResult_;
 return updateDataResult_ < other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ < other.removeDataResult_;
+    case (int32_t)OperationType::CREATE_DATA_REQUEST:
+return createDataRequestResult_ < other.createDataRequestResult_;
+    case (int32_t)OperationType::UPDATE_DATA_REQUEST:
+return updateDataRequestResult_ < other.updateDataRequestResult_;
+    case (int32_t)OperationType::REMOVE_DATA_REQUEST:
+return removeDataRequestResult_ < other.removeDataRequestResult_;
 }
 return false;
 }
