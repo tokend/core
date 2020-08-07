@@ -148,22 +148,32 @@ count_size(xdr::measurer& m) const override;
   };
 
   uint64 id{};
+  AccountID owner{};
+  uint64 type{};
   longstring value{};
   _ext_t ext{};
 
   UpdateDataRequest() = default;
   template<typename _id_T,
+           typename _owner_T,
+           typename _type_T,
            typename _value_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _id_T>::value
+                          && std::is_constructible<AccountID, _owner_T>::value
+                          && std::is_constructible<uint64, _type_T>::value
                           && std::is_constructible<longstring, _value_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
   explicit UpdateDataRequest(_id_T &&_id,
+                             _owner_T &&_owner,
+                             _type_T &&_type,
                              _value_T &&_value,
                              _ext_T &&_ext)
     : id(std::forward<_id_T>(_id)),
+      owner(std::forward<_owner_T>(_owner)),
+      type(std::forward<_type_T>(_type)),
       value(std::forward<_value_T>(_value)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool

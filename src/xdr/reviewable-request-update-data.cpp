@@ -93,6 +93,16 @@ if (!okid)
 {
 return false;
 }
+bool okowner = u.from_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
 bool okvalue = u.from_bytes(value);
 if (!okvalue)
 {
@@ -113,6 +123,16 @@ if (!okid)
 {
 return false;
 }
+bool okowner = m.to_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
 bool okvalue = m.to_bytes(value);
 if (!okvalue)
 {
@@ -129,6 +149,8 @@ void
 UpdateDataRequest::count_size(xdr::measurer& m) const 
 {
 m.count_size(id);
+m.count_size(owner);
+m.count_size(type);
 m.count_size(value);
 m.count_size(ext);
 }
@@ -140,6 +162,8 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<UpdateDataRequest const&>(other_abstract);return true
 && (id== other.id)
+&& (owner== other.owner)
+&& (type== other.type)
 && (value== other.value)
 && (ext== other.ext)
 ;}
@@ -153,6 +177,10 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<UpdateDataRequest const&>(other_abstract);
 if (id < other.id) return true;
 if (other.id < id) return false;
+if (owner < other.owner) return true;
+if (other.owner < owner) return false;
+if (type < other.type) return true;
+if (other.type < type) return false;
 if (value < other.value) return true;
 if (other.value < value) return false;
 if (ext < other.ext) return true;

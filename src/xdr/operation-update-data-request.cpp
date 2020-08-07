@@ -171,6 +171,16 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okowner = u.from_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool okdataID = u.from_bytes(dataID);
+if (!okdataID)
+{
+return false;
+}
 bool oktype = u.from_bytes(type);
 if (!oktype)
 {
@@ -201,6 +211,16 @@ if (!okfulfilled)
 {
 return false;
 }
+bool okowner = m.to_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool okdataID = m.to_bytes(dataID);
+if (!okdataID)
+{
+return false;
+}
 bool oktype = m.to_bytes(type);
 if (!oktype)
 {
@@ -223,6 +243,8 @@ UpdateDataRequestResponse::count_size(xdr::measurer& m) const
 {
 m.count_size(requestID);
 m.count_size(fulfilled);
+m.count_size(owner);
+m.count_size(dataID);
 m.count_size(type);
 m.count_size(value);
 m.count_size(ext);
@@ -236,6 +258,8 @@ return false;
 }auto& other = dynamic_cast<UpdateDataRequestResponse const&>(other_abstract);return true
 && (requestID== other.requestID)
 && (fulfilled== other.fulfilled)
+&& (owner== other.owner)
+&& (dataID== other.dataID)
 && (type== other.type)
 && (value== other.value)
 && (ext== other.ext)
@@ -252,6 +276,10 @@ if (requestID < other.requestID) return true;
 if (other.requestID < requestID) return false;
 if (fulfilled < other.fulfilled) return true;
 if (other.fulfilled < fulfilled) return false;
+if (owner < other.owner) return true;
+if (other.owner < owner) return false;
+if (dataID < other.dataID) return true;
+if (other.dataID < dataID) return false;
 if (type < other.type) return true;
 if (other.type < type) return false;
 if (value < other.value) return true;

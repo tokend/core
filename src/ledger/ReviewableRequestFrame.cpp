@@ -279,10 +279,6 @@ ReviewableRequestFrame::ensureCreateDataValid(CreateDataRequest const &request)
     if (request.value.empty()) {
         throw runtime_error("invalid empty value");
     }
-
-    if (request.type <= 0) {
-        throw runtime_error("invalid type");
-    }
 }
 
 void

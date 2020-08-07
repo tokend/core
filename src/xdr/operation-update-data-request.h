@@ -45,6 +45,9 @@ count_size(xdr::measurer& m) const override;
 
 enum class UpdateDataRequestResultCode : std::int32_t {
   SUCCESS = 0,
+  INVALID_VALUE = -1,
+  NOT_FOUND = -2,
+  OWNER_NOT_EXIST = -3,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::UpdateDataRequestResultCode>
@@ -56,13 +59,22 @@ template<> struct xdr_traits<::stellar::UpdateDataRequestResultCode>
     switch (val) {
     case ::stellar::UpdateDataRequestResultCode::SUCCESS:
       return "SUCCESS";
+    case ::stellar::UpdateDataRequestResultCode::INVALID_VALUE:
+      return "INVALID_VALUE";
+    case ::stellar::UpdateDataRequestResultCode::NOT_FOUND:
+      return "NOT_FOUND";
+    case ::stellar::UpdateDataRequestResultCode::OWNER_NOT_EXIST:
+      return "OWNER_NOT_EXIST";
     default:
       return nullptr;
     }
   }
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::UpdateDataRequestResultCode::SUCCESS
+      (int32_t)::stellar::UpdateDataRequestResultCode::SUCCESS,
+      (int32_t)::stellar::UpdateDataRequestResultCode::INVALID_VALUE,
+      (int32_t)::stellar::UpdateDataRequestResultCode::NOT_FOUND,
+      (int32_t)::stellar::UpdateDataRequestResultCode::OWNER_NOT_EXIST
     };
     return _xdr_enum_vec;
   }
@@ -207,6 +219,8 @@ count_size(xdr::measurer& m) const override;
 
   uint64 requestID{};
   bool fulfilled{};
+  AccountID owner{};
+  uint64 dataID{};
   uint64 type{};
   longstring value{};
   _ext_t ext{};
@@ -214,23 +228,31 @@ count_size(xdr::measurer& m) const override;
   UpdateDataRequestResponse() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
+           typename _owner_T,
+           typename _dataID_T,
            typename _type_T,
            typename _value_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _requestID_T>::value
                           && std::is_constructible<bool, _fulfilled_T>::value
+                          && std::is_constructible<AccountID, _owner_T>::value
+                          && std::is_constructible<uint64, _dataID_T>::value
                           && std::is_constructible<uint64, _type_T>::value
                           && std::is_constructible<longstring, _value_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
   explicit UpdateDataRequestResponse(_requestID_T &&_requestID,
                                      _fulfilled_T &&_fulfilled,
+                                     _owner_T &&_owner,
+                                     _dataID_T &&_dataID,
                                      _type_T &&_type,
                                      _value_T &&_value,
                                      _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
+      owner(std::forward<_owner_T>(_owner)),
+      dataID(std::forward<_dataID_T>(_dataID)),
       type(std::forward<_type_T>(_type)),
       value(std::forward<_value_T>(_value)),
       ext(std::forward<_ext_T>(_ext)) {}
