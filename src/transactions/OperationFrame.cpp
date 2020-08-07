@@ -449,10 +449,10 @@ OperationFrame::checkValid(Application& app,
         return false;
     }
 
-//    if (!doCheckSignature(app, storageHelper))
-//    {
-//        return false;
-//    }todo temp hide remove this
+    if (!doCheckSignature(app, storageHelper))
+    {
+        return false;
+    }
 
     if (!forApply)
     {

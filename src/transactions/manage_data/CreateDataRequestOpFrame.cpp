@@ -65,6 +65,13 @@ namespace stellar {
         return true;
     }
 
+    bool CreateDataRequestOpFrame::tryGetSignerRequirements(stellar::StorageHelper &storageHelper,
+                                                                  std::vector<SignerRequirement> &result) const {
+        //TODO
+
+        return true;
+    }
+
     void
     CreateDataRequestOpFrame::pickResultCode(CreateDataRequestResultCode code) {
         innerResult().code(code);
