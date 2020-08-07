@@ -45,6 +45,7 @@ count_size(xdr::measurer& m) const override;
 
 enum class RemoveDataRequestResultCode : std::int32_t {
   SUCCESS = 0,
+  NOT_FOUND = -1,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::RemoveDataRequestResultCode>
@@ -56,13 +57,16 @@ template<> struct xdr_traits<::stellar::RemoveDataRequestResultCode>
     switch (val) {
     case ::stellar::RemoveDataRequestResultCode::SUCCESS:
       return "SUCCESS";
+    case ::stellar::RemoveDataRequestResultCode::NOT_FOUND:
+      return "NOT_FOUND";
     default:
       return nullptr;
     }
   }
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::RemoveDataRequestResultCode::SUCCESS
+      (int32_t)::stellar::RemoveDataRequestResultCode::SUCCESS,
+      (int32_t)::stellar::RemoveDataRequestResultCode::NOT_FOUND
     };
     return _xdr_enum_vec;
   }

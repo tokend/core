@@ -58,9 +58,15 @@ namespace stellar {
     CreateDataRequestOpFrame::tryGetOperationConditions(
             StorageHelper& storageHelper, std::vector<OperationCondition>& result) const
     {
+        auto action = AccountRuleAction::CREATE;
+        if (!(getSourceID() == mCreateDataRequestOp.createDataRequest.owner))
+        {
+            action = AccountRuleAction::CREATE_FOR_OTHER;
+        }
+
         AccountRuleResource resource(LedgerEntryType::DATA);
         resource.data().type = mCreateDataRequestOp.createDataRequest.type;
-        result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+        result.emplace_back(resource, action, mSourceAccount);
 
         return true;
     }
