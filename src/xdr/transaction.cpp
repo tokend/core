@@ -1313,8 +1313,6 @@ return u.from_bytes(createDataResult_);
 return u.from_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataResult_);
-    case (int32_t)OperationType::CREATE_DATA_REQUEST:
-return u.from_bytes(createDataRequestResult_);
     case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 return u.from_bytes(CreateDataCreationRequestResult_);
     case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
@@ -1439,8 +1437,6 @@ return m.to_bytes(createDataResult_);
 return m.to_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataResult_);
-    case (int32_t)OperationType::CREATE_DATA_REQUEST:
-return m.to_bytes(createDataRequestResult_);
     case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 return m.to_bytes(CreateDataCreationRequestResult_);
     case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
@@ -1561,8 +1557,6 @@ return m.count_size(createDataResult_);
 return m.count_size(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataResult_);
-    case (int32_t)OperationType::CREATE_DATA_REQUEST:
-return m.count_size(createDataRequestResult_);
     case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 return m.count_size(CreateDataCreationRequestResult_);
     case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
@@ -1686,8 +1680,6 @@ return createDataResult_ == other.createDataResult_;
 return updateDataResult_ == other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ == other.removeDataResult_;
-    case (int32_t)OperationType::CREATE_DATA_REQUEST:
-return createDataRequestResult_ == other.createDataRequestResult_;
     case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 return CreateDataCreationRequestResult_ == other.CreateDataCreationRequestResult_;
     case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
@@ -1813,8 +1805,6 @@ return createDataResult_ < other.createDataResult_;
 return updateDataResult_ < other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ < other.removeDataResult_;
-    case (int32_t)OperationType::CREATE_DATA_REQUEST:
-return createDataRequestResult_ < other.createDataRequestResult_;
     case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 return CreateDataCreationRequestResult_ < other.CreateDataCreationRequestResult_;
     case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:

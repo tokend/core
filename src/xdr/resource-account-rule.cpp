@@ -883,6 +883,65 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+ReviewableRequestResource::_dataCreation_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_dataCreation_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_dataCreation_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_dataCreation_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_dataCreation_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_dataCreation_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_dataCreation_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ReviewableRequestResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -910,6 +969,8 @@ return u.from_bytes(manageOffer_);
 return u.from_bytes(createPayment_);
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return u.from_bytes(performRedemption_);
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return u.from_bytes(dataCreation_);
   default:
 return u.from_bytes(ext_);
 }
@@ -944,6 +1005,8 @@ return m.to_bytes(manageOffer_);
 return m.to_bytes(createPayment_);
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.to_bytes(performRedemption_);
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.to_bytes(dataCreation_);
   default:
 return m.to_bytes(ext_);
 }
@@ -974,6 +1037,8 @@ return m.count_size(manageOffer_);
 return m.count_size(createPayment_);
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.count_size(performRedemption_);
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.count_size(dataCreation_);
   default:
 return m.count_size(ext_);
 }
@@ -1007,6 +1072,8 @@ return manageOffer_ == other.manageOffer_;
 return createPayment_ == other.createPayment_;
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return performRedemption_ == other.performRedemption_;
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreation_ == other.dataCreation_;
   default:
 return ext_ == other.ext_;
 }
@@ -1042,6 +1109,8 @@ return manageOffer_ < other.manageOffer_;
 return createPayment_ < other.createPayment_;
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return performRedemption_ < other.performRedemption_;
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreation_ < other.dataCreation_;
   default:
 return ext_ < other.ext_;
 }

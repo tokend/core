@@ -93,6 +93,11 @@ if (!oktype)
 {
 return false;
 }
+bool oksequenceNumber = u.from_bytes(sequenceNumber);
+if (!oksequenceNumber)
+{
+return false;
+}
 bool okvalue = u.from_bytes(value);
 if (!okvalue)
 {
@@ -113,6 +118,11 @@ if (!oktype)
 {
 return false;
 }
+bool oksequenceNumber = m.to_bytes(sequenceNumber);
+if (!oksequenceNumber)
+{
+return false;
+}
 bool okvalue = m.to_bytes(value);
 if (!okvalue)
 {
@@ -129,6 +139,7 @@ void
 DataCreationRequest::count_size(xdr::measurer& m) const 
 {
 m.count_size(type);
+m.count_size(sequenceNumber);
 m.count_size(value);
 m.count_size(ext);
 }
@@ -140,6 +151,7 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<DataCreationRequest const&>(other_abstract);return true
 && (type== other.type)
+&& (sequenceNumber== other.sequenceNumber)
 && (value== other.value)
 && (ext== other.ext)
 ;}
@@ -153,6 +165,8 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<DataCreationRequest const&>(other_abstract);
 if (type < other.type) return true;
 if (other.type < type) return false;
+if (sequenceNumber < other.sequenceNumber) return true;
+if (other.sequenceNumber < sequenceNumber) return false;
 if (value < other.value) return true;
 if (other.value < value) return false;
 if (ext < other.ext) return true;

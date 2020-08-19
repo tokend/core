@@ -3330,7 +3330,6 @@ struct OperationResult : xdr::xdr_abstract {
       CreateDataResult createDataResult_;
       UpdateDataResult updateDataResult_;
       RemoveDataResult removeDataResult_;
-      CreateDataRequestResult createDataRequestResult_;
       CreateDataCreationRequestResult CreateDataCreationRequestResult_;
       CancelDataCreationRequestResult CancelDataCreationRequestResult_;
     };
@@ -3392,7 +3391,6 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CREATE_DATA,
         OperationType::UPDATE_DATA,
         OperationType::REMOVE_DATA,
-        OperationType::CREATE_DATA_REQUEST,
         OperationType::CREATE_DATA_CREATION_REQUEST,
         OperationType::CANCEL_DATA_CREATION_REQUEST
       };
@@ -3452,9 +3450,8 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CREATE_DATA ? 51
         : which == (int32_t)OperationType::UPDATE_DATA ? 52
         : which == (int32_t)OperationType::REMOVE_DATA ? 53
-        : which == (int32_t)OperationType::CREATE_DATA_REQUEST ? 54
-        : which == (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST ? 55
-        : which == (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST ? 56
+        : which == (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST ? 54
+        : which == (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST ? 55
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3618,9 +3615,6 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::REMOVE_DATA:
         _f(&_tr_t::removeDataResult_, std::forward<_A>(_a)...);
-        return true;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-        _f(&_tr_t::createDataRequestResult_, std::forward<_A>(_a)...);
         return true;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
         _f(&_tr_t::CreateDataCreationRequestResult_, std::forward<_A>(_a)...);
@@ -3800,9 +3794,6 @@ break;
         case (int32_t)OperationType::REMOVE_DATA:
 new(&removeDataResult_) RemoveDataResult{};
 break;
-        case (int32_t)OperationType::CREATE_DATA_REQUEST:
-new(&createDataRequestResult_) CreateDataRequestResult{};
-break;
         case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 new(&CreateDataCreationRequestResult_) CreateDataCreationRequestResult{};
 break;
@@ -3977,9 +3968,6 @@ break;
       case (int32_t)OperationType::REMOVE_DATA:
 new(&removeDataResult_) RemoveDataResult{};
 break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-new(&createDataRequestResult_) CreateDataRequestResult{};
-break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 new(&CreateDataCreationRequestResult_) CreateDataCreationRequestResult{};
 break;
@@ -4150,9 +4138,6 @@ new(&updateDataResult_) UpdateDataResult(source.updateDataResult_);
 break;
       case (int32_t)OperationType::REMOVE_DATA:
 new(&removeDataResult_) RemoveDataResult(source.removeDataResult_);
-break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-new(&createDataRequestResult_) CreateDataRequestResult(source.createDataRequestResult_);
 break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 new(&CreateDataCreationRequestResult_) CreateDataCreationRequestResult(source.CreateDataCreationRequestResult_);
@@ -4325,9 +4310,6 @@ break;
       case (int32_t)OperationType::REMOVE_DATA:
 new(&removeDataResult_) RemoveDataResult(std::move(source.removeDataResult_));
 break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-new(&createDataRequestResult_) CreateDataRequestResult(std::move(source.createDataRequestResult_));
-break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 new(&CreateDataCreationRequestResult_) CreateDataCreationRequestResult(std::move(source.CreateDataCreationRequestResult_));
 break;
@@ -4498,9 +4480,6 @@ updateDataResult_.~UpdateDataResult();
 break;
     case (int32_t)OperationType::REMOVE_DATA:
 removeDataResult_.~RemoveDataResult();
-break;
-    case (int32_t)OperationType::CREATE_DATA_REQUEST:
-createDataRequestResult_.~CreateDataRequestResult();
 break;
     case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 CreateDataCreationRequestResult_.~CreateDataCreationRequestResult();
@@ -4675,9 +4654,6 @@ break;
       case (int32_t)OperationType::REMOVE_DATA:
 removeDataResult_ = source.removeDataResult_;
 break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-createDataRequestResult_ = source.createDataRequestResult_;
-break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 CreateDataCreationRequestResult_ = source.CreateDataCreationRequestResult_;
 break;
@@ -4848,9 +4824,6 @@ new(&updateDataResult_) UpdateDataResult(source.updateDataResult_);
 break;
       case (int32_t)OperationType::REMOVE_DATA:
 new(&removeDataResult_) RemoveDataResult(source.removeDataResult_);
-break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-new(&createDataRequestResult_) CreateDataRequestResult(source.createDataRequestResult_);
 break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 new(&CreateDataCreationRequestResult_) CreateDataCreationRequestResult(source.CreateDataCreationRequestResult_);
@@ -5026,9 +4999,6 @@ break;
       case (int32_t)OperationType::REMOVE_DATA:
 removeDataResult_ = std::move(source.removeDataResult_);
 break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-createDataRequestResult_ = std::move(source.createDataRequestResult_);
-break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 CreateDataCreationRequestResult_ = std::move(source.CreateDataCreationRequestResult_);
 break;
@@ -5199,9 +5169,6 @@ new(&updateDataResult_) UpdateDataResult(std::move(source.updateDataResult_));
 break;
       case (int32_t)OperationType::REMOVE_DATA:
 new(&removeDataResult_) RemoveDataResult(std::move(source.removeDataResult_));
-break;
-      case (int32_t)OperationType::CREATE_DATA_REQUEST:
-new(&createDataRequestResult_) CreateDataRequestResult(std::move(source.createDataRequestResult_));
 break;
       case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
 new(&CreateDataCreationRequestResult_) CreateDataCreationRequestResult(std::move(source.CreateDataCreationRequestResult_));
@@ -5750,33 +5717,23 @@ break;
         return removeDataResult_;
       throw xdr::xdr_wrong_union("_tr_t: removeDataResult accessed when not selected");
     }
-    CreateDataRequestResult &createDataRequestResult() {
-      if (_xdr_field_number(type_) == 54)
-        return createDataRequestResult_;
-      throw xdr::xdr_wrong_union("_tr_t: createDataRequestResult accessed when not selected");
-    }
-    const CreateDataRequestResult &createDataRequestResult() const {
-      if (_xdr_field_number(type_) == 54)
-        return createDataRequestResult_;
-      throw xdr::xdr_wrong_union("_tr_t: createDataRequestResult accessed when not selected");
-    }
     CreateDataCreationRequestResult &CreateDataCreationRequestResult() {
-      if (_xdr_field_number(type_) == 55)
+      if (_xdr_field_number(type_) == 54)
         return CreateDataCreationRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: CreateDataCreationRequestResult accessed when not selected");
     }
     const CreateDataCreationRequestResult &CreateDataCreationRequestResult() const {
-      if (_xdr_field_number(type_) == 55)
+      if (_xdr_field_number(type_) == 54)
         return CreateDataCreationRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: CreateDataCreationRequestResult accessed when not selected");
     }
     CancelDataCreationRequestResult &CancelDataCreationRequestResult() {
-      if (_xdr_field_number(type_) == 56)
+      if (_xdr_field_number(type_) == 55)
         return CancelDataCreationRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: CancelDataCreationRequestResult accessed when not selected");
     }
     const CancelDataCreationRequestResult &CancelDataCreationRequestResult() const {
-      if (_xdr_field_number(type_) == 56)
+      if (_xdr_field_number(type_) == 55)
         return CancelDataCreationRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: CancelDataCreationRequestResult accessed when not selected");
     }bool

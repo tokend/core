@@ -67,9 +67,6 @@
 #include "swap/OpenSwapOpFrame.h"
 #include "swap/CloseSwapOpFrame.h"
 #include "CreateRedemptionRequestOpFrame.h"
-#include "manage_data/CreateDataOpFrame.h"
-#include "manage_data/UpdateDataOpFrame.h"
-#include "manage_data/RemoveDataOpFrame.h"
 
 namespace stellar
 {
@@ -188,12 +185,6 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<UpdateDataOpFrame>(op, res, tx);
         case OperationType::REMOVE_DATA:
             return make_shared<RemoveDataOpFrame>(op, res, tx);
-        case OperationType::CREATE_DATA_REQUEST:
-            return make_shared<CreateDataRequestOpFrame>(op, res, tx);
-        case OperationType::UPDATE_DATA_REQUEST:
-            return make_shared<UpdateDataRequestOpFrame>(op, res, tx);
-        case OperationType::REMOVE_DATA_REQUEST:
-            return make_shared<RemoveDataRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
