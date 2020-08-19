@@ -8,7 +8,7 @@
 using namespace xdr;
 namespace stellar {
 bool
-CreateDataRequest::_ext_t::from_bytes(xdr::unmarshaler& u) 
+DataCreationRequest::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -24,7 +24,7 @@ _xdr_discriminant(disc, true);switch (v_)
 return false;
 }
 bool
-CreateDataRequest::_ext_t::to_bytes(xdr::marshaler& m) const
+DataCreationRequest::_ext_t::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(v_);
 if (!ok)
@@ -40,7 +40,7 @@ switch (v_)
 return false;
 }
 void
-CreateDataRequest::_ext_t::count_size(xdr::measurer& m) const
+DataCreationRequest::_ext_t::count_size(xdr::measurer& m) const
 {
 m.count_size(v_);
 switch (v_)
@@ -52,7 +52,7 @@ switch (v_)
 }
 }
 bool
-CreateDataRequest::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+DataCreationRequest::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -69,7 +69,7 @@ switch (v_)
 return false;
 }
 bool
-CreateDataRequest::_ext_t::operator<(xdr_abstract const& other_abstract) const
+DataCreationRequest::_ext_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -86,7 +86,7 @@ switch (v_)
 return false;
 }
 bool
-CreateDataRequest::from_bytes(xdr::unmarshaler& u) 
+DataCreationRequest::from_bytes(xdr::unmarshaler& u) 
 {
 bool oktype = u.from_bytes(type);
 if (!oktype)
@@ -98,11 +98,6 @@ if (!okvalue)
 {
 return false;
 }
-bool okowner = u.from_bytes(owner);
-if (!okowner)
-{
-return false;
-}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -111,7 +106,7 @@ return false;
 return true;
 }
 bool
-CreateDataRequest::to_bytes(xdr::marshaler& m) const 
+DataCreationRequest::to_bytes(xdr::marshaler& m) const 
 {
 bool oktype = m.to_bytes(type);
 if (!oktype)
@@ -123,11 +118,6 @@ if (!okvalue)
 {
 return false;
 }
-bool okowner = m.to_bytes(owner);
-if (!okowner)
-{
-return false;
-}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -136,39 +126,35 @@ return false;
 return true;
 }
 void
-CreateDataRequest::count_size(xdr::measurer& m) const 
+DataCreationRequest::count_size(xdr::measurer& m) const 
 {
 m.count_size(type);
 m.count_size(value);
-m.count_size(owner);
 m.count_size(ext);
 }
 bool
-CreateDataRequest::operator==(xdr::xdr_abstract const& other_abstract) const 
+DataCreationRequest::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<CreateDataRequest const&>(other_abstract);return true
+}auto& other = dynamic_cast<DataCreationRequest const&>(other_abstract);return true
 && (type== other.type)
 && (value== other.value)
-&& (owner== other.owner)
 && (ext== other.ext)
 ;}
 bool
-CreateDataRequest::operator<(xdr_abstract const& other_abstract) const
+DataCreationRequest::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<CreateDataRequest const&>(other_abstract);
+auto& other = dynamic_cast<DataCreationRequest const&>(other_abstract);
 if (type < other.type) return true;
 if (other.type < type) return false;
 if (value < other.value) return true;
 if (other.value < value) return false;
-if (owner < other.owner) return true;
-if (other.owner < owner) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

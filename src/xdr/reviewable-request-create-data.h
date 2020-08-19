@@ -11,7 +11,7 @@
 
 namespace stellar {
 
-struct CreateDataRequest  : xdr::xdr_abstract {
+struct DataCreationRequest  : xdr::xdr_abstract {
   struct _ext_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<LedgerVersion>::case_type;
   private:
@@ -149,27 +149,22 @@ count_size(xdr::measurer& m) const override;
 
   uint64 type{};
   longstring value{};
-  AccountID owner{};
   _ext_t ext{};
 
-  CreateDataRequest() = default;
+  DataCreationRequest() = default;
   template<typename _type_T,
            typename _value_T,
-           typename _owner_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _type_T>::value
                           && std::is_constructible<longstring, _value_T>::value
-                          && std::is_constructible<AccountID, _owner_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
-  explicit CreateDataRequest(_type_T &&_type,
-                             _value_T &&_value,
-                             _owner_T &&_owner,
-                             _ext_T &&_ext)
+  explicit DataCreationRequest(_type_T &&_type,
+                               _value_T &&_value,
+                               _ext_T &&_ext)
     : type(std::forward<_type_T>(_type)),
       value(std::forward<_value_T>(_value)),
-      owner(std::forward<_owner_T>(_owner)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
