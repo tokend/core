@@ -2,15 +2,15 @@
 
 #include "ledger/EntryFrame.h"
 
-namespace stellar 
+namespace stellar
 {
-class DataFrame : public EntryFrame 
+class DataFrame : public EntryFrame
 {
     DataEntry& mDataEntry;
 
     DataFrame(DataFrame const& from);
 
-public:
+  public:
     typedef std::shared_ptr<DataFrame> pointer;
 
     DataFrame();
@@ -22,19 +22,18 @@ public:
         return EntryFrame::pointer(new DataFrame(*this));
     }
 
-    static pointer create(CreateDataRequest const& request);
+    static pointer create(DataCreationRequest const& request);
 
-    LedgerKey const&
-    getKey() const override;
+    LedgerKey const& getKey() const override;
 
     DataEntry const&
-    getData() const 
+    getData() const
     {
         return mDataEntry;
     }
 
     DataEntry&
-    getData() 
+    getData()
     {
         clearCached();
         return mDataEntry;

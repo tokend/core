@@ -52,6 +52,7 @@ enum class CreateDataCreationRequestResultCode : std::int32_t {
   SUCCESS = 0,
   INVALID_VALUE = -1,
   CREATE_DATA_TASKS_NOT_FOUND = -2,
+  REQUEST_NOT_FOUND = -3,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreateDataCreationRequestResultCode>
@@ -67,6 +68,8 @@ template<> struct xdr_traits<::stellar::CreateDataCreationRequestResultCode>
       return "INVALID_VALUE";
     case ::stellar::CreateDataCreationRequestResultCode::CREATE_DATA_TASKS_NOT_FOUND:
       return "CREATE_DATA_TASKS_NOT_FOUND";
+    case ::stellar::CreateDataCreationRequestResultCode::REQUEST_NOT_FOUND:
+      return "REQUEST_NOT_FOUND";
     default:
       return nullptr;
     }
@@ -75,7 +78,8 @@ template<> struct xdr_traits<::stellar::CreateDataCreationRequestResultCode>
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::CreateDataCreationRequestResultCode::SUCCESS,
       (int32_t)::stellar::CreateDataCreationRequestResultCode::INVALID_VALUE,
-      (int32_t)::stellar::CreateDataCreationRequestResultCode::CREATE_DATA_TASKS_NOT_FOUND
+      (int32_t)::stellar::CreateDataCreationRequestResultCode::CREATE_DATA_TASKS_NOT_FOUND,
+      (int32_t)::stellar::CreateDataCreationRequestResultCode::REQUEST_NOT_FOUND
     };
     return _xdr_enum_vec;
   }
@@ -220,6 +224,8 @@ count_size(xdr::measurer& m) const override;
 
   uint64 requestID{};
   bool fulfilled{};
+  AccountID owner{};
+  uint64 id{};
   uint64 type{};
   longstring value{};
   _ext_t ext{};
@@ -227,23 +233,31 @@ count_size(xdr::measurer& m) const override;
   CreateDataCreationRequestResponse() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
+           typename _owner_T,
+           typename _id_T,
            typename _type_T,
            typename _value_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _requestID_T>::value
                           && std::is_constructible<bool, _fulfilled_T>::value
+                          && std::is_constructible<AccountID, _owner_T>::value
+                          && std::is_constructible<uint64, _id_T>::value
                           && std::is_constructible<uint64, _type_T>::value
                           && std::is_constructible<longstring, _value_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
   explicit CreateDataCreationRequestResponse(_requestID_T &&_requestID,
                                              _fulfilled_T &&_fulfilled,
+                                             _owner_T &&_owner,
+                                             _id_T &&_id,
                                              _type_T &&_type,
                                              _value_T &&_value,
                                              _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
+      owner(std::forward<_owner_T>(_owner)),
+      id(std::forward<_id_T>(_id)),
       type(std::forward<_type_T>(_type)),
       value(std::forward<_value_T>(_value)),
       ext(std::forward<_ext_T>(_ext)) {}

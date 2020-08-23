@@ -1001,6 +1001,7 @@ enum class OperationType : std::int32_t {
   REMOVE_DATA = 59,
   CREATE_DATA_CREATION_REQUEST = 60,
   CANCEL_DATA_CREATION_REQUEST = 61,
+  CREATE_DATA_UPDATE_REQUEST = 62,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1120,6 +1121,8 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CREATE_DATA_CREATION_REQUEST";
     case ::stellar::OperationType::CANCEL_DATA_CREATION_REQUEST:
       return "CANCEL_DATA_CREATION_REQUEST";
+    case ::stellar::OperationType::CREATE_DATA_UPDATE_REQUEST:
+      return "CREATE_DATA_UPDATE_REQUEST";
     default:
       return nullptr;
     }
@@ -1180,7 +1183,8 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::UPDATE_DATA,
       (int32_t)::stellar::OperationType::REMOVE_DATA,
       (int32_t)::stellar::OperationType::CREATE_DATA_CREATION_REQUEST,
-      (int32_t)::stellar::OperationType::CANCEL_DATA_CREATION_REQUEST
+      (int32_t)::stellar::OperationType::CANCEL_DATA_CREATION_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_DATA_UPDATE_REQUEST
     };
     return _xdr_enum_vec;
   }

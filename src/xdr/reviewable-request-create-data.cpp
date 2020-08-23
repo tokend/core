@@ -98,6 +98,11 @@ if (!oksequenceNumber)
 {
 return false;
 }
+bool okowner = u.from_bytes(owner);
+if (!okowner)
+{
+return false;
+}
 bool okvalue = u.from_bytes(value);
 if (!okvalue)
 {
@@ -123,6 +128,11 @@ if (!oksequenceNumber)
 {
 return false;
 }
+bool okowner = m.to_bytes(owner);
+if (!okowner)
+{
+return false;
+}
 bool okvalue = m.to_bytes(value);
 if (!okvalue)
 {
@@ -140,6 +150,7 @@ DataCreationRequest::count_size(xdr::measurer& m) const
 {
 m.count_size(type);
 m.count_size(sequenceNumber);
+m.count_size(owner);
 m.count_size(value);
 m.count_size(ext);
 }
@@ -152,6 +163,7 @@ return false;
 }auto& other = dynamic_cast<DataCreationRequest const&>(other_abstract);return true
 && (type== other.type)
 && (sequenceNumber== other.sequenceNumber)
+&& (owner== other.owner)
 && (value== other.value)
 && (ext== other.ext)
 ;}
@@ -167,6 +179,8 @@ if (type < other.type) return true;
 if (other.type < type) return false;
 if (sequenceNumber < other.sequenceNumber) return true;
 if (other.sequenceNumber < sequenceNumber) return false;
+if (owner < other.owner) return true;
+if (other.owner < owner) return false;
 if (value < other.value) return true;
 if (other.value < value) return false;
 if (ext < other.ext) return true;

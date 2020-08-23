@@ -149,26 +149,31 @@ count_size(xdr::measurer& m) const override;
 
   uint64 type{};
   uint32 sequenceNumber{};
+  AccountID owner{};
   longstring value{};
   _ext_t ext{};
 
   DataCreationRequest() = default;
   template<typename _type_T,
            typename _sequenceNumber_T,
+           typename _owner_T,
            typename _value_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _type_T>::value
                           && std::is_constructible<uint32, _sequenceNumber_T>::value
+                          && std::is_constructible<AccountID, _owner_T>::value
                           && std::is_constructible<longstring, _value_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
   explicit DataCreationRequest(_type_T &&_type,
                                _sequenceNumber_T &&_sequenceNumber,
+                               _owner_T &&_owner,
                                _value_T &&_value,
                                _ext_T &&_ext)
     : type(std::forward<_type_T>(_type)),
       sequenceNumber(std::forward<_sequenceNumber_T>(_sequenceNumber)),
+      owner(std::forward<_owner_T>(_owner)),
       value(std::forward<_value_T>(_value)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool

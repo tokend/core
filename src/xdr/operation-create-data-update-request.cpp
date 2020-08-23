@@ -1,4 +1,4 @@
-#include "operation-create-data-request.h"
+#include "operation-create-data-update-request.h"
 #include "cpp-serialize/src/unmarshaler.h"
 #include "cpp-serialize/src/marshaler.h"
 #include "cpp-serialize/src/measurer.h"
@@ -8,10 +8,15 @@
 using namespace xdr;
 namespace stellar {
 bool
-CreateDataRequestOp::from_bytes(xdr::unmarshaler& u) 
+CreateDataUpdateRequestOp::from_bytes(xdr::unmarshaler& u) 
 {
-bool okcreateDataRequest = u.from_bytes(createDataRequest);
-if (!okcreateDataRequest)
+bool okrequestID = u.from_bytes(requestID);
+if (!okrequestID)
+{
+return false;
+}
+bool okdataUpdateRequest = u.from_bytes(dataUpdateRequest);
+if (!okdataUpdateRequest)
 {
 return false;
 }
@@ -28,10 +33,15 @@ return false;
 return true;
 }
 bool
-CreateDataRequestOp::to_bytes(xdr::marshaler& m) const 
+CreateDataUpdateRequestOp::to_bytes(xdr::marshaler& m) const 
 {
-bool okcreateDataRequest = m.to_bytes(createDataRequest);
-if (!okcreateDataRequest)
+bool okrequestID = m.to_bytes(requestID);
+if (!okrequestID)
+{
+return false;
+}
+bool okdataUpdateRequest = m.to_bytes(dataUpdateRequest);
+if (!okdataUpdateRequest)
 {
 return false;
 }
@@ -48,40 +58,44 @@ return false;
 return true;
 }
 void
-CreateDataRequestOp::count_size(xdr::measurer& m) const 
+CreateDataUpdateRequestOp::count_size(xdr::measurer& m) const 
 {
-m.count_size(createDataRequest);
+m.count_size(requestID);
+m.count_size(dataUpdateRequest);
 m.count_size(allTasks);
 m.count_size(ext);
 }
 bool
-CreateDataRequestOp::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataUpdateRequestOp::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<CreateDataRequestOp const&>(other_abstract);return true
-&& (createDataRequest== other.createDataRequest)
+}auto& other = dynamic_cast<CreateDataUpdateRequestOp const&>(other_abstract);return true
+&& (requestID== other.requestID)
+&& (dataUpdateRequest== other.dataUpdateRequest)
 && (allTasks== other.allTasks)
 && (ext== other.ext)
 ;}
 bool
-CreateDataRequestOp::operator<(xdr_abstract const& other_abstract) const
+CreateDataUpdateRequestOp::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<CreateDataRequestOp const&>(other_abstract);
-if (createDataRequest < other.createDataRequest) return true;
-if (other.createDataRequest < createDataRequest) return false;
+auto& other = dynamic_cast<CreateDataUpdateRequestOp const&>(other_abstract);
+if (requestID < other.requestID) return true;
+if (other.requestID < requestID) return false;
+if (dataUpdateRequest < other.dataUpdateRequest) return true;
+if (other.dataUpdateRequest < dataUpdateRequest) return false;
 if (allTasks < other.allTasks) return true;
 if (other.allTasks < allTasks) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
-CreateDataRequestResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
+CreateDataUpdateRequestResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -97,7 +111,7 @@ _xdr_discriminant(disc, true);switch (v_)
 return false;
 }
 bool
-CreateDataRequestResponse::_ext_t::to_bytes(xdr::marshaler& m) const
+CreateDataUpdateRequestResponse::_ext_t::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(v_);
 if (!ok)
@@ -113,7 +127,7 @@ switch (v_)
 return false;
 }
 void
-CreateDataRequestResponse::_ext_t::count_size(xdr::measurer& m) const
+CreateDataUpdateRequestResponse::_ext_t::count_size(xdr::measurer& m) const
 {
 m.count_size(v_);
 switch (v_)
@@ -125,7 +139,7 @@ switch (v_)
 }
 }
 bool
-CreateDataRequestResponse::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataUpdateRequestResponse::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -142,7 +156,7 @@ switch (v_)
 return false;
 }
 bool
-CreateDataRequestResponse::_ext_t::operator<(xdr_abstract const& other_abstract) const
+CreateDataUpdateRequestResponse::_ext_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -159,7 +173,7 @@ switch (v_)
 return false;
 }
 bool
-CreateDataRequestResponse::from_bytes(xdr::unmarshaler& u) 
+CreateDataUpdateRequestResponse::from_bytes(xdr::unmarshaler& u) 
 {
 bool okrequestID = u.from_bytes(requestID);
 if (!okrequestID)
@@ -168,6 +182,16 @@ return false;
 }
 bool okfulfilled = u.from_bytes(fulfilled);
 if (!okfulfilled)
+{
+return false;
+}
+bool okowner = u.from_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool okid = u.from_bytes(id);
+if (!okid)
 {
 return false;
 }
@@ -189,7 +213,7 @@ return false;
 return true;
 }
 bool
-CreateDataRequestResponse::to_bytes(xdr::marshaler& m) const 
+CreateDataUpdateRequestResponse::to_bytes(xdr::marshaler& m) const 
 {
 bool okrequestID = m.to_bytes(requestID);
 if (!okrequestID)
@@ -198,6 +222,16 @@ return false;
 }
 bool okfulfilled = m.to_bytes(fulfilled);
 if (!okfulfilled)
+{
+return false;
+}
+bool okowner = m.to_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool okid = m.to_bytes(id);
+if (!okid)
 {
 return false;
 }
@@ -219,39 +253,47 @@ return false;
 return true;
 }
 void
-CreateDataRequestResponse::count_size(xdr::measurer& m) const 
+CreateDataUpdateRequestResponse::count_size(xdr::measurer& m) const 
 {
 m.count_size(requestID);
 m.count_size(fulfilled);
+m.count_size(owner);
+m.count_size(id);
 m.count_size(type);
 m.count_size(value);
 m.count_size(ext);
 }
 bool
-CreateDataRequestResponse::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataUpdateRequestResponse::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<CreateDataRequestResponse const&>(other_abstract);return true
+}auto& other = dynamic_cast<CreateDataUpdateRequestResponse const&>(other_abstract);return true
 && (requestID== other.requestID)
 && (fulfilled== other.fulfilled)
+&& (owner== other.owner)
+&& (id== other.id)
 && (type== other.type)
 && (value== other.value)
 && (ext== other.ext)
 ;}
 bool
-CreateDataRequestResponse::operator<(xdr_abstract const& other_abstract) const
+CreateDataUpdateRequestResponse::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<CreateDataRequestResponse const&>(other_abstract);
+auto& other = dynamic_cast<CreateDataUpdateRequestResponse const&>(other_abstract);
 if (requestID < other.requestID) return true;
 if (other.requestID < requestID) return false;
 if (fulfilled < other.fulfilled) return true;
 if (other.fulfilled < fulfilled) return false;
+if (owner < other.owner) return true;
+if (other.owner < owner) return false;
+if (id < other.id) return true;
+if (other.id < id) return false;
 if (type < other.type) return true;
 if (other.type < type) return false;
 if (value < other.value) return true;
@@ -260,7 +302,7 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
-CreateDataRequestResult::from_bytes(xdr::unmarshaler& u) 
+CreateDataUpdateRequestResult::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -269,8 +311,8 @@ return false;
 }
 _xdr_discriminant(disc, true);switch (code_)
 {
-  case (int32_t)CreateDataRequestResultCode::SUCCESS:
-return u.from_bytes(createDataRequestResponse_);
+  case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
+return u.from_bytes(createDataUpdateRequestResponse_);
   default:
   
   return true;
@@ -278,7 +320,7 @@ return u.from_bytes(createDataRequestResponse_);
 return false;
 }
 bool
-CreateDataRequestResult::to_bytes(xdr::marshaler& m) const
+CreateDataUpdateRequestResult::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(code_);
 if (!ok)
@@ -288,40 +330,40 @@ return false;
 switch (code_)
 {
 
-  case (int32_t)CreateDataRequestResultCode::SUCCESS:
-return m.to_bytes(createDataRequestResponse_);
+  case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
+return m.to_bytes(createDataUpdateRequestResponse_);
   default:
     return true;
 }
 return false;
 }
 void
-CreateDataRequestResult::count_size(xdr::measurer& m) const
+CreateDataUpdateRequestResult::count_size(xdr::measurer& m) const
 {
 m.count_size(code_);
 switch (code_)
 {
 
-  case (int32_t)CreateDataRequestResultCode::SUCCESS:
-return m.count_size(createDataRequestResponse_);
+  case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
+return m.count_size(createDataUpdateRequestResponse_);
   default:
   
   return;
 }
 }
 bool
-CreateDataRequestResult::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataUpdateRequestResult::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }
-auto& other = dynamic_cast<CreateDataRequestResult const&>(other_abstract);
+auto& other = dynamic_cast<CreateDataUpdateRequestResult const&>(other_abstract);
 if (other.code_ != code_) return false;
 switch (code_)
 {
-  case (int32_t)CreateDataRequestResultCode::SUCCESS:
-return createDataRequestResponse_ == other.createDataRequestResponse_;
+  case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
+return createDataUpdateRequestResponse_ == other.createDataUpdateRequestResponse_;
   default:
   
   return true;
@@ -329,19 +371,19 @@ return createDataRequestResponse_ == other.createDataRequestResponse_;
 return false;
 }
 bool
-CreateDataRequestResult::operator<(xdr_abstract const& other_abstract) const
+CreateDataUpdateRequestResult::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<CreateDataRequestResult const&>(other_abstract);
+auto& other = dynamic_cast<CreateDataUpdateRequestResult const&>(other_abstract);
 if (code_ < other.code_) return true;
 if (other.code_ < code_) return false;
 switch (code_)
 {
-  case (int32_t)CreateDataRequestResultCode::SUCCESS:
-return createDataRequestResponse_ < other.createDataRequestResponse_;
+  case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
+return createDataUpdateRequestResponse_ < other.createDataUpdateRequestResponse_;
   default:
     return false;
 }
