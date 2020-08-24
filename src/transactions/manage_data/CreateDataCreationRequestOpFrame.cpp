@@ -61,7 +61,7 @@ CreateDataCreationRequestOpFrame::tryGetSignerRequirements(
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(
         ReviewableRequestType::DATA_CREATION);
-    resource.reviewableRequest().details.createSale().type =
+    resource.reviewableRequest().details.dataCreation().type =
         mCreateDataCreationRequestOp.dataCreationRequest.type;
     resource.reviewableRequest().tasksToRemove = 0;
     resource.reviewableRequest().tasksToAdd = 0;
