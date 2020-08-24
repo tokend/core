@@ -103,6 +103,11 @@ if (!okvalue)
 {
 return false;
 }
+bool okcreatorDetails = u.from_bytes(creatorDetails);
+if (!okcreatorDetails)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -128,6 +133,11 @@ if (!okvalue)
 {
 return false;
 }
+bool okcreatorDetails = m.to_bytes(creatorDetails);
+if (!okcreatorDetails)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -141,6 +151,7 @@ DataUpdateRequest::count_size(xdr::measurer& m) const
 m.count_size(id);
 m.count_size(sequenceNumber);
 m.count_size(value);
+m.count_size(creatorDetails);
 m.count_size(ext);
 }
 bool
@@ -153,6 +164,7 @@ return false;
 && (id== other.id)
 && (sequenceNumber== other.sequenceNumber)
 && (value== other.value)
+&& (creatorDetails== other.creatorDetails)
 && (ext== other.ext)
 ;}
 bool
@@ -169,6 +181,8 @@ if (sequenceNumber < other.sequenceNumber) return true;
 if (other.sequenceNumber < sequenceNumber) return false;
 if (value < other.value) return true;
 if (other.value < value) return false;
+if (creatorDetails < other.creatorDetails) return true;
+if (other.creatorDetails < creatorDetails) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

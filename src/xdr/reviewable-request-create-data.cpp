@@ -108,6 +108,11 @@ if (!okvalue)
 {
 return false;
 }
+bool okcreatorDetails = u.from_bytes(creatorDetails);
+if (!okcreatorDetails)
+{
+return false;
+}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -138,6 +143,11 @@ if (!okvalue)
 {
 return false;
 }
+bool okcreatorDetails = m.to_bytes(creatorDetails);
+if (!okcreatorDetails)
+{
+return false;
+}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -152,6 +162,7 @@ m.count_size(type);
 m.count_size(sequenceNumber);
 m.count_size(owner);
 m.count_size(value);
+m.count_size(creatorDetails);
 m.count_size(ext);
 }
 bool
@@ -165,6 +176,7 @@ return false;
 && (sequenceNumber== other.sequenceNumber)
 && (owner== other.owner)
 && (value== other.value)
+&& (creatorDetails== other.creatorDetails)
 && (ext== other.ext)
 ;}
 bool
@@ -183,6 +195,8 @@ if (owner < other.owner) return true;
 if (other.owner < owner) return false;
 if (value < other.value) return true;
 if (other.value < value) return false;
+if (creatorDetails < other.creatorDetails) return true;
+if (other.creatorDetails < creatorDetails) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

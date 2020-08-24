@@ -52,6 +52,8 @@ enum class CreateDataUpdateRequestResultCode : std::int32_t {
   SUCCESS = 0,
   INVALID_VALUE = -1,
   UPDATE_DATA_TASKS_NOT_FOUND = -2,
+  DATA_NOT_FOUND = -3,
+  INVALID_CREATOR_DETAILS = -4,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreateDataUpdateRequestResultCode>
@@ -67,6 +69,10 @@ template<> struct xdr_traits<::stellar::CreateDataUpdateRequestResultCode>
       return "INVALID_VALUE";
     case ::stellar::CreateDataUpdateRequestResultCode::UPDATE_DATA_TASKS_NOT_FOUND:
       return "UPDATE_DATA_TASKS_NOT_FOUND";
+    case ::stellar::CreateDataUpdateRequestResultCode::DATA_NOT_FOUND:
+      return "DATA_NOT_FOUND";
+    case ::stellar::CreateDataUpdateRequestResultCode::INVALID_CREATOR_DETAILS:
+      return "INVALID_CREATOR_DETAILS";
     default:
       return nullptr;
     }
@@ -75,7 +81,9 @@ template<> struct xdr_traits<::stellar::CreateDataUpdateRequestResultCode>
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::CreateDataUpdateRequestResultCode::SUCCESS,
       (int32_t)::stellar::CreateDataUpdateRequestResultCode::INVALID_VALUE,
-      (int32_t)::stellar::CreateDataUpdateRequestResultCode::UPDATE_DATA_TASKS_NOT_FOUND
+      (int32_t)::stellar::CreateDataUpdateRequestResultCode::UPDATE_DATA_TASKS_NOT_FOUND,
+      (int32_t)::stellar::CreateDataUpdateRequestResultCode::DATA_NOT_FOUND,
+      (int32_t)::stellar::CreateDataUpdateRequestResultCode::INVALID_CREATOR_DETAILS
     };
     return _xdr_enum_vec;
   }

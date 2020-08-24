@@ -87,6 +87,14 @@ CreateDataCreationRequestOpFrame::doCheckValid(Application& app)
         return false;
     }
 
+    if (!isValidJson(
+            mCreateDataCreationRequestOp.dataCreationRequest.creatorDetails))
+    {
+        pickResultCode(
+            CreateDataCreationRequestResultCode::INVALID_CREATOR_DETAILS);
+        return false;
+    }
+
     return true;
 }
 

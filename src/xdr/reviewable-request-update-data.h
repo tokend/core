@@ -150,26 +150,31 @@ count_size(xdr::measurer& m) const override;
   uint64 id{};
   uint32 sequenceNumber{};
   longstring value{};
+  longstring creatorDetails{};
   _ext_t ext{};
 
   DataUpdateRequest() = default;
   template<typename _id_T,
            typename _sequenceNumber_T,
            typename _value_T,
+           typename _creatorDetails_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _id_T>::value
                           && std::is_constructible<uint32, _sequenceNumber_T>::value
                           && std::is_constructible<longstring, _value_T>::value
+                          && std::is_constructible<longstring, _creatorDetails_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
   explicit DataUpdateRequest(_id_T &&_id,
                              _sequenceNumber_T &&_sequenceNumber,
                              _value_T &&_value,
+                             _creatorDetails_T &&_creatorDetails,
                              _ext_T &&_ext)
     : id(std::forward<_id_T>(_id)),
       sequenceNumber(std::forward<_sequenceNumber_T>(_sequenceNumber)),
       value(std::forward<_value_T>(_value)),
+      creatorDetails(std::forward<_creatorDetails_T>(_creatorDetails)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
