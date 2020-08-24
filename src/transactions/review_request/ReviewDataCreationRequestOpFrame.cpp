@@ -68,7 +68,7 @@ ReviewDataCreationRequestOpFrame::handleReject(
     Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-    request->checkRequestType(ReviewableRequestType::KYC_RECOVERY);
+    request->checkRequestType(ReviewableRequestType::DATA_CREATION);
 
     if (mReviewRequest.reviewDetails.tasksToRemove != 0)
     {
