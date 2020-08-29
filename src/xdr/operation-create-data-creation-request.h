@@ -90,7 +90,7 @@ template<> struct xdr_traits<::stellar::CreateDataCreationRequestResultCode>
 };
 } namespace stellar {
 
-struct CreateDataCreationRequestResponse  : xdr::xdr_abstract {
+struct CreateDataCreationRequestSuccess  : xdr::xdr_abstract {
   struct _ext_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<LedgerVersion>::case_type;
   private:
@@ -234,7 +234,7 @@ count_size(xdr::measurer& m) const override;
   longstring value{};
   _ext_t ext{};
 
-  CreateDataCreationRequestResponse() = default;
+  CreateDataCreationRequestSuccess() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
            typename _owner_T,
@@ -251,13 +251,13 @@ count_size(xdr::measurer& m) const override;
                           && std::is_constructible<longstring, _value_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
-  explicit CreateDataCreationRequestResponse(_requestID_T &&_requestID,
-                                             _fulfilled_T &&_fulfilled,
-                                             _owner_T &&_owner,
-                                             _id_T &&_id,
-                                             _type_T &&_type,
-                                             _value_T &&_value,
-                                             _ext_T &&_ext)
+  explicit CreateDataCreationRequestSuccess(_requestID_T &&_requestID,
+                                            _fulfilled_T &&_fulfilled,
+                                            _owner_T &&_owner,
+                                            _id_T &&_id,
+                                            _type_T &&_type,
+                                            _value_T &&_value,
+                                            _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
       owner(std::forward<_owner_T>(_owner)),
@@ -282,7 +282,7 @@ struct CreateDataCreationRequestResult : xdr::xdr_abstract {
 private:
   _xdr_case_type code_;
   union {
-    CreateDataCreationRequestResponse createDataCreationRequestResponse_;
+    CreateDataCreationRequestSuccess success_;
   };
 
 public:
@@ -299,7 +299,7 @@ public:
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
     switch (_which) {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-      _f(&CreateDataCreationRequestResult::createDataCreationRequestResponse_, std::forward<_A>(_a)...);
+      _f(&CreateDataCreationRequestResult::success_, std::forward<_A>(_a)...);
       return true;
     default:
       return true;
@@ -316,7 +316,7 @@ public:
       code_ = which;switch (code_)
 {
       case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-new(&createDataCreationRequestResponse_) CreateDataCreationRequestResponse{};
+new(&success_) CreateDataCreationRequestSuccess{};
 break;
       default:
         break;
@@ -330,7 +330,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-new(&createDataCreationRequestResponse_) CreateDataCreationRequestResponse{};
+new(&success_) CreateDataCreationRequestSuccess{};
 break;
     default:
       break;
@@ -341,7 +341,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-new(&createDataCreationRequestResponse_) CreateDataCreationRequestResponse(source.createDataCreationRequestResponse_);
+new(&success_) CreateDataCreationRequestSuccess(source.success_);
 break;
     default:
       break;
@@ -352,7 +352,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-new(&createDataCreationRequestResponse_) CreateDataCreationRequestResponse(std::move(source.createDataCreationRequestResponse_));
+new(&success_) CreateDataCreationRequestSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -363,7 +363,7 @@ break;
 switch (code_)
 {
   case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-createDataCreationRequestResponse_.~CreateDataCreationRequestResponse();
+success_.~CreateDataCreationRequestSuccess();
 break;
   default:
     break;
@@ -376,7 +376,7 @@ break;
 switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-createDataCreationRequestResponse_ = source.createDataCreationRequestResponse_;
+success_ = source.success_;
 break;
     default:
       break;
@@ -387,7 +387,7 @@ else {this->~CreateDataCreationRequestResult();
 switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-new(&createDataCreationRequestResponse_) CreateDataCreationRequestResponse(source.createDataCreationRequestResponse_);
+new(&success_) CreateDataCreationRequestSuccess(source.success_);
 break;
     default:
       break;
@@ -401,7 +401,7 @@ break;
 switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-createDataCreationRequestResponse_ = std::move(source.createDataCreationRequestResponse_);
+success_ = std::move(source.success_);
 break;
     default:
       break;
@@ -412,7 +412,7 @@ else {this->~CreateDataCreationRequestResult();
 switch (code_)
 {
     case (int32_t)CreateDataCreationRequestResultCode::SUCCESS:
-new(&createDataCreationRequestResponse_) CreateDataCreationRequestResponse(std::move(source.createDataCreationRequestResponse_));
+new(&success_) CreateDataCreationRequestSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -427,15 +427,15 @@ break;
     return *this;
   }
 
-  CreateDataCreationRequestResponse &createDataCreationRequestResponse() {
+  CreateDataCreationRequestSuccess &success() {
     if (_xdr_field_number(code_) == 1)
-      return createDataCreationRequestResponse_;
-    throw xdr::xdr_wrong_union("CreateDataCreationRequestResult: createDataCreationRequestResponse accessed when not selected");
+      return success_;
+    throw xdr::xdr_wrong_union("CreateDataCreationRequestResult: success accessed when not selected");
   }
-  const CreateDataCreationRequestResponse &createDataCreationRequestResponse() const {
+  const CreateDataCreationRequestSuccess &success() const {
     if (_xdr_field_number(code_) == 1)
-      return createDataCreationRequestResponse_;
-    throw xdr::xdr_wrong_union("CreateDataCreationRequestResult: createDataCreationRequestResponse accessed when not selected");
+      return success_;
+    throw xdr::xdr_wrong_union("CreateDataCreationRequestResult: success accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

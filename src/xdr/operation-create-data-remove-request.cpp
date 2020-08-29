@@ -1,4 +1,4 @@
-#include "operation-remove-data-request.h"
+#include "operation-create-data-remove-request.h"
 #include "cpp-serialize/src/unmarshaler.h"
 #include "cpp-serialize/src/marshaler.h"
 #include "cpp-serialize/src/measurer.h"
@@ -8,10 +8,15 @@
 using namespace xdr;
 namespace stellar {
 bool
-RemoveDataRequestOp::from_bytes(xdr::unmarshaler& u) 
+CreateDataRemoveRequestOp::from_bytes(xdr::unmarshaler& u) 
 {
-bool okremoveDataRequest = u.from_bytes(removeDataRequest);
-if (!okremoveDataRequest)
+bool okrequestID = u.from_bytes(requestID);
+if (!okrequestID)
+{
+return false;
+}
+bool okdataRemoveRequest = u.from_bytes(dataRemoveRequest);
+if (!okdataRemoveRequest)
 {
 return false;
 }
@@ -28,10 +33,15 @@ return false;
 return true;
 }
 bool
-RemoveDataRequestOp::to_bytes(xdr::marshaler& m) const 
+CreateDataRemoveRequestOp::to_bytes(xdr::marshaler& m) const 
 {
-bool okremoveDataRequest = m.to_bytes(removeDataRequest);
-if (!okremoveDataRequest)
+bool okrequestID = m.to_bytes(requestID);
+if (!okrequestID)
+{
+return false;
+}
+bool okdataRemoveRequest = m.to_bytes(dataRemoveRequest);
+if (!okdataRemoveRequest)
 {
 return false;
 }
@@ -48,40 +58,44 @@ return false;
 return true;
 }
 void
-RemoveDataRequestOp::count_size(xdr::measurer& m) const 
+CreateDataRemoveRequestOp::count_size(xdr::measurer& m) const 
 {
-m.count_size(removeDataRequest);
+m.count_size(requestID);
+m.count_size(dataRemoveRequest);
 m.count_size(allTasks);
 m.count_size(ext);
 }
 bool
-RemoveDataRequestOp::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataRemoveRequestOp::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<RemoveDataRequestOp const&>(other_abstract);return true
-&& (removeDataRequest== other.removeDataRequest)
+}auto& other = dynamic_cast<CreateDataRemoveRequestOp const&>(other_abstract);return true
+&& (requestID== other.requestID)
+&& (dataRemoveRequest== other.dataRemoveRequest)
 && (allTasks== other.allTasks)
 && (ext== other.ext)
 ;}
 bool
-RemoveDataRequestOp::operator<(xdr_abstract const& other_abstract) const
+CreateDataRemoveRequestOp::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<RemoveDataRequestOp const&>(other_abstract);
-if (removeDataRequest < other.removeDataRequest) return true;
-if (other.removeDataRequest < removeDataRequest) return false;
+auto& other = dynamic_cast<CreateDataRemoveRequestOp const&>(other_abstract);
+if (requestID < other.requestID) return true;
+if (other.requestID < requestID) return false;
+if (dataRemoveRequest < other.dataRemoveRequest) return true;
+if (other.dataRemoveRequest < dataRemoveRequest) return false;
 if (allTasks < other.allTasks) return true;
 if (other.allTasks < allTasks) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
-RemoveDataRequestResponse::_ext_t::from_bytes(xdr::unmarshaler& u) 
+CreateDataRemoveRequestSuccess::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -97,7 +111,7 @@ _xdr_discriminant(disc, true);switch (v_)
 return false;
 }
 bool
-RemoveDataRequestResponse::_ext_t::to_bytes(xdr::marshaler& m) const
+CreateDataRemoveRequestSuccess::_ext_t::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(v_);
 if (!ok)
@@ -113,7 +127,7 @@ switch (v_)
 return false;
 }
 void
-RemoveDataRequestResponse::_ext_t::count_size(xdr::measurer& m) const
+CreateDataRemoveRequestSuccess::_ext_t::count_size(xdr::measurer& m) const
 {
 m.count_size(v_);
 switch (v_)
@@ -125,7 +139,7 @@ switch (v_)
 }
 }
 bool
-RemoveDataRequestResponse::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataRemoveRequestSuccess::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -142,7 +156,7 @@ switch (v_)
 return false;
 }
 bool
-RemoveDataRequestResponse::_ext_t::operator<(xdr_abstract const& other_abstract) const
+CreateDataRemoveRequestSuccess::_ext_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -159,7 +173,7 @@ switch (v_)
 return false;
 }
 bool
-RemoveDataRequestResponse::from_bytes(xdr::unmarshaler& u) 
+CreateDataRemoveRequestSuccess::from_bytes(xdr::unmarshaler& u) 
 {
 bool okrequestID = u.from_bytes(requestID);
 if (!okrequestID)
@@ -179,7 +193,7 @@ return false;
 return true;
 }
 bool
-RemoveDataRequestResponse::to_bytes(xdr::marshaler& m) const 
+CreateDataRemoveRequestSuccess::to_bytes(xdr::marshaler& m) const 
 {
 bool okrequestID = m.to_bytes(requestID);
 if (!okrequestID)
@@ -199,31 +213,31 @@ return false;
 return true;
 }
 void
-RemoveDataRequestResponse::count_size(xdr::measurer& m) const 
+CreateDataRemoveRequestSuccess::count_size(xdr::measurer& m) const 
 {
 m.count_size(requestID);
 m.count_size(fulfilled);
 m.count_size(ext);
 }
 bool
-RemoveDataRequestResponse::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataRemoveRequestSuccess::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<RemoveDataRequestResponse const&>(other_abstract);return true
+}auto& other = dynamic_cast<CreateDataRemoveRequestSuccess const&>(other_abstract);return true
 && (requestID== other.requestID)
 && (fulfilled== other.fulfilled)
 && (ext== other.ext)
 ;}
 bool
-RemoveDataRequestResponse::operator<(xdr_abstract const& other_abstract) const
+CreateDataRemoveRequestSuccess::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<RemoveDataRequestResponse const&>(other_abstract);
+auto& other = dynamic_cast<CreateDataRemoveRequestSuccess const&>(other_abstract);
 if (requestID < other.requestID) return true;
 if (other.requestID < requestID) return false;
 if (fulfilled < other.fulfilled) return true;
@@ -232,7 +246,7 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
-RemoveDataRequestResult::from_bytes(xdr::unmarshaler& u) 
+CreateDataRemoveRequestResult::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -241,8 +255,8 @@ return false;
 }
 _xdr_discriminant(disc, true);switch (code_)
 {
-  case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-return u.from_bytes(removeDataRequestResponse_);
+  case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+return u.from_bytes(success_);
   default:
   
   return true;
@@ -250,7 +264,7 @@ return u.from_bytes(removeDataRequestResponse_);
 return false;
 }
 bool
-RemoveDataRequestResult::to_bytes(xdr::marshaler& m) const
+CreateDataRemoveRequestResult::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(code_);
 if (!ok)
@@ -260,40 +274,40 @@ return false;
 switch (code_)
 {
 
-  case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-return m.to_bytes(removeDataRequestResponse_);
+  case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+return m.to_bytes(success_);
   default:
     return true;
 }
 return false;
 }
 void
-RemoveDataRequestResult::count_size(xdr::measurer& m) const
+CreateDataRemoveRequestResult::count_size(xdr::measurer& m) const
 {
 m.count_size(code_);
 switch (code_)
 {
 
-  case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-return m.count_size(removeDataRequestResponse_);
+  case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+return m.count_size(success_);
   default:
   
   return;
 }
 }
 bool
-RemoveDataRequestResult::operator==(xdr::xdr_abstract const& other_abstract) const 
+CreateDataRemoveRequestResult::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }
-auto& other = dynamic_cast<RemoveDataRequestResult const&>(other_abstract);
+auto& other = dynamic_cast<CreateDataRemoveRequestResult const&>(other_abstract);
 if (other.code_ != code_) return false;
 switch (code_)
 {
-  case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-return removeDataRequestResponse_ == other.removeDataRequestResponse_;
+  case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+return success_ == other.success_;
   default:
   
   return true;
@@ -301,19 +315,19 @@ return removeDataRequestResponse_ == other.removeDataRequestResponse_;
 return false;
 }
 bool
-RemoveDataRequestResult::operator<(xdr_abstract const& other_abstract) const
+CreateDataRemoveRequestResult::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<RemoveDataRequestResult const&>(other_abstract);
+auto& other = dynamic_cast<CreateDataRemoveRequestResult const&>(other_abstract);
 if (code_ < other.code_) return true;
 if (other.code_ < code_) return false;
 switch (code_)
 {
-  case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-return removeDataRequestResponse_ < other.removeDataRequestResponse_;
+  case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+return success_ < other.success_;
   default:
     return false;
 }

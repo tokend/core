@@ -116,9 +116,9 @@ CreateDataCreationRequestOpFrame::tryAutoApprove(
                                  "tryApproveRequest expected to be success");
     }
 
-    innerResult().createDataCreationRequestResponse().fulfilled =
+    innerResult().success().fulfilled =
         result.success().fulfilled;
-    innerResult().createDataCreationRequestResponse().id =
+    innerResult().success().id =
         result.success().fulfilled
             ? result.success().typeExt.dataCreationExtended().id
             : 0;
@@ -170,13 +170,13 @@ CreateDataCreationRequestOpFrame::createRequest(Application& app,
     storageHelper.getReviewableRequestHelper().storeAdd(request->mEntry);
 
     pickResultCode(CreateDataCreationRequestResultCode::SUCCESS);
-    innerResult().createDataCreationRequestResponse().requestID =
+    innerResult().success().requestID =
         request->getRequestID();
-    innerResult().createDataCreationRequestResponse().value =
+    innerResult().success().value =
         mCreateDataCreationRequestOp.dataCreationRequest.value;
-    innerResult().createDataCreationRequestResponse().type =
+    innerResult().success().type =
         mCreateDataCreationRequestOp.dataCreationRequest.type;
-    innerResult().createDataCreationRequestResponse().ext.v(
+    innerResult().success().ext.v(
         LedgerVersion::EMPTY_VERSION);
 
     if (request->canBeFulfilled(ledgerManager))
@@ -214,10 +214,10 @@ CreateDataCreationRequestOpFrame::updateRequest(Application& app,
     requestHelper.storeChange(requestFrame->mEntry);
 
     innerResult().code(CreateDataCreationRequestResultCode::SUCCESS);
-    innerResult().createDataCreationRequestResponse().requestID =
+    innerResult().success().requestID =
         requestFrame->getRequestID();
-    innerResult().createDataCreationRequestResponse().fulfilled = false;
-    innerResult().createDataCreationRequestResponse().id = 0;
+    innerResult().success().fulfilled = false;
+    innerResult().success().id = 0;
     return true;
 }
 

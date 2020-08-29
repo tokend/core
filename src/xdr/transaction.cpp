@@ -129,6 +129,12 @@ return u.from_bytes(createDataCreationRequestOp_);
 return u.from_bytes(cancelDataCreationRequestOp_);
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return u.from_bytes(createDataUpdateRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return u.from_bytes(createDataRemoveRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return u.from_bytes(cancelDataUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return u.from_bytes(cancelDataRemoveRequestOp_);
 }
 return false;
 }
@@ -255,6 +261,12 @@ return m.to_bytes(createDataCreationRequestOp_);
 return m.to_bytes(cancelDataCreationRequestOp_);
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return m.to_bytes(createDataUpdateRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.to_bytes(createDataRemoveRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.to_bytes(cancelDataUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.to_bytes(cancelDataRemoveRequestOp_);
 }
 return false;
 }
@@ -377,6 +389,12 @@ return m.count_size(createDataCreationRequestOp_);
 return m.count_size(cancelDataCreationRequestOp_);
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return m.count_size(createDataUpdateRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.count_size(createDataRemoveRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.count_size(cancelDataUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.count_size(cancelDataRemoveRequestOp_);
 }
 }
 bool
@@ -502,6 +520,12 @@ return createDataCreationRequestOp_ == other.createDataCreationRequestOp_;
 return cancelDataCreationRequestOp_ == other.cancelDataCreationRequestOp_;
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return createDataUpdateRequestOp_ == other.createDataUpdateRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestOp_ == other.createDataRemoveRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestOp_ == other.cancelDataUpdateRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestOp_ == other.cancelDataRemoveRequestOp_;
 }
 return false;
 }
@@ -629,6 +653,12 @@ return createDataCreationRequestOp_ < other.createDataCreationRequestOp_;
 return cancelDataCreationRequestOp_ < other.cancelDataCreationRequestOp_;
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return createDataUpdateRequestOp_ < other.createDataUpdateRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestOp_ < other.createDataRemoveRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestOp_ < other.cancelDataUpdateRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestOp_ < other.cancelDataRemoveRequestOp_;
 }
 return false;
 }
@@ -1329,6 +1359,12 @@ return u.from_bytes(createDataCreationRequestResult_);
 return u.from_bytes(cancelDataCreationRequestResult_);
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return u.from_bytes(createDataUpdateRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return u.from_bytes(createDataRemoveRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return u.from_bytes(cancelDataUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return u.from_bytes(cancelDataRemoveRequestResult_);
 }
 return false;
 }
@@ -1455,6 +1491,12 @@ return m.to_bytes(createDataCreationRequestResult_);
 return m.to_bytes(cancelDataCreationRequestResult_);
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return m.to_bytes(createDataUpdateRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.to_bytes(createDataRemoveRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.to_bytes(cancelDataUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.to_bytes(cancelDataRemoveRequestResult_);
 }
 return false;
 }
@@ -1577,6 +1619,12 @@ return m.count_size(createDataCreationRequestResult_);
 return m.count_size(cancelDataCreationRequestResult_);
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return m.count_size(createDataUpdateRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.count_size(createDataRemoveRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.count_size(cancelDataUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.count_size(cancelDataRemoveRequestResult_);
 }
 }
 bool
@@ -1702,6 +1750,12 @@ return createDataCreationRequestResult_ == other.createDataCreationRequestResult
 return cancelDataCreationRequestResult_ == other.cancelDataCreationRequestResult_;
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return createDataUpdateRequestResult_ == other.createDataUpdateRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestResult_ == other.createDataRemoveRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestResult_ == other.cancelDataUpdateRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestResult_ == other.cancelDataRemoveRequestResult_;
 }
 return false;
 }
@@ -1829,6 +1883,12 @@ return createDataCreationRequestResult_ < other.createDataCreationRequestResult_
 return cancelDataCreationRequestResult_ < other.cancelDataCreationRequestResult_;
     case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
 return createDataUpdateRequestResult_ < other.createDataUpdateRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestResult_ < other.createDataRemoveRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestResult_ < other.cancelDataUpdateRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestResult_ < other.cancelDataRemoveRequestResult_;
 }
 return false;
 }

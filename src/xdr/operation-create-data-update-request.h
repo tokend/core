@@ -54,6 +54,7 @@ enum class CreateDataUpdateRequestResultCode : std::int32_t {
   UPDATE_DATA_TASKS_NOT_FOUND = -2,
   DATA_NOT_FOUND = -3,
   INVALID_CREATOR_DETAILS = -4,
+  REQUEST_NOT_FOUND = -5,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::CreateDataUpdateRequestResultCode>
@@ -73,6 +74,8 @@ template<> struct xdr_traits<::stellar::CreateDataUpdateRequestResultCode>
       return "DATA_NOT_FOUND";
     case ::stellar::CreateDataUpdateRequestResultCode::INVALID_CREATOR_DETAILS:
       return "INVALID_CREATOR_DETAILS";
+    case ::stellar::CreateDataUpdateRequestResultCode::REQUEST_NOT_FOUND:
+      return "REQUEST_NOT_FOUND";
     default:
       return nullptr;
     }
@@ -83,14 +86,15 @@ template<> struct xdr_traits<::stellar::CreateDataUpdateRequestResultCode>
       (int32_t)::stellar::CreateDataUpdateRequestResultCode::INVALID_VALUE,
       (int32_t)::stellar::CreateDataUpdateRequestResultCode::UPDATE_DATA_TASKS_NOT_FOUND,
       (int32_t)::stellar::CreateDataUpdateRequestResultCode::DATA_NOT_FOUND,
-      (int32_t)::stellar::CreateDataUpdateRequestResultCode::INVALID_CREATOR_DETAILS
+      (int32_t)::stellar::CreateDataUpdateRequestResultCode::INVALID_CREATOR_DETAILS,
+      (int32_t)::stellar::CreateDataUpdateRequestResultCode::REQUEST_NOT_FOUND
     };
     return _xdr_enum_vec;
   }
 };
 } namespace stellar {
 
-struct CreateDataUpdateRequestResponse  : xdr::xdr_abstract {
+struct CreateDataUpdateRequestSuccess  : xdr::xdr_abstract {
   struct _ext_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<LedgerVersion>::case_type;
   private:
@@ -228,42 +232,22 @@ count_size(xdr::measurer& m) const override;
 
   uint64 requestID{};
   bool fulfilled{};
-  AccountID owner{};
-  uint64 id{};
-  uint64 type{};
-  longstring value{};
   _ext_t ext{};
 
-  CreateDataUpdateRequestResponse() = default;
+  CreateDataUpdateRequestSuccess() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
-           typename _owner_T,
-           typename _id_T,
-           typename _type_T,
-           typename _value_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _requestID_T>::value
                           && std::is_constructible<bool, _fulfilled_T>::value
-                          && std::is_constructible<AccountID, _owner_T>::value
-                          && std::is_constructible<uint64, _id_T>::value
-                          && std::is_constructible<uint64, _type_T>::value
-                          && std::is_constructible<longstring, _value_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
-  explicit CreateDataUpdateRequestResponse(_requestID_T &&_requestID,
-                                           _fulfilled_T &&_fulfilled,
-                                           _owner_T &&_owner,
-                                           _id_T &&_id,
-                                           _type_T &&_type,
-                                           _value_T &&_value,
-                                           _ext_T &&_ext)
+  explicit CreateDataUpdateRequestSuccess(_requestID_T &&_requestID,
+                                          _fulfilled_T &&_fulfilled,
+                                          _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
-      owner(std::forward<_owner_T>(_owner)),
-      id(std::forward<_id_T>(_id)),
-      type(std::forward<_type_T>(_type)),
-      value(std::forward<_value_T>(_value)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
@@ -282,7 +266,7 @@ struct CreateDataUpdateRequestResult : xdr::xdr_abstract {
 private:
   _xdr_case_type code_;
   union {
-    CreateDataUpdateRequestResponse createDataUpdateRequestResponse_;
+    CreateDataUpdateRequestSuccess success_;
   };
 
 public:
@@ -299,7 +283,7 @@ public:
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
     switch (_which) {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-      _f(&CreateDataUpdateRequestResult::createDataUpdateRequestResponse_, std::forward<_A>(_a)...);
+      _f(&CreateDataUpdateRequestResult::success_, std::forward<_A>(_a)...);
       return true;
     default:
       return true;
@@ -316,7 +300,7 @@ public:
       code_ = which;switch (code_)
 {
       case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-new(&createDataUpdateRequestResponse_) CreateDataUpdateRequestResponse{};
+new(&success_) CreateDataUpdateRequestSuccess{};
 break;
       default:
         break;
@@ -330,7 +314,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-new(&createDataUpdateRequestResponse_) CreateDataUpdateRequestResponse{};
+new(&success_) CreateDataUpdateRequestSuccess{};
 break;
     default:
       break;
@@ -341,7 +325,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-new(&createDataUpdateRequestResponse_) CreateDataUpdateRequestResponse(source.createDataUpdateRequestResponse_);
+new(&success_) CreateDataUpdateRequestSuccess(source.success_);
 break;
     default:
       break;
@@ -352,7 +336,7 @@ break;
     switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-new(&createDataUpdateRequestResponse_) CreateDataUpdateRequestResponse(std::move(source.createDataUpdateRequestResponse_));
+new(&success_) CreateDataUpdateRequestSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -363,7 +347,7 @@ break;
 switch (code_)
 {
   case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-createDataUpdateRequestResponse_.~CreateDataUpdateRequestResponse();
+success_.~CreateDataUpdateRequestSuccess();
 break;
   default:
     break;
@@ -376,7 +360,7 @@ break;
 switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-createDataUpdateRequestResponse_ = source.createDataUpdateRequestResponse_;
+success_ = source.success_;
 break;
     default:
       break;
@@ -387,7 +371,7 @@ else {this->~CreateDataUpdateRequestResult();
 switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-new(&createDataUpdateRequestResponse_) CreateDataUpdateRequestResponse(source.createDataUpdateRequestResponse_);
+new(&success_) CreateDataUpdateRequestSuccess(source.success_);
 break;
     default:
       break;
@@ -401,7 +385,7 @@ break;
 switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-createDataUpdateRequestResponse_ = std::move(source.createDataUpdateRequestResponse_);
+success_ = std::move(source.success_);
 break;
     default:
       break;
@@ -412,7 +396,7 @@ else {this->~CreateDataUpdateRequestResult();
 switch (code_)
 {
     case (int32_t)CreateDataUpdateRequestResultCode::SUCCESS:
-new(&createDataUpdateRequestResponse_) CreateDataUpdateRequestResponse(std::move(source.createDataUpdateRequestResponse_));
+new(&success_) CreateDataUpdateRequestSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -427,15 +411,15 @@ break;
     return *this;
   }
 
-  CreateDataUpdateRequestResponse &createDataUpdateRequestResponse() {
+  CreateDataUpdateRequestSuccess &success() {
     if (_xdr_field_number(code_) == 1)
-      return createDataUpdateRequestResponse_;
-    throw xdr::xdr_wrong_union("CreateDataUpdateRequestResult: createDataUpdateRequestResponse accessed when not selected");
+      return success_;
+    throw xdr::xdr_wrong_union("CreateDataUpdateRequestResult: success accessed when not selected");
   }
-  const CreateDataUpdateRequestResponse &createDataUpdateRequestResponse() const {
+  const CreateDataUpdateRequestSuccess &success() const {
     if (_xdr_field_number(code_) == 1)
-      return createDataUpdateRequestResponse_;
-    throw xdr::xdr_wrong_union("CreateDataUpdateRequestResult: createDataUpdateRequestResponse accessed when not selected");
+      return success_;
+    throw xdr::xdr_wrong_union("CreateDataUpdateRequestResult: success accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

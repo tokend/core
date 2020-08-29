@@ -110,6 +110,8 @@ public:
     static longstring makePaymentTasksKey(AssetCode const& code);
     static longstring makeRedemptionTasksKey();
     static longstring makeCreateDataCreationRequestTasksKey(std::string type);
+    static longstring makeCreateDataUpdateRequestTasksKey(std::string type);
+    static longstring makeCreateDataRemoveRequestTasksKey(std::string type);
 
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
@@ -144,5 +146,7 @@ public:
     static char const * paymentTasks;
     static char const * redemptionTasks;
     static char const * createDataCreationRequestTasks;
+    static char const * createDataUpdateRequestTasks;
+    static char const * createDataRemoveRequestTasks;
 };
 }

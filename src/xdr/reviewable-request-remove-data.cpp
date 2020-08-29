@@ -8,7 +8,7 @@
 using namespace xdr;
 namespace stellar {
 bool
-RemoveDataRequest::_ext_t::from_bytes(xdr::unmarshaler& u) 
+DataRemoveRequest::_ext_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
 if (!ok)
@@ -24,7 +24,7 @@ _xdr_discriminant(disc, true);switch (v_)
 return false;
 }
 bool
-RemoveDataRequest::_ext_t::to_bytes(xdr::marshaler& m) const
+DataRemoveRequest::_ext_t::to_bytes(xdr::marshaler& m) const
 {
 bool ok = m.to_bytes(v_);
 if (!ok)
@@ -40,7 +40,7 @@ switch (v_)
 return false;
 }
 void
-RemoveDataRequest::_ext_t::count_size(xdr::measurer& m) const
+DataRemoveRequest::_ext_t::count_size(xdr::measurer& m) const
 {
 m.count_size(v_);
 switch (v_)
@@ -52,7 +52,7 @@ switch (v_)
 }
 }
 bool
-RemoveDataRequest::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+DataRemoveRequest::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -69,7 +69,7 @@ switch (v_)
 return false;
 }
 bool
-RemoveDataRequest::_ext_t::operator<(xdr_abstract const& other_abstract) const
+DataRemoveRequest::_ext_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
@@ -86,10 +86,20 @@ switch (v_)
 return false;
 }
 bool
-RemoveDataRequest::from_bytes(xdr::unmarshaler& u) 
+DataRemoveRequest::from_bytes(xdr::unmarshaler& u) 
 {
 bool okid = u.from_bytes(id);
 if (!okid)
+{
+return false;
+}
+bool oksequenceNumber = u.from_bytes(sequenceNumber);
+if (!oksequenceNumber)
+{
+return false;
+}
+bool okcreatorDetails = u.from_bytes(creatorDetails);
+if (!okcreatorDetails)
 {
 return false;
 }
@@ -101,10 +111,20 @@ return false;
 return true;
 }
 bool
-RemoveDataRequest::to_bytes(xdr::marshaler& m) const 
+DataRemoveRequest::to_bytes(xdr::marshaler& m) const 
 {
 bool okid = m.to_bytes(id);
 if (!okid)
+{
+return false;
+}
+bool oksequenceNumber = m.to_bytes(sequenceNumber);
+if (!oksequenceNumber)
+{
+return false;
+}
+bool okcreatorDetails = m.to_bytes(creatorDetails);
+if (!okcreatorDetails)
 {
 return false;
 }
@@ -116,31 +136,39 @@ return false;
 return true;
 }
 void
-RemoveDataRequest::count_size(xdr::measurer& m) const 
+DataRemoveRequest::count_size(xdr::measurer& m) const 
 {
 m.count_size(id);
+m.count_size(sequenceNumber);
+m.count_size(creatorDetails);
 m.count_size(ext);
 }
 bool
-RemoveDataRequest::operator==(xdr::xdr_abstract const& other_abstract) const 
+DataRemoveRequest::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<RemoveDataRequest const&>(other_abstract);return true
+}auto& other = dynamic_cast<DataRemoveRequest const&>(other_abstract);return true
 && (id== other.id)
+&& (sequenceNumber== other.sequenceNumber)
+&& (creatorDetails== other.creatorDetails)
 && (ext== other.ext)
 ;}
 bool
-RemoveDataRequest::operator<(xdr_abstract const& other_abstract) const
+DataRemoveRequest::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<RemoveDataRequest const&>(other_abstract);
+auto& other = dynamic_cast<DataRemoveRequest const&>(other_abstract);
 if (id < other.id) return true;
 if (other.id < id) return false;
+if (sequenceNumber < other.sequenceNumber) return true;
+if (other.sequenceNumber < sequenceNumber) return false;
+if (creatorDetails < other.creatorDetails) return true;
+if (other.creatorDetails < creatorDetails) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

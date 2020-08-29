@@ -1,9 +1,9 @@
 // -*- C++ -*-
-// Automatically generated from operation-remove-data-request.x.
+// Automatically generated from operation-create-data-remove-request.x.
 // DO NOT EDIT or your changes may be overwritten
 
-#ifndef __XDR_OPERATION_REMOVE_DATA_REQUEST_H_INCLUDED__
-#define __XDR_OPERATION_REMOVE_DATA_REQUEST_H_INCLUDED__ 1
+#ifndef __XDR_OPERATION_CREATE_DATA_REMOVE_REQUEST_H_INCLUDED__
+#define __XDR_OPERATION_CREATE_DATA_REMOVE_REQUEST_H_INCLUDED__ 1
 
 #include <xdrpp/types.h>
 
@@ -11,24 +11,29 @@
 
 namespace stellar {
 
-struct RemoveDataRequestOp  : xdr::xdr_abstract {
-  RemoveDataRequest removeDataRequest{};
+struct CreateDataRemoveRequestOp  : xdr::xdr_abstract {
+  uint64 requestID{};
+  DataRemoveRequest dataRemoveRequest{};
   xdr::pointer<uint32> allTasks{};
   EmptyExt ext{};
 
-  RemoveDataRequestOp() = default;
-  template<typename _removeDataRequest_T,
+  CreateDataRemoveRequestOp() = default;
+  template<typename _requestID_T,
+           typename _dataRemoveRequest_T,
            typename _allTasks_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<RemoveDataRequest, _removeDataRequest_T>::value
+           std::enable_if<std::is_constructible<uint64, _requestID_T>::value
+                          && std::is_constructible<DataRemoveRequest, _dataRemoveRequest_T>::value
                           && std::is_constructible<xdr::pointer<uint32>, _allTasks_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit RemoveDataRequestOp(_removeDataRequest_T &&_removeDataRequest,
-                               _allTasks_T &&_allTasks,
-                               _ext_T &&_ext)
-    : removeDataRequest(std::forward<_removeDataRequest_T>(_removeDataRequest)),
+  explicit CreateDataRemoveRequestOp(_requestID_T &&_requestID,
+                                     _dataRemoveRequest_T &&_dataRemoveRequest,
+                                     _allTasks_T &&_allTasks,
+                                     _ext_T &&_ext)
+    : requestID(std::forward<_requestID_T>(_requestID)),
+      dataRemoveRequest(std::forward<_dataRemoveRequest_T>(_dataRemoveRequest)),
       allTasks(std::forward<_allTasks_T>(_allTasks)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
@@ -43,37 +48,49 @@ count_size(xdr::measurer& m) const override;
 
 };
 
-enum class RemoveDataRequestResultCode : std::int32_t {
+enum class CreateDataRemoveRequestResultCode : std::int32_t {
   SUCCESS = 0,
-  NOT_FOUND = -1,
+  REMOVE_DATA_TASKS_NOT_FOUND = -1,
+  DATA_NOT_FOUND = -2,
+  INVALID_CREATOR_DETAILS = -3,
+  REQUEST_NOT_FOUND = -4,
 };
 } namespace xdr {
-template<> struct xdr_traits<::stellar::RemoveDataRequestResultCode>
-  : xdr_integral_base<::stellar::RemoveDataRequestResultCode, std::uint32_t> {
+template<> struct xdr_traits<::stellar::CreateDataRemoveRequestResultCode>
+  : xdr_integral_base<::stellar::CreateDataRemoveRequestResultCode, std::uint32_t> {
   using case_type = std::int32_t;
   static constexpr const bool is_enum = true;
   static constexpr const bool is_numeric = false;
-  static const char *enum_name(::stellar::RemoveDataRequestResultCode val) {
+  static const char *enum_name(::stellar::CreateDataRemoveRequestResultCode val) {
     switch (val) {
-    case ::stellar::RemoveDataRequestResultCode::SUCCESS:
+    case ::stellar::CreateDataRemoveRequestResultCode::SUCCESS:
       return "SUCCESS";
-    case ::stellar::RemoveDataRequestResultCode::NOT_FOUND:
-      return "NOT_FOUND";
+    case ::stellar::CreateDataRemoveRequestResultCode::REMOVE_DATA_TASKS_NOT_FOUND:
+      return "REMOVE_DATA_TASKS_NOT_FOUND";
+    case ::stellar::CreateDataRemoveRequestResultCode::DATA_NOT_FOUND:
+      return "DATA_NOT_FOUND";
+    case ::stellar::CreateDataRemoveRequestResultCode::INVALID_CREATOR_DETAILS:
+      return "INVALID_CREATOR_DETAILS";
+    case ::stellar::CreateDataRemoveRequestResultCode::REQUEST_NOT_FOUND:
+      return "REQUEST_NOT_FOUND";
     default:
       return nullptr;
     }
   }
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::RemoveDataRequestResultCode::SUCCESS,
-      (int32_t)::stellar::RemoveDataRequestResultCode::NOT_FOUND
+      (int32_t)::stellar::CreateDataRemoveRequestResultCode::SUCCESS,
+      (int32_t)::stellar::CreateDataRemoveRequestResultCode::REMOVE_DATA_TASKS_NOT_FOUND,
+      (int32_t)::stellar::CreateDataRemoveRequestResultCode::DATA_NOT_FOUND,
+      (int32_t)::stellar::CreateDataRemoveRequestResultCode::INVALID_CREATOR_DETAILS,
+      (int32_t)::stellar::CreateDataRemoveRequestResultCode::REQUEST_NOT_FOUND
     };
     return _xdr_enum_vec;
   }
 };
 } namespace stellar {
 
-struct RemoveDataRequestResponse  : xdr::xdr_abstract {
+struct CreateDataRemoveRequestSuccess  : xdr::xdr_abstract {
   struct _ext_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<LedgerVersion>::case_type;
   private:
@@ -213,7 +230,7 @@ count_size(xdr::measurer& m) const override;
   bool fulfilled{};
   _ext_t ext{};
 
-  RemoveDataRequestResponse() = default;
+  CreateDataRemoveRequestSuccess() = default;
   template<typename _requestID_T,
            typename _fulfilled_T,
            typename _ext_T,
@@ -222,9 +239,9 @@ count_size(xdr::measurer& m) const override;
                           && std::is_constructible<bool, _fulfilled_T>::value
                           && std::is_constructible<_ext_t, _ext_T>::value
                          >::type>
-  explicit RemoveDataRequestResponse(_requestID_T &&_requestID,
-                                     _fulfilled_T &&_fulfilled,
-                                     _ext_T &&_ext)
+  explicit CreateDataRemoveRequestSuccess(_requestID_T &&_requestID,
+                                          _fulfilled_T &&_fulfilled,
+                                          _ext_T &&_ext)
     : requestID(std::forward<_requestID_T>(_requestID)),
       fulfilled(std::forward<_fulfilled_T>(_fulfilled)),
       ext(std::forward<_ext_T>(_ext)) {}
@@ -240,29 +257,29 @@ count_size(xdr::measurer& m) const override;
 
 };
 
-struct RemoveDataRequestResult : xdr::xdr_abstract {
-  using _xdr_case_type = xdr::xdr_traits<RemoveDataRequestResultCode>::case_type;
+struct CreateDataRemoveRequestResult : xdr::xdr_abstract {
+  using _xdr_case_type = xdr::xdr_traits<CreateDataRemoveRequestResultCode>::case_type;
 private:
   _xdr_case_type code_;
   union {
-    RemoveDataRequestResponse removeDataRequestResponse_;
+    CreateDataRemoveRequestSuccess success_;
   };
 
 public:
   static constexpr const bool _xdr_has_default_case = true;
-  static const std::vector<RemoveDataRequestResultCode> &_xdr_case_values() {
-    static const std::vector<RemoveDataRequestResultCode> _xdr_disc_vec {};
+  static const std::vector<CreateDataRemoveRequestResultCode> &_xdr_case_values() {
+    static const std::vector<CreateDataRemoveRequestResultCode> _xdr_disc_vec {};
     return _xdr_disc_vec;
   }
   static constexpr int _xdr_field_number(_xdr_case_type which) {
-    return which == (int32_t)RemoveDataRequestResultCode::SUCCESS ? 1
+    return which == (int32_t)CreateDataRemoveRequestResultCode::SUCCESS ? 1
       : 0;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
     switch (_which) {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-      _f(&RemoveDataRequestResult::removeDataRequestResponse_, std::forward<_A>(_a)...);
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+      _f(&CreateDataRemoveRequestResult::success_, std::forward<_A>(_a)...);
       return true;
     default:
       return true;
@@ -273,13 +290,13 @@ public:
   void _xdr_discriminant(_xdr_case_type which, bool validate = true) {
     int fnum = _xdr_field_number(which);
     if (fnum < 0 && validate)
-      throw xdr::xdr_bad_discriminant("bad value of code in RemoveDataRequestResult");
+      throw xdr::xdr_bad_discriminant("bad value of code in CreateDataRemoveRequestResult");
     if (fnum != _xdr_field_number(code_)) {
-      this->~RemoveDataRequestResult();
+      this->~CreateDataRemoveRequestResult();
       code_ = which;switch (code_)
 {
-      case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-new(&removeDataRequestResponse_) RemoveDataRequestResponse{};
+      case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+new(&success_) CreateDataRemoveRequestSuccess{};
 break;
       default:
         break;
@@ -289,68 +306,68 @@ break;
     else
       code_ = which;
   }
-  explicit RemoveDataRequestResult(RemoveDataRequestResultCode which = RemoveDataRequestResultCode{}) : code_((int32_t)which) {
+  explicit CreateDataRemoveRequestResult(CreateDataRemoveRequestResultCode which = CreateDataRemoveRequestResultCode{}) : code_((int32_t)which) {
     switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-new(&removeDataRequestResponse_) RemoveDataRequestResponse{};
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+new(&success_) CreateDataRemoveRequestSuccess{};
 break;
     default:
       break;
 }
 
   }
-  RemoveDataRequestResult(const RemoveDataRequestResult &source) : code_(source.code_) {
+  CreateDataRemoveRequestResult(const CreateDataRemoveRequestResult &source) : code_(source.code_) {
     switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-new(&removeDataRequestResponse_) RemoveDataRequestResponse(source.removeDataRequestResponse_);
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+new(&success_) CreateDataRemoveRequestSuccess(source.success_);
 break;
     default:
       break;
 }
 
   }
-  RemoveDataRequestResult(RemoveDataRequestResult &&source) : code_(source.code_) {
+  CreateDataRemoveRequestResult(CreateDataRemoveRequestResult &&source) : code_(source.code_) {
     switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-new(&removeDataRequestResponse_) RemoveDataRequestResponse(std::move(source.removeDataRequestResponse_));
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+new(&success_) CreateDataRemoveRequestSuccess(std::move(source.success_));
 break;
     default:
       break;
 }
 
   }
-  ~RemoveDataRequestResult() {
+  ~CreateDataRemoveRequestResult() {
 switch (code_)
 {
-  case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-removeDataRequestResponse_.~RemoveDataRequestResponse();
+  case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+success_.~CreateDataRemoveRequestSuccess();
 break;
   default:
     break;
 }
 }
 
-  RemoveDataRequestResult &operator=(const RemoveDataRequestResult &source) {
+  CreateDataRemoveRequestResult &operator=(const CreateDataRemoveRequestResult &source) {
     if (code_ == source.code_)
 {
 switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-removeDataRequestResponse_ = source.removeDataRequestResponse_;
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+success_ = source.success_;
 break;
     default:
       break;
 }
 }
-else {this->~RemoveDataRequestResult();
+else {this->~CreateDataRemoveRequestResult();
     code_ = source.code_;
 switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-new(&removeDataRequestResponse_) RemoveDataRequestResponse(source.removeDataRequestResponse_);
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+new(&success_) CreateDataRemoveRequestSuccess(source.success_);
 break;
     default:
       break;
@@ -358,24 +375,24 @@ break;
 }
     return *this;
   }
-  RemoveDataRequestResult &operator=(RemoveDataRequestResult &&source) {
+  CreateDataRemoveRequestResult &operator=(CreateDataRemoveRequestResult &&source) {
     if (code_ == source.code_)
 {
 switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-removeDataRequestResponse_ = std::move(source.removeDataRequestResponse_);
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+success_ = std::move(source.success_);
 break;
     default:
       break;
 }
 }
-else {this->~RemoveDataRequestResult();
+else {this->~CreateDataRemoveRequestResult();
     code_ = std::move(source.code_);
 switch (code_)
 {
-    case (int32_t)RemoveDataRequestResultCode::SUCCESS:
-new(&removeDataRequestResponse_) RemoveDataRequestResponse(std::move(source.removeDataRequestResponse_));
+    case (int32_t)CreateDataRemoveRequestResultCode::SUCCESS:
+new(&success_) CreateDataRemoveRequestSuccess(std::move(source.success_));
 break;
     default:
       break;
@@ -384,21 +401,21 @@ break;
     return *this;
   }
 
-  RemoveDataRequestResultCode code() const { return RemoveDataRequestResultCode(code_); }
-  RemoveDataRequestResult &code(RemoveDataRequestResultCode _xdr_d, bool _xdr_validate = true) {
+  CreateDataRemoveRequestResultCode code() const { return CreateDataRemoveRequestResultCode(code_); }
+  CreateDataRemoveRequestResult &code(CreateDataRemoveRequestResultCode _xdr_d, bool _xdr_validate = true) {
     _xdr_discriminant((int32_t)_xdr_d, _xdr_validate);
     return *this;
   }
 
-  RemoveDataRequestResponse &removeDataRequestResponse() {
+  CreateDataRemoveRequestSuccess &success() {
     if (_xdr_field_number(code_) == 1)
-      return removeDataRequestResponse_;
-    throw xdr::xdr_wrong_union("RemoveDataRequestResult: removeDataRequestResponse accessed when not selected");
+      return success_;
+    throw xdr::xdr_wrong_union("CreateDataRemoveRequestResult: success accessed when not selected");
   }
-  const RemoveDataRequestResponse &removeDataRequestResponse() const {
+  const CreateDataRemoveRequestSuccess &success() const {
     if (_xdr_field_number(code_) == 1)
-      return removeDataRequestResponse_;
-    throw xdr::xdr_wrong_union("RemoveDataRequestResult: removeDataRequestResponse accessed when not selected");
+      return success_;
+    throw xdr::xdr_wrong_union("CreateDataRemoveRequestResult: success accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -415,4 +432,4 @@ count_size(xdr::measurer& m) const override;
 
 }
 
-#endif // !__XDR_OPERATION_REMOVE_DATA_REQUEST_H_INCLUDED__
+#endif // !__XDR_OPERATION_CREATE_DATA_REMOVE_REQUEST_H_INCLUDED__

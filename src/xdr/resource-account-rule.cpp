@@ -942,6 +942,124 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+ReviewableRequestResource::_dataUpdate_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_dataUpdate_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_dataUpdate_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_dataUpdate_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_dataUpdate_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_dataUpdate_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_dataUpdate_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
+ReviewableRequestResource::_dataRemove_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_dataRemove_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_dataRemove_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_dataRemove_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_dataRemove_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_dataRemove_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_dataRemove_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ReviewableRequestResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -971,6 +1089,10 @@ return u.from_bytes(createPayment_);
 return u.from_bytes(performRedemption_);
   case (int32_t)ReviewableRequestType::DATA_CREATION:
 return u.from_bytes(dataCreation_);
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return u.from_bytes(dataUpdate_);
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return u.from_bytes(dataRemove_);
   default:
 return u.from_bytes(ext_);
 }
@@ -1007,6 +1129,10 @@ return m.to_bytes(createPayment_);
 return m.to_bytes(performRedemption_);
   case (int32_t)ReviewableRequestType::DATA_CREATION:
 return m.to_bytes(dataCreation_);
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return m.to_bytes(dataUpdate_);
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return m.to_bytes(dataRemove_);
   default:
 return m.to_bytes(ext_);
 }
@@ -1039,6 +1165,10 @@ return m.count_size(createPayment_);
 return m.count_size(performRedemption_);
   case (int32_t)ReviewableRequestType::DATA_CREATION:
 return m.count_size(dataCreation_);
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return m.count_size(dataUpdate_);
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return m.count_size(dataRemove_);
   default:
 return m.count_size(ext_);
 }
@@ -1074,6 +1204,10 @@ return createPayment_ == other.createPayment_;
 return performRedemption_ == other.performRedemption_;
   case (int32_t)ReviewableRequestType::DATA_CREATION:
 return dataCreation_ == other.dataCreation_;
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return dataUpdate_ == other.dataUpdate_;
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return dataRemove_ == other.dataRemove_;
   default:
 return ext_ == other.ext_;
 }
@@ -1111,6 +1245,10 @@ return createPayment_ < other.createPayment_;
 return performRedemption_ < other.performRedemption_;
   case (int32_t)ReviewableRequestType::DATA_CREATION:
 return dataCreation_ < other.dataCreation_;
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return dataUpdate_ < other.dataUpdate_;
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return dataRemove_ < other.dataRemove_;
   default:
 return ext_ < other.ext_;
 }
