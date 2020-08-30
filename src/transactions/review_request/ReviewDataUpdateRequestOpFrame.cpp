@@ -55,9 +55,6 @@ ReviewDataUpdateRequestOpFrame::handleApprove(
 
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(
-        ReviewableRequestType::DATA_UPDATE);
-
     return true;
 }
 
