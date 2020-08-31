@@ -44,7 +44,7 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureRedemptionValid(RedemptionRequest const &request);
 	static void ensureCreateDataValid(DataCreationRequest const &request);
 	static void ensureUpdateDataValid(DataUpdateRequest const &request);
-//	static void ensureRemoveDataValid(RemoveDataRequest const &request);
+	static void ensureRemoveDataValid(DataRemoveRequest const &request);
 
   public:
     typedef std::shared_ptr<ReviewableRequestFrame> pointer;

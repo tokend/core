@@ -293,13 +293,18 @@ ReviewableRequestFrame::ensureUpdateDataValid(DataUpdateRequest const &request)
     }
 }
 
-//void/**/
-//ReviewableRequestFrame::ensureRemoveDataValid(RemoveDataRequest const &request)
-//{
-//    if (request.id <= 0) {
-//        throw runtime_error("invalid request id");
-//    }
-//}
+void/**/
+ReviewableRequestFrame::ensureRemoveDataValid(DataRemoveRequest const &request)
+{
+    if (request.id <= 0) {
+        throw runtime_error("invalid request id");
+    }
+
+    if (!isValidJson(request.creatorDetails))
+    {
+        throw runtime_error("creator details are invalid")
+    }
+}
 
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
@@ -366,8 +371,8 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureCreateDataValid(oe.body.dataCreationRequest());
         case ReviewableRequestType::DATA_UPDATE:
             return ensureUpdateDataValid(oe.body.dataUpdateRequest());
-//        case ReviewableRequestType::REMOVE_DATA:
-//            return ensureRemoveDataValid(oe.body.removeDataRequest());
+        case ReviewableRequestType::DATA_REMOVE:
+            return ensureRemoveDataValid(oe.body.dataRemoveRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }
