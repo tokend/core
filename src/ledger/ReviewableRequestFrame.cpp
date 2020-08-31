@@ -302,7 +302,7 @@ ReviewableRequestFrame::ensureRemoveDataValid(DataRemoveRequest const &request)
 
     if (!isValidJson(request.creatorDetails))
     {
-        throw runtime_error("creator details are invalid")
+        throw runtime_error("creator details are invalid");
     }
 }
 
