@@ -1048,6 +1048,79 @@ return ext_ < other.ext_;
 return false;
 }
 bool
+CustomRuleResource::from_bytes(xdr::unmarshaler& u) 
+{
+bool okaction = u.from_bytes(action);
+if (!okaction)
+{
+return false;
+}
+bool okresource = u.from_bytes(resource);
+if (!okresource)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+CustomRuleResource::to_bytes(xdr::marshaler& m) const 
+{
+bool okaction = m.to_bytes(action);
+if (!okaction)
+{
+return false;
+}
+bool okresource = m.to_bytes(resource);
+if (!okresource)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+CustomRuleResource::count_size(xdr::measurer& m) const 
+{
+m.count_size(action);
+m.count_size(resource);
+m.count_size(ext);
+}
+bool
+CustomRuleResource::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<CustomRuleResource const&>(other_abstract);return true
+&& (action== other.action)
+&& (resource== other.resource)
+&& (ext== other.ext)
+;}
+bool
+CustomRuleResource::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<CustomRuleResource const&>(other_abstract);
+if (action < other.action) return true;
+if (other.action < action) return false;
+if (resource < other.resource) return true;
+if (other.resource < resource) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 AccountRuleResource::_asset_t::from_bytes(xdr::unmarshaler& u) 
 {
 bool okassetCode = u.from_bytes(assetCode);
@@ -2020,6 +2093,8 @@ return u.from_bytes(accountSpecificRuleExt_);
 return u.from_bytes(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return u.from_bytes(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return u.from_bytes(custom_);
   default:
 return u.from_bytes(ext_);
 }
@@ -2062,6 +2137,8 @@ return m.to_bytes(accountSpecificRuleExt_);
 return m.to_bytes(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return m.to_bytes(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return m.to_bytes(custom_);
   default:
 return m.to_bytes(ext_);
 }
@@ -2101,6 +2178,8 @@ return m.count_size(accountSpecificRuleExt_);
 return m.count_size(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return m.count_size(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return m.count_size(custom_);
   default:
 return m.count_size(ext_);
 }
@@ -2143,6 +2222,8 @@ return accountSpecificRuleExt_ == other.accountSpecificRuleExt_;
 return swap_ == other.swap_;
   case (int32_t)LedgerEntryType::DATA:
 return data_ == other.data_;
+  case (int32_t)LedgerEntryType::CUSTOM:
+return custom_ == other.custom_;
   default:
 return ext_ == other.ext_;
 }
@@ -2186,6 +2267,8 @@ return accountSpecificRuleExt_ < other.accountSpecificRuleExt_;
 return swap_ < other.swap_;
   case (int32_t)LedgerEntryType::DATA:
 return data_ < other.data_;
+  case (int32_t)LedgerEntryType::CUSTOM:
+return custom_ < other.custom_;
   default:
 return ext_ < other.ext_;
 }

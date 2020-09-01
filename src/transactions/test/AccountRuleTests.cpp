@@ -95,4 +95,45 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
                                             ManageAccountRuleResultCode::NOT_FOUND,
                                             TransactionResultCode::txFAILED);
     }
+
+    SECTION("Successful creation for custom type")
+    {
+
+        AccountRuleResource resource(LedgerEntryType::CUSTOM);
+        resource.custom().resource = R"({"type": "identifier"})";
+        resource.custom().action = R"({"type": "upsert"})";
+        auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, resource, AccountRuleAction::CUSTOM, false);
+        auto createRuleResult = manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::CREATE);
+
+        ruleEntry.id = createRuleResult.success().ruleID;
+
+        SECTION("Successful updating")
+        {
+            ruleEntry.resource.custom().action = R"({"type": "*"})";
+            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                                ManageAccountRuleAction::UPDATE);
+        }
+        SECTION("Successful deletion")
+        {
+            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                                ManageAccountRuleAction::REMOVE);
+        }
+
+        SECTION("cannot delete cause of role use rule")
+        {
+            auto creationRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+                "{}", {ruleEntry.id});
+            manageAccountRoleTestHelper.applyTx(master, creationRoleOp);
+
+            auto result = manageAccountRuleTestHelper.applyTx(master, ruleEntry,
+                                                              ManageAccountRuleAction::REMOVE,
+                                                              ManageAccountRuleResultCode::RULE_IS_USED,
+                                                              TransactionResultCode::txFAILED);
+
+            REQUIRE(result.roleIDs().size() == 1);
+            REQUIRE(result.roleIDs()[0] == ruleEntry.id);
+        }
+    }
 }

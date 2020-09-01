@@ -975,6 +975,7 @@ enum class ManageAccountRuleResultCode : std::int32_t {
   NOT_FOUND = -1,
   RULE_IS_USED = -2,
   INVALID_DETAILS = -3,
+  INVALID_ACTION = -4,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ManageAccountRuleResultCode>
@@ -992,6 +993,8 @@ template<> struct xdr_traits<::stellar::ManageAccountRuleResultCode>
       return "RULE_IS_USED";
     case ::stellar::ManageAccountRuleResultCode::INVALID_DETAILS:
       return "INVALID_DETAILS";
+    case ::stellar::ManageAccountRuleResultCode::INVALID_ACTION:
+      return "INVALID_ACTION";
     default:
       return nullptr;
     }
@@ -1001,7 +1004,8 @@ template<> struct xdr_traits<::stellar::ManageAccountRuleResultCode>
       (int32_t)::stellar::ManageAccountRuleResultCode::SUCCESS,
       (int32_t)::stellar::ManageAccountRuleResultCode::NOT_FOUND,
       (int32_t)::stellar::ManageAccountRuleResultCode::RULE_IS_USED,
-      (int32_t)::stellar::ManageAccountRuleResultCode::INVALID_DETAILS
+      (int32_t)::stellar::ManageAccountRuleResultCode::INVALID_DETAILS,
+      (int32_t)::stellar::ManageAccountRuleResultCode::INVALID_ACTION
     };
     return _xdr_enum_vec;
   }
