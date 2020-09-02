@@ -1194,7 +1194,7 @@ count_size(xdr::measurer& m) const override;
 };
 
 struct CustomRuleResource  : xdr::xdr_abstract {
-  longstring action{};
+  xdr::pointer<longstring> action{};
   longstring resource{};
   EmptyExt ext{};
 
@@ -1203,7 +1203,7 @@ struct CustomRuleResource  : xdr::xdr_abstract {
            typename _resource_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<longstring, _action_T>::value
+           std::enable_if<std::is_constructible<xdr::pointer<longstring>, _action_T>::value
                           && std::is_constructible<longstring, _resource_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
