@@ -2,6 +2,10 @@
 
 ## Unreleased 
 
+### Added
+
+* Ability to set custom rule and action in permissions
+
 ## 3.6.5
 
 ### Added 
