@@ -1205,6 +1205,8 @@ return u.from_bytes(accountSpecificRuleExt_);
 return u.from_bytes(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return u.from_bytes(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return u.from_bytes(custom_);
   default:
 return u.from_bytes(ext_);
 }
@@ -1253,6 +1255,8 @@ return m.to_bytes(accountSpecificRuleExt_);
 return m.to_bytes(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return m.to_bytes(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return m.to_bytes(custom_);
   default:
 return m.to_bytes(ext_);
 }
@@ -1298,6 +1302,8 @@ return m.count_size(accountSpecificRuleExt_);
 return m.count_size(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return m.count_size(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return m.count_size(custom_);
   default:
 return m.count_size(ext_);
 }
@@ -1346,6 +1352,8 @@ return accountSpecificRuleExt_ == other.accountSpecificRuleExt_;
 return swap_ == other.swap_;
   case (int32_t)LedgerEntryType::DATA:
 return data_ == other.data_;
+  case (int32_t)LedgerEntryType::CUSTOM:
+return custom_ == other.custom_;
   default:
 return ext_ == other.ext_;
 }
@@ -1395,6 +1403,8 @@ return accountSpecificRuleExt_ < other.accountSpecificRuleExt_;
 return swap_ < other.swap_;
   case (int32_t)LedgerEntryType::DATA:
 return data_ < other.data_;
+  case (int32_t)LedgerEntryType::CUSTOM:
+return custom_ < other.custom_;
   default:
 return ext_ < other.ext_;
 }

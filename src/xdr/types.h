@@ -543,6 +543,7 @@ enum class LedgerEntryType : std::int32_t {
   INITIATE_KYC_RECOVERY = 37,
   SWAP = 38,
   DATA = 39,
+  CUSTOM = 40,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerEntryType>
@@ -626,6 +627,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       return "SWAP";
     case ::stellar::LedgerEntryType::DATA:
       return "DATA";
+    case ::stellar::LedgerEntryType::CUSTOM:
+      return "CUSTOM";
     default:
       return nullptr;
     }
@@ -668,7 +671,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       (int32_t)::stellar::LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
       (int32_t)::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY,
       (int32_t)::stellar::LedgerEntryType::SWAP,
-      (int32_t)::stellar::LedgerEntryType::DATA
+      (int32_t)::stellar::LedgerEntryType::DATA,
+      (int32_t)::stellar::LedgerEntryType::CUSTOM
     };
     return _xdr_enum_vec;
   }

@@ -666,6 +666,7 @@ private:
     _accountSpecificRuleExt_t accountSpecificRuleExt_;
     _swap_t swap_;
     _data_t data_;
+    CustomRuleResource custom_;
     EmptyExt ext_;
   };
 
@@ -692,7 +693,8 @@ public:
       : which == (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE ? 13
       : which == (int32_t)LedgerEntryType::SWAP ? 14
       : which == (int32_t)LedgerEntryType::DATA ? 15
-      : 16;
+      : which == (int32_t)LedgerEntryType::CUSTOM ? 16
+      : 17;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -743,6 +745,9 @@ public:
       return true;
     case (int32_t)LedgerEntryType::DATA:
       _f(&SignerRuleResource::data_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)LedgerEntryType::CUSTOM:
+      _f(&SignerRuleResource::custom_, std::forward<_A>(_a)...);
       return true;
     default:
       _f(&SignerRuleResource::ext_, std::forward<_A>(_a)...);
@@ -806,6 +811,9 @@ break;
       case (int32_t)LedgerEntryType::DATA:
 new(&data_) _data_t{};
 break;
+      case (int32_t)LedgerEntryType::CUSTOM:
+new(&custom_) CustomRuleResource{};
+break;
       default:
 new(&ext_) EmptyExt{};
 break;
@@ -865,6 +873,9 @@ break;
     case (int32_t)LedgerEntryType::DATA:
 new(&data_) _data_t{};
 break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+new(&custom_) CustomRuleResource{};
+break;
     default:
 new(&ext_) EmptyExt{};
 break;
@@ -920,6 +931,9 @@ new(&swap_) _swap_t(source.swap_);
 break;
     case (int32_t)LedgerEntryType::DATA:
 new(&data_) _data_t(source.data_);
+break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+new(&custom_) CustomRuleResource(source.custom_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -977,6 +991,9 @@ break;
     case (int32_t)LedgerEntryType::DATA:
 new(&data_) _data_t(std::move(source.data_));
 break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+new(&custom_) CustomRuleResource(std::move(source.custom_));
+break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
@@ -1032,6 +1049,9 @@ swap_.~_swap_t();
 break;
   case (int32_t)LedgerEntryType::DATA:
 data_.~_data_t();
+break;
+  case (int32_t)LedgerEntryType::CUSTOM:
+custom_.~CustomRuleResource();
 break;
   default:
 ext_.~EmptyExt();
@@ -1091,6 +1111,9 @@ break;
     case (int32_t)LedgerEntryType::DATA:
 data_ = source.data_;
 break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+custom_ = source.custom_;
+break;
     default:
 ext_ = source.ext_;
 break;
@@ -1146,6 +1169,9 @@ new(&swap_) _swap_t(source.swap_);
 break;
     case (int32_t)LedgerEntryType::DATA:
 new(&data_) _data_t(source.data_);
+break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+new(&custom_) CustomRuleResource(source.custom_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -1206,6 +1232,9 @@ break;
     case (int32_t)LedgerEntryType::DATA:
 data_ = std::move(source.data_);
 break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+custom_ = std::move(source.custom_);
+break;
     default:
 ext_ = std::move(source.ext_);
 break;
@@ -1261,6 +1290,9 @@ new(&swap_) _swap_t(std::move(source.swap_));
 break;
     case (int32_t)LedgerEntryType::DATA:
 new(&data_) _data_t(std::move(source.data_));
+break;
+    case (int32_t)LedgerEntryType::CUSTOM:
+new(&custom_) CustomRuleResource(std::move(source.custom_));
 break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
@@ -1426,13 +1458,23 @@ break;
       return data_;
     throw xdr::xdr_wrong_union("SignerRuleResource: data accessed when not selected");
   }
-  EmptyExt &ext() {
+  CustomRuleResource &custom() {
     if (_xdr_field_number(type_) == 16)
+      return custom_;
+    throw xdr::xdr_wrong_union("SignerRuleResource: custom accessed when not selected");
+  }
+  const CustomRuleResource &custom() const {
+    if (_xdr_field_number(type_) == 16)
+      return custom_;
+    throw xdr::xdr_wrong_union("SignerRuleResource: custom accessed when not selected");
+  }
+  EmptyExt &ext() {
+    if (_xdr_field_number(type_) == 17)
       return ext_;
     throw xdr::xdr_wrong_union("SignerRuleResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(type_) == 16)
+    if (_xdr_field_number(type_) == 17)
       return ext_;
     throw xdr::xdr_wrong_union("SignerRuleResource: ext accessed when not selected");
   }bool
@@ -1471,6 +1513,7 @@ enum class SignerRuleAction : std::int32_t {
   REMOVE_FOR_OTHER = 19,
   EXCHANGE = 20,
   UPDATE_FOR_OTHER = 21,
+  CUSTOM = 22,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SignerRuleAction>
@@ -1522,6 +1565,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       return "EXCHANGE";
     case ::stellar::SignerRuleAction::UPDATE_FOR_OTHER:
       return "UPDATE_FOR_OTHER";
+    case ::stellar::SignerRuleAction::CUSTOM:
+      return "CUSTOM";
     default:
       return nullptr;
     }
@@ -1548,7 +1593,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       (int32_t)::stellar::SignerRuleAction::CREATE_FOR_OTHER_WITH_TASKS,
       (int32_t)::stellar::SignerRuleAction::REMOVE_FOR_OTHER,
       (int32_t)::stellar::SignerRuleAction::EXCHANGE,
-      (int32_t)::stellar::SignerRuleAction::UPDATE_FOR_OTHER
+      (int32_t)::stellar::SignerRuleAction::UPDATE_FOR_OTHER,
+      (int32_t)::stellar::SignerRuleAction::CUSTOM
     };
     return _xdr_enum_vec;
   }
