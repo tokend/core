@@ -40,14 +40,19 @@ bool
 ManageAccountRuleOpFrame::doCheckValid(Application& app)
 {
     std::string details;
-
+    AccountRuleAction action;
+    AccountRuleResource resource;
     switch (mManageAccountRule.data.action())
     {
         case ManageAccountRuleAction::CREATE:
             details = mManageAccountRule.data.createData().details;
+            action = mManageAccountRule.data.createData().action;
+            resource = mManageAccountRule.data.createData().resource;
             break;
         case ManageAccountRuleAction::UPDATE:
             details = mManageAccountRule.data.updateData().details;
+            action = mManageAccountRule.data.updateData().action;
+            resource = mManageAccountRule.data.updateData().resource;
             break;
         case ManageAccountRuleAction::REMOVE:
             return true;
@@ -58,6 +63,13 @@ ManageAccountRuleOpFrame::doCheckValid(Application& app)
     if (!isValidJson(details))
     {
         innerResult().code(ManageAccountRuleResultCode::INVALID_DETAILS);
+        return false;
+    }
+
+    if (action == AccountRuleAction::CUSTOM &&
+        resource.type() != LedgerEntryType::CUSTOM)
+    {
+        innerResult().code(ManageAccountRuleResultCode::INVALID_ACTION);
         return false;
     }
 
