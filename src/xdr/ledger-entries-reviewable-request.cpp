@@ -220,6 +220,12 @@ return u.from_bytes(manageOfferRequest_);
 return u.from_bytes(createPaymentRequest_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return u.from_bytes(redemptionRequest_);
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return u.from_bytes(dataCreationRequest_);
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return u.from_bytes(dataUpdateRequest_);
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return u.from_bytes(dataRemoveRequest_);
 }
 return false;
 }
@@ -272,6 +278,12 @@ return m.to_bytes(manageOfferRequest_);
 return m.to_bytes(createPaymentRequest_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.to_bytes(redemptionRequest_);
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.to_bytes(dataCreationRequest_);
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return m.to_bytes(dataUpdateRequest_);
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return m.to_bytes(dataRemoveRequest_);
 }
 return false;
 }
@@ -320,6 +332,12 @@ return m.count_size(manageOfferRequest_);
 return m.count_size(createPaymentRequest_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.count_size(redemptionRequest_);
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.count_size(dataCreationRequest_);
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return m.count_size(dataUpdateRequest_);
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return m.count_size(dataRemoveRequest_);
 }
 }
 bool
@@ -371,6 +389,12 @@ return manageOfferRequest_ == other.manageOfferRequest_;
 return createPaymentRequest_ == other.createPaymentRequest_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return redemptionRequest_ == other.redemptionRequest_;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreationRequest_ == other.dataCreationRequest_;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return dataUpdateRequest_ == other.dataUpdateRequest_;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return dataRemoveRequest_ == other.dataRemoveRequest_;
 }
 return false;
 }
@@ -424,6 +448,12 @@ return manageOfferRequest_ < other.manageOfferRequest_;
 return createPaymentRequest_ < other.createPaymentRequest_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return redemptionRequest_ < other.redemptionRequest_;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreationRequest_ < other.dataCreationRequest_;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return dataUpdateRequest_ < other.dataUpdateRequest_;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return dataRemoveRequest_ < other.dataRemoveRequest_;
 }
 return false;
 }

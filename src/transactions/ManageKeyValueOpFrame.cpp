@@ -42,6 +42,9 @@ namespace stellar
     char const* ManageKeyValueOpFrame::removeSaleParticipationTasks = "remove_sale_participation_tasks";
     char const* ManageKeyValueOpFrame::paymentTasks = "payment_tasks";
     char const* ManageKeyValueOpFrame::redemptionTasks = "redemption_tasks";
+    char const* ManageKeyValueOpFrame::createDataCreationRequestTasks = "create_data_creation_request_tasks";
+    char const* ManageKeyValueOpFrame::createDataUpdateRequestTasks = "create_data_update_request_tasks";
+    char const* ManageKeyValueOpFrame::createDataRemoveRequestTasks = "create_data_remove_request_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -78,6 +81,9 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {removeSaleParticipationTasks, KeyValueEntryType::UINT32},
         {paymentTasks, KeyValueEntryType::UINT32},
         {redemptionTasks, KeyValueEntryType::UINT32},
+        {createDataCreationRequestTasks, KeyValueEntryType::UINT32},
+        {createDataUpdateRequestTasks, KeyValueEntryType::UINT32},
+        {createDataRemoveRequestTasks, KeyValueEntryType::UINT32},
     };
 }
 
@@ -342,5 +348,23 @@ ManageKeyValueOpFrame::makeKYCRecoveryKey()
     ManageKeyValueOpFrame::makeRedemptionTasksKey()
     {
         return string(redemptionTasks);
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDataCreationRequestTasksKey(string type)
+    {
+        return string(createDataCreationRequestTasks) + ":" + type;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDataUpdateRequestTasksKey(string type)
+    {
+        return string(createDataUpdateRequestTasks) + ":" + type;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDataRemoveRequestTasksKey(string type)
+    {
+        return string(createDataRemoveRequestTasks) + ":" + type;
     }
 }

@@ -8,6 +8,15 @@
 #include <transactions/manage_role_rule/ManageSignerRoleOpFrame.h>
 #include <transactions/manage_role_rule/ManageSignerRuleOpFrame.h>
 #include <transactions/rule_verifing/SignerRuleVerifierImpl.h>
+#include "transactions/manage_data/CreateDataCreationRequestOpFrame.h"
+#include "transactions/manage_data/CancelDataCreationRequestOpFrame.h"
+#include "transactions/manage_data/CreateDataUpdateRequestOpFrame.h"
+#include "transactions/manage_data/CancelDataUpdateRequestOpFrame.h"
+#include "transactions/manage_data/CreateDataRemoveRequestOpFrame.h"
+#include "transactions/manage_data/CancelDataRemoveRequestOpFrame.h"
+#include "transactions/manage_data/CreateDataOpFrame.h"
+#include "transactions/manage_data/UpdateDataOpFrame.h"
+#include "transactions/manage_data/RemoveDataOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
@@ -64,9 +73,6 @@
 #include "swap/OpenSwapOpFrame.h"
 #include "swap/CloseSwapOpFrame.h"
 #include "CreateRedemptionRequestOpFrame.h"
-#include "manage_data/CreateDataOpFrame.h"
-#include "manage_data/UpdateDataOpFrame.h"
-#include "manage_data/RemoveDataOpFrame.h"
 
 namespace stellar
 {
@@ -185,6 +191,18 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<UpdateDataOpFrame>(op, res, tx);
         case OperationType::REMOVE_DATA:
             return make_shared<RemoveDataOpFrame>(op, res, tx);
+        case OperationType::CREATE_DATA_CREATION_REQUEST:
+            return make_shared<CreateDataCreationRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_DATA_CREATION_REQUEST:
+            return make_shared<CancelDataCreationRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_DATA_UPDATE_REQUEST:
+            return make_shared<CreateDataUpdateRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_DATA_UPDATE_REQUEST:
+            return make_shared<CancelDataUpdateRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_DATA_REMOVE_REQUEST:
+            return make_shared<CreateDataRemoveRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_DATA_REMOVE_REQUEST:
+            return make_shared<CancelDataRemoveRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

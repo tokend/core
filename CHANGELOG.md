@@ -5,6 +5,7 @@
 ### Added
 
 * Ability to set custom rule and action in permissions
+* Reviewable requests for create, update and remove data operations
 
 ## 3.6.5
 

@@ -25,6 +25,9 @@
 #include "xdr/reviewable-request-manage-offer.h"
 #include "xdr/reviewable-request-payment.h"
 #include "xdr/reviewable-request-redemption.h"
+#include "xdr/reviewable-request-create-data.h"
+#include "xdr/reviewable-request-update-data.h"
+#include "xdr/reviewable-request-remove-data.h"
 
 namespace stellar {
 
@@ -50,6 +53,9 @@ enum class ReviewableRequestType : std::int32_t {
   MANAGE_OFFER = 19,
   CREATE_PAYMENT = 20,
   PERFORM_REDEMPTION = 21,
+  DATA_CREATION = 22,
+  DATA_UPDATE = 23,
+  DATA_REMOVE = 24,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ReviewableRequestType>
@@ -101,6 +107,12 @@ template<> struct xdr_traits<::stellar::ReviewableRequestType>
       return "CREATE_PAYMENT";
     case ::stellar::ReviewableRequestType::PERFORM_REDEMPTION:
       return "PERFORM_REDEMPTION";
+    case ::stellar::ReviewableRequestType::DATA_CREATION:
+      return "DATA_CREATION";
+    case ::stellar::ReviewableRequestType::DATA_UPDATE:
+      return "DATA_UPDATE";
+    case ::stellar::ReviewableRequestType::DATA_REMOVE:
+      return "DATA_REMOVE";
     default:
       return nullptr;
     }
@@ -127,7 +139,10 @@ template<> struct xdr_traits<::stellar::ReviewableRequestType>
       (int32_t)::stellar::ReviewableRequestType::KYC_RECOVERY,
       (int32_t)::stellar::ReviewableRequestType::MANAGE_OFFER,
       (int32_t)::stellar::ReviewableRequestType::CREATE_PAYMENT,
-      (int32_t)::stellar::ReviewableRequestType::PERFORM_REDEMPTION
+      (int32_t)::stellar::ReviewableRequestType::PERFORM_REDEMPTION,
+      (int32_t)::stellar::ReviewableRequestType::DATA_CREATION,
+      (int32_t)::stellar::ReviewableRequestType::DATA_UPDATE,
+      (int32_t)::stellar::ReviewableRequestType::DATA_REMOVE
     };
     return _xdr_enum_vec;
   }
@@ -331,6 +346,9 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
       ManageOfferRequest manageOfferRequest_;
       CreatePaymentRequest createPaymentRequest_;
       RedemptionRequest redemptionRequest_;
+      DataCreationRequest dataCreationRequest_;
+      DataUpdateRequest dataUpdateRequest_;
+      DataRemoveRequest dataRemoveRequest_;
     };
 
   public:
@@ -355,7 +373,10 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         ReviewableRequestType::KYC_RECOVERY,
         ReviewableRequestType::MANAGE_OFFER,
         ReviewableRequestType::CREATE_PAYMENT,
-        ReviewableRequestType::PERFORM_REDEMPTION
+        ReviewableRequestType::PERFORM_REDEMPTION,
+        ReviewableRequestType::DATA_CREATION,
+        ReviewableRequestType::DATA_UPDATE,
+        ReviewableRequestType::DATA_REMOVE
       };
       return _xdr_disc_vec;
     }
@@ -379,6 +400,9 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 17
         : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 18
         : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 19
+        : which == (int32_t)ReviewableRequestType::DATA_CREATION ? 20
+        : which == (int32_t)ReviewableRequestType::DATA_UPDATE ? 21
+        : which == (int32_t)ReviewableRequestType::DATA_REMOVE ? 22
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -440,6 +464,15 @@ struct ReviewableRequestEntry  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
         _f(&_body_t::redemptionRequest_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+        _f(&_body_t::dataCreationRequest_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+        _f(&_body_t::dataUpdateRequest_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+        _f(&_body_t::dataRemoveRequest_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -511,6 +544,15 @@ break;
         case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&redemptionRequest_) RedemptionRequest{};
 break;
+        case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationRequest_) DataCreationRequest{};
+break;
+        case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdateRequest_) DataUpdateRequest{};
+break;
+        case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemoveRequest_) DataRemoveRequest{};
+break;
 }
 
       }
@@ -577,6 +619,15 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&redemptionRequest_) RedemptionRequest{};
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationRequest_) DataCreationRequest{};
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdateRequest_) DataUpdateRequest{};
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemoveRequest_) DataRemoveRequest{};
+break;
 }
 
     }
@@ -639,6 +690,15 @@ new(&createPaymentRequest_) CreatePaymentRequest(source.createPaymentRequest_);
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&redemptionRequest_) RedemptionRequest(source.redemptionRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationRequest_) DataCreationRequest(source.dataCreationRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdateRequest_) DataUpdateRequest(source.dataUpdateRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemoveRequest_) DataRemoveRequest(source.dataRemoveRequest_);
 break;
 }
 
@@ -703,6 +763,15 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&redemptionRequest_) RedemptionRequest(std::move(source.redemptionRequest_));
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationRequest_) DataCreationRequest(std::move(source.dataCreationRequest_));
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdateRequest_) DataUpdateRequest(std::move(source.dataUpdateRequest_));
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemoveRequest_) DataRemoveRequest(std::move(source.dataRemoveRequest_));
+break;
 }
 
     }
@@ -765,6 +834,15 @@ createPaymentRequest_.~CreatePaymentRequest();
 break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 redemptionRequest_.~RedemptionRequest();
+break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreationRequest_.~DataCreationRequest();
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+dataUpdateRequest_.~DataUpdateRequest();
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+dataRemoveRequest_.~DataRemoveRequest();
 break;
 }
 }
@@ -831,6 +909,15 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 redemptionRequest_ = source.redemptionRequest_;
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreationRequest_ = source.dataCreationRequest_;
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+dataUpdateRequest_ = source.dataUpdateRequest_;
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+dataRemoveRequest_ = source.dataRemoveRequest_;
+break;
 }
 }
 else {this->~_body_t();
@@ -893,6 +980,15 @@ new(&createPaymentRequest_) CreatePaymentRequest(source.createPaymentRequest_);
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&redemptionRequest_) RedemptionRequest(source.redemptionRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationRequest_) DataCreationRequest(source.dataCreationRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdateRequest_) DataUpdateRequest(source.dataUpdateRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemoveRequest_) DataRemoveRequest(source.dataRemoveRequest_);
 break;
 }
 }
@@ -960,6 +1056,15 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 redemptionRequest_ = std::move(source.redemptionRequest_);
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreationRequest_ = std::move(source.dataCreationRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+dataUpdateRequest_ = std::move(source.dataUpdateRequest_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+dataRemoveRequest_ = std::move(source.dataRemoveRequest_);
+break;
 }
 }
 else {this->~_body_t();
@@ -1022,6 +1127,15 @@ new(&createPaymentRequest_) CreatePaymentRequest(std::move(source.createPaymentR
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&redemptionRequest_) RedemptionRequest(std::move(source.redemptionRequest_));
+break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationRequest_) DataCreationRequest(std::move(source.dataCreationRequest_));
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdateRequest_) DataUpdateRequest(std::move(source.dataUpdateRequest_));
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemoveRequest_) DataRemoveRequest(std::move(source.dataRemoveRequest_));
 break;
 }
 }
@@ -1223,6 +1337,36 @@ break;
       if (_xdr_field_number(type_) == 19)
         return redemptionRequest_;
       throw xdr::xdr_wrong_union("_body_t: redemptionRequest accessed when not selected");
+    }
+    DataCreationRequest &dataCreationRequest() {
+      if (_xdr_field_number(type_) == 20)
+        return dataCreationRequest_;
+      throw xdr::xdr_wrong_union("_body_t: dataCreationRequest accessed when not selected");
+    }
+    const DataCreationRequest &dataCreationRequest() const {
+      if (_xdr_field_number(type_) == 20)
+        return dataCreationRequest_;
+      throw xdr::xdr_wrong_union("_body_t: dataCreationRequest accessed when not selected");
+    }
+    DataUpdateRequest &dataUpdateRequest() {
+      if (_xdr_field_number(type_) == 21)
+        return dataUpdateRequest_;
+      throw xdr::xdr_wrong_union("_body_t: dataUpdateRequest accessed when not selected");
+    }
+    const DataUpdateRequest &dataUpdateRequest() const {
+      if (_xdr_field_number(type_) == 21)
+        return dataUpdateRequest_;
+      throw xdr::xdr_wrong_union("_body_t: dataUpdateRequest accessed when not selected");
+    }
+    DataRemoveRequest &dataRemoveRequest() {
+      if (_xdr_field_number(type_) == 22)
+        return dataRemoveRequest_;
+      throw xdr::xdr_wrong_union("_body_t: dataRemoveRequest accessed when not selected");
+    }
+    const DataRemoveRequest &dataRemoveRequest() const {
+      if (_xdr_field_number(type_) == 22)
+        return dataRemoveRequest_;
+      throw xdr::xdr_wrong_union("_body_t: dataRemoveRequest accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

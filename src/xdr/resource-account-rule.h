@@ -663,6 +663,84 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _dataCreation_t  : xdr::xdr_abstract {
+    uint64 type{};
+    EmptyExt ext{};
+
+    _dataCreation_t() = default;
+    template<typename _type_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<uint64, _type_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _dataCreation_t(_type_T &&_type,
+                             _ext_T &&_ext)
+      : type(std::forward<_type_T>(_type)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
+  struct _dataUpdate_t  : xdr::xdr_abstract {
+    uint64 type{};
+    EmptyExt ext{};
+
+    _dataUpdate_t() = default;
+    template<typename _type_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<uint64, _type_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _dataUpdate_t(_type_T &&_type,
+                           _ext_T &&_ext)
+      : type(std::forward<_type_T>(_type)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
+  struct _dataRemove_t  : xdr::xdr_abstract {
+    uint64 type{};
+    EmptyExt ext{};
+
+    _dataRemove_t() = default;
+    template<typename _type_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<uint64, _type_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _dataRemove_t(_type_T &&_type,
+                           _ext_T &&_ext)
+      : type(std::forward<_type_T>(_type)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
 
   using _xdr_case_type = xdr::xdr_traits<ReviewableRequestType>::case_type;
 private:
@@ -677,6 +755,9 @@ private:
     _manageOffer_t manageOffer_;
     _createPayment_t createPayment_;
     _performRedemption_t performRedemption_;
+    _dataCreation_t dataCreation_;
+    _dataUpdate_t dataUpdate_;
+    _dataRemove_t dataRemove_;
     EmptyExt ext_;
   };
 
@@ -696,7 +777,10 @@ public:
       : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 7
       : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 8
       : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 9
-      : 10;
+      : which == (int32_t)ReviewableRequestType::DATA_CREATION ? 10
+      : which == (int32_t)ReviewableRequestType::DATA_UPDATE ? 11
+      : which == (int32_t)ReviewableRequestType::DATA_REMOVE ? 12
+      : 13;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -727,6 +811,15 @@ public:
       return true;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
       _f(&ReviewableRequestResource::performRedemption_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+      _f(&ReviewableRequestResource::dataCreation_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+      _f(&ReviewableRequestResource::dataUpdate_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+      _f(&ReviewableRequestResource::dataRemove_, std::forward<_A>(_a)...);
       return true;
     default:
       _f(&ReviewableRequestResource::ext_, std::forward<_A>(_a)...);
@@ -770,6 +863,15 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&performRedemption_) _performRedemption_t{};
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreation_) _dataCreation_t{};
+break;
+      case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdate_) _dataUpdate_t{};
+break;
+      case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemove_) _dataRemove_t{};
+break;
       default:
 new(&ext_) EmptyExt{};
 break;
@@ -809,6 +911,15 @@ break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&performRedemption_) _performRedemption_t{};
 break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreation_) _dataCreation_t{};
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdate_) _dataUpdate_t{};
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemove_) _dataRemove_t{};
+break;
     default:
 new(&ext_) EmptyExt{};
 break;
@@ -844,6 +955,15 @@ new(&createPayment_) _createPayment_t(source.createPayment_);
 break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&performRedemption_) _performRedemption_t(source.performRedemption_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreation_) _dataCreation_t(source.dataCreation_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdate_) _dataUpdate_t(source.dataUpdate_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemove_) _dataRemove_t(source.dataRemove_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -881,6 +1001,15 @@ break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&performRedemption_) _performRedemption_t(std::move(source.performRedemption_));
 break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreation_) _dataCreation_t(std::move(source.dataCreation_));
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdate_) _dataUpdate_t(std::move(source.dataUpdate_));
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemove_) _dataRemove_t(std::move(source.dataRemove_));
+break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
@@ -916,6 +1045,15 @@ createPayment_.~_createPayment_t();
 break;
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 performRedemption_.~_performRedemption_t();
+break;
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreation_.~_dataCreation_t();
+break;
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+dataUpdate_.~_dataUpdate_t();
+break;
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+dataRemove_.~_dataRemove_t();
 break;
   default:
 ext_.~EmptyExt();
@@ -955,6 +1093,15 @@ break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 performRedemption_ = source.performRedemption_;
 break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreation_ = source.dataCreation_;
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+dataUpdate_ = source.dataUpdate_;
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+dataRemove_ = source.dataRemove_;
+break;
     default:
 ext_ = source.ext_;
 break;
@@ -990,6 +1137,15 @@ new(&createPayment_) _createPayment_t(source.createPayment_);
 break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&performRedemption_) _performRedemption_t(source.performRedemption_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreation_) _dataCreation_t(source.dataCreation_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdate_) _dataUpdate_t(source.dataUpdate_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemove_) _dataRemove_t(source.dataRemove_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -1030,6 +1186,15 @@ break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 performRedemption_ = std::move(source.performRedemption_);
 break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreation_ = std::move(source.dataCreation_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+dataUpdate_ = std::move(source.dataUpdate_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+dataRemove_ = std::move(source.dataRemove_);
+break;
     default:
 ext_ = std::move(source.ext_);
 break;
@@ -1065,6 +1230,15 @@ new(&createPayment_) _createPayment_t(std::move(source.createPayment_));
 break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&performRedemption_) _performRedemption_t(std::move(source.performRedemption_));
+break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreation_) _dataCreation_t(std::move(source.dataCreation_));
+break;
+    case (int32_t)ReviewableRequestType::DATA_UPDATE:
+new(&dataUpdate_) _dataUpdate_t(std::move(source.dataUpdate_));
+break;
+    case (int32_t)ReviewableRequestType::DATA_REMOVE:
+new(&dataRemove_) _dataRemove_t(std::move(source.dataRemove_));
 break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
@@ -1170,13 +1344,43 @@ break;
       return performRedemption_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: performRedemption accessed when not selected");
   }
-  EmptyExt &ext() {
+  _dataCreation_t &dataCreation() {
     if (_xdr_field_number(requestType_) == 10)
+      return dataCreation_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataCreation accessed when not selected");
+  }
+  const _dataCreation_t &dataCreation() const {
+    if (_xdr_field_number(requestType_) == 10)
+      return dataCreation_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataCreation accessed when not selected");
+  }
+  _dataUpdate_t &dataUpdate() {
+    if (_xdr_field_number(requestType_) == 11)
+      return dataUpdate_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataUpdate accessed when not selected");
+  }
+  const _dataUpdate_t &dataUpdate() const {
+    if (_xdr_field_number(requestType_) == 11)
+      return dataUpdate_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataUpdate accessed when not selected");
+  }
+  _dataRemove_t &dataRemove() {
+    if (_xdr_field_number(requestType_) == 12)
+      return dataRemove_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataRemove accessed when not selected");
+  }
+  const _dataRemove_t &dataRemove() const {
+    if (_xdr_field_number(requestType_) == 12)
+      return dataRemove_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataRemove accessed when not selected");
+  }
+  EmptyExt &ext() {
+    if (_xdr_field_number(requestType_) == 13)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(requestType_) == 10)
+    if (_xdr_field_number(requestType_) == 13)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }bool
