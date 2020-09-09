@@ -11,6 +11,7 @@
 #include "xdr/operation-payment.h"
 #include "xdr/operation-manage-offer.h"
 #include "xdr/operation-create-redemption-request.h"
+#include "xdr/operation-create-close-deferred-payment-request.h"
 
 namespace stellar {
 
@@ -1760,93 +1761,6 @@ struct CreateDeferredPaymentResult  : xdr::xdr_abstract {
     : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
       destination(std::forward<_destination_T>(_destination)),
       source(std::forward<_source_T>(_source)),
-      totalFee(std::forward<_totalFee_T>(_totalFee)),
-      totalAmount(std::forward<_totalAmount_T>(_totalAmount)),
-      ext(std::forward<_ext_T>(_ext)) {}
-  bool
-operator==(xdr::xdr_abstract const& other) const override;bool
-operator<(xdr::xdr_abstract const& other) const override;private:
-  bool
-from_bytes(xdr::unmarshaler& u) override;
-bool
-to_bytes(xdr::marshaler& m) const override;
-void
-count_size(xdr::measurer& m) const override;
-
-};
-
-enum class CloseDeferredPaymentEffect : std::int32_t {
-  CHARGED = 0,
-  DELETED = 1,
-};
-} namespace xdr {
-template<> struct xdr_traits<::stellar::CloseDeferredPaymentEffect>
-  : xdr_integral_base<::stellar::CloseDeferredPaymentEffect, std::uint32_t> {
-  using case_type = std::int32_t;
-  static constexpr const bool is_enum = true;
-  static constexpr const bool is_numeric = false;
-  static const char *enum_name(::stellar::CloseDeferredPaymentEffect val) {
-    switch (val) {
-    case ::stellar::CloseDeferredPaymentEffect::CHARGED:
-      return "CHARGED";
-    case ::stellar::CloseDeferredPaymentEffect::DELETED:
-      return "DELETED";
-    default:
-      return nullptr;
-    }
-  }
-  static const std::vector<int32_t> &enum_values() {
-    static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::CloseDeferredPaymentEffect::CHARGED,
-      (int32_t)::stellar::CloseDeferredPaymentEffect::DELETED
-    };
-    return _xdr_enum_vec;
-  }
-};
-} namespace stellar {
-
-struct CloseDeferredPaymentResult  : xdr::xdr_abstract {
-  uint64 deferredPaymentID{};
-  AccountID destination{};
-  BalanceID destinationBalance{};
-  CloseDeferredPaymentEffect effect{};
-  uint64 deferredPaymentRemainder{};
-  uint64 totalFee{};
-  uint64 totalAmount{};
-  EmptyExt ext{};
-
-  CloseDeferredPaymentResult() = default;
-  template<typename _deferredPaymentID_T,
-           typename _destination_T,
-           typename _destinationBalance_T,
-           typename _effect_T,
-           typename _deferredPaymentRemainder_T,
-           typename _totalFee_T,
-           typename _totalAmount_T,
-           typename _ext_T,
-           typename = typename
-           std::enable_if<std::is_constructible<uint64, _deferredPaymentID_T>::value
-                          && std::is_constructible<AccountID, _destination_T>::value
-                          && std::is_constructible<BalanceID, _destinationBalance_T>::value
-                          && std::is_constructible<CloseDeferredPaymentEffect, _effect_T>::value
-                          && std::is_constructible<uint64, _deferredPaymentRemainder_T>::value
-                          && std::is_constructible<uint64, _totalFee_T>::value
-                          && std::is_constructible<uint64, _totalAmount_T>::value
-                          && std::is_constructible<EmptyExt, _ext_T>::value
-                         >::type>
-  explicit CloseDeferredPaymentResult(_deferredPaymentID_T &&_deferredPaymentID,
-                                      _destination_T &&_destination,
-                                      _destinationBalance_T &&_destinationBalance,
-                                      _effect_T &&_effect,
-                                      _deferredPaymentRemainder_T &&_deferredPaymentRemainder,
-                                      _totalFee_T &&_totalFee,
-                                      _totalAmount_T &&_totalAmount,
-                                      _ext_T &&_ext)
-    : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
-      destination(std::forward<_destination_T>(_destination)),
-      destinationBalance(std::forward<_destinationBalance_T>(_destinationBalance)),
-      effect(std::forward<_effect_T>(_effect)),
-      deferredPaymentRemainder(std::forward<_deferredPaymentRemainder_T>(_deferredPaymentRemainder)),
       totalFee(std::forward<_totalFee_T>(_totalFee)),
       totalAmount(std::forward<_totalAmount_T>(_totalAmount)),
       ext(std::forward<_ext_T>(_ext)) {}
