@@ -67,6 +67,10 @@
 #include "manage_data/CreateDataOpFrame.h"
 #include "manage_data/UpdateDataOpFrame.h"
 #include "manage_data/RemoveDataOpFrame.h"
+#include "CancelCloseDeferredPaymentRequestOpFrame.h"
+#include "CancelDeferredPaymentCreationRequestOpFrame.h"
+#include "CreateCloseDeferredPaymentRequestOpFrame.h"
+#include "CreateDeferredPaymentCreationRequestOpFrame.h"
 
 namespace stellar
 {
@@ -185,6 +189,14 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<UpdateDataOpFrame>(op, res, tx);
         case OperationType::REMOVE_DATA:
             return make_shared<RemoveDataOpFrame>(op, res, tx);
+        case OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+            return make_shared<CreateDeferredPaymentCreationRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+            return make_shared<CancelDeferredPaymentCreationRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+            return make_shared<CreateCloseDeferredPaymentRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+            return make_shared<CancelCloseDeferredPaymentRequestOpFrame>(op, res, tx);
         default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

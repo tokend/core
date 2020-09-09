@@ -220,6 +220,10 @@ return u.from_bytes(manageOfferRequest_);
 return u.from_bytes(createPaymentRequest_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return u.from_bytes(redemptionRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return u.from_bytes(createDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return u.from_bytes(closeDeferredPaymentRequest_);
 }
 return false;
 }
@@ -272,6 +276,10 @@ return m.to_bytes(manageOfferRequest_);
 return m.to_bytes(createPaymentRequest_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.to_bytes(redemptionRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.to_bytes(createDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.to_bytes(closeDeferredPaymentRequest_);
 }
 return false;
 }
@@ -320,6 +328,10 @@ return m.count_size(manageOfferRequest_);
 return m.count_size(createPaymentRequest_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.count_size(redemptionRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.count_size(createDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.count_size(closeDeferredPaymentRequest_);
 }
 }
 bool
@@ -371,6 +383,10 @@ return manageOfferRequest_ == other.manageOfferRequest_;
 return createPaymentRequest_ == other.createPaymentRequest_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return redemptionRequest_ == other.redemptionRequest_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentRequest_ == other.createDeferredPaymentRequest_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentRequest_ == other.closeDeferredPaymentRequest_;
 }
 return false;
 }
@@ -424,6 +440,10 @@ return manageOfferRequest_ < other.manageOfferRequest_;
 return createPaymentRequest_ < other.createPaymentRequest_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return redemptionRequest_ < other.redemptionRequest_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentRequest_ < other.createDeferredPaymentRequest_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentRequest_ < other.closeDeferredPaymentRequest_;
 }
 return false;
 }

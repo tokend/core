@@ -1546,6 +1546,264 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+CreateDeferredPaymentResult::from_bytes(xdr::unmarshaler& u) 
+{
+bool okdeferredPaymentID = u.from_bytes(deferredPaymentID);
+if (!okdeferredPaymentID)
+{
+return false;
+}
+bool okdestination = u.from_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool oksource = u.from_bytes(source);
+if (!oksource)
+{
+return false;
+}
+bool oktotalFee = u.from_bytes(totalFee);
+if (!oktotalFee)
+{
+return false;
+}
+bool oktotalAmount = u.from_bytes(totalAmount);
+if (!oktotalAmount)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+CreateDeferredPaymentResult::to_bytes(xdr::marshaler& m) const 
+{
+bool okdeferredPaymentID = m.to_bytes(deferredPaymentID);
+if (!okdeferredPaymentID)
+{
+return false;
+}
+bool okdestination = m.to_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool oksource = m.to_bytes(source);
+if (!oksource)
+{
+return false;
+}
+bool oktotalFee = m.to_bytes(totalFee);
+if (!oktotalFee)
+{
+return false;
+}
+bool oktotalAmount = m.to_bytes(totalAmount);
+if (!oktotalAmount)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+CreateDeferredPaymentResult::count_size(xdr::measurer& m) const 
+{
+m.count_size(deferredPaymentID);
+m.count_size(destination);
+m.count_size(source);
+m.count_size(totalFee);
+m.count_size(totalAmount);
+m.count_size(ext);
+}
+bool
+CreateDeferredPaymentResult::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<CreateDeferredPaymentResult const&>(other_abstract);return true
+&& (deferredPaymentID== other.deferredPaymentID)
+&& (destination== other.destination)
+&& (source== other.source)
+&& (totalFee== other.totalFee)
+&& (totalAmount== other.totalAmount)
+&& (ext== other.ext)
+;}
+bool
+CreateDeferredPaymentResult::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<CreateDeferredPaymentResult const&>(other_abstract);
+if (deferredPaymentID < other.deferredPaymentID) return true;
+if (other.deferredPaymentID < deferredPaymentID) return false;
+if (destination < other.destination) return true;
+if (other.destination < destination) return false;
+if (source < other.source) return true;
+if (other.source < source) return false;
+if (totalFee < other.totalFee) return true;
+if (other.totalFee < totalFee) return false;
+if (totalAmount < other.totalAmount) return true;
+if (other.totalAmount < totalAmount) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
+CloseDeferredPaymentResult::from_bytes(xdr::unmarshaler& u) 
+{
+bool okdeferredPaymentID = u.from_bytes(deferredPaymentID);
+if (!okdeferredPaymentID)
+{
+return false;
+}
+bool okdestination = u.from_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool okdestinationBalance = u.from_bytes(destinationBalance);
+if (!okdestinationBalance)
+{
+return false;
+}
+bool okeffect = u.from_bytes(effect);
+if (!okeffect)
+{
+return false;
+}
+bool okdeferredPaymentRemainder = u.from_bytes(deferredPaymentRemainder);
+if (!okdeferredPaymentRemainder)
+{
+return false;
+}
+bool oktotalFee = u.from_bytes(totalFee);
+if (!oktotalFee)
+{
+return false;
+}
+bool oktotalAmount = u.from_bytes(totalAmount);
+if (!oktotalAmount)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+CloseDeferredPaymentResult::to_bytes(xdr::marshaler& m) const 
+{
+bool okdeferredPaymentID = m.to_bytes(deferredPaymentID);
+if (!okdeferredPaymentID)
+{
+return false;
+}
+bool okdestination = m.to_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool okdestinationBalance = m.to_bytes(destinationBalance);
+if (!okdestinationBalance)
+{
+return false;
+}
+bool okeffect = m.to_bytes(effect);
+if (!okeffect)
+{
+return false;
+}
+bool okdeferredPaymentRemainder = m.to_bytes(deferredPaymentRemainder);
+if (!okdeferredPaymentRemainder)
+{
+return false;
+}
+bool oktotalFee = m.to_bytes(totalFee);
+if (!oktotalFee)
+{
+return false;
+}
+bool oktotalAmount = m.to_bytes(totalAmount);
+if (!oktotalAmount)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+CloseDeferredPaymentResult::count_size(xdr::measurer& m) const 
+{
+m.count_size(deferredPaymentID);
+m.count_size(destination);
+m.count_size(destinationBalance);
+m.count_size(effect);
+m.count_size(deferredPaymentRemainder);
+m.count_size(totalFee);
+m.count_size(totalAmount);
+m.count_size(ext);
+}
+bool
+CloseDeferredPaymentResult::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<CloseDeferredPaymentResult const&>(other_abstract);return true
+&& (deferredPaymentID== other.deferredPaymentID)
+&& (destination== other.destination)
+&& (destinationBalance== other.destinationBalance)
+&& (effect== other.effect)
+&& (deferredPaymentRemainder== other.deferredPaymentRemainder)
+&& (totalFee== other.totalFee)
+&& (totalAmount== other.totalAmount)
+&& (ext== other.ext)
+;}
+bool
+CloseDeferredPaymentResult::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<CloseDeferredPaymentResult const&>(other_abstract);
+if (deferredPaymentID < other.deferredPaymentID) return true;
+if (other.deferredPaymentID < deferredPaymentID) return false;
+if (destination < other.destination) return true;
+if (other.destination < destination) return false;
+if (destinationBalance < other.destinationBalance) return true;
+if (other.destinationBalance < destinationBalance) return false;
+if (effect < other.effect) return true;
+if (other.effect < effect) return false;
+if (deferredPaymentRemainder < other.deferredPaymentRemainder) return true;
+if (other.deferredPaymentRemainder < deferredPaymentRemainder) return false;
+if (totalFee < other.totalFee) return true;
+if (other.totalFee < totalFee) return false;
+if (totalAmount < other.totalAmount) return true;
+if (other.totalAmount < totalAmount) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ExtendedResult::_typeExt_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -1572,6 +1830,10 @@ return u.from_bytes(manageOfferResult_);
 return u.from_bytes(paymentResult_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return u.from_bytes(createRedemptionResult_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return u.from_bytes(createDeferredPaymentResult_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return u.from_bytes(closeDeferredPaymentResult_);
 }
 return false;
 }
@@ -1602,6 +1864,10 @@ return m.to_bytes(manageOfferResult_);
 return m.to_bytes(paymentResult_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.to_bytes(createRedemptionResult_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.to_bytes(createDeferredPaymentResult_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.to_bytes(closeDeferredPaymentResult_);
 }
 return false;
 }
@@ -1629,6 +1895,10 @@ return m.count_size(manageOfferResult_);
 return m.count_size(paymentResult_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.count_size(createRedemptionResult_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.count_size(createDeferredPaymentResult_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.count_size(closeDeferredPaymentResult_);
 }
 }
 bool
@@ -1659,6 +1929,10 @@ return manageOfferResult_ == other.manageOfferResult_;
 return paymentResult_ == other.paymentResult_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return createRedemptionResult_ == other.createRedemptionResult_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentResult_ == other.createDeferredPaymentResult_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentResult_ == other.closeDeferredPaymentResult_;
 }
 return false;
 }
@@ -1690,6 +1964,10 @@ return manageOfferResult_ < other.manageOfferResult_;
 return paymentResult_ < other.paymentResult_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return createRedemptionResult_ < other.createRedemptionResult_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentResult_ < other.createDeferredPaymentResult_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentResult_ < other.closeDeferredPaymentResult_;
 }
 return false;
 }

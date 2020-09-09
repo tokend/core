@@ -543,6 +543,7 @@ enum class LedgerEntryType : std::int32_t {
   INITIATE_KYC_RECOVERY = 37,
   SWAP = 38,
   DATA = 39,
+  DEFERRED_PAYMENT = 40,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerEntryType>
@@ -626,6 +627,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       return "SWAP";
     case ::stellar::LedgerEntryType::DATA:
       return "DATA";
+    case ::stellar::LedgerEntryType::DEFERRED_PAYMENT:
+      return "DEFERRED_PAYMENT";
     default:
       return nullptr;
     }
@@ -668,7 +671,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       (int32_t)::stellar::LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
       (int32_t)::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY,
       (int32_t)::stellar::LedgerEntryType::SWAP,
-      (int32_t)::stellar::LedgerEntryType::DATA
+      (int32_t)::stellar::LedgerEntryType::DATA,
+      (int32_t)::stellar::LedgerEntryType::DEFERRED_PAYMENT
     };
     return _xdr_enum_vec;
   }
@@ -999,6 +1003,10 @@ enum class OperationType : std::int32_t {
   CREATE_DATA = 57,
   UPDATE_DATA = 58,
   REMOVE_DATA = 59,
+  CREATE_DEFERRED_PAYMENT_CREATION_REQUEST = 60,
+  CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST = 61,
+  CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST = 62,
+  CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST = 63,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1114,6 +1122,14 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "UPDATE_DATA";
     case ::stellar::OperationType::REMOVE_DATA:
       return "REMOVE_DATA";
+    case ::stellar::OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+      return "CREATE_DEFERRED_PAYMENT_CREATION_REQUEST";
+    case ::stellar::OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+      return "CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST";
+    case ::stellar::OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+      return "CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST";
+    case ::stellar::OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+      return "CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST";
     default:
       return nullptr;
     }
@@ -1172,7 +1188,11 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CREATE_REDEMPTION_REQUEST,
       (int32_t)::stellar::OperationType::CREATE_DATA,
       (int32_t)::stellar::OperationType::UPDATE_DATA,
-      (int32_t)::stellar::OperationType::REMOVE_DATA
+      (int32_t)::stellar::OperationType::REMOVE_DATA,
+      (int32_t)::stellar::OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
+      (int32_t)::stellar::OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
+      (int32_t)::stellar::OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST
     };
     return _xdr_enum_vec;
   }

@@ -123,6 +123,14 @@ return u.from_bytes(createDataOp_);
 return u.from_bytes(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return u.from_bytes(createDeferredPaymentCreationRequestOp_);
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return u.from_bytes(cancelDeferredPaymentCreationRequestOp_);
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return u.from_bytes(createCloseDeferredPaymentRequestOp_);
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return u.from_bytes(cancelCloseDeferredPaymentRequestOp_);
 }
 return false;
 }
@@ -243,6 +251,14 @@ return m.to_bytes(createDataOp_);
 return m.to_bytes(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.to_bytes(createDeferredPaymentCreationRequestOp_);
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.to_bytes(cancelDeferredPaymentCreationRequestOp_);
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.to_bytes(createCloseDeferredPaymentRequestOp_);
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.to_bytes(cancelCloseDeferredPaymentRequestOp_);
 }
 return false;
 }
@@ -359,6 +375,14 @@ return m.count_size(createDataOp_);
 return m.count_size(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.count_size(createDeferredPaymentCreationRequestOp_);
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.count_size(cancelDeferredPaymentCreationRequestOp_);
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.count_size(createCloseDeferredPaymentRequestOp_);
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.count_size(cancelCloseDeferredPaymentRequestOp_);
 }
 }
 bool
@@ -478,6 +502,14 @@ return createDataOp_ == other.createDataOp_;
 return updateDataOp_ == other.updateDataOp_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataOp_ == other.removeDataOp_;
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return createDeferredPaymentCreationRequestOp_ == other.createDeferredPaymentCreationRequestOp_;
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return cancelDeferredPaymentCreationRequestOp_ == other.cancelDeferredPaymentCreationRequestOp_;
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return createCloseDeferredPaymentRequestOp_ == other.createCloseDeferredPaymentRequestOp_;
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return cancelCloseDeferredPaymentRequestOp_ == other.cancelCloseDeferredPaymentRequestOp_;
 }
 return false;
 }
@@ -599,6 +631,14 @@ return createDataOp_ < other.createDataOp_;
 return updateDataOp_ < other.updateDataOp_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataOp_ < other.removeDataOp_;
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return createDeferredPaymentCreationRequestOp_ < other.createDeferredPaymentCreationRequestOp_;
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return cancelDeferredPaymentCreationRequestOp_ < other.cancelDeferredPaymentCreationRequestOp_;
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return createCloseDeferredPaymentRequestOp_ < other.createCloseDeferredPaymentRequestOp_;
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return cancelCloseDeferredPaymentRequestOp_ < other.cancelCloseDeferredPaymentRequestOp_;
 }
 return false;
 }
@@ -1293,6 +1333,14 @@ return u.from_bytes(createDataResult_);
 return u.from_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return u.from_bytes(createDeferredPaymentCreationRequestResult_);
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return u.from_bytes(cancelDeferredPaymentCreationRequestResult_);
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return u.from_bytes(createCloseDeferredPaymentRequestResult_);
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return u.from_bytes(cancelCloseDeferredPaymentRequestResult_);
 }
 return false;
 }
@@ -1413,6 +1461,14 @@ return m.to_bytes(createDataResult_);
 return m.to_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.to_bytes(createDeferredPaymentCreationRequestResult_);
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.to_bytes(cancelDeferredPaymentCreationRequestResult_);
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.to_bytes(createCloseDeferredPaymentRequestResult_);
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.to_bytes(cancelCloseDeferredPaymentRequestResult_);
 }
 return false;
 }
@@ -1529,6 +1585,14 @@ return m.count_size(createDataResult_);
 return m.count_size(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.count_size(createDeferredPaymentCreationRequestResult_);
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return m.count_size(cancelDeferredPaymentCreationRequestResult_);
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.count_size(createCloseDeferredPaymentRequestResult_);
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return m.count_size(cancelCloseDeferredPaymentRequestResult_);
 }
 }
 bool
@@ -1648,6 +1712,14 @@ return createDataResult_ == other.createDataResult_;
 return updateDataResult_ == other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ == other.removeDataResult_;
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return createDeferredPaymentCreationRequestResult_ == other.createDeferredPaymentCreationRequestResult_;
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return cancelDeferredPaymentCreationRequestResult_ == other.cancelDeferredPaymentCreationRequestResult_;
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return createCloseDeferredPaymentRequestResult_ == other.createCloseDeferredPaymentRequestResult_;
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return cancelCloseDeferredPaymentRequestResult_ == other.cancelCloseDeferredPaymentRequestResult_;
 }
 return false;
 }
@@ -1769,6 +1841,14 @@ return createDataResult_ < other.createDataResult_;
 return updateDataResult_ < other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ < other.removeDataResult_;
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+return createDeferredPaymentCreationRequestResult_ < other.createDeferredPaymentCreationRequestResult_;
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+return cancelDeferredPaymentCreationRequestResult_ < other.cancelDeferredPaymentCreationRequestResult_;
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return createCloseDeferredPaymentRequestResult_ < other.createCloseDeferredPaymentRequestResult_;
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+return cancelCloseDeferredPaymentRequestResult_ < other.cancelCloseDeferredPaymentRequestResult_;
 }
 return false;
 }

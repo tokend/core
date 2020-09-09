@@ -137,6 +137,32 @@ void ReviewableRequestFrame::ensureWithdrawalValid(WithdrawalRequest const& requ
     }
 }
 
+void ReviewableRequestFrame::ensureCreateDeferredPaymentValid(CreateDeferredPaymentRequest const& request)
+{
+    if (request.amount == 0)
+    {
+        throw runtime_error("amount is invalid");
+    }
+
+    if (!isValidJson(request.creatorDetails))
+    {
+        throw runtime_error("external details is invalid");
+    }
+}
+
+void ReviewableRequestFrame::ensureCloseDeferredPaymentValid(CloseDeferredPaymentRequest const& request)
+{
+    if (request.amount == 0)
+    {
+        throw runtime_error("amount is invalid");
+    }
+
+    if (!isValidJson(request.creatorDetails))
+    {
+        throw runtime_error("external details is invalid");
+    }
+}
+
 void ReviewableRequestFrame::ensureKYCRecoveryValid(
     KYCRecoveryRequest const& request
     )
@@ -334,6 +360,10 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureCreatePaymentValid(oe.body.createPaymentRequest());
         case ReviewableRequestType::PERFORM_REDEMPTION:
             return ensureRedemptionValid(oe.body.redemptionRequest());
+        case ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+            return ensureCreateDeferredPaymentValid(oe.body.createDeferredPaymentRequest());
+        case ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+            return ensureCloseDeferredPaymentValid(oe.body.closeDeferredPaymentRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

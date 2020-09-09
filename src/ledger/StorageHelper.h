@@ -40,6 +40,7 @@ class SaleHelper;
 class PendingStatisticsHelper;
 class StatisticsV2Helper;
 class DataHelper;
+class DeferredPaymentHelper;
 
 class StorageHelper
 {
@@ -98,6 +99,7 @@ class StorageHelper
     virtual PendingStatisticsHelper& getPendingStatisticsHelper() = 0;
     virtual StatisticsV2Helper& getStatisticsV2Helper() = 0;
     virtual DataHelper& getDataHelper() = 0;
+    virtual DeferredPaymentHelper& getDeferredPaymentHelper() = 0;
 
 };
 } // namespace stellar

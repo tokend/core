@@ -1728,6 +1728,140 @@ count_size(xdr::measurer& m) const override;
 
 };
 
+struct CreateDeferredPaymentResult  : xdr::xdr_abstract {
+  uint64 deferredPaymentID{};
+  AccountID destination{};
+  AccountID source{};
+  uint64 totalFee{};
+  uint64 totalAmount{};
+  EmptyExt ext{};
+
+  CreateDeferredPaymentResult() = default;
+  template<typename _deferredPaymentID_T,
+           typename _destination_T,
+           typename _source_T,
+           typename _totalFee_T,
+           typename _totalAmount_T,
+           typename _ext_T,
+           typename = typename
+           std::enable_if<std::is_constructible<uint64, _deferredPaymentID_T>::value
+                          && std::is_constructible<AccountID, _destination_T>::value
+                          && std::is_constructible<AccountID, _source_T>::value
+                          && std::is_constructible<uint64, _totalFee_T>::value
+                          && std::is_constructible<uint64, _totalAmount_T>::value
+                          && std::is_constructible<EmptyExt, _ext_T>::value
+                         >::type>
+  explicit CreateDeferredPaymentResult(_deferredPaymentID_T &&_deferredPaymentID,
+                                       _destination_T &&_destination,
+                                       _source_T &&_source,
+                                       _totalFee_T &&_totalFee,
+                                       _totalAmount_T &&_totalAmount,
+                                       _ext_T &&_ext)
+    : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
+      destination(std::forward<_destination_T>(_destination)),
+      source(std::forward<_source_T>(_source)),
+      totalFee(std::forward<_totalFee_T>(_totalFee)),
+      totalAmount(std::forward<_totalAmount_T>(_totalAmount)),
+      ext(std::forward<_ext_T>(_ext)) {}
+  bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+  bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+};
+
+enum class CloseDeferredPaymentEffect : std::int32_t {
+  CHARGED = 0,
+  DELETED = 1,
+};
+} namespace xdr {
+template<> struct xdr_traits<::stellar::CloseDeferredPaymentEffect>
+  : xdr_integral_base<::stellar::CloseDeferredPaymentEffect, std::uint32_t> {
+  using case_type = std::int32_t;
+  static constexpr const bool is_enum = true;
+  static constexpr const bool is_numeric = false;
+  static const char *enum_name(::stellar::CloseDeferredPaymentEffect val) {
+    switch (val) {
+    case ::stellar::CloseDeferredPaymentEffect::CHARGED:
+      return "CHARGED";
+    case ::stellar::CloseDeferredPaymentEffect::DELETED:
+      return "DELETED";
+    default:
+      return nullptr;
+    }
+  }
+  static const std::vector<int32_t> &enum_values() {
+    static const std::vector<int32_t> _xdr_enum_vec = {
+      (int32_t)::stellar::CloseDeferredPaymentEffect::CHARGED,
+      (int32_t)::stellar::CloseDeferredPaymentEffect::DELETED
+    };
+    return _xdr_enum_vec;
+  }
+};
+} namespace stellar {
+
+struct CloseDeferredPaymentResult  : xdr::xdr_abstract {
+  uint64 deferredPaymentID{};
+  AccountID destination{};
+  BalanceID destinationBalance{};
+  CloseDeferredPaymentEffect effect{};
+  uint64 deferredPaymentRemainder{};
+  uint64 totalFee{};
+  uint64 totalAmount{};
+  EmptyExt ext{};
+
+  CloseDeferredPaymentResult() = default;
+  template<typename _deferredPaymentID_T,
+           typename _destination_T,
+           typename _destinationBalance_T,
+           typename _effect_T,
+           typename _deferredPaymentRemainder_T,
+           typename _totalFee_T,
+           typename _totalAmount_T,
+           typename _ext_T,
+           typename = typename
+           std::enable_if<std::is_constructible<uint64, _deferredPaymentID_T>::value
+                          && std::is_constructible<AccountID, _destination_T>::value
+                          && std::is_constructible<BalanceID, _destinationBalance_T>::value
+                          && std::is_constructible<CloseDeferredPaymentEffect, _effect_T>::value
+                          && std::is_constructible<uint64, _deferredPaymentRemainder_T>::value
+                          && std::is_constructible<uint64, _totalFee_T>::value
+                          && std::is_constructible<uint64, _totalAmount_T>::value
+                          && std::is_constructible<EmptyExt, _ext_T>::value
+                         >::type>
+  explicit CloseDeferredPaymentResult(_deferredPaymentID_T &&_deferredPaymentID,
+                                      _destination_T &&_destination,
+                                      _destinationBalance_T &&_destinationBalance,
+                                      _effect_T &&_effect,
+                                      _deferredPaymentRemainder_T &&_deferredPaymentRemainder,
+                                      _totalFee_T &&_totalFee,
+                                      _totalAmount_T &&_totalAmount,
+                                      _ext_T &&_ext)
+    : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
+      destination(std::forward<_destination_T>(_destination)),
+      destinationBalance(std::forward<_destinationBalance_T>(_destinationBalance)),
+      effect(std::forward<_effect_T>(_effect)),
+      deferredPaymentRemainder(std::forward<_deferredPaymentRemainder_T>(_deferredPaymentRemainder)),
+      totalFee(std::forward<_totalFee_T>(_totalFee)),
+      totalAmount(std::forward<_totalAmount_T>(_totalAmount)),
+      ext(std::forward<_ext_T>(_ext)) {}
+  bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+  bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+};
+
 struct ExtendedResult  : xdr::xdr_abstract {
   struct _typeExt_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<ReviewableRequestType>::case_type;
@@ -1741,6 +1875,8 @@ struct ExtendedResult  : xdr::xdr_abstract {
       ManageOfferResult manageOfferResult_;
       PaymentResult paymentResult_;
       CreateRedemptionRequestResult createRedemptionResult_;
+      CreateDeferredPaymentResult createDeferredPaymentResult_;
+      CloseDeferredPaymentResult closeDeferredPaymentResult_;
     };
 
   public:
@@ -1754,7 +1890,9 @@ struct ExtendedResult  : xdr::xdr_abstract {
         ReviewableRequestType::CREATE_POLL,
         ReviewableRequestType::MANAGE_OFFER,
         ReviewableRequestType::CREATE_PAYMENT,
-        ReviewableRequestType::PERFORM_REDEMPTION
+        ReviewableRequestType::PERFORM_REDEMPTION,
+        ReviewableRequestType::CREATE_DEFERRED_PAYMENT,
+        ReviewableRequestType::CLOSE_DEFERRED_PAYMENT
       };
       return _xdr_disc_vec;
     }
@@ -1767,6 +1905,8 @@ struct ExtendedResult  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 5
         : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 6
         : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 7
+        : which == (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT ? 8
+        : which == (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT ? 9
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -1794,6 +1934,12 @@ struct ExtendedResult  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
         _f(&_typeExt_t::createRedemptionResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+        _f(&_typeExt_t::createDeferredPaymentResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+        _f(&_typeExt_t::closeDeferredPaymentResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -1831,6 +1977,12 @@ break;
         case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult{};
 break;
+        case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPaymentResult_) CreateDeferredPaymentResult{};
+break;
+        case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPaymentResult_) CloseDeferredPaymentResult{};
+break;
 }
 
       }
@@ -1863,6 +2015,12 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult{};
 break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPaymentResult_) CreateDeferredPaymentResult{};
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPaymentResult_) CloseDeferredPaymentResult{};
+break;
 }
 
     }
@@ -1891,6 +2049,12 @@ new(&paymentResult_) PaymentResult(source.paymentResult_);
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(source.createRedemptionResult_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(source.createDeferredPaymentResult_);
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPaymentResult_) CloseDeferredPaymentResult(source.closeDeferredPaymentResult_);
 break;
 }
 
@@ -1921,6 +2085,12 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionResult_));
 break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(std::move(source.createDeferredPaymentResult_));
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPaymentResult_) CloseDeferredPaymentResult(std::move(source.closeDeferredPaymentResult_));
+break;
 }
 
     }
@@ -1949,6 +2119,12 @@ paymentResult_.~PaymentResult();
 break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 createRedemptionResult_.~CreateRedemptionRequestResult();
+break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+createDeferredPaymentResult_.~CreateDeferredPaymentResult();
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+closeDeferredPaymentResult_.~CloseDeferredPaymentResult();
 break;
 }
 }
@@ -1981,6 +2157,12 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 createRedemptionResult_ = source.createRedemptionResult_;
 break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+createDeferredPaymentResult_ = source.createDeferredPaymentResult_;
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+closeDeferredPaymentResult_ = source.closeDeferredPaymentResult_;
+break;
 }
 }
 else {this->~_typeExt_t();
@@ -2009,6 +2191,12 @@ new(&paymentResult_) PaymentResult(source.paymentResult_);
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(source.createRedemptionResult_);
+break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(source.createDeferredPaymentResult_);
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPaymentResult_) CloseDeferredPaymentResult(source.closeDeferredPaymentResult_);
 break;
 }
 }
@@ -2042,6 +2230,12 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 createRedemptionResult_ = std::move(source.createRedemptionResult_);
 break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+createDeferredPaymentResult_ = std::move(source.createDeferredPaymentResult_);
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+closeDeferredPaymentResult_ = std::move(source.closeDeferredPaymentResult_);
+break;
 }
 }
 else {this->~_typeExt_t();
@@ -2070,6 +2264,12 @@ new(&paymentResult_) PaymentResult(std::move(source.paymentResult_));
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionResult_));
+break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(std::move(source.createDeferredPaymentResult_));
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPaymentResult_) CloseDeferredPaymentResult(std::move(source.closeDeferredPaymentResult_));
 break;
 }
 }
@@ -2151,6 +2351,26 @@ break;
       if (_xdr_field_number(requestType_) == 7)
         return createRedemptionResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: createRedemptionResult accessed when not selected");
+    }
+    CreateDeferredPaymentResult &createDeferredPaymentResult() {
+      if (_xdr_field_number(requestType_) == 8)
+        return createDeferredPaymentResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: createDeferredPaymentResult accessed when not selected");
+    }
+    const CreateDeferredPaymentResult &createDeferredPaymentResult() const {
+      if (_xdr_field_number(requestType_) == 8)
+        return createDeferredPaymentResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: createDeferredPaymentResult accessed when not selected");
+    }
+    CloseDeferredPaymentResult &closeDeferredPaymentResult() {
+      if (_xdr_field_number(requestType_) == 9)
+        return closeDeferredPaymentResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: closeDeferredPaymentResult accessed when not selected");
+    }
+    const CloseDeferredPaymentResult &closeDeferredPaymentResult() const {
+      if (_xdr_field_number(requestType_) == 9)
+        return closeDeferredPaymentResult_;
+      throw xdr::xdr_wrong_union("_typeExt_t: closeDeferredPaymentResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

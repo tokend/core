@@ -39,6 +39,7 @@
 #include "xdr/ledger-entries-account-specific-rule.h"
 #include "xdr/ledger-entries-swap.h"
 #include "xdr/ledger-entries-data.h"
+#include "xdr/ledger-entries-deferred-payment.h"
 
 namespace stellar {
 
@@ -118,6 +119,7 @@ struct LedgerEntry  : xdr::xdr_abstract {
       AccountSpecificRuleEntry accountSpecificRule_;
       SwapEntry swap_;
       DataEntry data_;
+      DeferredPaymentEntry deferredPayment_;
     };
 
   public:
@@ -155,7 +157,8 @@ struct LedgerEntry  : xdr::xdr_abstract {
         LedgerEntryType::VOTE,
         LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
         LedgerEntryType::SWAP,
-        LedgerEntryType::DATA
+        LedgerEntryType::DATA,
+        LedgerEntryType::DEFERRED_PAYMENT
       };
       return _xdr_disc_vec;
     }
@@ -192,6 +195,7 @@ struct LedgerEntry  : xdr::xdr_abstract {
         : which == (int32_t)LedgerEntryType::ACCOUNT_SPECIFIC_RULE ? 30
         : which == (int32_t)LedgerEntryType::SWAP ? 31
         : which == (int32_t)LedgerEntryType::DATA ? 32
+        : which == (int32_t)LedgerEntryType::DEFERRED_PAYMENT ? 33
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -292,6 +296,9 @@ struct LedgerEntry  : xdr::xdr_abstract {
         return true;
       case (int32_t)LedgerEntryType::DATA:
         _f(&_data_t::data_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+        _f(&_data_t::deferredPayment_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -402,6 +409,9 @@ break;
         case (int32_t)LedgerEntryType::DATA:
 new(&data_) DataEntry{};
 break;
+        case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+new(&deferredPayment_) DeferredPaymentEntry{};
+break;
 }
 
       }
@@ -507,6 +517,9 @@ break;
       case (int32_t)LedgerEntryType::DATA:
 new(&data_) DataEntry{};
 break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+new(&deferredPayment_) DeferredPaymentEntry{};
+break;
 }
 
     }
@@ -608,6 +621,9 @@ new(&swap_) SwapEntry(source.swap_);
 break;
       case (int32_t)LedgerEntryType::DATA:
 new(&data_) DataEntry(source.data_);
+break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+new(&deferredPayment_) DeferredPaymentEntry(source.deferredPayment_);
 break;
 }
 
@@ -711,6 +727,9 @@ break;
       case (int32_t)LedgerEntryType::DATA:
 new(&data_) DataEntry(std::move(source.data_));
 break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+new(&deferredPayment_) DeferredPaymentEntry(std::move(source.deferredPayment_));
+break;
 }
 
     }
@@ -812,6 +831,9 @@ swap_.~SwapEntry();
 break;
     case (int32_t)LedgerEntryType::DATA:
 data_.~DataEntry();
+break;
+    case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+deferredPayment_.~DeferredPaymentEntry();
 break;
 }
 }
@@ -917,6 +939,9 @@ break;
       case (int32_t)LedgerEntryType::DATA:
 data_ = source.data_;
 break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+deferredPayment_ = source.deferredPayment_;
+break;
 }
 }
 else {this->~_data_t();
@@ -1018,6 +1043,9 @@ new(&swap_) SwapEntry(source.swap_);
 break;
       case (int32_t)LedgerEntryType::DATA:
 new(&data_) DataEntry(source.data_);
+break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+new(&deferredPayment_) DeferredPaymentEntry(source.deferredPayment_);
 break;
 }
 }
@@ -1124,6 +1152,9 @@ break;
       case (int32_t)LedgerEntryType::DATA:
 data_ = std::move(source.data_);
 break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+deferredPayment_ = std::move(source.deferredPayment_);
+break;
 }
 }
 else {this->~_data_t();
@@ -1225,6 +1256,9 @@ new(&swap_) SwapEntry(std::move(source.swap_));
 break;
       case (int32_t)LedgerEntryType::DATA:
 new(&data_) DataEntry(std::move(source.data_));
+break;
+      case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+new(&deferredPayment_) DeferredPaymentEntry(std::move(source.deferredPayment_));
 break;
 }
 }
@@ -1556,6 +1590,16 @@ break;
       if (_xdr_field_number(type_) == 32)
         return data_;
       throw xdr::xdr_wrong_union("_data_t: data accessed when not selected");
+    }
+    DeferredPaymentEntry &deferredPayment() {
+      if (_xdr_field_number(type_) == 33)
+        return deferredPayment_;
+      throw xdr::xdr_wrong_union("_data_t: deferredPayment accessed when not selected");
+    }
+    const DeferredPaymentEntry &deferredPayment() const {
+      if (_xdr_field_number(type_) == 33)
+        return deferredPayment_;
+      throw xdr::xdr_wrong_union("_data_t: deferredPayment accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

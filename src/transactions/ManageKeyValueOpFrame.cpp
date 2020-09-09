@@ -42,6 +42,8 @@ namespace stellar
     char const* ManageKeyValueOpFrame::removeSaleParticipationTasks = "remove_sale_participation_tasks";
     char const* ManageKeyValueOpFrame::paymentTasks = "payment_tasks";
     char const* ManageKeyValueOpFrame::redemptionTasks = "redemption_tasks";
+    char const* ManageKeyValueOpFrame::createDeferredPaymentCreationTasks = "create_deferred_payment_creation_tasks";
+    char const* ManageKeyValueOpFrame::createDeferredPaymentCloseTasks = "create_deferred_payment_close_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -342,5 +344,17 @@ ManageKeyValueOpFrame::makeKYCRecoveryKey()
     ManageKeyValueOpFrame::makeRedemptionTasksKey()
     {
         return string(redemptionTasks);
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDeferredPaymentCreationTasksKey(AssetCode const& code)
+    {
+        return string(createDeferredPaymentCreationTasks) + ":" + code;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDeferredPaymentCloseTasksKey(AssetCode const& code)
+    {
+        return string(createDeferredPaymentCloseTasks) + ":" + code;
     }
 }

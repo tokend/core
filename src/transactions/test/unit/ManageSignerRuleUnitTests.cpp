@@ -56,6 +56,7 @@
 #include "transactions/test/mocks/MockPendingStatisticsHelper.h"
 #include "transactions/test/mocks/MockStatisticsV2Helper.h"
 #include "transactions/test/mocks/MockDataHelper.h"
+#include "transactions/test/mocks/MockDeferredPaymentHelper.h"
 #include "util/StatusManager.h"
 #include "util/TmpDir.h"
 #include "work/WorkManager.h"

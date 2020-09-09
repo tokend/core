@@ -32,6 +32,8 @@
 #include "ReviewManageOfferRequestOpFrame.h"
 #include "ReviewPaymentRequestOpFrame.h"
 #include "ReviewRedemptionRequestOpFrame.h"
+#include "ReviewCreateDeferredPaymentRequestOpFrame.h"
+#include "ReviewCloseDeferredPaymentRequestOpFrame.h"
 
 namespace stellar
 {
@@ -161,6 +163,10 @@ ReviewRequestOpFrame::makeHelper(Operation const& op, OperationResult& res, Tran
 		return new ReviewPaymentRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType ::PERFORM_REDEMPTION:
         return new ReviewRedemptionRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+        return new ReviewCreateDeferredPaymentRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+        return new ReviewCloseDeferredPaymentRequestOpFrame(op, res, parentTx);
 	default:
 		throw std::runtime_error("Unexpected request type for review request op");
 	}

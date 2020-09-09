@@ -110,6 +110,11 @@ public:
     static longstring makePaymentTasksKey(AssetCode const& code);
     static longstring makeRedemptionTasksKey();
 
+    static longstring
+        makeCreateDeferredPaymentCreationTasksKey(AssetCode const& code);
+    static longstring
+        makeCreateDeferredPaymentCloseTasksKey(AssetCode const& code);
+
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
     static const char * issuanceTasksPrefix;
@@ -142,5 +147,8 @@ public:
     static char const * removeSaleParticipationTasks;
     static char const * paymentTasks;
     static char const * redemptionTasks;
+    static char const * createDeferredPaymentCreationTasks;
+    static char const * createDeferredPaymentCloseTasks;
+
 };
 }
