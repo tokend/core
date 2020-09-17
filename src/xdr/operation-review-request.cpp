@@ -1661,6 +1661,79 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+DataCreationExtended::from_bytes(xdr::unmarshaler& u) 
+{
+bool okowner = u.from_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool okid = u.from_bytes(id);
+if (!okid)
+{
+return false;
+}
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+return true;
+}
+bool
+DataCreationExtended::to_bytes(xdr::marshaler& m) const 
+{
+bool okowner = m.to_bytes(owner);
+if (!okowner)
+{
+return false;
+}
+bool okid = m.to_bytes(id);
+if (!okid)
+{
+return false;
+}
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+return true;
+}
+void
+DataCreationExtended::count_size(xdr::measurer& m) const 
+{
+m.count_size(owner);
+m.count_size(id);
+m.count_size(type);
+}
+bool
+DataCreationExtended::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<DataCreationExtended const&>(other_abstract);return true
+&& (owner== other.owner)
+&& (id== other.id)
+&& (type== other.type)
+;}
+bool
+DataCreationExtended::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<DataCreationExtended const&>(other_abstract);
+if (owner < other.owner) return true;
+if (other.owner < owner) return false;
+if (id < other.id) return true;
+if (other.id < id) return false;
+if (type < other.type) return true;
+if (other.type < type) return false;
+return false;
+}bool
 ExtendedResult::_typeExt_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -1687,6 +1760,8 @@ return u.from_bytes(manageOfferResult_);
 return u.from_bytes(paymentResult_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return u.from_bytes(createRedemptionResult_);
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return u.from_bytes(dataCreationExtended_);
     case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return u.from_bytes(createDeferredPaymentResult_);
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1721,6 +1796,8 @@ return m.to_bytes(manageOfferResult_);
 return m.to_bytes(paymentResult_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.to_bytes(createRedemptionResult_);
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.to_bytes(dataCreationExtended_);
     case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return m.to_bytes(createDeferredPaymentResult_);
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1752,6 +1829,8 @@ return m.count_size(manageOfferResult_);
 return m.count_size(paymentResult_);
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.count_size(createRedemptionResult_);
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.count_size(dataCreationExtended_);
     case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return m.count_size(createDeferredPaymentResult_);
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1786,6 +1865,8 @@ return manageOfferResult_ == other.manageOfferResult_;
 return paymentResult_ == other.paymentResult_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return createRedemptionResult_ == other.createRedemptionResult_;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreationExtended_ == other.dataCreationExtended_;
     case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return createDeferredPaymentResult_ == other.createDeferredPaymentResult_;
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1821,6 +1902,8 @@ return manageOfferResult_ < other.manageOfferResult_;
 return paymentResult_ < other.paymentResult_;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return createRedemptionResult_ < other.createRedemptionResult_;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreationExtended_ < other.dataCreationExtended_;
     case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return createDeferredPaymentResult_ < other.createDeferredPaymentResult_;
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:

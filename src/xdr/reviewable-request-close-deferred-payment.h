@@ -14,7 +14,6 @@ namespace stellar {
 
 struct CloseDeferredPaymentRequest  : xdr::xdr_abstract {
   uint64 deferredPaymentID{};
-  AccountID destination{};
   BalanceID destinationBalance{};
   longstring creatorDetails{};
   uint64 amount{};
@@ -24,7 +23,6 @@ struct CloseDeferredPaymentRequest  : xdr::xdr_abstract {
 
   CloseDeferredPaymentRequest() = default;
   template<typename _deferredPaymentID_T,
-           typename _destination_T,
            typename _destinationBalance_T,
            typename _creatorDetails_T,
            typename _amount_T,
@@ -33,7 +31,6 @@ struct CloseDeferredPaymentRequest  : xdr::xdr_abstract {
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _deferredPaymentID_T>::value
-                          && std::is_constructible<AccountID, _destination_T>::value
                           && std::is_constructible<BalanceID, _destinationBalance_T>::value
                           && std::is_constructible<longstring, _creatorDetails_T>::value
                           && std::is_constructible<uint64, _amount_T>::value
@@ -42,7 +39,6 @@ struct CloseDeferredPaymentRequest  : xdr::xdr_abstract {
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit CloseDeferredPaymentRequest(_deferredPaymentID_T &&_deferredPaymentID,
-                                       _destination_T &&_destination,
                                        _destinationBalance_T &&_destinationBalance,
                                        _creatorDetails_T &&_creatorDetails,
                                        _amount_T &&_amount,
@@ -50,7 +46,6 @@ struct CloseDeferredPaymentRequest  : xdr::xdr_abstract {
                                        _sequenceNumber_T &&_sequenceNumber,
                                        _ext_T &&_ext)
     : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
-      destination(std::forward<_destination_T>(_destination)),
       destinationBalance(std::forward<_destinationBalance_T>(_destinationBalance)),
       creatorDetails(std::forward<_creatorDetails_T>(_creatorDetails)),
       amount(std::forward<_amount_T>(_amount)),

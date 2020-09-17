@@ -133,14 +133,6 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
                                                         StorageHelper& sh,
                                                         LedgerManager& lm)
 {
-    if (!sh.getAccountHelper().exists(
-            mCreateCloseDeferredPaymentRequest.request.destination))
-    {
-        pickResultCode(CreateCloseDeferredPaymentRequestResultCode::
-                           DESTINATION_ACCOUNT_NOT_FOUND);
-        return false;
-    }
-
     auto deferredPayment = sh.getDeferredPaymentHelper().loadDeferredPayment(
         mCreateCloseDeferredPaymentRequest.request.deferredPaymentID);
 
@@ -226,7 +218,6 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
     request->setTasks(allTasks);
     requestHelper.storeAdd(request->mEntry);
 
-    // fixme autoapprove
 
     pickResultCode(CreateCloseDeferredPaymentRequestResultCode::SUCCESS);
 
@@ -234,6 +225,12 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
     innerResult().success().deferredPaymentID = 0;
     innerResult().success().fulfilled = false;
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
+
+    if (request->canBeFulfilled(lm))
+    {
+        return tryAutoApprove(app, sh, request);
+    }
+
     return true;
 }
 
@@ -242,14 +239,6 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
                                                         StorageHelper& sh,
                                                         LedgerManager& lm)
 {
-    if (!sh.getAccountHelper().exists(
-            mCreateCloseDeferredPaymentRequest.request.destination))
-    {
-        pickResultCode(CreateCloseDeferredPaymentRequestResultCode::
-                           DESTINATION_ACCOUNT_NOT_FOUND);
-        return false;
-    }
-
     auto deferredPayment = sh.getDeferredPaymentHelper().loadDeferredPayment(
         mCreateCloseDeferredPaymentRequest.request.deferredPaymentID);
 
@@ -320,8 +309,6 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
         mCreateCloseDeferredPaymentRequest.request.destinationBalance;
     closeDeferredPayment.deferredPaymentID =
         mCreateCloseDeferredPaymentRequest.request.deferredPaymentID;
-    closeDeferredPayment.destination =
-        mCreateCloseDeferredPaymentRequest.request.destination;
     closeDeferredPayment.creatorDetails =
         mCreateCloseDeferredPaymentRequest.request.creatorDetails;
     closeDeferredPayment.feeData =
@@ -332,8 +319,6 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
     request->recalculateHashRejectReason();
     requestHelper.storeChange(request->mEntry);
 
-    // fixme autoapprove
-
     pickResultCode(CreateCloseDeferredPaymentRequestResultCode::SUCCESS);
 
     innerResult().success().requestID = request->getRequestID();
@@ -341,6 +326,12 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
         deferredPayment->getDeferredPayment().id;
     innerResult().success().fulfilled = false;
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
+
+    if (request->canBeFulfilled(lm))
+    {
+        return tryAutoApprove(app, sh, request);
+    }
+
     return true;
 }
 

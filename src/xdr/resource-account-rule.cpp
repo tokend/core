@@ -883,6 +883,183 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+ReviewableRequestResource::_dataCreation_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_dataCreation_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_dataCreation_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_dataCreation_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_dataCreation_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_dataCreation_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_dataCreation_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
+ReviewableRequestResource::_dataUpdate_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_dataUpdate_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_dataUpdate_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_dataUpdate_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_dataUpdate_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_dataUpdate_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_dataUpdate_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
+ReviewableRequestResource::_dataRemove_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool oktype = u.from_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_dataRemove_t::to_bytes(xdr::marshaler& m) const 
+{
+bool oktype = m.to_bytes(type);
+if (!oktype)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_dataRemove_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(type);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_dataRemove_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_dataRemove_t const&>(other_abstract);return true
+&& (type== other.type)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_dataRemove_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_dataRemove_t const&>(other_abstract);
+if (type < other.type) return true;
+if (other.type < type) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ReviewableRequestResource::_createDeferredPayment_t::from_bytes(xdr::unmarshaler& u) 
 {
 bool okassetCode = u.from_bytes(assetCode);
@@ -1056,6 +1233,12 @@ return u.from_bytes(manageOffer_);
 return u.from_bytes(createPayment_);
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return u.from_bytes(performRedemption_);
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return u.from_bytes(dataCreation_);
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return u.from_bytes(dataUpdate_);
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return u.from_bytes(dataRemove_);
   case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return u.from_bytes(createDeferredPayment_);
   case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1094,6 +1277,12 @@ return m.to_bytes(manageOffer_);
 return m.to_bytes(createPayment_);
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.to_bytes(performRedemption_);
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.to_bytes(dataCreation_);
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return m.to_bytes(dataUpdate_);
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return m.to_bytes(dataRemove_);
   case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return m.to_bytes(createDeferredPayment_);
   case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1128,6 +1317,12 @@ return m.count_size(manageOffer_);
 return m.count_size(createPayment_);
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return m.count_size(performRedemption_);
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return m.count_size(dataCreation_);
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return m.count_size(dataUpdate_);
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return m.count_size(dataRemove_);
   case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return m.count_size(createDeferredPayment_);
   case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1165,6 +1360,12 @@ return manageOffer_ == other.manageOffer_;
 return createPayment_ == other.createPayment_;
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return performRedemption_ == other.performRedemption_;
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreation_ == other.dataCreation_;
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return dataUpdate_ == other.dataUpdate_;
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return dataRemove_ == other.dataRemove_;
   case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return createDeferredPayment_ == other.createDeferredPayment_;
   case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1204,6 +1405,12 @@ return manageOffer_ < other.manageOffer_;
 return createPayment_ < other.createPayment_;
   case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 return performRedemption_ < other.performRedemption_;
+  case (int32_t)ReviewableRequestType::DATA_CREATION:
+return dataCreation_ < other.dataCreation_;
+  case (int32_t)ReviewableRequestType::DATA_UPDATE:
+return dataUpdate_ < other.dataUpdate_;
+  case (int32_t)ReviewableRequestType::DATA_REMOVE:
+return dataRemove_ < other.dataRemove_;
   case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 return createDeferredPayment_ < other.createDeferredPayment_;
   case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
@@ -1214,6 +1421,79 @@ return ext_ < other.ext_;
 return false;
 }
 bool
+CustomRuleResource::from_bytes(xdr::unmarshaler& u) 
+{
+bool okaction = u.from_bytes(action);
+if (!okaction)
+{
+return false;
+}
+bool okresource = u.from_bytes(resource);
+if (!okresource)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+CustomRuleResource::to_bytes(xdr::marshaler& m) const 
+{
+bool okaction = m.to_bytes(action);
+if (!okaction)
+{
+return false;
+}
+bool okresource = m.to_bytes(resource);
+if (!okresource)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+CustomRuleResource::count_size(xdr::measurer& m) const 
+{
+m.count_size(action);
+m.count_size(resource);
+m.count_size(ext);
+}
+bool
+CustomRuleResource::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<CustomRuleResource const&>(other_abstract);return true
+&& (action== other.action)
+&& (resource== other.resource)
+&& (ext== other.ext)
+;}
+bool
+CustomRuleResource::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<CustomRuleResource const&>(other_abstract);
+if (action < other.action) return true;
+if (other.action < action) return false;
+if (resource < other.resource) return true;
+if (other.resource < resource) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 AccountRuleResource::_asset_t::from_bytes(xdr::unmarshaler& u) 
 {
 bool okassetCode = u.from_bytes(assetCode);
@@ -2186,6 +2466,8 @@ return u.from_bytes(accountSpecificRuleExt_);
 return u.from_bytes(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return u.from_bytes(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return u.from_bytes(custom_);
   default:
 return u.from_bytes(ext_);
 }
@@ -2228,6 +2510,8 @@ return m.to_bytes(accountSpecificRuleExt_);
 return m.to_bytes(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return m.to_bytes(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return m.to_bytes(custom_);
   default:
 return m.to_bytes(ext_);
 }
@@ -2267,6 +2551,8 @@ return m.count_size(accountSpecificRuleExt_);
 return m.count_size(swap_);
   case (int32_t)LedgerEntryType::DATA:
 return m.count_size(data_);
+  case (int32_t)LedgerEntryType::CUSTOM:
+return m.count_size(custom_);
   default:
 return m.count_size(ext_);
 }
@@ -2309,6 +2595,8 @@ return accountSpecificRuleExt_ == other.accountSpecificRuleExt_;
 return swap_ == other.swap_;
   case (int32_t)LedgerEntryType::DATA:
 return data_ == other.data_;
+  case (int32_t)LedgerEntryType::CUSTOM:
+return custom_ == other.custom_;
   default:
 return ext_ == other.ext_;
 }
@@ -2352,6 +2640,8 @@ return accountSpecificRuleExt_ < other.accountSpecificRuleExt_;
 return swap_ < other.swap_;
   case (int32_t)LedgerEntryType::DATA:
 return data_ < other.data_;
+  case (int32_t)LedgerEntryType::CUSTOM:
+return custom_ < other.custom_;
   default:
 return ext_ < other.ext_;
 }

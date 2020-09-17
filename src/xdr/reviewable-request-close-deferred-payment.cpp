@@ -15,11 +15,6 @@ if (!okdeferredPaymentID)
 {
 return false;
 }
-bool okdestination = u.from_bytes(destination);
-if (!okdestination)
-{
-return false;
-}
 bool okdestinationBalance = u.from_bytes(destinationBalance);
 if (!okdestinationBalance)
 {
@@ -60,11 +55,6 @@ if (!okdeferredPaymentID)
 {
 return false;
 }
-bool okdestination = m.to_bytes(destination);
-if (!okdestination)
-{
-return false;
-}
 bool okdestinationBalance = m.to_bytes(destinationBalance);
 if (!okdestinationBalance)
 {
@@ -101,7 +91,6 @@ void
 CloseDeferredPaymentRequest::count_size(xdr::measurer& m) const 
 {
 m.count_size(deferredPaymentID);
-m.count_size(destination);
 m.count_size(destinationBalance);
 m.count_size(creatorDetails);
 m.count_size(amount);
@@ -117,7 +106,6 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<CloseDeferredPaymentRequest const&>(other_abstract);return true
 && (deferredPaymentID== other.deferredPaymentID)
-&& (destination== other.destination)
 && (destinationBalance== other.destinationBalance)
 && (creatorDetails== other.creatorDetails)
 && (amount== other.amount)
@@ -135,8 +123,6 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<CloseDeferredPaymentRequest const&>(other_abstract);
 if (deferredPaymentID < other.deferredPaymentID) return true;
 if (other.deferredPaymentID < deferredPaymentID) return false;
-if (destination < other.destination) return true;
-if (other.destination < destination) return false;
 if (destinationBalance < other.destinationBalance) return true;
 if (other.destinationBalance < destinationBalance) return false;
 if (creatorDetails < other.creatorDetails) return true;

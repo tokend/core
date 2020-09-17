@@ -295,6 +295,13 @@ struct LedgerEntryIdCmp
 
             return ad.id < bd.id;
         }
+        case LedgerEntryType::DEFERRED_PAYMENT:
+        {
+            auto const& ad = a.deferredPayment();
+            auto const& bd = b.deferredPayment();
+
+            return ad.id < bd.id;
+        }
         default:
         {
             throw std::runtime_error(

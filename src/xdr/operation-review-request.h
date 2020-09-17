@@ -1776,6 +1776,38 @@ count_size(xdr::measurer& m) const override;
 
 };
 
+struct DataCreationExtended  : xdr::xdr_abstract {
+  AccountID owner{};
+  uint64 id{};
+  uint64 type{};
+
+  DataCreationExtended() = default;
+  template<typename _owner_T,
+           typename _id_T,
+           typename _type_T,
+           typename = typename
+           std::enable_if<std::is_constructible<AccountID, _owner_T>::value
+                          && std::is_constructible<uint64, _id_T>::value
+                          && std::is_constructible<uint64, _type_T>::value
+                         >::type>
+  explicit DataCreationExtended(_owner_T &&_owner,
+                                _id_T &&_id,
+                                _type_T &&_type)
+    : owner(std::forward<_owner_T>(_owner)),
+      id(std::forward<_id_T>(_id)),
+      type(std::forward<_type_T>(_type)) {}
+  bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+  bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+};
+
 struct ExtendedResult  : xdr::xdr_abstract {
   struct _typeExt_t : xdr::xdr_abstract {
     using _xdr_case_type = xdr::xdr_traits<ReviewableRequestType>::case_type;
@@ -1789,6 +1821,7 @@ struct ExtendedResult  : xdr::xdr_abstract {
       ManageOfferResult manageOfferResult_;
       PaymentResult paymentResult_;
       CreateRedemptionRequestResult createRedemptionResult_;
+      DataCreationExtended dataCreationExtended_;
       CreateDeferredPaymentResult createDeferredPaymentResult_;
       CloseDeferredPaymentResult closeDeferredPaymentResult_;
     };
@@ -1805,6 +1838,7 @@ struct ExtendedResult  : xdr::xdr_abstract {
         ReviewableRequestType::MANAGE_OFFER,
         ReviewableRequestType::CREATE_PAYMENT,
         ReviewableRequestType::PERFORM_REDEMPTION,
+        ReviewableRequestType::DATA_CREATION,
         ReviewableRequestType::CREATE_DEFERRED_PAYMENT,
         ReviewableRequestType::CLOSE_DEFERRED_PAYMENT
       };
@@ -1819,8 +1853,9 @@ struct ExtendedResult  : xdr::xdr_abstract {
         : which == (int32_t)ReviewableRequestType::MANAGE_OFFER ? 5
         : which == (int32_t)ReviewableRequestType::CREATE_PAYMENT ? 6
         : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 7
-        : which == (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT ? 8
-        : which == (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT ? 9
+        : which == (int32_t)ReviewableRequestType::DATA_CREATION ? 8
+        : which == (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT ? 9
+        : which == (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT ? 10
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -1848,6 +1883,9 @@ struct ExtendedResult  : xdr::xdr_abstract {
         return true;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
         _f(&_typeExt_t::createRedemptionResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+        _f(&_typeExt_t::dataCreationExtended_, std::forward<_A>(_a)...);
         return true;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
         _f(&_typeExt_t::createDeferredPaymentResult_, std::forward<_A>(_a)...);
@@ -1891,6 +1929,9 @@ break;
         case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult{};
 break;
+        case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationExtended_) DataCreationExtended{};
+break;
         case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 new(&createDeferredPaymentResult_) CreateDeferredPaymentResult{};
 break;
@@ -1929,6 +1970,9 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult{};
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationExtended_) DataCreationExtended{};
+break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 new(&createDeferredPaymentResult_) CreateDeferredPaymentResult{};
 break;
@@ -1963,6 +2007,9 @@ new(&paymentResult_) PaymentResult(source.paymentResult_);
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(source.createRedemptionResult_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationExtended_) DataCreationExtended(source.dataCreationExtended_);
 break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(source.createDeferredPaymentResult_);
@@ -1999,6 +2046,9 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionResult_));
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationExtended_) DataCreationExtended(std::move(source.dataCreationExtended_));
+break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(std::move(source.createDeferredPaymentResult_));
 break;
@@ -2033,6 +2083,9 @@ paymentResult_.~PaymentResult();
 break;
     case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 createRedemptionResult_.~CreateRedemptionRequestResult();
+break;
+    case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreationExtended_.~DataCreationExtended();
 break;
     case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 createDeferredPaymentResult_.~CreateDeferredPaymentResult();
@@ -2071,6 +2124,9 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 createRedemptionResult_ = source.createRedemptionResult_;
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreationExtended_ = source.dataCreationExtended_;
+break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 createDeferredPaymentResult_ = source.createDeferredPaymentResult_;
 break;
@@ -2105,6 +2161,9 @@ new(&paymentResult_) PaymentResult(source.paymentResult_);
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(source.createRedemptionResult_);
+break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationExtended_) DataCreationExtended(source.dataCreationExtended_);
 break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(source.createDeferredPaymentResult_);
@@ -2144,6 +2203,9 @@ break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 createRedemptionResult_ = std::move(source.createRedemptionResult_);
 break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+dataCreationExtended_ = std::move(source.dataCreationExtended_);
+break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 createDeferredPaymentResult_ = std::move(source.createDeferredPaymentResult_);
 break;
@@ -2178,6 +2240,9 @@ new(&paymentResult_) PaymentResult(std::move(source.paymentResult_));
 break;
       case (int32_t)ReviewableRequestType::PERFORM_REDEMPTION:
 new(&createRedemptionResult_) CreateRedemptionRequestResult(std::move(source.createRedemptionResult_));
+break;
+      case (int32_t)ReviewableRequestType::DATA_CREATION:
+new(&dataCreationExtended_) DataCreationExtended(std::move(source.dataCreationExtended_));
 break;
       case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
 new(&createDeferredPaymentResult_) CreateDeferredPaymentResult(std::move(source.createDeferredPaymentResult_));
@@ -2266,23 +2331,33 @@ break;
         return createRedemptionResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: createRedemptionResult accessed when not selected");
     }
-    CreateDeferredPaymentResult &createDeferredPaymentResult() {
+    DataCreationExtended &dataCreationExtended() {
       if (_xdr_field_number(requestType_) == 8)
+        return dataCreationExtended_;
+      throw xdr::xdr_wrong_union("_typeExt_t: dataCreationExtended accessed when not selected");
+    }
+    const DataCreationExtended &dataCreationExtended() const {
+      if (_xdr_field_number(requestType_) == 8)
+        return dataCreationExtended_;
+      throw xdr::xdr_wrong_union("_typeExt_t: dataCreationExtended accessed when not selected");
+    }
+    CreateDeferredPaymentResult &createDeferredPaymentResult() {
+      if (_xdr_field_number(requestType_) == 9)
         return createDeferredPaymentResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: createDeferredPaymentResult accessed when not selected");
     }
     const CreateDeferredPaymentResult &createDeferredPaymentResult() const {
-      if (_xdr_field_number(requestType_) == 8)
+      if (_xdr_field_number(requestType_) == 9)
         return createDeferredPaymentResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: createDeferredPaymentResult accessed when not selected");
     }
     CloseDeferredPaymentResult &closeDeferredPaymentResult() {
-      if (_xdr_field_number(requestType_) == 9)
+      if (_xdr_field_number(requestType_) == 10)
         return closeDeferredPaymentResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: closeDeferredPaymentResult accessed when not selected");
     }
     const CloseDeferredPaymentResult &closeDeferredPaymentResult() const {
-      if (_xdr_field_number(requestType_) == 9)
+      if (_xdr_field_number(requestType_) == 10)
         return closeDeferredPaymentResult_;
       throw xdr::xdr_wrong_union("_typeExt_t: closeDeferredPaymentResult accessed when not selected");
     }bool
@@ -3055,6 +3130,7 @@ enum class ReviewRequestResultCode : std::int32_t {
   INVALID_SIGNER_DATA = -1600,
   MANAGE_OFFER_FAILED = -1700,
   PAYMENT_FAILED = -1800,
+  DATA_NOT_FOUND = -1900,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
@@ -3190,6 +3266,8 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       return "MANAGE_OFFER_FAILED";
     case ::stellar::ReviewRequestResultCode::PAYMENT_FAILED:
       return "PAYMENT_FAILED";
+    case ::stellar::ReviewRequestResultCode::DATA_NOT_FOUND:
+      return "DATA_NOT_FOUND";
     default:
       return nullptr;
     }
@@ -3258,7 +3336,8 @@ template<> struct xdr_traits<::stellar::ReviewRequestResultCode>
       (int32_t)::stellar::ReviewRequestResultCode::ATOMIC_SWAP_BID_OWNER_FULL_LINE,
       (int32_t)::stellar::ReviewRequestResultCode::INVALID_SIGNER_DATA,
       (int32_t)::stellar::ReviewRequestResultCode::MANAGE_OFFER_FAILED,
-      (int32_t)::stellar::ReviewRequestResultCode::PAYMENT_FAILED
+      (int32_t)::stellar::ReviewRequestResultCode::PAYMENT_FAILED,
+      (int32_t)::stellar::ReviewRequestResultCode::DATA_NOT_FOUND
     };
     return _xdr_enum_vec;
   }

@@ -195,7 +195,7 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
         .typeExt.closeDeferredPaymentResult()
         .destinationBalance = closeDeferredPayment.destinationBalance;
     innerResult().success().typeExt.closeDeferredPaymentResult().destination =
-        closeDeferredPayment.destination;
+        destinationBalance->getAccountID();
     innerResult().success().typeExt.closeDeferredPaymentResult().totalAmount =
         closeDeferredPayment.amount;
     innerResult().success().typeExt.closeDeferredPaymentResult().totalFee = 0;

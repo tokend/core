@@ -123,6 +123,18 @@ return u.from_bytes(createDataOp_);
 return u.from_bytes(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return u.from_bytes(createDataCreationRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return u.from_bytes(cancelDataCreationRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return u.from_bytes(createDataUpdateRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return u.from_bytes(createDataRemoveRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return u.from_bytes(cancelDataUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return u.from_bytes(cancelDataRemoveRequestOp_);
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return u.from_bytes(createDeferredPaymentCreationRequestOp_);
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -251,6 +263,18 @@ return m.to_bytes(createDataOp_);
 return m.to_bytes(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return m.to_bytes(createDataCreationRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return m.to_bytes(cancelDataCreationRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return m.to_bytes(createDataUpdateRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.to_bytes(createDataRemoveRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.to_bytes(cancelDataUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.to_bytes(cancelDataRemoveRequestOp_);
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return m.to_bytes(createDeferredPaymentCreationRequestOp_);
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -375,6 +399,18 @@ return m.count_size(createDataOp_);
 return m.count_size(updateDataOp_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataOp_);
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return m.count_size(createDataCreationRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return m.count_size(cancelDataCreationRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return m.count_size(createDataUpdateRequestOp_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.count_size(createDataRemoveRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.count_size(cancelDataUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.count_size(cancelDataRemoveRequestOp_);
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return m.count_size(createDeferredPaymentCreationRequestOp_);
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -502,6 +538,18 @@ return createDataOp_ == other.createDataOp_;
 return updateDataOp_ == other.updateDataOp_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataOp_ == other.removeDataOp_;
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return createDataCreationRequestOp_ == other.createDataCreationRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return cancelDataCreationRequestOp_ == other.cancelDataCreationRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return createDataUpdateRequestOp_ == other.createDataUpdateRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestOp_ == other.createDataRemoveRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestOp_ == other.cancelDataUpdateRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestOp_ == other.cancelDataRemoveRequestOp_;
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return createDeferredPaymentCreationRequestOp_ == other.createDeferredPaymentCreationRequestOp_;
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -631,6 +679,18 @@ return createDataOp_ < other.createDataOp_;
 return updateDataOp_ < other.updateDataOp_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataOp_ < other.removeDataOp_;
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return createDataCreationRequestOp_ < other.createDataCreationRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return cancelDataCreationRequestOp_ < other.cancelDataCreationRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return createDataUpdateRequestOp_ < other.createDataUpdateRequestOp_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestOp_ < other.createDataRemoveRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestOp_ < other.cancelDataUpdateRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestOp_ < other.cancelDataRemoveRequestOp_;
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return createDeferredPaymentCreationRequestOp_ < other.createDeferredPaymentCreationRequestOp_;
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -1333,6 +1393,18 @@ return u.from_bytes(createDataResult_);
 return u.from_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return u.from_bytes(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return u.from_bytes(createDataCreationRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return u.from_bytes(cancelDataCreationRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return u.from_bytes(createDataUpdateRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return u.from_bytes(createDataRemoveRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return u.from_bytes(cancelDataUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return u.from_bytes(cancelDataRemoveRequestResult_);
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return u.from_bytes(createDeferredPaymentCreationRequestResult_);
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -1461,6 +1533,18 @@ return m.to_bytes(createDataResult_);
 return m.to_bytes(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.to_bytes(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return m.to_bytes(createDataCreationRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return m.to_bytes(cancelDataCreationRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return m.to_bytes(createDataUpdateRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.to_bytes(createDataRemoveRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.to_bytes(cancelDataUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.to_bytes(cancelDataRemoveRequestResult_);
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return m.to_bytes(createDeferredPaymentCreationRequestResult_);
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -1585,6 +1669,18 @@ return m.count_size(createDataResult_);
 return m.count_size(updateDataResult_);
     case (int32_t)OperationType::REMOVE_DATA:
 return m.count_size(removeDataResult_);
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return m.count_size(createDataCreationRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return m.count_size(cancelDataCreationRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return m.count_size(createDataUpdateRequestResult_);
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return m.count_size(createDataRemoveRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return m.count_size(cancelDataUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return m.count_size(cancelDataRemoveRequestResult_);
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return m.count_size(createDeferredPaymentCreationRequestResult_);
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -1712,6 +1808,18 @@ return createDataResult_ == other.createDataResult_;
 return updateDataResult_ == other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ == other.removeDataResult_;
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return createDataCreationRequestResult_ == other.createDataCreationRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return cancelDataCreationRequestResult_ == other.cancelDataCreationRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return createDataUpdateRequestResult_ == other.createDataUpdateRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestResult_ == other.createDataRemoveRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestResult_ == other.cancelDataUpdateRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestResult_ == other.cancelDataRemoveRequestResult_;
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return createDeferredPaymentCreationRequestResult_ == other.createDeferredPaymentCreationRequestResult_;
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -1841,6 +1949,18 @@ return createDataResult_ < other.createDataResult_;
 return updateDataResult_ < other.updateDataResult_;
     case (int32_t)OperationType::REMOVE_DATA:
 return removeDataResult_ < other.removeDataResult_;
+    case (int32_t)OperationType::CREATE_DATA_CREATION_REQUEST:
+return createDataCreationRequestResult_ < other.createDataCreationRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_CREATION_REQUEST:
+return cancelDataCreationRequestResult_ < other.cancelDataCreationRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA_UPDATE_REQUEST:
+return createDataUpdateRequestResult_ < other.createDataUpdateRequestResult_;
+    case (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST:
+return createDataRemoveRequestResult_ < other.createDataRemoveRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST:
+return cancelDataUpdateRequestResult_ < other.cancelDataUpdateRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
+return cancelDataRemoveRequestResult_ < other.cancelDataRemoveRequestResult_;
     case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
 return createDeferredPaymentCreationRequestResult_ < other.createDeferredPaymentCreationRequestResult_;
     case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:

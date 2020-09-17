@@ -124,10 +124,26 @@ ReviewCreateDeferredPaymentRequestOpFrame::handleApprove(
     storageHelper.getDeferredPaymentHelper().storeAdd(
         deferredPaymentFrame->mEntry);
 
+    uint64_t totalFee = 0;
+
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     innerResult().success().fulfilled = true;
-    innerResult().success().typeExt.requestType(ReviewableRequestType::NONE);
+    innerResult().success().typeExt.requestType(
+        ReviewableRequestType::CREATE_DEFERRED_PAYMENT);
+    innerResult()
+        .success()
+        .typeExt.createDeferredPaymentResult()
+        .deferredPaymentID = newPaymentID;
+    innerResult().success().typeExt.createDeferredPaymentResult().destination =
+        createDeferredPayment.destination;
+    innerResult().success().typeExt.createDeferredPaymentResult().source =
+        srcBalance->getAccountID();
+    innerResult().success().typeExt.createDeferredPaymentResult().totalFee =
+        totalFee;
+    innerResult().success().typeExt.createDeferredPaymentResult().totalAmount =
+        createDeferredPayment.amount;
+
     return true;
 }
 

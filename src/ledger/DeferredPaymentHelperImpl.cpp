@@ -18,7 +18,7 @@ DeferredPaymentHelperImpl::DeferredPaymentHelperImpl(
 {
     mDeferredPaymentColumnSelector =
         "select id, amount, fee_data, source, "
-        "source_balance, destination, reference,"
+        "source_balance, destination, "
         "version, lastmodified from deferred_payments ";
 }
 
@@ -280,10 +280,10 @@ DeferredPaymentHelperImpl::load(
         std::string rawFeeData, rawSrcBalance, rawSrc, rawDst;
         auto& st = prep.statement();
         st.exchange(into(deferredPaymentEntry.id));
-        st.exchange(into(deferredPaymentEntry.id));
         st.exchange(into(deferredPaymentEntry.amount));
         st.exchange(into(rawFeeData));
         st.exchange(into(rawSrc));
+        st.exchange(into(rawSrcBalance));
         st.exchange(into(rawDst));
         st.exchange(into(version));
         st.exchange(into(le.lastModifiedLedgerSeq));

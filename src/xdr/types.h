@@ -543,7 +543,8 @@ enum class LedgerEntryType : std::int32_t {
   INITIATE_KYC_RECOVERY = 37,
   SWAP = 38,
   DATA = 39,
-  DEFERRED_PAYMENT = 40,
+  CUSTOM = 40,
+  DEFERRED_PAYMENT = 41,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerEntryType>
@@ -627,6 +628,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       return "SWAP";
     case ::stellar::LedgerEntryType::DATA:
       return "DATA";
+    case ::stellar::LedgerEntryType::CUSTOM:
+      return "CUSTOM";
     case ::stellar::LedgerEntryType::DEFERRED_PAYMENT:
       return "DEFERRED_PAYMENT";
     default:
@@ -672,6 +675,7 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       (int32_t)::stellar::LedgerEntryType::INITIATE_KYC_RECOVERY,
       (int32_t)::stellar::LedgerEntryType::SWAP,
       (int32_t)::stellar::LedgerEntryType::DATA,
+      (int32_t)::stellar::LedgerEntryType::CUSTOM,
       (int32_t)::stellar::LedgerEntryType::DEFERRED_PAYMENT
     };
     return _xdr_enum_vec;
@@ -1003,10 +1007,16 @@ enum class OperationType : std::int32_t {
   CREATE_DATA = 57,
   UPDATE_DATA = 58,
   REMOVE_DATA = 59,
-  CREATE_DEFERRED_PAYMENT_CREATION_REQUEST = 60,
-  CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST = 61,
-  CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST = 62,
-  CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST = 63,
+  CREATE_DATA_CREATION_REQUEST = 60,
+  CANCEL_DATA_CREATION_REQUEST = 61,
+  CREATE_DATA_UPDATE_REQUEST = 62,
+  CREATE_DATA_REMOVE_REQUEST = 63,
+  CANCEL_DATA_UPDATE_REQUEST = 64,
+  CANCEL_DATA_REMOVE_REQUEST = 65,
+  CREATE_DEFERRED_PAYMENT_CREATION_REQUEST = 66,
+  CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST = 67,
+  CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST = 68,
+  CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST = 69,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1122,6 +1132,18 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "UPDATE_DATA";
     case ::stellar::OperationType::REMOVE_DATA:
       return "REMOVE_DATA";
+    case ::stellar::OperationType::CREATE_DATA_CREATION_REQUEST:
+      return "CREATE_DATA_CREATION_REQUEST";
+    case ::stellar::OperationType::CANCEL_DATA_CREATION_REQUEST:
+      return "CANCEL_DATA_CREATION_REQUEST";
+    case ::stellar::OperationType::CREATE_DATA_UPDATE_REQUEST:
+      return "CREATE_DATA_UPDATE_REQUEST";
+    case ::stellar::OperationType::CREATE_DATA_REMOVE_REQUEST:
+      return "CREATE_DATA_REMOVE_REQUEST";
+    case ::stellar::OperationType::CANCEL_DATA_UPDATE_REQUEST:
+      return "CANCEL_DATA_UPDATE_REQUEST";
+    case ::stellar::OperationType::CANCEL_DATA_REMOVE_REQUEST:
+      return "CANCEL_DATA_REMOVE_REQUEST";
     case ::stellar::OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
       return "CREATE_DEFERRED_PAYMENT_CREATION_REQUEST";
     case ::stellar::OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
@@ -1189,6 +1211,12 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CREATE_DATA,
       (int32_t)::stellar::OperationType::UPDATE_DATA,
       (int32_t)::stellar::OperationType::REMOVE_DATA,
+      (int32_t)::stellar::OperationType::CREATE_DATA_CREATION_REQUEST,
+      (int32_t)::stellar::OperationType::CANCEL_DATA_CREATION_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_DATA_UPDATE_REQUEST,
+      (int32_t)::stellar::OperationType::CREATE_DATA_REMOVE_REQUEST,
+      (int32_t)::stellar::OperationType::CANCEL_DATA_UPDATE_REQUEST,
+      (int32_t)::stellar::OperationType::CANCEL_DATA_REMOVE_REQUEST,
       (int32_t)::stellar::OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
       (int32_t)::stellar::OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
       (int32_t)::stellar::OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
