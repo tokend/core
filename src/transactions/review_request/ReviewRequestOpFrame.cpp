@@ -32,6 +32,9 @@
 #include "ReviewManageOfferRequestOpFrame.h"
 #include "ReviewPaymentRequestOpFrame.h"
 #include "ReviewRedemptionRequestOpFrame.h"
+#include "ReviewDataCreationRequestOpFrame.h"
+#include "ReviewDataUpdateRequestOpFrame.h"
+#include "ReviewDataRemoveRequestOpFrame.h"
 #include "ReviewCreateDeferredPaymentRequestOpFrame.h"
 #include "ReviewCloseDeferredPaymentRequestOpFrame.h"
 
@@ -121,55 +124,64 @@ ReviewRequestOpFrame::ReviewRequestOpFrame(Operation const& op,
 {
 }
 
-ReviewRequestOpFrame *
-ReviewRequestOpFrame::makeHelper(Operation const& op, OperationResult& res, TransactionFrame& parentTx)
+ReviewRequestOpFrame*
+ReviewRequestOpFrame::makeHelper(Operation const& op, OperationResult& res,
+                                 TransactionFrame& parentTx)
 {
-	switch (op.body.reviewRequestOp().requestDetails.requestType()) {
-	case ReviewableRequestType::CREATE_ASSET:
-		return new ReviewAssetCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_ASSET:
-		return new ReviewAssetUpdateRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ISSUANCE:
-		return new ReviewIssuanceCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_PRE_ISSUANCE:
-		return new ReviewPreIssuanceCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_WITHDRAW:
-		return new ReviewWithdrawalRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_SALE:
-		return new ReviewSaleCreationRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_LIMITS:
-		return new ReviewLimitsUpdateRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_AML_ALERT:
-		return new ReviewAMLAlertRequestOpFrame(op,res,parentTx);
+    switch (op.body.reviewRequestOp().requestDetails.requestType())
+    {
+    case ReviewableRequestType::CREATE_ASSET:
+        return new ReviewAssetCreationRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::UPDATE_ASSET:
+        return new ReviewAssetUpdateRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_ISSUANCE:
+        return new ReviewIssuanceCreationRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_PRE_ISSUANCE:
+        return new ReviewPreIssuanceCreationRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_WITHDRAW:
+        return new ReviewWithdrawalRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_SALE:
+        return new ReviewSaleCreationRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::UPDATE_LIMITS:
+        return new ReviewLimitsUpdateRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_AML_ALERT:
+        return new ReviewAMLAlertRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType::CHANGE_ROLE:
         return new ReviewChangeRoleRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::UPDATE_SALE_DETAILS:
-		return new ReviewUpdateSaleDetailsRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_INVOICE:
-		return new ReviewInvoiceRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::MANAGE_CONTRACT:
-		return new ReviewContractRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
-		return new ReviewASwapAskRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
-		return new ReviewASwapBidRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_POLL:
-		return new ReviewCreatePollRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::UPDATE_SALE_DETAILS:
+        return new ReviewUpdateSaleDetailsRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_INVOICE:
+        return new ReviewInvoiceRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::MANAGE_CONTRACT:
+        return new ReviewContractRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_ATOMIC_SWAP_ASK:
+        return new ReviewASwapAskRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_ATOMIC_SWAP_BID:
+        return new ReviewASwapBidRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_POLL:
+        return new ReviewCreatePollRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType::KYC_RECOVERY:
-		return new ReviewKYCRecoveryRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::MANAGE_OFFER:
-		return new ReviewManageOfferRequestOpFrame(op, res, parentTx);
-	case ReviewableRequestType::CREATE_PAYMENT:
-		return new ReviewPaymentRequestOpFrame(op, res, parentTx);
+        return new ReviewKYCRecoveryRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::MANAGE_OFFER:
+        return new ReviewManageOfferRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_PAYMENT:
+        return new ReviewPaymentRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType ::PERFORM_REDEMPTION:
         return new ReviewRedemptionRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::DATA_CREATION:
+        return new ReviewDataCreationRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::DATA_UPDATE:
+        return new ReviewDataUpdateRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::DATA_REMOVE:
+        return new ReviewDataRemoveRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
         return new ReviewCreateDeferredPaymentRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
         return new ReviewCloseDeferredPaymentRequestOpFrame(op, res, parentTx);
-	default:
-		throw std::runtime_error("Unexpected request type for review request op");
-	}
+    default:
+        throw std::runtime_error(
+            "Unexpected request type for review request op");
+    }
 }
 
 bool

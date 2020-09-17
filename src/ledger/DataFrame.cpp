@@ -1,25 +1,23 @@
 #include "DataFrame.h"
 
-namespace stellar 
+namespace stellar
 {
-DataFrame::DataFrame() 
-        : EntryFrame(LedgerEntryType::DATA)
-        , mDataEntry(mEntry.data.data()) 
+DataFrame::DataFrame()
+    : EntryFrame(LedgerEntryType::DATA), mDataEntry(mEntry.data.data())
 {
 }
 
 DataFrame::DataFrame(LedgerEntry const& from)
-        : EntryFrame(from), mDataEntry(mEntry.data.data())
+    : EntryFrame(from), mDataEntry(mEntry.data.data())
 {
 }
 
-DataFrame::DataFrame(DataFrame const& from) 
-        : DataFrame(from.mEntry) 
+DataFrame::DataFrame(DataFrame const& from) : DataFrame(from.mEntry)
 {
 }
 
-LedgerKey const& 
-DataFrame::getKey() const 
+LedgerKey const&
+DataFrame::getKey() const
 {
     if (!mKeyCalculated)
     {
@@ -29,6 +27,19 @@ DataFrame::getKey() const
     }
 
     return mKey;
+}
+
+DataFrame::pointer
+DataFrame::create(DataCreationRequest const& request)
+{
+    LedgerEntry le;
+    le.data.type(LedgerEntryType::DATA);
+    DataEntry& data = le.data.data();
+    data.value = request.value;
+    data.type = request.type;
+    data.owner = request.owner;
+
+    return std::make_shared<DataFrame>(le);
 }
 
 }

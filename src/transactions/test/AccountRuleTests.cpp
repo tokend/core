@@ -3,8 +3,8 @@
 #include "ledger/AccountRuleHelperImpl.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDeltaImpl.h"
-#include "test/test.h"
 #include "overlay/LoopbackPeer.h"
+#include "test/test.h"
 #include "test/test_marshaler.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "transactions/test/test_helper/ManageAccountRuleTestHelper.h"
@@ -42,7 +42,8 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Successful creation")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            0, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
+            0, AccountRuleResource(LedgerEntryType::KEY_VALUE),
+            AccountRuleAction::MANAGE, false);
         auto createRuleResult = manageAccountRuleTestHelper.applyTx(
             master, ruleEntry, ManageAccountRuleAction::CREATE);
 
@@ -51,13 +52,13 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
         SECTION("Successful updating")
         {
             ruleEntry.action = AccountRuleAction::ANY;
-            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                                ManageAccountRuleAction::UPDATE);
+            manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::UPDATE);
         }
         SECTION("Successful deletion")
         {
-            manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                                ManageAccountRuleAction::REMOVE);
+            manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::REMOVE);
         }
 
         SECTION("cannot delete cause of role use rule")
@@ -66,10 +67,10 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
                 "{}", {ruleEntry.id});
             manageAccountRoleTestHelper.applyTx(master, creationRoleOp);
 
-            auto result = manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                                              ManageAccountRuleAction::REMOVE,
-                                                              ManageAccountRuleResultCode::RULE_IS_USED,
-                                                              TransactionResultCode::txFAILED);
+            auto result = manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::REMOVE,
+                ManageAccountRuleResultCode::RULE_IS_USED,
+                TransactionResultCode::txFAILED);
 
             REQUIRE(result.roleIDs().size() == 1);
             REQUIRE(result.roleIDs()[0] == ruleEntry.id);
@@ -79,20 +80,63 @@ TEST_CASE("Set role policy", "[tx][manage_account_rule]")
     SECTION("Rule not found when trying to delete it")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
-        manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                            ManageAccountRuleAction::REMOVE,
-                                            ManageAccountRuleResultCode::NOT_FOUND,
-                                            TransactionResultCode::txFAILED);
+            228, AccountRuleResource(LedgerEntryType::KEY_VALUE),
+            AccountRuleAction::MANAGE, false);
+        manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::REMOVE,
+            ManageAccountRuleResultCode::NOT_FOUND,
+            TransactionResultCode::txFAILED);
     }
 
     SECTION("Rule not found for update")
     {
         auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
-            228, AccountRuleResource(LedgerEntryType::KEY_VALUE), AccountRuleAction::MANAGE, false);
-        manageAccountRuleTestHelper.applyTx(master, ruleEntry,
-                                            ManageAccountRuleAction::UPDATE,
-                                            ManageAccountRuleResultCode::NOT_FOUND,
-                                            TransactionResultCode::txFAILED);
+            228, AccountRuleResource(LedgerEntryType::KEY_VALUE),
+            AccountRuleAction::MANAGE, false);
+        manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::UPDATE,
+            ManageAccountRuleResultCode::NOT_FOUND,
+            TransactionResultCode::txFAILED);
+    }
+
+    SECTION("Successful creation for custom type")
+    {
+
+        AccountRuleResource resource(LedgerEntryType::CUSTOM);
+        resource.custom().resource = R"({"type": "identifier"})";
+        resource.custom().action.activate() = R"({"type": "upsert"})";
+        auto ruleEntry = manageAccountRuleTestHelper.createAccountRuleEntry(
+            0, resource, AccountRuleAction::CUSTOM, false);
+        auto createRuleResult = manageAccountRuleTestHelper.applyTx(
+            master, ruleEntry, ManageAccountRuleAction::CREATE);
+
+        ruleEntry.id = createRuleResult.success().ruleID;
+
+        SECTION("Successful updating")
+        {
+            ruleEntry.resource.custom().action.activate() = R"({"type": "*"})";
+            manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::UPDATE);
+        }
+        SECTION("Successful deletion")
+        {
+            manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::REMOVE);
+        }
+
+        SECTION("cannot delete cause of role use rule")
+        {
+            auto creationRoleOp = manageAccountRoleTestHelper.buildCreateRoleOp(
+                "{}", {ruleEntry.id});
+            manageAccountRoleTestHelper.applyTx(master, creationRoleOp);
+
+            auto result = manageAccountRuleTestHelper.applyTx(
+                master, ruleEntry, ManageAccountRuleAction::REMOVE,
+                ManageAccountRuleResultCode::RULE_IS_USED,
+                TransactionResultCode::txFAILED);
+
+            REQUIRE(result.roleIDs().size() == 1);
+            REQUIRE(result.roleIDs()[0] == ruleEntry.id);
+        }
     }
 }

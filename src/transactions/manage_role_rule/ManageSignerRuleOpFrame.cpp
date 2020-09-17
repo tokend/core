@@ -41,14 +41,20 @@ bool
 ManageSignerRuleOpFrame::doCheckValid(Application& app)
 {
     std::string details;
+    SignerRuleAction action;
+    SignerRuleResource resource;
 
     switch (mManageSignerRule.data.action())
     {
         case ManageSignerRuleAction::CREATE:
             details = mManageSignerRule.data.createData().details;
+            action = mManageSignerRule.data.createData().action;
+            resource = mManageSignerRule.data.createData().resource;
             break;
         case ManageSignerRuleAction::UPDATE:
             details = mManageSignerRule.data.updateData().details;
+            action = mManageSignerRule.data.updateData().action;
+            resource = mManageSignerRule.data.updateData().resource;
             break;
         case ManageSignerRuleAction::REMOVE:
             return true;
@@ -59,6 +65,13 @@ ManageSignerRuleOpFrame::doCheckValid(Application& app)
     if (!isValidJson(details))
     {
         innerResult().code(ManageSignerRuleResultCode::INVALID_DETAILS);
+        return false;
+    }
+
+    if (action == SignerRuleAction::CUSTOM &&
+        resource.type() != LedgerEntryType::CUSTOM)
+    {
+        innerResult().code(ManageSignerRuleResultCode::INVALID_ACTION);
         return false;
     }
 

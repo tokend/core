@@ -299,6 +299,39 @@ ReviewableRequestFrame::ensureRedemptionValid(RedemptionRequest const &request)
     }
 }
 
+void
+ReviewableRequestFrame::ensureCreateDataValid(DataCreationRequest const &request)
+{
+    if (request.value.empty()) {
+        throw runtime_error("invalid empty value");
+    }
+}
+
+void
+ReviewableRequestFrame::ensureUpdateDataValid(DataUpdateRequest const &request)
+{
+    if (request.value.empty()) {
+        throw runtime_error("invalid empty value");
+    }
+
+    if (request.id <= 0) {
+        throw runtime_error("invalid request id");
+    }
+}
+
+void/**/
+ReviewableRequestFrame::ensureRemoveDataValid(DataRemoveRequest const &request)
+{
+    if (request.id <= 0) {
+        throw runtime_error("invalid request id");
+    }
+
+    if (!isValidJson(request.creatorDetails))
+    {
+        throw runtime_error("creator details are invalid");
+    }
+}
+
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
 	return sha256(xdr::xdr_to_opaque(body));
@@ -360,6 +393,12 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureCreatePaymentValid(oe.body.createPaymentRequest());
         case ReviewableRequestType::PERFORM_REDEMPTION:
             return ensureRedemptionValid(oe.body.redemptionRequest());
+        case ReviewableRequestType::DATA_CREATION:
+            return ensureCreateDataValid(oe.body.dataCreationRequest());
+        case ReviewableRequestType::DATA_UPDATE:
+            return ensureUpdateDataValid(oe.body.dataUpdateRequest());
+        case ReviewableRequestType::DATA_REMOVE:
+            return ensureRemoveDataValid(oe.body.dataRemoveRequest());
         case ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
             return ensureCreateDeferredPaymentValid(oe.body.createDeferredPaymentRequest());
         case ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
