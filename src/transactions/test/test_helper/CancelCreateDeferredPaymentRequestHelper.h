@@ -13,8 +13,8 @@ public:
 
     TransactionFramePtr cancelCreateDeferredPaymentRequest(Account &source, uint64_t requestID);
 
-    CancelDeferredPaymentCreationRequestResultCode
-    applyCancelCreateDeferredPaymentRequest(Account &source, uint64_t requestID, CancelDeferredPaymentCreationRequestResultCode expectedResult);
+    CancelDeferredPaymentCreationRequestResult
+    applyCancelCreateDeferredPaymentRequest(Account &source, uint64_t requestID, CancelDeferredPaymentCreationRequestResultCode expectedResult = CancelDeferredPaymentCreationRequestResultCode::SUCCESS );
 };
 }
 }

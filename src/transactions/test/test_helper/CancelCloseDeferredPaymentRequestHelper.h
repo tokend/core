@@ -6,15 +6,20 @@ namespace stellar
 {
 namespace txtest
 {
-class CancelCreateDeferredPaymentRequestHelper : TxHelper
+class CancelCloseDeferredPaymentRequestHelper : TxHelper
 {
-public:
-    explicit CancelCreateDeferredPaymentRequestHelper(TestManager::pointer testManager);
+  public:
+    explicit CancelCloseDeferredPaymentRequestHelper(
+        TestManager::pointer testManager);
 
-    TransactionFramePtr cancelCreateDeferredPaymentRequest(Account &source, uint64_t requestID);
+    TransactionFramePtr cancelCloseDeferredPaymentRequest(Account& source,
+                                                          uint64_t requestID);
 
-    CancelDeferredPaymentCreationRequestResult
-    applyCancelCreateDeferredPaymentRequest(Account &source, uint64_t requestID, CancelDeferredPaymentCreationRequestResultCode expectedResult);
+    CancelCloseDeferredPaymentRequestResult
+    applyCancelCloseDeferredPaymentRequest(
+        Account& source, uint64_t requestID,
+        CancelCloseDeferredPaymentRequestResultCode expectedResult =
+            CancelCloseDeferredPaymentRequestResultCode::SUCCESS);
 };
 }
 }

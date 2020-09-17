@@ -2,7 +2,7 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
-#include "transactions/CancelCreateDeferredPaymentRequestOpFrame.h"
+#include "transactions/CancelDeferredPaymentCreationRequestOpFrame.h"
 
 namespace stellar
 {
@@ -15,7 +15,7 @@ CancelCreateDeferredPaymentRequestHelper::
 {
 }
 
-CancelDeferredPaymentCreationRequestResultCode
+CancelDeferredPaymentCreationRequestResult
 CancelCreateDeferredPaymentRequestHelper::
     applyCancelCreateDeferredPaymentRequest(
         txtest::Account& source, uint64_t requestID,
@@ -32,21 +32,22 @@ CancelCreateDeferredPaymentRequestHelper::
     auto opResult = txResult.result.results()[0];
 
     auto actualResultCode =
-        CancelCreateDeferredPaymentRequestOpFrame::getInnerCode(opResult);
+        CancelDeferredPaymentCreationRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
     auto reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
-    if (expectedResult != CancelCreateDeferredPaymentRequestResultCode::SUCCESS)
+    if (expectedResult !=
+        CancelDeferredPaymentCreationRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx ==
                 reviewableRequestCountAfterTx);
-        return CancelCreateDeferredPaymentRequestResult{};
+        return CancelDeferredPaymentCreationRequestResult{};
     }
 
     REQUIRE(reviewableRequestCountBeforeTx ==
             reviewableRequestCountAfterTx + 1);
 
-    return opResult.tr().cancelCreateDeferredPaymentRequestResult();
+    return opResult.tr().cancelDeferredPaymentCreationRequestResult();
 }
 
 TransactionFramePtr
@@ -54,8 +55,8 @@ CancelCreateDeferredPaymentRequestHelper::cancelCreateDeferredPaymentRequest(
     txtest::Account& source, uint64_t requestID)
 {
     Operation baseOp;
-    baseOp.body.type(OperationType::CANCEL_CHANGE_ROLE_REQUEST);
-    auto& op = baseOp.body.cancelCreateDeferredPaymentRequestOp();
+    baseOp.body.type(OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST);
+    auto& op = baseOp.body.cancelDeferredPaymentCreationRequestOp();
     op.requestID = requestID;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);

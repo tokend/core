@@ -4,6 +4,8 @@
 #include "ledger/StorageHelper.h"
 #include "test/test.h"
 #include "test/test_marshaler.h"
+#include "test_helper/CancelCloseDeferredPaymentRequestHelper.h"
+#include "test_helper/CancelCreateDeferredPaymentRequestHelper.h"
 #include "test_helper/CreateAccountTestHelper.h"
 #include "test_helper/CreateCloseDeferredPaymentRequestTestHelper.h"
 #include "test_helper/CreateDeferredPaymentCreationRequestTestHelper.h"
@@ -58,6 +60,10 @@ TEST_CASE("DeferredPayment", "[tx][deferred_payment]")
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
     ManageBalanceTestHelper manageBalanceTestHelper(testManager);
     IssuanceRequestHelper issuanceTestHelper(testManager);
+    CancelCloseDeferredPaymentRequestHelper
+        cancelCloseDeferredPaymentRequestHelper(testManager);
+    CancelCreateDeferredPaymentRequestHelper
+        cancelCreateDeferredPaymentRequestHelper(testManager);
 
     auto& balanceHelper = testManager->getStorageHelper().getBalanceHelper();
     auto& requestHelper =
@@ -190,117 +196,50 @@ TEST_CASE("DeferredPayment", "[tx][deferred_payment]")
                               OperationResultCode::opINNER);
         REQUIRE(result.success().fulfilled);
 
-        CloseDeferredPaymentRequest closeDeferredPaymentRequest;
-        closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
-        closeDeferredPaymentRequest.destinationBalance = destBalance;
-        closeDeferredPaymentRequest.deferredPaymentID =
-            result.success().deferredPaymentID;
-        closeDeferredPaymentRequest.amount = 500;
+        SECTION("Close")
+        {
+            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
+            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
+            closeDeferredPaymentRequest.destinationBalance = destBalance;
+            closeDeferredPaymentRequest.deferredPaymentID =
+                result.success().deferredPaymentID;
+            closeDeferredPaymentRequest.amount = 500;
 
-        createCloseDeferredPaymentTestHelper
-            .applyCreateCloseDeferredPaymentRequest(
-                recipient, closeDeferredPaymentRequest, 0, &allTasks);
+            createCloseDeferredPaymentTestHelper
+                .applyCreateCloseDeferredPaymentRequest(
+                    recipient, closeDeferredPaymentRequest, 0, &allTasks);
+        }
+
+        SECTION("create Close & cancel")
+        {
+            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
+            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
+            closeDeferredPaymentRequest.destinationBalance = destBalance;
+            closeDeferredPaymentRequest.deferredPaymentID =
+                result.success().deferredPaymentID;
+            closeDeferredPaymentRequest.amount = 500;
+
+            auto createCloseRes =
+                createCloseDeferredPaymentTestHelper
+                    .applyCreateCloseDeferredPaymentRequest(
+                        recipient, closeDeferredPaymentRequest, 0, &allTasks);
+
+            cancelCloseDeferredPaymentRequestHelper
+                .applyCancelCloseDeferredPaymentRequest(
+                    recipient, createCloseRes.success().requestID);
+        }
     }
 
-    //    auto srcBalance = balanceHelper.loadBalance(payer.key.getPublicKey(),
-    //                                                deferredPaymentAsset);
-    //    SECTION("dst account does not exist")
-    //    {
-    //        AccountID dstAccountID = SecretKey::random().getPublicKey();
-    //        deferredPaymentHelper.applyCreateDeferredPayment(
-    //            root, srcBalance->getBalanceID(), dstAccountID, 10,
-    //            R"({ "why": "because" })", "", &allTasks,
-    //            CreateDeferredPaymentCreationRequestResultCode::
-    //                DESTINATION_ACCOUNT_NOT_FOUND,
-    //            OperationResultCode::opNO_ENTRY);
-    //    }
-    //
-    //    auto reference = "Random reference";
-    //    SECTION("Given valid accounts with balances")
-    //    {
-    //
-    //        srcBalance = balanceHelper.loadBalance(payer.key.getPublicKey(),
-    //                                               deferredPaymentAsset);
-    //        REQUIRE(!!srcBalance);
-    //
-    //        uint32_t issuanceTasks = 0;
-    //        issuanceTestHelper.applyCreateIssuanceRequest(
-    //            payer, deferredPaymentAsset, preIssuedAmount,
-    //            srcBalance->getBalanceID(),
-    //            "RANDOM ISSUANCE REFERENCE AWARWAWRWARAWR", &issuanceTasks);
-    //        SECTION("zero tasks not allowed")
-    //        {
-    //            deferredPaymentHelper.applyCreateDeferredPayment(
-    //                payer, srcBalance->getBalanceID(),
-    //                recipient.key.getPublicKey(), preIssuedAmount - 10, R"({
-    //                "why": "because" })", reference, &zeroTasks,
-    //                CreateDeferredPaymentRequestResultCode::
-    //                    DeferredPayment_ZERO_TASKS_NOT_ALLOWED);
-    //        }
-    //        SECTION("Underfunded")
-    //        {
-    //            REQUIRE(srcBalance->getAmount() == 0);
-    //            deferredPaymentHelper.applyCreateDeferredPayment(
-    //                payer, srcBalance->getBalanceID(),
-    //                recipient.key.getPublicKey(), preIssuedAmount + 10, R"({
-    //                "why": "because" })", reference, &allTasks,
-    //                CreateDeferredPaymentRequestResultCode::UNDERFUNDED);
-    //        }
-    //        SECTION("Mismatching balance precision and amount")
-    //        {
-    //            manageAssetTestHelper.changeAssetTrailingDigits(
-    //                deferredPaymentAsset, 0);
-    //            deferredPaymentHelper.applyCreateDeferredPayment(
-    //                payer, srcBalance->getBalanceID(),
-    //                recipient.key.getPublicKey(), preIssuedAmount - 10, R"({
-    //                "why": "just because" })", reference, &allTasks,
-    //                CreateDeferredPaymentRequestResultCode::INCORRECT_PRECISION);
-    //        }
-    //        SECTION("shouldn't redeem non-owned asset")
-    //        {
-    //            auto notPayer = Account{SecretKey::random(), Salt(1)};
-    //            createAccountTestHelper.applyTx(
-    //                CreateAccountTestBuilder()
-    //                    .setSource(root)
-    //                    .setToPublicKey(notPayer.key.getPublicKey())
-    //                    .addBasicSigner()
-    //                    .setRoleID(1));
-    //
-    //            deferredPaymentHelper.applyCreateDeferredPayment(
-    //                notPayer, srcBalance->getBalanceID(),
-    //                recipient.key.getPublicKey(), preIssuedAmount - 10,
-    //                R"({ "why": "just because" })", reference, &allTasks,
-    //                CreateDeferredPaymentRequestResultCode::
-    //                    DeferredPayment_NON_OWNED_ASSET_FORBIDDEN);
-    //        }
-    //
-    //        SECTION("create and approve request")
-    //        {
-    //            auto result =
-    //            deferredPaymentHelper.applyCreateDeferredPayment(
-    //                payer, srcBalance->getBalanceID(),
-    //                recipient.key.getPublicKey(), preIssuedAmount / 2, R"({
-    //                "why": "because i can" })", reference, &allTasks,
-    //                CreateDeferredPaymentRequestResultCode::SUCCESS);
-    //            SECTION("OK but not fulfilled because only admin can fulfill")
-    //            {
-    //                REQUIRE(!result.deferredPaymentResponse().fulfilled);
-    //            }
-    //
-    //            SECTION("approve & fulfill request")
-    //            {
-    //                auto request = requestHelper.loadRequest(
-    //                    result.deferredPaymentResponse().requestID);
-    //                REQUIRE(request->getReviewer() == app.getAdminID());
-    //                uint32_t tasksToRemove = 1;
-    //                auto reviewResult =
-    //                    reviewDeferredPaymentHelper.applyReviewRequestTxWithTasks(
-    //                        root, request->getRequestID(),
-    //                        ReviewRequestOpAction::APPROVE, "",
-    //                        ReviewRequestResultCode::SUCCESS, &zeroTasks,
-    //                        &tasksToRemove);
-    //                REQUIRE(reviewResult.success().fulfilled);
-    //            }
-    //        }
-    //    }
+    SECTION("Create & cancel")
+    {
+        auto result =
+            createDeferredPaymentCreationTestHelper
+                .applyCreateDeferredPaymentCreationRequest(
+                    payer, request, 0, &allTasks, OperationResultCode::opINNER);
+        REQUIRE_FALSE(result.success().fulfilled);
+
+        cancelCreateDeferredPaymentRequestHelper
+            .applyCancelCreateDeferredPaymentRequest(
+                payer, result.success().requestID);
+    }
 }

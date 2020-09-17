@@ -238,11 +238,7 @@ CreateDeferredPaymentCreationTestHelper::checkApprovedCreation(
 xdr::pointer<string64>
 CreateDeferredPaymentCreationTestHelper::getReference()
 {
-    const auto hash = sha256(
-        xdr::xdr_to_opaque(ReviewableRequestType::CREATE_DEFERRED_PAYMENT));
-    auto reference = binToHex(hash);
-    const auto referencePtr = xdr::pointer<string64>(new string64(reference));
-    return referencePtr;
+    return nullptr;
 }
 }
 }

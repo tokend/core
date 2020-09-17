@@ -1,62 +1,60 @@
-#include "CancelCreateDeferredPaymentRequestHelper.h"
+#include "CancelCloseDeferredPaymentRequestHelper.h"
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
-#include "transactions/CancelDeferredPaymentCreationRequestOpFrame.h"
+#include "transactions/CancelCloseDeferredPaymentRequestOpFrame.h"
 
 namespace stellar
 {
 namespace txtest
 {
-CancelCreateDeferredPaymentRequestHelper::
-    CancelCreateDeferredPaymentRequestHelper(
+CancelCloseDeferredPaymentRequestHelper::
+    CancelCloseDeferredPaymentRequestHelper(
         txtest::TestManager::pointer testManager)
     : TxHelper(testManager)
 {
 }
 
-CancelDeferredPaymentCreationRequestResult
-CancelCreateDeferredPaymentRequestHelper::
-    applyCancelCreateDeferredPaymentRequest(
-        txtest::Account& source, uint64_t requestID,
-        CancelDeferredPaymentCreationRequestResultCode expectedResult)
+CancelCloseDeferredPaymentRequestResult
+CancelCloseDeferredPaymentRequestHelper::applyCancelCloseDeferredPaymentRequest(
+    txtest::Account& source, uint64_t requestID,
+    CancelCloseDeferredPaymentRequestResultCode expectedResult)
 {
     auto& reviewableRequestHelper =
         mTestManager->getStorageHelper().getReviewableRequestHelper();
     auto reviewableRequestCountBeforeTx =
         reviewableRequestHelper.countObjects();
 
-    auto txFrame = cancelCreateDeferredPaymentRequest(source, requestID);
+    auto txFrame = cancelCloseDeferredPaymentRequest(source, requestID);
     mTestManager->applyCheck(txFrame);
     auto txResult = txFrame->getResult();
     auto opResult = txResult.result.results()[0];
 
     auto actualResultCode =
-        CancelDeferredPaymentCreationRequestOpFrame::getInnerCode(opResult);
+        CancelCloseDeferredPaymentRequestOpFrame::getInnerCode(opResult);
     REQUIRE(actualResultCode == expectedResult);
 
     auto reviewableRequestCountAfterTx = reviewableRequestHelper.countObjects();
-    if (expectedResult !=
-        CancelDeferredPaymentCreationRequestResultCode::SUCCESS)
+    if (expectedResult != CancelCloseDeferredPaymentRequestResultCode::SUCCESS)
     {
         REQUIRE(reviewableRequestCountBeforeTx ==
                 reviewableRequestCountAfterTx);
-        return CancelDeferredPaymentCreationRequestResult{};
+        return CancelCloseDeferredPaymentRequestResult{};
     }
 
     REQUIRE(reviewableRequestCountBeforeTx ==
             reviewableRequestCountAfterTx + 1);
 
-    return opResult.tr().cancelDeferredPaymentCreationRequestResult();
+    return opResult.tr().cancelCloseDeferredPaymentRequestResult();
 }
 
 TransactionFramePtr
-CancelCreateDeferredPaymentRequestHelper::cancelCreateDeferredPaymentRequest(
+CancelCloseDeferredPaymentRequestHelper::cancelCloseDeferredPaymentRequest(
     txtest::Account& source, uint64_t requestID)
 {
     Operation baseOp;
-    baseOp.body.type(OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST);
-    auto& op = baseOp.body.cancelDeferredPaymentCreationRequestOp();
+    baseOp.body.type(OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST);
+    auto& op = baseOp.body.cancelCloseDeferredPaymentRequestOp();
     op.requestID = requestID;
     op.ext.v(LedgerVersion::EMPTY_VERSION);
     return txFromOperation(source, baseOp, nullptr);

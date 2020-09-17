@@ -38,18 +38,18 @@ CancelCloseDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
         storageHelper.getReviewableRequestHelper()
             .loadRequest(mCancelCloseDeferredPaymentRequest.requestID)
             ->getRequestEntry()
-            .body.createDeferredPaymentRequest();
+            .body.closeDeferredPaymentRequest();
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
-    auto srcBalanceFrame = balanceHelper.loadBalance(request.sourceBalance);
-    if (!srcBalanceFrame)
+    auto balanceFrame = balanceHelper.loadBalance(request.destinationBalance);
+    if (!balanceFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
         mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
     auto& assetHelper = storageHelper.getAssetHelper();
-    auto assetFrame = assetHelper.mustLoadAsset(srcBalanceFrame->getAsset());
+    auto assetFrame = assetHelper.mustLoadAsset(balanceFrame->getAsset());
 
     resource.reviewableRequest().details.requestType(
         ReviewableRequestType::CLOSE_DEFERRED_PAYMENT);
@@ -76,7 +76,7 @@ CancelCloseDeferredPaymentRequestOpFrame::doApply(Application& app,
 
     auto requestFrame = requestHelper.loadRequest(
         requestID, getSourceID(),
-        ReviewableRequestType::CREATE_DEFERRED_PAYMENT);
+        ReviewableRequestType::CLOSE_DEFERRED_PAYMENT);
     if (!requestFrame)
     {
         innerResult().code(
