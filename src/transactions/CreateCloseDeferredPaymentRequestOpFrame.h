@@ -40,6 +40,8 @@ class CreateCloseDeferredPaymentRequestOpFrame : public OperationFrame
 
     bool destinationCanBeFunded(BalanceFrame::pointer destBalance, uint64_t amount);
 
+
+    bool isDestinationValid(AssetCode asset, StorageHelper& storageHelper, Application& app);
   public:
     CreateCloseDeferredPaymentRequestOpFrame(Operation const& op,
                                              OperationResult& res,

@@ -15,6 +15,9 @@ class ReviewCloseDeferredPaymentRequestOpFrame : public ReviewRequestOpFrame
                                   std::vector<SignerRequirement>& result,
                                   LedgerManager& lm) const override;
 
+    BalanceFrame::pointer
+    tryLoadDestinationBalance(AssetCode asset, CloseDeferredPaymentRequest& request, StorageHelper& storageHelper, Application& app);
+
   protected:
     bool handleApprove(Application& app, StorageHelper& storageHelper,
                        LedgerManager& ledgerManager,

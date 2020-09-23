@@ -1733,36 +1733,26 @@ struct CreateDeferredPaymentResult  : xdr::xdr_abstract {
   uint64 deferredPaymentID{};
   AccountID destination{};
   AccountID source{};
-  uint64 totalFee{};
-  uint64 totalAmount{};
   EmptyExt ext{};
 
   CreateDeferredPaymentResult() = default;
   template<typename _deferredPaymentID_T,
            typename _destination_T,
            typename _source_T,
-           typename _totalFee_T,
-           typename _totalAmount_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _deferredPaymentID_T>::value
                           && std::is_constructible<AccountID, _destination_T>::value
                           && std::is_constructible<AccountID, _source_T>::value
-                          && std::is_constructible<uint64, _totalFee_T>::value
-                          && std::is_constructible<uint64, _totalAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit CreateDeferredPaymentResult(_deferredPaymentID_T &&_deferredPaymentID,
                                        _destination_T &&_destination,
                                        _source_T &&_source,
-                                       _totalFee_T &&_totalFee,
-                                       _totalAmount_T &&_totalAmount,
                                        _ext_T &&_ext)
     : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
       destination(std::forward<_destination_T>(_destination)),
       source(std::forward<_source_T>(_source)),
-      totalFee(std::forward<_totalFee_T>(_totalFee)),
-      totalAmount(std::forward<_totalAmount_T>(_totalAmount)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool

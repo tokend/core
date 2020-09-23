@@ -17,29 +17,10 @@ DeferredPaymentHelperImpl::DeferredPaymentHelperImpl(
     : mStorageHelper(storageHelper)
 {
     mDeferredPaymentColumnSelector =
-        "select id, amount, fee_data, source, "
+        "select id, amount, details, source, "
         "source_balance, destination, "
         "version, lastmodified from deferred_payments ";
 }
-
-/*
- * //: ID of the deferred payment entry
-    uint64 id;
-
-    uint64 amount;
-    PaymentFeeData feeData;
-
-    //: Creator of the entry
-    AccountID source;
-    BalanceID sourceBalance;
-
-    AccountID destination;
-
-    longstring reference;
-
-    //: Reserved for future extension
-    EmptyExt ext;
- * */
 
 void
 DeferredPaymentHelperImpl::dropAll()
@@ -54,7 +35,7 @@ DeferredPaymentHelperImpl::dropAll()
                        "source          VARCHAR(56) NOT NULL,"
                        "source_balance  VARCHAR(56) NOT NULL,"
                        "destination     VARCHAR(56) NOT NULL,"
-                       "fee_data        TEXT NOT NULL,"
+                       "details         TEXT NOT NULL,"
                        "version         INT    NOT NULL,"
                        "lastmodified    INT    NOT NULL"
                        ");";
@@ -76,15 +57,15 @@ DeferredPaymentHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     if (insert)
     {
         sql = "INSERT INTO deferred_payments (id, amount, source, "
-              "source_balance, destination, fee_data, version, "
+              "source_balance, destination, details, version, "
               "lastmodified) "
-              "VALUES (:id, :am, :src, :srcb, :dst, :fd, :v, :lm)";
+              "VALUES (:id, :am, :src, :srcb, :dst, :d, :v, :lm)";
     }
     else
     {
         sql = "UPDATE deferred_payments SET amount = :am, source = :src, "
               "source_balance = :srcb, "
-              "destination = :dst, fee_data = :fd, version = "
+              "destination = :dst, details = :d, version = "
               ":v, "
               "lastmodified = :lm "
               " WHERE id = :id";
@@ -96,8 +77,7 @@ DeferredPaymentHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     auto dst = PubKeyUtils::toStrKey(deferredPaymentEntry.destination);
     auto srcBalance =
         BalanceKeyUtils::toStrKey(deferredPaymentEntry.sourceBalance);
-    auto feeDataBytes = xdr::xdr_to_opaque(deferredPaymentEntry.feeData);
-    auto feeData = bn::encode_b64(feeDataBytes);
+    auto details = deferredPaymentEntry.details;
 
     statement& st = prep.statement();
     st.exchange(use(deferredPaymentEntry.id, "id"));
@@ -105,7 +85,7 @@ DeferredPaymentHelperImpl::storeUpdate(LedgerEntry const& entry, bool insert)
     st.exchange(use(src, "src"));
     st.exchange(use(srcBalance, "srcb"));
     st.exchange(use(dst, "dst"));
-    st.exchange(use(feeData, "fd"));
+    st.exchange(use(details, "d"));
     st.exchange(use(version, "v"));
     st.exchange(use(deferredPaymentFrame->mEntry.lastModifiedLedgerSeq, "lm"));
 
@@ -277,11 +257,11 @@ DeferredPaymentHelperImpl::load(
         auto& deferredPaymentEntry = le.data.deferredPayment();
 
         int32_t version;
-        std::string rawFeeData, rawSrcBalance, rawSrc, rawDst;
+        std::string rawSrcBalance, rawSrc, rawDst;
         auto& st = prep.statement();
         st.exchange(into(deferredPaymentEntry.id));
         st.exchange(into(deferredPaymentEntry.amount));
-        st.exchange(into(rawFeeData));
+        st.exchange(into(deferredPaymentEntry.details));
         st.exchange(into(rawSrc));
         st.exchange(into(rawSrcBalance));
         st.exchange(into(rawDst));
@@ -293,13 +273,6 @@ DeferredPaymentHelperImpl::load(
         while (st.got_data())
         {
             deferredPaymentEntry.ext.v(static_cast<LedgerVersion>(version));
-
-            // unmarshal body
-            std::vector<uint8_t> decoded;
-            bn::decode_b64(rawFeeData, decoded);
-            xdr::xdr_get unmarshaler(&decoded.front(), &decoded.back() + 1);
-            xdr::xdr_argpack_archive(unmarshaler, deferredPaymentEntry.feeData);
-            unmarshaler.done();
 
             deferredPaymentEntry.sourceBalance =
                 BalanceKeyUtils::fromStrKey(rawSrcBalance);

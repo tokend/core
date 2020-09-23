@@ -49,7 +49,7 @@ CreateCloseDeferredPaymentTestHelper::applyCreateCloseDeferredPaymentRequest(
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
     auto& keyValueHelper = storageHelper.getKeyValueHelper();
 
-    auto destinationBalance = balanceHelper.loadBalance(request.destinationBalance);
+//    auto destinationBalance = balanceHelper.loadBalance(request.destinationBalance);
 
     Database& db = mTestManager->getDB();
     ReviewableRequestFrame::pointer requestBeforeTx;
@@ -86,10 +86,10 @@ CreateCloseDeferredPaymentTestHelper::applyCreateCloseDeferredPaymentRequest(
             auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
             auto requestBeforeTxEntry = requestBeforeTx->getRequestEntry();
 
-            REQUIRE(requestAfterTxEntry.body.closeDeferredPaymentRequest()
-                        .destinationBalance ==
-                    requestBeforeTxEntry.body.closeDeferredPaymentRequest()
-                        .destinationBalance);
+//            REQUIRE(requestAfterTxEntry.body.closeDeferredPaymentRequest()
+//                        .destinationBalance ==
+//                    requestBeforeTxEntry.body.closeDeferredPaymentRequest()
+//                        .destinationBalance);
 
             REQUIRE(requestAfterTxEntry.body.closeDeferredPaymentRequest()
                         .deferredPaymentID ==
@@ -147,17 +147,17 @@ CreateCloseDeferredPaymentTestHelper::applyCreateCloseDeferredPaymentRequest(
     else
     {
 
-        auto key =
-            ManageKeyValueOpFrame::makeCreateDeferredPaymentCloseTasksKey(
-                destinationBalance->getAsset());
-        auto kvEntry = keyValueHelper.loadKeyValue(key);
-        REQUIRE(kvEntry);
-
-        REQUIRE(kvEntry.get()->getKeyValue().value.type() ==
-                KeyValueEntryType::UINT32);
-        auto tasks = kvEntry.get()->getKeyValue().value.ui32Value();
-
-        REQUIRE(requestAfterTxEntry.tasks.allTasks == tasks);
+//        auto key =
+//            ManageKeyValueOpFrame::makeCreateDeferredPaymentCloseTasksKey(
+//                destinationBalance->getAsset());
+//        auto kvEntry = keyValueHelper.loadKeyValue(key);
+//        REQUIRE(kvEntry);
+//
+//        REQUIRE(kvEntry.get()->getKeyValue().value.type() ==
+//                KeyValueEntryType::UINT32);
+//        auto tasks = kvEntry.get()->getKeyValue().value.ui32Value();
+//
+//        REQUIRE(requestAfterTxEntry.tasks.allTasks == tasks);
     }
 
     REQUIRE(requestAfterTxEntry.tasks.pendingTasks ==

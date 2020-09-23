@@ -7,10 +7,11 @@
 #include "managers/BalanceManager.h"
 #include "review_request/ReviewRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include <ledger/AccountHelper.h>
-#include <ledger/BalanceHelper.h>
-#include <ledger/DeferredPaymentHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/AccountHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/DeferredPaymentHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
+#include "ledger/AccountFrame.h"
 
 namespace stellar
 {
@@ -47,8 +48,6 @@ CreateCloseDeferredPaymentRequestOpFrame::tryGetOperationConditions(
         assetFrame->getCode();
 
     auto action = AccountRuleAction::CREATE;
-
-    action = AccountRuleAction::CREATE;
     if (mCreateCloseDeferredPaymentRequest.allTasks)
     {
         action = AccountRuleAction::CREATE_WITH_TASKS;
@@ -105,6 +104,45 @@ CreateCloseDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
     return true;
 }
 
+bool
+CreateCloseDeferredPaymentRequestOpFrame::isDestinationValid(AssetCode asset,
+                                          StorageHelper& storageHelper, Application& app)
+{
+    switch (mCreateCloseDeferredPaymentRequest.request.destination.type())
+    {
+        case CloseDeferredPaymentDestinationType::BALANCE:
+        {
+            auto dest = storageHelper.getBalanceHelper().
+                    loadBalance(mCreateCloseDeferredPaymentRequest.request.destination.balanceID());
+            if (!dest)
+            {
+                pickResultCode(CreateCloseDeferredPaymentRequestResultCode::DESTINATION_BALANCE_NOT_FOUND);
+                return false;
+            }
+
+            if (dest->getAsset() != asset)
+            {
+                pickResultCode(CreateCloseDeferredPaymentRequestResultCode::ASSET_MISMATCH);
+                return false;
+            }
+
+            return true;
+        }
+        case CloseDeferredPaymentDestinationType::ACCOUNT:
+        {
+            if (!storageHelper.getAccountHelper().exists(mCreateCloseDeferredPaymentRequest.request.destination.accountID()))
+            {
+                pickResultCode(CreateCloseDeferredPaymentRequestResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
+                return false;
+            }
+
+            return true;
+        }
+        default:
+            throw std::runtime_error("Unexpected destination type on payment");
+    }
+}
+
 CreateCloseDeferredPaymentRequestOpFrame::
     CreateCloseDeferredPaymentRequestOpFrame(Operation const& op,
                                              OperationResult& res,
@@ -157,19 +195,7 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
     auto srcBalance = balanceHelper.loadBalance(
         deferredPayment->getDeferredPayment().sourceBalance);
 
-    auto destBalance = balanceHelper.loadBalance(
-        mCreateCloseDeferredPaymentRequest.request.destinationBalance);
-    if (!destBalance)
-    {
-        pickResultCode(CreateCloseDeferredPaymentRequestResultCode::
-                           DESTINATION_BALANCE_NOT_FOUND);
-        return false;
-    }
-
-    if (srcBalance->getAsset() != destBalance->getAsset())
-    {
-        pickResultCode(
-            CreateCloseDeferredPaymentRequestResultCode::ASSET_MISMATCH);
+    if (!isDestinationValid(srcBalance->getAsset(), sh, app)) {
         return false;
     }
 
@@ -181,13 +207,6 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
     {
         pickResultCode(
             CreateCloseDeferredPaymentRequestResultCode::INCORRECT_PRECISION);
-        return false;
-    }
-
-    if (!destinationCanBeFunded(
-            destBalance, mCreateCloseDeferredPaymentRequest.request.amount))
-    {
-        pickResultCode(CreateCloseDeferredPaymentRequestResultCode::LINE_FULL);
         return false;
     }
 
@@ -263,19 +282,7 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
     auto srcBalance = balanceHelper.loadBalance(
         deferredPayment->getDeferredPayment().sourceBalance);
 
-    auto destBalance = balanceHelper.loadBalance(
-        mCreateCloseDeferredPaymentRequest.request.destinationBalance);
-    if (!destBalance)
-    {
-        pickResultCode(CreateCloseDeferredPaymentRequestResultCode::
-                           DESTINATION_BALANCE_NOT_FOUND);
-        return false;
-    }
-
-    if (srcBalance->getAsset() != destBalance->getAsset())
-    {
-        pickResultCode(
-            CreateCloseDeferredPaymentRequestResultCode::ASSET_MISMATCH);
+    if (!isDestinationValid(srcBalance->getAsset(), sh, app)) {
         return false;
     }
 
@@ -290,13 +297,6 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
         return false;
     }
 
-    if (!destinationCanBeFunded(
-            destBalance, mCreateCloseDeferredPaymentRequest.request.amount))
-    {
-        pickResultCode(CreateCloseDeferredPaymentRequestResultCode::LINE_FULL);
-        return false;
-    }
-
     auto& requestHelper = sh.getReviewableRequestHelper();
 
     auto request =
@@ -305,14 +305,12 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
         request->getRequestEntry().body.closeDeferredPaymentRequest();
 
     closeDeferredPayment.sequenceNumber++;
-    closeDeferredPayment.destinationBalance =
-        mCreateCloseDeferredPaymentRequest.request.destinationBalance;
+    closeDeferredPayment.destination =
+        mCreateCloseDeferredPaymentRequest.request.destination;
     closeDeferredPayment.deferredPaymentID =
         mCreateCloseDeferredPaymentRequest.request.deferredPaymentID;
     closeDeferredPayment.creatorDetails =
         mCreateCloseDeferredPaymentRequest.request.creatorDetails;
-    closeDeferredPayment.feeData =
-        mCreateCloseDeferredPaymentRequest.request.feeData;
     closeDeferredPayment.amount =
         mCreateCloseDeferredPaymentRequest.request.amount;
 

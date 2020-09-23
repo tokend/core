@@ -139,10 +139,6 @@ ReviewCreateDeferredPaymentRequestOpFrame::handleApprove(
         createDeferredPayment.destination;
     innerResult().success().typeExt.createDeferredPaymentResult().source =
         srcBalance->getAccountID();
-    innerResult().success().typeExt.createDeferredPaymentResult().totalFee =
-        totalFee;
-    innerResult().success().typeExt.createDeferredPaymentResult().totalAmount =
-        createDeferredPayment.amount;
 
     return true;
 }

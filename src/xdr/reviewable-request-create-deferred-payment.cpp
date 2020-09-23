@@ -25,11 +25,6 @@ if (!okamount)
 {
 return false;
 }
-bool okfeeData = u.from_bytes(feeData);
-if (!okfeeData)
-{
-return false;
-}
 bool oksequenceNumber = u.from_bytes(sequenceNumber);
 if (!oksequenceNumber)
 {
@@ -65,11 +60,6 @@ if (!okamount)
 {
 return false;
 }
-bool okfeeData = m.to_bytes(feeData);
-if (!okfeeData)
-{
-return false;
-}
 bool oksequenceNumber = m.to_bytes(sequenceNumber);
 if (!oksequenceNumber)
 {
@@ -93,7 +83,6 @@ CreateDeferredPaymentRequest::count_size(xdr::measurer& m) const
 m.count_size(sourceBalance);
 m.count_size(destination);
 m.count_size(amount);
-m.count_size(feeData);
 m.count_size(sequenceNumber);
 m.count_size(creatorDetails);
 m.count_size(ext);
@@ -108,7 +97,6 @@ return false;
 && (sourceBalance== other.sourceBalance)
 && (destination== other.destination)
 && (amount== other.amount)
-&& (feeData== other.feeData)
 && (sequenceNumber== other.sequenceNumber)
 && (creatorDetails== other.creatorDetails)
 && (ext== other.ext)
@@ -127,8 +115,6 @@ if (destination < other.destination) return true;
 if (other.destination < destination) return false;
 if (amount < other.amount) return true;
 if (other.amount < amount) return false;
-if (feeData < other.feeData) return true;
-if (other.feeData < feeData) return false;
 if (sequenceNumber < other.sequenceNumber) return true;
 if (other.sequenceNumber < sequenceNumber) return false;
 if (creatorDetails < other.creatorDetails) return true;

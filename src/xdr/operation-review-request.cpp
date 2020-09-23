@@ -1563,16 +1563,6 @@ if (!oksource)
 {
 return false;
 }
-bool oktotalFee = u.from_bytes(totalFee);
-if (!oktotalFee)
-{
-return false;
-}
-bool oktotalAmount = u.from_bytes(totalAmount);
-if (!oktotalAmount)
-{
-return false;
-}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -1598,16 +1588,6 @@ if (!oksource)
 {
 return false;
 }
-bool oktotalFee = m.to_bytes(totalFee);
-if (!oktotalFee)
-{
-return false;
-}
-bool oktotalAmount = m.to_bytes(totalAmount);
-if (!oktotalAmount)
-{
-return false;
-}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -1621,8 +1601,6 @@ CreateDeferredPaymentResult::count_size(xdr::measurer& m) const
 m.count_size(deferredPaymentID);
 m.count_size(destination);
 m.count_size(source);
-m.count_size(totalFee);
-m.count_size(totalAmount);
 m.count_size(ext);
 }
 bool
@@ -1635,8 +1613,6 @@ return false;
 && (deferredPaymentID== other.deferredPaymentID)
 && (destination== other.destination)
 && (source== other.source)
-&& (totalFee== other.totalFee)
-&& (totalAmount== other.totalAmount)
 && (ext== other.ext)
 ;}
 bool
@@ -1653,10 +1629,6 @@ if (destination < other.destination) return true;
 if (other.destination < destination) return false;
 if (source < other.source) return true;
 if (other.source < source) return false;
-if (totalFee < other.totalFee) return true;
-if (other.totalFee < totalFee) return false;
-if (totalAmount < other.totalAmount) return true;
-if (other.totalAmount < totalAmount) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

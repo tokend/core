@@ -3,6 +3,7 @@
 #include <ledger/AssetHelper.h>
 #include <ledger/BalanceHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
+#include <ledger/DeferredPaymentHelper.h>
 
 namespace stellar
 {
@@ -40,8 +41,9 @@ CancelCloseDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
             ->getRequestEntry()
             .body.closeDeferredPaymentRequest();
 
+    auto deferredPayment = storageHelper.getDeferredPaymentHelper().loadDeferredPayment(request.deferredPaymentID);
     auto& balanceHelper = storageHelper.getBalanceHelper();
-    auto balanceFrame = balanceHelper.loadBalance(request.destinationBalance);
+    auto balanceFrame = balanceHelper.loadBalance(deferredPayment->getDeferredPayment().sourceBalance);
     if (!balanceFrame)
     {
         mResult.code(OperationResultCode::opNO_ENTRY);

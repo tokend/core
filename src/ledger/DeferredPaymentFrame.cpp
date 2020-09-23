@@ -32,7 +32,7 @@ DeferredPaymentFrame::createNew(uint64_t const id,
     deferredPayment.sourceBalance = request.sourceBalance;
     deferredPayment.destination = request.destination;
     deferredPayment.source = ownerID;
-    deferredPayment.feeData = request.feeData;
+    deferredPayment.details = request.creatorDetails;
 
     return std::make_shared<DeferredPaymentFrame>(entry);
 }

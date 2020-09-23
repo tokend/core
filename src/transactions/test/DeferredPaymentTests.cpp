@@ -196,38 +196,38 @@ TEST_CASE("DeferredPayment", "[tx][deferred_payment]")
                               OperationResultCode::opINNER);
         REQUIRE(result.success().fulfilled);
 
-        SECTION("Close")
-        {
-            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
-            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
-            closeDeferredPaymentRequest.destinationBalance = destBalance;
-            closeDeferredPaymentRequest.deferredPaymentID =
-                result.success().deferredPaymentID;
-            closeDeferredPaymentRequest.amount = 500;
-
-            createCloseDeferredPaymentTestHelper
-                .applyCreateCloseDeferredPaymentRequest(
-                    recipient, closeDeferredPaymentRequest, 0, &allTasks);
-        }
-
-        SECTION("create Close & cancel")
-        {
-            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
-            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
-            closeDeferredPaymentRequest.destinationBalance = destBalance;
-            closeDeferredPaymentRequest.deferredPaymentID =
-                result.success().deferredPaymentID;
-            closeDeferredPaymentRequest.amount = 500;
-
-            auto createCloseRes =
-                createCloseDeferredPaymentTestHelper
-                    .applyCreateCloseDeferredPaymentRequest(
-                        recipient, closeDeferredPaymentRequest, 0, &allTasks);
-
-            cancelCloseDeferredPaymentRequestHelper
-                .applyCancelCloseDeferredPaymentRequest(
-                    recipient, createCloseRes.success().requestID);
-        }
+//        SECTION("Close")
+//        {
+//            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
+//            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
+//            closeDeferredPaymentRequest.destinationBalance = destBalance;
+//            closeDeferredPaymentRequest.deferredPaymentID =
+//                result.success().deferredPaymentID;
+//            closeDeferredPaymentRequest.amount = 500;
+//
+//            createCloseDeferredPaymentTestHelper
+//                .applyCreateCloseDeferredPaymentRequest(
+//                    recipient, closeDeferredPaymentRequest, 0, &allTasks);
+//        }
+//
+//        SECTION("create Close & cancel")
+//        {
+//            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
+//            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
+//            closeDeferredPaymentRequest.destinationBalance = destBalance;
+//            closeDeferredPaymentRequest.deferredPaymentID =
+//                result.success().deferredPaymentID;
+//            closeDeferredPaymentRequest.amount = 500;
+//
+//            auto createCloseRes =
+//                createCloseDeferredPaymentTestHelper
+//                    .applyCreateCloseDeferredPaymentRequest(
+//                        recipient, closeDeferredPaymentRequest, 0, &allTasks);
+//
+//            cancelCloseDeferredPaymentRequestHelper
+//                .applyCancelCloseDeferredPaymentRequest(
+//                    recipient, createCloseRes.success().requestID);
+//        }
     }
 
     SECTION("Create & cancel")

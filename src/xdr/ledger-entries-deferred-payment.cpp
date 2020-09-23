@@ -20,8 +20,8 @@ if (!okamount)
 {
 return false;
 }
-bool okfeeData = u.from_bytes(feeData);
-if (!okfeeData)
+bool okdetails = u.from_bytes(details);
+if (!okdetails)
 {
 return false;
 }
@@ -60,8 +60,8 @@ if (!okamount)
 {
 return false;
 }
-bool okfeeData = m.to_bytes(feeData);
-if (!okfeeData)
+bool okdetails = m.to_bytes(details);
+if (!okdetails)
 {
 return false;
 }
@@ -92,7 +92,7 @@ DeferredPaymentEntry::count_size(xdr::measurer& m) const
 {
 m.count_size(id);
 m.count_size(amount);
-m.count_size(feeData);
+m.count_size(details);
 m.count_size(source);
 m.count_size(sourceBalance);
 m.count_size(destination);
@@ -107,7 +107,7 @@ return false;
 }auto& other = dynamic_cast<DeferredPaymentEntry const&>(other_abstract);return true
 && (id== other.id)
 && (amount== other.amount)
-&& (feeData== other.feeData)
+&& (details== other.details)
 && (source== other.source)
 && (sourceBalance== other.sourceBalance)
 && (destination== other.destination)
@@ -125,8 +125,8 @@ if (id < other.id) return true;
 if (other.id < id) return false;
 if (amount < other.amount) return true;
 if (other.amount < amount) return false;
-if (feeData < other.feeData) return true;
-if (other.feeData < feeData) return false;
+if (details < other.details) return true;
+if (other.details < details) return false;
 if (source < other.source) return true;
 if (other.source < source) return false;
 if (sourceBalance < other.sourceBalance) return true;

@@ -289,9 +289,6 @@ struct CloseDeferredPaymentResult  : xdr::xdr_abstract {
   AccountID destination{};
   BalanceID destinationBalance{};
   CloseDeferredPaymentEffect effect{};
-  uint64 deferredPaymentRemainder{};
-  uint64 totalFee{};
-  uint64 totalAmount{};
   EmptyExt ext{};
 
   CloseDeferredPaymentResult() = default;
@@ -299,35 +296,23 @@ struct CloseDeferredPaymentResult  : xdr::xdr_abstract {
            typename _destination_T,
            typename _destinationBalance_T,
            typename _effect_T,
-           typename _deferredPaymentRemainder_T,
-           typename _totalFee_T,
-           typename _totalAmount_T,
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _deferredPaymentID_T>::value
                           && std::is_constructible<AccountID, _destination_T>::value
                           && std::is_constructible<BalanceID, _destinationBalance_T>::value
                           && std::is_constructible<CloseDeferredPaymentEffect, _effect_T>::value
-                          && std::is_constructible<uint64, _deferredPaymentRemainder_T>::value
-                          && std::is_constructible<uint64, _totalFee_T>::value
-                          && std::is_constructible<uint64, _totalAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit CloseDeferredPaymentResult(_deferredPaymentID_T &&_deferredPaymentID,
                                       _destination_T &&_destination,
                                       _destinationBalance_T &&_destinationBalance,
                                       _effect_T &&_effect,
-                                      _deferredPaymentRemainder_T &&_deferredPaymentRemainder,
-                                      _totalFee_T &&_totalFee,
-                                      _totalAmount_T &&_totalAmount,
                                       _ext_T &&_ext)
     : deferredPaymentID(std::forward<_deferredPaymentID_T>(_deferredPaymentID)),
       destination(std::forward<_destination_T>(_destination)),
       destinationBalance(std::forward<_destinationBalance_T>(_destinationBalance)),
       effect(std::forward<_effect_T>(_effect)),
-      deferredPaymentRemainder(std::forward<_deferredPaymentRemainder_T>(_deferredPaymentRemainder)),
-      totalFee(std::forward<_totalFee_T>(_totalFee)),
-      totalAmount(std::forward<_totalAmount_T>(_totalAmount)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool

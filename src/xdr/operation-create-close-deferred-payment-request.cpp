@@ -195,21 +195,6 @@ if (!okeffect)
 {
 return false;
 }
-bool okdeferredPaymentRemainder = u.from_bytes(deferredPaymentRemainder);
-if (!okdeferredPaymentRemainder)
-{
-return false;
-}
-bool oktotalFee = u.from_bytes(totalFee);
-if (!oktotalFee)
-{
-return false;
-}
-bool oktotalAmount = u.from_bytes(totalAmount);
-if (!oktotalAmount)
-{
-return false;
-}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -240,21 +225,6 @@ if (!okeffect)
 {
 return false;
 }
-bool okdeferredPaymentRemainder = m.to_bytes(deferredPaymentRemainder);
-if (!okdeferredPaymentRemainder)
-{
-return false;
-}
-bool oktotalFee = m.to_bytes(totalFee);
-if (!oktotalFee)
-{
-return false;
-}
-bool oktotalAmount = m.to_bytes(totalAmount);
-if (!oktotalAmount)
-{
-return false;
-}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -269,9 +239,6 @@ m.count_size(deferredPaymentID);
 m.count_size(destination);
 m.count_size(destinationBalance);
 m.count_size(effect);
-m.count_size(deferredPaymentRemainder);
-m.count_size(totalFee);
-m.count_size(totalAmount);
 m.count_size(ext);
 }
 bool
@@ -285,9 +252,6 @@ return false;
 && (destination== other.destination)
 && (destinationBalance== other.destinationBalance)
 && (effect== other.effect)
-&& (deferredPaymentRemainder== other.deferredPaymentRemainder)
-&& (totalFee== other.totalFee)
-&& (totalAmount== other.totalAmount)
 && (ext== other.ext)
 ;}
 bool
@@ -306,12 +270,6 @@ if (destinationBalance < other.destinationBalance) return true;
 if (other.destinationBalance < destinationBalance) return false;
 if (effect < other.effect) return true;
 if (other.effect < effect) return false;
-if (deferredPaymentRemainder < other.deferredPaymentRemainder) return true;
-if (other.deferredPaymentRemainder < deferredPaymentRemainder) return false;
-if (totalFee < other.totalFee) return true;
-if (other.totalFee < totalFee) return false;
-if (totalAmount < other.totalAmount) return true;
-if (other.totalAmount < totalAmount) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;

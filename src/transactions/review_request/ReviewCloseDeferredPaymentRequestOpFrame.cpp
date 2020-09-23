@@ -13,6 +13,8 @@
 #include "ledger/StorageHelper.h"
 #include "main/Application.h"
 #include "xdrpp/printer.h"
+#include "transactions/managers/BalanceManager.h"
+#include "ledger/AccountHelper.h"
 
 namespace stellar
 {
@@ -86,6 +88,45 @@ ReviewCloseDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
     return true;
 }
 
+BalanceFrame::pointer
+ReviewCloseDeferredPaymentRequestOpFrame::tryLoadDestinationBalance(AssetCode asset, CloseDeferredPaymentRequest& request,
+                                          StorageHelper& storageHelper, Application& app)
+{
+    switch (request.destination.type())
+    {
+        case CloseDeferredPaymentDestinationType::BALANCE:
+        {
+            auto dest = storageHelper.getBalanceHelper().loadBalance(request.destination.balanceID());
+            if (!dest)
+            {
+                innerResult().code(ReviewRequestResultCode::DESTINATION_BALANCE_NOT_FOUND);
+                return nullptr;
+            }
+
+            if (dest->getAsset() != asset)
+            {
+                innerResult().code(ReviewRequestResultCode::BALANCE_ASSETS_MISMATCHED);
+                return nullptr;
+            }
+
+            return dest;
+        }
+        case CloseDeferredPaymentDestinationType::ACCOUNT:
+        {
+            if (!storageHelper.getAccountHelper().exists(request.destination.accountID()))
+            {
+                innerResult().code(ReviewRequestResultCode::DESTINATION_ACCOUNT_NOT_FOUND);
+                return nullptr;
+            }
+
+            BalanceManager balanceManager(app, storageHelper);
+            return balanceManager.loadOrCreateBalance(request.destination.accountID(), asset);
+        }
+        default:
+            throw std::runtime_error("Unexpected destination type on payment");
+    }
+}
+
 bool
 ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
     Application& app, StorageHelper& storageHelper,
@@ -127,55 +168,85 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
     auto srcBalance = storageHelper.getBalanceHelper().loadBalance(
         deferredPayment->getDeferredPayment().sourceBalance);
 
-    auto destinationBalance = storageHelper.getBalanceHelper().loadBalance(
-        closeDeferredPayment.destinationBalance);
+    auto destinationBalance = tryLoadDestinationBalance(srcBalance->getAsset(), closeDeferredPayment, storageHelper, app);
+
+    if (deferredPayment->getDeferredPayment().amount < closeDeferredPayment.amount) {
+        innerResult().code(ReviewRequestResultCode::UNDERFUNDED);
+    }
 
     requestHelper.storeDelete(request->getKey());
 
-    auto result = srcBalance->tryChargeFromLocked(closeDeferredPayment.amount);
-    if (result != BalanceFrame::Result::SUCCESS)
-    {
-
-        switch (result)
+    if (srcBalance->getBalanceID() == destinationBalance->getBalanceID()) {
+        auto result = srcBalance->unlock(closeDeferredPayment.amount);
+        if (result != BalanceFrame::Result::SUCCESS)
         {
-        case BalanceFrame::Result::NONMATCHING_PRECISION:
-            innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
-            return false;
-        case BalanceFrame::Result::LINE_FULL:
-            innerResult().code(ReviewRequestResultCode::LINE_FULL);
-            return false;
-        default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: failed to charge source on deferred "
-                   "payment close, "
-                   "id: "
-                << deferredPayment->getDeferredPayment().id;
-            throw std::runtime_error(
-                "Unexpected state: failed to charge source "
-                "on deferred payment close ");
+
+            switch (result)
+            {
+                case BalanceFrame::Result::NONMATCHING_PRECISION:
+                    innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
+                    return false;
+                case BalanceFrame::Result::LINE_FULL:
+                    innerResult().code(ReviewRequestResultCode::LINE_FULL);
+                    return false;
+                default:
+                    CLOG(ERROR, Logging::OPERATION_LOGGER)
+                            << "Unexpected state: failed to charge source on deferred "
+                               "payment close, "
+                               "id: "
+                            << deferredPayment->getDeferredPayment().id;
+                    throw std::runtime_error(
+                            "Unexpected state: failed to charge source "
+                            "on deferred payment close ");
+            }
         }
     }
-
-    result = destinationBalance->tryFundAccount(closeDeferredPayment.amount);
-    if (result != BalanceFrame::Result::SUCCESS)
-    {
-
-        switch (result)
+    else {
+        auto result = srcBalance->tryChargeFromLocked(closeDeferredPayment.amount);
+        if (result != BalanceFrame::Result::SUCCESS)
         {
-        case BalanceFrame::Result::NONMATCHING_PRECISION:
-            innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
-            return false;
-        case BalanceFrame::Result::LINE_FULL:
-            innerResult().code(ReviewRequestResultCode::LINE_FULL);
-            return false;
-        default:
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Unexpected state: failed to fund destination on deferred "
-                   "payment close, "
-                   "id: "
-                << deferredPayment->getDeferredPayment().id;
-            throw std::runtime_error("Unexpected state: failed to fund "
-                                     "destination on deferred payment close ");
+
+            switch (result)
+            {
+                case BalanceFrame::Result::NONMATCHING_PRECISION:
+                    innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
+                    return false;
+                case BalanceFrame::Result::LINE_FULL:
+                    innerResult().code(ReviewRequestResultCode::LINE_FULL);
+                    return false;
+                default:
+                    CLOG(ERROR, Logging::OPERATION_LOGGER)
+                            << "Unexpected state: failed to charge source on deferred "
+                               "payment close, "
+                               "id: "
+                            << deferredPayment->getDeferredPayment().id;
+                    throw std::runtime_error(
+                            "Unexpected state: failed to charge source "
+                            "on deferred payment close ");
+            }
+        }
+
+        result = destinationBalance->tryFundAccount(closeDeferredPayment.amount);
+        if (result != BalanceFrame::Result::SUCCESS)
+        {
+
+            switch (result)
+            {
+                case BalanceFrame::Result::NONMATCHING_PRECISION:
+                    innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
+                    return false;
+                case BalanceFrame::Result::LINE_FULL:
+                    innerResult().code(ReviewRequestResultCode::LINE_FULL);
+                    return false;
+                default:
+                    CLOG(ERROR, Logging::OPERATION_LOGGER)
+                            << "Unexpected state: failed to fund destination on deferred "
+                               "payment close, "
+                               "id: "
+                            << deferredPayment->getDeferredPayment().id;
+                    throw std::runtime_error("Unexpected state: failed to fund "
+                                             "destination on deferred payment close ");
+            }
         }
     }
 
@@ -193,12 +264,9 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
     innerResult()
         .success()
         .typeExt.closeDeferredPaymentResult()
-        .destinationBalance = closeDeferredPayment.destinationBalance;
+        .destinationBalance = destinationBalance->getBalanceID();
     innerResult().success().typeExt.closeDeferredPaymentResult().destination =
         destinationBalance->getAccountID();
-    innerResult().success().typeExt.closeDeferredPaymentResult().totalAmount =
-        closeDeferredPayment.amount;
-    innerResult().success().typeExt.closeDeferredPaymentResult().totalFee = 0;
 
     if (deferredPayment->getDeferredPayment().amount == 0)
     {
@@ -212,11 +280,6 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
         innerResult().success().typeExt.closeDeferredPaymentResult().effect =
             CloseDeferredPaymentEffect::CHARGED;
     }
-    innerResult()
-        .success()
-        .typeExt.closeDeferredPaymentResult()
-        .deferredPaymentRemainder =
-        deferredPayment->getDeferredPayment().amount;
 
     return true;
 }

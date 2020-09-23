@@ -20,28 +20,28 @@ ReviewCloseDeferredPaymentRequestChecker::checkApprove(
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto& deferredPaymentHelper = storageHelper.getDeferredPaymentHelper();
 
-    auto balanceAfter = balanceHelper.loadBalance(
-        closeDeferredPaymentRequest->destinationBalance);
+//    auto balanceAfter = balanceHelper.loadBalance(
+//        closeDeferredPaymentRequest->destinationBalance);
     uint64_t amount = closeDeferredPaymentRequest->amount;
 
-    auto feeData = closeDeferredPaymentRequest->feeData;
-    uint64_t totalFee = feeData.sourceFee.fixed + feeData.sourceFee.percent;
-    if (feeData.sourcePaysForDest)
-    {
-        totalFee += feeData.destinationFee.fixed;
-        totalFee += feeData.destinationFee.percent;
+//    auto feeData = closeDeferredPaymentRequest->feeData;
+//    uint64_t totalFee = feeData.sourceFee.fixed + feeData.sourceFee.percent;
+//    if (feeData.sourcePaysForDest)
+//    {
+//        totalFee += feeData.destinationFee.fixed;
+//        totalFee += feeData.destinationFee.percent;
+//
+//        REQUIRE((balanceBeforeTx->getAmount() + amount) ==
+//                balanceAfter->getAmount());
+//    }
+//
+//    if (!feeData.sourcePaysForDest)
+//    {
+//        REQUIRE((balanceBeforeTx->getAmount() + amount - totalFee) ==
+//                balanceAfter->getAmount());
+//    }
 
-        REQUIRE((balanceBeforeTx->getAmount() + amount) ==
-                balanceAfter->getAmount());
-    }
-
-    if (!feeData.sourcePaysForDest)
-    {
-        REQUIRE((balanceBeforeTx->getAmount() + amount - totalFee) ==
-                balanceAfter->getAmount());
-    }
-
-    if (closeDeferredPaymentRequest->amount > (amount + totalFee))
+    if (closeDeferredPaymentRequest->amount > (amount))
     {
         auto deferredPaymentAfter = deferredPaymentHelper.loadDeferredPayment(
             closeDeferredPaymentRequest->deferredPaymentID);
@@ -67,8 +67,8 @@ ReviewCloseDeferredPaymentRequestChecker::
 
     closeDeferredPaymentRequest = std::make_shared<CloseDeferredPaymentRequest>(
         request->getRequestEntry().body.closeDeferredPaymentRequest());
-    balanceBeforeTx = balanceHelper.loadBalance(
-        closeDeferredPaymentRequest->destinationBalance);
+//    balanceBeforeTx = balanceHelper.loadBalance(
+//        closeDeferredPaymentRequest->destinationBalance);
     deferredPaymentBeforeTx = deferredPaymentHelper.loadDeferredPayment(
         closeDeferredPaymentRequest->deferredPaymentID);
 }
@@ -85,8 +85,8 @@ ReviewCloseDeferredPaymentRequestChecker::
     auto& deferredPaymentHelper = storageHelper.getDeferredPaymentHelper();
 
     closeDeferredPaymentRequest = req;
-    balanceBeforeTx = balanceHelper.loadBalance(
-        closeDeferredPaymentRequest->destinationBalance);
+//    balanceBeforeTx = balanceHelper.loadBalance(
+//        closeDeferredPaymentRequest->destinationBalance);
     deferredPaymentBeforeTx = deferredPaymentHelper.loadDeferredPayment(
         closeDeferredPaymentRequest->deferredPaymentID);
 }

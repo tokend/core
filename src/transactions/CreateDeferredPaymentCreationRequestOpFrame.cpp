@@ -281,8 +281,6 @@ CreateDeferredPaymentCreationRequestOpFrame::updateRequest(Application& app,
         mCreateDeferredPaymentCreationRequest.request.amount;
     createDeferredPaymentRequest.destination =
         mCreateDeferredPaymentCreationRequest.request.destination;
-    createDeferredPaymentRequest.feeData =
-        mCreateDeferredPaymentCreationRequest.request.feeData;
     createDeferredPaymentRequest.sourceBalance =
         mCreateDeferredPaymentCreationRequest.request.sourceBalance;
     createDeferredPaymentRequest.creatorDetails =
