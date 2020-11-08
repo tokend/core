@@ -200,6 +200,8 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
                             "on deferred payment close ");
             }
         }
+
+        storageHelper.getBalanceHelper().storeChange(srcBalance->mEntry);
     }
     else {
         auto result = srcBalance->tryChargeFromLocked(closeDeferredPayment.amount);
@@ -225,6 +227,7 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
                             "on deferred payment close ");
             }
         }
+        storageHelper.getBalanceHelper().storeChange(srcBalance->mEntry);
 
         result = destinationBalance->tryFundAccount(closeDeferredPayment.amount);
         if (result != BalanceFrame::Result::SUCCESS)
@@ -248,6 +251,7 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
                                              "destination on deferred payment close ");
             }
         }
+        storageHelper.getBalanceHelper().storeChange(destinationBalance->mEntry);
     }
 
     deferredPayment->getDeferredPayment().amount -= closeDeferredPayment.amount;
