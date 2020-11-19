@@ -353,7 +353,7 @@ CreateCloseDeferredPaymentRequestOpFrame::tryAutoApprove(
         result.success().typeExt.closeDeferredPaymentResult();
     innerResult().success().deferredPaymentID =
         result.success()
-            .typeExt.createDeferredPaymentResult()
+            .typeExt.closeDeferredPaymentResult()
             .deferredPaymentID;
 
     return true;
