@@ -87,10 +87,14 @@ CancelDeferredPaymentCreationRequestOpFrame::doApply(
     auto& request =
         requestFrame->getRequestEntry().body.createDeferredPaymentRequest();
 
-    auto srcBalance = request.sourceBalance;
-
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto srcBalanceFrame = balanceHelper.loadBalance(request.sourceBalance);
+    if (!srcBalanceFrame)
+    {
+        innerResult().code(
+            CancelDeferredPaymentCreationRequestResultCode::NOT_FOUND);
+        return false;
+    }
 
     auto result = srcBalanceFrame->unlock(request.amount);
     switch (result)
@@ -117,6 +121,7 @@ CancelDeferredPaymentCreationRequestOpFrame::doApply(
     requestHelper.storeDelete(requestFrame->getKey());
 
     innerResult().code(CancelDeferredPaymentCreationRequestResultCode::SUCCESS);
+
     return true;
 }
 
