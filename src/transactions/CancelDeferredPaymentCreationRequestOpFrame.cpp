@@ -34,11 +34,17 @@ CancelDeferredPaymentCreationRequestOpFrame::tryGetSignerRequirements(
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
 
-    auto& request =
-        storageHelper.getReviewableRequestHelper()
-            .loadRequest(mCancelDeferredPaymentCreationRequest.requestID)
-            ->getRequestEntry()
-            .body.createDeferredPaymentRequest();
+    auto reviewableRequest = storageHelper.getReviewableRequestHelper()
+        .loadRequest(mCancelDeferredPaymentCreationRequest.requestID);
+
+    if (!reviewableRequest)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    auto& request = reviewableRequest->getRequestEntry().body.createDeferredPaymentRequest();
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto srcBalanceFrame = balanceHelper.loadBalance(request.sourceBalance);
@@ -48,6 +54,7 @@ CancelDeferredPaymentCreationRequestOpFrame::tryGetSignerRequirements(
         mResult.entryType() = LedgerEntryType::BALANCE;
         return false;
     }
+
     auto& assetHelper = storageHelper.getAssetHelper();
     auto assetFrame = assetHelper.mustLoadAsset(srcBalanceFrame->getAsset());
 
@@ -87,10 +94,14 @@ CancelDeferredPaymentCreationRequestOpFrame::doApply(
     auto& request =
         requestFrame->getRequestEntry().body.createDeferredPaymentRequest();
 
-    auto srcBalance = request.sourceBalance;
-
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto srcBalanceFrame = balanceHelper.loadBalance(request.sourceBalance);
+    if (!srcBalanceFrame)
+    {
+        innerResult().code(
+            CancelDeferredPaymentCreationRequestResultCode::NOT_FOUND);
+        return false;
+    }
 
     auto result = srcBalanceFrame->unlock(request.amount);
     switch (result)
@@ -117,6 +128,7 @@ CancelDeferredPaymentCreationRequestOpFrame::doApply(
     requestHelper.storeDelete(requestFrame->getKey());
 
     innerResult().code(CancelDeferredPaymentCreationRequestResultCode::SUCCESS);
+
     return true;
 }
 
