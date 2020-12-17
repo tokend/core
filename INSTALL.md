@@ -47,15 +47,43 @@ When running a node, the best bet is to go with the latest release.
 See [installing gcc 4.9 on ubuntu 14.04](http://askubuntu.com/questions/428198/getting-installing-gcc-g-4-9-on-ubuntu)
 
 ### OS X
-When building on OSX, here's some dependencies you'll need:
-- Install xcode
-- Install homebrew
-- brew install libsodium
-- brew install libtool
-- brew install automake
-- brew install pkg-config
-- brew install libpqxx *(If ./configure later complains about libpq missing, try PKG_CONFIG_PATH='/usr/local/lib/pkgconfig')* 
-- brew install openssl
+1) When building on OSX, here's some dependencies you'll need:
+    - Install xcode or Clion
+    - Install homebrew
+    - brew install libsodium
+    - brew install libtool
+    - brew install automake
+    - brew install pkg-config
+    - brew install libpqxx *(If ./configure later complains about libpq missing, try PKG_CONFIG_PATH='/usr/local/lib/pkgconfig')* 
+    - brew install openssl
+    - brew install gcc
+
+2) Set build Cmake options
+    
+    ```
+    -DOPENSSL_LIBRARIES=/usr/local/opt/openssl@1.1 
+    -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@1.1 
+    -DPostgreSQL_INCLUDE_DIRS=/usr/local/include 
+    -DPostgreSQL_LIBRARIES=/usr/local/lib/libpq.so
+    ```
+
+3) Edit or create new config file using ./docs/example.core.ini
+
+    __Recommendation:__ change all paths in config file to local directory (for example change /deta to ./data)
+
+4) If you using Clion config Preferences->BuildTools->Toolchain for using GNU G++ compiler (standard path is /usr/local/Cellar/gcc/10.2.0/bin/g++-10)
+
+5) Build project
+
+6) Launch PG database. Docker usage example:
+    ```commandline
+    docker run -e POSTGRES_PASSWORD=core -e POSTGRES_USER=core -e POSTGRES_DB=core -p 5432:5432 postgres
+    ```
+7) Launch built application (commands example execution in project root)
+    ```commandline
+        ./src/core --conf ./docs/example.core.ini --newdb --ll DEBUG
+        ./src/core --conf ./docs/example.core.ini --ll DEBUG
+    ```
 
 ### Windows 
 See [INSTALL-Windows.txt](INSTALL-Windows.txt)
