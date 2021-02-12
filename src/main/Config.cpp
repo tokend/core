@@ -23,7 +23,7 @@
 namespace stellar
 {
 const uint32_t Config::CURRENT_LEDGER_PROTOCOL_VERSION =
-        static_cast<uint32_t>(LedgerVersion::FIX_PAYMENT_TASKS_WILDCARD_VALUE);
+        static_cast<uint32_t>(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR);
 
 // Options that must only be used for testing
 static const std::unordered_set<std::string> TESTING_ONLY_OPTIONS = {

@@ -47,10 +47,24 @@ CancelChangeRoleRequestOpFrame::doApply(Application& app, StorageHelper& storage
 
     auto requestFrame = requestHelper.loadRequest(requestID, getSourceID(),
                                                   ReviewableRequestType::CHANGE_ROLE);
-    if (!requestFrame)
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR))
     {
-        innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
-        return false;
+        if (!requestFrame)
+        {
+            innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
+            return false;
+        }
+    }
+    else
+    {
+        requestFrame = requestHelper.loadRequest(requestID);
+        if (!requestFrame ||
+            !(getSourceID() == requestFrame->getRequestor()) &&
+            !(getSourceID() == requestFrame->getRequestEntry().body.changeRoleRequest().destinationAccount))
+        {
+            innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
+            return false;
+        }
     }
 
     requestHelper.storeDelete(requestFrame->getKey());
