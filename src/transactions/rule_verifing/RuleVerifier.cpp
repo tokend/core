@@ -60,14 +60,22 @@ RuleVerifier::isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset)
 }
 
 bool
-RuleVerifier::isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTasks) const
+RuleVerifier::isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTasks,
+                           LedgerVersion const& ledgerVersion) const
 {
-    if (expectedTasks == 0)
+    if(ledgerVersion >= LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR)
     {
-        return true;
+        return (expectedTasks & actualTasks) == expectedTasks;
     }
+    else
+    {
+        if (expectedTasks == 0)
+        {
+            return true;
+        }
 
-    return (expectedTasks | actualTasks) == expectedTasks;
+        return (expectedTasks | actualTasks) == expectedTasks;
+    }
 }
 
 bool
