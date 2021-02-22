@@ -67,15 +67,13 @@ RuleVerifier::isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTa
     {
         return (expectedTasks & actualTasks) == expectedTasks;
     }
-    else
-    {
-        if (expectedTasks == 0)
-        {
-            return true;
-        }
 
-        return (expectedTasks | actualTasks) == expectedTasks;
+    if (expectedTasks == 0)
+    {
+        return true;
     }
+
+    return (expectedTasks | actualTasks) == expectedTasks;
 }
 
 bool
