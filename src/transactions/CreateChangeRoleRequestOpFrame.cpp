@@ -97,7 +97,7 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(StorageHelper& storageHe
     }
 
     if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR) &&
-        !(getSourceID() == mCreateChangeRoleRequestOp.destinationAccount) ||
+        !(getSourceID() == mCreateChangeRoleRequestOp.destinationAccount) &&
         !(getSourceID() == request->getRequestor()))
     {
         innerResult().code(
@@ -167,7 +167,7 @@ CreateChangeRoleRequestOpFrame::doApply(Application& app, StorageHelper& storage
         ledgerManager.getCloseTime());
 
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
-    if (requestHelper.isReferenceExist(requestor, reference, requestFrame->getRequestID()))
+    if (requestHelper.isReferenceExist(mCreateChangeRoleRequestOp.destinationAccount, reference, requestFrame->getRequestID()))
     {
         innerResult().code(CreateChangeRoleRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
