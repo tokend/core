@@ -54,9 +54,6 @@ ReviewDataCreationRequestOpFrame::handleApprove(
     Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-    auto accID = request->getReviewer();
-    auto acc = storageHelper.getAccountHelper().loadAccount(accID);
-
     request->checkRequestType(ReviewableRequestType::DATA_CREATION);
 
     auto& requestEntry = request->getRequestEntry();
