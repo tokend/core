@@ -20,11 +20,6 @@ class ReviewRequestOpFrame : public OperationFrame {
     bool
     tryGetSignerRequirements(StorageHelper& storageHelper,
                              std::vector<SignerRequirement>& result) const override;
-    bool
-    tryGetSignerRequirements(StorageHelper& storageHelper,
-                             std::vector<SignerRequirement>& result,
-                             LedgerManager& lm) const override;
-
 protected:
     ReviewRequestResult&
     innerResult()
@@ -54,6 +49,9 @@ protected:
     void
     createReference(StorageHelper& storageHelper, AccountID const& requestor, xdr::pointer<stellar::string64> reference);
 
+    bool
+    tryGetSignerRequirements(StorageHelper& storageHelper,
+                             std::vector<SignerRequirement>& result, LedgerManager& lm) const override;
 public:
 
     ReviewRequestOpFrame(Operation const& op, OperationResult& res,

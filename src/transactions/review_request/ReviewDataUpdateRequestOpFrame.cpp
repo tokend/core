@@ -19,6 +19,37 @@ ReviewDataUpdateRequestOpFrame::ReviewDataUpdateRequestOpFrame(
 }
 
 bool
+ReviewDataUpdateRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
+                                                         std::vector<SignerRequirement>& result, LedgerManager& lm) const
+{
+    // Check older ledger versions (current functionality was created in 31st one)
+    if(lm.getLedgerVersion() < LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR) {
+        return ReviewRequestOpFrame::tryGetSignerRequirements(storageHelper, result, lm);
+    }
+
+    auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
+
+    if (!request || (request->getType() != ReviewableRequestType::DATA_UPDATE))
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
+
+    SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+    resource.reviewableRequest().details.requestType(ReviewableRequestType::DATA_UPDATE);
+    resource.reviewableRequest().details.dataUpdate().type =
+            request->getRequestEntry().body.dataCreationRequest().type;
+    resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
+    resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
+    resource.reviewableRequest().allTasks = 0;
+
+    result.emplace_back(resource, SignerRuleAction::REVIEW);
+
+    return true;
+}
+
+bool
 ReviewDataUpdateRequestOpFrame::handleApprove(
     Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
