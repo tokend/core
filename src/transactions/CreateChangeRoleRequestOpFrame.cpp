@@ -82,7 +82,7 @@ CreateChangeRoleRequestOpFrame::updateChangeRoleRequest(StorageHelper& storageHe
                                                         LedgerManager& ledgerManager)
 {
     // ensure that logic is true
-    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR) ||
+    if (!ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR) &&
         !(getSourceID() == mCreateChangeRoleRequestOp.destinationAccount))
     {
         innerResult().code(CreateChangeRoleRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST);
@@ -167,7 +167,13 @@ CreateChangeRoleRequestOpFrame::doApply(Application& app, StorageHelper& storage
         ledgerManager.getCloseTime());
 
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
-    if (requestHelper.isReferenceExist(mCreateChangeRoleRequestOp.destinationAccount, reference, requestFrame->getRequestID()))
+
+    auto requestExists =
+        ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR) ?
+            requestHelper.requestExistsByReference(reference, requestFrame->getRequestID()) :
+            requestHelper.isReferenceExist(requestor, reference, requestFrame->getRequestID());
+
+    if (requestExists)
     {
         innerResult().code(CreateChangeRoleRequestResultCode::REQUEST_ALREADY_EXISTS);
         return false;
@@ -233,7 +239,7 @@ CreateChangeRoleRequestOpFrame::doCheckValid(Application& app)
 std::string
 CreateChangeRoleRequestOpFrame::getReference() const
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::CHANGE_ROLE));
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::CHANGE_ROLE, mCreateChangeRoleRequestOp.destinationAccount));
     return binToHex(hash);
 }
 
