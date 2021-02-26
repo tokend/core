@@ -271,6 +271,19 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
 
         }
 
+        SECTION("source master, create and update pending")
+        {
+            auto createUpdateKYCRequestResult = changeRoleRequestHelper.applyCreateChangeRoleRequest(
+                master, 0, account.key.getPublicKey(), tokenOwnerRoleID, kycData, &tasks);
+
+            requestID = createUpdateKYCRequestResult.success().requestID;
+            uint32 newTasks = 1;
+
+            changeRoleRequestHelper.applyCreateChangeRoleRequest(master, requestID,
+                                                                 account.key.getPublicKey(), tokenOwnerRoleID, kycData, nullptr,
+                                                                 CreateChangeRoleRequestResultCode::SUCCESS);
+        }
+
         SECTION("try change to nonexisting role")
         {
             uint64_t nonExistingID = 42;
