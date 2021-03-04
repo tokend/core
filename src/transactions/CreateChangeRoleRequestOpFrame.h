@@ -31,7 +31,7 @@ class CreateChangeRoleRequestOpFrame : public OperationFrame
     void updateRequest(ReviewableRequestEntry &requestEntry);
 
     bool updateChangeRoleRequest(StorageHelper& storageHelper,
-                                 Application &app);
+                                 Application &app, LedgerManager& ledgerManager);
 
     void tryAutoApprove(StorageHelper& storageHelper, Application &app,
                         ReviewableRequestFrame::pointer requestFrame);

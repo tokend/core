@@ -357,6 +357,25 @@ bool ReviewableRequestHelperImpl::exists(AccountID const& rawRequestor, string64
     return exists != 0;
 }
 
+
+bool ReviewableRequestHelperImpl::requestExistsByReference(string64 reference, uint64_t requestID)
+{
+    auto& db = getDatabase();
+    auto timer = db.getSelectTimer("reviewable_request_exists_by_reference"); // actually by reference
+    auto prep =
+        db.getPreparedStatement("SELECT EXISTS (SELECT NULL FROM reviewable_request WHERE reference = :reference AND id <> :request_id)");
+
+    auto& st = prep.statement();
+    st.exchange(use(reference, "reference"));
+    st.exchange(use(requestID, "request_id"));
+    int exists = 0;
+    st.exchange(into(exists));
+    st.define_and_bind();
+    st.execute(true);
+
+    return exists != 0;
+}
+
 bool ReviewableRequestHelperImpl::isReferenceExist(AccountID const& requestor, string64 reference, uint64_t requestID)
 {
     if (exists(requestor, reference, requestID))

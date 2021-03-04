@@ -33,6 +33,7 @@ public:
     virtual std::vector<ReviewableRequestFrame::pointer> loadRequests(std::vector<uint64_t> requestIDs) = 0;
 
     virtual bool exists(AccountID const& requestor, string64 reference, uint64_t requestID = 0) = 0;
+    virtual bool requestExistsByReference(string64 reference, uint64_t requestID = 0) = 0;
     virtual bool isReferenceExist(AccountID const& requestor, string64 reference, uint64_t requestID= 0) = 0;
 };
 }
