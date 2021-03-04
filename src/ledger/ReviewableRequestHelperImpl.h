@@ -64,6 +64,8 @@ private:
 
     bool isReferenceExist(AccountID const& requestor, string64 reference, uint64_t requestID = 0) override;
 
+    bool requestExistsByReference(string64 reference, uint64_t requestID = 0) override;
+
     Database& getDatabase() override;
 
     LedgerDelta *getLedgerDelta() override;

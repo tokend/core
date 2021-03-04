@@ -13,7 +13,6 @@ if ((NOT PostgreSQL_INCLUDE_DIRS) OR (NOT PostgreSQL_LIBRARIES))
 endif()
 
 target_link_libraries(core ${PostgreSQL_LIBRARIES})
-target_link_libraries(core pq)
 target_link_libraries(core soci)
 target_link_libraries(core 3rdparty -lpthread)
 target_link_libraries(core crow)

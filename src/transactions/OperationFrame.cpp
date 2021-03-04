@@ -350,7 +350,7 @@ OperationFrame::doCheckSignature(Application& app, StorageHelper& storageHelper)
         involvedAccounts[*sr.source].push_back(sr);
     }
 
-    SignerRuleVerifierImpl signerRuleVerifier;
+    SignerRuleVerifierImpl signerRuleVerifier(lm.getLedgerVersion());
     for (auto const& it : involvedAccounts)
     {
         auto result = mParentTx.getSignatureValidator()->check(app, storageHelper,

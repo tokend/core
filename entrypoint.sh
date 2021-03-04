@@ -25,6 +25,14 @@ init() {
     $BIN --conf $CONFIG --newhist vs
 }
 
+catchup() {
+  $BIN --conf $CONFIG --catchup-complete
+}
+
+# Environment variable explanation:
+# ENSUREDB - create new history for node, then start node (if no other env var provided)
+# DOCATCHUP - do complete catchup, then start node
+
 case "$1" in
     "ensuredb")
         ensuredb
@@ -35,16 +43,29 @@ case "$1" in
     "start")
         start
         ;;
+    "catchup")
+        catchup
+        ;;
     *)
 
     echo "ensuredb=$ENSUREDB"
+    echo "docatchup=$DOCATCHUP"
 
     if [ -z "$ENSUREDB" ]; then
-        echo "starting node"
-        start
-    else 
-        echo "ensuring history and starting node"
-        ensuredb && start
+        echo "ensuring history will not be done"
+    else
+        echo "ensuring history..."
+        ensuredb
     fi
+
+    if [ -z "$DOCATCHUP" ]; then
+        echo "catchup will not be done"
+    else
+        echo "catchuping history..."
+        catchup
+    fi
+
+    echo "starting node"
+    start
 
 esac

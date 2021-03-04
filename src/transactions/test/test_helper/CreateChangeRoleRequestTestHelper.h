@@ -33,7 +33,7 @@ protected:
     ReviewableRequestFrame::pointer
     createReviewableChangeKYCRequest(ChangeRoleRequest request, uint64 requestID);
 
-    xdr::pointer<string64> getReference();
+    xdr::pointer<string64> getReference(const ChangeRoleRequest& request);
 };
 }
 }

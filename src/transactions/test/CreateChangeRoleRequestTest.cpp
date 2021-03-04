@@ -144,6 +144,14 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
 
             reviewChangeRoleRequestHelper.applyReviewRequestTx(master, requestID, ReviewRequestOpAction::APPROVE, "");
         }
+        SECTION("source master, destination general")
+        {
+            auto createChangeRoleRequestResult = changeRoleRequestHelper.applyCreateChangeRoleRequest(
+                    master, 0, account.key.getPublicKey(), tokenOwnerRoleID, kycData);
+            requestID = createChangeRoleRequestResult.success().requestID;
+
+            reviewChangeRoleRequestHelper.applyReviewRequestTx(master, requestID, ReviewRequestOpAction::APPROVE, "");
+        }
         SECTION("set the same type")
         {
             key = ManageKeyValueOpFrame::makeChangeRoleKey(std::to_string(1), std::to_string(emptyAccountRoleID));
@@ -262,6 +270,7 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
                         .sequenceNumber);
 
         }
+
         SECTION("source master, create and update pending")
         {
             auto createUpdateKYCRequestResult = changeRoleRequestHelper.applyCreateChangeRoleRequest(
@@ -271,8 +280,8 @@ TEST_CASE("create KYC request", "[tx][create_change_role_request]")
             uint32 newTasks = 1;
 
             changeRoleRequestHelper.applyCreateChangeRoleRequest(master, requestID,
-                                                                 account.key.getPublicKey(), tokenOwnerRoleID, kycData, &newTasks,
-                                                                 CreateChangeRoleRequestResultCode::NOT_ALLOWED_TO_UPDATE_REQUEST);
+                                                                 account.key.getPublicKey(), tokenOwnerRoleID, kycData, nullptr,
+                                                                 CreateChangeRoleRequestResultCode::SUCCESS);
         }
 
         SECTION("try change to nonexisting role")

@@ -40,7 +40,7 @@ protected:
     isAssetMatches(AssetFields expectedAsset, AssetFields actualAsset) const;
 
     bool
-    isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTasks) const;
+    isTasksMatch(uint64_t const expectedTasks, uint64_t const actualTasks, LedgerVersion const& ledgerVersion = LedgerVersion::EMPTY_VERSION) const;
 
     bool
     isBoolMatches(bool const expected, bool const actual) const;

@@ -25,7 +25,7 @@ CreateChangeRoleTestHelper::CreateChangeRoleTestHelper(const TestManager::pointe
 ReviewableRequestFrame::pointer
 CreateChangeRoleTestHelper::createReviewableChangeKYCRequest(ChangeRoleRequest request, uint64 requestID)
 {
-    auto referencePtr = getReference();
+    auto referencePtr = getReference(request);
     auto frame = ReviewableRequestFrame::createNew(requestID, request.destinationAccount,
                                                    mTestManager->getApp().getAdminID(),
                                                    referencePtr,
@@ -114,7 +114,7 @@ CreateChangeRoleTestHelper::applyCreateChangeRoleRequest(Account& source,
     REQUIRE(requestAfterTx);
 
     auto requestAfterTxEntry = requestAfterTx->getRequestEntry();
-    auto referencePtr = getReference();
+    auto referencePtr = getReference(requestAfterTxEntry.body.changeRoleRequest());
 
     REQUIRE(requestAfterTx->getReference() == referencePtr);
     REQUIRE(requestAfterTx->getRequestID() == requestID);
@@ -199,9 +199,10 @@ CreateChangeRoleTestHelper::checkApprovedCreation(CreateChangeRoleRequestResult 
     return opResult;
 }
 
-xdr::pointer<string64> CreateChangeRoleTestHelper::getReference()
+xdr::pointer<string64> CreateChangeRoleTestHelper::getReference(const ChangeRoleRequest& request)
 {
-    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::CHANGE_ROLE));
+
+    const auto hash = sha256(xdr::xdr_to_opaque(ReviewableRequestType::CHANGE_ROLE, request.destinationAccount));
     auto reference = binToHex(hash);
     const auto referencePtr = xdr::pointer<string64>(new string64(reference));
     return referencePtr;

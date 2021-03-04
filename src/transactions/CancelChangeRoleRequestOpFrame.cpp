@@ -45,12 +45,23 @@ CancelChangeRoleRequestOpFrame::doApply(Application& app, StorageHelper& storage
     auto const requestID = mCancelChangeRoleRequest.requestID;
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
-    auto requestFrame = requestHelper.loadRequest(requestID, getSourceID(),
-                                                  ReviewableRequestType::CHANGE_ROLE);
+    auto requestFrame = ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR) ?
+                            requestHelper.loadRequest(requestID) :
+                            requestHelper.loadRequest(requestID, getSourceID(), ReviewableRequestType::CHANGE_ROLE);
+
     if (!requestFrame)
     {
         innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
         return false;
+    }
+
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR)) {
+        if (!(getSourceID() == requestFrame->getRequestor()) &&
+            !(getSourceID() == requestFrame->getRequestEntry().body.changeRoleRequest().destinationAccount))
+        {
+            innerResult().code(CancelChangeRoleRequestResultCode::REQUEST_NOT_FOUND);
+            return false;
+        }
     }
 
     requestHelper.storeDelete(requestFrame->getKey());

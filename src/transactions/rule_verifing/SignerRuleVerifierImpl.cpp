@@ -100,19 +100,19 @@ SignerRuleVerifierImpl::isResourceMatches(
     case LedgerEntryType::REVIEWABLE_REQUEST:
     {
         if (!isTasksMatch(requiredResource.reviewableRequest().tasksToAdd,
-                          actualResource.reviewableRequest().tasksToAdd))
+                          actualResource.reviewableRequest().tasksToAdd, currentLedgerVersion))
         {
             return false;
         }
 
         if (!isTasksMatch(requiredResource.reviewableRequest().tasksToRemove,
-                          actualResource.reviewableRequest().tasksToRemove))
+                          actualResource.reviewableRequest().tasksToRemove, currentLedgerVersion))
         {
             return false;
         }
 
         if (!isTasksMatch(requiredResource.reviewableRequest().allTasks,
-                          actualResource.reviewableRequest().allTasks))
+                          actualResource.reviewableRequest().allTasks, currentLedgerVersion))
         {
             return false;
         }
