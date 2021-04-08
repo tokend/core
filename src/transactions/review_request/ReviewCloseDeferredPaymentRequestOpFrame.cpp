@@ -81,7 +81,7 @@ ReviewCloseDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
         mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove =
         mReviewRequest.reviewDetails.tasksToRemove;
-    resource.reviewableRequest().allTasks = request->getAllTasks();
+    resource.reviewableRequest().allTasks = 0;
 
     result.emplace_back(resource, SignerRuleAction::REVIEW);
 
@@ -132,17 +132,7 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
     Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() !=
-        ReviewableRequestType::CLOSE_DEFERRED_PAYMENT)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-            << "Unexpected request type. Expected CLOSE_DEFERRED_PAYMENT, but "
-               "got "
-            << xdr::xdr_traits<ReviewableRequestType>::enum_name(
-                   request->getRequestType());
-        throw invalid_argument("Unexpected request type for review close "
-                               "deferred payment request");
-    }
+    request->checkRequestType(ReviewableRequestType::CLOSE_DEFERRED_PAYMENT);
 
     auto& closeDeferredPayment =
         request->getRequestEntry().body.closeDeferredPaymentRequest();
@@ -177,82 +167,31 @@ ReviewCloseDeferredPaymentRequestOpFrame::handleApprove(
     requestHelper.storeDelete(request->getKey());
 
     if (srcBalance->getBalanceID() == destinationBalance->getBalanceID()) {
-        auto result = srcBalance->unlock(closeDeferredPayment.amount);
+        auto result = srcBalance->unlock(closeDeferredPayment.amount); // store changes after else
         if (result != BalanceFrame::Result::SUCCESS)
         {
-
-            switch (result)
-            {
-                case BalanceFrame::Result::NONMATCHING_PRECISION:
-                    innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
-                    return false;
-                case BalanceFrame::Result::LINE_FULL:
-                    innerResult().code(ReviewRequestResultCode::LINE_FULL);
-                    return false;
-                default:
-                    CLOG(ERROR, Logging::OPERATION_LOGGER)
-                            << "Unexpected state: failed to charge source on deferred "
-                               "payment close, "
-                               "id: "
-                            << deferredPayment->getDeferredPayment().id;
-                    throw std::runtime_error(
-                            "Unexpected state: failed to charge source "
-                            "on deferred payment close ");
-            }
+            handleBalanceChangeResult(result, deferredPayment->getDeferredPayment().id, "unlock source");
+            return false;
         }
-
-        storageHelper.getBalanceHelper().storeChange(srcBalance->mEntry);
     }
-    else {
+    else 
+    {
         auto result = srcBalance->tryChargeFromLocked(closeDeferredPayment.amount);
         if (result != BalanceFrame::Result::SUCCESS)
         {
-
-            switch (result)
-            {
-                case BalanceFrame::Result::NONMATCHING_PRECISION:
-                    innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
-                    return false;
-                case BalanceFrame::Result::LINE_FULL:
-                    innerResult().code(ReviewRequestResultCode::LINE_FULL);
-                    return false;
-                default:
-                    CLOG(ERROR, Logging::OPERATION_LOGGER)
-                            << "Unexpected state: failed to charge source on deferred "
-                               "payment close, "
-                               "id: "
-                            << deferredPayment->getDeferredPayment().id;
-                    throw std::runtime_error(
-                            "Unexpected state: failed to charge source "
-                            "on deferred payment close ");
-            }
+            handleBalanceChangeResult(result, deferredPayment->getDeferredPayment().id, "charge source");
+            return false;
         }
-        storageHelper.getBalanceHelper().storeChange(srcBalance->mEntry);
 
         result = destinationBalance->tryFundAccount(closeDeferredPayment.amount);
         if (result != BalanceFrame::Result::SUCCESS)
         {
-
-            switch (result)
-            {
-                case BalanceFrame::Result::NONMATCHING_PRECISION:
-                    innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
-                    return false;
-                case BalanceFrame::Result::LINE_FULL:
-                    innerResult().code(ReviewRequestResultCode::LINE_FULL);
-                    return false;
-                default:
-                    CLOG(ERROR, Logging::OPERATION_LOGGER)
-                            << "Unexpected state: failed to fund destination on deferred "
-                               "payment close, "
-                               "id: "
-                            << deferredPayment->getDeferredPayment().id;
-                    throw std::runtime_error("Unexpected state: failed to fund "
-                                             "destination on deferred payment close ");
-            }
+            handleBalanceChangeResult(result, deferredPayment->getDeferredPayment().id, "fund destination");
+            return false;
         }
         storageHelper.getBalanceHelper().storeChange(destinationBalance->mEntry);
     }
+    storageHelper.getBalanceHelper().storeChange(srcBalance->mEntry);
 
     deferredPayment->getDeferredPayment().amount -= closeDeferredPayment.amount;
 
@@ -306,6 +245,27 @@ ReviewCloseDeferredPaymentRequestOpFrame::doCheckValid(Application& app)
     }
 
     return ReviewRequestOpFrame::doCheckValid(app);
+}
+
+void
+ReviewCloseDeferredPaymentRequestOpFrame::handleBalanceChangeResult(BalanceFrame::Result result, uint64 id, std::string op)
+{
+    switch (result)
+    {
+    case BalanceFrame::Result::NONMATCHING_PRECISION:
+        innerResult().code(ReviewRequestResultCode::INCORRECT_PRECISION);
+        return;
+    case BalanceFrame::Result::LINE_FULL:
+        innerResult().code(ReviewRequestResultCode::LINE_FULL);
+        return;
+    default:
+        CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to "
+                << op
+                << " on deferred payment close, id: "
+                << id;
+        throw std::runtime_error("Unexpected state: failed to " + op + " on deferred payment close");
+    }
 }
 
 }

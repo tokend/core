@@ -4,12 +4,12 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/StorageHelper.h"
-#include "managers/BalanceManager.h"
-#include "review_request/ReviewRequestHelper.h"
+#include "transactions/managers/BalanceManager.h"
+#include "transactions/review_request/ReviewRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
-#include <ledger/AccountHelper.h>
-#include <ledger/BalanceHelper.h>
-#include <ledger/ReviewableRequestHelper.h>
+#include "ledger/AccountHelper.h"
+#include "ledger/BalanceHelper.h"
+#include "ledger/ReviewableRequestHelper.h"
 
 namespace stellar
 {
@@ -53,7 +53,14 @@ CreateDeferredPaymentCreationRequestOpFrame::tryGetOperationConditions(
 
     auto action = AccountRuleAction::CREATE;
 
-    if (!(getSourceID() == srcBalanceFrame->getAccountID()))
+    if (getSourceID() == srcBalanceFrame->getAccountID())
+    {
+        if (mCreateDeferredPaymentCreationRequest.allTasks)
+        {
+            action = AccountRuleAction::CREATE_WITH_TASKS;
+        }
+    }
+    else
     {
         action = AccountRuleAction::CREATE_FOR_OTHER;
         if (mCreateDeferredPaymentCreationRequest.allTasks)
@@ -61,14 +68,7 @@ CreateDeferredPaymentCreationRequestOpFrame::tryGetOperationConditions(
             action = AccountRuleAction::CREATE_FOR_OTHER_WITH_TASKS;
         }
     }
-    if (getSourceID() == srcBalanceFrame->getAccountID())
-    {
-        action = AccountRuleAction::CREATE;
-        if (mCreateDeferredPaymentCreationRequest.allTasks)
-        {
-            action = AccountRuleAction::CREATE_WITH_TASKS;
-        }
-    }
+    
     result.emplace_back(resource, action, mSourceAccount);
 
     return true;
@@ -150,7 +150,14 @@ CreateDeferredPaymentCreationRequestOpFrame::createRequest(Application& app,
         return false;
     }
 
-    auto asset = sh.getAssetHelper().loadActiveAsset(sourceBalance->getAsset());
+    auto asset = sh.getAssetHelper().mustLoadAsset(sourceBalance->getAsset());
+    if (mCreateDeferredPaymentCreationRequest.request.amount %
+            asset->getMinimumAmount() != 0)
+    {
+        pickResultCode(
+            CreateDeferredPaymentCreationRequestResultCode::INCORRECT_PRECISION);
+        return false;
+    }
 
     if (!sh.getAccountHelper().exists(
             mCreateDeferredPaymentCreationRequest.request.destination))
@@ -201,15 +208,17 @@ CreateDeferredPaymentCreationRequestOpFrame::createRequest(Application& app,
     request->setTasks(allTasks);
     requestHelper.storeAdd(request->mEntry);
 
-    if (request->canBeFulfilled(lm))
-    {
-        return tryAutoApprove(app, sh, request);
-    }
     pickResultCode(CreateDeferredPaymentCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID = requestID;
     innerResult().success().deferredPaymentID = 0;
     innerResult().success().fulfilled = false;
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
+
+    if (request->canBeFulfilled(lm))
+    {
+        return tryAutoApprove(app, sh, request);
+    }
+    
     return true;
 }
 
@@ -243,7 +252,14 @@ CreateDeferredPaymentCreationRequestOpFrame::updateRequest(Application& app,
         return false;
     }
 
-    auto asset = sh.getAssetHelper().loadActiveAsset(sourceBalance->getAsset());
+    auto asset = sh.getAssetHelper().mustLoadAsset(sourceBalance->getAsset());
+    if (mCreateDeferredPaymentCreationRequest.request.amount %
+            asset->getMinimumAmount() != 0)
+    {
+        pickResultCode(
+            CreateDeferredPaymentCreationRequestResultCode::INCORRECT_PRECISION);
+        return false;
+    }
 
     if (!sh.getAccountHelper().exists(
             mCreateDeferredPaymentCreationRequest.request.destination))
@@ -291,16 +307,18 @@ CreateDeferredPaymentCreationRequestOpFrame::updateRequest(Application& app,
 
     requestHelper.storeChange(request->mEntry);
 
-    if (request->canBeFulfilled(lm))
-    {
-        return tryAutoApprove(app, sh, request);
-    }
     pickResultCode(CreateDeferredPaymentCreationRequestResultCode::SUCCESS);
     innerResult().success().requestID =
         mCreateDeferredPaymentCreationRequest.requestID;
     innerResult().success().deferredPaymentID = 0;
     innerResult().success().fulfilled = false;
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
+
+    if (request->canBeFulfilled(lm))
+    {
+        return tryAutoApprove(app, sh, request);
+    }
+    
     return true;
 }
 

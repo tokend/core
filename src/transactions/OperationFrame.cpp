@@ -73,10 +73,10 @@
 #include "swap/OpenSwapOpFrame.h"
 #include "swap/CloseSwapOpFrame.h"
 #include "CreateRedemptionRequestOpFrame.h"
-#include "CancelCloseDeferredPaymentRequestOpFrame.h"
-#include "CancelDeferredPaymentCreationRequestOpFrame.h"
-#include "CreateCloseDeferredPaymentRequestOpFrame.h"
-#include "CreateDeferredPaymentCreationRequestOpFrame.h"
+#include "payment/CancelCloseDeferredPaymentRequestOpFrame.h"
+#include "payment/CancelDeferredPaymentCreationRequestOpFrame.h"
+#include "payment/CreateCloseDeferredPaymentRequestOpFrame.h"
+#include "payment/CreateDeferredPaymentCreationRequestOpFrame.h"
 
 namespace stellar
 {

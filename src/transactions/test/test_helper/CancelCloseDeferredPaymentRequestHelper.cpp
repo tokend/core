@@ -2,7 +2,7 @@
 #include "ledger/ReviewableRequestHelper.h"
 #include "ledger/StorageHelper.h"
 #include "test/test_marshaler.h"
-#include "transactions/CancelCloseDeferredPaymentRequestOpFrame.h"
+#include "transactions/payment/CancelCloseDeferredPaymentRequestOpFrame.h"
 
 namespace stellar
 {

@@ -196,41 +196,74 @@ TEST_CASE("DeferredPayment", "[tx][deferred_payment]")
                               OperationResultCode::opINNER);
         REQUIRE(result.success().fulfilled);
 
-//        SECTION("Close")
-//        {
-//            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
-//            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
-//            closeDeferredPaymentRequest.destinationBalance = destBalance;
-//            closeDeferredPaymentRequest.deferredPaymentID =
-//                result.success().deferredPaymentID;
-//            closeDeferredPaymentRequest.amount = 500;
-//
-//            createCloseDeferredPaymentTestHelper
-//                .applyCreateCloseDeferredPaymentRequest(
-//                    recipient, closeDeferredPaymentRequest, 0, &allTasks);
-//        }
-//
-//        SECTION("create Close & cancel")
-//        {
-//            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
-//            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
-//            closeDeferredPaymentRequest.destinationBalance = destBalance;
-//            closeDeferredPaymentRequest.deferredPaymentID =
-//                result.success().deferredPaymentID;
-//            closeDeferredPaymentRequest.amount = 500;
-//
-//            auto createCloseRes =
-//                createCloseDeferredPaymentTestHelper
-//                    .applyCreateCloseDeferredPaymentRequest(
-//                        recipient, closeDeferredPaymentRequest, 0, &allTasks);
-//
-//            cancelCloseDeferredPaymentRequestHelper
-//                .applyCancelCloseDeferredPaymentRequest(
-//                    recipient, createCloseRes.success().requestID);
-//        }
+       SECTION("Close")
+       {
+           CloseDeferredPaymentRequest closeDeferredPaymentRequest;
+           closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
+           closeDeferredPaymentRequest.destination.type(CloseDeferredPaymentDestinationType::BALANCE);
+           closeDeferredPaymentRequest.destination.balanceID() = destBalance;
+           closeDeferredPaymentRequest.deferredPaymentID =
+               result.success().deferredPaymentID;
+           closeDeferredPaymentRequest.amount = 500;
+
+           createCloseDeferredPaymentTestHelper
+               .applyCreateCloseDeferredPaymentRequest(
+                   recipient, closeDeferredPaymentRequest, 0, &allTasks);
+       }
+
+       SECTION("create Close & cancel")
+       {
+            CloseDeferredPaymentRequest closeDeferredPaymentRequest;
+            closeDeferredPaymentRequest.creatorDetails = R"({"test": "ab"})";
+            closeDeferredPaymentRequest.destination.type(CloseDeferredPaymentDestinationType::BALANCE);
+            closeDeferredPaymentRequest.destination.balanceID() = destBalance;
+            closeDeferredPaymentRequest.deferredPaymentID =
+               result.success().deferredPaymentID;
+            closeDeferredPaymentRequest.amount = 500;
+
+            auto createCloseRes =
+               createCloseDeferredPaymentTestHelper
+                   .applyCreateCloseDeferredPaymentRequest(
+                       recipient, closeDeferredPaymentRequest, 0, &allTasks);
+
+            auto requestID = createCloseRes.success().requestID;
+            closeDeferredPaymentRequest.amount += 1;
+            createCloseRes = createCloseDeferredPaymentTestHelper
+                .applyCreateCloseDeferredPaymentRequest(
+                       recipient, closeDeferredPaymentRequest, requestID);
+
+            auto updatedRequest = requestHelper.loadRequest(requestID);
+            REQUIRE(updatedRequest->getRequestEntry().body.closeDeferredPaymentRequest().amount == closeDeferredPaymentRequest.amount);
+
+            SECTION("cancel")
+            {
+                cancelCloseDeferredPaymentRequestHelper
+                    .applyCancelCloseDeferredPaymentRequest(recipient, requestID);
+            }
+
+            SECTION("approve")
+            {
+                reviewCloseDeferredPaymentHelper.applyReviewRequestTxWithTasks(root, requestID,
+                    ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS, nullptr, &allTasks);
+            }
+
+            SECTION("reject")
+            {
+                uint32 additionalTask = 32;
+                reviewCloseDeferredPaymentHelper.applyReviewRequestTxWithTasks(root, requestID,
+                    ReviewRequestOpAction::REJECT, "kek", ReviewRequestResultCode::SUCCESS, &additionalTask);
+            }
+
+            SECTION("permament reject")
+            {
+                uint32 additionalTask = 64;
+                reviewCloseDeferredPaymentHelper.applyReviewRequestTxWithTasks(root, requestID,
+                    ReviewRequestOpAction::PERMANENT_REJECT, "cheburek", ReviewRequestResultCode::SUCCESS, &additionalTask);
+            }
+       }
     }
 
-    SECTION("Create & cancel")
+    SECTION("Create & update")
     {
         auto result =
             createDeferredPaymentCreationTestHelper
@@ -238,8 +271,40 @@ TEST_CASE("DeferredPayment", "[tx][deferred_payment]")
                     payer, request, 0, &allTasks, OperationResultCode::opINNER);
         REQUIRE_FALSE(result.success().fulfilled);
 
-        cancelCreateDeferredPaymentRequestHelper
-            .applyCancelCreateDeferredPaymentRequest(
-                payer, result.success().requestID);
+        auto requestID = result.success().requestID;
+
+        request.amount += 1;
+        result = createDeferredPaymentCreationTestHelper.applyCreateDeferredPaymentCreationRequest(
+                    payer, request, requestID, &allTasks, OperationResultCode::opINNER);
+        
+        auto updatedRequest = requestHelper.loadRequest(requestID);
+        REQUIRE(updatedRequest->getRequestEntry().body.createDeferredPaymentRequest().amount == request.amount);
+        
+        SECTION("cancel")
+        {
+            cancelCreateDeferredPaymentRequestHelper
+                .applyCancelCreateDeferredPaymentRequest(
+                    payer, requestID);
+        }
+
+        SECTION("approve")
+        {
+            reviewCreateDeferredPaymentHelper.applyReviewRequestTxWithTasks(root, requestID,
+                ReviewRequestOpAction::APPROVE, "", ReviewRequestResultCode::SUCCESS, nullptr, &allTasks);
+        }
+
+        SECTION("reject")
+        {
+            uint32 additionalTask = 32;
+            reviewCreateDeferredPaymentHelper.applyReviewRequestTxWithTasks(root, requestID,
+                ReviewRequestOpAction::REJECT, "kek", ReviewRequestResultCode::SUCCESS, &additionalTask);
+        }
+
+        SECTION("permament reject")
+        {
+            uint32 additionalTask = 64;
+            reviewCreateDeferredPaymentHelper.applyReviewRequestTxWithTasks(root, requestID,
+                ReviewRequestOpAction::PERMANENT_REJECT, "cheburek", ReviewRequestResultCode::SUCCESS, &additionalTask);
+        }
     }
 }

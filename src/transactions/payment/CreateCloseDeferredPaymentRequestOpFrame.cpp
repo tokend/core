@@ -4,8 +4,8 @@
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/StorageHelper.h"
-#include "managers/BalanceManager.h"
-#include "review_request/ReviewRequestHelper.h"
+#include "transactions/managers/BalanceManager.h"
+#include "transactions/review_request/ReviewRequestHelper.h"
 #include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/BalanceHelper.h"
@@ -175,7 +175,6 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
         mCreateCloseDeferredPaymentRequest.request.deferredPaymentID);
 
     // We already checked deferred payment existence, but to be extra sure
-
     if (!deferredPayment)
     {
         throw std::runtime_error("Expected deferred payment to exist");
@@ -199,11 +198,9 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
         return false;
     }
 
-    auto assetFrame =
-        sh.getAssetHelper().loadActiveAsset(srcBalance->getAsset());
+    auto assetFrame = sh.getAssetHelper().mustLoadAsset(srcBalance->getAsset());
     if (mCreateCloseDeferredPaymentRequest.request.amount %
-            assetFrame->getMinimumAmount() !=
-        0)
+            assetFrame->getMinimumAmount() != 0)
     {
         pickResultCode(
             CreateCloseDeferredPaymentRequestResultCode::INCORRECT_PRECISION);
@@ -237,7 +234,6 @@ CreateCloseDeferredPaymentRequestOpFrame::createRequest(Application& app,
     request->setTasks(allTasks);
     requestHelper.storeAdd(request->mEntry);
 
-
     pickResultCode(CreateCloseDeferredPaymentRequestResultCode::SUCCESS);
 
     innerResult().success().requestID = requestID;
@@ -262,7 +258,6 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
         mCreateCloseDeferredPaymentRequest.request.deferredPaymentID);
 
     // We already checked deferred payment existence, but to be extra sure
-
     if (!deferredPayment)
     {
         throw std::runtime_error("Expected deferred payment to exist");
@@ -286,11 +281,9 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
         return false;
     }
 
-    auto assetFrame =
-        sh.getAssetHelper().loadActiveAsset(srcBalance->getAsset());
+    auto assetFrame = sh.getAssetHelper().mustLoadAsset(srcBalance->getAsset());
     if (mCreateCloseDeferredPaymentRequest.request.amount %
-            assetFrame->getMinimumAmount() !=
-        0)
+            assetFrame->getMinimumAmount() != 0)
     {
         pickResultCode(
             CreateCloseDeferredPaymentRequestResultCode::INCORRECT_PRECISION);
@@ -301,7 +294,7 @@ CreateCloseDeferredPaymentRequestOpFrame::updateRequest(Application& app,
 
     auto request =
         requestHelper.loadRequest(mCreateCloseDeferredPaymentRequest.requestID);
-    auto closeDeferredPayment =
+    auto& closeDeferredPayment =
         request->getRequestEntry().body.closeDeferredPaymentRequest();
 
     closeDeferredPayment.sequenceNumber++;

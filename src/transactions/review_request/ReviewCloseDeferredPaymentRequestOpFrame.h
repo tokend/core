@@ -18,6 +18,9 @@ class ReviewCloseDeferredPaymentRequestOpFrame : public ReviewRequestOpFrame
     BalanceFrame::pointer
     tryLoadDestinationBalance(AssetCode asset, CloseDeferredPaymentRequest& request, StorageHelper& storageHelper, Application& app);
 
+    void
+    handleBalanceChangeResult(BalanceFrame::Result result, uint64 id, std::string op);
+
   protected:
     bool handleApprove(Application& app, StorageHelper& storageHelper,
                        LedgerManager& ledgerManager,

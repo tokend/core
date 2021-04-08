@@ -67,7 +67,7 @@ ReviewCreateDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
         mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove =
         mReviewRequest.reviewDetails.tasksToRemove;
-    resource.reviewableRequest().allTasks = request->getAllTasks();
+    resource.reviewableRequest().allTasks = 0;
 
     result.emplace_back(resource, SignerRuleAction::REVIEW);
 
@@ -79,17 +79,7 @@ ReviewCreateDeferredPaymentRequestOpFrame::handleApprove(
     Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() !=
-        ReviewableRequestType::CREATE_DEFERRED_PAYMENT)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-            << "Unexpected request type. Expected CREATE_DEFERRED_PAYMENT, but "
-               "got "
-            << xdr::xdr_traits<ReviewableRequestType>::enum_name(
-                   request->getRequestType());
-        throw invalid_argument("Unexpected request type for review create "
-                               "deferred payment request");
-    }
+    request->checkRequestType(ReviewableRequestType::CREATE_DEFERRED_PAYMENT);
 
     auto& createDeferredPayment =
         request->getRequestEntry().body.createDeferredPaymentRequest();
@@ -124,8 +114,6 @@ ReviewCreateDeferredPaymentRequestOpFrame::handleApprove(
     storageHelper.getDeferredPaymentHelper().storeAdd(
         deferredPaymentFrame->mEntry);
 
-    uint64_t totalFee = 0;
-
     innerResult().code(ReviewRequestResultCode::SUCCESS);
     innerResult().success().ext.v(LedgerVersion::EMPTY_VERSION);
     innerResult().success().fulfilled = true;
@@ -156,17 +144,7 @@ ReviewCreateDeferredPaymentRequestOpFrame::handlePermanentReject(
     Application& app, StorageHelper& storageHelper,
     LedgerManager& ledgerManager, ReviewableRequestFrame::pointer request)
 {
-    if (request->getRequestType() !=
-        ReviewableRequestType::CREATE_DEFERRED_PAYMENT)
-    {
-        CLOG(ERROR, Logging::OPERATION_LOGGER)
-            << "Unexpected request type. Expected CREATE_DEFERRED_PAYMENT, but "
-               "got "
-            << xdr::xdr_traits<ReviewableRequestType>::enum_name(
-                   request->getRequestType());
-        throw invalid_argument("Unexpected request type for review "
-                               "CREATE_DEFERRED_PAYMENT request");
-    }
+    request->checkRequestType(ReviewableRequestType::CREATE_DEFERRED_PAYMENT);
 
     auto& createDeferredPaymentRequest =
         request->getRequestEntry().body.createDeferredPaymentRequest();
