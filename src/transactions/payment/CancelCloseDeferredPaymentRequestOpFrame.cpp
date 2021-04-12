@@ -35,12 +35,16 @@ CancelCloseDeferredPaymentRequestOpFrame::tryGetSignerRequirements(
 {
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
 
-    auto& request =
-        storageHelper.getReviewableRequestHelper()
-            .loadRequest(mCancelCloseDeferredPaymentRequest.requestID)
-            ->getRequestEntry()
-            .body.closeDeferredPaymentRequest();
+    auto reviewableRequest = storageHelper.getReviewableRequestHelper()
+            .loadRequest(mCancelCloseDeferredPaymentRequest.requestID);
+    if (!reviewableRequest)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::REVIEWABLE_REQUEST;
+        return false;
+    }
 
+    auto request = reviewableRequest->getRequestEntry().body.closeDeferredPaymentRequest();
     auto deferredPayment = storageHelper.getDeferredPaymentHelper().loadDeferredPayment(request.deferredPaymentID);
     auto& balanceHelper = storageHelper.getBalanceHelper();
     auto balanceFrame = balanceHelper.loadBalance(deferredPayment->getDeferredPayment().sourceBalance);
