@@ -36,10 +36,17 @@ ReviewDataUpdateRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
         return false;
     }
 
+    auto dataFrame = storageHelper.getDataHelper().loadData(request->getRequestEntry().body.dataUpdateRequest().id);
+    if (!dataFrame)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::DATA;
+        return false;
+    }
+
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::DATA_UPDATE);
-    resource.reviewableRequest().details.dataUpdate().type =
-            request->getRequestEntry().body.dataCreationRequest().type;
+    resource.reviewableRequest().details.dataUpdate().type = dataFrame->getData().type;
     resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
     resource.reviewableRequest().allTasks = 0;
