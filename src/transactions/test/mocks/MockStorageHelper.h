@@ -32,6 +32,7 @@ class SaleHelper;
 class PendingStatisticsHelper;
 class StatisticsV2Helper;
 class DataHelper;
+class DeferredPaymentHelper;
 
 enum class LedgerEntryType;
 
@@ -89,6 +90,7 @@ public:
     MOCK_METHOD0(getPendingStatisticsHelper, PendingStatisticsHelper&());
     MOCK_METHOD0(getStatisticsV2Helper, StatisticsV2Helper&());
     MOCK_METHOD0(getDataHelper, DataHelper&());
+    MOCK_METHOD0(getDeferredPaymentHelper, DeferredPaymentHelper&());
 };
 
 }  // namespace stellar

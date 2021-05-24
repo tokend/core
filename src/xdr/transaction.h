@@ -67,6 +67,10 @@
 #include "xdr/operation-cancel-data-update-request.h"
 #include "xdr/operation-create-data-remove-request.h"
 #include "xdr/operation-cancel-data-remove-request.h"
+#include "xdr/operation-create-deferred-payment-creation-request.h"
+#include "xdr/operation-create-close-deferred-payment-request.h"
+#include "xdr/operation-cancel-deferred-payment-creation-request.h"
+#include "xdr/operation-cancel-close-deferred-payment-request.h"
 
 namespace stellar {
 
@@ -135,6 +139,10 @@ struct Operation  : xdr::xdr_abstract {
       CreateDataRemoveRequestOp createDataRemoveRequestOp_;
       CancelDataUpdateRequestOp cancelDataUpdateRequestOp_;
       CancelDataRemoveRequestOp cancelDataRemoveRequestOp_;
+      CreateDeferredPaymentCreationRequestOp createDeferredPaymentCreationRequestOp_;
+      CancelDeferredPaymentCreationRequestOp cancelDeferredPaymentCreationRequestOp_;
+      CreateCloseDeferredPaymentRequestOp createCloseDeferredPaymentRequestOp_;
+      CancelCloseDeferredPaymentRequestOp cancelCloseDeferredPaymentRequestOp_;
     };
 
   public:
@@ -199,7 +207,11 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::CREATE_DATA_UPDATE_REQUEST,
         OperationType::CREATE_DATA_REMOVE_REQUEST,
         OperationType::CANCEL_DATA_UPDATE_REQUEST,
-        OperationType::CANCEL_DATA_REMOVE_REQUEST
+        OperationType::CANCEL_DATA_REMOVE_REQUEST,
+        OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
+        OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
+        OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
+        OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -263,6 +275,10 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST ? 57
         : which == (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST ? 58
         : which == (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST ? 59
+        : which == (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST ? 60
+        : which == (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST ? 61
+        : which == (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST ? 62
+        : which == (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST ? 63
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -444,6 +460,18 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
         _f(&_body_t::cancelDataRemoveRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+        _f(&_body_t::createDeferredPaymentCreationRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+        _f(&_body_t::cancelDeferredPaymentCreationRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+        _f(&_body_t::createCloseDeferredPaymentRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+        _f(&_body_t::cancelCloseDeferredPaymentRequestOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -635,6 +663,18 @@ break;
         case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestOp_) CancelDataRemoveRequestOp{};
 break;
+        case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestOp_) CreateDeferredPaymentCreationRequestOp{};
+break;
+        case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestOp_) CancelDeferredPaymentCreationRequestOp{};
+break;
+        case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp{};
+break;
+        case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp{};
+break;
 }
 
       }
@@ -821,6 +861,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestOp_) CancelDataRemoveRequestOp{};
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestOp_) CreateDeferredPaymentCreationRequestOp{};
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestOp_) CancelDeferredPaymentCreationRequestOp{};
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp{};
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp{};
+break;
 }
 
     }
@@ -1003,6 +1055,18 @@ new(&cancelDataUpdateRequestOp_) CancelDataUpdateRequestOp(source.cancelDataUpda
 break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestOp_) CancelDataRemoveRequestOp(source.cancelDataRemoveRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestOp_) CreateDeferredPaymentCreationRequestOp(source.createDeferredPaymentCreationRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestOp_) CancelDeferredPaymentCreationRequestOp(source.cancelDeferredPaymentCreationRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(source.createCloseDeferredPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(source.cancelCloseDeferredPaymentRequestOp_);
 break;
 }
 
@@ -1187,6 +1251,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestOp_) CancelDataRemoveRequestOp(std::move(source.cancelDataRemoveRequestOp_));
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestOp_) CreateDeferredPaymentCreationRequestOp(std::move(source.createDeferredPaymentCreationRequestOp_));
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestOp_) CancelDeferredPaymentCreationRequestOp(std::move(source.cancelDeferredPaymentCreationRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(std::move(source.createCloseDeferredPaymentRequestOp_));
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(std::move(source.cancelCloseDeferredPaymentRequestOp_));
+break;
 }
 
     }
@@ -1369,6 +1445,18 @@ cancelDataUpdateRequestOp_.~CancelDataUpdateRequestOp();
 break;
     case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 cancelDataRemoveRequestOp_.~CancelDataRemoveRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+createDeferredPaymentCreationRequestOp_.~CreateDeferredPaymentCreationRequestOp();
+break;
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+cancelDeferredPaymentCreationRequestOp_.~CancelDeferredPaymentCreationRequestOp();
+break;
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+createCloseDeferredPaymentRequestOp_.~CreateCloseDeferredPaymentRequestOp();
+break;
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+cancelCloseDeferredPaymentRequestOp_.~CancelCloseDeferredPaymentRequestOp();
 break;
 }
 }
@@ -1555,6 +1643,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 cancelDataRemoveRequestOp_ = source.cancelDataRemoveRequestOp_;
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+createDeferredPaymentCreationRequestOp_ = source.createDeferredPaymentCreationRequestOp_;
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+cancelDeferredPaymentCreationRequestOp_ = source.cancelDeferredPaymentCreationRequestOp_;
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+createCloseDeferredPaymentRequestOp_ = source.createCloseDeferredPaymentRequestOp_;
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+cancelCloseDeferredPaymentRequestOp_ = source.cancelCloseDeferredPaymentRequestOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1737,6 +1837,18 @@ new(&cancelDataUpdateRequestOp_) CancelDataUpdateRequestOp(source.cancelDataUpda
 break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestOp_) CancelDataRemoveRequestOp(source.cancelDataRemoveRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestOp_) CreateDeferredPaymentCreationRequestOp(source.createDeferredPaymentCreationRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestOp_) CancelDeferredPaymentCreationRequestOp(source.cancelDeferredPaymentCreationRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(source.createCloseDeferredPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(source.cancelCloseDeferredPaymentRequestOp_);
 break;
 }
 }
@@ -1924,6 +2036,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 cancelDataRemoveRequestOp_ = std::move(source.cancelDataRemoveRequestOp_);
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+createDeferredPaymentCreationRequestOp_ = std::move(source.createDeferredPaymentCreationRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+cancelDeferredPaymentCreationRequestOp_ = std::move(source.cancelDeferredPaymentCreationRequestOp_);
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+createCloseDeferredPaymentRequestOp_ = std::move(source.createCloseDeferredPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+cancelCloseDeferredPaymentRequestOp_ = std::move(source.cancelCloseDeferredPaymentRequestOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -2106,6 +2230,18 @@ new(&cancelDataUpdateRequestOp_) CancelDataUpdateRequestOp(std::move(source.canc
 break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestOp_) CancelDataRemoveRequestOp(std::move(source.cancelDataRemoveRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestOp_) CreateDeferredPaymentCreationRequestOp(std::move(source.createDeferredPaymentCreationRequestOp_));
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestOp_) CancelDeferredPaymentCreationRequestOp(std::move(source.cancelDeferredPaymentCreationRequestOp_));
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(std::move(source.createCloseDeferredPaymentRequestOp_));
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(std::move(source.cancelCloseDeferredPaymentRequestOp_));
 break;
 }
 }
@@ -2707,6 +2843,46 @@ break;
       if (_xdr_field_number(type_) == 59)
         return cancelDataRemoveRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: cancelDataRemoveRequestOp accessed when not selected");
+    }
+    CreateDeferredPaymentCreationRequestOp &createDeferredPaymentCreationRequestOp() {
+      if (_xdr_field_number(type_) == 60)
+        return createDeferredPaymentCreationRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createDeferredPaymentCreationRequestOp accessed when not selected");
+    }
+    const CreateDeferredPaymentCreationRequestOp &createDeferredPaymentCreationRequestOp() const {
+      if (_xdr_field_number(type_) == 60)
+        return createDeferredPaymentCreationRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createDeferredPaymentCreationRequestOp accessed when not selected");
+    }
+    CancelDeferredPaymentCreationRequestOp &cancelDeferredPaymentCreationRequestOp() {
+      if (_xdr_field_number(type_) == 61)
+        return cancelDeferredPaymentCreationRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: cancelDeferredPaymentCreationRequestOp accessed when not selected");
+    }
+    const CancelDeferredPaymentCreationRequestOp &cancelDeferredPaymentCreationRequestOp() const {
+      if (_xdr_field_number(type_) == 61)
+        return cancelDeferredPaymentCreationRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: cancelDeferredPaymentCreationRequestOp accessed when not selected");
+    }
+    CreateCloseDeferredPaymentRequestOp &createCloseDeferredPaymentRequestOp() {
+      if (_xdr_field_number(type_) == 62)
+        return createCloseDeferredPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createCloseDeferredPaymentRequestOp accessed when not selected");
+    }
+    const CreateCloseDeferredPaymentRequestOp &createCloseDeferredPaymentRequestOp() const {
+      if (_xdr_field_number(type_) == 62)
+        return createCloseDeferredPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createCloseDeferredPaymentRequestOp accessed when not selected");
+    }
+    CancelCloseDeferredPaymentRequestOp &cancelCloseDeferredPaymentRequestOp() {
+      if (_xdr_field_number(type_) == 63)
+        return cancelCloseDeferredPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: cancelCloseDeferredPaymentRequestOp accessed when not selected");
+    }
+    const CancelCloseDeferredPaymentRequestOp &cancelCloseDeferredPaymentRequestOp() const {
+      if (_xdr_field_number(type_) == 63)
+        return cancelCloseDeferredPaymentRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: cancelCloseDeferredPaymentRequestOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -3512,6 +3688,10 @@ struct OperationResult : xdr::xdr_abstract {
       CreateDataRemoveRequestResult createDataRemoveRequestResult_;
       CancelDataUpdateRequestResult cancelDataUpdateRequestResult_;
       CancelDataRemoveRequestResult cancelDataRemoveRequestResult_;
+      CreateDeferredPaymentCreationRequestResult createDeferredPaymentCreationRequestResult_;
+      CancelDeferredPaymentCreationRequestResult cancelDeferredPaymentCreationRequestResult_;
+      CreateCloseDeferredPaymentRequestResult createCloseDeferredPaymentRequestResult_;
+      CancelCloseDeferredPaymentRequestResult cancelCloseDeferredPaymentRequestResult_;
     };
 
   public:
@@ -3576,7 +3756,11 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CREATE_DATA_UPDATE_REQUEST,
         OperationType::CREATE_DATA_REMOVE_REQUEST,
         OperationType::CANCEL_DATA_UPDATE_REQUEST,
-        OperationType::CANCEL_DATA_REMOVE_REQUEST
+        OperationType::CANCEL_DATA_REMOVE_REQUEST,
+        OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
+        OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
+        OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
+        OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -3640,6 +3824,10 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CREATE_DATA_REMOVE_REQUEST ? 57
         : which == (int32_t)OperationType::CANCEL_DATA_UPDATE_REQUEST ? 58
         : which == (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST ? 59
+        : which == (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST ? 60
+        : which == (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST ? 61
+        : which == (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST ? 62
+        : which == (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST ? 63
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -3821,6 +4009,18 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
         _f(&_tr_t::cancelDataRemoveRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+        _f(&_tr_t::createDeferredPaymentCreationRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+        _f(&_tr_t::cancelDeferredPaymentCreationRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+        _f(&_tr_t::createCloseDeferredPaymentRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+        _f(&_tr_t::cancelCloseDeferredPaymentRequestResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -4012,6 +4212,18 @@ break;
         case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestResult_) CancelDataRemoveRequestResult{};
 break;
+        case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestResult_) CreateDeferredPaymentCreationRequestResult{};
+break;
+        case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestResult_) CancelDeferredPaymentCreationRequestResult{};
+break;
+        case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequestResult{};
+break;
+        case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult{};
+break;
 }
 
       }
@@ -4198,6 +4410,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestResult_) CancelDataRemoveRequestResult{};
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestResult_) CreateDeferredPaymentCreationRequestResult{};
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestResult_) CancelDeferredPaymentCreationRequestResult{};
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequestResult{};
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult{};
+break;
 }
 
     }
@@ -4380,6 +4604,18 @@ new(&cancelDataUpdateRequestResult_) CancelDataUpdateRequestResult(source.cancel
 break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestResult_) CancelDataRemoveRequestResult(source.cancelDataRemoveRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestResult_) CreateDeferredPaymentCreationRequestResult(source.createDeferredPaymentCreationRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestResult_) CancelDeferredPaymentCreationRequestResult(source.cancelDeferredPaymentCreationRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequestResult(source.createCloseDeferredPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(source.cancelCloseDeferredPaymentRequestResult_);
 break;
 }
 
@@ -4564,6 +4800,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestResult_) CancelDataRemoveRequestResult(std::move(source.cancelDataRemoveRequestResult_));
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestResult_) CreateDeferredPaymentCreationRequestResult(std::move(source.createDeferredPaymentCreationRequestResult_));
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestResult_) CancelDeferredPaymentCreationRequestResult(std::move(source.cancelDeferredPaymentCreationRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequestResult(std::move(source.createCloseDeferredPaymentRequestResult_));
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(std::move(source.cancelCloseDeferredPaymentRequestResult_));
+break;
 }
 
     }
@@ -4746,6 +4994,18 @@ cancelDataUpdateRequestResult_.~CancelDataUpdateRequestResult();
 break;
     case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 cancelDataRemoveRequestResult_.~CancelDataRemoveRequestResult();
+break;
+    case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+createDeferredPaymentCreationRequestResult_.~CreateDeferredPaymentCreationRequestResult();
+break;
+    case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+cancelDeferredPaymentCreationRequestResult_.~CancelDeferredPaymentCreationRequestResult();
+break;
+    case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+createCloseDeferredPaymentRequestResult_.~CreateCloseDeferredPaymentRequestResult();
+break;
+    case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+cancelCloseDeferredPaymentRequestResult_.~CancelCloseDeferredPaymentRequestResult();
 break;
 }
 }
@@ -4932,6 +5192,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 cancelDataRemoveRequestResult_ = source.cancelDataRemoveRequestResult_;
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+createDeferredPaymentCreationRequestResult_ = source.createDeferredPaymentCreationRequestResult_;
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+cancelDeferredPaymentCreationRequestResult_ = source.cancelDeferredPaymentCreationRequestResult_;
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+createCloseDeferredPaymentRequestResult_ = source.createCloseDeferredPaymentRequestResult_;
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+cancelCloseDeferredPaymentRequestResult_ = source.cancelCloseDeferredPaymentRequestResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -5114,6 +5386,18 @@ new(&cancelDataUpdateRequestResult_) CancelDataUpdateRequestResult(source.cancel
 break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestResult_) CancelDataRemoveRequestResult(source.cancelDataRemoveRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestResult_) CreateDeferredPaymentCreationRequestResult(source.createDeferredPaymentCreationRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestResult_) CancelDeferredPaymentCreationRequestResult(source.cancelDeferredPaymentCreationRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequestResult(source.createCloseDeferredPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(source.cancelCloseDeferredPaymentRequestResult_);
 break;
 }
 }
@@ -5301,6 +5585,18 @@ break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 cancelDataRemoveRequestResult_ = std::move(source.cancelDataRemoveRequestResult_);
 break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+createDeferredPaymentCreationRequestResult_ = std::move(source.createDeferredPaymentCreationRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+cancelDeferredPaymentCreationRequestResult_ = std::move(source.cancelDeferredPaymentCreationRequestResult_);
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+createCloseDeferredPaymentRequestResult_ = std::move(source.createCloseDeferredPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+cancelCloseDeferredPaymentRequestResult_ = std::move(source.cancelCloseDeferredPaymentRequestResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -5483,6 +5779,18 @@ new(&cancelDataUpdateRequestResult_) CancelDataUpdateRequestResult(std::move(sou
 break;
       case (int32_t)OperationType::CANCEL_DATA_REMOVE_REQUEST:
 new(&cancelDataRemoveRequestResult_) CancelDataRemoveRequestResult(std::move(source.cancelDataRemoveRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&createDeferredPaymentCreationRequestResult_) CreateDeferredPaymentCreationRequestResult(std::move(source.createDeferredPaymentCreationRequestResult_));
+break;
+      case (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+new(&cancelDeferredPaymentCreationRequestResult_) CancelDeferredPaymentCreationRequestResult(std::move(source.cancelDeferredPaymentCreationRequestResult_));
+break;
+      case (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequestResult(std::move(source.createCloseDeferredPaymentRequestResult_));
+break;
+      case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(std::move(source.cancelCloseDeferredPaymentRequestResult_));
 break;
 }
 }
@@ -6084,6 +6392,46 @@ break;
       if (_xdr_field_number(type_) == 59)
         return cancelDataRemoveRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: cancelDataRemoveRequestResult accessed when not selected");
+    }
+    CreateDeferredPaymentCreationRequestResult &createDeferredPaymentCreationRequestResult() {
+      if (_xdr_field_number(type_) == 60)
+        return createDeferredPaymentCreationRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createDeferredPaymentCreationRequestResult accessed when not selected");
+    }
+    const CreateDeferredPaymentCreationRequestResult &createDeferredPaymentCreationRequestResult() const {
+      if (_xdr_field_number(type_) == 60)
+        return createDeferredPaymentCreationRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createDeferredPaymentCreationRequestResult accessed when not selected");
+    }
+    CancelDeferredPaymentCreationRequestResult &cancelDeferredPaymentCreationRequestResult() {
+      if (_xdr_field_number(type_) == 61)
+        return cancelDeferredPaymentCreationRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: cancelDeferredPaymentCreationRequestResult accessed when not selected");
+    }
+    const CancelDeferredPaymentCreationRequestResult &cancelDeferredPaymentCreationRequestResult() const {
+      if (_xdr_field_number(type_) == 61)
+        return cancelDeferredPaymentCreationRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: cancelDeferredPaymentCreationRequestResult accessed when not selected");
+    }
+    CreateCloseDeferredPaymentRequestResult &createCloseDeferredPaymentRequestResult() {
+      if (_xdr_field_number(type_) == 62)
+        return createCloseDeferredPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createCloseDeferredPaymentRequestResult accessed when not selected");
+    }
+    const CreateCloseDeferredPaymentRequestResult &createCloseDeferredPaymentRequestResult() const {
+      if (_xdr_field_number(type_) == 62)
+        return createCloseDeferredPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createCloseDeferredPaymentRequestResult accessed when not selected");
+    }
+    CancelCloseDeferredPaymentRequestResult &cancelCloseDeferredPaymentRequestResult() {
+      if (_xdr_field_number(type_) == 63)
+        return cancelCloseDeferredPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: cancelCloseDeferredPaymentRequestResult accessed when not selected");
+    }
+    const CancelCloseDeferredPaymentRequestResult &cancelCloseDeferredPaymentRequestResult() const {
+      if (_xdr_field_number(type_) == 63)
+        return cancelCloseDeferredPaymentRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: cancelCloseDeferredPaymentRequestResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

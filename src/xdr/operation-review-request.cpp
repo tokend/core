@@ -1546,6 +1546,93 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+CreateDeferredPaymentResult::from_bytes(xdr::unmarshaler& u) 
+{
+bool okdeferredPaymentID = u.from_bytes(deferredPaymentID);
+if (!okdeferredPaymentID)
+{
+return false;
+}
+bool okdestination = u.from_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool oksource = u.from_bytes(source);
+if (!oksource)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+CreateDeferredPaymentResult::to_bytes(xdr::marshaler& m) const 
+{
+bool okdeferredPaymentID = m.to_bytes(deferredPaymentID);
+if (!okdeferredPaymentID)
+{
+return false;
+}
+bool okdestination = m.to_bytes(destination);
+if (!okdestination)
+{
+return false;
+}
+bool oksource = m.to_bytes(source);
+if (!oksource)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+CreateDeferredPaymentResult::count_size(xdr::measurer& m) const 
+{
+m.count_size(deferredPaymentID);
+m.count_size(destination);
+m.count_size(source);
+m.count_size(ext);
+}
+bool
+CreateDeferredPaymentResult::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<CreateDeferredPaymentResult const&>(other_abstract);return true
+&& (deferredPaymentID== other.deferredPaymentID)
+&& (destination== other.destination)
+&& (source== other.source)
+&& (ext== other.ext)
+;}
+bool
+CreateDeferredPaymentResult::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<CreateDeferredPaymentResult const&>(other_abstract);
+if (deferredPaymentID < other.deferredPaymentID) return true;
+if (other.deferredPaymentID < deferredPaymentID) return false;
+if (destination < other.destination) return true;
+if (other.destination < destination) return false;
+if (source < other.source) return true;
+if (other.source < source) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 DataCreationExtended::from_bytes(xdr::unmarshaler& u) 
 {
 bool okowner = u.from_bytes(owner);
@@ -1647,6 +1734,10 @@ return u.from_bytes(paymentResult_);
 return u.from_bytes(createRedemptionResult_);
     case (int32_t)ReviewableRequestType::DATA_CREATION:
 return u.from_bytes(dataCreationExtended_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return u.from_bytes(createDeferredPaymentResult_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return u.from_bytes(closeDeferredPaymentResult_);
 }
 return false;
 }
@@ -1679,6 +1770,10 @@ return m.to_bytes(paymentResult_);
 return m.to_bytes(createRedemptionResult_);
     case (int32_t)ReviewableRequestType::DATA_CREATION:
 return m.to_bytes(dataCreationExtended_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.to_bytes(createDeferredPaymentResult_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.to_bytes(closeDeferredPaymentResult_);
 }
 return false;
 }
@@ -1708,6 +1803,10 @@ return m.count_size(paymentResult_);
 return m.count_size(createRedemptionResult_);
     case (int32_t)ReviewableRequestType::DATA_CREATION:
 return m.count_size(dataCreationExtended_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.count_size(createDeferredPaymentResult_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.count_size(closeDeferredPaymentResult_);
 }
 }
 bool
@@ -1740,6 +1839,10 @@ return paymentResult_ == other.paymentResult_;
 return createRedemptionResult_ == other.createRedemptionResult_;
     case (int32_t)ReviewableRequestType::DATA_CREATION:
 return dataCreationExtended_ == other.dataCreationExtended_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentResult_ == other.createDeferredPaymentResult_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentResult_ == other.closeDeferredPaymentResult_;
 }
 return false;
 }
@@ -1773,6 +1876,10 @@ return paymentResult_ < other.paymentResult_;
 return createRedemptionResult_ < other.createRedemptionResult_;
     case (int32_t)ReviewableRequestType::DATA_CREATION:
 return dataCreationExtended_ < other.dataCreationExtended_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentResult_ < other.createDeferredPaymentResult_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentResult_ < other.closeDeferredPaymentResult_;
 }
 return false;
 }

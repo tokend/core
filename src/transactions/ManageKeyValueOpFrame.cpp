@@ -45,6 +45,8 @@ namespace stellar
     char const* ManageKeyValueOpFrame::createDataCreationRequestTasks = "create_data_creation_request_tasks";
     char const* ManageKeyValueOpFrame::createDataUpdateRequestTasks = "create_data_update_request_tasks";
     char const* ManageKeyValueOpFrame::createDataRemoveRequestTasks = "create_data_remove_request_tasks";
+    char const* ManageKeyValueOpFrame::createDeferredPaymentCreationTasks = "create_deferred_payment_creation_tasks";
+    char const* ManageKeyValueOpFrame::createDeferredPaymentCloseTasks = "create_deferred_payment_close_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -84,6 +86,9 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {createDataCreationRequestTasks, KeyValueEntryType::UINT32},
         {createDataUpdateRequestTasks, KeyValueEntryType::UINT32},
         {createDataRemoveRequestTasks, KeyValueEntryType::UINT32},
+        {createDeferredPaymentCreationTasks, KeyValueEntryType::UINT32},
+        {createDeferredPaymentCloseTasks, KeyValueEntryType::UINT32},
+
     };
 }
 
@@ -350,6 +355,7 @@ ManageKeyValueOpFrame::makeKYCRecoveryKey()
         return string(redemptionTasks);
     }
 
+
     longstring
     ManageKeyValueOpFrame::makeCreateDataCreationRequestTasksKey(string type)
     {
@@ -366,5 +372,17 @@ ManageKeyValueOpFrame::makeKYCRecoveryKey()
     ManageKeyValueOpFrame::makeCreateDataRemoveRequestTasksKey(string type)
     {
         return string(createDataRemoveRequestTasks) + ":" + type;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDeferredPaymentCreationTasksKey(AssetCode const& code)
+    {
+        return string(createDeferredPaymentCreationTasks) + ":" + code;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDeferredPaymentCloseTasksKey(AssetCode const& code)
+    {
+        return string(createDeferredPaymentCloseTasks) + ":" + code;
     }
 }

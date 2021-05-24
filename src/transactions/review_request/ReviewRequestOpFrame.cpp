@@ -35,6 +35,8 @@
 #include "ReviewDataCreationRequestOpFrame.h"
 #include "ReviewDataUpdateRequestOpFrame.h"
 #include "ReviewDataRemoveRequestOpFrame.h"
+#include "ReviewCreateDeferredPaymentRequestOpFrame.h"
+#include "ReviewCloseDeferredPaymentRequestOpFrame.h"
 
 namespace stellar
 {
@@ -172,6 +174,10 @@ ReviewRequestOpFrame::makeHelper(Operation const& op, OperationResult& res,
         return new ReviewDataUpdateRequestOpFrame(op, res, parentTx);
     case ReviewableRequestType::DATA_REMOVE:
         return new ReviewDataRemoveRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+        return new ReviewCreateDeferredPaymentRequestOpFrame(op, res, parentTx);
+    case ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+        return new ReviewCloseDeferredPaymentRequestOpFrame(op, res, parentTx);
     default:
         throw std::runtime_error(
             "Unexpected request type for review request op");

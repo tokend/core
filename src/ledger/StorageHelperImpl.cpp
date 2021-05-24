@@ -31,6 +31,7 @@
 #include "ReviewableRequestHelperImpl.h"
 #include "SwapHelperImpl.h"
 #include "DataHelperImpl.h"
+#include "DeferredPaymentHelperImpl.h"
 
 
 namespace stellar
@@ -74,7 +75,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::SALE, &getSaleHelper()},
         {LedgerEntryType::PENDING_STATISTICS, &getPendingStatisticsHelper()},
         {LedgerEntryType::STATISTICS_V2, &getStatisticsV2Helper()},
-
+        {LedgerEntryType::DEFERRED_PAYMENT, &getDeferredPaymentHelper()},
     };
 }
 
@@ -556,6 +557,17 @@ StorageHelperImpl::getDataHelper()
         mDataHelper = std::make_unique<DataHelperImpl>(*this);
     }
     return *mDataHelper;
+}
+
+
+DeferredPaymentHelper&
+StorageHelperImpl::getDeferredPaymentHelper()
+{
+    if (!mDeferredPaymentHelper)
+    {
+        mDeferredPaymentHelper = std::make_unique<DeferredPaymentHelperImpl>(*this);
+    }
+    return *mDeferredPaymentHelper;
 }
 
 } // namespace stellar

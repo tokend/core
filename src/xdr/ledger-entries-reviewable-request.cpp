@@ -226,6 +226,10 @@ return u.from_bytes(dataCreationRequest_);
 return u.from_bytes(dataUpdateRequest_);
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return u.from_bytes(dataRemoveRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return u.from_bytes(createDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return u.from_bytes(closeDeferredPaymentRequest_);
 }
 return false;
 }
@@ -284,6 +288,10 @@ return m.to_bytes(dataCreationRequest_);
 return m.to_bytes(dataUpdateRequest_);
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return m.to_bytes(dataRemoveRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.to_bytes(createDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.to_bytes(closeDeferredPaymentRequest_);
 }
 return false;
 }
@@ -338,6 +346,10 @@ return m.count_size(dataCreationRequest_);
 return m.count_size(dataUpdateRequest_);
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return m.count_size(dataRemoveRequest_);
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.count_size(createDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.count_size(closeDeferredPaymentRequest_);
 }
 }
 bool
@@ -395,6 +407,10 @@ return dataCreationRequest_ == other.dataCreationRequest_;
 return dataUpdateRequest_ == other.dataUpdateRequest_;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return dataRemoveRequest_ == other.dataRemoveRequest_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentRequest_ == other.createDeferredPaymentRequest_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentRequest_ == other.closeDeferredPaymentRequest_;
 }
 return false;
 }
@@ -454,6 +470,10 @@ return dataCreationRequest_ < other.dataCreationRequest_;
 return dataUpdateRequest_ < other.dataUpdateRequest_;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return dataRemoveRequest_ < other.dataRemoveRequest_;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPaymentRequest_ < other.createDeferredPaymentRequest_;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPaymentRequest_ < other.closeDeferredPaymentRequest_;
 }
 return false;
 }

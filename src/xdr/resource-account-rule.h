@@ -741,6 +741,68 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _createDeferredPayment_t  : xdr::xdr_abstract {
+    AssetCode assetCode{};
+    uint64 assetType{};
+    EmptyExt ext{};
+
+    _createDeferredPayment_t() = default;
+    template<typename _assetCode_T,
+             typename _assetType_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<AssetCode, _assetCode_T>::value
+                            && std::is_constructible<uint64, _assetType_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _createDeferredPayment_t(_assetCode_T &&_assetCode,
+                                      _assetType_T &&_assetType,
+                                      _ext_T &&_ext)
+      : assetCode(std::forward<_assetCode_T>(_assetCode)),
+        assetType(std::forward<_assetType_T>(_assetType)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
+  struct _closeDeferredPayment_t  : xdr::xdr_abstract {
+    AssetCode assetCode{};
+    uint64 assetType{};
+    EmptyExt ext{};
+
+    _closeDeferredPayment_t() = default;
+    template<typename _assetCode_T,
+             typename _assetType_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<AssetCode, _assetCode_T>::value
+                            && std::is_constructible<uint64, _assetType_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _closeDeferredPayment_t(_assetCode_T &&_assetCode,
+                                     _assetType_T &&_assetType,
+                                     _ext_T &&_ext)
+      : assetCode(std::forward<_assetCode_T>(_assetCode)),
+        assetType(std::forward<_assetType_T>(_assetType)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
 
   using _xdr_case_type = xdr::xdr_traits<ReviewableRequestType>::case_type;
 private:
@@ -758,6 +820,8 @@ private:
     _dataCreation_t dataCreation_;
     _dataUpdate_t dataUpdate_;
     _dataRemove_t dataRemove_;
+    _createDeferredPayment_t createDeferredPayment_;
+    _closeDeferredPayment_t closeDeferredPayment_;
     EmptyExt ext_;
   };
 
@@ -780,7 +844,9 @@ public:
       : which == (int32_t)ReviewableRequestType::DATA_CREATION ? 10
       : which == (int32_t)ReviewableRequestType::DATA_UPDATE ? 11
       : which == (int32_t)ReviewableRequestType::DATA_REMOVE ? 12
-      : 13;
+      : which == (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT ? 13
+      : which == (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT ? 14
+      : 15;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -820,6 +886,12 @@ public:
       return true;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
       _f(&ReviewableRequestResource::dataRemove_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+      _f(&ReviewableRequestResource::createDeferredPayment_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+      _f(&ReviewableRequestResource::closeDeferredPayment_, std::forward<_A>(_a)...);
       return true;
     default:
       _f(&ReviewableRequestResource::ext_, std::forward<_A>(_a)...);
@@ -872,6 +944,12 @@ break;
       case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t{};
 break;
+      case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPayment_) _createDeferredPayment_t{};
+break;
+      case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPayment_) _closeDeferredPayment_t{};
+break;
       default:
 new(&ext_) EmptyExt{};
 break;
@@ -920,6 +998,12 @@ break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t{};
 break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPayment_) _createDeferredPayment_t{};
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPayment_) _closeDeferredPayment_t{};
+break;
     default:
 new(&ext_) EmptyExt{};
 break;
@@ -964,6 +1048,12 @@ new(&dataUpdate_) _dataUpdate_t(source.dataUpdate_);
 break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(source.dataRemove_);
+break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPayment_) _createDeferredPayment_t(source.createDeferredPayment_);
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPayment_) _closeDeferredPayment_t(source.closeDeferredPayment_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -1010,6 +1100,12 @@ break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(std::move(source.dataRemove_));
 break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPayment_) _createDeferredPayment_t(std::move(source.createDeferredPayment_));
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPayment_) _closeDeferredPayment_t(std::move(source.closeDeferredPayment_));
+break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
@@ -1054,6 +1150,12 @@ dataUpdate_.~_dataUpdate_t();
 break;
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 dataRemove_.~_dataRemove_t();
+break;
+  case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+createDeferredPayment_.~_createDeferredPayment_t();
+break;
+  case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+closeDeferredPayment_.~_closeDeferredPayment_t();
 break;
   default:
 ext_.~EmptyExt();
@@ -1102,6 +1204,12 @@ break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 dataRemove_ = source.dataRemove_;
 break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+createDeferredPayment_ = source.createDeferredPayment_;
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+closeDeferredPayment_ = source.closeDeferredPayment_;
+break;
     default:
 ext_ = source.ext_;
 break;
@@ -1146,6 +1254,12 @@ new(&dataUpdate_) _dataUpdate_t(source.dataUpdate_);
 break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(source.dataRemove_);
+break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPayment_) _createDeferredPayment_t(source.createDeferredPayment_);
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPayment_) _closeDeferredPayment_t(source.closeDeferredPayment_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -1195,6 +1309,12 @@ break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 dataRemove_ = std::move(source.dataRemove_);
 break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+createDeferredPayment_ = std::move(source.createDeferredPayment_);
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+closeDeferredPayment_ = std::move(source.closeDeferredPayment_);
+break;
     default:
 ext_ = std::move(source.ext_);
 break;
@@ -1239,6 +1359,12 @@ new(&dataUpdate_) _dataUpdate_t(std::move(source.dataUpdate_));
 break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(std::move(source.dataRemove_));
+break;
+    case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+new(&createDeferredPayment_) _createDeferredPayment_t(std::move(source.createDeferredPayment_));
+break;
+    case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+new(&closeDeferredPayment_) _closeDeferredPayment_t(std::move(source.closeDeferredPayment_));
 break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
@@ -1374,13 +1500,33 @@ break;
       return dataRemove_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: dataRemove accessed when not selected");
   }
-  EmptyExt &ext() {
+  _createDeferredPayment_t &createDeferredPayment() {
     if (_xdr_field_number(requestType_) == 13)
+      return createDeferredPayment_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: createDeferredPayment accessed when not selected");
+  }
+  const _createDeferredPayment_t &createDeferredPayment() const {
+    if (_xdr_field_number(requestType_) == 13)
+      return createDeferredPayment_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: createDeferredPayment accessed when not selected");
+  }
+  _closeDeferredPayment_t &closeDeferredPayment() {
+    if (_xdr_field_number(requestType_) == 14)
+      return closeDeferredPayment_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: closeDeferredPayment accessed when not selected");
+  }
+  const _closeDeferredPayment_t &closeDeferredPayment() const {
+    if (_xdr_field_number(requestType_) == 14)
+      return closeDeferredPayment_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: closeDeferredPayment accessed when not selected");
+  }
+  EmptyExt &ext() {
+    if (_xdr_field_number(requestType_) == 15)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(requestType_) == 13)
+    if (_xdr_field_number(requestType_) == 15)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }bool

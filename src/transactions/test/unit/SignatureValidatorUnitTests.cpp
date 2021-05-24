@@ -40,6 +40,7 @@
 #include "transactions/test/mocks/MockPendingStatisticsHelper.h"
 #include "transactions/test/mocks/MockStatisticsV2Helper.h"
 #include "transactions/test/mocks/MockDataHelper.h"
+#include "transactions/test/mocks/MockDeferredPaymentHelper.h"
 #include "bucket/BucketManager.h"
 #include "herder/Herder.h"
 #include "invariant/Invariants.h"

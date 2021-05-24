@@ -81,6 +81,8 @@ return u.from_bytes(accountSpecificRule_);
 return u.from_bytes(swap_);
     case (int32_t)LedgerEntryType::DATA:
 return u.from_bytes(data_);
+    case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+return u.from_bytes(deferredPayment_);
 }
 return false;
 }
@@ -159,6 +161,8 @@ return m.to_bytes(accountSpecificRule_);
 return m.to_bytes(swap_);
     case (int32_t)LedgerEntryType::DATA:
 return m.to_bytes(data_);
+    case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+return m.to_bytes(deferredPayment_);
 }
 return false;
 }
@@ -233,6 +237,8 @@ return m.count_size(accountSpecificRule_);
 return m.count_size(swap_);
     case (int32_t)LedgerEntryType::DATA:
 return m.count_size(data_);
+    case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+return m.count_size(deferredPayment_);
 }
 }
 bool
@@ -310,6 +316,8 @@ return accountSpecificRule_ == other.accountSpecificRule_;
 return swap_ == other.swap_;
     case (int32_t)LedgerEntryType::DATA:
 return data_ == other.data_;
+    case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+return deferredPayment_ == other.deferredPayment_;
 }
 return false;
 }
@@ -389,6 +397,8 @@ return accountSpecificRule_ < other.accountSpecificRule_;
 return swap_ < other.swap_;
     case (int32_t)LedgerEntryType::DATA:
 return data_ < other.data_;
+    case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
+return deferredPayment_ < other.deferredPayment_;
 }
 return false;
 }

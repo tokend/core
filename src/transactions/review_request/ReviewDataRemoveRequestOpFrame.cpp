@@ -28,7 +28,6 @@ ReviewDataRemoveRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
     }
 
     auto request = storageHelper.getReviewableRequestHelper().loadRequest(mReviewRequest.requestID);
-
     if (!request || (request->getType() != ReviewableRequestType::DATA_REMOVE))
     {
         mResult.code(OperationResultCode::opNO_ENTRY);
@@ -36,10 +35,17 @@ ReviewDataRemoveRequestOpFrame::tryGetSignerRequirements(StorageHelper& storageH
         return false;
     }
 
+    auto dataFrame = storageHelper.getDataHelper().loadData(request->getRequestEntry().body.dataRemoveRequest().id);
+    if (!dataFrame)
+    {
+        mResult.code(OperationResultCode::opNO_ENTRY);
+        mResult.entryType() = LedgerEntryType::DATA;
+        return false;
+    }
+
     SignerRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
     resource.reviewableRequest().details.requestType(ReviewableRequestType::DATA_REMOVE);
-    resource.reviewableRequest().details.dataRemove().type =
-            request->getRequestEntry().body.dataCreationRequest().type;
+    resource.reviewableRequest().details.dataRemove().type = dataFrame->getData().type;
     resource.reviewableRequest().tasksToAdd = mReviewRequest.reviewDetails.tasksToAdd;
     resource.reviewableRequest().tasksToRemove = mReviewRequest.reviewDetails.tasksToRemove;
     resource.reviewableRequest().allTasks = 0;

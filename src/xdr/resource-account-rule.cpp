@@ -1060,6 +1060,152 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+ReviewableRequestResource::_createDeferredPayment_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okassetCode = u.from_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = u.from_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_createDeferredPayment_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okassetCode = m.to_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = m.to_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_createDeferredPayment_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(assetCode);
+m.count_size(assetType);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_createDeferredPayment_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_createDeferredPayment_t const&>(other_abstract);return true
+&& (assetCode== other.assetCode)
+&& (assetType== other.assetType)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_createDeferredPayment_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_createDeferredPayment_t const&>(other_abstract);
+if (assetCode < other.assetCode) return true;
+if (other.assetCode < assetCode) return false;
+if (assetType < other.assetType) return true;
+if (other.assetType < assetType) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
+ReviewableRequestResource::_closeDeferredPayment_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okassetCode = u.from_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = u.from_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+ReviewableRequestResource::_closeDeferredPayment_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okassetCode = m.to_bytes(assetCode);
+if (!okassetCode)
+{
+return false;
+}
+bool okassetType = m.to_bytes(assetType);
+if (!okassetType)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+ReviewableRequestResource::_closeDeferredPayment_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(assetCode);
+m.count_size(assetType);
+m.count_size(ext);
+}
+bool
+ReviewableRequestResource::_closeDeferredPayment_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_closeDeferredPayment_t const&>(other_abstract);return true
+&& (assetCode== other.assetCode)
+&& (assetType== other.assetType)
+&& (ext== other.ext)
+;}
+bool
+ReviewableRequestResource::_closeDeferredPayment_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_closeDeferredPayment_t const&>(other_abstract);
+if (assetCode < other.assetCode) return true;
+if (other.assetCode < assetCode) return false;
+if (assetType < other.assetType) return true;
+if (other.assetType < assetType) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ReviewableRequestResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -1093,6 +1239,10 @@ return u.from_bytes(dataCreation_);
 return u.from_bytes(dataUpdate_);
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return u.from_bytes(dataRemove_);
+  case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return u.from_bytes(createDeferredPayment_);
+  case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return u.from_bytes(closeDeferredPayment_);
   default:
 return u.from_bytes(ext_);
 }
@@ -1133,6 +1283,10 @@ return m.to_bytes(dataCreation_);
 return m.to_bytes(dataUpdate_);
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return m.to_bytes(dataRemove_);
+  case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.to_bytes(createDeferredPayment_);
+  case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.to_bytes(closeDeferredPayment_);
   default:
 return m.to_bytes(ext_);
 }
@@ -1169,6 +1323,10 @@ return m.count_size(dataCreation_);
 return m.count_size(dataUpdate_);
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return m.count_size(dataRemove_);
+  case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return m.count_size(createDeferredPayment_);
+  case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return m.count_size(closeDeferredPayment_);
   default:
 return m.count_size(ext_);
 }
@@ -1208,6 +1366,10 @@ return dataCreation_ == other.dataCreation_;
 return dataUpdate_ == other.dataUpdate_;
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return dataRemove_ == other.dataRemove_;
+  case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPayment_ == other.createDeferredPayment_;
+  case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPayment_ == other.closeDeferredPayment_;
   default:
 return ext_ == other.ext_;
 }
@@ -1249,6 +1411,10 @@ return dataCreation_ < other.dataCreation_;
 return dataUpdate_ < other.dataUpdate_;
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 return dataRemove_ < other.dataRemove_;
+  case (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT:
+return createDeferredPayment_ < other.createDeferredPayment_;
+  case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
+return closeDeferredPayment_ < other.closeDeferredPayment_;
   default:
 return ext_ < other.ext_;
 }

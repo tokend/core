@@ -33,6 +33,7 @@
 #include <ledger/ContractHelper.h>
 #include <ledger/KeyValueHelper.h>
 #include <ledger/LimitsV2Helper.h>
+#include <ledger/DeferredPaymentHelper.h>
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StatisticsV2Helper.h>
@@ -70,7 +71,8 @@ enum databaseSchemaVersion : unsigned long
     FIX_HISTORY_UPGRADES = 18,
     ENABLE_ATOMIC_SWAP = 19,
     SWAPS = 20,
-    ASSET_STATE = 21
+    ASSET_STATE = 21,
+    DEFERRED_PAYMENTS = 22
 };
 
 static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ASSET_STATE;
@@ -199,6 +201,8 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
         case ASSET_STATE:
             sh.getAssetHelper().addAssetState();
             break;
+        case DEFERRED_PAYMENTS:
+            sh.getDeferredPaymentHelper().dropAll();
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
             throw std::runtime_error("Unknown DB schema version");

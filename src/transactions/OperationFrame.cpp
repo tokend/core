@@ -73,6 +73,10 @@
 #include "swap/OpenSwapOpFrame.h"
 #include "swap/CloseSwapOpFrame.h"
 #include "CreateRedemptionRequestOpFrame.h"
+#include "payment/CancelCloseDeferredPaymentRequestOpFrame.h"
+#include "payment/CancelDeferredPaymentCreationRequestOpFrame.h"
+#include "payment/CreateCloseDeferredPaymentRequestOpFrame.h"
+#include "payment/CreateDeferredPaymentCreationRequestOpFrame.h"
 
 namespace stellar
 {
@@ -203,7 +207,15 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<CreateDataRemoveRequestOpFrame>(op, res, tx);
         case OperationType::CANCEL_DATA_REMOVE_REQUEST:
             return make_shared<CancelDataRemoveRequestOpFrame>(op, res, tx);
-        default:
+        case OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST:
+            return make_shared<CreateDeferredPaymentCreationRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST:
+            return make_shared<CancelDeferredPaymentCreationRequestOpFrame>(op, res, tx);
+        case OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST:
+            return make_shared<CreateCloseDeferredPaymentRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
+            return make_shared<CancelCloseDeferredPaymentRequestOpFrame>(op, res, tx);
+    default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
             throw std::invalid_argument(err.str());
