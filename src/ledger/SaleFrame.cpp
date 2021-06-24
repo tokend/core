@@ -157,6 +157,16 @@ BalanceID const& SaleFrame::getBaseBalanceID() const
     return mSale.baseBalance;
 }
 
+void SaleFrame::setStartTime(uint64 newStartTime) 
+{
+    mSale.startTime = newStartTime;
+}
+
+void SaleFrame::setEndTime(uint64 newEndTime) 
+{
+    mSale.endTime = newEndTime;
+}
+
 void SaleFrame::subCurrentCap(AssetCode const& asset, uint64_t const amount)
 {
     auto& saleQuoteAsset = getSaleQuoteAsset(asset);

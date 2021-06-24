@@ -73,5 +73,8 @@ public:
 
     std::vector<std::string> makeTasksKeyVector();
 
+private: 
+    bool 
+    updateTime(StorageHelper& storageHelper, LedgerManager& lm, SaleFrame::pointer sale);
 };
 }

@@ -78,6 +78,9 @@ class SaleFrame : public EntryFrame
     AssetCode const& getBaseAsset() const;
     AssetCode const& getDefaultQuoteAsset() const;
 
+    void setStartTime(uint64 newStartTime);
+    void setEndTime(uint64 newEndTime);
+
     static bool convertToBaseAmount(uint64_t const& price, uint64_t const& quoteAssetAmount,
         uint64_t basePrecisionStep, uint64_t& result);
 
