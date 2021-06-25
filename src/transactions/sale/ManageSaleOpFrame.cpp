@@ -48,11 +48,11 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
             return false;
         }
 
-        SignerRuleResource resource(LedgerEntryType::SALE);
+        AccountRuleResource resource(LedgerEntryType::SALE);
         resource.sale().saleID = sale->getID();
         resource.sale().saleType = sale->getType();
 
-        result.emplace_back(resource, SignerRuleAction::UPDATE_END_TIME);
+        result.emplace_back(resource, AccountRuleAction::UPDATE_END_TIME, mSourceAccount);
         break;
     }
     // only sale owner or admin can manage sale
