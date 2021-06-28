@@ -365,6 +365,28 @@ TEST_CASE("Sale", "[tx][sale]")
 
         SECTION("Manage sale")
         {
+            SECTION("Update time bounds") 
+            {
+                auto manageSaleData = ManageSaleOp::_data_t(ManageSaleAction::UPDATE_TIME);
+                manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData, ManageSaleResultCode::INVALID_UPDATE_TIME_DATA);
+                manageSaleData.updateTime().newEndTime = endTime + 1000;
+                manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData);
+
+                manageSaleData.updateTime().newStartTime = currentTime + 100;
+                manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData, ManageSaleResultCode::INVALID_START_TIME);
+
+                saleRequest.startTime = currentTime + 500;
+                auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
+                auto newSaleID = result.success().typeExt.saleExtended().saleID;
+
+                manageSaleData.updateTime().newEndTime = endTime + 1000;
+                manageSaleData.updateTime().newStartTime = currentTime + 600;
+                manageSaleTestHelper.applyManageSaleTx(syndicate, newSaleID, manageSaleData);
+
+                manageSaleData.updateTime().newEndTime = currentTime + 500;
+                manageSaleTestHelper.applyManageSaleTx(syndicate, newSaleID, manageSaleData, ManageSaleResultCode::INVALID_END_TIME);
+            }
+
             SECTION("Update sale details")
             {
                 uint64_t requestID = 0;
