@@ -331,7 +331,9 @@ ManageSaleOpFrame::updateTime(StorageHelper& storageHelper, LedgerManager& lm, S
 
     if (newStartTime != 0) 
     {
-        if (currentTime >= sale->getStartTime()) {
+        if ((currentTime >= sale->getStartTime()) || 
+            (lm.getLastClosedLedgerHeader().header.scpValue.closeTime > newStartTime)) 
+        {
             innerResult().code(ManageSaleResultCode::INVALID_START_TIME);
             return false;            
         }

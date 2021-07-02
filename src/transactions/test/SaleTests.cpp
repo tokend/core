@@ -379,7 +379,10 @@ TEST_CASE("Sale", "[tx][sale]")
                 auto result = saleRequestHelper.createApprovedSale(root, syndicate, saleRequest);
                 auto newSaleID = result.success().typeExt.saleExtended().saleID;
 
-                manageSaleData.updateTime().newEndTime = endTime + 1000;
+                testManager->advanceToTime(currentTime + 300);
+                manageSaleData.updateTime().newStartTime = currentTime + 200;
+                manageSaleTestHelper.applyManageSaleTx(syndicate, saleID, manageSaleData, ManageSaleResultCode::INVALID_START_TIME);
+
                 manageSaleData.updateTime().newStartTime = currentTime + 600;
                 manageSaleTestHelper.applyManageSaleTx(syndicate, newSaleID, manageSaleData);
 
