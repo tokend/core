@@ -22,22 +22,39 @@ ManageSaleOpFrame::tryGetOperationConditions(StorageHelper& storageHelper,
                                              std::vector<OperationCondition>& result,
                                              LedgerManager& ledgerManager) const
 {
-    if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS)
-        && mManageSaleOp.data.action() == ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST)
-    {
-        AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
-        resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_SALE_DETAILS);
+    switch (mManageSaleOp.data.action()) {
+    case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
+        if (ledgerManager.shouldUse(LedgerVersion::FIX_NOT_CHECKING_SET_TASKS_PERMISSIONS))
+        {
+            AccountRuleResource resource(LedgerEntryType::REVIEWABLE_REQUEST);
+            resource.reviewableRequest().details.requestType(ReviewableRequestType::UPDATE_SALE_DETAILS);
 
-        if (mManageSaleOp.data.updateSaleDetailsData().allTasks)
-        {
-            result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+            if (mManageSaleOp.data.updateSaleDetailsData().allTasks)
+            {
+                result.emplace_back(resource, AccountRuleAction::CREATE_WITH_TASKS, mSourceAccount);
+            }
+            else
+            {
+                result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+            }
         }
-        else
+        break;
+    case ManageSaleAction::UPDATE_TIME:
+        auto sale = storageHelper.getSaleHelper().loadSale(mManageSaleOp.saleID);
+        if (!sale)
         {
-            result.emplace_back(resource, AccountRuleAction::CREATE, mSourceAccount);
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::SALE;
+            return false;
         }
+
+        AccountRuleResource resource(LedgerEntryType::SALE);
+        resource.sale().saleID = sale->getID();
+        resource.sale().saleType = sale->getType();
+
+        result.emplace_back(resource, AccountRuleAction::UPDATE_END_TIME, mSourceAccount);
+        break;
     }
-
     // only sale owner or admin can manage sale
     return true;
 }
@@ -58,7 +75,15 @@ ManageSaleOpFrame::tryGetSignerRequirements(StorageHelper& storageHelper,
     resource.sale().saleID = sale->getID();
     resource.sale().saleType = sale->getType();
 
-    result.emplace_back(resource, SignerRuleAction::MANAGE);
+    switch (mManageSaleOp.data.action())
+    {
+    case ManageSaleAction::UPDATE_TIME:
+        result.emplace_back(resource, SignerRuleAction::UPDATE_END_TIME);
+        break;
+    default:
+        result.emplace_back(resource, SignerRuleAction::MANAGE);
+        break;
+    }
 
     return true;
 }
@@ -226,6 +251,8 @@ bool ManageSaleOpFrame::doApply(Application& app, StorageHelper& storageHelper, 
             innerResult().success().response.action(ManageSaleAction::CANCEL);
             break;
         }
+        case ManageSaleAction::UPDATE_TIME:
+            return updateTime(storageHelper, lm, saleFrame);
         default:
             CLOG(ERROR, Logging::OPERATION_LOGGER) << "Unexpected action from manage sale op: "
                                                    << xdr::xdr_to_string(mManageSaleOp.data.action());
@@ -243,15 +270,22 @@ bool ManageSaleOpFrame::doCheckValid(Application& app)
         return false;
     }
 
-    if (mManageSaleOp.data.action() != ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST)
-    {
-        return true;
-    }
-
-    if (!isValidJson(mManageSaleOp.data.updateSaleDetailsData().creatorDetails))
-    {
-        innerResult().code(ManageSaleResultCode::INVALID_CREATOR_DETAILS);
-        return false;
+    switch (mManageSaleOp.data.action()) {
+    case ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
+        if (!isValidJson(mManageSaleOp.data.updateSaleDetailsData().creatorDetails))
+        {
+            innerResult().code(ManageSaleResultCode::INVALID_CREATOR_DETAILS);
+            return false;
+        }
+        break;
+    case ManageSaleAction::UPDATE_TIME:
+        if ((mManageSaleOp.data.updateTime().newStartTime == 0) && 
+            (mManageSaleOp.data.updateTime().newEndTime == 0)) 
+        {
+            innerResult().code(ManageSaleResultCode::INVALID_UPDATE_TIME_DATA);
+            return false;
+        }
+        break;
     }
 
     return true;
@@ -288,6 +322,39 @@ ManageSaleOpFrame::unlockPendingIssuance(StorageHelper& storageHelper, AssetCode
     auto asset = assetHelper.mustLoadAsset(code);
     asset->mustUnlockIssuedAmount(amount);
     assetHelper.storeChange(asset->mEntry);
+}
+
+bool
+ManageSaleOpFrame::updateTime(StorageHelper& storageHelper, LedgerManager& lm, SaleFrame::pointer sale) {
+    uint64 currentTime = lm.getCloseTime();
+    uint64 newStartTime = mManageSaleOp.data.updateTime().newStartTime;
+
+    if (newStartTime != 0) 
+    {
+        if ((currentTime >= sale->getStartTime()) || 
+            (lm.getLastClosedLedgerHeader().header.scpValue.closeTime > newStartTime)) 
+        {
+            innerResult().code(ManageSaleResultCode::INVALID_START_TIME);
+            return false;            
+        }
+
+        sale->setStartTime(newStartTime);
+    }
+
+    uint64 newEndTime = mManageSaleOp.data.updateTime().newEndTime;
+    if (newEndTime <= sale->getStartTime()) 
+    {
+        innerResult().code(ManageSaleResultCode::INVALID_END_TIME);
+        return false;     
+    }
+
+    sale->setEndTime(newEndTime);
+
+    storageHelper.getSaleHelper().storeChange(sale->mEntry);
+
+    innerResult().code(ManageSaleResultCode::SUCCESS);
+    innerResult().success().response.action(ManageSaleAction::UPDATE_TIME);
+    return true;
 }
 
 }

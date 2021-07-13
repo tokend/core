@@ -173,6 +173,157 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+UpdateTimeData::_ext_t::from_bytes(xdr::unmarshaler& u) 
+{
+int32_t disc;bool ok = u.from_bytes(disc);
+if (!ok)
+{
+return false;
+}
+_xdr_discriminant(disc, true);switch (v_)
+{
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+    
+  return true;
+}
+return false;
+}
+bool
+UpdateTimeData::_ext_t::to_bytes(xdr::marshaler& m) const
+{
+bool ok = m.to_bytes(v_);
+if (!ok)
+{
+return false;
+}
+switch (v_)
+{
+
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+      return true;
+}
+return false;
+}
+void
+UpdateTimeData::_ext_t::count_size(xdr::measurer& m) const
+{
+m.count_size(v_);
+switch (v_)
+{
+
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+    
+  return;
+}
+}
+bool
+UpdateTimeData::_ext_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}
+auto& other = dynamic_cast<_ext_t const&>(other_abstract);
+if (other.v_ != v_) return false;
+switch (v_)
+{
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+    
+  return true;
+}
+return false;
+}
+bool
+UpdateTimeData::_ext_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_ext_t const&>(other_abstract);
+if (v_ < other.v_) return true;
+if (other.v_ < v_) return false;
+switch (v_)
+{
+    case (int32_t)LedgerVersion::EMPTY_VERSION:
+      return false;
+}
+return false;
+}
+bool
+UpdateTimeData::from_bytes(xdr::unmarshaler& u) 
+{
+bool oknewStartTime = u.from_bytes(newStartTime);
+if (!oknewStartTime)
+{
+return false;
+}
+bool oknewEndTime = u.from_bytes(newEndTime);
+if (!oknewEndTime)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+UpdateTimeData::to_bytes(xdr::marshaler& m) const 
+{
+bool oknewStartTime = m.to_bytes(newStartTime);
+if (!oknewStartTime)
+{
+return false;
+}
+bool oknewEndTime = m.to_bytes(newEndTime);
+if (!oknewEndTime)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+UpdateTimeData::count_size(xdr::measurer& m) const 
+{
+m.count_size(newStartTime);
+m.count_size(newEndTime);
+m.count_size(ext);
+}
+bool
+UpdateTimeData::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<UpdateTimeData const&>(other_abstract);return true
+&& (newStartTime== other.newStartTime)
+&& (newEndTime== other.newEndTime)
+&& (ext== other.ext)
+;}
+bool
+UpdateTimeData::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<UpdateTimeData const&>(other_abstract);
+if (newStartTime < other.newStartTime) return true;
+if (other.newStartTime < newStartTime) return false;
+if (newEndTime < other.newEndTime) return true;
+if (other.newEndTime < newEndTime) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 ManageSaleOp::_data_t::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -187,6 +338,8 @@ return u.from_bytes(updateSaleDetailsData_);
     case (int32_t)ManageSaleAction::CANCEL:
     
   return true;
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
+return u.from_bytes(updateTime_);
 }
 return false;
 }
@@ -205,6 +358,8 @@ switch (action_)
 return m.to_bytes(updateSaleDetailsData_);
     case (int32_t)ManageSaleAction::CANCEL:
       return true;
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
+return m.to_bytes(updateTime_);
 }
 return false;
 }
@@ -220,6 +375,8 @@ return m.count_size(updateSaleDetailsData_);
     case (int32_t)ManageSaleAction::CANCEL:
     
   return;
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
+return m.count_size(updateTime_);
 }
 }
 bool
@@ -238,6 +395,8 @@ return updateSaleDetailsData_ == other.updateSaleDetailsData_;
     case (int32_t)ManageSaleAction::CANCEL:
     
   return true;
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
+return updateTime_ == other.updateTime_;
 }
 return false;
 }
@@ -257,6 +416,8 @@ switch (action_)
 return updateSaleDetailsData_ < other.updateSaleDetailsData_;
     case (int32_t)ManageSaleAction::CANCEL:
       return false;
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
+return updateTime_ < other.updateTime_;
 }
 return false;
 }
@@ -424,6 +585,7 @@ _xdr_discriminant(disc, true);switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return u.from_bytes(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
     
   return true;
 }
@@ -443,6 +605,7 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return m.to_bytes(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
       return true;
 }
 return false;
@@ -457,6 +620,7 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return m.count_size(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
     
   return;
 }
@@ -475,6 +639,7 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return requestID_ == other.requestID_;
     case (int32_t)ManageSaleAction::CANCEL:
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
     
   return true;
 }
@@ -495,6 +660,7 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return requestID_ < other.requestID_;
     case (int32_t)ManageSaleAction::CANCEL:
+    case (int32_t)ManageSaleAction::UPDATE_TIME:
       return false;
 }
 return false;
