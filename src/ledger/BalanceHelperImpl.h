@@ -62,6 +62,9 @@ private:
     BalanceFrame::pointer
     loadBalance(AccountID accountID, AssetCode assetCode) override;
 
+    BalanceFrame::pointer
+    loadFirstBalance(AccountID accountID, AssetCode assetCode) override;
+
     void
     loadBalances(AccountID const& accountID,
                  std::vector<BalanceFrame::pointer>& retBalances) override;
