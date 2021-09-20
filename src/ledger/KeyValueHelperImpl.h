@@ -46,6 +46,9 @@ class KeyValueHelperImpl : public KeyValueHelper, NonCopyable
     loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
               uint32_t* passedTasks = nullptr) override;
 
+    bool
+    loadBalanceID(PublicKey& pubKey, std::vector<std::string> keys) override;
+
     void storeUpdateHelper(LedgerDelta* delta, Database& db, bool insert,
                            LedgerEntry const& entry);
 

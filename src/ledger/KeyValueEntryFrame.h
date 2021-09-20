@@ -61,6 +61,9 @@ public:
     uint32_t const
     mustGetUint32Value() const;
 
+    xdr::xstring<> const
+    mustGetStringValue() const;
+
     LedgerKey const&
     getKey() const override;
 

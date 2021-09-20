@@ -1,14 +1,14 @@
 #include "PaymentOpFrame.h"
-#include "ledger/LedgerDelta.h"
-#include "ledger/StorageHelper.h"
-#include "main/Application.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/FeeHelper.h"
+#include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/ReferenceHelper.h"
+#include "ledger/StorageHelper.h"
+#include "main/Application.h"
 
 namespace stellar
 {
@@ -128,7 +128,6 @@ PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::po
         }
     }
 
-
     return true;
 }
 
@@ -155,9 +154,16 @@ PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
         throw std::runtime_error("Total sum of fees to be charged overflows");
     }
 
-    auto adminBalance = balanceManager.loadOrCreateBalanceForAdmin(chargeFrom->getAsset());
+    try
+    {
+        balanceManager.transferFee(chargeFrom->getAsset(), totalFee);
+    }
+    catch (...)
+    {
+        return false;
+    }
 
-    return processTransfer(balanceManager, payer, chargeFrom, adminBalance, totalFee, universalAmount, lm);
+    return true;
 }
 
 void

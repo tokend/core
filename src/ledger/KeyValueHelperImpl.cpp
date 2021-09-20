@@ -298,4 +298,28 @@ KeyValueHelperImpl::loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
 
     return false;
 }
+
+bool
+KeyValueHelperImpl::loadBalanceID(PublicKey& pubKey,std::vector<std::string> keys)
+{
+    for (auto& key : keys)
+    {
+        auto keyValueFrame = loadKeyValue(key);
+        if (keyValueFrame)
+        {
+            try
+            {
+                pubKey = BalanceKeyUtils::fromStrKey(keyValueFrame->mustGetStringValue());
+            }
+            catch (std::invalid_argument&)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
 } // namespace stellar

@@ -42,6 +42,22 @@ namespace stellar{
                                  mKeyEntry.key + "key to be UINT32 type");
     }
 
+    xdr::xstring<> const
+    KeyValueEntryFrame::mustGetStringValue() const
+    {
+        if (getKeyValueEntryType() == KeyValueEntryType::STRING)
+        {
+            return mKeyEntry.value.stringValue();
+        }
+
+        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Unexpected database state. "
+                << "Expected " + mKeyEntry.key + " key to be STRING type, get:"
+                << xdr::xdr_traits<KeyValueEntryType>::enum_name(
+                                getKeyValueEntryType());
+        throw std::runtime_error("Unexpected database state. Expected " +
+                                 mKeyEntry.key + "key to be STRING type");
+    }
+
     LedgerKey const &
     KeyValueEntryFrame::getKey() const
     {
