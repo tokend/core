@@ -19,7 +19,13 @@ BalanceManager::BalanceManager(Application& app, StorageHelper& sh)
 BalanceFrame::pointer
 BalanceManager::loadOrCreateBalance(const AccountID& account, const AssetCode& asset)
 {
-    auto balance = mSh.getBalanceHelper().loadBalance(account, asset);
+    BalanceFrame::pointer balance;
+    if(mLm.shouldUse(LedgerVersion::FIX_UNORDERED_FEE_DESTINATION)){
+        balance = mSh.getBalanceHelper().loadFirstBalance(account, asset);
+    } else {
+        balance = mSh.getBalanceHelper().loadBalance(account, asset);
+    }
+
     if (balance)
     {
         return balance;

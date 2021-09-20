@@ -42,6 +42,7 @@ enum class LedgerVersion : std::int32_t {
   FIX_INVEST_TO_IMMEDIATE_SALE = 29,
   FIX_PAYMENT_TASKS_WILDCARD_VALUE = 30,
   FIX_CHANGE_ROLE_REQUEST_REQUESTOR = 31,
+  FIX_UNORDERED_FEE_DESTINATION = 32
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerVersion>

@@ -334,6 +334,40 @@ BalanceHelperImpl::loadBalance(AccountID accountID, AssetCode assetCode)
     return retBalance;
 }
 
+BalanceFrame::pointer
+BalanceHelperImpl::loadFirstBalance(AccountID accountID, AssetCode assetCode)
+{
+    Database& db = getDatabase();
+
+    string accountIDStr = PubKeyUtils::toStrKey(accountID);
+
+    string sql = balanceColumnSelector;
+    sql += " WHERE asset = :asset AND account_id = :acc_id ORDER BY sequential_id ASC LIMIT 1";
+
+    auto prep = db.getPreparedStatement(sql);
+    auto &st = prep.statement();
+    st.exchange(use(assetCode, "asset"));
+    st.exchange(use(accountIDStr, "acc_id"));
+
+    auto timer = db.getSelectTimer("load-balances");
+
+    BalanceFrame::pointer retBalance;
+    loadBalances(prep, [&retBalance](BalanceFrame::pointer const& framePtr)
+    {
+        retBalance = framePtr;
+    });
+
+    if (!retBalance)
+    {
+        return nullptr;
+    }
+
+    putCachedEntry(retBalance->getKey(),
+                   make_shared<LedgerEntry>(retBalance->mEntry));
+
+    return retBalance;
+}
+
 void
 BalanceHelperImpl::loadBalances(AccountID const& accountID,
                                 std::vector<BalanceFrame::pointer>& retBalances)

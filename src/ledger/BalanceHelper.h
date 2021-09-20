@@ -31,6 +31,9 @@ public:
     virtual BalanceFrame::pointer loadBalance(AccountID accountID,
                                               AssetCode assetCode) = 0;
 
+    virtual BalanceFrame::pointer loadFirstBalance(AccountID accountID,
+                                              AssetCode assetCode) = 0;
+
     virtual void loadBalances(AccountID const& accountID,
                               std::vector<BalanceFrame::pointer>& retBalances) = 0;
 
