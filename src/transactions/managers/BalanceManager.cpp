@@ -63,8 +63,9 @@ BalanceManager::transferFee(AssetCode const& assetCode, uint64_t totalFee)
     if(mLm.shouldUse(LedgerVersion::ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV)){
         auto& keyValueHelper = mSh.getKeyValueHelper();
         PublicKey commissionBalanceID;
-        keyValueHelper.loadBalanceID(commissionBalanceID, makeTasksKeyVector(assetCode));
-        commissionBalance = mSh.getBalanceHelper().loadBalance(commissionBalanceID);
+        if(keyValueHelper.loadBalanceID(commissionBalanceID, makeTasksKeyVector(assetCode))){
+            commissionBalance = mSh.getBalanceHelper().loadBalance(commissionBalanceID);
+        }
     }
 
     if(!commissionBalance){
