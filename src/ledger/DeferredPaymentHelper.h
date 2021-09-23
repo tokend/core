@@ -10,5 +10,8 @@ class DeferredPaymentHelper : public EntryHelper
 public:
     virtual DeferredPaymentFrame::pointer
     loadDeferredPayment(uint64_t id) = 0;
+
+    virtual void
+    createIfNotExists() = 0;
 };
 }

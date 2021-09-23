@@ -19,7 +19,16 @@ DataHelperImpl::dropAll()
     Database& db = getDatabase();
 
     db.getSession() << "DROP TABLE IF EXISTS data";
-    db.getSession() << "CREATE TABLE data"
+
+    createIfNotExists();
+}
+
+void
+DataHelperImpl::createIfNotExists()
+{
+    Database& db = getDatabase();
+
+    db.getSession() << "CREATE TABLE IF NOT EXISTS data"
                        "("
                        "id           BIGINT NOT NULL PRIMARY KEY,"
                        "type         NUMERIC(20,0) NOT NULL,"

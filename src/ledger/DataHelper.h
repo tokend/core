@@ -10,5 +10,8 @@ class DataHelper : public EntryHelper
 public:
     virtual DataFrame::pointer
     loadData(uint64_t id) = 0;
+
+    virtual void
+    createIfNotExists() = 0;
 };
 }

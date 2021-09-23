@@ -18,6 +18,7 @@
 #include "ledger/StorageHelperImpl.h"
 #include "ledger/SwapHelper.h"
 #include "ledger/VoteHelper.h"
+#include "ledger/DataHelperImpl.h"
 #include "main/Application.h"
 #include "main/Config.h"
 #include "main/ExternalQueue.h"
@@ -72,10 +73,11 @@ enum databaseSchemaVersion : unsigned long
     ENABLE_ATOMIC_SWAP = 19,
     SWAPS = 20,
     ASSET_STATE = 21,
-    DEFERRED_PAYMENTS = 22
+    DEFERRED_PAYMENTS = 22,
+    DATA = 23
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::ASSET_STATE;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::DATA;
 
 static void
 setSerializable(soci::session& sess)
@@ -202,7 +204,11 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             sh.getAssetHelper().addAssetState();
             break;
         case DEFERRED_PAYMENTS:
-            sh.getDeferredPaymentHelper().dropAll();
+            sh.getDeferredPaymentHelper().createIfNotExists();
+            break;
+        case DATA:
+            sh.getDataHelper().createIfNotExists();
+            break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
             throw std::runtime_error("Unknown DB schema version");
