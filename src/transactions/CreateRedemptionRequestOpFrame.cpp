@@ -166,9 +166,12 @@ namespace stellar {
             pickResultCode(CreateRedemptionRequestResultCode::REDEMPTION_TASKS_NOT_FOUND);
             return false;
         }
-        if (allTasks == 0) {
-            pickResultCode(CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED);
-            return false;
+
+        if(!ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)){
+            if (allTasks == 0) {
+                pickResultCode(CreateRedemptionRequestResultCode::REDEMPTION_ZERO_TASKS_NOT_ALLOWED);
+                return false;
+            }
         }
 
         request->setTasks(allTasks);

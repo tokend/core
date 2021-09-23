@@ -44,6 +44,7 @@ enum class LedgerVersion : std::int32_t {
   FIX_CHANGE_ROLE_REQUEST_REQUESTOR = 31,
   FIX_UNORDERED_FEE_DESTINATION = 32,
   ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV = 33,
+  DELETE_REDEMPTION_ZERO_TASKS_CHECKING = 34,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerVersion>
@@ -121,6 +122,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       return "FIX_UNORDERED_FEE_DESTINATION";
     case ::stellar::LedgerVersion::ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV:
       return "ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV";
+    case ::stellar::LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING:
+      return "DELETE_REDEMPTION_ZERO_TASKS_CHECKING";
     default:
       return nullptr;
     }
@@ -160,7 +163,8 @@ template<> struct xdr_traits<::stellar::LedgerVersion>
       (int32_t)::stellar::LedgerVersion::FIX_PAYMENT_TASKS_WILDCARD_VALUE,
       (int32_t)::stellar::LedgerVersion::FIX_CHANGE_ROLE_REQUEST_REQUESTOR,
       (int32_t)::stellar::LedgerVersion::FIX_UNORDERED_FEE_DESTINATION,
-      (int32_t)::stellar::LedgerVersion::ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV
+      (int32_t)::stellar::LedgerVersion::ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV,
+      (int32_t)::stellar::LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING
     };
     return _xdr_enum_vec;
   }
