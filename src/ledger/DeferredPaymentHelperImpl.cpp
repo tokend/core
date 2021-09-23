@@ -28,6 +28,8 @@ DeferredPaymentHelperImpl::dropAll()
     Database& db = getDatabase();
 
     db.getSession() << "DROP TABLE IF EXISTS deferred_payments";
+    
+    createIfNotExists();
 }
 
 void
@@ -35,7 +37,7 @@ DeferredPaymentHelperImpl::createIfNotExists()
 {
     Database& db = getDatabase();
     
-    db.getSession() << "CREATE TABLE deferred_payments"
+    db.getSession() << "CREATE TABLE IF NOT EXISTS deferred_payments"
                     "("
                     "id              BIGINT NOT NULL PRIMARY KEY,"
                     "amount          NUMERIC(20, 0) NOT NULL,"

@@ -19,6 +19,8 @@ DataHelperImpl::dropAll()
     Database& db = getDatabase();
 
     db.getSession() << "DROP TABLE IF EXISTS data";
+
+    createIfNotExists();
 }
 
 void
