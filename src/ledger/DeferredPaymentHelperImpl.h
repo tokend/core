@@ -10,6 +10,8 @@ class DeferredPaymentHelperImpl : public DeferredPaymentHelper, NonCopyable
 {
     void dropAll() override;
 
+    void createIfNotExists() override;
+
     void storeAdd(LedgerEntry const& entry) override;
 
     void storeChange(LedgerEntry const& entry) override;

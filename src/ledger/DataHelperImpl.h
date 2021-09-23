@@ -12,6 +12,9 @@ class DataHelperImpl : public DataHelper, NonCopyable
     dropAll() override;
 
     void
+    createIfNotExists() override;
+
+    void
     storeAdd(LedgerEntry const& entry) override;
 
     void

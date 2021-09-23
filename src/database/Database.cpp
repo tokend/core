@@ -204,10 +204,10 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             sh.getAssetHelper().addAssetState();
             break;
         case DEFERRED_PAYMENTS:
-            sh.getDeferredPaymentHelper().dropAll();
+            sh.getDeferredPaymentHelper().createIfNotExists();
             break;
         case DATA:
-            sh.getDataHelper().dropAll();
+            sh.getDataHelper().createIfNotExists();
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
