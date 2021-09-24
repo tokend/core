@@ -183,7 +183,7 @@ namespace stellar {
         innerResult().redemptionResponse().asset = sourceBalance->getAsset();
         innerResult().redemptionResponse().fulfilled = false; // approve by admin is mandatory
         innerResult().redemptionResponse().ext.v(LedgerVersion::EMPTY_VERSION);
-        if(!ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)){
+        if(ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)){
             if (request->canBeFulfilled(ledgerManager))
                 tryAutoApprove(storageHelper, app, request);
         }
