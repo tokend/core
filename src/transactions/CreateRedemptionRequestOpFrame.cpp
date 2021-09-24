@@ -183,6 +183,10 @@ namespace stellar {
         innerResult().redemptionResponse().asset = sourceBalance->getAsset();
         innerResult().redemptionResponse().fulfilled = false; // approve by admin is mandatory
         innerResult().redemptionResponse().ext.v(LedgerVersion::EMPTY_VERSION);
+        if(!ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)){
+            if (request->canBeFulfilled(ledgerManager))
+                tryAutoApprove(storageHelper, app, request);
+        }
         return true;
     }
 
@@ -205,6 +209,23 @@ namespace stellar {
         }
 
         return true;
+    }
+
+    void
+    CreateRedemptionRequestOpFrame::tryAutoApprove(StorageHelper& storageHelper, Application& app,
+                                                   ReviewableRequestFrame::pointer requestFrame)
+    {
+        auto& ledgerManager = app.getLedgerManager();
+        auto result = ReviewRequestHelper::tryApproveRequest(mParentTx, app, ledgerManager, storageHelper, requestFrame);
+        if (result != ReviewRequestResultCode::SUCCESS)
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: tryApproveRequest expected to be success, but was: "
+                << xdr::xdr_to_string(result);
+            throw std::runtime_error("Unexpected state: tryApproveRequest expected to be success");
+        }
+
+        innerResult().redemptionResponse().fulfilled = true;
     }
 
     void

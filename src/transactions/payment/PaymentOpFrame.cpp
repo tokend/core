@@ -2,6 +2,7 @@
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelper.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/FeeHelper.h"
 #include "ledger/LedgerDelta.h"
@@ -133,14 +134,18 @@ PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::po
 
 bool
 PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
-                                   AccountFrame::pointer payer, BalanceFrame::pointer chargeFrom,
-                                   Fee expectedFee, Fee actualFee, uint64_t& universalAmount, LedgerManager& lm) {
+                                   AccountFrame::pointer payer,
+                                   BalanceFrame::pointer chargeFrom,
+                                   Fee expectedFee, Fee actualFee,
+                                   uint64_t& universalAmount, LedgerManager& lm)
+{
     if ((actualFee.fixed == 0) && (actualFee.percent == 0))
     {
         return true;
     }
 
-    if ((expectedFee.fixed < actualFee.fixed) || (expectedFee.percent < actualFee.percent))
+    if ((expectedFee.fixed < actualFee.fixed) ||
+        (expectedFee.percent < actualFee.percent))
     {
         innerResult().code(PaymentResultCode::INSUFFICIENT_FEE_AMOUNT);
         return false;
@@ -154,16 +159,38 @@ PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
         throw std::runtime_error("Total sum of fees to be charged overflows");
     }
 
-    try
+    if (lm.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING))
     {
-        balanceManager.transferFee(chargeFrom->getAsset(), totalFee);
-    }
-    catch (...)
-    {
-        return false;
+        auto result = chargeFrom->tryCharge(totalFee);
+        if (result != BalanceFrame::Result::SUCCESS)
+        {
+            std::string strBalanceID =
+                PubKeyUtils::toStrKey(chargeFrom->getBalanceID());
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Failed to charge commission from balance with fee, result "
+                << result << ". balanceID: " << strBalanceID;
+            return false;
+        }
+
+        try
+        {
+            balanceManager.transferFee(chargeFrom->getAsset(), totalFee);
+        }
+        catch (std::exception& e)
+        {
+            std::string strBalanceID = PubKeyUtils::toStrKey(chargeFrom->getBalanceID());
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Failed to transfer fee"
+                << ".The message was: "<< e.what();
+            return false;
+        }
+
+        return true;
     }
 
-    return true;
+    auto adminBalance = balanceManager.loadOrCreateBalanceForAdmin(chargeFrom->getAsset());
+
+    return processTransfer(balanceManager, payer, chargeFrom, adminBalance, totalFee, universalAmount, lm);
 }
 
 void
