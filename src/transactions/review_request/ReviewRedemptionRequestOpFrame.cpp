@@ -25,7 +25,19 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
-    createReference(storageHelper, request->getRequestor(), request->getReference());
+
+    auto reference = request->getReference();
+    if(ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)){
+        // on create redemption request there is no validation for reference emptiness,
+        // so we need to check it here
+        if(reference && !reference->empty()){
+            createReference(storageHelper, request->getRequestor(),
+                            request->getReference());
+        }
+    } else {
+        createReference(storageHelper, request->getRequestor(),
+                        request->getReference());
+    }
 
     auto srcBalanceFrame = balanceHelper.loadBalance(redemption.sourceBalanceID);
     if (!srcBalanceFrame) {
