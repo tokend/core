@@ -181,7 +181,7 @@ namespace stellar {
 
         innerResult().redemptionResponse().requestID = requestID;
         innerResult().redemptionResponse().asset = sourceBalance->getAsset();
-        innerResult().redemptionResponse().fulfilled = false; // approve by admin is mandatory
+        innerResult().redemptionResponse().fulfilled = false;
         innerResult().redemptionResponse().ext.v(LedgerVersion::EMPTY_VERSION);
         if(ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)){
             if (request->canBeFulfilled(ledgerManager))

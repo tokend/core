@@ -67,7 +67,7 @@ BalanceManager::transferFee(AssetCode const& assetCode, uint64_t totalFee)
     BalanceFrame::pointer commissionBalance;
     if(mLm.shouldUse(LedgerVersion::ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV)){
         auto& keyValueHelper = mSh.getKeyValueHelper();
-        PublicKey commissionBalanceID;
+        BalanceID commissionBalanceID;
         if(keyValueHelper.loadBalanceID(commissionBalanceID, makeTasksKeyVector(assetCode))){
             commissionBalance = mSh.getBalanceHelper().loadBalance(commissionBalanceID);
         }
@@ -82,7 +82,7 @@ BalanceManager::transferFee(AssetCode const& assetCode, uint64_t totalFee)
     const auto result = commissionBalance->tryFundAccount(totalFee);
     if (result != BalanceFrame::Result::SUCCESS)
     {
-        std::string strBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
+        std::string strBalanceID = BalanceKeyUtils::toStrKey(commissionBalance->getBalanceID());
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Failed to fund commission balance with fee, reason " << result
             << ". balanceID: " << strBalanceID;

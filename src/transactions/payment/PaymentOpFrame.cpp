@@ -1,6 +1,7 @@
 #include "PaymentOpFrame.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/AssetPairHelper.h"
 #include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
@@ -137,7 +138,8 @@ PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
                                    AccountFrame::pointer payer,
                                    BalanceFrame::pointer chargeFrom,
                                    Fee expectedFee, Fee actualFee,
-                                   uint64_t& universalAmount, LedgerManager& lm)
+                                   uint64_t& universalAmount,
+                                   LedgerManager& lm, StorageHelper& sh)
 {
     if ((actualFee.fixed == 0) && (actualFee.percent == 0))
     {
@@ -162,28 +164,15 @@ PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
     if (lm.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING))
     {
         auto result = chargeFrom->tryCharge(totalFee);
-        if (result != BalanceFrame::Result::SUCCESS)
-        {
-            std::string strBalanceID =
-                PubKeyUtils::toStrKey(chargeFrom->getBalanceID());
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Failed to charge commission from balance with fee, result "
-                << result << ". balanceID: " << strBalanceID;
+        if (result != BalanceFrame::Result::SUCCESS) {
+            innerResult().code(result == BalanceFrame::Result::UNDERFUNDED ?
+                                         PaymentResultCode::UNDERFUNDED:
+                                         PaymentResultCode::INCORRECT_AMOUNT_PRECISION);
             return false;
         }
+        sh.getBalanceHelper().storeChange(chargeFrom->mEntry);
 
-        try
-        {
-            balanceManager.transferFee(chargeFrom->getAsset(), totalFee);
-        }
-        catch (std::exception& e)
-        {
-            std::string strBalanceID = PubKeyUtils::toStrKey(chargeFrom->getBalanceID());
-            CLOG(ERROR, Logging::OPERATION_LOGGER)
-                << "Failed to transfer fee"
-                << ".The message was: "<< e.what();
-            return false;
-        }
+        balanceManager.transferFee(chargeFrom->getAsset(), totalFee);
 
         return true;
     }
@@ -364,7 +353,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                   PaymentFeeType::OUTGOING, storageHelper, ledgerManager);
 
     if (!processTransferFee(balanceManager, mSourceAccount, sourceBalance,
-                            mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager))
+                            mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager, storageHelper))
     {
         return false;
     }
@@ -386,7 +375,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         uint64_t destFeeUniversalAmount = 0;
 
         if (!processTransferFee(balanceManager, destFeePayer, destFeePayerBalance,
-                                mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager))
+                                mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager, storageHelper))
         {
             return false;
         }

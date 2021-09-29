@@ -31,7 +31,7 @@ public:
               uint32_t* passedTasks = nullptr) = 0;
 
     virtual bool
-    loadBalanceID(PublicKey &pubKey, std::vector<std::string> keys) = 0;
+    loadBalanceID(BalanceID &pubKey, std::vector<std::string> keys) = 0;
 };
 
 }

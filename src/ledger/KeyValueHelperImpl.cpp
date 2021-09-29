@@ -300,7 +300,7 @@ KeyValueHelperImpl::loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
 }
 
 bool
-KeyValueHelperImpl::loadBalanceID(PublicKey& pubKey,
+KeyValueHelperImpl::loadBalanceID(BalanceID& pubKey,
                                   std::vector<std::string> keys)
 {
     for (auto& key : keys)
