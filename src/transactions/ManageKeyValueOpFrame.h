@@ -64,6 +64,7 @@ public:
     static longstring makeWithdrawalTasksKey(AssetCode assetCode);
 
     static longstring makeMaxContractDetailLengthKey();
+    static longstring makeFeeCollectionBalanceKey(AssetCode assetCode);
 
     static longstring makeMaxContractInitialDetailLengthKey();
 
@@ -128,6 +129,7 @@ public:
     static const char * atomicSwapTasksPrefix;
     static const char * atomicSwapAskTasks;
     static const char * withdrawLowerBoundPrefix;
+    static const char * feeCollectionBalancePrefix;
     static char const * preIssuanceTasksPrefix;
     static char const * assetCreateTasks;
     static char const * assetUpdateTasks;

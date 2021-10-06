@@ -1,9 +1,9 @@
 #include "ledger/KeyValueHelperImpl.h"
+#include "database/Database.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
-#include "database/Database.h"
-#include <xdrpp/marshal.h>
 #include "util/basen.h"
+#include <xdrpp/marshal.h>
 
 using namespace soci;
 
@@ -292,6 +292,34 @@ KeyValueHelperImpl::loadTasks(uint32_t& allTasks, std::vector<std::string> keys,
         if (keyValueFrame)
         {
             allTasks = keyValueFrame->mustGetUint32Value();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool
+KeyValueHelperImpl::loadBalanceID(BalanceID& pubKey,
+                                  std::vector<std::string> keys)
+{
+    for (auto& key : keys)
+    {
+        auto keyValueFrame = loadKeyValue(key);
+        if (keyValueFrame)
+        {
+            try
+            {
+                pubKey = BalanceKeyUtils::fromStrKey(
+                    keyValueFrame->mustGetStringValue());
+            }
+            catch (std::exception& e)
+            {
+                CLOG(ERROR, Logging::OPERATION_LOGGER)
+                    << "Failed to derive balance id from string " << e.what();
+                continue;
+            }
+
             return true;
         }
     }

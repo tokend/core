@@ -29,6 +29,9 @@ public:
     virtual bool
     loadTasks(uint32_t &allTasks, std::vector<std::string> keys,
               uint32_t* passedTasks = nullptr) = 0;
+
+    virtual bool
+    loadBalanceID(BalanceID &pubKey, std::vector<std::string> keys) = 0;
 };
 
 }

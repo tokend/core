@@ -1,14 +1,16 @@
 #include "PaymentOpFrame.h"
-#include "ledger/LedgerDelta.h"
-#include "ledger/StorageHelper.h"
-#include "main/Application.h"
 #include "ledger/AccountHelper.h"
 #include "ledger/AssetHelper.h"
+#include "ledger/BalanceHelper.h"
 #include "ledger/AssetPairHelper.h"
+#include "ledger/BalanceFrame.h"
 #include "ledger/BalanceHelper.h"
 #include "ledger/FeeHelper.h"
+#include "ledger/LedgerDelta.h"
 #include "ledger/LedgerHeaderFrame.h"
 #include "ledger/ReferenceHelper.h"
+#include "ledger/StorageHelper.h"
+#include "main/Application.h"
 
 namespace stellar
 {
@@ -128,20 +130,24 @@ PaymentOpFrame::processTransfer(BalanceManager& balanceManager, AccountFrame::po
         }
     }
 
-
     return true;
 }
 
 bool
 PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
-                                   AccountFrame::pointer payer, BalanceFrame::pointer chargeFrom,
-                                   Fee expectedFee, Fee actualFee, uint64_t& universalAmount, LedgerManager& lm) {
+                                   AccountFrame::pointer payer,
+                                   BalanceFrame::pointer chargeFrom,
+                                   Fee expectedFee, Fee actualFee,
+                                   uint64_t& universalAmount,
+                                   LedgerManager& lm, StorageHelper& sh)
+{
     if ((actualFee.fixed == 0) && (actualFee.percent == 0))
     {
         return true;
     }
 
-    if ((expectedFee.fixed < actualFee.fixed) || (expectedFee.percent < actualFee.percent))
+    if ((expectedFee.fixed < actualFee.fixed) ||
+        (expectedFee.percent < actualFee.percent))
     {
         innerResult().code(PaymentResultCode::INSUFFICIENT_FEE_AMOUNT);
         return false;
@@ -153,6 +159,22 @@ PaymentOpFrame::processTransferFee(BalanceManager& balanceManager,
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Unexpected state: failed to calculate total sum of fees to be charged - overflow";
         throw std::runtime_error("Total sum of fees to be charged overflows");
+    }
+
+    if (lm.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING))
+    {
+        auto result = chargeFrom->tryCharge(totalFee);
+        if (result != BalanceFrame::Result::SUCCESS) {
+            innerResult().code(result == BalanceFrame::Result::UNDERFUNDED ?
+                                         PaymentResultCode::UNDERFUNDED:
+                                         PaymentResultCode::INCORRECT_AMOUNT_PRECISION);
+            return false;
+        }
+        sh.getBalanceHelper().storeChange(chargeFrom->mEntry);
+
+        balanceManager.transferFee(chargeFrom->getAsset(), totalFee);
+
+        return true;
     }
 
     auto adminBalance = balanceManager.loadOrCreateBalanceForAdmin(chargeFrom->getAsset());
@@ -331,7 +353,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
                                   PaymentFeeType::OUTGOING, storageHelper, ledgerManager);
 
     if (!processTransferFee(balanceManager, mSourceAccount, sourceBalance,
-                            mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager))
+                            mPayment.feeData.sourceFee, sourceFee, sourceSentUniversal, ledgerManager, storageHelper))
     {
         return false;
     }
@@ -353,7 +375,7 @@ PaymentOpFrame::doApply(Application& app, StorageHelper& storageHelper,
         uint64_t destFeeUniversalAmount = 0;
 
         if (!processTransferFee(balanceManager, destFeePayer, destFeePayerBalance,
-                                mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager))
+                                mPayment.feeData.destinationFee, destFee, destFeeUniversalAmount, ledgerManager, storageHelper))
         {
             return false;
         }

@@ -26,6 +26,8 @@ namespace stellar {
         tryGetSignerRequirements(StorageHelper& storageHelper,
                                  std::vector<SignerRequirement>& result) const override;
 
+        void tryAutoApprove(StorageHelper& storageHelper, Application& app,
+                            ReviewableRequestFrame::pointer requestFrame);
     public:
 
         CreateRedemptionRequestOpFrame(Operation const &op, OperationResult &res,

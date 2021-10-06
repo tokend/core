@@ -59,6 +59,9 @@ private:
     processStatistics(AccountFrame::pointer from, BalanceFrame::pointer fromBalance,
                       uint64_t amount);
 
+    std::vector<std::string>
+    makeTasksKeyVector(AssetCode const& code);
+
     [[deprecated]]
     bool
     calculateUniversalAmount(AssetCode transferAsset, uint64_t amount);

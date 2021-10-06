@@ -14,6 +14,7 @@ namespace stellar
     char const * ManageKeyValueOpFrame::externalSystemPrefix = "ext_sys_exp_period";
     char const * ManageKeyValueOpFrame::issuanceTasksPrefix = "issuance_tasks";
     char const * ManageKeyValueOpFrame::withdrawalTasksPrefix = "withdrawal_tasks";
+    char const * ManageKeyValueOpFrame::feeCollectionBalancePrefix = "fee_collection_balance";
     char const * ManageKeyValueOpFrame::preIssuanceTasksPrefix = "preissuance_tasks";
     char const * ManageKeyValueOpFrame::assetCreateTasks = "asset_create_tasks";
     char const * ManageKeyValueOpFrame::assetUpdateTasks = "asset_update_tasks";
@@ -235,6 +236,13 @@ longstring ManageKeyValueOpFrame::makeWithdrawalTasksKey(AssetCode assetCode)
 {
     longstring key;
     key = key + withdrawalTasksPrefix + ":" + assetCode;
+    return key;
+}
+
+longstring ManageKeyValueOpFrame::makeFeeCollectionBalanceKey(AssetCode assetCode)
+{
+    longstring key;
+    key = key + feeCollectionBalancePrefix + ":" + assetCode;
     return key;
 }
 

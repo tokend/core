@@ -32,7 +32,7 @@ class PaymentOpFrame : public OperationFrame {
     bool
     processTransferFee(BalanceManager& balanceManager, AccountFrame::pointer payer,
                        BalanceFrame::pointer candidateToCharge, Fee expectedFee, Fee actualFee,
-                       uint64_t& universalAmount, LedgerManager& lm);
+                       uint64_t& universalAmount, LedgerManager& lm,StorageHelper& sh);
 
     void
     setErrorCode(BalanceManager::Result transferResult);

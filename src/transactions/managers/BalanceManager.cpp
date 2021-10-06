@@ -4,6 +4,8 @@
 #include "ledger/AssetHelper.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/LedgerManager.h"
+#include "ledger/KeyValueHelper.h"
+#include "transactions/ManageKeyValueOpFrame.h"
 #include "ledger/AssetPairHelper.h"
 #include "main/Application.h"
 #include "transactions/managers/StatisticsV2Processor.h"
@@ -62,13 +64,25 @@ BalanceManager::transferFee(AssetCode const& assetCode, uint64_t totalFee)
         return;
     }
 
+    BalanceFrame::pointer commissionBalance;
+    if(mLm.shouldUse(LedgerVersion::ADD_DEFAULT_FEE_RECEIVER_BALANCE_KV)){
+        auto& keyValueHelper = mSh.getKeyValueHelper();
+        BalanceID commissionBalanceID;
+        if(keyValueHelper.loadBalanceID(commissionBalanceID, makeTasksKeyVector(assetCode))){
+            commissionBalance = mSh.getBalanceHelper().loadBalance(commissionBalanceID);
+        }
+    }
+
+    if(!commissionBalance){
+        commissionBalance = loadOrCreateBalanceForAdmin(assetCode);
+    }
+
     // load commission balance and transfer fee
-    auto commissionBalance = loadOrCreateBalanceForAdmin(assetCode);
 
     const auto result = commissionBalance->tryFundAccount(totalFee);
     if (result != BalanceFrame::Result::SUCCESS)
     {
-        std::string strBalanceID = PubKeyUtils::toStrKey(commissionBalance->getBalanceID());
+        std::string strBalanceID = BalanceKeyUtils::toStrKey(commissionBalance->getBalanceID());
         CLOG(ERROR, Logging::OPERATION_LOGGER)
             << "Failed to fund commission balance with fee, reason " << result
             << ". balanceID: " << strBalanceID;
@@ -191,6 +205,15 @@ BalanceManager::calculateUniversalAmount(AssetCode transferAsset, uint64_t amoun
 
     return mSh.getAssetPairHelper().convertAmount(assetPairFrame, transferAsset,
                                                       amount, Rounding::ROUND_UP, mUniversalAmount);
+}
+
+std::vector<std::string>
+BalanceManager::makeTasksKeyVector(AssetCode const& code)
+{
+    return
+        {
+            ManageKeyValueOpFrame::makeFeeCollectionBalanceKey(code),
+        };
 }
 
 }

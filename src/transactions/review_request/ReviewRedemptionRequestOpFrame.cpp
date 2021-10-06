@@ -25,7 +25,11 @@ bool ReviewRedemptionRequestOpFrame::handleApprove(Application &app, StorageHelp
     auto& requestHelper = storageHelper.getReviewableRequestHelper();
 
     auto& balanceHelper = storageHelper.getBalanceHelper();
-    createReference(storageHelper, request->getRequestor(), request->getReference());
+
+    auto reference = request->getReference();
+    if(!ledgerManager.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING) || reference && !reference->empty()){
+        createReference(storageHelper, request->getRequestor(), reference);
+    }
 
     auto srcBalanceFrame = balanceHelper.loadBalance(redemption.sourceBalanceID);
     if (!srcBalanceFrame) {
