@@ -71,6 +71,9 @@
 #include "xdr/operation-create-close-deferred-payment-request.h"
 #include "xdr/operation-cancel-deferred-payment-creation-request.h"
 #include "xdr/operation-cancel-close-deferred-payment-request.h"
+#include "xdr/operation-lp-swap.h"
+#include "xdr/operation-lp-add-liquidity.h"
+#include "xdr/operation-lp-remove-liquidity.h"
 
 namespace stellar {
 
@@ -143,6 +146,9 @@ struct Operation  : xdr::xdr_abstract {
       CancelDeferredPaymentCreationRequestOp cancelDeferredPaymentCreationRequestOp_;
       CreateCloseDeferredPaymentRequestOp createCloseDeferredPaymentRequestOp_;
       CancelCloseDeferredPaymentRequestOp cancelCloseDeferredPaymentRequestOp_;
+      LPSwapOp lpSwapOp_;
+      LPAddLiquidityOp lpAddLiquidityOp_;
+      LPRemoveLiquidityOp lpRemoveLiquidityOp_;
     };
 
   public:
@@ -211,7 +217,10 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
         OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
         OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
-        OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST
+        OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST,
+        OperationType::LP_SWAP,
+        OperationType::LP_ADD_LIQUIDITY,
+        OperationType::LP_REMOVE_LIQUIDITY
       };
       return _xdr_disc_vec;
     }
@@ -279,6 +288,9 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST ? 61
         : which == (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST ? 62
         : which == (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST ? 63
+        : which == (int32_t)OperationType::LP_SWAP ? 64
+        : which == (int32_t)OperationType::LP_ADD_LIQUIDITY ? 65
+        : which == (int32_t)OperationType::LP_REMOVE_LIQUIDITY ? 66
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -472,6 +484,15 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
         _f(&_body_t::cancelCloseDeferredPaymentRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::LP_SWAP:
+        _f(&_body_t::lpSwapOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+        _f(&_body_t::lpAddLiquidityOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+        _f(&_body_t::lpRemoveLiquidityOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -675,6 +696,15 @@ break;
         case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp{};
 break;
+        case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapOp_) LPSwapOp{};
+break;
+        case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityOp_) LPAddLiquidityOp{};
+break;
+        case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp{};
+break;
 }
 
       }
@@ -873,6 +903,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp{};
 break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapOp_) LPSwapOp{};
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityOp_) LPAddLiquidityOp{};
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp{};
+break;
 }
 
     }
@@ -1067,6 +1106,15 @@ new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(s
 break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(source.cancelCloseDeferredPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapOp_) LPSwapOp(source.lpSwapOp_);
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityOp_) LPAddLiquidityOp(source.lpAddLiquidityOp_);
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(source.lpRemoveLiquidityOp_);
 break;
 }
 
@@ -1263,6 +1311,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(std::move(source.cancelCloseDeferredPaymentRequestOp_));
 break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapOp_) LPSwapOp(std::move(source.lpSwapOp_));
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityOp_) LPAddLiquidityOp(std::move(source.lpAddLiquidityOp_));
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(std::move(source.lpRemoveLiquidityOp_));
+break;
 }
 
     }
@@ -1457,6 +1514,15 @@ createCloseDeferredPaymentRequestOp_.~CreateCloseDeferredPaymentRequestOp();
 break;
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 cancelCloseDeferredPaymentRequestOp_.~CancelCloseDeferredPaymentRequestOp();
+break;
+    case (int32_t)OperationType::LP_SWAP:
+lpSwapOp_.~LPSwapOp();
+break;
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+lpAddLiquidityOp_.~LPAddLiquidityOp();
+break;
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+lpRemoveLiquidityOp_.~LPRemoveLiquidityOp();
 break;
 }
 }
@@ -1655,6 +1721,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 cancelCloseDeferredPaymentRequestOp_ = source.cancelCloseDeferredPaymentRequestOp_;
 break;
+      case (int32_t)OperationType::LP_SWAP:
+lpSwapOp_ = source.lpSwapOp_;
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+lpAddLiquidityOp_ = source.lpAddLiquidityOp_;
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+lpRemoveLiquidityOp_ = source.lpRemoveLiquidityOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1849,6 +1924,15 @@ new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(s
 break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(source.cancelCloseDeferredPaymentRequestOp_);
+break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapOp_) LPSwapOp(source.lpSwapOp_);
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityOp_) LPAddLiquidityOp(source.lpAddLiquidityOp_);
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(source.lpRemoveLiquidityOp_);
 break;
 }
 }
@@ -2048,6 +2132,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 cancelCloseDeferredPaymentRequestOp_ = std::move(source.cancelCloseDeferredPaymentRequestOp_);
 break;
+      case (int32_t)OperationType::LP_SWAP:
+lpSwapOp_ = std::move(source.lpSwapOp_);
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+lpAddLiquidityOp_ = std::move(source.lpAddLiquidityOp_);
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+lpRemoveLiquidityOp_ = std::move(source.lpRemoveLiquidityOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -2242,6 +2335,15 @@ new(&createCloseDeferredPaymentRequestOp_) CreateCloseDeferredPaymentRequestOp(s
 break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestOp_) CancelCloseDeferredPaymentRequestOp(std::move(source.cancelCloseDeferredPaymentRequestOp_));
+break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapOp_) LPSwapOp(std::move(source.lpSwapOp_));
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityOp_) LPAddLiquidityOp(std::move(source.lpAddLiquidityOp_));
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(std::move(source.lpRemoveLiquidityOp_));
 break;
 }
 }
@@ -2883,6 +2985,36 @@ break;
       if (_xdr_field_number(type_) == 63)
         return cancelCloseDeferredPaymentRequestOp_;
       throw xdr::xdr_wrong_union("_body_t: cancelCloseDeferredPaymentRequestOp accessed when not selected");
+    }
+    LPSwapOp &lpSwapOp() {
+      if (_xdr_field_number(type_) == 64)
+        return lpSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: lpSwapOp accessed when not selected");
+    }
+    const LPSwapOp &lpSwapOp() const {
+      if (_xdr_field_number(type_) == 64)
+        return lpSwapOp_;
+      throw xdr::xdr_wrong_union("_body_t: lpSwapOp accessed when not selected");
+    }
+    LPAddLiquidityOp &lpAddLiquidityOp() {
+      if (_xdr_field_number(type_) == 65)
+        return lpAddLiquidityOp_;
+      throw xdr::xdr_wrong_union("_body_t: lpAddLiquidityOp accessed when not selected");
+    }
+    const LPAddLiquidityOp &lpAddLiquidityOp() const {
+      if (_xdr_field_number(type_) == 65)
+        return lpAddLiquidityOp_;
+      throw xdr::xdr_wrong_union("_body_t: lpAddLiquidityOp accessed when not selected");
+    }
+    LPRemoveLiquidityOp &lpRemoveLiquidityOp() {
+      if (_xdr_field_number(type_) == 66)
+        return lpRemoveLiquidityOp_;
+      throw xdr::xdr_wrong_union("_body_t: lpRemoveLiquidityOp accessed when not selected");
+    }
+    const LPRemoveLiquidityOp &lpRemoveLiquidityOp() const {
+      if (_xdr_field_number(type_) == 66)
+        return lpRemoveLiquidityOp_;
+      throw xdr::xdr_wrong_union("_body_t: lpRemoveLiquidityOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -3692,6 +3824,9 @@ struct OperationResult : xdr::xdr_abstract {
       CancelDeferredPaymentCreationRequestResult cancelDeferredPaymentCreationRequestResult_;
       CreateCloseDeferredPaymentRequestResult createCloseDeferredPaymentRequestResult_;
       CancelCloseDeferredPaymentRequestResult cancelCloseDeferredPaymentRequestResult_;
+      LPSwapResult lpSwapResult_;
+      LPAddLiquidityResult lpAddLiquidityResult_;
+      LPRemoveLiquidityResult lpRemoveLiquidityResult_;
     };
 
   public:
@@ -3760,7 +3895,10 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
         OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
         OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
-        OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST
+        OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST,
+        OperationType::LP_SWAP,
+        OperationType::LP_ADD_LIQUIDITY,
+        OperationType::LP_REMOVE_LIQUIDITY
       };
       return _xdr_disc_vec;
     }
@@ -3828,6 +3966,9 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST ? 61
         : which == (int32_t)OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST ? 62
         : which == (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST ? 63
+        : which == (int32_t)OperationType::LP_SWAP ? 64
+        : which == (int32_t)OperationType::LP_ADD_LIQUIDITY ? 65
+        : which == (int32_t)OperationType::LP_REMOVE_LIQUIDITY ? 66
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -4021,6 +4162,15 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
         _f(&_tr_t::cancelCloseDeferredPaymentRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::LP_SWAP:
+        _f(&_tr_t::lpSwapResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+        _f(&_tr_t::lpAddLiquidityResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+        _f(&_tr_t::lpRemoveLiquidityResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -4224,6 +4374,15 @@ break;
         case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult{};
 break;
+        case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapResult_) LPSwapResult{};
+break;
+        case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityResult_) LPAddLiquidityResult{};
+break;
+        case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult{};
+break;
 }
 
       }
@@ -4422,6 +4581,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult{};
 break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapResult_) LPSwapResult{};
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityResult_) LPAddLiquidityResult{};
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult{};
+break;
 }
 
     }
@@ -4616,6 +4784,15 @@ new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequest
 break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(source.cancelCloseDeferredPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapResult_) LPSwapResult(source.lpSwapResult_);
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityResult_) LPAddLiquidityResult(source.lpAddLiquidityResult_);
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(source.lpRemoveLiquidityResult_);
 break;
 }
 
@@ -4812,6 +4989,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(std::move(source.cancelCloseDeferredPaymentRequestResult_));
 break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapResult_) LPSwapResult(std::move(source.lpSwapResult_));
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityResult_) LPAddLiquidityResult(std::move(source.lpAddLiquidityResult_));
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(std::move(source.lpRemoveLiquidityResult_));
+break;
 }
 
     }
@@ -5006,6 +5192,15 @@ createCloseDeferredPaymentRequestResult_.~CreateCloseDeferredPaymentRequestResul
 break;
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 cancelCloseDeferredPaymentRequestResult_.~CancelCloseDeferredPaymentRequestResult();
+break;
+    case (int32_t)OperationType::LP_SWAP:
+lpSwapResult_.~LPSwapResult();
+break;
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+lpAddLiquidityResult_.~LPAddLiquidityResult();
+break;
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+lpRemoveLiquidityResult_.~LPRemoveLiquidityResult();
 break;
 }
 }
@@ -5204,6 +5399,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 cancelCloseDeferredPaymentRequestResult_ = source.cancelCloseDeferredPaymentRequestResult_;
 break;
+      case (int32_t)OperationType::LP_SWAP:
+lpSwapResult_ = source.lpSwapResult_;
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+lpAddLiquidityResult_ = source.lpAddLiquidityResult_;
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+lpRemoveLiquidityResult_ = source.lpRemoveLiquidityResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -5398,6 +5602,15 @@ new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequest
 break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(source.cancelCloseDeferredPaymentRequestResult_);
+break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapResult_) LPSwapResult(source.lpSwapResult_);
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityResult_) LPAddLiquidityResult(source.lpAddLiquidityResult_);
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(source.lpRemoveLiquidityResult_);
 break;
 }
 }
@@ -5597,6 +5810,15 @@ break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 cancelCloseDeferredPaymentRequestResult_ = std::move(source.cancelCloseDeferredPaymentRequestResult_);
 break;
+      case (int32_t)OperationType::LP_SWAP:
+lpSwapResult_ = std::move(source.lpSwapResult_);
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+lpAddLiquidityResult_ = std::move(source.lpAddLiquidityResult_);
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+lpRemoveLiquidityResult_ = std::move(source.lpRemoveLiquidityResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -5791,6 +6013,15 @@ new(&createCloseDeferredPaymentRequestResult_) CreateCloseDeferredPaymentRequest
 break;
       case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 new(&cancelCloseDeferredPaymentRequestResult_) CancelCloseDeferredPaymentRequestResult(std::move(source.cancelCloseDeferredPaymentRequestResult_));
+break;
+      case (int32_t)OperationType::LP_SWAP:
+new(&lpSwapResult_) LPSwapResult(std::move(source.lpSwapResult_));
+break;
+      case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+new(&lpAddLiquidityResult_) LPAddLiquidityResult(std::move(source.lpAddLiquidityResult_));
+break;
+      case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(std::move(source.lpRemoveLiquidityResult_));
 break;
 }
 }
@@ -6432,6 +6663,36 @@ break;
       if (_xdr_field_number(type_) == 63)
         return cancelCloseDeferredPaymentRequestResult_;
       throw xdr::xdr_wrong_union("_tr_t: cancelCloseDeferredPaymentRequestResult accessed when not selected");
+    }
+    LPSwapResult &lpSwapResult() {
+      if (_xdr_field_number(type_) == 64)
+        return lpSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: lpSwapResult accessed when not selected");
+    }
+    const LPSwapResult &lpSwapResult() const {
+      if (_xdr_field_number(type_) == 64)
+        return lpSwapResult_;
+      throw xdr::xdr_wrong_union("_tr_t: lpSwapResult accessed when not selected");
+    }
+    LPAddLiquidityResult &lpAddLiquidityResult() {
+      if (_xdr_field_number(type_) == 65)
+        return lpAddLiquidityResult_;
+      throw xdr::xdr_wrong_union("_tr_t: lpAddLiquidityResult accessed when not selected");
+    }
+    const LPAddLiquidityResult &lpAddLiquidityResult() const {
+      if (_xdr_field_number(type_) == 65)
+        return lpAddLiquidityResult_;
+      throw xdr::xdr_wrong_union("_tr_t: lpAddLiquidityResult accessed when not selected");
+    }
+    LPRemoveLiquidityResult &lpRemoveLiquidityResult() {
+      if (_xdr_field_number(type_) == 66)
+        return lpRemoveLiquidityResult_;
+      throw xdr::xdr_wrong_union("_tr_t: lpRemoveLiquidityResult accessed when not selected");
+    }
+    const LPRemoveLiquidityResult &lpRemoveLiquidityResult() const {
+      if (_xdr_field_number(type_) == 66)
+        return lpRemoveLiquidityResult_;
+      throw xdr::xdr_wrong_union("_tr_t: lpRemoveLiquidityResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

@@ -32,6 +32,7 @@
 #include "SwapHelperImpl.h"
 #include "DataHelperImpl.h"
 #include "DeferredPaymentHelperImpl.h"
+#include "LiquidityPoolHelperImpl.h"
 
 
 namespace stellar
@@ -76,6 +77,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::PENDING_STATISTICS, &getPendingStatisticsHelper()},
         {LedgerEntryType::STATISTICS_V2, &getStatisticsV2Helper()},
         {LedgerEntryType::DEFERRED_PAYMENT, &getDeferredPaymentHelper()},
+        {LedgerEntryType::LIQUIDITY_POOL, &getLiquidityPoolEntryHelper()}
     };
 }
 
@@ -568,6 +570,16 @@ StorageHelperImpl::getDeferredPaymentHelper()
         mDeferredPaymentHelper = std::make_unique<DeferredPaymentHelperImpl>(*this);
     }
     return *mDeferredPaymentHelper;
+}
+
+LiquidityPoolHelper&
+StorageHelperImpl::getLiquidityPoolEntryHelper()
+{
+    if (!mLiquidityPoolHelper)
+    {
+        mLiquidityPoolHelper = std::make_unique<LiquidityPoolHelperImpl>(*this);
+    }
+    return *mLiquidityPoolHelper;
 }
 
 } // namespace stellar

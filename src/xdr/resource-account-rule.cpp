@@ -2430,6 +2430,107 @@ if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
 }bool
+AccountRuleResource::_liquidityPool_t::from_bytes(xdr::unmarshaler& u) 
+{
+bool okfirstAsset = u.from_bytes(firstAsset);
+if (!okfirstAsset)
+{
+return false;
+}
+bool okfirstAssetType = u.from_bytes(firstAssetType);
+if (!okfirstAssetType)
+{
+return false;
+}
+bool oksecondAsset = u.from_bytes(secondAsset);
+if (!oksecondAsset)
+{
+return false;
+}
+bool oksecondAssetType = u.from_bytes(secondAssetType);
+if (!oksecondAssetType)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+bool
+AccountRuleResource::_liquidityPool_t::to_bytes(xdr::marshaler& m) const 
+{
+bool okfirstAsset = m.to_bytes(firstAsset);
+if (!okfirstAsset)
+{
+return false;
+}
+bool okfirstAssetType = m.to_bytes(firstAssetType);
+if (!okfirstAssetType)
+{
+return false;
+}
+bool oksecondAsset = m.to_bytes(secondAsset);
+if (!oksecondAsset)
+{
+return false;
+}
+bool oksecondAssetType = m.to_bytes(secondAssetType);
+if (!oksecondAssetType)
+{
+return false;
+}
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
+return true;
+}
+void
+AccountRuleResource::_liquidityPool_t::count_size(xdr::measurer& m) const 
+{
+m.count_size(firstAsset);
+m.count_size(firstAssetType);
+m.count_size(secondAsset);
+m.count_size(secondAssetType);
+m.count_size(ext);
+}
+bool
+AccountRuleResource::_liquidityPool_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+return false;
+}auto& other = dynamic_cast<_liquidityPool_t const&>(other_abstract);return true
+&& (firstAsset== other.firstAsset)
+&& (firstAssetType== other.firstAssetType)
+&& (secondAsset== other.secondAsset)
+&& (secondAssetType== other.secondAssetType)
+&& (ext== other.ext)
+;}
+bool
+AccountRuleResource::_liquidityPool_t::operator<(xdr_abstract const& other_abstract) const
+{
+if (typeid(*this) != typeid(other_abstract))
+{
+throw std::runtime_error("unexpected operator< invoke");
+}
+auto& other = dynamic_cast<_liquidityPool_t const&>(other_abstract);
+if (firstAsset < other.firstAsset) return true;
+if (other.firstAsset < firstAsset) return false;
+if (firstAssetType < other.firstAssetType) return true;
+if (other.firstAssetType < firstAssetType) return false;
+if (secondAsset < other.secondAsset) return true;
+if (other.secondAsset < secondAsset) return false;
+if (secondAssetType < other.secondAssetType) return true;
+if (other.secondAssetType < secondAssetType) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
+return false;
+}bool
 AccountRuleResource::from_bytes(xdr::unmarshaler& u) 
 {
 int32_t disc;bool ok = u.from_bytes(disc);
@@ -2468,6 +2569,8 @@ return u.from_bytes(swap_);
 return u.from_bytes(data_);
   case (int32_t)LedgerEntryType::CUSTOM:
 return u.from_bytes(custom_);
+  case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return u.from_bytes(liquidityPool_);
   default:
 return u.from_bytes(ext_);
 }
@@ -2512,6 +2615,8 @@ return m.to_bytes(swap_);
 return m.to_bytes(data_);
   case (int32_t)LedgerEntryType::CUSTOM:
 return m.to_bytes(custom_);
+  case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return m.to_bytes(liquidityPool_);
   default:
 return m.to_bytes(ext_);
 }
@@ -2553,6 +2658,8 @@ return m.count_size(swap_);
 return m.count_size(data_);
   case (int32_t)LedgerEntryType::CUSTOM:
 return m.count_size(custom_);
+  case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return m.count_size(liquidityPool_);
   default:
 return m.count_size(ext_);
 }
@@ -2597,6 +2704,8 @@ return swap_ == other.swap_;
 return data_ == other.data_;
   case (int32_t)LedgerEntryType::CUSTOM:
 return custom_ == other.custom_;
+  case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return liquidityPool_ == other.liquidityPool_;
   default:
 return ext_ == other.ext_;
 }
@@ -2642,6 +2751,8 @@ return swap_ < other.swap_;
 return data_ < other.data_;
   case (int32_t)LedgerEntryType::CUSTOM:
 return custom_ < other.custom_;
+  case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return liquidityPool_ < other.liquidityPool_;
   default:
 return ext_ < other.ext_;
 }

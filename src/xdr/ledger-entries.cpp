@@ -83,6 +83,8 @@ return u.from_bytes(swap_);
 return u.from_bytes(data_);
     case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 return u.from_bytes(deferredPayment_);
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return u.from_bytes(liquidityPool_);
 }
 return false;
 }
@@ -163,6 +165,8 @@ return m.to_bytes(swap_);
 return m.to_bytes(data_);
     case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 return m.to_bytes(deferredPayment_);
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return m.to_bytes(liquidityPool_);
 }
 return false;
 }
@@ -239,6 +243,8 @@ return m.count_size(swap_);
 return m.count_size(data_);
     case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 return m.count_size(deferredPayment_);
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return m.count_size(liquidityPool_);
 }
 }
 bool
@@ -318,6 +324,8 @@ return swap_ == other.swap_;
 return data_ == other.data_;
     case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 return deferredPayment_ == other.deferredPayment_;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return liquidityPool_ == other.liquidityPool_;
 }
 return false;
 }
@@ -399,6 +407,8 @@ return swap_ < other.swap_;
 return data_ < other.data_;
     case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 return deferredPayment_ < other.deferredPayment_;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+return liquidityPool_ < other.liquidityPool_;
 }
 return false;
 }

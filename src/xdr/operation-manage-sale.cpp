@@ -585,6 +585,8 @@ _xdr_discriminant(disc, true);switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return u.from_bytes(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
+    
+  return true;
     case (int32_t)ManageSaleAction::UPDATE_TIME:
     
   return true;
@@ -605,6 +607,7 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return m.to_bytes(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
+      return true;
     case (int32_t)ManageSaleAction::UPDATE_TIME:
       return true;
 }
@@ -620,6 +623,8 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return m.count_size(requestID_);
     case (int32_t)ManageSaleAction::CANCEL:
+    
+  return;
     case (int32_t)ManageSaleAction::UPDATE_TIME:
     
   return;
@@ -639,6 +644,8 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return requestID_ == other.requestID_;
     case (int32_t)ManageSaleAction::CANCEL:
+    
+  return true;
     case (int32_t)ManageSaleAction::UPDATE_TIME:
     
   return true;
@@ -660,6 +667,7 @@ switch (action_)
     case (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST:
 return requestID_ < other.requestID_;
     case (int32_t)ManageSaleAction::CANCEL:
+      return false;
     case (int32_t)ManageSaleAction::UPDATE_TIME:
       return false;
 }

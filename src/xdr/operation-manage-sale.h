@@ -856,7 +856,8 @@ struct ManageSaleResultSuccess  : xdr::xdr_abstract {
     }
     static constexpr int _xdr_field_number(_xdr_case_type which) {
       return which == (int32_t)ManageSaleAction::CREATE_UPDATE_DETAILS_REQUEST ? 1
-        : which == (int32_t)ManageSaleAction::CANCEL || which == (int32_t)ManageSaleAction::UPDATE_TIME ? 0
+        : which == (int32_t)ManageSaleAction::CANCEL ? 0
+        : which == (int32_t)ManageSaleAction::UPDATE_TIME ? 0
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -866,6 +867,7 @@ struct ManageSaleResultSuccess  : xdr::xdr_abstract {
         _f(&_response_t::requestID_, std::forward<_A>(_a)...);
         return true;
       case (int32_t)ManageSaleAction::CANCEL:
+        return true;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         return true;
       }
@@ -885,6 +887,7 @@ struct ManageSaleResultSuccess  : xdr::xdr_abstract {
 new(&requestID_) uint64{};
 break;
         case (int32_t)ManageSaleAction::CANCEL:
+          break;
         case (int32_t)ManageSaleAction::UPDATE_TIME:
           break;
 }
@@ -900,6 +903,7 @@ break;
 new(&requestID_) uint64{};
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }
@@ -912,6 +916,7 @@ break;
 new(&requestID_) uint64(source.requestID_);
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }
@@ -924,6 +929,7 @@ break;
 new(&requestID_) uint64(std::move(source.requestID_));
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }
@@ -936,6 +942,7 @@ switch (action_)
 requestID_.~uint64();
 break;
     case (int32_t)ManageSaleAction::CANCEL:
+      break;
     case (int32_t)ManageSaleAction::UPDATE_TIME:
       break;
 }
@@ -950,6 +957,7 @@ switch (action_)
 requestID_ = source.requestID_;
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }
@@ -962,6 +970,7 @@ switch (action_)
 new(&requestID_) uint64(source.requestID_);
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }
@@ -977,6 +986,7 @@ switch (action_)
 requestID_ = std::move(source.requestID_);
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }
@@ -989,6 +999,7 @@ switch (action_)
 new(&requestID_) uint64(std::move(source.requestID_));
 break;
       case (int32_t)ManageSaleAction::CANCEL:
+        break;
       case (int32_t)ManageSaleAction::UPDATE_TIME:
         break;
 }

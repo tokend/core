@@ -41,6 +41,7 @@ class PendingStatisticsHelper;
 class StatisticsV2Helper;
 class DataHelper;
 class DeferredPaymentHelper;
+class LiquidityPoolHelper;
 
 class StorageHelperImpl : public StorageHelper {
 public:
@@ -99,6 +100,7 @@ private:
     StatisticsV2Helper& getStatisticsV2Helper() override;
     DataHelper& getDataHelper() override;
     DeferredPaymentHelper& getDeferredPaymentHelper() override;
+    LiquidityPoolHelper& getLiquidityPoolEntryHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;
@@ -142,5 +144,6 @@ private:
     std::unique_ptr<StatisticsV2Helper> mStatisticsV2Helper;
     std::unique_ptr<DataHelper> mDataHelper;
     std::unique_ptr<DeferredPaymentHelper> mDeferredPaymentHelper;
+    std::unique_ptr<LiquidityPoolHelper> mLiquidityPoolHelper;
 };
 } // namespace stellar

@@ -143,6 +143,12 @@ return u.from_bytes(cancelDeferredPaymentCreationRequestOp_);
 return u.from_bytes(createCloseDeferredPaymentRequestOp_);
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return u.from_bytes(cancelCloseDeferredPaymentRequestOp_);
+    case (int32_t)OperationType::LP_SWAP:
+return u.from_bytes(lpSwapOp_);
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return u.from_bytes(lpAddLiquidityOp_);
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return u.from_bytes(lpRemoveLiquidityOp_);
 }
 return false;
 }
@@ -283,6 +289,12 @@ return m.to_bytes(cancelDeferredPaymentCreationRequestOp_);
 return m.to_bytes(createCloseDeferredPaymentRequestOp_);
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return m.to_bytes(cancelCloseDeferredPaymentRequestOp_);
+    case (int32_t)OperationType::LP_SWAP:
+return m.to_bytes(lpSwapOp_);
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return m.to_bytes(lpAddLiquidityOp_);
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return m.to_bytes(lpRemoveLiquidityOp_);
 }
 return false;
 }
@@ -419,6 +431,12 @@ return m.count_size(cancelDeferredPaymentCreationRequestOp_);
 return m.count_size(createCloseDeferredPaymentRequestOp_);
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return m.count_size(cancelCloseDeferredPaymentRequestOp_);
+    case (int32_t)OperationType::LP_SWAP:
+return m.count_size(lpSwapOp_);
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return m.count_size(lpAddLiquidityOp_);
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return m.count_size(lpRemoveLiquidityOp_);
 }
 }
 bool
@@ -558,6 +576,12 @@ return cancelDeferredPaymentCreationRequestOp_ == other.cancelDeferredPaymentCre
 return createCloseDeferredPaymentRequestOp_ == other.createCloseDeferredPaymentRequestOp_;
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return cancelCloseDeferredPaymentRequestOp_ == other.cancelCloseDeferredPaymentRequestOp_;
+    case (int32_t)OperationType::LP_SWAP:
+return lpSwapOp_ == other.lpSwapOp_;
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return lpAddLiquidityOp_ == other.lpAddLiquidityOp_;
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return lpRemoveLiquidityOp_ == other.lpRemoveLiquidityOp_;
 }
 return false;
 }
@@ -699,6 +723,12 @@ return cancelDeferredPaymentCreationRequestOp_ < other.cancelDeferredPaymentCrea
 return createCloseDeferredPaymentRequestOp_ < other.createCloseDeferredPaymentRequestOp_;
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return cancelCloseDeferredPaymentRequestOp_ < other.cancelCloseDeferredPaymentRequestOp_;
+    case (int32_t)OperationType::LP_SWAP:
+return lpSwapOp_ < other.lpSwapOp_;
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return lpAddLiquidityOp_ < other.lpAddLiquidityOp_;
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return lpRemoveLiquidityOp_ < other.lpRemoveLiquidityOp_;
 }
 return false;
 }
@@ -1413,6 +1443,12 @@ return u.from_bytes(cancelDeferredPaymentCreationRequestResult_);
 return u.from_bytes(createCloseDeferredPaymentRequestResult_);
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return u.from_bytes(cancelCloseDeferredPaymentRequestResult_);
+    case (int32_t)OperationType::LP_SWAP:
+return u.from_bytes(lpSwapResult_);
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return u.from_bytes(lpAddLiquidityResult_);
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return u.from_bytes(lpRemoveLiquidityResult_);
 }
 return false;
 }
@@ -1553,6 +1589,12 @@ return m.to_bytes(cancelDeferredPaymentCreationRequestResult_);
 return m.to_bytes(createCloseDeferredPaymentRequestResult_);
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return m.to_bytes(cancelCloseDeferredPaymentRequestResult_);
+    case (int32_t)OperationType::LP_SWAP:
+return m.to_bytes(lpSwapResult_);
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return m.to_bytes(lpAddLiquidityResult_);
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return m.to_bytes(lpRemoveLiquidityResult_);
 }
 return false;
 }
@@ -1689,6 +1731,12 @@ return m.count_size(cancelDeferredPaymentCreationRequestResult_);
 return m.count_size(createCloseDeferredPaymentRequestResult_);
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return m.count_size(cancelCloseDeferredPaymentRequestResult_);
+    case (int32_t)OperationType::LP_SWAP:
+return m.count_size(lpSwapResult_);
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return m.count_size(lpAddLiquidityResult_);
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return m.count_size(lpRemoveLiquidityResult_);
 }
 }
 bool
@@ -1828,6 +1876,12 @@ return cancelDeferredPaymentCreationRequestResult_ == other.cancelDeferredPaymen
 return createCloseDeferredPaymentRequestResult_ == other.createCloseDeferredPaymentRequestResult_;
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return cancelCloseDeferredPaymentRequestResult_ == other.cancelCloseDeferredPaymentRequestResult_;
+    case (int32_t)OperationType::LP_SWAP:
+return lpSwapResult_ == other.lpSwapResult_;
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return lpAddLiquidityResult_ == other.lpAddLiquidityResult_;
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return lpRemoveLiquidityResult_ == other.lpRemoveLiquidityResult_;
 }
 return false;
 }
@@ -1969,6 +2023,12 @@ return cancelDeferredPaymentCreationRequestResult_ < other.cancelDeferredPayment
 return createCloseDeferredPaymentRequestResult_ < other.createCloseDeferredPaymentRequestResult_;
     case (int32_t)OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
 return cancelCloseDeferredPaymentRequestResult_ < other.cancelCloseDeferredPaymentRequestResult_;
+    case (int32_t)OperationType::LP_SWAP:
+return lpSwapResult_ < other.lpSwapResult_;
+    case (int32_t)OperationType::LP_ADD_LIQUIDITY:
+return lpAddLiquidityResult_ < other.lpAddLiquidityResult_;
+    case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
+return lpRemoveLiquidityResult_ < other.lpRemoveLiquidityResult_;
 }
 return false;
 }
