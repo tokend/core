@@ -107,6 +107,7 @@ AssetHelperImpl::markDeleted(LedgerEntry const& entry, LedgerManager& lm)
     Database& db = getDatabase();
 
     auto assetFrame = make_shared<AssetFrame>(entry);
+    std::string assetCode = assetFrame->getCode();
 
     auto timer = db.getDeleteTimer("delete-asset");
     auto prep = db.getPreparedStatement(
@@ -114,7 +115,6 @@ AssetHelperImpl::markDeleted(LedgerEntry const& entry, LedgerManager& lm)
     auto& st = prep.statement();
 
     if (lm.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)) {
-        std::string assetCode = assetFrame->getCode();
         st.exchange(use(assetCode, "code"));
     } else {
         st.exchange(use(assetFrame->getCode(), "code"));
