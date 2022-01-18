@@ -106,12 +106,13 @@ AssetHelperImpl::markDeleted(LedgerEntry const& entry)
     Database& db = getDatabase();
 
     auto assetFrame = make_shared<AssetFrame>(entry);
+    std::string assetCode = assetFrame->getCode();
 
     auto timer = db.getDeleteTimer("delete-asset");
     auto prep = db.getPreparedStatement(
         "UPDATE asset SET state = :state WHERE code = :code");
     auto& st = prep.statement();
-    st.exchange(use(assetFrame->getCode(), "code"));
+    st.exchange(use(assetCode, "code"));
     int deletedState = int(AssetFrame::State::DELETED);
     st.exchange(use(deletedState, "state"));
 
