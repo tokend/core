@@ -302,6 +302,13 @@ struct LedgerEntryIdCmp
 
             return ad.id < bd.id;
         }
+        case LedgerEntryType::LIQUIDITY_POOL:
+        {
+            auto const& ad = a.liquidityPool();
+            auto const& bd = b.liquidityPool();
+
+            return ad.id < bd.id;
+        }
         default:
         {
             throw std::runtime_error(

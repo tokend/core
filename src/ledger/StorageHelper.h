@@ -101,7 +101,7 @@ class StorageHelper
     virtual StatisticsV2Helper& getStatisticsV2Helper() = 0;
     virtual DataHelper& getDataHelper() = 0;
     virtual DeferredPaymentHelper& getDeferredPaymentHelper() = 0;
-    virtual LiquidityPoolHelper& getLiquidityPoolEntryHelper() = 0;
+    virtual LiquidityPoolHelper& getLiquidityPoolHelper() = 0;
 
 };
 } // namespace stellar

@@ -295,39 +295,34 @@ count_size(xdr::measurer& m) const override;
 
   };
 
-  BalanceID sourceBalance{};
-  BalanceID targetBalance{};
+  AssetCode inputAsset{};
+  AssetCode outputAsset{};
   _lpSwapRequest_t lpSwapRequest{};
   PaymentFeeData feeData{};
-  int64 deadline{};
   EmptyExt ext{};
 
   LPSwapOp() = default;
-  template<typename _sourceBalance_T,
-           typename _targetBalance_T,
+  template<typename _inputAsset_T,
+           typename _outputAsset_T,
            typename _lpSwapRequest_T,
            typename _feeData_T,
-           typename _deadline_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<BalanceID, _sourceBalance_T>::value
-                          && std::is_constructible<BalanceID, _targetBalance_T>::value
+           std::enable_if<std::is_constructible<AssetCode, _inputAsset_T>::value
+                          && std::is_constructible<AssetCode, _outputAsset_T>::value
                           && std::is_constructible<_lpSwapRequest_t, _lpSwapRequest_T>::value
                           && std::is_constructible<PaymentFeeData, _feeData_T>::value
-                          && std::is_constructible<int64, _deadline_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit LPSwapOp(_sourceBalance_T &&_sourceBalance,
-                    _targetBalance_T &&_targetBalance,
+  explicit LPSwapOp(_inputAsset_T &&_inputAsset,
+                    _outputAsset_T &&_outputAsset,
                     _lpSwapRequest_T &&_lpSwapRequest,
                     _feeData_T &&_feeData,
-                    _deadline_T &&_deadline,
                     _ext_T &&_ext)
-    : sourceBalance(std::forward<_sourceBalance_T>(_sourceBalance)),
-      targetBalance(std::forward<_targetBalance_T>(_targetBalance)),
+    : inputAsset(std::forward<_inputAsset_T>(_inputAsset)),
+      outputAsset(std::forward<_outputAsset_T>(_outputAsset)),
       lpSwapRequest(std::forward<_lpSwapRequest_T>(_lpSwapRequest)),
       feeData(std::forward<_feeData_T>(_feeData)),
-      deadline(std::forward<_deadline_T>(_deadline)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
@@ -353,8 +348,7 @@ enum class LPSwapResultCode : std::int32_t {
   INSUFFICIENT_FEE_AMOUNT = -8,
   AMOUNT_IS_LESS_THAN_DEST_FEE = -9,
   INCORRECT_AMOUNT_PRECISION = -10,
-  SWAP_EXPIRED = -11,
-  INVALID_AMOUNT = -12,
+  INVALID_AMOUNT = -11,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPSwapResultCode>
@@ -386,8 +380,6 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       return "AMOUNT_IS_LESS_THAN_DEST_FEE";
     case ::stellar::LPSwapResultCode::INCORRECT_AMOUNT_PRECISION:
       return "INCORRECT_AMOUNT_PRECISION";
-    case ::stellar::LPSwapResultCode::SWAP_EXPIRED:
-      return "SWAP_EXPIRED";
     case ::stellar::LPSwapResultCode::INVALID_AMOUNT:
       return "INVALID_AMOUNT";
     default:
@@ -407,7 +399,6 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_FEE_AMOUNT,
       (int32_t)::stellar::LPSwapResultCode::AMOUNT_IS_LESS_THAN_DEST_FEE,
       (int32_t)::stellar::LPSwapResultCode::INCORRECT_AMOUNT_PRECISION,
-      (int32_t)::stellar::LPSwapResultCode::SWAP_EXPIRED,
       (int32_t)::stellar::LPSwapResultCode::INVALID_AMOUNT
     };
     return _xdr_enum_vec;
@@ -417,7 +408,7 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
 
 struct LPSwapSuccess  : xdr::xdr_abstract {
   uint64 liquidityPoolID{};
-  AccountID pool{};
+  AccountID poolAccount{};
   BalanceID destBalance{};
   AssetCode sourceAsset{};
   AssetCode targetAsset{};
@@ -429,7 +420,7 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
 
   LPSwapSuccess() = default;
   template<typename _liquidityPoolID_T,
-           typename _pool_T,
+           typename _poolAccount_T,
            typename _destBalance_T,
            typename _sourceAsset_T,
            typename _targetAsset_T,
@@ -440,7 +431,7 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
-                          && std::is_constructible<AccountID, _pool_T>::value
+                          && std::is_constructible<AccountID, _poolAccount_T>::value
                           && std::is_constructible<BalanceID, _destBalance_T>::value
                           && std::is_constructible<AssetCode, _sourceAsset_T>::value
                           && std::is_constructible<AssetCode, _targetAsset_T>::value
@@ -451,7 +442,7 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit LPSwapSuccess(_liquidityPoolID_T &&_liquidityPoolID,
-                         _pool_T &&_pool,
+                         _poolAccount_T &&_poolAccount,
                          _destBalance_T &&_destBalance,
                          _sourceAsset_T &&_sourceAsset,
                          _targetAsset_T &&_targetAsset,
@@ -461,7 +452,7 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          _actualDestinationPaymentFee_T &&_actualDestinationPaymentFee,
                          _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
-      pool(std::forward<_pool_T>(_pool)),
+      poolAccount(std::forward<_poolAccount_T>(_poolAccount)),
       destBalance(std::forward<_destBalance_T>(_destBalance)),
       sourceAsset(std::forward<_sourceAsset_T>(_sourceAsset)),
       targetAsset(std::forward<_targetAsset_T>(_targetAsset)),

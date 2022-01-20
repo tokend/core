@@ -13,54 +13,44 @@
 namespace stellar {
 
 struct LPAddLiquidityOp  : xdr::xdr_abstract {
-  AssetCode firstAsset{};
-  AssetCode secondAsset{};
+  BalanceID firstAssetBalance{};
+  BalanceID secondAssetBalance{};
   uint64 firstAssetDesiredAmount{};
   uint64 secondAssetDesiredAmount{};
   uint64 firstAssetMinAmount{};
   uint64 secondAssetMinAmount{};
-  PaymentFeeData feeData{};
-  uint64 deadline{};
   EmptyExt ext{};
 
   LPAddLiquidityOp() = default;
-  template<typename _firstAsset_T,
-           typename _secondAsset_T,
+  template<typename _firstAssetBalance_T,
+           typename _secondAssetBalance_T,
            typename _firstAssetDesiredAmount_T,
            typename _secondAssetDesiredAmount_T,
            typename _firstAssetMinAmount_T,
            typename _secondAssetMinAmount_T,
-           typename _feeData_T,
-           typename _deadline_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<AssetCode, _firstAsset_T>::value
-                          && std::is_constructible<AssetCode, _secondAsset_T>::value
+           std::enable_if<std::is_constructible<BalanceID, _firstAssetBalance_T>::value
+                          && std::is_constructible<BalanceID, _secondAssetBalance_T>::value
                           && std::is_constructible<uint64, _firstAssetDesiredAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetDesiredAmount_T>::value
                           && std::is_constructible<uint64, _firstAssetMinAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetMinAmount_T>::value
-                          && std::is_constructible<PaymentFeeData, _feeData_T>::value
-                          && std::is_constructible<uint64, _deadline_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit LPAddLiquidityOp(_firstAsset_T &&_firstAsset,
-                            _secondAsset_T &&_secondAsset,
+  explicit LPAddLiquidityOp(_firstAssetBalance_T &&_firstAssetBalance,
+                            _secondAssetBalance_T &&_secondAssetBalance,
                             _firstAssetDesiredAmount_T &&_firstAssetDesiredAmount,
                             _secondAssetDesiredAmount_T &&_secondAssetDesiredAmount,
                             _firstAssetMinAmount_T &&_firstAssetMinAmount,
                             _secondAssetMinAmount_T &&_secondAssetMinAmount,
-                            _feeData_T &&_feeData,
-                            _deadline_T &&_deadline,
                             _ext_T &&_ext)
-    : firstAsset(std::forward<_firstAsset_T>(_firstAsset)),
-      secondAsset(std::forward<_secondAsset_T>(_secondAsset)),
+    : firstAssetBalance(std::forward<_firstAssetBalance_T>(_firstAssetBalance)),
+      secondAssetBalance(std::forward<_secondAssetBalance_T>(_secondAssetBalance)),
       firstAssetDesiredAmount(std::forward<_firstAssetDesiredAmount_T>(_firstAssetDesiredAmount)),
       secondAssetDesiredAmount(std::forward<_secondAssetDesiredAmount_T>(_secondAssetDesiredAmount)),
       firstAssetMinAmount(std::forward<_firstAssetMinAmount_T>(_firstAssetMinAmount)),
       secondAssetMinAmount(std::forward<_secondAssetMinAmount_T>(_secondAssetMinAmount)),
-      feeData(std::forward<_feeData_T>(_feeData)),
-      deadline(std::forward<_deadline_T>(_deadline)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
@@ -80,9 +70,14 @@ enum class LPAddLiquidityResultCode : std::int32_t {
   UNDERFUNDED = -2,
   LINE_FULL = -3,
   NOT_ALLOWED_BY_ASSET_POLICY = -4,
-  INVALID_DESTINATION_FEE = -5,
-  INSUFFICIENT_FEE_AMOUNT = -6,
-  PROVIDED_AMOUNT_IS_LESS_THAN_FEE = -7,
+  SRC_BALANCE_NOT_FOUND = -5,
+  INVALID_DESIRED_AMOUNT = -6,
+  INVALID_MIN_AMOUNT = -7,
+  INCORRECT_AMOUNT_PRECISION = -8,
+  INSUFFICIENT_FIRST_ASSET_AMOUNT = -9,
+  INSUFFICIENT_SECOND_ASSET_AMOUNT = -10,
+  MIN_AMOUNT_BIGGER_THAN_DESIRED = -11,
+  INSUFFICIENT_LIQUIDITY_PROVIDED = -12,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
@@ -102,12 +97,22 @@ template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
       return "LINE_FULL";
     case ::stellar::LPAddLiquidityResultCode::NOT_ALLOWED_BY_ASSET_POLICY:
       return "NOT_ALLOWED_BY_ASSET_POLICY";
-    case ::stellar::LPAddLiquidityResultCode::INVALID_DESTINATION_FEE:
-      return "INVALID_DESTINATION_FEE";
-    case ::stellar::LPAddLiquidityResultCode::INSUFFICIENT_FEE_AMOUNT:
-      return "INSUFFICIENT_FEE_AMOUNT";
-    case ::stellar::LPAddLiquidityResultCode::PROVIDED_AMOUNT_IS_LESS_THAN_FEE:
-      return "PROVIDED_AMOUNT_IS_LESS_THAN_FEE";
+    case ::stellar::LPAddLiquidityResultCode::SRC_BALANCE_NOT_FOUND:
+      return "SRC_BALANCE_NOT_FOUND";
+    case ::stellar::LPAddLiquidityResultCode::INVALID_DESIRED_AMOUNT:
+      return "INVALID_DESIRED_AMOUNT";
+    case ::stellar::LPAddLiquidityResultCode::INVALID_MIN_AMOUNT:
+      return "INVALID_MIN_AMOUNT";
+    case ::stellar::LPAddLiquidityResultCode::INCORRECT_AMOUNT_PRECISION:
+      return "INCORRECT_AMOUNT_PRECISION";
+    case ::stellar::LPAddLiquidityResultCode::INSUFFICIENT_FIRST_ASSET_AMOUNT:
+      return "INSUFFICIENT_FIRST_ASSET_AMOUNT";
+    case ::stellar::LPAddLiquidityResultCode::INSUFFICIENT_SECOND_ASSET_AMOUNT:
+      return "INSUFFICIENT_SECOND_ASSET_AMOUNT";
+    case ::stellar::LPAddLiquidityResultCode::MIN_AMOUNT_BIGGER_THAN_DESIRED:
+      return "MIN_AMOUNT_BIGGER_THAN_DESIRED";
+    case ::stellar::LPAddLiquidityResultCode::INSUFFICIENT_LIQUIDITY_PROVIDED:
+      return "INSUFFICIENT_LIQUIDITY_PROVIDED";
     default:
       return nullptr;
     }
@@ -119,9 +124,14 @@ template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
       (int32_t)::stellar::LPAddLiquidityResultCode::UNDERFUNDED,
       (int32_t)::stellar::LPAddLiquidityResultCode::LINE_FULL,
       (int32_t)::stellar::LPAddLiquidityResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
-      (int32_t)::stellar::LPAddLiquidityResultCode::INVALID_DESTINATION_FEE,
-      (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_FEE_AMOUNT,
-      (int32_t)::stellar::LPAddLiquidityResultCode::PROVIDED_AMOUNT_IS_LESS_THAN_FEE
+      (int32_t)::stellar::LPAddLiquidityResultCode::SRC_BALANCE_NOT_FOUND,
+      (int32_t)::stellar::LPAddLiquidityResultCode::INVALID_DESIRED_AMOUNT,
+      (int32_t)::stellar::LPAddLiquidityResultCode::INVALID_MIN_AMOUNT,
+      (int32_t)::stellar::LPAddLiquidityResultCode::INCORRECT_AMOUNT_PRECISION,
+      (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_FIRST_ASSET_AMOUNT,
+      (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_SECOND_ASSET_AMOUNT,
+      (int32_t)::stellar::LPAddLiquidityResultCode::MIN_AMOUNT_BIGGER_THAN_DESIRED,
+      (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_LIQUIDITY_PROVIDED
     };
     return _xdr_enum_vec;
   }
@@ -134,8 +144,8 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
   BalanceID firstAssetBalanceID{};
   BalanceID secondAssetBalanceID{};
   AssetCode lpAsset{};
-  BalanceID lpTokenBalanceID{};
   uint64 lpTokensAmount{};
+  EmptyExt ext{};
 
   LPAddLiquiditySuccess() = default;
   template<typename _liquidityPoolID_T,
@@ -143,31 +153,31 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
            typename _firstAssetBalanceID_T,
            typename _secondAssetBalanceID_T,
            typename _lpAsset_T,
-           typename _lpTokenBalanceID_T,
            typename _lpTokensAmount_T,
+           typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
                           && std::is_constructible<AccountID, _lpAccountID_T>::value
                           && std::is_constructible<BalanceID, _firstAssetBalanceID_T>::value
                           && std::is_constructible<BalanceID, _secondAssetBalanceID_T>::value
                           && std::is_constructible<AssetCode, _lpAsset_T>::value
-                          && std::is_constructible<BalanceID, _lpTokenBalanceID_T>::value
                           && std::is_constructible<uint64, _lpTokensAmount_T>::value
+                          && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit LPAddLiquiditySuccess(_liquidityPoolID_T &&_liquidityPoolID,
                                  _lpAccountID_T &&_lpAccountID,
                                  _firstAssetBalanceID_T &&_firstAssetBalanceID,
                                  _secondAssetBalanceID_T &&_secondAssetBalanceID,
                                  _lpAsset_T &&_lpAsset,
-                                 _lpTokenBalanceID_T &&_lpTokenBalanceID,
-                                 _lpTokensAmount_T &&_lpTokensAmount)
+                                 _lpTokensAmount_T &&_lpTokensAmount,
+                                 _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
       lpAccountID(std::forward<_lpAccountID_T>(_lpAccountID)),
       firstAssetBalanceID(std::forward<_firstAssetBalanceID_T>(_firstAssetBalanceID)),
       secondAssetBalanceID(std::forward<_secondAssetBalanceID_T>(_secondAssetBalanceID)),
       lpAsset(std::forward<_lpAsset_T>(_lpAsset)),
-      lpTokenBalanceID(std::forward<_lpTokenBalanceID_T>(_lpTokenBalanceID)),
-      lpTokensAmount(std::forward<_lpTokensAmount_T>(_lpTokensAmount)) {}
+      lpTokensAmount(std::forward<_lpTokensAmount_T>(_lpTokensAmount)),
+      ext(std::forward<_ext_T>(_ext)) {}
   bool
 operator==(xdr::xdr_abstract const& other) const override;bool
 operator<(xdr::xdr_abstract const& other) const override;private:

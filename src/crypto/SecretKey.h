@@ -108,6 +108,13 @@ PublicKey fromStrKey(std::string const& s);
 BalanceID forAccount(AccountID const& owner, uint64_t id);
 }
 
+namespace AccountKeyUtils
+{
+    std::string toStrKey(PublicKey const& pk);
+    PublicKey fromStrKey(std::string const& s);
+    AccountID forLiquidityPoolAsset(AssetCode const& lpToken);
+}
+
 namespace StrKeyUtils
 {
 // logs a key (can be a public or private key) in all
@@ -121,6 +128,7 @@ PublicKey fromStr(std::string const& s, uint8_t& keyType);
 namespace HashUtils
 {
 Hash random();
+Hash fromStr(std::string const& s);
 }
 }
 

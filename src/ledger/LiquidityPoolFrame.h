@@ -31,10 +31,18 @@ public:
 
     LiquidityPoolEntry& getLiquidityPoolEntry() const;
 
-    AccountID const& getOwnerID() const;
-    LPAssetPair const& getAssetPair() const;
+    uint64_t getPoolID() const;
+    AccountID const& getAccountID() const;
+    AssetCode const& getLpTokenAsset() const;
+    BalanceID const& getFirstAssetBalance() const;
+    BalanceID const& getSecondAssetBalance() const;
+    uint64_t const& getLPTokensAmount() const;
+    uint64_t const& getFirstReserve() const;
+    uint64_t const& getSecondReserve() const;
 
-    static pointer createNew();
+    static pointer createNew(uint64_t const& id, AccountID const& accountID, BalanceID const& firstAssetBalance,
+        BalanceID const& secondAssetBalance, AssetCode const& lpTokenAsset, uint64_t const& lpTokensAmount,
+        uint64_t const& firstReserve, uint64_t const& secondReserve);
 
     LedgerKey const& getKey() const override;
 
