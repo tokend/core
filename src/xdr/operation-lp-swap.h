@@ -295,32 +295,32 @@ count_size(xdr::measurer& m) const override;
 
   };
 
-  AssetCode inputAsset{};
-  AssetCode outputAsset{};
+  BalanceID fromBalance{};
+  BalanceID toBalance{};
   _lpSwapRequest_t lpSwapRequest{};
   PaymentFeeData feeData{};
   EmptyExt ext{};
 
   LPSwapOp() = default;
-  template<typename _inputAsset_T,
-           typename _outputAsset_T,
+  template<typename _fromBalance_T,
+           typename _toBalance_T,
            typename _lpSwapRequest_T,
            typename _feeData_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<AssetCode, _inputAsset_T>::value
-                          && std::is_constructible<AssetCode, _outputAsset_T>::value
+           std::enable_if<std::is_constructible<BalanceID, _fromBalance_T>::value
+                          && std::is_constructible<BalanceID, _toBalance_T>::value
                           && std::is_constructible<_lpSwapRequest_t, _lpSwapRequest_T>::value
                           && std::is_constructible<PaymentFeeData, _feeData_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit LPSwapOp(_inputAsset_T &&_inputAsset,
-                    _outputAsset_T &&_outputAsset,
+  explicit LPSwapOp(_fromBalance_T &&_fromBalance,
+                    _toBalance_T &&_toBalance,
                     _lpSwapRequest_T &&_lpSwapRequest,
                     _feeData_T &&_feeData,
                     _ext_T &&_ext)
-    : inputAsset(std::forward<_inputAsset_T>(_inputAsset)),
-      outputAsset(std::forward<_outputAsset_T>(_outputAsset)),
+    : fromBalance(std::forward<_fromBalance_T>(_fromBalance)),
+      toBalance(std::forward<_toBalance_T>(_toBalance)),
       lpSwapRequest(std::forward<_lpSwapRequest_T>(_lpSwapRequest)),
       feeData(std::forward<_feeData_T>(_feeData)),
       ext(std::forward<_ext_T>(_ext)) {}
@@ -341,14 +341,20 @@ enum class LPSwapResultCode : std::int32_t {
   MALFORMED = -1,
   UNDERFUNDED = -2,
   BALANCE_ASSETS_MATCHED = -3,
-  SRC_BALANCE_NOT_FOUND = -4,
-  TGT_BALANCE_NOT_FOUND = -5,
+  FROM_BALANCE_NOT_FOUND = -4,
+  TO_BALANCE_NOT_FOUND = -5,
   NOT_ALLOWED_BY_ASSET_POLICY = -6,
   INVALID_DESTINATION_FEE = -7,
   INSUFFICIENT_FEE_AMOUNT = -8,
   AMOUNT_IS_LESS_THAN_DEST_FEE = -9,
   INCORRECT_AMOUNT_PRECISION = -10,
-  INVALID_AMOUNT = -11,
+  INSUFFICIENT_INPUT_AMOUNT = -11,
+  INSUFFICIENT_OUTPUT_AMOUNT = -12,
+  SAME_ASSETS = -13,
+  LIQUIDITY_POOL_NOT_FOUND = -14,
+  INSUFFICIENT_LIQUIDITY = -15,
+  EXCESSIVE_INPUT_AMOUNT = -16,
+  LINE_FULL = -17,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPSwapResultCode>
@@ -366,10 +372,10 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       return "UNDERFUNDED";
     case ::stellar::LPSwapResultCode::BALANCE_ASSETS_MATCHED:
       return "BALANCE_ASSETS_MATCHED";
-    case ::stellar::LPSwapResultCode::SRC_BALANCE_NOT_FOUND:
-      return "SRC_BALANCE_NOT_FOUND";
-    case ::stellar::LPSwapResultCode::TGT_BALANCE_NOT_FOUND:
-      return "TGT_BALANCE_NOT_FOUND";
+    case ::stellar::LPSwapResultCode::FROM_BALANCE_NOT_FOUND:
+      return "FROM_BALANCE_NOT_FOUND";
+    case ::stellar::LPSwapResultCode::TO_BALANCE_NOT_FOUND:
+      return "TO_BALANCE_NOT_FOUND";
     case ::stellar::LPSwapResultCode::NOT_ALLOWED_BY_ASSET_POLICY:
       return "NOT_ALLOWED_BY_ASSET_POLICY";
     case ::stellar::LPSwapResultCode::INVALID_DESTINATION_FEE:
@@ -380,8 +386,20 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       return "AMOUNT_IS_LESS_THAN_DEST_FEE";
     case ::stellar::LPSwapResultCode::INCORRECT_AMOUNT_PRECISION:
       return "INCORRECT_AMOUNT_PRECISION";
-    case ::stellar::LPSwapResultCode::INVALID_AMOUNT:
-      return "INVALID_AMOUNT";
+    case ::stellar::LPSwapResultCode::INSUFFICIENT_INPUT_AMOUNT:
+      return "INSUFFICIENT_INPUT_AMOUNT";
+    case ::stellar::LPSwapResultCode::INSUFFICIENT_OUTPUT_AMOUNT:
+      return "INSUFFICIENT_OUTPUT_AMOUNT";
+    case ::stellar::LPSwapResultCode::SAME_ASSETS:
+      return "SAME_ASSETS";
+    case ::stellar::LPSwapResultCode::LIQUIDITY_POOL_NOT_FOUND:
+      return "LIQUIDITY_POOL_NOT_FOUND";
+    case ::stellar::LPSwapResultCode::INSUFFICIENT_LIQUIDITY:
+      return "INSUFFICIENT_LIQUIDITY";
+    case ::stellar::LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT:
+      return "EXCESSIVE_INPUT_AMOUNT";
+    case ::stellar::LPSwapResultCode::LINE_FULL:
+      return "LINE_FULL";
     default:
       return nullptr;
     }
@@ -392,14 +410,20 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       (int32_t)::stellar::LPSwapResultCode::MALFORMED,
       (int32_t)::stellar::LPSwapResultCode::UNDERFUNDED,
       (int32_t)::stellar::LPSwapResultCode::BALANCE_ASSETS_MATCHED,
-      (int32_t)::stellar::LPSwapResultCode::SRC_BALANCE_NOT_FOUND,
-      (int32_t)::stellar::LPSwapResultCode::TGT_BALANCE_NOT_FOUND,
+      (int32_t)::stellar::LPSwapResultCode::FROM_BALANCE_NOT_FOUND,
+      (int32_t)::stellar::LPSwapResultCode::TO_BALANCE_NOT_FOUND,
       (int32_t)::stellar::LPSwapResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
       (int32_t)::stellar::LPSwapResultCode::INVALID_DESTINATION_FEE,
       (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_FEE_AMOUNT,
       (int32_t)::stellar::LPSwapResultCode::AMOUNT_IS_LESS_THAN_DEST_FEE,
       (int32_t)::stellar::LPSwapResultCode::INCORRECT_AMOUNT_PRECISION,
-      (int32_t)::stellar::LPSwapResultCode::INVALID_AMOUNT
+      (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_INPUT_AMOUNT,
+      (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_OUTPUT_AMOUNT,
+      (int32_t)::stellar::LPSwapResultCode::SAME_ASSETS,
+      (int32_t)::stellar::LPSwapResultCode::LIQUIDITY_POOL_NOT_FOUND,
+      (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_LIQUIDITY,
+      (int32_t)::stellar::LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT,
+      (int32_t)::stellar::LPSwapResultCode::LINE_FULL
     };
     return _xdr_enum_vec;
   }
@@ -409,7 +433,6 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
 struct LPSwapSuccess  : xdr::xdr_abstract {
   uint64 liquidityPoolID{};
   AccountID poolAccount{};
-  BalanceID destBalance{};
   AssetCode sourceAsset{};
   AssetCode targetAsset{};
   uint64 swapInAmount{};
@@ -421,7 +444,6 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
   LPSwapSuccess() = default;
   template<typename _liquidityPoolID_T,
            typename _poolAccount_T,
-           typename _destBalance_T,
            typename _sourceAsset_T,
            typename _targetAsset_T,
            typename _swapInAmount_T,
@@ -432,7 +454,6 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
            typename = typename
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
                           && std::is_constructible<AccountID, _poolAccount_T>::value
-                          && std::is_constructible<BalanceID, _destBalance_T>::value
                           && std::is_constructible<AssetCode, _sourceAsset_T>::value
                           && std::is_constructible<AssetCode, _targetAsset_T>::value
                           && std::is_constructible<uint64, _swapInAmount_T>::value
@@ -443,7 +464,6 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          >::type>
   explicit LPSwapSuccess(_liquidityPoolID_T &&_liquidityPoolID,
                          _poolAccount_T &&_poolAccount,
-                         _destBalance_T &&_destBalance,
                          _sourceAsset_T &&_sourceAsset,
                          _targetAsset_T &&_targetAsset,
                          _swapInAmount_T &&_swapInAmount,
@@ -453,7 +473,6 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
       poolAccount(std::forward<_poolAccount_T>(_poolAccount)),
-      destBalance(std::forward<_destBalance_T>(_destBalance)),
       sourceAsset(std::forward<_sourceAsset_T>(_sourceAsset)),
       targetAsset(std::forward<_targetAsset_T>(_targetAsset)),
       swapInAmount(std::forward<_swapInAmount_T>(_swapInAmount)),
