@@ -213,13 +213,13 @@ return false;
 bool
 LPSwapOp::from_bytes(xdr::unmarshaler& u) 
 {
-bool okinputAsset = u.from_bytes(inputAsset);
-if (!okinputAsset)
+bool okfromBalance = u.from_bytes(fromBalance);
+if (!okfromBalance)
 {
 return false;
 }
-bool okoutputAsset = u.from_bytes(outputAsset);
-if (!okoutputAsset)
+bool oktoBalance = u.from_bytes(toBalance);
+if (!oktoBalance)
 {
 return false;
 }
@@ -243,13 +243,13 @@ return true;
 bool
 LPSwapOp::to_bytes(xdr::marshaler& m) const 
 {
-bool okinputAsset = m.to_bytes(inputAsset);
-if (!okinputAsset)
+bool okfromBalance = m.to_bytes(fromBalance);
+if (!okfromBalance)
 {
 return false;
 }
-bool okoutputAsset = m.to_bytes(outputAsset);
-if (!okoutputAsset)
+bool oktoBalance = m.to_bytes(toBalance);
+if (!oktoBalance)
 {
 return false;
 }
@@ -273,8 +273,8 @@ return true;
 void
 LPSwapOp::count_size(xdr::measurer& m) const 
 {
-m.count_size(inputAsset);
-m.count_size(outputAsset);
+m.count_size(fromBalance);
+m.count_size(toBalance);
 m.count_size(lpSwapRequest);
 m.count_size(feeData);
 m.count_size(ext);
@@ -286,8 +286,8 @@ if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }auto& other = dynamic_cast<LPSwapOp const&>(other_abstract);return true
-&& (inputAsset== other.inputAsset)
-&& (outputAsset== other.outputAsset)
+&& (fromBalance== other.fromBalance)
+&& (toBalance== other.toBalance)
 && (lpSwapRequest== other.lpSwapRequest)
 && (feeData== other.feeData)
 && (ext== other.ext)
@@ -300,10 +300,10 @@ if (typeid(*this) != typeid(other_abstract))
 throw std::runtime_error("unexpected operator< invoke");
 }
 auto& other = dynamic_cast<LPSwapOp const&>(other_abstract);
-if (inputAsset < other.inputAsset) return true;
-if (other.inputAsset < inputAsset) return false;
-if (outputAsset < other.outputAsset) return true;
-if (other.outputAsset < outputAsset) return false;
+if (fromBalance < other.fromBalance) return true;
+if (other.fromBalance < fromBalance) return false;
+if (toBalance < other.toBalance) return true;
+if (other.toBalance < toBalance) return false;
 if (lpSwapRequest < other.lpSwapRequest) return true;
 if (other.lpSwapRequest < lpSwapRequest) return false;
 if (feeData < other.feeData) return true;
@@ -321,11 +321,6 @@ return false;
 }
 bool okpoolAccount = u.from_bytes(poolAccount);
 if (!okpoolAccount)
-{
-return false;
-}
-bool okdestBalance = u.from_bytes(destBalance);
-if (!okdestBalance)
 {
 return false;
 }
@@ -379,11 +374,6 @@ if (!okpoolAccount)
 {
 return false;
 }
-bool okdestBalance = m.to_bytes(destBalance);
-if (!okdestBalance)
-{
-return false;
-}
 bool oksourceAsset = m.to_bytes(sourceAsset);
 if (!oksourceAsset)
 {
@@ -426,7 +416,6 @@ LPSwapSuccess::count_size(xdr::measurer& m) const
 {
 m.count_size(liquidityPoolID);
 m.count_size(poolAccount);
-m.count_size(destBalance);
 m.count_size(sourceAsset);
 m.count_size(targetAsset);
 m.count_size(swapInAmount);
@@ -444,7 +433,6 @@ return false;
 }auto& other = dynamic_cast<LPSwapSuccess const&>(other_abstract);return true
 && (liquidityPoolID== other.liquidityPoolID)
 && (poolAccount== other.poolAccount)
-&& (destBalance== other.destBalance)
 && (sourceAsset== other.sourceAsset)
 && (targetAsset== other.targetAsset)
 && (swapInAmount== other.swapInAmount)
@@ -465,8 +453,6 @@ if (liquidityPoolID < other.liquidityPoolID) return true;
 if (other.liquidityPoolID < liquidityPoolID) return false;
 if (poolAccount < other.poolAccount) return true;
 if (other.poolAccount < poolAccount) return false;
-if (destBalance < other.destBalance) return true;
-if (other.destBalance < destBalance) return false;
 if (sourceAsset < other.sourceAsset) return true;
 if (other.sourceAsset < sourceAsset) return false;
 if (targetAsset < other.targetAsset) return true;

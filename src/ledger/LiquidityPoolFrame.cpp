@@ -1,6 +1,9 @@
 #include "LiquidityPoolFrame.h"
+
 #include "xdrpp/printer.h"
 #include "AssetFrame.h"
+#include <crypto/StrKey.h>
+#include "util/SecretValue.h"
 
 namespace stellar
 {
@@ -92,25 +95,18 @@ LiquidityPoolFrame::createNew(uint64_t const& id, AccountID const& accountID, Ba
     BalanceID const& secondAssetBalance, AssetCode const& lpTokenAsset, uint64_t const& lpTokensAmount,
     uint64_t const& firstReserve, uint64_t const& secondReserve)
 {
-    try
-    {
-        LedgerEntry entry;
-        entry.data.type(LedgerEntryType::LIQUIDITY_POOL);
+    LedgerEntry entry;
+    entry.data.type(LedgerEntryType::LIQUIDITY_POOL);
 
-        LiquidityPoolEntry& lp = entry.data.liquidityPool();
-        lp.id = id;
-        lp.liquidityPoolAcount = accountID;
-        lp.firstAssetBalance = firstAssetBalance;
-        lp.secondAssetBalance = secondAssetBalance;
-        lp.lpTokenAssetCode = lpTokenAsset;
-        lp.lpTokensTotalCap = lpTokensAmount;
+    LiquidityPoolEntry& lp = entry.data.liquidityPool();
+    lp.id = id;
+    lp.liquidityPoolAcount = accountID;
+    lp.firstAssetBalance = firstAssetBalance;
+    lp.secondAssetBalance = secondAssetBalance;
+    lp.lpTokenAssetCode = lpTokenAsset;
+    lp.lpTokensTotalCap = lpTokensAmount;
 
-        return std::make_shared<LiquidityPoolFrame>(entry);
-    } catch(...)
-    {
-        CLOG(ERROR, Logging::ENTRY_LOGGER) << "Failed to create liquidity pool from request";
-        throw_with_nested(std::runtime_error("Failed to create liquidity pool from request"));
-    }
+    return std::make_shared<LiquidityPoolFrame>(entry);
 }
 
 const LedgerKey& LiquidityPoolFrame::getKey() const
@@ -143,6 +139,21 @@ uint64_t const& LiquidityPoolFrame::getFirstReserve() const
 uint64_t const& LiquidityPoolFrame::getSecondReserve() const
 {
     return mLiquidityPool.secondReserve;
+}
+
+AssetCode const LiquidityPoolFrame::calculateLPTokenAssetCode(const AssetCode& first, const AssetCode& second)
+{
+    AssetCode lFirst = first, lSecond = second;
+    if (first > second)
+    {
+        lFirst.swap(lSecond);
+    }
+
+    std::string lpTokenCodeStr = "LP:" + lFirst + ":" + lSecond;
+    Hash lpTokenHash = HashUtils::fromStr(lpTokenCodeStr);
+    auto key = strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, lpTokenHash).value;
+
+    return {std::begin(key), std::begin(key) + 16};
 }
 
 }

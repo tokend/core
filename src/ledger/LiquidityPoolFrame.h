@@ -46,6 +46,8 @@ public:
 
     LedgerKey const& getKey() const override;
 
+    static AssetCode const calculateLPTokenAssetCode(AssetCode const& first, AssetCode const& second);
+
 private:
     LiquidityPoolEntry& mLiquidityPool;
 

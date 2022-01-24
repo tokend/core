@@ -13,16 +13,11 @@ namespace stellar
     {
         Database& db = getDatabase();
         db.getSession() << "DROP TABLE IF EXISTS liquidity_pool;";
-    }
-
-    void LiquidityPoolHelperImpl::createIfNotExists()
-    {
-        Database& db = getDatabase();
         db.getSession() << "CREATE TABLE IF NOT EXISTS liquidity_pool"
                            "("
                            "id             BIGINT NOT NULL PRIMARY KEY CHECK (id >= 0),"
                            "account        CHAR(56) NOT NULL,"
-                           "token_asset    CHAR(16) NOT NULL,"
+                           "token_asset    VARCHAR(16) NOT NULL,"
                            "first_balance  CHAR(56) NOT NULL,"
                            "second_balance CHAR(56) NOT NULL,"
                            "tokens_amount  NUMERIC(20, 0) NOT NULL,"
@@ -78,23 +73,7 @@ namespace stellar
 
     bool LiquidityPoolHelperImpl::exists(const LedgerKey& key)
     {
-        Database& db = getDatabase();
-        int exists = 0;
-        auto timer = db.getSelectTimer("liquidity_pool_exists");
-
-        auto prep = db.getPreparedStatement(
-            "SELECT EXISTS ( "
-            "SELECT NULL FROM liquidity_pool lp "
-            "WHERE lp.id = :id"
-            ")"
-        );
-        auto& st = prep.statement();
-        st.exchange(use(key.liquidityPool().id, "id"));
-        st.exchange(into(exists));
-        st.define_and_bind();
-        st.execute(true);
-
-        return exists != 0;
+        return exists(key.liquidityPool().id);
     }
 
     bool LiquidityPoolHelperImpl::exists(const AssetCode& lpTokenAsset)
@@ -122,30 +101,8 @@ namespace stellar
 
     bool LiquidityPoolHelperImpl::exists(const AssetCode& firstAsset, const AssetCode& secondAsset)
     {
-        Database& db = getDatabase();
-        int exists = 0;
-        auto timer = db.getSelectTimer("liquidity_pool_exists");
-
-        auto prep = db.getPreparedStatement(
-            "SELECT EXISTS ( "
-                "SELECT NULL FROM liquidity_pool lp "
-                "INNER JOIN balance b1 ON "
-                "    lp.first_balance = b1.balance_id AND b1.asset IN (:first_asset, :second_asset) "
-                "INNER JOIN balance b2 ON "
-                "    lp.second_balance = b2.balance_id AND b2.asset IN (:first_asset, :second_asset) "
-            ")"
-        );
-        auto& st = prep.statement();
-
-        std::string firstAssetCode = firstAsset;
-        std::string secondAssetCode = secondAsset;
-        st.exchange(use(firstAssetCode, "first_asset"));
-        st.exchange(use(secondAssetCode, "second_asset"));
-        st.exchange(into(exists));
-        st.define_and_bind();
-        st.execute(true);
-
-        return exists != 0;
+        auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
+        return exists(lpTokenAsset);
     }
 
     LedgerKey LiquidityPoolHelperImpl::getLedgerKey(const LedgerEntry& from)
@@ -296,69 +253,17 @@ namespace stellar
         return retLP;
     }
 
-    LiquidityPoolFrame::pointer LiquidityPoolHelperImpl::loadPool(uint64_t poolID, AccountID accountID)
-    {
-        auto pool = loadPool(poolID);
-        if (!pool)
-        {
-            return nullptr;
-        }
-
-        if (!(pool->getAccountID() == accountID))
-        {
-            return nullptr;
-        }
-
-        return pool;
-    }
-
-    LiquidityPoolFrame::pointer
-    LiquidityPoolHelperImpl::loadPool(uint64_t poolID, AssetCode const& first, AssetCode const& second)
+    LiquidityPoolFrame::pointer LiquidityPoolHelperImpl::loadPool(AssetCode const& lpTokenAsset)
     {
         Database& db = getDatabase();
 
         std::string sql = mLPColumnSelector;
-        sql += +"INNER JOIN balance b1 ON "
-                "    lp.first_balance = b1.balance_id AND b1.asset IN (:first_asset, :second_asset) "
-                "INNER JOIN balance b2 ON "
-                "    lp.second_balance = b2.balance_id AND b2.asset IN (:first_asset, :second_asset) "
-                "WHERE lp.id = :id";
+        sql += +"WHERE lp.token_asset = :tokenAsset";
         auto prep = db.getPreparedStatement(sql);
         auto& st = prep.statement();
 
-        std::string firstAssetCode = first;
-        std::string secondAssetCode = second;
-        st.exchange(use(firstAssetCode, "first_asset"));
-        st.exchange(use(secondAssetCode, "second_asset"));
-        st.exchange(use(poolID, "id"));
-
-        LiquidityPoolFrame::pointer retLP;
-
-        auto timer = db.getSelectTimer("liquidity_pool_with_assets");
-        loadPools(prep, [&retLP](LedgerEntry const& entry) -> void
-        {
-            retLP = std::make_shared<LiquidityPoolFrame>(entry);
-        });
-
-        return retLP;
-    }
-
-    LiquidityPoolFrame::pointer LiquidityPoolHelperImpl::loadPool(AssetCode const& first, AssetCode const& second)
-    {
-        Database& db = getDatabase();
-
-        std::string sql = mLPColumnSelector;
-        sql += +"INNER JOIN balance b1 ON "
-                "    lp.first_balance = b1.balance_id AND b1.asset IN (:first_asset, :second_asset) "
-                "INNER JOIN balance b2 ON "
-                "    lp.second_balance = b2.balance_id AND b2.asset IN (:first_asset, :second_asset) ";
-        auto prep = db.getPreparedStatement(sql);
-        auto& st = prep.statement();
-
-        std::string firstAssetCode = first;
-        std::string secondAssetCode = second;
-        st.exchange(use(firstAssetCode, "first_asset"));
-        st.exchange(use(secondAssetCode, "second_asset"));
+        std::string tokenAsset = lpTokenAsset;
+        st.exchange(use(tokenAsset, "tokenAsset"));
 
         LiquidityPoolFrame::pointer retLP;
 
