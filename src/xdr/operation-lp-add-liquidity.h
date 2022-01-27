@@ -66,9 +66,9 @@ count_size(xdr::measurer& m) const override;
 
 enum class LPAddLiquidityResultCode : std::int32_t {
   SUCCESS = 0,
-  MALFORMED = -1,
+  SAME_ASSETS = -1,
   UNDERFUNDED = -2,
-  LINE_FULL = -3,
+  BALANCE_OVERFLOW = -3,
   NOT_ALLOWED_BY_ASSET_POLICY = -4,
   SRC_BALANCE_NOT_FOUND = -5,
   INVALID_DESIRED_AMOUNT = -6,
@@ -78,6 +78,7 @@ enum class LPAddLiquidityResultCode : std::int32_t {
   INSUFFICIENT_SECOND_ASSET_AMOUNT = -10,
   MIN_AMOUNT_BIGGER_THAN_DESIRED = -11,
   INSUFFICIENT_LIQUIDITY_PROVIDED = -12,
+  SAME_BALANCES = -13,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
@@ -89,12 +90,12 @@ template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
     switch (val) {
     case ::stellar::LPAddLiquidityResultCode::SUCCESS:
       return "SUCCESS";
-    case ::stellar::LPAddLiquidityResultCode::MALFORMED:
-      return "MALFORMED";
+    case ::stellar::LPAddLiquidityResultCode::SAME_ASSETS:
+      return "SAME_ASSETS";
     case ::stellar::LPAddLiquidityResultCode::UNDERFUNDED:
       return "UNDERFUNDED";
-    case ::stellar::LPAddLiquidityResultCode::LINE_FULL:
-      return "LINE_FULL";
+    case ::stellar::LPAddLiquidityResultCode::BALANCE_OVERFLOW:
+      return "BALANCE_OVERFLOW";
     case ::stellar::LPAddLiquidityResultCode::NOT_ALLOWED_BY_ASSET_POLICY:
       return "NOT_ALLOWED_BY_ASSET_POLICY";
     case ::stellar::LPAddLiquidityResultCode::SRC_BALANCE_NOT_FOUND:
@@ -113,6 +114,8 @@ template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
       return "MIN_AMOUNT_BIGGER_THAN_DESIRED";
     case ::stellar::LPAddLiquidityResultCode::INSUFFICIENT_LIQUIDITY_PROVIDED:
       return "INSUFFICIENT_LIQUIDITY_PROVIDED";
+    case ::stellar::LPAddLiquidityResultCode::SAME_BALANCES:
+      return "SAME_BALANCES";
     default:
       return nullptr;
     }
@@ -120,9 +123,9 @@ template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::LPAddLiquidityResultCode::SUCCESS,
-      (int32_t)::stellar::LPAddLiquidityResultCode::MALFORMED,
+      (int32_t)::stellar::LPAddLiquidityResultCode::SAME_ASSETS,
       (int32_t)::stellar::LPAddLiquidityResultCode::UNDERFUNDED,
-      (int32_t)::stellar::LPAddLiquidityResultCode::LINE_FULL,
+      (int32_t)::stellar::LPAddLiquidityResultCode::BALANCE_OVERFLOW,
       (int32_t)::stellar::LPAddLiquidityResultCode::NOT_ALLOWED_BY_ASSET_POLICY,
       (int32_t)::stellar::LPAddLiquidityResultCode::SRC_BALANCE_NOT_FOUND,
       (int32_t)::stellar::LPAddLiquidityResultCode::INVALID_DESIRED_AMOUNT,
@@ -131,7 +134,8 @@ template<> struct xdr_traits<::stellar::LPAddLiquidityResultCode>
       (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_FIRST_ASSET_AMOUNT,
       (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_SECOND_ASSET_AMOUNT,
       (int32_t)::stellar::LPAddLiquidityResultCode::MIN_AMOUNT_BIGGER_THAN_DESIRED,
-      (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_LIQUIDITY_PROVIDED
+      (int32_t)::stellar::LPAddLiquidityResultCode::INSUFFICIENT_LIQUIDITY_PROVIDED,
+      (int32_t)::stellar::LPAddLiquidityResultCode::SAME_BALANCES
     };
     return _xdr_enum_vec;
   }

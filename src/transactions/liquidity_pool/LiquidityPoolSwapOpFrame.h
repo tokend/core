@@ -7,6 +7,10 @@
 
 namespace stellar
 {
+
+class BalanceHelper;
+class LiquidityPoolHelper;
+
 class LiquidityPoolSwapOpFrame : public OperationFrame
 {
 public:
@@ -42,13 +46,15 @@ private:
         StorageHelper& sh,
         std::vector<SignerRequirement>& result) const override;
 
-    uint64_t calculateAmountIn(uint64_t amountOut) const;
-    uint64_t calculateAmountOut(uint64_t amountIn) const;
+    bool calculateAmountIn(uint64_t amountOut, uint64_t& amountIn);
+    bool calculateAmountOut(uint64_t amountIn, uint64_t& amountOut);
 
     std::array<uint64_t, 2> swap(BalanceFrame::pointer const& sourceFrom, BalanceFrame::pointer const& sourceTo,
         BalanceFrame::pointer const& lpFrom, BalanceFrame::pointer const& lpTo, Application& app, StorageHelper& sh);
 
     void setTransferCode(BalanceManager::Result transferResult);
+
+    void syncReserves(BalanceHelper& balanceHelper, LiquidityPoolHelper& lpHelper);
 
     LiquidityPoolFrame::pointer mLiquidityPoolFrame;
 

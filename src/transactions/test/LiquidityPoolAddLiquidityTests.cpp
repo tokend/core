@@ -4,7 +4,7 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/LiquidityPoolHelper.h>
 #include <ledger/LedgerManager.h>
-#include <transactions/test/test_helper/LiquidityPoolTestHelper.h>
+#include <transactions/test/test_helper/LPAddLiquidityTestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
@@ -19,7 +19,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
+TEST_CASE("LP add liquidity", "[tx][liquidity_pool][add_liquidity]")
 {
     struct TestSet
     {
@@ -48,7 +48,7 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
     auto root = Account{getRoot(), Salt(0)};
 
     //helpers
-    auto liquidityPoolTestHelper = LiquidityPoolTestHelper(testManager);
+    auto liquidityPoolTestHelper = LPAddLiquidityTestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto manageAccountRuleTestHelper = ManageAccountRuleTestHelper(testManager);
     auto issuanceTestHelper = IssuanceRequestHelper(testManager);
@@ -107,7 +107,8 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
         auto result = liquidityPoolTestHelper.applyAddLiquidityTx(account, firstBalance, secondBalance, firstDesiredAmount,
             secondDesiredAmount, firstMinAmount, secondMinAmount, LPAddLiquidityResultCode::SUCCESS);
 
-        auto pool = liquidityPoolHelper.loadPool(firstAsset, secondAsset);
+        auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
+        auto pool = liquidityPoolHelper.loadPool(lpTokenAsset);
         REQUIRE(pool->getLPTokensAmount() == lpTokensAmount10x20);
 
         auto lpFirstBalance = balanceHelper.loadBalance(pool->getAccountID(), firstAsset);
@@ -121,7 +122,7 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
         result = liquidityPoolTestHelper.applyAddLiquidityTx(account, firstBalance, secondBalance, firstDesiredAmount * 2,
             secondDesiredAmount * 2, firstMinAmount, secondMinAmount, LPAddLiquidityResultCode::SUCCESS);
 
-        pool = liquidityPoolHelper.loadPool(firstAsset, secondAsset);
+        pool = liquidityPoolHelper.loadPool(lpTokenAsset);
         REQUIRE(pool->getLPTokensAmount() == lpTokensAmount10x20 * 3);
 
         lpFirstBalance = balanceHelper.loadBalance(pool->getAccountID(), firstAsset);
@@ -138,7 +139,8 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
         auto result = liquidityPoolTestHelper.applyAddLiquidityTx(account, firstBalance, secondBalance, firstDesiredAmount,
             secondDesiredAmount, firstMinAmount, secondMinAmount, LPAddLiquidityResultCode::SUCCESS);
 
-        auto pool = liquidityPoolHelper.loadPool(firstAsset, secondAsset);
+        auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
+        auto pool = liquidityPoolHelper.loadPool(lpTokenAsset);
         REQUIRE(pool->getLPTokensAmount() == lpTokensAmount10x20);
 
         auto lpFirstBalance = balanceHelper.loadBalance(pool->getAccountID(), firstAsset);
@@ -152,7 +154,7 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
         result = liquidityPoolTestHelper.applyAddLiquidityTx(account, secondBalance, firstBalance, secondDesiredAmount * 2,
             firstDesiredAmount * 2, secondMinAmount, firstMinAmount, LPAddLiquidityResultCode::SUCCESS);
 
-        pool = liquidityPoolHelper.loadPool(firstAsset, secondAsset);
+        pool = liquidityPoolHelper.loadPool(lpTokenAsset);
         REQUIRE(pool->getLPTokensAmount() == lpTokensAmount10x20 * 3);
 
         lpFirstBalance = balanceHelper.loadBalance(pool->getAccountID(), firstAsset);
@@ -190,7 +192,8 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
             firstDesiredAmount, secondDesiredAmount, firstMinAmount, secondMinAmount,
             LPAddLiquidityResultCode::SUCCESS);
 
-        auto pool = liquidityPoolHelper.loadPool(firstAsset, secondAsset);
+        auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
+        auto pool = liquidityPoolHelper.loadPool(lpTokenAsset);
         auto lpFirstBalance = balanceHelper.loadBalance(pool->getAccountID(), firstAsset);
         auto lpSecondBalance = balanceHelper.loadBalance(pool->getAccountID(), secondAsset);
         REQUIRE(lpFirstBalance->getAmount() == firstDesiredAmount * 2);
@@ -210,7 +213,7 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
     SECTION("Provide liquidity with equal balances")
     {
         liquidityPoolTestHelper.applyAddLiquidityTx(account, firstBalance, firstBalance, secondDesiredAmount,
-            firstDesiredAmount, secondMinAmount, firstMinAmount, LPAddLiquidityResultCode::MALFORMED);
+            firstDesiredAmount, secondMinAmount, firstMinAmount, LPAddLiquidityResultCode::SAME_BALANCES);
     }
 
     SECTION("Provide liquidity with zero desired amount")

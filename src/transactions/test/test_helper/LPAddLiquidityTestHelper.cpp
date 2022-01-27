@@ -1,4 +1,4 @@
-#include "LiquidityPoolTestHelper.h"
+#include "LPAddLiquidityTestHelper.h"
 #include <transactions/liquidity_pool/LiquidityPoolAddLiquidityOpFrame.h>
 #include "test/test_marshaler.h"
 
@@ -7,11 +7,12 @@ namespace stellar
 namespace txtest
 {
 
-LiquidityPoolTestHelper::LiquidityPoolTestHelper(TestManager::pointer testManager) : TxHelper(testManager)
+LPAddLiquidityTestHelper::LPAddLiquidityTestHelper(TestManager::pointer testManager) : TxHelper(testManager)
 {
 }
 
-LPAddLiquidityResult LiquidityPoolTestHelper::applyAddLiquidityTx(Account& from,
+LPAddLiquidityResult
+LPAddLiquidityTestHelper::applyAddLiquidityTx(Account& from,
     BalanceID& firstBalance, BalanceID& secondBalance, uint64_t firstDesiredAmount, uint64_t secondDesiredAmount,
     uint64_t firstMinAmount, uint64_t secondMinAmount, LPAddLiquidityResultCode expectedResultCode, Account* signer)
 {
@@ -29,7 +30,7 @@ LPAddLiquidityResult LiquidityPoolTestHelper::applyAddLiquidityTx(Account& from,
 }
 
 TransactionFramePtr
-LiquidityPoolTestHelper::createAddLiquidityPoolTx(Account& from, BalanceID& firstBalance,
+LPAddLiquidityTestHelper::createAddLiquidityPoolTx(Account& from, BalanceID& firstBalance,
     BalanceID& secondBalance, uint64_t firstDesiredAmount, uint64_t secondDesiredAmount, uint64_t firstMinAmount,
     uint64_t secondMinAmount, Account* signer)
 {

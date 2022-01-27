@@ -338,7 +338,7 @@ count_size(xdr::measurer& m) const override;
 
 enum class LPSwapResultCode : std::int32_t {
   SUCCESS = 0,
-  MALFORMED = -1,
+  SAME_BALANCES = -1,
   UNDERFUNDED = -2,
   BALANCE_ASSETS_MATCHED = -3,
   FROM_BALANCE_NOT_FOUND = -4,
@@ -354,7 +354,8 @@ enum class LPSwapResultCode : std::int32_t {
   LIQUIDITY_POOL_NOT_FOUND = -14,
   INSUFFICIENT_LIQUIDITY = -15,
   EXCESSIVE_INPUT_AMOUNT = -16,
-  LINE_FULL = -17,
+  BALANCE_OVERFLOW = -17,
+  INCORRECT_REQUEST_TYPE = -18,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPSwapResultCode>
@@ -366,8 +367,8 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
     switch (val) {
     case ::stellar::LPSwapResultCode::SUCCESS:
       return "SUCCESS";
-    case ::stellar::LPSwapResultCode::MALFORMED:
-      return "MALFORMED";
+    case ::stellar::LPSwapResultCode::SAME_BALANCES:
+      return "SAME_BALANCES";
     case ::stellar::LPSwapResultCode::UNDERFUNDED:
       return "UNDERFUNDED";
     case ::stellar::LPSwapResultCode::BALANCE_ASSETS_MATCHED:
@@ -398,8 +399,10 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       return "INSUFFICIENT_LIQUIDITY";
     case ::stellar::LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT:
       return "EXCESSIVE_INPUT_AMOUNT";
-    case ::stellar::LPSwapResultCode::LINE_FULL:
-      return "LINE_FULL";
+    case ::stellar::LPSwapResultCode::BALANCE_OVERFLOW:
+      return "BALANCE_OVERFLOW";
+    case ::stellar::LPSwapResultCode::INCORRECT_REQUEST_TYPE:
+      return "INCORRECT_REQUEST_TYPE";
     default:
       return nullptr;
     }
@@ -407,7 +410,7 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::LPSwapResultCode::SUCCESS,
-      (int32_t)::stellar::LPSwapResultCode::MALFORMED,
+      (int32_t)::stellar::LPSwapResultCode::SAME_BALANCES,
       (int32_t)::stellar::LPSwapResultCode::UNDERFUNDED,
       (int32_t)::stellar::LPSwapResultCode::BALANCE_ASSETS_MATCHED,
       (int32_t)::stellar::LPSwapResultCode::FROM_BALANCE_NOT_FOUND,
@@ -423,7 +426,8 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       (int32_t)::stellar::LPSwapResultCode::LIQUIDITY_POOL_NOT_FOUND,
       (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_LIQUIDITY,
       (int32_t)::stellar::LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT,
-      (int32_t)::stellar::LPSwapResultCode::LINE_FULL
+      (int32_t)::stellar::LPSwapResultCode::BALANCE_OVERFLOW,
+      (int32_t)::stellar::LPSwapResultCode::INCORRECT_REQUEST_TYPE
     };
     return _xdr_enum_vec;
   }
