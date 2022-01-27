@@ -7,6 +7,9 @@
 
 namespace stellar
 {
+
+class BalanceHelper;
+
 class LiquidityPoolAddLiquidityOpFrame : public OperationFrame
 {
 public:
@@ -47,17 +50,19 @@ private:
     void mustCreateLiquidityPoolAccount(StorageHelper& sh);
     void mustCreateLiquidityPoolBalances(Application& app, StorageHelper& sh);
 
-    bool transferAssets(Application& app, StorageHelper& sh, LedgerManager& lm);
+    bool distributeAssets(Application& app, StorageHelper& sh, LedgerManager& lm);
 
     void setTransferCode(BalanceManager::Result transferResult);
 
-    static AssetCode calculateLPAssetCode(AssetCode const& first, AssetCode const& second);
-
-    static uint64 quote(uint64_t firstAmount, uint64_t firstReserve, uint64_t secondReserve);
+    static bool quote(uint64_t firstAmount, uint64_t firstReserve, uint64_t secondReserve, uint64_t* quote);
 
     void normalize(AssetCode const& firstAsset, AssetCode const& secondAsset);
 
-    bool calculateLPOutputs(uint64_t const firstAssetReserve, uint64_t const secondAssetReserve);
+    bool calculateLPOutputs(uint64_t firstAssetReserve, uint64_t secondAssetReserve);
+
+    std::array<uint64_t, 2> addToExistingPool(BalanceHelper& balanceHelper);
+
+    LiquidityPoolFrame::pointer mPoolFrame;
 
     uint64_t mLiquidityPoolID;
 

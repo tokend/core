@@ -19,7 +19,6 @@ public:
     explicit LiquidityPoolHelperImpl(StorageHelper &storageHelper);
 
     void dropAll() override;
-    void createIfNotExists() override;
     void storeAdd(LedgerEntry const& entry) override;
     void storeChange(LedgerEntry const& entry) override;
     void storeDelete(LedgerKey const& key) override;
@@ -35,10 +34,8 @@ public:
     bool exists(AssetCode const& lpTokenAsset) override;
     bool exists(AssetCode const& firstAsset, AssetCode const& secondAsset) override;
 
-    LiquidityPoolFrame::pointer loadPool(uint64_t poolID, AccountID accountID) override;
     LiquidityPoolFrame::pointer loadPool(uint64_t poolID) override;
-    LiquidityPoolFrame::pointer loadPool(uint64_t poolID, AssetCode const& first, AssetCode const& second) override;
-    LiquidityPoolFrame::pointer loadPool(AssetCode const& first, AssetCode const& second) override;
+    LiquidityPoolFrame::pointer loadPool(AssetCode const& lpTokenAsset) override;
 
     void loadPools(StatementContext& prep, const std::function<void(LedgerEntry const&)>& lpProcessor) const;
 

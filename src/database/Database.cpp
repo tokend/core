@@ -212,7 +212,7 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             sh.getDataHelper().createIfNotExists();
             break;
         case LIQUIDITY_POOL:
-            sh.getLiquidityPoolHelper().createIfNotExists();
+            sh.getLiquidityPoolHelper().dropAll();
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;

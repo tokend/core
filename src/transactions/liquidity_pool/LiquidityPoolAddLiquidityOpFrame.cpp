@@ -97,9 +97,9 @@ namespace stellar
             return false;
         }
 
-        if (mAddLiquidity.firstAssetBalance.operator==(mAddLiquidity.secondAssetBalance))
+        if (mAddLiquidity.firstAssetBalance == mAddLiquidity.secondAssetBalance)
         {
-            innerResult().code(LPAddLiquidityResultCode::MALFORMED);
+            innerResult().code(LPAddLiquidityResultCode::SAME_BALANCES);
             return false;
         }
 
@@ -143,64 +143,36 @@ namespace stellar
 
         if (firstAssetCode == secondAssetCode)
         {
-            innerResult().code(LPAddLiquidityResultCode::MALFORMED);
+            innerResult().code(LPAddLiquidityResultCode::SAME_ASSETS);
             return false;
         }
 
         normalize(firstAssetCode, secondAssetCode);
 
-        uint64_t firstReserveDiff, secondReserveDiff;
-
         auto& lpHelper = sh.getLiquidityPoolHelper();
-        auto poolFrame = lpHelper.loadPool(mSourceFirstBalance->getAsset(), mSourceSecondBalance->getAsset());
-        if (!poolFrame)
+
+        mLPTokenAssetCode = LiquidityPoolFrame::calculateLPTokenAssetCode(mSourceFirstBalance->getAsset(),
+            mSourceSecondBalance->getAsset());
+        mPoolFrame = lpHelper.loadPool(mLPTokenAssetCode);
+
+        uint64_t firstReserveDiff, secondReserveDiff;
+        if (!mPoolFrame)
         {
-            mLPTokenAssetCode = calculateLPAssetCode(mSourceFirstBalance->getAsset(), mSourceSecondBalance->getAsset());
-
-            poolFrame = mustCreateLiquidityPool(app, sh);
-
-            mFromFirstAssetAmount = mAddLiquidity.firstAssetDesiredAmount;
-            mFromSecondAssetAmount = mAddLiquidity.secondAssetDesiredAmount;
-
-            mLPTokensAmountToIssue = std::sqrt(mAddLiquidity.firstAssetDesiredAmount *
-                mAddLiquidity.secondAssetDesiredAmount);
+            mPoolFrame = mustCreateLiquidityPool(app, sh);
 
             firstReserveDiff = mFromFirstAssetAmount;
             secondReserveDiff = mFromSecondAssetAmount;
         }
         else
         {
-            uint64_t firstAssetReserve = poolFrame->getFirstReserve();
-            uint64_t secondAssetReserve = poolFrame->getSecondReserve();
+            auto reserveDiffs = addToExistingPool(balanceHelper);
+            firstReserveDiff = reserveDiffs[0];
+            secondReserveDiff = reserveDiffs[1];
 
-            mLPFirstBalance = balanceHelper.loadFirstBalance(poolFrame->getAccountID(),
-                mSourceFirstBalance->getAsset());
-            mLPSecondBalance = balanceHelper.loadFirstBalance(poolFrame->getAccountID(),
-                mSourceSecondBalance->getAsset());
-
-            if (!calculateLPOutputs(firstAssetReserve, secondAssetReserve))
+            if (!firstReserveDiff || !secondReserveDiff)
             {
                 return false;
             }
-
-            uint64_t lpTokensAmount = poolFrame->getLPTokensAmount();
-            firstReserveDiff = mLPFirstBalance->getAmount() + mFromFirstAssetAmount - firstAssetReserve;
-            secondReserveDiff = mLPSecondBalance->getAmount() + mFromSecondAssetAmount - secondAssetReserve;
-
-            uint64_t fromFirstAsset, fromSecondAsset;
-            if (!bigDivide(fromFirstAsset, firstReserveDiff, lpTokensAmount, firstAssetReserve, ROUND_DOWN) ||
-                !bigDivide(fromSecondAsset, secondReserveDiff, lpTokensAmount, secondAssetReserve, ROUND_DOWN))
-            {
-                CLOG(ERROR, Logging::OPERATION_LOGGER)
-                    << "Unexpected state: LP tokens calculated amount overflows UINT64_MAX, "
-                    << "liquidity pool id: "
-                    << poolFrame->getPoolID();
-                throw std::runtime_error("Unexpected state: LP tokens calculated amount overflows UINT64_MAX");
-            }
-
-            mLPTokensAmountToIssue = std::min(fromFirstAsset, fromSecondAsset);
-            mLPAccountID = poolFrame->getAccountID();
-            mSourceLPTokensBalance = balanceHelper.loadBalance(sourceAccountID, poolFrame->getLpTokenAsset());
         }
 
         if (mLPTokensAmountToIssue == 0)
@@ -214,17 +186,17 @@ namespace stellar
             auto balanceManager = BalanceManager(app, sh);
 
             mSourceLPTokensBalance = balanceManager.loadOrCreateBalance(mSourceAccount->getID(),
-                poolFrame->getLpTokenAsset());
+                mPoolFrame->getLpTokenAsset());
         }
 
-        mLiquidityPoolID = poolFrame->getKey().liquidityPool().id;
+        mLiquidityPoolID = mPoolFrame->getKey().liquidityPool().id;
 
-        if (!transferAssets(app, sh, lm))
+        if (!distributeAssets(app, sh, lm))
         {
             return false;
         }
 
-        auto lpEntry = poolFrame->getLiquidityPoolEntry();
+        auto lpEntry = mPoolFrame->getLiquidityPoolEntry();
         lpEntry.lpTokensTotalCap += mLPTokensAmountToIssue;
         lpEntry.firstReserve += firstReserveDiff;
         lpEntry.secondReserve += secondReserveDiff;
@@ -236,13 +208,50 @@ namespace stellar
 
         innerResult().code(LPAddLiquidityResultCode::SUCCESS);
         innerResult().success().liquidityPoolID = mLiquidityPoolID;
-        innerResult().success().lpAccountID = mLPAccountID;
+        innerResult().success().lpAccountID = mPoolFrame->getAccountID();
         innerResult().success().firstAssetBalanceID = mLPFirstBalance->getBalanceID();
         innerResult().success().secondAssetBalanceID = mLPSecondBalance->getBalanceID();
         innerResult().success().lpAsset = mLPTokenAssetCode;
         innerResult().success().lpTokensAmount = lpEntry.lpTokensTotalCap;
 
         return true;
+    }
+
+    std::array<uint64_t, 2> LiquidityPoolAddLiquidityOpFrame::addToExistingPool(BalanceHelper& balanceHelper)
+    {
+        uint64_t firstAssetReserve = mPoolFrame->getFirstReserve();
+        uint64_t secondAssetReserve = mPoolFrame->getSecondReserve();
+
+        mLPFirstBalance = balanceHelper.loadFirstBalance(mPoolFrame->getAccountID(),
+                                                         mSourceFirstBalance->getAsset());
+        mLPSecondBalance = balanceHelper.loadFirstBalance(mPoolFrame->getAccountID(),
+                                                          mSourceSecondBalance->getAsset());
+
+        if (!calculateLPOutputs(firstAssetReserve, secondAssetReserve))
+        {
+            return {0, 0};
+        }
+
+        uint64_t firstReserveDiff = mLPFirstBalance->getAmount() + mFromFirstAssetAmount - firstAssetReserve;
+        uint64_t secondReserveDiff = mLPSecondBalance->getAmount() + mFromSecondAssetAmount - secondAssetReserve;
+
+        uint64_t lpTokensAmount = mPoolFrame->getLPTokensAmount();
+
+        uint64_t fromFirstAsset, fromSecondAsset;
+        if (!bigDivide(fromFirstAsset, firstReserveDiff, lpTokensAmount, firstAssetReserve, ROUND_DOWN) ||
+            !bigDivide(fromSecondAsset, secondReserveDiff, lpTokensAmount, secondAssetReserve, ROUND_DOWN))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: LP tokens calculated amount overflows UINT64_MAX, "
+                << "liquidity pool id: "
+                << mPoolFrame->getPoolID();
+            throw std::runtime_error("Unexpected state: LP tokens calculated amount overflows UINT64_MAX");
+        }
+
+        mLPTokensAmountToIssue = std::min(fromFirstAsset, fromSecondAsset);
+        mSourceLPTokensBalance = balanceHelper.loadBalance(mSourceAccount->getID(), mPoolFrame->getLpTokenAsset());
+
+        return {firstReserveDiff, secondReserveDiff};
     }
 
     void LiquidityPoolAddLiquidityOpFrame::normalize(AssetCode const& firstAsset, AssetCode const& secondAsset)
@@ -259,8 +268,14 @@ namespace stellar
     bool LiquidityPoolAddLiquidityOpFrame::calculateLPOutputs(uint64_t const firstAssetReserve,
         uint64_t const secondAssetReserve)
     {
-        auto secondAmountOptimal = quote(mAddLiquidity.firstAssetDesiredAmount,
-            firstAssetReserve, secondAssetReserve);
+        uint64_t secondAmountOptimal;
+        auto quoteOk = quote(mAddLiquidity.firstAssetDesiredAmount,
+            firstAssetReserve, secondAssetReserve, &secondAmountOptimal);
+        if (!quoteOk) {
+            innerResult().code(LPAddLiquidityResultCode::BALANCE_OVERFLOW);
+            return false;
+        }
+
         if (secondAmountOptimal <= mAddLiquidity.secondAssetDesiredAmount)
         {
             if (secondAmountOptimal < mAddLiquidity.secondAssetMinAmount)
@@ -274,8 +289,14 @@ namespace stellar
         }
         else
         {
-            auto firstAmountOptimal = quote(mAddLiquidity.secondAssetDesiredAmount,
-                secondAssetReserve, firstAssetReserve);
+            uint64_t firstAmountOptimal;
+            quoteOk = quote(mAddLiquidity.secondAssetDesiredAmount,
+                secondAssetReserve, firstAssetReserve, &firstAmountOptimal);
+            if (!quoteOk) {
+                innerResult().code(LPAddLiquidityResultCode::BALANCE_OVERFLOW);
+                return false;
+            }
+
             if (firstAmountOptimal <= mAddLiquidity.firstAssetDesiredAmount &&
                 firstAmountOptimal >= mAddLiquidity.firstAssetMinAmount)
             {
@@ -311,6 +332,12 @@ namespace stellar
         entry.data.liquidityPool() = lpEntry;
         sh.getLiquidityPoolHelper().storeAdd(entry);
 
+        mFromFirstAssetAmount = mAddLiquidity.firstAssetDesiredAmount;
+        mFromSecondAssetAmount = mAddLiquidity.secondAssetDesiredAmount;
+
+        mLPTokensAmountToIssue = std::sqrt(mAddLiquidity.firstAssetDesiredAmount *
+            mAddLiquidity.secondAssetDesiredAmount);
+
         return std::make_shared<LiquidityPoolFrame>(entry);
     }
 
@@ -318,8 +345,11 @@ namespace stellar
     {
         uint64_t accountSeqID = sh.mustGetLedgerDelta().getHeaderFrame().generateID(LedgerEntryType::ACCOUNT);
 
+        Hash lpTokenHash = HashUtils::fromStr(mLPTokenAssetCode);
+        auto accountPubKey = strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, lpTokenHash).value;
+
         AccountEntry accountEntry;
-        accountEntry.accountID = AccountKeyUtils::forLiquidityPoolAsset(mLPTokenAssetCode);
+        accountEntry.accountID = PubKeyUtils::fromStrKey(accountPubKey);
         accountEntry.sequentialID = accountSeqID;
 
         LedgerEntry entry;
@@ -352,6 +382,7 @@ namespace stellar
         assetEntry.owner = mLPAccountID;
         assetEntry.maxIssuanceAmount = UINT64_MAX;
         assetEntry.availableForIssueance = UINT64_MAX;
+        assetEntry.preissuedAssetSigner = mLPAccountID;
 
         AssetFrame::ensureValid(assetEntry);
 
@@ -368,17 +399,19 @@ namespace stellar
         mLPSecondBalance = lpSecondBalanceFrame;
     }
 
-    bool LiquidityPoolAddLiquidityOpFrame::transferAssets(Application& app, StorageHelper& sh, LedgerManager& lm)
+    bool LiquidityPoolAddLiquidityOpFrame::distributeAssets(Application& app, StorageHelper& sh, LedgerManager& lm)
     {
+        auto lpPoolAccountID = mPoolFrame->getAccountID();
+
         auto& accountHelper = sh.getAccountHelper();
-        auto lpAccountFrame = accountHelper.loadAccount(mLPAccountID);
+        auto lpAccountFrame = accountHelper.loadAccount(lpPoolAccountID);
 
         uint32_t allTasks = 0;
         const auto lpTokensIssuanceRequestOp = CreateIssuanceRequestOpFrame::build(mSourceLPTokensBalance->getAsset(),
             mLPTokensAmountToIssue, mSourceLPTokensBalance->getBalanceID(), lm, allTasks);
 
         Operation op;
-        op.sourceAccount.activate() = mLPAccountID;
+        op.sourceAccount.activate() = lpPoolAccountID;
         op.body.type(OperationType::CREATE_ISSUANCE_REQUEST);
         op.body.createIssuanceRequestOp() = lpTokensIssuanceRequestOp;
 
@@ -435,7 +468,7 @@ namespace stellar
             innerResult().code(LPAddLiquidityResultCode::UNDERFUNDED);
             return;
         case BalanceManager::LINE_FULL:
-            innerResult().code(LPAddLiquidityResultCode::LINE_FULL);
+            innerResult().code(LPAddLiquidityResultCode::BALANCE_OVERFLOW);
             return;
         case BalanceManager::INCORRECT_PRECISION:
             innerResult().code(LPAddLiquidityResultCode::INCORRECT_AMOUNT_PRECISION);
@@ -446,28 +479,21 @@ namespace stellar
         }
     }
 
-    AssetCode LiquidityPoolAddLiquidityOpFrame::calculateLPAssetCode(AssetCode const& first, AssetCode const& second)
-    {
-        AssetCode lFirst = first, lSecond = second;
-        if (first > second)
-        {
-            lFirst.swap(lSecond);
-        }
-
-        std::string lpTokenCodeStr = "LP:" + lFirst + ":" + lSecond;
-        Hash lpTokenHash = HashUtils::fromStr(lpTokenCodeStr);
-        auto key = strKey::toStrKey(strKey::STRKEY_BALANCE_ED25519, lpTokenHash).value;
-
-        return {std::begin(key), std::begin(key) + 16};
-    }
-
-    uint64 LiquidityPoolAddLiquidityOpFrame::quote(uint64_t firstAmount, uint64_t firstReserve, uint64_t secondReserve)
+    bool LiquidityPoolAddLiquidityOpFrame::quote(uint64_t firstAmount, uint64_t firstReserve, uint64_t secondReserve,
+        uint64_t* quote)
     {
         if (!firstAmount || !firstReserve || !secondReserve)
         {
-            return 0;
+            return false;
         }
 
-        return firstAmount * secondReserve / firstReserve;
+        if (!bigDivide(*quote, firstAmount, secondReserve, firstReserve, ROUND_UP))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: LP quote calculated amount overflows UINT64_MAX";
+            return false;
+        }
+
+        return true;
     }
 }

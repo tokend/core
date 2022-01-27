@@ -305,28 +305,6 @@ BalanceID BalanceKeyUtils::forAccount(AccountID const& owner, uint64_t id)
 	return balance;
 }
 
-std::string AccountKeyUtils::toStrKey(const PublicKey &pk)
-{
-    return strKey::toStrKey(strKey::STRKEY_PUBKEY_ED25519, pk.ed25519()).value;
-}
-
-PublicKey AccountKeyUtils::fromStrKey(const std::string &s)
-{
-    return StrKeyUtils::fromStrKey(s, strKey::STRKEY_PUBKEY_ED25519);
-}
-
-AccountID AccountKeyUtils::forLiquidityPoolAsset(AssetCode const& lpToken)
-{
-    const void* p = reinterpret_cast<const void*>(&lpToken);
-    ByteSlice hashData = ByteSlice(p, sizeof lpToken);
-    auto sha256 = SHA256::create();
-    sha256->add(hashData);
-    auto hash = sha256->finish();
-    AccountID account(CryptoKeyType::KEY_TYPE_ED25519);
-    account.ed25519() = hash;
-    return account;
-}
-
 static void
 logPublicKey(std::ostream& s, PublicKey const& pk)
 {
@@ -432,8 +410,8 @@ HashUtils::random()
 Hash
 HashUtils::fromStr(const std::string& s)
 {
-    const void* p = static_cast<const void*>(&s);
-    ByteSlice hashData = ByteSlice(p, sizeof s);
+    const void* p = static_cast<const void*>(s.c_str());
+    ByteSlice hashData = ByteSlice(p, s.length());
     auto sha256 = SHA256::create();
     sha256->add(hashData);
     auto hash = sha256->finish();
