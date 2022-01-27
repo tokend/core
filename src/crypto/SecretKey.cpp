@@ -406,6 +406,18 @@ HashUtils::random()
     randombytes_buf(res.data(), res.size());
     return res;
 }
+
+Hash
+HashUtils::fromStr(const std::string& s)
+{
+    const void* p = static_cast<const void*>(s.c_str());
+    ByteSlice hashData = ByteSlice(p, s.length());
+    auto sha256 = SHA256::create();
+    sha256->add(hashData);
+    auto hash = sha256->finish();
+
+    return hash;
+}
 }
 
 namespace std

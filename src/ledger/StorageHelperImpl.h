@@ -100,7 +100,7 @@ private:
     StatisticsV2Helper& getStatisticsV2Helper() override;
     DataHelper& getDataHelper() override;
     DeferredPaymentHelper& getDeferredPaymentHelper() override;
-    LiquidityPoolHelper& getLiquidityPoolEntryHelper() override;
+    LiquidityPoolHelper& getLiquidityPoolHelper() override;
 
     Database& mDatabase;
     LedgerDelta *mLedgerDelta;

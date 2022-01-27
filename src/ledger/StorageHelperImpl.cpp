@@ -77,7 +77,7 @@ StorageHelperImpl::StorageHelperImpl(Database& db, LedgerDelta* ledgerDelta)
         {LedgerEntryType::PENDING_STATISTICS, &getPendingStatisticsHelper()},
         {LedgerEntryType::STATISTICS_V2, &getStatisticsV2Helper()},
         {LedgerEntryType::DEFERRED_PAYMENT, &getDeferredPaymentHelper()},
-        {LedgerEntryType::LIQUIDITY_POOL, &getLiquidityPoolEntryHelper()}
+        {LedgerEntryType::LIQUIDITY_POOL, &getLiquidityPoolHelper()}
     };
 }
 
@@ -573,7 +573,7 @@ StorageHelperImpl::getDeferredPaymentHelper()
 }
 
 LiquidityPoolHelper&
-StorageHelperImpl::getLiquidityPoolEntryHelper()
+StorageHelperImpl::getLiquidityPoolHelper()
 {
     if (!mLiquidityPoolHelper)
     {

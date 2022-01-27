@@ -30,16 +30,6 @@ if (!oksecondAssetMinAmount)
 {
 return false;
 }
-bool okfeeData = u.from_bytes(feeData);
-if (!okfeeData)
-{
-return false;
-}
-bool okdeadline = u.from_bytes(deadline);
-if (!okdeadline)
-{
-return false;
-}
 bool okext = u.from_bytes(ext);
 if (!okext)
 {
@@ -70,16 +60,6 @@ if (!oksecondAssetMinAmount)
 {
 return false;
 }
-bool okfeeData = m.to_bytes(feeData);
-if (!okfeeData)
-{
-return false;
-}
-bool okdeadline = m.to_bytes(deadline);
-if (!okdeadline)
-{
-return false;
-}
 bool okext = m.to_bytes(ext);
 if (!okext)
 {
@@ -94,8 +74,6 @@ m.count_size(lpTokenAsset);
 m.count_size(lpTokensAmount);
 m.count_size(firstAssetMinAmount);
 m.count_size(secondAssetMinAmount);
-m.count_size(feeData);
-m.count_size(deadline);
 m.count_size(ext);
 }
 bool
@@ -109,8 +87,6 @@ return false;
 && (lpTokensAmount== other.lpTokensAmount)
 && (firstAssetMinAmount== other.firstAssetMinAmount)
 && (secondAssetMinAmount== other.secondAssetMinAmount)
-&& (feeData== other.feeData)
-&& (deadline== other.deadline)
 && (ext== other.ext)
 ;}
 bool
@@ -129,10 +105,6 @@ if (firstAssetMinAmount < other.firstAssetMinAmount) return true;
 if (other.firstAssetMinAmount < firstAssetMinAmount) return false;
 if (secondAssetMinAmount < other.secondAssetMinAmount) return true;
 if (other.secondAssetMinAmount < secondAssetMinAmount) return false;
-if (feeData < other.feeData) return true;
-if (other.feeData < feeData) return false;
-if (deadline < other.deadline) return true;
-if (other.deadline < deadline) return false;
 if (ext < other.ext) return true;
 if (other.ext < ext) return false;
 return false;
@@ -171,6 +143,11 @@ return false;
 }
 bool oksecondAssetAmount = u.from_bytes(secondAssetAmount);
 if (!oksecondAssetAmount)
+{
+return false;
+}
+bool okext = u.from_bytes(ext);
+if (!okext)
 {
 return false;
 }
@@ -214,6 +191,11 @@ if (!oksecondAssetAmount)
 {
 return false;
 }
+bool okext = m.to_bytes(ext);
+if (!okext)
+{
+return false;
+}
 return true;
 }
 void
@@ -226,6 +208,7 @@ m.count_size(firstAsset);
 m.count_size(secondAsset);
 m.count_size(firstAssetAmount);
 m.count_size(secondAssetAmount);
+m.count_size(ext);
 }
 bool
 LPRemoveLiquiditySuccess::operator==(xdr::xdr_abstract const& other_abstract) const 
@@ -241,6 +224,7 @@ return false;
 && (secondAsset== other.secondAsset)
 && (firstAssetAmount== other.firstAssetAmount)
 && (secondAssetAmount== other.secondAssetAmount)
+&& (ext== other.ext)
 ;}
 bool
 LPRemoveLiquiditySuccess::operator<(xdr_abstract const& other_abstract) const
@@ -264,6 +248,8 @@ if (firstAssetAmount < other.firstAssetAmount) return true;
 if (other.firstAssetAmount < firstAssetAmount) return false;
 if (secondAssetAmount < other.secondAssetAmount) return true;
 if (other.secondAssetAmount < secondAssetAmount) return false;
+if (ext < other.ext) return true;
+if (other.ext < ext) return false;
 return false;
 }bool
 LPRemoveLiquidityResult::from_bytes(xdr::unmarshaler& u) 

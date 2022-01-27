@@ -38,6 +38,7 @@
 #include <ledger/PendingStatisticsHelper.h>
 #include <ledger/ReviewableRequestHelper.h>
 #include <ledger/StatisticsV2Helper.h>
+#include <ledger/LiquidityPoolHelper.h>
 #include "xdr/ledger-entries.h"
 
 // NOTE: soci will just crash and not throw
@@ -74,10 +75,11 @@ enum databaseSchemaVersion : unsigned long
     SWAPS = 20,
     ASSET_STATE = 21,
     DEFERRED_PAYMENTS = 22,
-    DATA = 23
+    DATA = 23,
+    LIQUIDITY_POOL = 24
 };
 
-static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::DATA;
+static unsigned long const SCHEMA_VERSION = databaseSchemaVersion::LIQUIDITY_POOL;
 
 static void
 setSerializable(soci::session& sess)
@@ -208,6 +210,9 @@ DatabaseImpl::applySchemaUpgrade(unsigned long vers)
             break;
         case DATA:
             sh.getDataHelper().createIfNotExists();
+            break;
+        case LIQUIDITY_POOL:
+            sh.getLiquidityPoolHelper().dropAll();
             break;
         default:
             CLOG(ERROR, "Database") << "Unknown DB schema version: " << vers;
