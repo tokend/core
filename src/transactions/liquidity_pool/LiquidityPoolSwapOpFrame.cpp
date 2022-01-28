@@ -267,8 +267,8 @@ namespace stellar
         }
         break;
         default:
-            // TODO handle
-            ;
+            innerResult().code(LPSwapResultCode::INCORRECT_REQUEST_TYPE);
+            return {0, 0};
         }
 
         auto balanceManager = BalanceManager(app, sh);
