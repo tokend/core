@@ -355,6 +355,7 @@ enum class LPSwapResultCode : std::int32_t {
   INSUFFICIENT_LIQUIDITY = -15,
   EXCESSIVE_INPUT_AMOUNT = -16,
   BALANCE_OVERFLOW = -17,
+  INCORRECT_REQUEST_TYPE = -18,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPSwapResultCode>
@@ -400,6 +401,8 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       return "EXCESSIVE_INPUT_AMOUNT";
     case ::stellar::LPSwapResultCode::BALANCE_OVERFLOW:
       return "BALANCE_OVERFLOW";
+    case ::stellar::LPSwapResultCode::INCORRECT_REQUEST_TYPE:
+      return "INCORRECT_REQUEST_TYPE";
     default:
       return nullptr;
     }
@@ -423,7 +426,8 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
       (int32_t)::stellar::LPSwapResultCode::LIQUIDITY_POOL_NOT_FOUND,
       (int32_t)::stellar::LPSwapResultCode::INSUFFICIENT_LIQUIDITY,
       (int32_t)::stellar::LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT,
-      (int32_t)::stellar::LPSwapResultCode::BALANCE_OVERFLOW
+      (int32_t)::stellar::LPSwapResultCode::BALANCE_OVERFLOW,
+      (int32_t)::stellar::LPSwapResultCode::INCORRECT_REQUEST_TYPE
     };
     return _xdr_enum_vec;
   }

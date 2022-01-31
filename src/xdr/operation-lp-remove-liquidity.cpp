@@ -10,8 +10,8 @@ namespace stellar {
 bool
 LPRemoveLiquidityOp::from_bytes(xdr::unmarshaler& u) 
 {
-bool oklpTokenAsset = u.from_bytes(lpTokenAsset);
-if (!oklpTokenAsset)
+bool oklpTokenBalance = u.from_bytes(lpTokenBalance);
+if (!oklpTokenBalance)
 {
 return false;
 }
@@ -40,8 +40,8 @@ return true;
 bool
 LPRemoveLiquidityOp::to_bytes(xdr::marshaler& m) const 
 {
-bool oklpTokenAsset = m.to_bytes(lpTokenAsset);
-if (!oklpTokenAsset)
+bool oklpTokenBalance = m.to_bytes(lpTokenBalance);
+if (!oklpTokenBalance)
 {
 return false;
 }
@@ -70,7 +70,7 @@ return true;
 void
 LPRemoveLiquidityOp::count_size(xdr::measurer& m) const 
 {
-m.count_size(lpTokenAsset);
+m.count_size(lpTokenBalance);
 m.count_size(lpTokensAmount);
 m.count_size(firstAssetMinAmount);
 m.count_size(secondAssetMinAmount);
@@ -83,7 +83,7 @@ if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }auto& other = dynamic_cast<LPRemoveLiquidityOp const&>(other_abstract);return true
-&& (lpTokenAsset== other.lpTokenAsset)
+&& (lpTokenBalance== other.lpTokenBalance)
 && (lpTokensAmount== other.lpTokensAmount)
 && (firstAssetMinAmount== other.firstAssetMinAmount)
 && (secondAssetMinAmount== other.secondAssetMinAmount)
@@ -97,8 +97,8 @@ if (typeid(*this) != typeid(other_abstract))
 throw std::runtime_error("unexpected operator< invoke");
 }
 auto& other = dynamic_cast<LPRemoveLiquidityOp const&>(other_abstract);
-if (lpTokenAsset < other.lpTokenAsset) return true;
-if (other.lpTokenAsset < lpTokenAsset) return false;
+if (lpTokenBalance < other.lpTokenBalance) return true;
+if (other.lpTokenBalance < lpTokenBalance) return false;
 if (lpTokensAmount < other.lpTokensAmount) return true;
 if (other.lpTokensAmount < lpTokensAmount) return false;
 if (firstAssetMinAmount < other.firstAssetMinAmount) return true;

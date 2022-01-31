@@ -383,6 +383,7 @@ namespace stellar
         assetEntry.maxIssuanceAmount = UINT64_MAX;
         assetEntry.availableForIssueance = UINT64_MAX;
         assetEntry.preissuedAssetSigner = mLPAccountID;
+        assetEntry.policies = static_cast<uint32>(AssetPolicy::TRANSFERABLE);
 
         AssetFrame::ensureValid(assetEntry);
 
