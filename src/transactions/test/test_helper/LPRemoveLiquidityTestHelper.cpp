@@ -36,10 +36,30 @@ LPRemoveLiquidityResult LPRemoveLiquidityTestHelper::applyRemoveLiquidityTx(Acco
 
     auto txResult = txFramePtr->getResult();
     auto opResult = txResult.result.results()[0];
-    auto actualResultCode = LiquidityPoolRemoveLiquidityOpFrame::getInnerCode(opResult);
 
-    REQUIRE(actualResultCode == expectedResultCode);
-    return txResult.result.results()[0].tr().lpRemoveLiquidityResult();
+    LPRemoveLiquidityResultCode actualResultCode;
+
+    if (opResult.code() == OperationResultCode::opNO_ENTRY)
+    {
+        switch (opResult.entryType())
+        {
+        case LedgerEntryType::LIQUIDITY_POOL:
+            actualResultCode = LPRemoveLiquidityResultCode::LP_NOT_FOUND;
+            break;
+        case LedgerEntryType::BALANCE:
+            actualResultCode = LPRemoveLiquidityResultCode::LP_TOKEN_BALANCE_NOT_FOUND;
+            break;
+        }
+
+        REQUIRE(actualResultCode == expectedResultCode);
+    }
+    else
+    {
+        actualResultCode = LiquidityPoolRemoveLiquidityOpFrame::getInnerCode(opResult);
+
+        REQUIRE(actualResultCode == expectedResultCode);
+        return txResult.result.results()[0].tr().lpRemoveLiquidityResult();
+    }
 }
 
 }

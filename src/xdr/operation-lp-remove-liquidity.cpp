@@ -126,16 +126,6 @@ if (!oksecondAssetBalanceID)
 {
 return false;
 }
-bool okfirstAsset = u.from_bytes(firstAsset);
-if (!okfirstAsset)
-{
-return false;
-}
-bool oksecondAsset = u.from_bytes(secondAsset);
-if (!oksecondAsset)
-{
-return false;
-}
 bool okfirstAssetAmount = u.from_bytes(firstAssetAmount);
 if (!okfirstAssetAmount)
 {
@@ -171,16 +161,6 @@ if (!oksecondAssetBalanceID)
 {
 return false;
 }
-bool okfirstAsset = m.to_bytes(firstAsset);
-if (!okfirstAsset)
-{
-return false;
-}
-bool oksecondAsset = m.to_bytes(secondAsset);
-if (!oksecondAsset)
-{
-return false;
-}
 bool okfirstAssetAmount = m.to_bytes(firstAssetAmount);
 if (!okfirstAssetAmount)
 {
@@ -204,8 +184,6 @@ LPRemoveLiquiditySuccess::count_size(xdr::measurer& m) const
 m.count_size(liquidityPoolID);
 m.count_size(firstAssetBalanceID);
 m.count_size(secondAssetBalanceID);
-m.count_size(firstAsset);
-m.count_size(secondAsset);
 m.count_size(firstAssetAmount);
 m.count_size(secondAssetAmount);
 m.count_size(ext);
@@ -220,8 +198,6 @@ return false;
 && (liquidityPoolID== other.liquidityPoolID)
 && (firstAssetBalanceID== other.firstAssetBalanceID)
 && (secondAssetBalanceID== other.secondAssetBalanceID)
-&& (firstAsset== other.firstAsset)
-&& (secondAsset== other.secondAsset)
 && (firstAssetAmount== other.firstAssetAmount)
 && (secondAssetAmount== other.secondAssetAmount)
 && (ext== other.ext)
@@ -240,10 +216,6 @@ if (firstAssetBalanceID < other.firstAssetBalanceID) return true;
 if (other.firstAssetBalanceID < firstAssetBalanceID) return false;
 if (secondAssetBalanceID < other.secondAssetBalanceID) return true;
 if (other.secondAssetBalanceID < secondAssetBalanceID) return false;
-if (firstAsset < other.firstAsset) return true;
-if (other.firstAsset < firstAsset) return false;
-if (secondAsset < other.secondAsset) return true;
-if (other.secondAsset < secondAsset) return false;
 if (firstAssetAmount < other.firstAssetAmount) return true;
 if (other.firstAssetAmount < firstAssetAmount) return false;
 if (secondAssetAmount < other.secondAssetAmount) return true;

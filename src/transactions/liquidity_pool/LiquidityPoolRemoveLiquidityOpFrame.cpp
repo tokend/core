@@ -4,6 +4,7 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/LiquidityPoolHelper.h>
 #include <ledger/AccountHelper.h>
+#include <ledger/AssetHelper.h>
 #include <transactions/managers/BalanceManager.h>
 
 namespace stellar
@@ -29,6 +30,31 @@ namespace stellar
             return false;
         }
 
+        auto& liquidityPoolHelper = sh.getLiquidityPoolHelper();
+        auto lpFrame = liquidityPoolHelper.loadPool(lpTokensBalanceFrame->getAsset());
+        if (!lpFrame)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::LIQUIDITY_POOL;
+
+            return false;
+        }
+
+        auto lpFirstBalanceFrame = balanceHelper.loadBalance(lpFrame->getFirstAssetBalance());
+        auto lpSecondBalanceFrame = balanceHelper.loadBalance(lpFrame->getSecondAssetBalance());
+
+        auto& assetHelper = sh.getAssetHelper();
+        auto firstAssetFrame = assetHelper.mustLoadAsset(lpFirstBalanceFrame->getAsset());
+        auto secondAssetFrame = assetHelper.mustLoadAsset(lpSecondBalanceFrame->getAsset());
+
+        AccountRuleResource resource(LedgerEntryType::LIQUIDITY_POOL);
+        resource.liquidityPool().firstAsset = firstAssetFrame->getCode();
+        resource.liquidityPool().firstAssetType = firstAssetFrame->getType();
+        resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
+        resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
+
+        result.emplace_back(resource, AccountRuleAction::MANAGE_LIQUIDITY, mSourceAccount);
+
         return true;
     }
 
@@ -44,6 +70,31 @@ namespace stellar
 
             return false;
         }
+
+        auto& liquidityPoolHelper = sh.getLiquidityPoolHelper();
+        auto lpFrame = liquidityPoolHelper.loadPool(lpTokensBalanceFrame->getAsset());
+        if (!lpFrame)
+        {
+            mResult.code(OperationResultCode::opNO_ENTRY);
+            mResult.entryType() = LedgerEntryType::LIQUIDITY_POOL;
+
+            return false;
+        }
+
+        auto lpFirstBalanceFrame = balanceHelper.loadBalance(lpFrame->getFirstAssetBalance());
+        auto lpSecondBalanceFrame = balanceHelper.loadBalance(lpFrame->getSecondAssetBalance());
+
+        auto& assetHelper = sh.getAssetHelper();
+        auto firstAssetFrame = assetHelper.mustLoadAsset(lpFirstBalanceFrame->getAsset());
+        auto secondAssetFrame = assetHelper.mustLoadAsset(lpSecondBalanceFrame->getAsset());
+
+        SignerRuleResource resource(LedgerEntryType::LIQUIDITY_POOL);
+        resource.liquidityPool().firstAsset = firstAssetFrame->getCode();
+        resource.liquidityPool().firstAssetType = firstAssetFrame->getType();
+        resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
+        resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
+
+        result.emplace_back(resource, SignerRuleAction::MANAGE_LIQUIDITY);
 
         return true;
     }
@@ -111,8 +162,6 @@ namespace stellar
         innerResult().success().liquidityPoolID = mLPFrame->getPoolID();
         innerResult().success().firstAssetBalanceID = balances[0]->getBalanceID();
         innerResult().success().secondAssetBalanceID = balances[1]->getBalanceID();
-        innerResult().success().firstAsset = balances[0]->getAsset();
-        innerResult().success().secondAsset = balances[1]->getAsset();
         innerResult().success().firstAssetAmount = outputs[0];
         innerResult().success().secondAssetAmount = outputs[1];
 
@@ -146,7 +195,7 @@ namespace stellar
     std::array<BalanceFrame::pointer, 2>
     LiquidityPoolRemoveLiquidityOpFrame::getSourceBalances(Application& app, StorageHelper& sh)
     {
-            auto& balanceHelper = sh.getBalanceHelper();
+        auto& balanceHelper = sh.getBalanceHelper();
         auto balanceManager = BalanceManager(app, sh);
 
         auto sourceAccountID = mSourceAccount->getID();
@@ -174,7 +223,6 @@ namespace stellar
         uint64_t firstAmount, uint64_t secondAmount)
     {
         auto balanceManager = BalanceManager(app, sh);
-        auto& balanceHelper = sh.getBalanceHelper();
         auto& accountHelper = sh.getAccountHelper();
 
         auto sourceAccountID = mSourceAccount->getID();

@@ -116,8 +116,6 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
   uint64 liquidityPoolID{};
   BalanceID firstAssetBalanceID{};
   BalanceID secondAssetBalanceID{};
-  AssetCode firstAsset{};
-  AssetCode secondAsset{};
   uint64 firstAssetAmount{};
   uint64 secondAssetAmount{};
   EmptyExt ext{};
@@ -126,8 +124,6 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
   template<typename _liquidityPoolID_T,
            typename _firstAssetBalanceID_T,
            typename _secondAssetBalanceID_T,
-           typename _firstAsset_T,
-           typename _secondAsset_T,
            typename _firstAssetAmount_T,
            typename _secondAssetAmount_T,
            typename _ext_T,
@@ -135,8 +131,6 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
                           && std::is_constructible<BalanceID, _firstAssetBalanceID_T>::value
                           && std::is_constructible<BalanceID, _secondAssetBalanceID_T>::value
-                          && std::is_constructible<AssetCode, _firstAsset_T>::value
-                          && std::is_constructible<AssetCode, _secondAsset_T>::value
                           && std::is_constructible<uint64, _firstAssetAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
@@ -144,16 +138,12 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
   explicit LPRemoveLiquiditySuccess(_liquidityPoolID_T &&_liquidityPoolID,
                                     _firstAssetBalanceID_T &&_firstAssetBalanceID,
                                     _secondAssetBalanceID_T &&_secondAssetBalanceID,
-                                    _firstAsset_T &&_firstAsset,
-                                    _secondAsset_T &&_secondAsset,
                                     _firstAssetAmount_T &&_firstAssetAmount,
                                     _secondAssetAmount_T &&_secondAssetAmount,
                                     _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
       firstAssetBalanceID(std::forward<_firstAssetBalanceID_T>(_firstAssetBalanceID)),
       secondAssetBalanceID(std::forward<_secondAssetBalanceID_T>(_secondAssetBalanceID)),
-      firstAsset(std::forward<_firstAsset_T>(_firstAsset)),
-      secondAsset(std::forward<_secondAsset_T>(_secondAsset)),
       firstAssetAmount(std::forward<_firstAssetAmount_T>(_firstAssetAmount)),
       secondAssetAmount(std::forward<_secondAssetAmount_T>(_secondAssetAmount)),
       ext(std::forward<_ext_T>(_ext)) {}

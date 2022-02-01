@@ -149,6 +149,15 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
             removeLPTokensAmount, 0, 0, LPRemoveLiquidityResultCode::LP_NOT_FOUND);
     }
 
+    SECTION("Non-existing LP balance")
+    {
+        uint64_t removeLPTokensAmount = createLPResult.success().lpTokensAmount;
+
+        auto fakeBalance = BalanceKeyUtils::forAccount(accountID, UINT64_MAX);
+        auto removeRes = removeLiquidityTestHelper.applyRemoveLiquidityTx(account,
+            fakeBalance, removeLPTokensAmount, 0, 0, LPRemoveLiquidityResultCode::LP_TOKEN_BALANCE_NOT_FOUND);
+    }
+
     SECTION("Insufficient first min amount")
     {
         uint64_t removeLPTokensAmount = createLPResult.success().lpTokensAmount;
