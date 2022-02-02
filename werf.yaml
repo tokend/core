@@ -24,7 +24,6 @@ shell:                      # Shell сборочные инструкции.
 image: corepg              # Название собираемого образа.
 from: postgres:14              # Базовый образ.
 docker:
-  WORKDIR: /build
   ENTRYPOINT: core-entrypoint.sh
   VOLUME: /data
   ENV: {CONFIG: /config.ini}

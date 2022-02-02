@@ -57,8 +57,8 @@ Build and Publish:
     - type werf && source $(werf ci-env gitlab --as-file)
     - werf build --report-path=images-report.json
     - docker pull $(cat images-report.json | jq -r .Images.corepg.DockerImageName)
-    - docker tag $(cat images-report.json | jq -r .Images.corepg.DockerImageName) $PG_IMAGE
-    - docker push $PG_IMAGE
+    - docker tag $(cat images-report.json | jq -r .Images.corepg.DockerImageName) $IMAGE_NAME
+    - docker push $IMAGE_NAME
   except: [schedules]
   interruptible: true
 
