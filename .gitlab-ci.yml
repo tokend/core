@@ -64,10 +64,14 @@ Build and Publish:
   interruptible: true
 
 Build and Publish DH:
-  image: docker:latest
-  stage: publish
+  stage: build-and-publish
   tags:
     - tokend
+  services:
+      - docker:18-dind
+  image: 
+    name: "registry.gitlab.com/tokend/devops/werf-dind:8588e38f423bc5cc35c68e57e0c0dd57eb920e5d"
+    entrypoint: [""]
   only:
     - /^.+\..+\..+$/
   script:
