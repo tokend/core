@@ -2,7 +2,7 @@ configVersion: 1
 project: 'core'
 ---
 image: core              # Название собираемого образа.
-from: registry.gitlab.com/tokend/core/buildbase:2               # Базовый образ.
+from: registry.gitlab.com/tokend/devops/docker-containers:core-latest               # Базовый образ.
 docker:
   WORKDIR: /build
 git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
@@ -15,12 +15,13 @@ shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
   - cd build
   - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
+  - export VERSION={{ env "CI_COMMIT_SHA" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
   - make -j4
 
 ---
 image: corenc
-from: registry.gitlab.com/tokend/core/buildbase:2
+from: registry.gitlab.com/tokend/devops/docker-containers:core-latest
 docker:
   WORKDIR: /build
 git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
@@ -33,5 +34,6 @@ shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
   - cd build
   - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
+  - export VERSION={{ env "CI_COMMIT_SHA" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
   - make -j4
