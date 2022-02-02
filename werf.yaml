@@ -8,13 +8,11 @@ docker:
 git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
 - add: /                    # Исходный путь в репозитории.
   to: /build                  # Путь назначения в образе.
-  includePaths: [.git/*]
   stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
     setup:                  # Для стадии Setup.
     - "**/*"
 shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
-  - git submodule update --init
   - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
   - make -j4
@@ -27,13 +25,11 @@ docker:
 git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
 - add: /                    # Исходный путь в репозитории.
   to: /build                  # Путь назначения в образе.
-  includePaths: [.git/*]
   stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
     setup:                  # Для стадии Setup.
     - "*"
 shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
-  - git submodule update --init
   - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
   - make -j4
