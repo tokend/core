@@ -112,7 +112,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         auto sourceToBalanceBeforeSwap = balanceHelper.loadBalance(secondBalance);
 
         uint64_t amountIn = 1 * ONE, amountOutMin = 1.8 * ONE;
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_TOKENS_FOR_TOKENS, firstBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS, firstBalance,
             secondBalance, amountIn, amountOutMin, LPSwapResultCode::SUCCESS);
 
         auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
@@ -124,8 +124,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().sourceAsset);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().targetAsset);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -139,7 +139,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         auto sourceToBalanceBeforeSwap = balanceHelper.loadBalance(firstBalance);
 
         uint64_t amountIn = 3 * ONE, amountOutMin = 1 * ONE;
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_TOKENS_FOR_TOKENS, secondBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS, secondBalance,
             firstBalance, amountIn, amountOutMin, LPSwapResultCode::SUCCESS);
 
         auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
@@ -151,8 +151,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().sourceAsset);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().targetAsset);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -166,7 +166,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         auto sourceToBalanceBeforeSwap = balanceHelper.loadBalance(secondBalance);
 
         uint64_t amountInMax = 2 * ONE, amountOut = 2 * ONE;
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::TOKENS_FOR_EXACT_TOKENS, firstBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS, firstBalance,
             secondBalance, amountInMax, amountOut, LPSwapResultCode::SUCCESS);
 
         auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
@@ -178,8 +178,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().sourceAsset);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().targetAsset);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -193,7 +193,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         auto sourceToBalanceBeforeSwap = balanceHelper.loadBalance(firstBalance);
 
         uint64_t amountInMax = 2.5 * ONE, amountOut = 1 * ONE;
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::TOKENS_FOR_EXACT_TOKENS, secondBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS, secondBalance,
             firstBalance, amountInMax, amountOut, LPSwapResultCode::SUCCESS);
 
         auto lpTokenAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
@@ -205,8 +205,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().sourceAsset);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(accountID, swapResult.success().targetAsset);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -218,7 +218,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
     {
         uint64_t amountIn = 1 * ONE, amountOutMin = 1.8 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_TOKENS_FOR_TOKENS, firstBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS, firstBalance,
             firstBalance, amountIn, amountOutMin, LPSwapResultCode::SAME_BALANCES);
     }
 
@@ -226,23 +226,23 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
     {
         uint64_t amountIn = 0 * ONE, amountOutMin = 1.8 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_TOKENS_FOR_TOKENS, firstBalance,
-            secondBalance, amountIn, amountOutMin, LPSwapResultCode::INSUFFICIENT_INPUT_AMOUNT);
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS, firstBalance,
+            secondBalance, amountIn, amountOutMin, LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT);
     }
 
     SECTION("Swap with zero out")
     {
-        uint64_t amountInMax = 1 * ONE, amountOut = 0 * ONE;
+        uint64_t amountIn = 1 * ONE, amountOutMin = 0 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::TOKENS_FOR_EXACT_TOKENS, firstBalance,
-            secondBalance, amountInMax, amountOut, LPSwapResultCode::INSUFFICIENT_OUTPUT_AMOUNT);
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS, firstBalance,
+            secondBalance, amountIn, amountOutMin, LPSwapResultCode::SUCCESS);
     }
 
     SECTION("Swap exact A to B with excessive outMin")
     {
         uint64_t amountIn = 1 * ONE, amountOutMin = 2 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_TOKENS_FOR_TOKENS, firstBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS, firstBalance,
             secondBalance, amountIn, amountOutMin, LPSwapResultCode::INSUFFICIENT_OUTPUT_AMOUNT);
     }
 
@@ -250,7 +250,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
     {
         uint64_t amountIn = 10 * ONE, amountOutMin = 21 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_TOKENS_FOR_TOKENS, firstBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS, firstBalance,
             secondBalance, amountIn, amountOutMin, LPSwapResultCode::INSUFFICIENT_LIQUIDITY);
     }
 
@@ -258,7 +258,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
     {
         uint64_t amountInMax = 1 * ONE, amountOut = 2 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::TOKENS_FOR_EXACT_TOKENS, firstBalance,
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS, firstBalance,
             secondBalance, amountInMax, amountOut, LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT);
     }
 
@@ -280,7 +280,7 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
 
         uint64_t amountInMax = 1 * ONE, amountOut = 2 * ONE;
 
-        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::TOKENS_FOR_EXACT_TOKENS, firstBalance,
-            secondBalance, amountInMax, amountOut, LPSwapResultCode::LIQUIDITY_POOL_NOT_FOUND);
+        auto swapResult = lpSwapTestHelper.applyLPSwapTx(account, LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS,
+            firstBalance, secondBalance, amountInMax, amountOut, LPSwapResultCode::LIQUIDITY_POOL_NOT_FOUND);
     }
 }

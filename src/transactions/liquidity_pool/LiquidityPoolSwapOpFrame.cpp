@@ -86,9 +86,9 @@ namespace stellar
 
         switch (mLPSwap.lpSwapRequest.type())
         {
-        case LPSwapType::EXACT_TOKENS_FOR_TOKENS:
+        case LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
         {
-            auto request = mLPSwap.lpSwapRequest.swapExactTokensForTokens();
+            auto request = mLPSwap.lpSwapRequest.swapExactInTokensForOutTokens();
 
             if (request.amountIn == 0)
             {
@@ -97,9 +97,9 @@ namespace stellar
             }
         }
         break;
-        case LPSwapType::TOKENS_FOR_EXACT_TOKENS:
+        case LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
         {
-            auto request = mLPSwap.lpSwapRequest.swapTokensForExactTokens();
+            auto request = mLPSwap.lpSwapRequest.swapExactOutTokensForInTokens();
 
             if (request.amountOut == 0)
             {
@@ -109,8 +109,8 @@ namespace stellar
         }
         break;
         default:
-            innerResult().code(LPSwapResultCode::INCORRECT_REQUEST_TYPE);
-            return false;
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "unexpected swap type";
+            throw std::runtime_error("unexpected swap type");
         }
 
         return true;
@@ -156,16 +156,10 @@ namespace stellar
 
         auto lpFirstBalance = balanceHelper.loadBalance(mLiquidityPoolFrame->getFirstAssetBalance());
         auto lpFirstAsset = lpFirstBalance->getAsset();
-        if (lpFirstAsset == mFromAsset)
-        {
-            mReserveIn = mLiquidityPoolFrame->getFirstReserve();
-            mReserveOut = mLiquidityPoolFrame->getSecondReserve();
-        }
-        else
-        {
-            mReserveIn = mLiquidityPoolFrame->getSecondReserve();
-            mReserveOut = mLiquidityPoolFrame->getFirstReserve();
-        }
+
+        bool assetsSorted = lpFirstAsset == mFromAsset;
+        mReserveIn = assetsSorted ? mLiquidityPoolFrame->getFirstReserve() : mLiquidityPoolFrame->getSecondReserve();
+        mReserveOut = assetsSorted ? mLiquidityPoolFrame->getSecondReserve() : mLiquidityPoolFrame->getFirstReserve();
 
         auto lpFromBalance = balanceHelper.loadBalance(mLiquidityPoolFrame->getAccountID(), mToAsset);
         auto lpToBalance = balanceHelper.loadBalance(mLiquidityPoolFrame->getAccountID(), mFromAsset);
@@ -181,8 +175,8 @@ namespace stellar
         innerResult().code(LPSwapResultCode::SUCCESS);
         innerResult().success().liquidityPoolID = mLiquidityPoolFrame->getPoolID();
         innerResult().success().poolAccount = mLiquidityPoolFrame->getAccountID();
-        innerResult().success().sourceAsset = mFromAsset;
-        innerResult().success().targetAsset = mToAsset;
+        innerResult().success().sourceBalanceID = sourceFromBalance->getBalanceID();
+        innerResult().success().targetBalanceID = sourceToBalance->getBalanceID();
         innerResult().success().swapInAmount = amounts[0];
         innerResult().success().swapOutAmount = amounts[1];
 
@@ -191,7 +185,10 @@ namespace stellar
 
     bool LiquidityPoolSwapOpFrame::calculateAmountIn(uint64_t amountOut, uint64_t& amountIn)
     {
-        if (!bigDivide(amountIn, mReserveIn, amountOut, mReserveOut - amountOut, ROUND_UP))
+        uint64_t denominator = mReserveOut - amountOut;
+
+        if (denominator == 0 ||
+            !bigDivide(amountIn, mReserveIn, amountOut, denominator, ROUND_UP))
         {
             innerResult().code(LPSwapResultCode::BALANCE_OVERFLOW);
             return false;
@@ -226,9 +223,9 @@ namespace stellar
 
         switch (mLPSwap.lpSwapRequest.type())
         {
-        case LPSwapType::TOKENS_FOR_EXACT_TOKENS:
+        case LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
         {
-            auto request = mLPSwap.lpSwapRequest.swapTokensForExactTokens();
+            auto request = mLPSwap.lpSwapRequest.swapExactOutTokensForInTokens();
 
             if (request.amountOut > mReserveOut)
             {
@@ -236,7 +233,11 @@ namespace stellar
                 return {0, request.amountOut};
             }
 
-            calculateAmountIn(request.amountOut, amountIn);
+            if (!calculateAmountIn(request.amountOut, amountIn))
+            {
+                return {0, 0};
+            }
+
             if (amountIn > request.amountInMax)
             {
                 innerResult().code(LPSwapResultCode::EXCESSIVE_INPUT_AMOUNT);
@@ -246,9 +247,9 @@ namespace stellar
             amountOut = request.amountOut;
         }
         break;
-        case LPSwapType::EXACT_TOKENS_FOR_TOKENS:
+        case LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
         {
-            auto request = mLPSwap.lpSwapRequest.swapExactTokensForTokens();
+            auto request = mLPSwap.lpSwapRequest.swapExactInTokensForOutTokens();
 
             if (request.amountOutMin > mReserveOut)
             {
@@ -256,7 +257,11 @@ namespace stellar
                 return {request.amountIn, 0};
             }
 
-            calculateAmountOut(request.amountIn, amountOut);
+            if (!calculateAmountOut(request.amountIn, amountOut))
+            {
+                return {0, 0};
+            }
+
             if (amountOut < request.amountOutMin)
             {
                 innerResult().code(LPSwapResultCode::INSUFFICIENT_OUTPUT_AMOUNT);
@@ -267,8 +272,8 @@ namespace stellar
         }
         break;
         default:
-            innerResult().code(LPSwapResultCode::INCORRECT_REQUEST_TYPE);
-            return {0, 0};
+            CLOG(ERROR, Logging::OPERATION_LOGGER) << "unexpected swap type";
+            throw std::runtime_error("unexpected swap type");
         }
 
         auto balanceManager = BalanceManager(app, sh);

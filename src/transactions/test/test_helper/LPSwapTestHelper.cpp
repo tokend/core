@@ -41,16 +41,16 @@ LPSwapTestHelper::createLPSwapTx(Account& from, LPSwapType swapType, BalanceID& 
     swap.lpSwapRequest.type(swapType);
     switch (swapType)
     {
-    case LPSwapType::TOKENS_FOR_EXACT_TOKENS:
+    case LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
     {
-        auto& request = swap.lpSwapRequest.swapTokensForExactTokens();
+        auto& request = swap.lpSwapRequest.swapExactOutTokensForInTokens();
         request.amountOut = amountOut;
         request.amountInMax = amountIn;
     }
     break;
-    case LPSwapType::EXACT_TOKENS_FOR_TOKENS:
+    case LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
     {
-        auto& request = swap.lpSwapRequest.swapExactTokensForTokens();
+        auto& request = swap.lpSwapRequest.swapExactInTokensForOutTokens();
         request.amountOutMin = amountOut;
         request.amountIn = amountIn;
     }

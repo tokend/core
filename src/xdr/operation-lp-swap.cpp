@@ -8,7 +8,7 @@
 using namespace xdr;
 namespace stellar {
 bool
-LPSwapOp::_lpSwapRequest_t::_swapTokensForExactTokens_t::from_bytes(xdr::unmarshaler& u) 
+LPSwapOp::_lpSwapRequest_t::_swapExactOutTokensForInTokens_t::from_bytes(xdr::unmarshaler& u) 
 {
 bool okamountInMax = u.from_bytes(amountInMax);
 if (!okamountInMax)
@@ -23,7 +23,7 @@ return false;
 return true;
 }
 bool
-LPSwapOp::_lpSwapRequest_t::_swapTokensForExactTokens_t::to_bytes(xdr::marshaler& m) const 
+LPSwapOp::_lpSwapRequest_t::_swapExactOutTokensForInTokens_t::to_bytes(xdr::marshaler& m) const 
 {
 bool okamountInMax = m.to_bytes(amountInMax);
 if (!okamountInMax)
@@ -38,36 +38,36 @@ return false;
 return true;
 }
 void
-LPSwapOp::_lpSwapRequest_t::_swapTokensForExactTokens_t::count_size(xdr::measurer& m) const 
+LPSwapOp::_lpSwapRequest_t::_swapExactOutTokensForInTokens_t::count_size(xdr::measurer& m) const 
 {
 m.count_size(amountInMax);
 m.count_size(amountOut);
 }
 bool
-LPSwapOp::_lpSwapRequest_t::_swapTokensForExactTokens_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+LPSwapOp::_lpSwapRequest_t::_swapExactOutTokensForInTokens_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<_swapTokensForExactTokens_t const&>(other_abstract);return true
+}auto& other = dynamic_cast<_swapExactOutTokensForInTokens_t const&>(other_abstract);return true
 && (amountInMax== other.amountInMax)
 && (amountOut== other.amountOut)
 ;}
 bool
-LPSwapOp::_lpSwapRequest_t::_swapTokensForExactTokens_t::operator<(xdr_abstract const& other_abstract) const
+LPSwapOp::_lpSwapRequest_t::_swapExactOutTokensForInTokens_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<_swapTokensForExactTokens_t const&>(other_abstract);
+auto& other = dynamic_cast<_swapExactOutTokensForInTokens_t const&>(other_abstract);
 if (amountInMax < other.amountInMax) return true;
 if (other.amountInMax < amountInMax) return false;
 if (amountOut < other.amountOut) return true;
 if (other.amountOut < amountOut) return false;
 return false;
 }bool
-LPSwapOp::_lpSwapRequest_t::_swapExactTokensForTokens_t::from_bytes(xdr::unmarshaler& u) 
+LPSwapOp::_lpSwapRequest_t::_swapExactInTokensForOutTokens_t::from_bytes(xdr::unmarshaler& u) 
 {
 bool okamountIn = u.from_bytes(amountIn);
 if (!okamountIn)
@@ -82,7 +82,7 @@ return false;
 return true;
 }
 bool
-LPSwapOp::_lpSwapRequest_t::_swapExactTokensForTokens_t::to_bytes(xdr::marshaler& m) const 
+LPSwapOp::_lpSwapRequest_t::_swapExactInTokensForOutTokens_t::to_bytes(xdr::marshaler& m) const 
 {
 bool okamountIn = m.to_bytes(amountIn);
 if (!okamountIn)
@@ -97,29 +97,29 @@ return false;
 return true;
 }
 void
-LPSwapOp::_lpSwapRequest_t::_swapExactTokensForTokens_t::count_size(xdr::measurer& m) const 
+LPSwapOp::_lpSwapRequest_t::_swapExactInTokensForOutTokens_t::count_size(xdr::measurer& m) const 
 {
 m.count_size(amountIn);
 m.count_size(amountOutMin);
 }
 bool
-LPSwapOp::_lpSwapRequest_t::_swapExactTokensForTokens_t::operator==(xdr::xdr_abstract const& other_abstract) const 
+LPSwapOp::_lpSwapRequest_t::_swapExactInTokensForOutTokens_t::operator==(xdr::xdr_abstract const& other_abstract) const 
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 return false;
-}auto& other = dynamic_cast<_swapExactTokensForTokens_t const&>(other_abstract);return true
+}auto& other = dynamic_cast<_swapExactInTokensForOutTokens_t const&>(other_abstract);return true
 && (amountIn== other.amountIn)
 && (amountOutMin== other.amountOutMin)
 ;}
 bool
-LPSwapOp::_lpSwapRequest_t::_swapExactTokensForTokens_t::operator<(xdr_abstract const& other_abstract) const
+LPSwapOp::_lpSwapRequest_t::_swapExactInTokensForOutTokens_t::operator<(xdr_abstract const& other_abstract) const
 {
 if (typeid(*this) != typeid(other_abstract))
 {
 throw std::runtime_error("unexpected operator< invoke");
 }
-auto& other = dynamic_cast<_swapExactTokensForTokens_t const&>(other_abstract);
+auto& other = dynamic_cast<_swapExactInTokensForOutTokens_t const&>(other_abstract);
 if (amountIn < other.amountIn) return true;
 if (other.amountIn < amountIn) return false;
 if (amountOutMin < other.amountOutMin) return true;
@@ -135,10 +135,10 @@ return false;
 }
 _xdr_discriminant(disc, true);switch (type_)
 {
-    case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-return u.from_bytes(swapTokensForExactTokens_);
-    case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-return u.from_bytes(swapExactTokensForTokens_);
+    case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+return u.from_bytes(swapExactOutTokensForInTokens_);
+    case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+return u.from_bytes(swapExactInTokensForOutTokens_);
 }
 return false;
 }
@@ -153,10 +153,10 @@ return false;
 switch (type_)
 {
 
-    case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-return m.to_bytes(swapTokensForExactTokens_);
-    case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-return m.to_bytes(swapExactTokensForTokens_);
+    case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+return m.to_bytes(swapExactOutTokensForInTokens_);
+    case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+return m.to_bytes(swapExactInTokensForOutTokens_);
 }
 return false;
 }
@@ -167,10 +167,10 @@ m.count_size(type_);
 switch (type_)
 {
 
-    case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-return m.count_size(swapTokensForExactTokens_);
-    case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-return m.count_size(swapExactTokensForTokens_);
+    case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+return m.count_size(swapExactOutTokensForInTokens_);
+    case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+return m.count_size(swapExactInTokensForOutTokens_);
 }
 }
 bool
@@ -184,10 +184,10 @@ auto& other = dynamic_cast<_lpSwapRequest_t const&>(other_abstract);
 if (other.type_ != type_) return false;
 switch (type_)
 {
-    case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-return swapTokensForExactTokens_ == other.swapTokensForExactTokens_;
-    case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-return swapExactTokensForTokens_ == other.swapExactTokensForTokens_;
+    case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+return swapExactOutTokensForInTokens_ == other.swapExactOutTokensForInTokens_;
+    case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+return swapExactInTokensForOutTokens_ == other.swapExactInTokensForOutTokens_;
 }
 return false;
 }
@@ -203,10 +203,10 @@ if (type_ < other.type_) return true;
 if (other.type_ < type_) return false;
 switch (type_)
 {
-    case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-return swapTokensForExactTokens_ < other.swapTokensForExactTokens_;
-    case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-return swapExactTokensForTokens_ < other.swapExactTokensForTokens_;
+    case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+return swapExactOutTokensForInTokens_ < other.swapExactOutTokensForInTokens_;
+    case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+return swapExactInTokensForOutTokens_ < other.swapExactInTokensForOutTokens_;
 }
 return false;
 }
@@ -324,13 +324,13 @@ if (!okpoolAccount)
 {
 return false;
 }
-bool oksourceAsset = u.from_bytes(sourceAsset);
-if (!oksourceAsset)
+bool oksourceBalanceID = u.from_bytes(sourceBalanceID);
+if (!oksourceBalanceID)
 {
 return false;
 }
-bool oktargetAsset = u.from_bytes(targetAsset);
-if (!oktargetAsset)
+bool oktargetBalanceID = u.from_bytes(targetBalanceID);
+if (!oktargetBalanceID)
 {
 return false;
 }
@@ -374,13 +374,13 @@ if (!okpoolAccount)
 {
 return false;
 }
-bool oksourceAsset = m.to_bytes(sourceAsset);
-if (!oksourceAsset)
+bool oksourceBalanceID = m.to_bytes(sourceBalanceID);
+if (!oksourceBalanceID)
 {
 return false;
 }
-bool oktargetAsset = m.to_bytes(targetAsset);
-if (!oktargetAsset)
+bool oktargetBalanceID = m.to_bytes(targetBalanceID);
+if (!oktargetBalanceID)
 {
 return false;
 }
@@ -416,8 +416,8 @@ LPSwapSuccess::count_size(xdr::measurer& m) const
 {
 m.count_size(liquidityPoolID);
 m.count_size(poolAccount);
-m.count_size(sourceAsset);
-m.count_size(targetAsset);
+m.count_size(sourceBalanceID);
+m.count_size(targetBalanceID);
 m.count_size(swapInAmount);
 m.count_size(swapOutAmount);
 m.count_size(actualSourcePaymentFee);
@@ -433,8 +433,8 @@ return false;
 }auto& other = dynamic_cast<LPSwapSuccess const&>(other_abstract);return true
 && (liquidityPoolID== other.liquidityPoolID)
 && (poolAccount== other.poolAccount)
-&& (sourceAsset== other.sourceAsset)
-&& (targetAsset== other.targetAsset)
+&& (sourceBalanceID== other.sourceBalanceID)
+&& (targetBalanceID== other.targetBalanceID)
 && (swapInAmount== other.swapInAmount)
 && (swapOutAmount== other.swapOutAmount)
 && (actualSourcePaymentFee== other.actualSourcePaymentFee)
@@ -453,10 +453,10 @@ if (liquidityPoolID < other.liquidityPoolID) return true;
 if (other.liquidityPoolID < liquidityPoolID) return false;
 if (poolAccount < other.poolAccount) return true;
 if (other.poolAccount < poolAccount) return false;
-if (sourceAsset < other.sourceAsset) return true;
-if (other.sourceAsset < sourceAsset) return false;
-if (targetAsset < other.targetAsset) return true;
-if (other.targetAsset < targetAsset) return false;
+if (sourceBalanceID < other.sourceBalanceID) return true;
+if (other.sourceBalanceID < sourceBalanceID) return false;
+if (targetBalanceID < other.targetBalanceID) return true;
+if (other.targetBalanceID < targetBalanceID) return false;
 if (swapInAmount < other.swapInAmount) return true;
 if (other.swapInAmount < swapInAmount) return false;
 if (swapOutAmount < other.swapOutAmount) return true;
