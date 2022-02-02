@@ -10,10 +10,11 @@ git:                        # Секция с директивами для до
   to: /build                  # Путь назначения в образе.
   stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
     setup:                  # Для стадии Setup.
-    - "*"
+    - "**/*"
 shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
-  - CORE_REVISION={{ env "VERSION” }} cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
+  - export CORE_REVISION={{ env "VERSION” }}
+  - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
   - make -j4
 
 ---
@@ -29,5 +30,6 @@ git:                        # Секция с директивами для до
     - "*"
 shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
-  - CORE_REVISION={{ env "VERSION” }} cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
+  - export CORE_REVISION={{ env "VERSION” }}
+  - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
   - make -j4
