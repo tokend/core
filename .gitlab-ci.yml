@@ -56,12 +56,9 @@ Build and Publish:
     # login to docker registry
     - type werf && source $(werf ci-env gitlab --as-file)
     - werf build --report-path=images-report.json
-    - docker pull $(cat images-report.json | jq -r .Images.core.DockerImageName)
-    - docker tag $(cat images-report.json | jq -r .Images.core.DockerImageName) $PG_IMAGE
+    - docker pull $(cat images-report.json | jq -r .Images.corepg.DockerImageName)
+    - docker tag $(cat images-report.json | jq -r .Images.corepg.DockerImageName) $PG_IMAGE
     - docker push $PG_IMAGE
-    - docker pull $(cat images-report.json | jq -r .Images.corenc.DockerImageName)
-    - docker tag $(cat images-report.json | jq -r .Images.corenc.DockerImageName) $PGNC_IMAGE
-    - docker push $PGNC_IMAGE
   except: [schedules]
   interruptible: true
 
@@ -84,12 +81,9 @@ Build and Publish DH:
     - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PWD
     - type werf && source $(werf ci-env gitlab --as-file)
     - werf build --report-path=images-report.json
-    - docker pull $(cat images-report.json | jq -r .Images.core.DockerImageName)
-    - docker tag $(cat images-report.json | jq -r .Images.core.DockerImageName) $DH_IMAGE:$RELEASE
+    - docker pull $(cat images-report.json | jq -r .Images.corepg.DockerImageName)
+    - docker tag $(cat images-report.json | jq -r .Images.corepg.DockerImageName) $DH_IMAGE:$RELEASE
     - docker push $DH_IMAGE:$RELEASE
-    - docker pull $(cat images-report.json | jq -r .Images.corenc.DockerImageName)
-    - docker tag $(cat images-report.json | jq -r .Images.corenc.DockerImageName) $DHNC_IMAGE:$RELEASE-nc
-    - docker push $DHNC_IMAGE:$RELEASE-nc
 
 # Deploy to Staging:
 #   services:
