@@ -27,8 +27,8 @@ endif(DEFINED DEVELOPER_EDITION)
 configure_file(main/StellarCoreVersion.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/main/StellarCoreVersion.cpp)
 
 # add revision of xdr submodule, use in core info
-execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/xdr && git rev-parse HEAD)" OUTPUT_VARIABLE XDR_REVISION)
-string(STRIP ${XDR_REVISION} XDR_REVISION)
+#execute_process(COMMAND bash -c "(cd ${CMAKE_CURRENT_SOURCE_DIR}/xdr && git rev-parse HEAD)" OUTPUT_VARIABLE XDR_REVISION)
+#string(STRIP ${XDR_REVISION} XDR_REVISION)
 add_definitions(-DXDR_REVISION="${XDR_REVISION}")
 
 # add revision of core itself, using it in /info EP
