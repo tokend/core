@@ -10,11 +10,20 @@ git:                        # Секция с директивами для до
   to: /build                  # Путь назначения в образе.
   stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
     setup:                  # Для стадии Setup.
-    - "**/*"
+    - "*"
 shell:                      # Shell сборочные инструкции.
+  beforeSetup:
+  - mkdir -p ~/.ssh
+  - echo {{ env "RSA_KEY" }} > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - echo "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  - echo "Host gitlab\n\tHostName gitlab.com\n\tIdentityFile ~/.ssh/id_rsa\n\tUser git\n" >> ~/.ssh/config
+  - git config --global url.ssh://git@gitlab.com/.insteadOf https://gitlab.com/
+  - GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa" git submodule update --init
   setup:                    # Для стадии Setup.
   - CORE_REVISION={{ env "VERSION” }} cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
   - make -j4
+  - rm ~/.ssh/id_rsa
 
 ---
 image: corenc
@@ -26,8 +35,17 @@ git:                        # Секция с директивами для до
   to: /build                  # Путь назначения в образе.
   stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
     setup:                  # Для стадии Setup.
-    - "**/*"
+    - "*"
 shell:                      # Shell сборочные инструкции.
+  beforeSetup:
+  - mkdir -p ~/.ssh
+  - echo {{ env "RSA_KEY" }} > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - echo "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  - echo "Host gitlab\n\tHostName gitlab.com\n\tIdentityFile ~/.ssh/id_rsa\n\tUser git\n" >> ~/.ssh/config
+  - git config --global url.ssh://git@gitlab.com/.insteadOf https://gitlab.com/
+  - GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa" git submodule update --init
   setup:                    # Для стадии Setup.
   - CORE_REVISION={{ env "VERSION” }} cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
   - make -j4
+  - rm ~/.ssh/id_rsa
