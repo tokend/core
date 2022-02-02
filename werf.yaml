@@ -2,9 +2,9 @@ configVersion: 1
 project: 'core'
 ---
 image: core              # Название собираемого образа.
-from: registry.gitlab.com/tokend/core/buildbase:2               # Базовый образ.
+from: registry.gitlab.com/tokend/devops/docker-containers:core-latest               # Базовый образ.
 docker:
-  WORKDIR: /build
+  WORKDIR: /
 git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
 - add: /                    # Исходный путь в репозитории.
   to: /                  # Путь назначения в образе.
@@ -19,7 +19,7 @@ shell:                      # Shell сборочные инструкции.
 
 ---
 image: corenc
-from: registry.gitlab.com/tokend/core/buildbase:2
+from: registry.gitlab.com/tokend/devops/docker-containers:core-latest
 docker:
   WORKDIR: /build
 git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
