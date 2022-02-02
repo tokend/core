@@ -13,7 +13,7 @@ git:                        # Секция с директивами для до
     - "**/*"
 shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
-  - export CORE_REVISION={{ env "VERS" }}
+  - export CORE_REVISION={{ env "VERSION" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
   - make -j4
 
@@ -30,6 +30,6 @@ git:                        # Секция с директивами для до
     - "*"
 shell:                      # Shell сборочные инструкции.
   setup:                    # Для стадии Setup.
-  - export CORE_REVISION={{ env "VERS" }}
+  - export CORE_REVISION={{ env "VERSION" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
   - make -j4
