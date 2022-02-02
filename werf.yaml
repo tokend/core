@@ -16,6 +16,7 @@ shell:                      # Shell сборочные инструкции.
   - cd build
   - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
   - export VERSION={{ env "CI_COMMIT_SHA" }}
+  - export XDR_REVISION={{ env "CI_COMMIT_SHA" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
   - make -j4
 
@@ -35,5 +36,6 @@ shell:                      # Shell сборочные инструкции.
   - cd build
   - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
   - export VERSION={{ env "CI_COMMIT_SHA" }}
+  - export XDR_REVISION={{ env "CI_COMMIT_SHA" }}
   - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so -DDISABLE_CONSESUS=1
   - make -j4
