@@ -13,8 +13,8 @@
 namespace stellar {
 
 enum class LPSwapType : std::int32_t {
-  TOKENS_FOR_EXACT_TOKENS = 0,
-  EXACT_TOKENS_FOR_TOKENS = 1,
+  EXACT_IN_TOKENS_FOR_OUT_TOKENS = 0,
+  EXACT_OUT_TOKENS_FOR_IN_TOKENS = 1,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPSwapType>
@@ -24,18 +24,18 @@ template<> struct xdr_traits<::stellar::LPSwapType>
   static constexpr const bool is_numeric = false;
   static const char *enum_name(::stellar::LPSwapType val) {
     switch (val) {
-    case ::stellar::LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-      return "TOKENS_FOR_EXACT_TOKENS";
-    case ::stellar::LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-      return "EXACT_TOKENS_FOR_TOKENS";
+    case ::stellar::LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+      return "EXACT_IN_TOKENS_FOR_OUT_TOKENS";
+    case ::stellar::LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+      return "EXACT_OUT_TOKENS_FOR_IN_TOKENS";
     default:
       return nullptr;
     }
   }
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::LPSwapType::TOKENS_FOR_EXACT_TOKENS,
-      (int32_t)::stellar::LPSwapType::EXACT_TOKENS_FOR_TOKENS
+      (int32_t)::stellar::LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS,
+      (int32_t)::stellar::LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS
     };
     return _xdr_enum_vec;
   }
@@ -44,19 +44,19 @@ template<> struct xdr_traits<::stellar::LPSwapType>
 
 struct LPSwapOp  : xdr::xdr_abstract {
   struct _lpSwapRequest_t : xdr::xdr_abstract {
-    struct _swapTokensForExactTokens_t  : xdr::xdr_abstract {
+    struct _swapExactOutTokensForInTokens_t  : xdr::xdr_abstract {
       uint64 amountInMax{};
       uint64 amountOut{};
 
-      _swapTokensForExactTokens_t() = default;
+      _swapExactOutTokensForInTokens_t() = default;
       template<typename _amountInMax_T,
                typename _amountOut_T,
                typename = typename
                std::enable_if<std::is_constructible<uint64, _amountInMax_T>::value
                               && std::is_constructible<uint64, _amountOut_T>::value
                              >::type>
-      explicit _swapTokensForExactTokens_t(_amountInMax_T &&_amountInMax,
-                                           _amountOut_T &&_amountOut)
+      explicit _swapExactOutTokensForInTokens_t(_amountInMax_T &&_amountInMax,
+                                                _amountOut_T &&_amountOut)
         : amountInMax(std::forward<_amountInMax_T>(_amountInMax)),
           amountOut(std::forward<_amountOut_T>(_amountOut)) {}
       bool
@@ -70,19 +70,19 @@ void
 count_size(xdr::measurer& m) const override;
 
     };
-    struct _swapExactTokensForTokens_t  : xdr::xdr_abstract {
+    struct _swapExactInTokensForOutTokens_t  : xdr::xdr_abstract {
       uint64 amountIn{};
       uint64 amountOutMin{};
 
-      _swapExactTokensForTokens_t() = default;
+      _swapExactInTokensForOutTokens_t() = default;
       template<typename _amountIn_T,
                typename _amountOutMin_T,
                typename = typename
                std::enable_if<std::is_constructible<uint64, _amountIn_T>::value
                               && std::is_constructible<uint64, _amountOutMin_T>::value
                              >::type>
-      explicit _swapExactTokensForTokens_t(_amountIn_T &&_amountIn,
-                                           _amountOutMin_T &&_amountOutMin)
+      explicit _swapExactInTokensForOutTokens_t(_amountIn_T &&_amountIn,
+                                                _amountOutMin_T &&_amountOutMin)
         : amountIn(std::forward<_amountIn_T>(_amountIn)),
           amountOutMin(std::forward<_amountOutMin_T>(_amountOutMin)) {}
       bool
@@ -101,32 +101,32 @@ count_size(xdr::measurer& m) const override;
   private:
     _xdr_case_type type_;
     union {
-      _swapTokensForExactTokens_t swapTokensForExactTokens_;
-      _swapExactTokensForTokens_t swapExactTokensForTokens_;
+      _swapExactOutTokensForInTokens_t swapExactOutTokensForInTokens_;
+      _swapExactInTokensForOutTokens_t swapExactInTokensForOutTokens_;
     };
 
   public:
     static constexpr const bool _xdr_has_default_case = false;
     static const std::vector<LPSwapType> &_xdr_case_values() {
       static const std::vector<LPSwapType> _xdr_disc_vec {
-        LPSwapType::TOKENS_FOR_EXACT_TOKENS,
-        LPSwapType::EXACT_TOKENS_FOR_TOKENS
+        LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS,
+        LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS
       };
       return _xdr_disc_vec;
     }
     static constexpr int _xdr_field_number(_xdr_case_type which) {
-      return which == (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS ? 1
-        : which == (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS ? 2
+      return which == (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS ? 1
+        : which == (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS ? 2
         : -1;
     }
     template<typename _F, typename..._A> static bool
     _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
       switch (_which) {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-        _f(&_lpSwapRequest_t::swapTokensForExactTokens_, std::forward<_A>(_a)...);
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+        _f(&_lpSwapRequest_t::swapExactOutTokensForInTokens_, std::forward<_A>(_a)...);
         return true;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-        _f(&_lpSwapRequest_t::swapExactTokensForTokens_, std::forward<_A>(_a)...);
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+        _f(&_lpSwapRequest_t::swapExactInTokensForOutTokens_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -141,11 +141,11 @@ count_size(xdr::measurer& m) const override;
         this->~_lpSwapRequest_t();
         type_ = which;switch (type_)
 {
-        case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-new(&swapTokensForExactTokens_) _swapTokensForExactTokens_t{};
+        case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+new(&swapExactOutTokensForInTokens_) _swapExactOutTokensForInTokens_t{};
 break;
-        case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-new(&swapExactTokensForTokens_) _swapExactTokensForTokens_t{};
+        case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+new(&swapExactInTokensForOutTokens_) _swapExactInTokensForOutTokens_t{};
 break;
 }
 
@@ -156,11 +156,11 @@ break;
     explicit _lpSwapRequest_t(LPSwapType which = LPSwapType{}) : type_((int32_t)which) {
       switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-new(&swapTokensForExactTokens_) _swapTokensForExactTokens_t{};
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+new(&swapExactOutTokensForInTokens_) _swapExactOutTokensForInTokens_t{};
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-new(&swapExactTokensForTokens_) _swapExactTokensForTokens_t{};
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+new(&swapExactInTokensForOutTokens_) _swapExactInTokensForOutTokens_t{};
 break;
 }
 
@@ -168,11 +168,11 @@ break;
     _lpSwapRequest_t(const _lpSwapRequest_t &source) : type_(source.type_) {
       switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-new(&swapTokensForExactTokens_) _swapTokensForExactTokens_t(source.swapTokensForExactTokens_);
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+new(&swapExactOutTokensForInTokens_) _swapExactOutTokensForInTokens_t(source.swapExactOutTokensForInTokens_);
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-new(&swapExactTokensForTokens_) _swapExactTokensForTokens_t(source.swapExactTokensForTokens_);
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+new(&swapExactInTokensForOutTokens_) _swapExactInTokensForOutTokens_t(source.swapExactInTokensForOutTokens_);
 break;
 }
 
@@ -180,11 +180,11 @@ break;
     _lpSwapRequest_t(_lpSwapRequest_t &&source) : type_(source.type_) {
       switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-new(&swapTokensForExactTokens_) _swapTokensForExactTokens_t(std::move(source.swapTokensForExactTokens_));
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+new(&swapExactOutTokensForInTokens_) _swapExactOutTokensForInTokens_t(std::move(source.swapExactOutTokensForInTokens_));
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-new(&swapExactTokensForTokens_) _swapExactTokensForTokens_t(std::move(source.swapExactTokensForTokens_));
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+new(&swapExactInTokensForOutTokens_) _swapExactInTokensForOutTokens_t(std::move(source.swapExactInTokensForOutTokens_));
 break;
 }
 
@@ -192,11 +192,11 @@ break;
     ~_lpSwapRequest_t() {
 switch (type_)
 {
-    case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-swapTokensForExactTokens_.~_swapTokensForExactTokens_t();
+    case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+swapExactOutTokensForInTokens_.~_swapExactOutTokensForInTokens_t();
 break;
-    case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-swapExactTokensForTokens_.~_swapExactTokensForTokens_t();
+    case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+swapExactInTokensForOutTokens_.~_swapExactInTokensForOutTokens_t();
 break;
 }
 }
@@ -206,11 +206,11 @@ break;
 {
 switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-swapTokensForExactTokens_ = source.swapTokensForExactTokens_;
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+swapExactOutTokensForInTokens_ = source.swapExactOutTokensForInTokens_;
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-swapExactTokensForTokens_ = source.swapExactTokensForTokens_;
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+swapExactInTokensForOutTokens_ = source.swapExactInTokensForOutTokens_;
 break;
 }
 }
@@ -218,11 +218,11 @@ else {this->~_lpSwapRequest_t();
       type_ = source.type_;
 switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-new(&swapTokensForExactTokens_) _swapTokensForExactTokens_t(source.swapTokensForExactTokens_);
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+new(&swapExactOutTokensForInTokens_) _swapExactOutTokensForInTokens_t(source.swapExactOutTokensForInTokens_);
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-new(&swapExactTokensForTokens_) _swapExactTokensForTokens_t(source.swapExactTokensForTokens_);
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+new(&swapExactInTokensForOutTokens_) _swapExactInTokensForOutTokens_t(source.swapExactInTokensForOutTokens_);
 break;
 }
 }
@@ -233,11 +233,11 @@ break;
 {
 switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-swapTokensForExactTokens_ = std::move(source.swapTokensForExactTokens_);
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+swapExactOutTokensForInTokens_ = std::move(source.swapExactOutTokensForInTokens_);
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-swapExactTokensForTokens_ = std::move(source.swapExactTokensForTokens_);
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+swapExactInTokensForOutTokens_ = std::move(source.swapExactInTokensForOutTokens_);
 break;
 }
 }
@@ -245,11 +245,11 @@ else {this->~_lpSwapRequest_t();
       type_ = std::move(source.type_);
 switch (type_)
 {
-      case (int32_t)LPSwapType::TOKENS_FOR_EXACT_TOKENS:
-new(&swapTokensForExactTokens_) _swapTokensForExactTokens_t(std::move(source.swapTokensForExactTokens_));
+      case (int32_t)LPSwapType::EXACT_OUT_TOKENS_FOR_IN_TOKENS:
+new(&swapExactOutTokensForInTokens_) _swapExactOutTokensForInTokens_t(std::move(source.swapExactOutTokensForInTokens_));
 break;
-      case (int32_t)LPSwapType::EXACT_TOKENS_FOR_TOKENS:
-new(&swapExactTokensForTokens_) _swapExactTokensForTokens_t(std::move(source.swapExactTokensForTokens_));
+      case (int32_t)LPSwapType::EXACT_IN_TOKENS_FOR_OUT_TOKENS:
+new(&swapExactInTokensForOutTokens_) _swapExactInTokensForOutTokens_t(std::move(source.swapExactInTokensForOutTokens_));
 break;
 }
 }
@@ -262,25 +262,25 @@ break;
       return *this;
     }
 
-    _swapTokensForExactTokens_t &swapTokensForExactTokens() {
+    _swapExactOutTokensForInTokens_t &swapExactOutTokensForInTokens() {
       if (_xdr_field_number(type_) == 1)
-        return swapTokensForExactTokens_;
-      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapTokensForExactTokens accessed when not selected");
+        return swapExactOutTokensForInTokens_;
+      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapExactOutTokensForInTokens accessed when not selected");
     }
-    const _swapTokensForExactTokens_t &swapTokensForExactTokens() const {
+    const _swapExactOutTokensForInTokens_t &swapExactOutTokensForInTokens() const {
       if (_xdr_field_number(type_) == 1)
-        return swapTokensForExactTokens_;
-      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapTokensForExactTokens accessed when not selected");
+        return swapExactOutTokensForInTokens_;
+      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapExactOutTokensForInTokens accessed when not selected");
     }
-    _swapExactTokensForTokens_t &swapExactTokensForTokens() {
+    _swapExactInTokensForOutTokens_t &swapExactInTokensForOutTokens() {
       if (_xdr_field_number(type_) == 2)
-        return swapExactTokensForTokens_;
-      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapExactTokensForTokens accessed when not selected");
+        return swapExactInTokensForOutTokens_;
+      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapExactInTokensForOutTokens accessed when not selected");
     }
-    const _swapExactTokensForTokens_t &swapExactTokensForTokens() const {
+    const _swapExactInTokensForOutTokens_t &swapExactInTokensForOutTokens() const {
       if (_xdr_field_number(type_) == 2)
-        return swapExactTokensForTokens_;
-      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapExactTokensForTokens accessed when not selected");
+        return swapExactInTokensForOutTokens_;
+      throw xdr::xdr_wrong_union("_lpSwapRequest_t: swapExactInTokensForOutTokens accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -433,8 +433,8 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
 struct LPSwapSuccess  : xdr::xdr_abstract {
   uint64 liquidityPoolID{};
   AccountID poolAccount{};
-  AssetCode sourceAsset{};
-  AssetCode targetAsset{};
+  BalanceID sourceBalanceID{};
+  BalanceID targetBalanceID{};
   uint64 swapInAmount{};
   uint64 swapOutAmount{};
   Fee actualSourcePaymentFee{};
@@ -444,8 +444,8 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
   LPSwapSuccess() = default;
   template<typename _liquidityPoolID_T,
            typename _poolAccount_T,
-           typename _sourceAsset_T,
-           typename _targetAsset_T,
+           typename _sourceBalanceID_T,
+           typename _targetBalanceID_T,
            typename _swapInAmount_T,
            typename _swapOutAmount_T,
            typename _actualSourcePaymentFee_T,
@@ -454,8 +454,8 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
            typename = typename
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
                           && std::is_constructible<AccountID, _poolAccount_T>::value
-                          && std::is_constructible<AssetCode, _sourceAsset_T>::value
-                          && std::is_constructible<AssetCode, _targetAsset_T>::value
+                          && std::is_constructible<BalanceID, _sourceBalanceID_T>::value
+                          && std::is_constructible<BalanceID, _targetBalanceID_T>::value
                           && std::is_constructible<uint64, _swapInAmount_T>::value
                           && std::is_constructible<uint64, _swapOutAmount_T>::value
                           && std::is_constructible<Fee, _actualSourcePaymentFee_T>::value
@@ -464,8 +464,8 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          >::type>
   explicit LPSwapSuccess(_liquidityPoolID_T &&_liquidityPoolID,
                          _poolAccount_T &&_poolAccount,
-                         _sourceAsset_T &&_sourceAsset,
-                         _targetAsset_T &&_targetAsset,
+                         _sourceBalanceID_T &&_sourceBalanceID,
+                         _targetBalanceID_T &&_targetBalanceID,
                          _swapInAmount_T &&_swapInAmount,
                          _swapOutAmount_T &&_swapOutAmount,
                          _actualSourcePaymentFee_T &&_actualSourcePaymentFee,
@@ -473,8 +473,8 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
       poolAccount(std::forward<_poolAccount_T>(_poolAccount)),
-      sourceAsset(std::forward<_sourceAsset_T>(_sourceAsset)),
-      targetAsset(std::forward<_targetAsset_T>(_targetAsset)),
+      sourceBalanceID(std::forward<_sourceBalanceID_T>(_sourceBalanceID)),
+      targetBalanceID(std::forward<_targetBalanceID_T>(_targetBalanceID)),
       swapInAmount(std::forward<_swapInAmount_T>(_swapInAmount)),
       swapOutAmount(std::forward<_swapOutAmount_T>(_swapOutAmount)),
       actualSourcePaymentFee(std::forward<_actualSourcePaymentFee_T>(_actualSourcePaymentFee)),

@@ -13,31 +13,31 @@
 namespace stellar {
 
 struct LPRemoveLiquidityOp  : xdr::xdr_abstract {
-  AssetCode lpTokenAsset{};
+  BalanceID lpTokenBalance{};
   uint64 lpTokensAmount{};
   uint64 firstAssetMinAmount{};
   uint64 secondAssetMinAmount{};
   EmptyExt ext{};
 
   LPRemoveLiquidityOp() = default;
-  template<typename _lpTokenAsset_T,
+  template<typename _lpTokenBalance_T,
            typename _lpTokensAmount_T,
            typename _firstAssetMinAmount_T,
            typename _secondAssetMinAmount_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<AssetCode, _lpTokenAsset_T>::value
+           std::enable_if<std::is_constructible<BalanceID, _lpTokenBalance_T>::value
                           && std::is_constructible<uint64, _lpTokensAmount_T>::value
                           && std::is_constructible<uint64, _firstAssetMinAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetMinAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit LPRemoveLiquidityOp(_lpTokenAsset_T &&_lpTokenAsset,
+  explicit LPRemoveLiquidityOp(_lpTokenBalance_T &&_lpTokenBalance,
                                _lpTokensAmount_T &&_lpTokensAmount,
                                _firstAssetMinAmount_T &&_firstAssetMinAmount,
                                _secondAssetMinAmount_T &&_secondAssetMinAmount,
                                _ext_T &&_ext)
-    : lpTokenAsset(std::forward<_lpTokenAsset_T>(_lpTokenAsset)),
+    : lpTokenBalance(std::forward<_lpTokenBalance_T>(_lpTokenBalance)),
       lpTokensAmount(std::forward<_lpTokensAmount_T>(_lpTokensAmount)),
       firstAssetMinAmount(std::forward<_firstAssetMinAmount_T>(_firstAssetMinAmount)),
       secondAssetMinAmount(std::forward<_secondAssetMinAmount_T>(_secondAssetMinAmount)),
@@ -56,12 +56,14 @@ count_size(xdr::measurer& m) const override;
 
 enum class LPRemoveLiquidityResultCode : std::int32_t {
   SUCCESS = 0,
-  MALFORMED = -1,
+  LP_TOKEN_BALANCE_NOT_FOUND = -1,
   UNDERFUNDED = -2,
-  LINE_FULL = -3,
-  INVALID_MIN_AMOUNT = -4,
-  INCORRECT_AMOUNT_PRECISION = -5,
-  INVALID_DEADLINE = -6,
+  BALANCE_OVERFLOW = -3,
+  LP_NOT_FOUND = -4,
+  INVALID_LP_TOKENS_AMOUNT = -5,
+  INSUFFICIENT_FIRST_AMOUNT = -6,
+  INSUFFICIENT_SECOND_AMOUNT = -7,
+  INCORRECT_AMOUNT_PRECISION = -8,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LPRemoveLiquidityResultCode>
@@ -73,18 +75,22 @@ template<> struct xdr_traits<::stellar::LPRemoveLiquidityResultCode>
     switch (val) {
     case ::stellar::LPRemoveLiquidityResultCode::SUCCESS:
       return "SUCCESS";
-    case ::stellar::LPRemoveLiquidityResultCode::MALFORMED:
-      return "MALFORMED";
+    case ::stellar::LPRemoveLiquidityResultCode::LP_TOKEN_BALANCE_NOT_FOUND:
+      return "LP_TOKEN_BALANCE_NOT_FOUND";
     case ::stellar::LPRemoveLiquidityResultCode::UNDERFUNDED:
       return "UNDERFUNDED";
-    case ::stellar::LPRemoveLiquidityResultCode::LINE_FULL:
-      return "LINE_FULL";
-    case ::stellar::LPRemoveLiquidityResultCode::INVALID_MIN_AMOUNT:
-      return "INVALID_MIN_AMOUNT";
+    case ::stellar::LPRemoveLiquidityResultCode::BALANCE_OVERFLOW:
+      return "BALANCE_OVERFLOW";
+    case ::stellar::LPRemoveLiquidityResultCode::LP_NOT_FOUND:
+      return "LP_NOT_FOUND";
+    case ::stellar::LPRemoveLiquidityResultCode::INVALID_LP_TOKENS_AMOUNT:
+      return "INVALID_LP_TOKENS_AMOUNT";
+    case ::stellar::LPRemoveLiquidityResultCode::INSUFFICIENT_FIRST_AMOUNT:
+      return "INSUFFICIENT_FIRST_AMOUNT";
+    case ::stellar::LPRemoveLiquidityResultCode::INSUFFICIENT_SECOND_AMOUNT:
+      return "INSUFFICIENT_SECOND_AMOUNT";
     case ::stellar::LPRemoveLiquidityResultCode::INCORRECT_AMOUNT_PRECISION:
       return "INCORRECT_AMOUNT_PRECISION";
-    case ::stellar::LPRemoveLiquidityResultCode::INVALID_DEADLINE:
-      return "INVALID_DEADLINE";
     default:
       return nullptr;
     }
@@ -92,12 +98,14 @@ template<> struct xdr_traits<::stellar::LPRemoveLiquidityResultCode>
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
       (int32_t)::stellar::LPRemoveLiquidityResultCode::SUCCESS,
-      (int32_t)::stellar::LPRemoveLiquidityResultCode::MALFORMED,
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::LP_TOKEN_BALANCE_NOT_FOUND,
       (int32_t)::stellar::LPRemoveLiquidityResultCode::UNDERFUNDED,
-      (int32_t)::stellar::LPRemoveLiquidityResultCode::LINE_FULL,
-      (int32_t)::stellar::LPRemoveLiquidityResultCode::INVALID_MIN_AMOUNT,
-      (int32_t)::stellar::LPRemoveLiquidityResultCode::INCORRECT_AMOUNT_PRECISION,
-      (int32_t)::stellar::LPRemoveLiquidityResultCode::INVALID_DEADLINE
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::BALANCE_OVERFLOW,
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::LP_NOT_FOUND,
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::INVALID_LP_TOKENS_AMOUNT,
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::INSUFFICIENT_FIRST_AMOUNT,
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::INSUFFICIENT_SECOND_AMOUNT,
+      (int32_t)::stellar::LPRemoveLiquidityResultCode::INCORRECT_AMOUNT_PRECISION
     };
     return _xdr_enum_vec;
   }
@@ -108,8 +116,6 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
   uint64 liquidityPoolID{};
   BalanceID firstAssetBalanceID{};
   BalanceID secondAssetBalanceID{};
-  AssetCode firstAsset{};
-  AssetCode secondAsset{};
   uint64 firstAssetAmount{};
   uint64 secondAssetAmount{};
   EmptyExt ext{};
@@ -118,8 +124,6 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
   template<typename _liquidityPoolID_T,
            typename _firstAssetBalanceID_T,
            typename _secondAssetBalanceID_T,
-           typename _firstAsset_T,
-           typename _secondAsset_T,
            typename _firstAssetAmount_T,
            typename _secondAssetAmount_T,
            typename _ext_T,
@@ -127,8 +131,6 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
                           && std::is_constructible<BalanceID, _firstAssetBalanceID_T>::value
                           && std::is_constructible<BalanceID, _secondAssetBalanceID_T>::value
-                          && std::is_constructible<AssetCode, _firstAsset_T>::value
-                          && std::is_constructible<AssetCode, _secondAsset_T>::value
                           && std::is_constructible<uint64, _firstAssetAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
@@ -136,16 +138,12 @@ struct LPRemoveLiquiditySuccess  : xdr::xdr_abstract {
   explicit LPRemoveLiquiditySuccess(_liquidityPoolID_T &&_liquidityPoolID,
                                     _firstAssetBalanceID_T &&_firstAssetBalanceID,
                                     _secondAssetBalanceID_T &&_secondAssetBalanceID,
-                                    _firstAsset_T &&_firstAsset,
-                                    _secondAsset_T &&_secondAsset,
                                     _firstAssetAmount_T &&_firstAssetAmount,
                                     _secondAssetAmount_T &&_secondAssetAmount,
                                     _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
       firstAssetBalanceID(std::forward<_firstAssetBalanceID_T>(_firstAssetBalanceID)),
       secondAssetBalanceID(std::forward<_secondAssetBalanceID_T>(_secondAssetBalanceID)),
-      firstAsset(std::forward<_firstAsset_T>(_firstAsset)),
-      secondAsset(std::forward<_secondAsset_T>(_secondAsset)),
       firstAssetAmount(std::forward<_firstAssetAmount_T>(_firstAssetAmount)),
       secondAssetAmount(std::forward<_secondAssetAmount_T>(_secondAssetAmount)),
       ext(std::forward<_ext_T>(_ext)) {}

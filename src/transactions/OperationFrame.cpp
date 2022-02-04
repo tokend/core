@@ -78,6 +78,7 @@
 #include "payment/CreateCloseDeferredPaymentRequestOpFrame.h"
 #include "payment/CreateDeferredPaymentCreationRequestOpFrame.h"
 #include "liquidity_pool/LiquidityPoolAddLiquidityOpFrame.h"
+#include "liquidity_pool/LiquidityPoolSwapOpFrame.h"
 
 namespace stellar
 {
@@ -218,6 +219,8 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<CancelCloseDeferredPaymentRequestOpFrame>(op, res, tx);
         case OperationType::LP_ADD_LIQUIDITY:
             return make_shared<LiquidityPoolAddLiquidityOpFrame>(op, res, tx);
+        case OperationType::LP_SWAP:
+            return make_shared<LiquidityPoolSwapOpFrame>(op, res, tx);
     default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());
