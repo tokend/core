@@ -4,7 +4,7 @@
 #include <ledger/BalanceHelper.h>
 #include <ledger/LiquidityPoolHelper.h>
 #include <ledger/LedgerManager.h>
-#include <transactions/test/test_helper/LiquidityPoolTestHelper.h>
+#include <transactions/test/test_helper/LPAddLiquidityTestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
 #include <transactions/test/test_helper/IssuanceRequestHelper.h>
@@ -19,7 +19,7 @@ using namespace stellar::txtest;
 
 typedef std::unique_ptr<Application> appPtr;
 
-TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
+TEST_CASE("LP add liquidity", "[tx][liquidity_pool][add_liquidity]")
 {
     struct TestSet
     {
@@ -48,7 +48,7 @@ TEST_CASE("Liquidity pool", "[tx][liquidity_pool]")
     auto root = Account{getRoot(), Salt(0)};
 
     //helpers
-    auto liquidityPoolTestHelper = LiquidityPoolTestHelper(testManager);
+    auto liquidityPoolTestHelper = LPAddLiquidityTestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto manageAccountRuleTestHelper = ManageAccountRuleTestHelper(testManager);
     auto issuanceTestHelper = IssuanceRequestHelper(testManager);

@@ -6,10 +6,10 @@ namespace stellar
 {
     namespace txtest
     {
-        class LiquidityPoolTestHelper : TxHelper
+        class LPAddLiquidityTestHelper : TxHelper
         {
         public:
-            explicit LiquidityPoolTestHelper(TestManager::pointer testManager);
+            explicit LPAddLiquidityTestHelper(TestManager::pointer testManager);
 
             TransactionFramePtr createAddLiquidityPoolTx(Account& from, BalanceID& firstBalance,
                 BalanceID& secondBalance, uint64_t firstDesiredAmount, uint64_t secondDesiredAmount,

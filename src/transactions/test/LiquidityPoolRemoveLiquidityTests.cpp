@@ -5,7 +5,7 @@
 #include <ledger/LiquidityPoolHelper.h>
 #include <ledger/LedgerManager.h>
 #include <ledger/AccountHelper.h>
-#include <transactions/test/test_helper/LiquidityPoolTestHelper.h>
+#include <transactions/test/test_helper/LPAddLiquidityTestHelper.h>
 #include <transactions/test/test_helper/LPRemoveLiquidityTestHelper.h>
 #include <transactions/test/test_helper/CreateAccountTestHelper.h>
 #include <transactions/test/test_helper/ManageAccountRuleTestHelper.h>
@@ -53,7 +53,7 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
 
     //helpers
     auto removeLiquidityTestHelper = LPRemoveLiquidityTestHelper(testManager);
-    auto liquidityPoolTestHelper = LiquidityPoolTestHelper(testManager);
+    auto liquidityPoolTestHelper = LPAddLiquidityTestHelper(testManager);
     auto createAccountTestHelper = CreateAccountTestHelper(testManager);
     auto manageAccountRuleTestHelper = ManageAccountRuleTestHelper(testManager);
     auto issuanceTestHelper = IssuanceRequestHelper(testManager);
