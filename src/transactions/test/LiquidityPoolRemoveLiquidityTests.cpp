@@ -125,6 +125,8 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
         auto lpFirstBalanceBefore = balanceHelper.loadBalance(lpBefore->getFirstAssetBalance());
         auto lpSecondBalanceBefore = balanceHelper.loadBalance(lpBefore->getSecondAssetBalance());
 
+        auto sourceLpBalanceBefore = balanceHelper.loadBalance(accountID, createLPResult.success().lpAsset);
+
         auto removeRes = removeLiquidityTestHelper.applyRemoveLiquidityTx(account, sourceLPBalanceID,
             removeLPTokensAmount, 0, 0, LPRemoveLiquidityResultCode::SUCCESS);
 
@@ -134,6 +136,11 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
 
         auto lpFirstBalanceAfter = balanceHelper.loadBalance(lpBefore->getFirstAssetBalance());
         auto lpSecondBalanceAfter = balanceHelper.loadBalance(lpBefore->getSecondAssetBalance());
+
+        auto sourceLpBalanceAfter = balanceHelper.loadBalance(accountID, createLPResult.success().lpAsset);
+
+        uint64_t lpBalanceDelta = sourceLpBalanceBefore->getAmount() - sourceLpBalanceAfter->getAmount();
+        REQUIRE(lpBalanceDelta == removeLPTokensAmount);
 
         REQUIRE(lpFirstBalanceAfter->getAmount() ==
                 lpFirstBalanceBefore->getAmount() - removeRes.success().firstAssetAmount);

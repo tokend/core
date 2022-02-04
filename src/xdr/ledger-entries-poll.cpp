@@ -19,6 +19,8 @@ _xdr_discriminant(disc, true);switch (type_)
 {
   case (int32_t)PollType::SINGLE_CHOICE:
 return u.from_bytes(ext_);
+  case (int32_t)PollType::CUSTOM_CHOICE:
+return u.from_bytes(customChoiceExt_);
 }
 return false;
 }
@@ -35,6 +37,8 @@ switch (type_)
 
   case (int32_t)PollType::SINGLE_CHOICE:
 return m.to_bytes(ext_);
+  case (int32_t)PollType::CUSTOM_CHOICE:
+return m.to_bytes(customChoiceExt_);
 }
 return false;
 }
@@ -47,6 +51,8 @@ switch (type_)
 
   case (int32_t)PollType::SINGLE_CHOICE:
 return m.count_size(ext_);
+  case (int32_t)PollType::CUSTOM_CHOICE:
+return m.count_size(customChoiceExt_);
 }
 }
 bool
@@ -62,6 +68,8 @@ switch (type_)
 {
   case (int32_t)PollType::SINGLE_CHOICE:
 return ext_ == other.ext_;
+  case (int32_t)PollType::CUSTOM_CHOICE:
+return customChoiceExt_ == other.customChoiceExt_;
 }
 return false;
 }
@@ -79,6 +87,8 @@ switch (type_)
 {
   case (int32_t)PollType::SINGLE_CHOICE:
 return ext_ < other.ext_;
+  case (int32_t)PollType::CUSTOM_CHOICE:
+return customChoiceExt_ < other.customChoiceExt_;
 }
 return false;
 }

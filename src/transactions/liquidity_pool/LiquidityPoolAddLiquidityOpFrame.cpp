@@ -47,7 +47,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, AccountRuleAction::MANAGE_LIQUIDITY, mSourceAccount);
+        result.emplace_back(resource, AccountRuleAction::LP_ADD_LIQUIDITY, mSourceAccount);
 
         return true;
     }
@@ -76,7 +76,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, SignerRuleAction::MANAGE_LIQUIDITY);
+        result.emplace_back(resource, SignerRuleAction::LP_ADD_LIQUIDITY);
 
         return true;
     }

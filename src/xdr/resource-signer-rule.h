@@ -1597,8 +1597,9 @@ enum class SignerRuleAction : std::int32_t {
   EXCHANGE = 20,
   UPDATE_FOR_OTHER = 21,
   CUSTOM = 22,
-  MANAGE_LIQUIDITY = 23,
-  LIQUIDITY_POOL_SWAP = 24,
+  LP_ADD_LIQUIDITY = 23,
+  LP_REMOVE_LIQUIDITY = 24,
+  LP_SWAP = 25,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SignerRuleAction>
@@ -1652,10 +1653,12 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       return "UPDATE_FOR_OTHER";
     case ::stellar::SignerRuleAction::CUSTOM:
       return "CUSTOM";
-    case ::stellar::SignerRuleAction::MANAGE_LIQUIDITY:
-      return "MANAGE_LIQUIDITY";
-    case ::stellar::SignerRuleAction::LIQUIDITY_POOL_SWAP:
-      return "LIQUIDITY_POOL_SWAP";
+    case ::stellar::SignerRuleAction::LP_ADD_LIQUIDITY:
+      return "LP_ADD_LIQUIDITY";
+    case ::stellar::SignerRuleAction::LP_REMOVE_LIQUIDITY:
+      return "LP_REMOVE_LIQUIDITY";
+    case ::stellar::SignerRuleAction::LP_SWAP:
+      return "LP_SWAP";
     default:
       return nullptr;
     }
@@ -1684,8 +1687,9 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       (int32_t)::stellar::SignerRuleAction::EXCHANGE,
       (int32_t)::stellar::SignerRuleAction::UPDATE_FOR_OTHER,
       (int32_t)::stellar::SignerRuleAction::CUSTOM,
-      (int32_t)::stellar::SignerRuleAction::MANAGE_LIQUIDITY,
-      (int32_t)::stellar::SignerRuleAction::LIQUIDITY_POOL_SWAP
+      (int32_t)::stellar::SignerRuleAction::LP_ADD_LIQUIDITY,
+      (int32_t)::stellar::SignerRuleAction::LP_REMOVE_LIQUIDITY,
+      (int32_t)::stellar::SignerRuleAction::LP_SWAP
     };
     return _xdr_enum_vec;
   }

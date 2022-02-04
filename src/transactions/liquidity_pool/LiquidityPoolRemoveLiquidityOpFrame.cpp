@@ -40,8 +40,8 @@ namespace stellar
             return false;
         }
 
-        auto lpFirstBalanceFrame = balanceHelper.loadBalance(lpFrame->getFirstAssetBalance());
-        auto lpSecondBalanceFrame = balanceHelper.loadBalance(lpFrame->getSecondAssetBalance());
+        auto lpFirstBalanceFrame = balanceHelper.mustLoadBalance(lpFrame->getFirstAssetBalance());
+        auto lpSecondBalanceFrame = balanceHelper.mustLoadBalance(lpFrame->getSecondAssetBalance());
 
         auto& assetHelper = sh.getAssetHelper();
         auto firstAssetFrame = assetHelper.mustLoadAsset(lpFirstBalanceFrame->getAsset());
@@ -53,7 +53,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, AccountRuleAction::MANAGE_LIQUIDITY, mSourceAccount);
+        result.emplace_back(resource, AccountRuleAction::LP_REMOVE_LIQUIDITY, mSourceAccount);
 
         return true;
     }
@@ -81,8 +81,8 @@ namespace stellar
             return false;
         }
 
-        auto lpFirstBalanceFrame = balanceHelper.loadBalance(lpFrame->getFirstAssetBalance());
-        auto lpSecondBalanceFrame = balanceHelper.loadBalance(lpFrame->getSecondAssetBalance());
+        auto lpFirstBalanceFrame = balanceHelper.mustLoadBalance(lpFrame->getFirstAssetBalance());
+        auto lpSecondBalanceFrame = balanceHelper.mustLoadBalance(lpFrame->getSecondAssetBalance());
 
         auto& assetHelper = sh.getAssetHelper();
         auto firstAssetFrame = assetHelper.mustLoadAsset(lpFirstBalanceFrame->getAsset());
@@ -94,7 +94,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, SignerRuleAction::MANAGE_LIQUIDITY);
+        result.emplace_back(resource, SignerRuleAction::LP_REMOVE_LIQUIDITY);
 
         return true;
     }
@@ -174,8 +174,8 @@ namespace stellar
         auto lpSecondBalance = mLPFrame->getSecondAssetBalance();
 
         auto& balanceHelper = sh.getBalanceHelper();
-        mLPFirstBalanceFrame = balanceHelper.loadBalance(lpFirstBalance);
-        mLPSecondBalanceFrame = balanceHelper.loadBalance(lpSecondBalance);
+        mLPFirstBalanceFrame = balanceHelper.mustLoadBalance(lpFirstBalance);
+        mLPSecondBalanceFrame = balanceHelper.mustLoadBalance(lpSecondBalance);
 
         auto lpTokensReserve = mLPFrame->getLPTokensAmount();
         auto lpFirstAmount = mLPFirstBalanceFrame->getAmount();
@@ -195,7 +195,6 @@ namespace stellar
     std::array<BalanceFrame::pointer, 2>
     LiquidityPoolRemoveLiquidityOpFrame::getSourceBalances(Application& app, StorageHelper& sh)
     {
-        auto& balanceHelper = sh.getBalanceHelper();
         auto balanceManager = BalanceManager(app, sh);
 
         auto sourceAccountID = mSourceAccount->getID();
@@ -203,17 +202,8 @@ namespace stellar
         auto firstAsset = mLPFirstBalanceFrame->getAsset();
         auto secondAsset = mLPSecondBalanceFrame->getAsset();
 
-        auto firstBalanceFrame = balanceHelper.loadFirstBalance(sourceAccountID, firstAsset);
-        if (!firstBalanceFrame)
-        {
-            firstBalanceFrame = balanceManager.loadOrCreateBalance(sourceAccountID, firstAsset);
-        }
-
-        auto secondBalanceFrame = balanceHelper.loadFirstBalance(sourceAccountID, secondAsset);
-        if (!secondBalanceFrame)
-        {
-            secondBalanceFrame = balanceManager.loadOrCreateBalance(sourceAccountID, secondAsset);
-        }
+        auto firstBalanceFrame = balanceManager.loadOrCreateBalance(sourceAccountID, firstAsset);
+        auto secondBalanceFrame = balanceManager.loadOrCreateBalance(sourceAccountID, secondAsset);
 
         return {firstBalanceFrame, secondBalanceFrame};
     }
@@ -244,12 +234,28 @@ namespace stellar
             return false;
         }
 
-        auto chargeRes = mLPTokensBalanceFrame->tryCharge(mRemoveLiquidity.lpTokensAmount);
+        uint64_t lpTokensAmount = mRemoveLiquidity.lpTokensAmount;
+
+        auto chargeRes = mLPTokensBalanceFrame->tryCharge(lpTokensAmount);
         if (chargeRes != BalanceFrame::Result::SUCCESS)
         {
             setChargeCode(chargeRes);
             return false;
         }
+
+        auto& balanceHelper = sh.getBalanceHelper();
+        balanceHelper.storeChange(mLPTokensBalanceFrame->mEntry);
+
+        auto& assetHelper = sh.getAssetHelper();
+        auto asset = assetHelper.mustLoadAsset(mLPTokensBalanceFrame->getAsset());
+        if (!asset->tryUnIssue(lpTokensAmount))
+        {
+            CLOG(ERROR, Logging::OPERATION_LOGGER)
+                << "Unexpected state: failed to unissue redundant LP tokens after removing liquidity: "
+                << mLPFrame->getPoolID();
+            throw std::runtime_error("Unexpected state: failed to unissue redundant LP tokens removing liquidity");
+        }
+        assetHelper.storeChange(asset->mEntry);
 
         return true;
     }
