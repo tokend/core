@@ -211,6 +211,8 @@ namespace stellar
         innerResult().success().lpAccountID = mPoolFrame->getAccountID();
         innerResult().success().firstAssetBalanceID = mLPFirstBalance->getBalanceID();
         innerResult().success().secondAssetBalanceID = mLPSecondBalance->getBalanceID();
+        innerResult().success().firstAssetAmount = mFromFirstAssetAmount;
+        innerResult().success().secondAssetAmount = mFromSecondAssetAmount;
         innerResult().success().lpAsset = mLPTokenAssetCode;
         innerResult().success().lpTokensAmount = lpEntry.lpTokensTotalCap;
 
@@ -322,7 +324,7 @@ namespace stellar
         LiquidityPoolEntry lpEntry;
         uint64_t lpID = sh.mustGetLedgerDelta().getHeaderFrame().generateID(LedgerEntryType::LIQUIDITY_POOL);
         lpEntry.id = lpID;
-        lpEntry.liquidityPoolAcount = mLPAccountID;
+        lpEntry.liquidityPoolAccount = mLPAccountID;
         lpEntry.firstAssetBalance = mLPFirstBalance->getBalanceID();
         lpEntry.secondAssetBalance = mLPSecondBalance->getBalanceID();
         lpEntry.lpTokenAssetCode = mLPTokenAssetCode;

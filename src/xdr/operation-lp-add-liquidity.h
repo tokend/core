@@ -147,6 +147,8 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
   AccountID lpAccountID{};
   BalanceID firstAssetBalanceID{};
   BalanceID secondAssetBalanceID{};
+  uint64 firstAssetAmount{};
+  uint64 secondAssetAmount{};
   AssetCode lpAsset{};
   uint64 lpTokensAmount{};
   EmptyExt ext{};
@@ -156,6 +158,8 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
            typename _lpAccountID_T,
            typename _firstAssetBalanceID_T,
            typename _secondAssetBalanceID_T,
+           typename _firstAssetAmount_T,
+           typename _secondAssetAmount_T,
            typename _lpAsset_T,
            typename _lpTokensAmount_T,
            typename _ext_T,
@@ -164,6 +168,8 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
                           && std::is_constructible<AccountID, _lpAccountID_T>::value
                           && std::is_constructible<BalanceID, _firstAssetBalanceID_T>::value
                           && std::is_constructible<BalanceID, _secondAssetBalanceID_T>::value
+                          && std::is_constructible<uint64, _firstAssetAmount_T>::value
+                          && std::is_constructible<uint64, _secondAssetAmount_T>::value
                           && std::is_constructible<AssetCode, _lpAsset_T>::value
                           && std::is_constructible<uint64, _lpTokensAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
@@ -172,6 +178,8 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
                                  _lpAccountID_T &&_lpAccountID,
                                  _firstAssetBalanceID_T &&_firstAssetBalanceID,
                                  _secondAssetBalanceID_T &&_secondAssetBalanceID,
+                                 _firstAssetAmount_T &&_firstAssetAmount,
+                                 _secondAssetAmount_T &&_secondAssetAmount,
                                  _lpAsset_T &&_lpAsset,
                                  _lpTokensAmount_T &&_lpTokensAmount,
                                  _ext_T &&_ext)
@@ -179,6 +187,8 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
       lpAccountID(std::forward<_lpAccountID_T>(_lpAccountID)),
       firstAssetBalanceID(std::forward<_firstAssetBalanceID_T>(_firstAssetBalanceID)),
       secondAssetBalanceID(std::forward<_secondAssetBalanceID_T>(_secondAssetBalanceID)),
+      firstAssetAmount(std::forward<_firstAssetAmount_T>(_firstAssetAmount)),
+      secondAssetAmount(std::forward<_secondAssetAmount_T>(_secondAssetAmount)),
       lpAsset(std::forward<_lpAsset_T>(_lpAsset)),
       lpTokensAmount(std::forward<_lpTokensAmount_T>(_lpTokensAmount)),
       ext(std::forward<_ext_T>(_ext)) {}

@@ -15,8 +15,8 @@ if (!okid)
 {
 return false;
 }
-bool okliquidityPoolAcount = u.from_bytes(liquidityPoolAcount);
-if (!okliquidityPoolAcount)
+bool okliquidityPoolAccount = u.from_bytes(liquidityPoolAccount);
+if (!okliquidityPoolAccount)
 {
 return false;
 }
@@ -65,8 +65,8 @@ if (!okid)
 {
 return false;
 }
-bool okliquidityPoolAcount = m.to_bytes(liquidityPoolAcount);
-if (!okliquidityPoolAcount)
+bool okliquidityPoolAccount = m.to_bytes(liquidityPoolAccount);
+if (!okliquidityPoolAccount)
 {
 return false;
 }
@@ -111,7 +111,7 @@ void
 LiquidityPoolEntry::count_size(xdr::measurer& m) const 
 {
 m.count_size(id);
-m.count_size(liquidityPoolAcount);
+m.count_size(liquidityPoolAccount);
 m.count_size(lpTokenAssetCode);
 m.count_size(firstAssetBalance);
 m.count_size(secondAssetBalance);
@@ -128,7 +128,7 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<LiquidityPoolEntry const&>(other_abstract);return true
 && (id== other.id)
-&& (liquidityPoolAcount== other.liquidityPoolAcount)
+&& (liquidityPoolAccount== other.liquidityPoolAccount)
 && (lpTokenAssetCode== other.lpTokenAssetCode)
 && (firstAssetBalance== other.firstAssetBalance)
 && (secondAssetBalance== other.secondAssetBalance)
@@ -147,8 +147,8 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<LiquidityPoolEntry const&>(other_abstract);
 if (id < other.id) return true;
 if (other.id < id) return false;
-if (liquidityPoolAcount < other.liquidityPoolAcount) return true;
-if (other.liquidityPoolAcount < liquidityPoolAcount) return false;
+if (liquidityPoolAccount < other.liquidityPoolAccount) return true;
+if (other.liquidityPoolAccount < liquidityPoolAccount) return false;
 if (lpTokenAssetCode < other.lpTokenAssetCode) return true;
 if (other.lpTokenAssetCode < lpTokenAssetCode) return false;
 if (firstAssetBalance < other.firstAssetBalance) return true;

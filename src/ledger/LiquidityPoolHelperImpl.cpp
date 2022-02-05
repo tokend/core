@@ -287,7 +287,7 @@ namespace stellar
 
             statement& st = prep.statement();
             st.exchange(into(lp.id));
-            st.exchange(into(lp.liquidityPoolAcount));
+            st.exchange(into(lp.liquidityPoolAccount));
             st.exchange(into(lp.lpTokenAssetCode));
             st.exchange(into(lp.firstAssetBalance));
             st.exchange(into(lp.secondAssetBalance));

@@ -159,6 +159,16 @@ if (!oksecondAssetBalanceID)
 {
 return false;
 }
+bool okfirstAssetAmount = u.from_bytes(firstAssetAmount);
+if (!okfirstAssetAmount)
+{
+return false;
+}
+bool oksecondAssetAmount = u.from_bytes(secondAssetAmount);
+if (!oksecondAssetAmount)
+{
+return false;
+}
 bool oklpAsset = u.from_bytes(lpAsset);
 if (!oklpAsset)
 {
@@ -199,6 +209,16 @@ if (!oksecondAssetBalanceID)
 {
 return false;
 }
+bool okfirstAssetAmount = m.to_bytes(firstAssetAmount);
+if (!okfirstAssetAmount)
+{
+return false;
+}
+bool oksecondAssetAmount = m.to_bytes(secondAssetAmount);
+if (!oksecondAssetAmount)
+{
+return false;
+}
 bool oklpAsset = m.to_bytes(lpAsset);
 if (!oklpAsset)
 {
@@ -223,6 +243,8 @@ m.count_size(liquidityPoolID);
 m.count_size(lpAccountID);
 m.count_size(firstAssetBalanceID);
 m.count_size(secondAssetBalanceID);
+m.count_size(firstAssetAmount);
+m.count_size(secondAssetAmount);
 m.count_size(lpAsset);
 m.count_size(lpTokensAmount);
 m.count_size(ext);
@@ -238,6 +260,8 @@ return false;
 && (lpAccountID== other.lpAccountID)
 && (firstAssetBalanceID== other.firstAssetBalanceID)
 && (secondAssetBalanceID== other.secondAssetBalanceID)
+&& (firstAssetAmount== other.firstAssetAmount)
+&& (secondAssetAmount== other.secondAssetAmount)
 && (lpAsset== other.lpAsset)
 && (lpTokensAmount== other.lpTokensAmount)
 && (ext== other.ext)
@@ -258,6 +282,10 @@ if (firstAssetBalanceID < other.firstAssetBalanceID) return true;
 if (other.firstAssetBalanceID < firstAssetBalanceID) return false;
 if (secondAssetBalanceID < other.secondAssetBalanceID) return true;
 if (other.secondAssetBalanceID < secondAssetBalanceID) return false;
+if (firstAssetAmount < other.firstAssetAmount) return true;
+if (other.firstAssetAmount < firstAssetAmount) return false;
+if (secondAssetAmount < other.secondAssetAmount) return true;
+if (other.secondAssetAmount < secondAssetAmount) return false;
 if (lpAsset < other.lpAsset) return true;
 if (other.lpAsset < lpAsset) return false;
 if (lpTokensAmount < other.lpTokensAmount) return true;
