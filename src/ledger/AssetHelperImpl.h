@@ -11,6 +11,7 @@ class session;
 namespace stellar
 {
 class StorageHelper;
+class LedgerManager;
 
 class AssetHelperImpl : public AssetHelper, NonCopyable
 {
@@ -77,7 +78,7 @@ private:
 
     void addAssetState() override;
 
-    void markDeleted(LedgerEntry const& entry) override;
+    void markDeleted(LedgerEntry const& entry, LedgerManager& lm) override;
 
     bool
     doesAmountFitAssetPrecision(const AssetCode& assetCode, uint64_t amount) override;

@@ -2,6 +2,7 @@
 #include "database/Database.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/StorageHelper.h"
+#include "ledger/LedgerManager.h"
 #include <xdrpp/marshal.h>
 
 using namespace soci;
@@ -98,7 +99,7 @@ AssetHelperImpl::storeDelete(LedgerKey const& key)
 }
 
 void
-AssetHelperImpl::markDeleted(LedgerEntry const& entry)
+AssetHelperImpl::markDeleted(LedgerEntry const& entry, LedgerManager& lm)
 {
 
     flushCachedEntry(getLedgerKey(entry));
@@ -106,12 +107,19 @@ AssetHelperImpl::markDeleted(LedgerEntry const& entry)
     Database& db = getDatabase();
 
     auto assetFrame = make_shared<AssetFrame>(entry);
+    std::string assetCode = assetFrame->getCode();
 
     auto timer = db.getDeleteTimer("delete-asset");
     auto prep = db.getPreparedStatement(
         "UPDATE asset SET state = :state WHERE code = :code");
     auto& st = prep.statement();
-    st.exchange(use(assetFrame->getCode(), "code"));
+
+    if (lm.shouldUse(LedgerVersion::DELETE_REDEMPTION_ZERO_TASKS_CHECKING)) {
+        st.exchange(use(assetCode, "code"));
+    } else {
+        st.exchange(use(assetFrame->getCode(), "code"));
+    }
+    
     int deletedState = int(AssetFrame::State::DELETED);
     st.exchange(use(deletedState, "state"));
 

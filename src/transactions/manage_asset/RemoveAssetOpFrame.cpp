@@ -140,7 +140,7 @@ RemoveAssetOpFrame::doApply(stellar::Application& app,
 
         deleteLimits(storageHelper);
 
-        assetHelper.markDeleted(asset->mEntry);
+        assetHelper.markDeleted(asset->mEntry, ledgerManager);
     }
     else
     {
