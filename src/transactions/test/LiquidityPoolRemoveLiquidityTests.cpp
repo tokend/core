@@ -113,31 +113,33 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
     auto createLPResult = liquidityPoolTestHelper.applyAddLiquidityTx(account, firstBalance, secondBalance,
         firstDesiredAmount, secondDesiredAmount, firstMinAmount, secondMinAmount, LPAddLiquidityResultCode::SUCCESS);
 
-    auto sourceLPBalanceFrame = balanceHelper.loadBalance(accountID, createLPResult.success().lpAsset);
+    auto lpAsset = LiquidityPoolFrame::calculateLPTokenAssetCode(firstAsset, secondAsset);
+
+    auto sourceLPBalanceFrame = balanceHelper.loadBalance(accountID, lpAsset);
     auto sourceLPBalanceID = sourceLPBalanceFrame->getBalanceID();
 
     SECTION("Remove liquidity")
     {
         uint64_t removeLPTokensAmount = createLPResult.success().lpTokensAmount;
 
-        auto lpBefore = liquidityPoolHelper.loadPool(createLPResult.success().lpAsset);
+        auto lpBefore = liquidityPoolHelper.loadPool(lpAsset);
 
         auto lpFirstBalanceBefore = balanceHelper.loadBalance(lpBefore->getFirstAssetBalance());
         auto lpSecondBalanceBefore = balanceHelper.loadBalance(lpBefore->getSecondAssetBalance());
 
-        auto sourceLpBalanceBefore = balanceHelper.loadBalance(accountID, createLPResult.success().lpAsset);
+        auto sourceLpBalanceBefore = balanceHelper.loadBalance(accountID, lpAsset);
 
         auto removeRes = removeLiquidityTestHelper.applyRemoveLiquidityTx(account, sourceLPBalanceID,
             removeLPTokensAmount, 0, 0, LPRemoveLiquidityResultCode::SUCCESS);
 
-        auto lpAfter = liquidityPoolHelper.loadPool(createLPResult.success().lpAsset);
+        auto lpAfter = liquidityPoolHelper.loadPool(lpAsset);
 
         REQUIRE(createLPResult.success().lpTokensAmount - removeLPTokensAmount == lpAfter->getLPTokensAmount());
 
         auto lpFirstBalanceAfter = balanceHelper.loadBalance(lpBefore->getFirstAssetBalance());
         auto lpSecondBalanceAfter = balanceHelper.loadBalance(lpBefore->getSecondAssetBalance());
 
-        auto sourceLpBalanceAfter = balanceHelper.loadBalance(accountID, createLPResult.success().lpAsset);
+        auto sourceLpBalanceAfter = balanceHelper.loadBalance(accountID, lpAsset);
 
         uint64_t lpBalanceDelta = sourceLpBalanceBefore->getAmount() - sourceLpBalanceAfter->getAmount();
         REQUIRE(lpBalanceDelta == removeLPTokensAmount);
@@ -199,7 +201,7 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
 
     SECTION("Remove liquidity from transferred LP tokens")
     {
-        auto lpBefore = liquidityPoolHelper.loadPool(createLPResult.success().lpAsset);
+        auto lpBefore = liquidityPoolHelper.loadPool(lpAsset);
 
         auto lpFirstBalanceBefore = balanceHelper.loadBalance(lpBefore->getFirstAssetBalance());
         auto lpSecondBalanceBefore = balanceHelper.loadBalance(lpBefore->getSecondAssetBalance());
@@ -233,7 +235,7 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
         auto removeRes = removeLiquidityTestHelper.applyRemoveLiquidityTx(lpReceiver, receiverBalanceID,
             lpTokensAmountToSend, 0, 0, LPRemoveLiquidityResultCode::SUCCESS);
 
-        auto lpAfter = liquidityPoolHelper.loadPool(createLPResult.success().lpAsset);
+        auto lpAfter = liquidityPoolHelper.loadPool(lpAsset);
 
         REQUIRE(createLPResult.success().lpTokensAmount - lpTokensAmountToSend == lpAfter->getLPTokensAmount());
 
@@ -247,7 +249,7 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
 
         SECTION("Remove left liquidity")
         {
-            lpBefore = liquidityPoolHelper.loadPool(createLPResult.success().lpAsset);
+            lpBefore = liquidityPoolHelper.loadPool(lpAsset);
 
             lpFirstBalanceBefore = balanceHelper.loadBalance(lpBefore->getFirstAssetBalance());
             lpSecondBalanceBefore = balanceHelper.loadBalance(lpBefore->getSecondAssetBalance());
@@ -259,7 +261,7 @@ TEST_CASE("Remove liquidity", "[tx][liquidity_pool][remove_liquidity]")
 
             auto expectedAmountLeft = createLPResult.success().lpTokensAmount - lpTokensAmountToSend - removeLPTokensAmount;
 
-            lpAfter = liquidityPoolHelper.loadPool(createLPResult.success().lpAsset);
+            lpAfter = liquidityPoolHelper.loadPool(lpAsset);
 
             REQUIRE(expectedAmountLeft == lpAfter->getLPTokensAmount());
 

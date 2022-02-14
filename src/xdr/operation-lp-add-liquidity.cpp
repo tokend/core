@@ -10,13 +10,13 @@ namespace stellar {
 bool
 LPAddLiquidityOp::from_bytes(xdr::unmarshaler& u) 
 {
-bool okfirstAssetBalance = u.from_bytes(firstAssetBalance);
-if (!okfirstAssetBalance)
+bool okfirstAssetBalanceID = u.from_bytes(firstAssetBalanceID);
+if (!okfirstAssetBalanceID)
 {
 return false;
 }
-bool oksecondAssetBalance = u.from_bytes(secondAssetBalance);
-if (!oksecondAssetBalance)
+bool oksecondAssetBalanceID = u.from_bytes(secondAssetBalanceID);
+if (!oksecondAssetBalanceID)
 {
 return false;
 }
@@ -50,13 +50,13 @@ return true;
 bool
 LPAddLiquidityOp::to_bytes(xdr::marshaler& m) const 
 {
-bool okfirstAssetBalance = m.to_bytes(firstAssetBalance);
-if (!okfirstAssetBalance)
+bool okfirstAssetBalanceID = m.to_bytes(firstAssetBalanceID);
+if (!okfirstAssetBalanceID)
 {
 return false;
 }
-bool oksecondAssetBalance = m.to_bytes(secondAssetBalance);
-if (!oksecondAssetBalance)
+bool oksecondAssetBalanceID = m.to_bytes(secondAssetBalanceID);
+if (!oksecondAssetBalanceID)
 {
 return false;
 }
@@ -90,8 +90,8 @@ return true;
 void
 LPAddLiquidityOp::count_size(xdr::measurer& m) const 
 {
-m.count_size(firstAssetBalance);
-m.count_size(secondAssetBalance);
+m.count_size(firstAssetBalanceID);
+m.count_size(secondAssetBalanceID);
 m.count_size(firstAssetDesiredAmount);
 m.count_size(secondAssetDesiredAmount);
 m.count_size(firstAssetMinAmount);
@@ -105,8 +105,8 @@ if (typeid(*this) != typeid(other_abstract))
 {
 return false;
 }auto& other = dynamic_cast<LPAddLiquidityOp const&>(other_abstract);return true
-&& (firstAssetBalance== other.firstAssetBalance)
-&& (secondAssetBalance== other.secondAssetBalance)
+&& (firstAssetBalanceID== other.firstAssetBalanceID)
+&& (secondAssetBalanceID== other.secondAssetBalanceID)
 && (firstAssetDesiredAmount== other.firstAssetDesiredAmount)
 && (secondAssetDesiredAmount== other.secondAssetDesiredAmount)
 && (firstAssetMinAmount== other.firstAssetMinAmount)
@@ -121,10 +121,10 @@ if (typeid(*this) != typeid(other_abstract))
 throw std::runtime_error("unexpected operator< invoke");
 }
 auto& other = dynamic_cast<LPAddLiquidityOp const&>(other_abstract);
-if (firstAssetBalance < other.firstAssetBalance) return true;
-if (other.firstAssetBalance < firstAssetBalance) return false;
-if (secondAssetBalance < other.secondAssetBalance) return true;
-if (other.secondAssetBalance < secondAssetBalance) return false;
+if (firstAssetBalanceID < other.firstAssetBalanceID) return true;
+if (other.firstAssetBalanceID < firstAssetBalanceID) return false;
+if (secondAssetBalanceID < other.secondAssetBalanceID) return true;
+if (other.secondAssetBalanceID < secondAssetBalanceID) return false;
 if (firstAssetDesiredAmount < other.firstAssetDesiredAmount) return true;
 if (other.firstAssetDesiredAmount < firstAssetDesiredAmount) return false;
 if (secondAssetDesiredAmount < other.secondAssetDesiredAmount) return true;
@@ -169,8 +169,8 @@ if (!oksecondAssetAmount)
 {
 return false;
 }
-bool oklpAsset = u.from_bytes(lpAsset);
-if (!oklpAsset)
+bool oklpTokensBalanceID = u.from_bytes(lpTokensBalanceID);
+if (!oklpTokensBalanceID)
 {
 return false;
 }
@@ -219,8 +219,8 @@ if (!oksecondAssetAmount)
 {
 return false;
 }
-bool oklpAsset = m.to_bytes(lpAsset);
-if (!oklpAsset)
+bool oklpTokensBalanceID = m.to_bytes(lpTokensBalanceID);
+if (!oklpTokensBalanceID)
 {
 return false;
 }
@@ -245,7 +245,7 @@ m.count_size(firstAssetBalanceID);
 m.count_size(secondAssetBalanceID);
 m.count_size(firstAssetAmount);
 m.count_size(secondAssetAmount);
-m.count_size(lpAsset);
+m.count_size(lpTokensBalanceID);
 m.count_size(lpTokensAmount);
 m.count_size(ext);
 }
@@ -262,7 +262,7 @@ return false;
 && (secondAssetBalanceID== other.secondAssetBalanceID)
 && (firstAssetAmount== other.firstAssetAmount)
 && (secondAssetAmount== other.secondAssetAmount)
-&& (lpAsset== other.lpAsset)
+&& (lpTokensBalanceID== other.lpTokensBalanceID)
 && (lpTokensAmount== other.lpTokensAmount)
 && (ext== other.ext)
 ;}
@@ -286,8 +286,8 @@ if (firstAssetAmount < other.firstAssetAmount) return true;
 if (other.firstAssetAmount < firstAssetAmount) return false;
 if (secondAssetAmount < other.secondAssetAmount) return true;
 if (other.secondAssetAmount < secondAssetAmount) return false;
-if (lpAsset < other.lpAsset) return true;
-if (other.lpAsset < lpAsset) return false;
+if (lpTokensBalanceID < other.lpTokensBalanceID) return true;
+if (other.lpTokensBalanceID < lpTokensBalanceID) return false;
 if (lpTokensAmount < other.lpTokensAmount) return true;
 if (other.lpTokensAmount < lpTokensAmount) return false;
 if (ext < other.ext) return true;

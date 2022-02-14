@@ -13,8 +13,8 @@
 namespace stellar {
 
 struct LPAddLiquidityOp  : xdr::xdr_abstract {
-  BalanceID firstAssetBalance{};
-  BalanceID secondAssetBalance{};
+  BalanceID firstAssetBalanceID{};
+  BalanceID secondAssetBalanceID{};
   uint64 firstAssetDesiredAmount{};
   uint64 secondAssetDesiredAmount{};
   uint64 firstAssetMinAmount{};
@@ -22,31 +22,31 @@ struct LPAddLiquidityOp  : xdr::xdr_abstract {
   EmptyExt ext{};
 
   LPAddLiquidityOp() = default;
-  template<typename _firstAssetBalance_T,
-           typename _secondAssetBalance_T,
+  template<typename _firstAssetBalanceID_T,
+           typename _secondAssetBalanceID_T,
            typename _firstAssetDesiredAmount_T,
            typename _secondAssetDesiredAmount_T,
            typename _firstAssetMinAmount_T,
            typename _secondAssetMinAmount_T,
            typename _ext_T,
            typename = typename
-           std::enable_if<std::is_constructible<BalanceID, _firstAssetBalance_T>::value
-                          && std::is_constructible<BalanceID, _secondAssetBalance_T>::value
+           std::enable_if<std::is_constructible<BalanceID, _firstAssetBalanceID_T>::value
+                          && std::is_constructible<BalanceID, _secondAssetBalanceID_T>::value
                           && std::is_constructible<uint64, _firstAssetDesiredAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetDesiredAmount_T>::value
                           && std::is_constructible<uint64, _firstAssetMinAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetMinAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
-  explicit LPAddLiquidityOp(_firstAssetBalance_T &&_firstAssetBalance,
-                            _secondAssetBalance_T &&_secondAssetBalance,
+  explicit LPAddLiquidityOp(_firstAssetBalanceID_T &&_firstAssetBalanceID,
+                            _secondAssetBalanceID_T &&_secondAssetBalanceID,
                             _firstAssetDesiredAmount_T &&_firstAssetDesiredAmount,
                             _secondAssetDesiredAmount_T &&_secondAssetDesiredAmount,
                             _firstAssetMinAmount_T &&_firstAssetMinAmount,
                             _secondAssetMinAmount_T &&_secondAssetMinAmount,
                             _ext_T &&_ext)
-    : firstAssetBalance(std::forward<_firstAssetBalance_T>(_firstAssetBalance)),
-      secondAssetBalance(std::forward<_secondAssetBalance_T>(_secondAssetBalance)),
+    : firstAssetBalanceID(std::forward<_firstAssetBalanceID_T>(_firstAssetBalanceID)),
+      secondAssetBalanceID(std::forward<_secondAssetBalanceID_T>(_secondAssetBalanceID)),
       firstAssetDesiredAmount(std::forward<_firstAssetDesiredAmount_T>(_firstAssetDesiredAmount)),
       secondAssetDesiredAmount(std::forward<_secondAssetDesiredAmount_T>(_secondAssetDesiredAmount)),
       firstAssetMinAmount(std::forward<_firstAssetMinAmount_T>(_firstAssetMinAmount)),
@@ -149,7 +149,7 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
   BalanceID secondAssetBalanceID{};
   uint64 firstAssetAmount{};
   uint64 secondAssetAmount{};
-  AssetCode lpAsset{};
+  BalanceID lpTokensBalanceID{};
   uint64 lpTokensAmount{};
   EmptyExt ext{};
 
@@ -160,7 +160,7 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
            typename _secondAssetBalanceID_T,
            typename _firstAssetAmount_T,
            typename _secondAssetAmount_T,
-           typename _lpAsset_T,
+           typename _lpTokensBalanceID_T,
            typename _lpTokensAmount_T,
            typename _ext_T,
            typename = typename
@@ -170,7 +170,7 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
                           && std::is_constructible<BalanceID, _secondAssetBalanceID_T>::value
                           && std::is_constructible<uint64, _firstAssetAmount_T>::value
                           && std::is_constructible<uint64, _secondAssetAmount_T>::value
-                          && std::is_constructible<AssetCode, _lpAsset_T>::value
+                          && std::is_constructible<BalanceID, _lpTokensBalanceID_T>::value
                           && std::is_constructible<uint64, _lpTokensAmount_T>::value
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
@@ -180,7 +180,7 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
                                  _secondAssetBalanceID_T &&_secondAssetBalanceID,
                                  _firstAssetAmount_T &&_firstAssetAmount,
                                  _secondAssetAmount_T &&_secondAssetAmount,
-                                 _lpAsset_T &&_lpAsset,
+                                 _lpTokensBalanceID_T &&_lpTokensBalanceID,
                                  _lpTokensAmount_T &&_lpTokensAmount,
                                  _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
@@ -189,7 +189,7 @@ struct LPAddLiquiditySuccess  : xdr::xdr_abstract {
       secondAssetBalanceID(std::forward<_secondAssetBalanceID_T>(_secondAssetBalanceID)),
       firstAssetAmount(std::forward<_firstAssetAmount_T>(_firstAssetAmount)),
       secondAssetAmount(std::forward<_secondAssetAmount_T>(_secondAssetAmount)),
-      lpAsset(std::forward<_lpAsset_T>(_lpAsset)),
+      lpTokensBalanceID(std::forward<_lpTokensBalanceID_T>(_lpTokensBalanceID)),
       lpTokensAmount(std::forward<_lpTokensAmount_T>(_lpTokensAmount)),
       ext(std::forward<_ext_T>(_ext)) {}
   bool

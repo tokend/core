@@ -27,8 +27,8 @@ namespace stellar
         std::vector<OperationCondition>& result) const
     {
         auto& balanceHelper = sh.getBalanceHelper();
-        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance);
-        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance);
+        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID);
+        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID);
         if (!firstBalanceFrame || !secondBalanceFrame)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);
@@ -56,8 +56,8 @@ namespace stellar
         std::vector<SignerRequirement>& result) const
     {
         auto& balanceHelper = sh.getBalanceHelper();
-        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance);
-        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance);
+        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID);
+        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID);
         if (!firstBalanceFrame || !secondBalanceFrame)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);
@@ -97,7 +97,7 @@ namespace stellar
             return false;
         }
 
-        if (mAddLiquidity.firstAssetBalance == mAddLiquidity.secondAssetBalance)
+        if (mAddLiquidity.firstAssetBalanceID == mAddLiquidity.secondAssetBalanceID)
         {
             innerResult().code(LPAddLiquidityResultCode::SAME_BALANCES);
             return false;
@@ -121,8 +121,8 @@ namespace stellar
 
         auto sourceAccountID = mSourceAccount->getID();
 
-        mSourceFirstBalance = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance, sourceAccountID);
-        mSourceSecondBalance = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance, sourceAccountID);
+        mSourceFirstBalance = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID, sourceAccountID);
+        mSourceSecondBalance = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID, sourceAccountID);
 
         if (!mSourceFirstBalance || !mSourceSecondBalance)
         {
@@ -213,7 +213,7 @@ namespace stellar
         innerResult().success().secondAssetBalanceID = mLPSecondBalance->getBalanceID();
         innerResult().success().firstAssetAmount = mFromFirstAssetAmount;
         innerResult().success().secondAssetAmount = mFromSecondAssetAmount;
-        innerResult().success().lpAsset = mLPTokenAssetCode;
+        innerResult().success().lpTokensBalanceID = mSourceLPTokensBalance->getBalanceID();
         innerResult().success().lpTokensAmount = lpEntry.lpTokensTotalCap;
 
         return true;
@@ -262,7 +262,7 @@ namespace stellar
         {
             std::swap(mAddLiquidity.firstAssetDesiredAmount, mAddLiquidity.secondAssetDesiredAmount);
             std::swap(mAddLiquidity.firstAssetMinAmount, mAddLiquidity.secondAssetMinAmount);
-            std::swap(mAddLiquidity.firstAssetBalance, mAddLiquidity.secondAssetBalance);
+            std::swap(mAddLiquidity.firstAssetBalanceID, mAddLiquidity.secondAssetBalanceID);
             std::swap(mSourceFirstBalance, mSourceSecondBalance);
         }
     }
@@ -365,8 +365,8 @@ namespace stellar
     void LiquidityPoolAddLiquidityOpFrame::mustCreateLiquidityPoolBalances(Application& app, StorageHelper& sh)
     {
         auto& balanceHelper = sh.getBalanceHelper();
-        auto sourceFirstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance);
-        auto sourceSecondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance);
+        auto sourceFirstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID);
+        auto sourceSecondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID);
 
         auto& assetHelper = sh.getAssetHelper();
         auto firstAssetFrame = assetHelper.mustLoadAsset(sourceFirstBalanceFrame->getAsset());
