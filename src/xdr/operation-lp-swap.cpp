@@ -324,13 +324,23 @@ if (!okpoolAccount)
 {
 return false;
 }
-bool oksourceBalanceID = u.from_bytes(sourceBalanceID);
-if (!oksourceBalanceID)
+bool oklpInBalanceID = u.from_bytes(lpInBalanceID);
+if (!oklpInBalanceID)
 {
 return false;
 }
-bool oktargetBalanceID = u.from_bytes(targetBalanceID);
-if (!oktargetBalanceID)
+bool oklpOutBalanceID = u.from_bytes(lpOutBalanceID);
+if (!oklpOutBalanceID)
+{
+return false;
+}
+bool oksourceInBalanceID = u.from_bytes(sourceInBalanceID);
+if (!oksourceInBalanceID)
+{
+return false;
+}
+bool oksourceOutBalanceID = u.from_bytes(sourceOutBalanceID);
+if (!oksourceOutBalanceID)
 {
 return false;
 }
@@ -374,13 +384,23 @@ if (!okpoolAccount)
 {
 return false;
 }
-bool oksourceBalanceID = m.to_bytes(sourceBalanceID);
-if (!oksourceBalanceID)
+bool oklpInBalanceID = m.to_bytes(lpInBalanceID);
+if (!oklpInBalanceID)
 {
 return false;
 }
-bool oktargetBalanceID = m.to_bytes(targetBalanceID);
-if (!oktargetBalanceID)
+bool oklpOutBalanceID = m.to_bytes(lpOutBalanceID);
+if (!oklpOutBalanceID)
+{
+return false;
+}
+bool oksourceInBalanceID = m.to_bytes(sourceInBalanceID);
+if (!oksourceInBalanceID)
+{
+return false;
+}
+bool oksourceOutBalanceID = m.to_bytes(sourceOutBalanceID);
+if (!oksourceOutBalanceID)
 {
 return false;
 }
@@ -416,8 +436,10 @@ LPSwapSuccess::count_size(xdr::measurer& m) const
 {
 m.count_size(liquidityPoolID);
 m.count_size(poolAccount);
-m.count_size(sourceBalanceID);
-m.count_size(targetBalanceID);
+m.count_size(lpInBalanceID);
+m.count_size(lpOutBalanceID);
+m.count_size(sourceInBalanceID);
+m.count_size(sourceOutBalanceID);
 m.count_size(swapInAmount);
 m.count_size(swapOutAmount);
 m.count_size(actualSourcePaymentFee);
@@ -433,8 +455,10 @@ return false;
 }auto& other = dynamic_cast<LPSwapSuccess const&>(other_abstract);return true
 && (liquidityPoolID== other.liquidityPoolID)
 && (poolAccount== other.poolAccount)
-&& (sourceBalanceID== other.sourceBalanceID)
-&& (targetBalanceID== other.targetBalanceID)
+&& (lpInBalanceID== other.lpInBalanceID)
+&& (lpOutBalanceID== other.lpOutBalanceID)
+&& (sourceInBalanceID== other.sourceInBalanceID)
+&& (sourceOutBalanceID== other.sourceOutBalanceID)
 && (swapInAmount== other.swapInAmount)
 && (swapOutAmount== other.swapOutAmount)
 && (actualSourcePaymentFee== other.actualSourcePaymentFee)
@@ -453,10 +477,14 @@ if (liquidityPoolID < other.liquidityPoolID) return true;
 if (other.liquidityPoolID < liquidityPoolID) return false;
 if (poolAccount < other.poolAccount) return true;
 if (other.poolAccount < poolAccount) return false;
-if (sourceBalanceID < other.sourceBalanceID) return true;
-if (other.sourceBalanceID < sourceBalanceID) return false;
-if (targetBalanceID < other.targetBalanceID) return true;
-if (other.targetBalanceID < targetBalanceID) return false;
+if (lpInBalanceID < other.lpInBalanceID) return true;
+if (other.lpInBalanceID < lpInBalanceID) return false;
+if (lpOutBalanceID < other.lpOutBalanceID) return true;
+if (other.lpOutBalanceID < lpOutBalanceID) return false;
+if (sourceInBalanceID < other.sourceInBalanceID) return true;
+if (other.sourceInBalanceID < sourceInBalanceID) return false;
+if (sourceOutBalanceID < other.sourceOutBalanceID) return true;
+if (other.sourceOutBalanceID < sourceOutBalanceID) return false;
 if (swapInAmount < other.swapInAmount) return true;
 if (other.swapInAmount < swapInAmount) return false;
 if (swapOutAmount < other.swapOutAmount) return true;

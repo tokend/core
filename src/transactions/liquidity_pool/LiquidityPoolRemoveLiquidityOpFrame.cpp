@@ -160,8 +160,10 @@ namespace stellar
 
         innerResult().code(LPRemoveLiquidityResultCode::SUCCESS);
         innerResult().success().liquidityPoolID = mLPFrame->getPoolID();
-        innerResult().success().firstAssetBalanceID = balances[0]->getBalanceID();
-        innerResult().success().secondAssetBalanceID = balances[1]->getBalanceID();
+        innerResult().success().sourceFirstAssetBalanceID = balances[0]->getBalanceID();
+        innerResult().success().sourceSecondAssetBalanceID = balances[1]->getBalanceID();
+        innerResult().success().lpFirstAssetBalanceID = mLPFirstBalanceFrame->getBalanceID();
+        innerResult().success().lpSecondAssetBalanceID = mLPSecondBalanceFrame->getBalanceID();
         innerResult().success().firstAssetAmount = outputs[0];
         innerResult().success().secondAssetAmount = outputs[1];
 

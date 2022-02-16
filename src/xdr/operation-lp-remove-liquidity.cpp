@@ -116,13 +116,23 @@ if (!okliquidityPoolID)
 {
 return false;
 }
-bool okfirstAssetBalanceID = u.from_bytes(firstAssetBalanceID);
-if (!okfirstAssetBalanceID)
+bool oklpFirstAssetBalanceID = u.from_bytes(lpFirstAssetBalanceID);
+if (!oklpFirstAssetBalanceID)
 {
 return false;
 }
-bool oksecondAssetBalanceID = u.from_bytes(secondAssetBalanceID);
-if (!oksecondAssetBalanceID)
+bool oklpSecondAssetBalanceID = u.from_bytes(lpSecondAssetBalanceID);
+if (!oklpSecondAssetBalanceID)
+{
+return false;
+}
+bool oksourceFirstAssetBalanceID = u.from_bytes(sourceFirstAssetBalanceID);
+if (!oksourceFirstAssetBalanceID)
+{
+return false;
+}
+bool oksourceSecondAssetBalanceID = u.from_bytes(sourceSecondAssetBalanceID);
+if (!oksourceSecondAssetBalanceID)
 {
 return false;
 }
@@ -151,13 +161,23 @@ if (!okliquidityPoolID)
 {
 return false;
 }
-bool okfirstAssetBalanceID = m.to_bytes(firstAssetBalanceID);
-if (!okfirstAssetBalanceID)
+bool oklpFirstAssetBalanceID = m.to_bytes(lpFirstAssetBalanceID);
+if (!oklpFirstAssetBalanceID)
 {
 return false;
 }
-bool oksecondAssetBalanceID = m.to_bytes(secondAssetBalanceID);
-if (!oksecondAssetBalanceID)
+bool oklpSecondAssetBalanceID = m.to_bytes(lpSecondAssetBalanceID);
+if (!oklpSecondAssetBalanceID)
+{
+return false;
+}
+bool oksourceFirstAssetBalanceID = m.to_bytes(sourceFirstAssetBalanceID);
+if (!oksourceFirstAssetBalanceID)
+{
+return false;
+}
+bool oksourceSecondAssetBalanceID = m.to_bytes(sourceSecondAssetBalanceID);
+if (!oksourceSecondAssetBalanceID)
 {
 return false;
 }
@@ -182,8 +202,10 @@ void
 LPRemoveLiquiditySuccess::count_size(xdr::measurer& m) const 
 {
 m.count_size(liquidityPoolID);
-m.count_size(firstAssetBalanceID);
-m.count_size(secondAssetBalanceID);
+m.count_size(lpFirstAssetBalanceID);
+m.count_size(lpSecondAssetBalanceID);
+m.count_size(sourceFirstAssetBalanceID);
+m.count_size(sourceSecondAssetBalanceID);
 m.count_size(firstAssetAmount);
 m.count_size(secondAssetAmount);
 m.count_size(ext);
@@ -196,8 +218,10 @@ if (typeid(*this) != typeid(other_abstract))
 return false;
 }auto& other = dynamic_cast<LPRemoveLiquiditySuccess const&>(other_abstract);return true
 && (liquidityPoolID== other.liquidityPoolID)
-&& (firstAssetBalanceID== other.firstAssetBalanceID)
-&& (secondAssetBalanceID== other.secondAssetBalanceID)
+&& (lpFirstAssetBalanceID== other.lpFirstAssetBalanceID)
+&& (lpSecondAssetBalanceID== other.lpSecondAssetBalanceID)
+&& (sourceFirstAssetBalanceID== other.sourceFirstAssetBalanceID)
+&& (sourceSecondAssetBalanceID== other.sourceSecondAssetBalanceID)
 && (firstAssetAmount== other.firstAssetAmount)
 && (secondAssetAmount== other.secondAssetAmount)
 && (ext== other.ext)
@@ -212,10 +236,14 @@ throw std::runtime_error("unexpected operator< invoke");
 auto& other = dynamic_cast<LPRemoveLiquiditySuccess const&>(other_abstract);
 if (liquidityPoolID < other.liquidityPoolID) return true;
 if (other.liquidityPoolID < liquidityPoolID) return false;
-if (firstAssetBalanceID < other.firstAssetBalanceID) return true;
-if (other.firstAssetBalanceID < firstAssetBalanceID) return false;
-if (secondAssetBalanceID < other.secondAssetBalanceID) return true;
-if (other.secondAssetBalanceID < secondAssetBalanceID) return false;
+if (lpFirstAssetBalanceID < other.lpFirstAssetBalanceID) return true;
+if (other.lpFirstAssetBalanceID < lpFirstAssetBalanceID) return false;
+if (lpSecondAssetBalanceID < other.lpSecondAssetBalanceID) return true;
+if (other.lpSecondAssetBalanceID < lpSecondAssetBalanceID) return false;
+if (sourceFirstAssetBalanceID < other.sourceFirstAssetBalanceID) return true;
+if (other.sourceFirstAssetBalanceID < sourceFirstAssetBalanceID) return false;
+if (sourceSecondAssetBalanceID < other.sourceSecondAssetBalanceID) return true;
+if (other.sourceSecondAssetBalanceID < sourceSecondAssetBalanceID) return false;
 if (firstAssetAmount < other.firstAssetAmount) return true;
 if (other.firstAssetAmount < firstAssetAmount) return false;
 if (secondAssetAmount < other.secondAssetAmount) return true;

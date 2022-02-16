@@ -35,7 +35,17 @@ private:
         return mResult.tr().lpAddLiquidityResult();
     }
 
-    LPAddLiquidityOp& mAddLiquidity;
+    struct SortedParams
+    {
+        uint64 firstAssetDesiredAmount;
+        uint64 secondAssetDesiredAmount;
+        uint64 firstAssetMinAmount;
+        uint64 secondAssetMinAmount;
+        PublicKey firstAssetBalanceID;
+        PublicKey secondAssetBalanceID;
+    } mSorted;
+
+    LPAddLiquidityOp const& mAddLiquidity;
 
     bool tryGetOperationConditions(
         StorageHelper& sh,
@@ -56,7 +66,7 @@ private:
 
     static bool quote(uint64_t firstAmount, uint64_t firstReserve, uint64_t secondReserve, uint64_t* quote);
 
-    void normalize(AssetCode const& firstAsset, AssetCode const& secondAsset);
+    void sort(AssetCode const& firstAsset, AssetCode const& secondAsset);
 
     bool calculateLPOutputs(uint64_t firstAssetReserve, uint64_t secondAssetReserve);
 

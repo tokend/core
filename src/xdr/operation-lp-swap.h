@@ -433,8 +433,10 @@ template<> struct xdr_traits<::stellar::LPSwapResultCode>
 struct LPSwapSuccess  : xdr::xdr_abstract {
   uint64 liquidityPoolID{};
   AccountID poolAccount{};
-  BalanceID sourceBalanceID{};
-  BalanceID targetBalanceID{};
+  BalanceID lpInBalanceID{};
+  BalanceID lpOutBalanceID{};
+  BalanceID sourceInBalanceID{};
+  BalanceID sourceOutBalanceID{};
   uint64 swapInAmount{};
   uint64 swapOutAmount{};
   Fee actualSourcePaymentFee{};
@@ -444,8 +446,10 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
   LPSwapSuccess() = default;
   template<typename _liquidityPoolID_T,
            typename _poolAccount_T,
-           typename _sourceBalanceID_T,
-           typename _targetBalanceID_T,
+           typename _lpInBalanceID_T,
+           typename _lpOutBalanceID_T,
+           typename _sourceInBalanceID_T,
+           typename _sourceOutBalanceID_T,
            typename _swapInAmount_T,
            typename _swapOutAmount_T,
            typename _actualSourcePaymentFee_T,
@@ -454,8 +458,10 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
            typename = typename
            std::enable_if<std::is_constructible<uint64, _liquidityPoolID_T>::value
                           && std::is_constructible<AccountID, _poolAccount_T>::value
-                          && std::is_constructible<BalanceID, _sourceBalanceID_T>::value
-                          && std::is_constructible<BalanceID, _targetBalanceID_T>::value
+                          && std::is_constructible<BalanceID, _lpInBalanceID_T>::value
+                          && std::is_constructible<BalanceID, _lpOutBalanceID_T>::value
+                          && std::is_constructible<BalanceID, _sourceInBalanceID_T>::value
+                          && std::is_constructible<BalanceID, _sourceOutBalanceID_T>::value
                           && std::is_constructible<uint64, _swapInAmount_T>::value
                           && std::is_constructible<uint64, _swapOutAmount_T>::value
                           && std::is_constructible<Fee, _actualSourcePaymentFee_T>::value
@@ -464,8 +470,10 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          >::type>
   explicit LPSwapSuccess(_liquidityPoolID_T &&_liquidityPoolID,
                          _poolAccount_T &&_poolAccount,
-                         _sourceBalanceID_T &&_sourceBalanceID,
-                         _targetBalanceID_T &&_targetBalanceID,
+                         _lpInBalanceID_T &&_lpInBalanceID,
+                         _lpOutBalanceID_T &&_lpOutBalanceID,
+                         _sourceInBalanceID_T &&_sourceInBalanceID,
+                         _sourceOutBalanceID_T &&_sourceOutBalanceID,
                          _swapInAmount_T &&_swapInAmount,
                          _swapOutAmount_T &&_swapOutAmount,
                          _actualSourcePaymentFee_T &&_actualSourcePaymentFee,
@@ -473,8 +481,10 @@ struct LPSwapSuccess  : xdr::xdr_abstract {
                          _ext_T &&_ext)
     : liquidityPoolID(std::forward<_liquidityPoolID_T>(_liquidityPoolID)),
       poolAccount(std::forward<_poolAccount_T>(_poolAccount)),
-      sourceBalanceID(std::forward<_sourceBalanceID_T>(_sourceBalanceID)),
-      targetBalanceID(std::forward<_targetBalanceID_T>(_targetBalanceID)),
+      lpInBalanceID(std::forward<_lpInBalanceID_T>(_lpInBalanceID)),
+      lpOutBalanceID(std::forward<_lpOutBalanceID_T>(_lpOutBalanceID)),
+      sourceInBalanceID(std::forward<_sourceInBalanceID_T>(_sourceInBalanceID)),
+      sourceOutBalanceID(std::forward<_sourceOutBalanceID_T>(_sourceOutBalanceID)),
       swapInAmount(std::forward<_swapInAmount_T>(_swapInAmount)),
       swapOutAmount(std::forward<_swapOutAmount_T>(_swapOutAmount)),
       actualSourcePaymentFee(std::forward<_actualSourcePaymentFee_T>(_actualSourcePaymentFee)),
