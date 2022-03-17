@@ -12,6 +12,7 @@ class session;
 namespace stellar
 {
 class StatementContext;
+class LedgerManager;
 
 class AssetHelper : public EntryHelper
 {
@@ -48,7 +49,7 @@ public:
         addAssetState() = 0;
 
         virtual void
-        markDeleted(LedgerEntry const& entry) = 0;
+        markDeleted(LedgerEntry const& entry, LedgerManager& lm) = 0;
 
 
 };

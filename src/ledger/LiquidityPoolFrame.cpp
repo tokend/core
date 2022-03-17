@@ -67,7 +67,7 @@ LiquidityPoolEntry& LiquidityPoolFrame::getLiquidityPoolEntry() const
 
 AccountID const& LiquidityPoolFrame::getAccountID() const
 {
-    return mLiquidityPool.liquidityPoolAcount;
+    return mLiquidityPool.liquidityPoolAccount;
 }
 
 AssetCode const& LiquidityPoolFrame::getLpTokenAsset() const
@@ -100,7 +100,7 @@ LiquidityPoolFrame::createNew(uint64_t const& id, AccountID const& accountID, Ba
 
     LiquidityPoolEntry& lp = entry.data.liquidityPool();
     lp.id = id;
-    lp.liquidityPoolAcount = accountID;
+    lp.liquidityPoolAccount = accountID;
     lp.firstAssetBalance = firstAssetBalance;
     lp.secondAssetBalance = secondAssetBalance;
     lp.lpTokenAssetCode = lpTokenAsset;

@@ -13,7 +13,7 @@ namespace stellar {
 
 struct LiquidityPoolEntry  : xdr::xdr_abstract {
   uint64 id{};
-  AccountID liquidityPoolAcount{};
+  AccountID liquidityPoolAccount{};
   AssetCode lpTokenAssetCode{};
   BalanceID firstAssetBalance{};
   BalanceID secondAssetBalance{};
@@ -24,7 +24,7 @@ struct LiquidityPoolEntry  : xdr::xdr_abstract {
 
   LiquidityPoolEntry() = default;
   template<typename _id_T,
-           typename _liquidityPoolAcount_T,
+           typename _liquidityPoolAccount_T,
            typename _lpTokenAssetCode_T,
            typename _firstAssetBalance_T,
            typename _secondAssetBalance_T,
@@ -34,7 +34,7 @@ struct LiquidityPoolEntry  : xdr::xdr_abstract {
            typename _ext_T,
            typename = typename
            std::enable_if<std::is_constructible<uint64, _id_T>::value
-                          && std::is_constructible<AccountID, _liquidityPoolAcount_T>::value
+                          && std::is_constructible<AccountID, _liquidityPoolAccount_T>::value
                           && std::is_constructible<AssetCode, _lpTokenAssetCode_T>::value
                           && std::is_constructible<BalanceID, _firstAssetBalance_T>::value
                           && std::is_constructible<BalanceID, _secondAssetBalance_T>::value
@@ -44,7 +44,7 @@ struct LiquidityPoolEntry  : xdr::xdr_abstract {
                           && std::is_constructible<EmptyExt, _ext_T>::value
                          >::type>
   explicit LiquidityPoolEntry(_id_T &&_id,
-                              _liquidityPoolAcount_T &&_liquidityPoolAcount,
+                              _liquidityPoolAccount_T &&_liquidityPoolAccount,
                               _lpTokenAssetCode_T &&_lpTokenAssetCode,
                               _firstAssetBalance_T &&_firstAssetBalance,
                               _secondAssetBalance_T &&_secondAssetBalance,
@@ -53,7 +53,7 @@ struct LiquidityPoolEntry  : xdr::xdr_abstract {
                               _secondReserve_T &&_secondReserve,
                               _ext_T &&_ext)
     : id(std::forward<_id_T>(_id)),
-      liquidityPoolAcount(std::forward<_liquidityPoolAcount_T>(_liquidityPoolAcount)),
+      liquidityPoolAccount(std::forward<_liquidityPoolAccount_T>(_liquidityPoolAccount)),
       lpTokenAssetCode(std::forward<_lpTokenAssetCode_T>(_lpTokenAssetCode)),
       firstAssetBalance(std::forward<_firstAssetBalance_T>(_firstAssetBalance)),
       secondAssetBalance(std::forward<_secondAssetBalance_T>(_secondAssetBalance)),

@@ -19,7 +19,7 @@ namespace stellar
     LiquidityPoolAddLiquidityOpFrame::
     LiquidityPoolAddLiquidityOpFrame(const Operation& op, OperationResult& opRes, TransactionFrame& parentTx)
         : OperationFrame(op, opRes, parentTx),
-          mAddLiquidity(const_cast<LPAddLiquidityOp&>(mOperation.body.lpAddLiquidityOp()))
+          mAddLiquidity(mOperation.body.lpAddLiquidityOp())
     {
     }
 
@@ -27,8 +27,8 @@ namespace stellar
         std::vector<OperationCondition>& result) const
     {
         auto& balanceHelper = sh.getBalanceHelper();
-        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance);
-        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance);
+        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID);
+        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID);
         if (!firstBalanceFrame || !secondBalanceFrame)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);
@@ -47,7 +47,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, AccountRuleAction::MANAGE_LIQUIDITY, mSourceAccount);
+        result.emplace_back(resource, AccountRuleAction::LP_ADD_LIQUIDITY, mSourceAccount);
 
         return true;
     }
@@ -56,8 +56,8 @@ namespace stellar
         std::vector<SignerRequirement>& result) const
     {
         auto& balanceHelper = sh.getBalanceHelper();
-        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance);
-        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance);
+        auto firstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID);
+        auto secondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID);
         if (!firstBalanceFrame || !secondBalanceFrame)
         {
             mResult.code(OperationResultCode::opNO_ENTRY);
@@ -76,7 +76,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, SignerRuleAction::MANAGE_LIQUIDITY);
+        result.emplace_back(resource, SignerRuleAction::LP_ADD_LIQUIDITY);
 
         return true;
     }
@@ -97,7 +97,7 @@ namespace stellar
             return false;
         }
 
-        if (mAddLiquidity.firstAssetBalance == mAddLiquidity.secondAssetBalance)
+        if (mAddLiquidity.firstAssetBalanceID == mAddLiquidity.secondAssetBalanceID)
         {
             innerResult().code(LPAddLiquidityResultCode::SAME_BALANCES);
             return false;
@@ -121,8 +121,8 @@ namespace stellar
 
         auto sourceAccountID = mSourceAccount->getID();
 
-        mSourceFirstBalance = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance, sourceAccountID);
-        mSourceSecondBalance = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance, sourceAccountID);
+        mSourceFirstBalance = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalanceID, sourceAccountID);
+        mSourceSecondBalance = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalanceID, sourceAccountID);
 
         if (!mSourceFirstBalance || !mSourceSecondBalance)
         {
@@ -147,7 +147,7 @@ namespace stellar
             return false;
         }
 
-        normalize(firstAssetCode, secondAssetCode);
+        sort(firstAssetCode, secondAssetCode);
 
         auto& lpHelper = sh.getLiquidityPoolHelper();
 
@@ -208,11 +208,15 @@ namespace stellar
 
         innerResult().code(LPAddLiquidityResultCode::SUCCESS);
         innerResult().success().liquidityPoolID = mLiquidityPoolID;
-        innerResult().success().lpAccountID = mPoolFrame->getAccountID();
-        innerResult().success().firstAssetBalanceID = mLPFirstBalance->getBalanceID();
-        innerResult().success().secondAssetBalanceID = mLPSecondBalance->getBalanceID();
-        innerResult().success().lpAsset = mLPTokenAssetCode;
-        innerResult().success().lpTokensAmount = lpEntry.lpTokensTotalCap;
+        innerResult().success().poolAccount = mLPAccountID;
+        innerResult().success().lpFirstAssetBalanceID = mLPFirstBalance->getBalanceID();
+        innerResult().success().lpSecondAssetBalanceID = mLPSecondBalance->getBalanceID();
+        innerResult().success().sourceFirstAssetBalanceID = mSourceFirstBalance->getBalanceID();
+        innerResult().success().sourceSecondAssetBalanceID = mSourceSecondBalance->getBalanceID();
+        innerResult().success().firstAssetAmount = mFromFirstAssetAmount;
+        innerResult().success().secondAssetAmount = mFromSecondAssetAmount;
+        innerResult().success().lpTokensBalanceID = mSourceLPTokensBalance->getBalanceID();
+        innerResult().success().lpTokensAmount = mLPTokensAmountToIssue;
 
         return true;
     }
@@ -254,13 +258,23 @@ namespace stellar
         return {firstReserveDiff, secondReserveDiff};
     }
 
-    void LiquidityPoolAddLiquidityOpFrame::normalize(AssetCode const& firstAsset, AssetCode const& secondAsset)
+    void LiquidityPoolAddLiquidityOpFrame::sort(AssetCode const& firstAsset, AssetCode const& secondAsset)
     {
+        mSorted = SortedParams
+        {
+                mAddLiquidity.firstAssetDesiredAmount,
+                mAddLiquidity.secondAssetDesiredAmount,
+                mAddLiquidity.firstAssetMinAmount,
+                mAddLiquidity.secondAssetMinAmount,
+                mAddLiquidity.firstAssetBalanceID,
+                mAddLiquidity.secondAssetBalanceID
+        };
+
         if (firstAsset > secondAsset)
         {
-            std::swap(mAddLiquidity.firstAssetDesiredAmount, mAddLiquidity.secondAssetDesiredAmount);
-            std::swap(mAddLiquidity.firstAssetMinAmount, mAddLiquidity.secondAssetMinAmount);
-            std::swap(mAddLiquidity.firstAssetBalance, mAddLiquidity.secondAssetBalance);
+            std::swap(mSorted.firstAssetDesiredAmount, mSorted.secondAssetDesiredAmount);
+            std::swap(mSorted.firstAssetMinAmount, mSorted.secondAssetMinAmount);
+            std::swap(mSorted.firstAssetBalanceID, mSorted.secondAssetBalanceID);
             std::swap(mSourceFirstBalance, mSourceSecondBalance);
         }
     }
@@ -269,39 +283,39 @@ namespace stellar
         uint64_t const secondAssetReserve)
     {
         uint64_t secondAmountOptimal;
-        auto quoteOk = quote(mAddLiquidity.firstAssetDesiredAmount,
+        auto quoteOk = quote(mSorted.firstAssetDesiredAmount,
             firstAssetReserve, secondAssetReserve, &secondAmountOptimal);
         if (!quoteOk) {
             innerResult().code(LPAddLiquidityResultCode::BALANCE_OVERFLOW);
             return false;
         }
 
-        if (secondAmountOptimal <= mAddLiquidity.secondAssetDesiredAmount)
+        if (secondAmountOptimal <= mSorted.secondAssetDesiredAmount)
         {
-            if (secondAmountOptimal < mAddLiquidity.secondAssetMinAmount)
+            if (secondAmountOptimal < mSorted.secondAssetMinAmount)
             {
                 innerResult().code(LPAddLiquidityResultCode::INSUFFICIENT_SECOND_ASSET_AMOUNT);
                 return false;
             }
 
-            mFromFirstAssetAmount = mAddLiquidity.firstAssetDesiredAmount;
+            mFromFirstAssetAmount = mSorted.firstAssetDesiredAmount;
             mFromSecondAssetAmount = secondAmountOptimal;
         }
         else
         {
             uint64_t firstAmountOptimal;
-            quoteOk = quote(mAddLiquidity.secondAssetDesiredAmount,
+            quoteOk = quote(mSorted.secondAssetDesiredAmount,
                 secondAssetReserve, firstAssetReserve, &firstAmountOptimal);
             if (!quoteOk) {
                 innerResult().code(LPAddLiquidityResultCode::BALANCE_OVERFLOW);
                 return false;
             }
 
-            if (firstAmountOptimal <= mAddLiquidity.firstAssetDesiredAmount &&
-                firstAmountOptimal >= mAddLiquidity.firstAssetMinAmount)
+            if (firstAmountOptimal <= mSorted.firstAssetDesiredAmount &&
+                firstAmountOptimal >= mSorted.firstAssetMinAmount)
             {
                 mFromFirstAssetAmount = firstAmountOptimal;
-                mFromSecondAssetAmount = mAddLiquidity.secondAssetDesiredAmount;
+                mFromSecondAssetAmount = mSorted.secondAssetDesiredAmount;
             }
             else
             {
@@ -322,7 +336,7 @@ namespace stellar
         LiquidityPoolEntry lpEntry;
         uint64_t lpID = sh.mustGetLedgerDelta().getHeaderFrame().generateID(LedgerEntryType::LIQUIDITY_POOL);
         lpEntry.id = lpID;
-        lpEntry.liquidityPoolAcount = mLPAccountID;
+        lpEntry.liquidityPoolAccount = mLPAccountID;
         lpEntry.firstAssetBalance = mLPFirstBalance->getBalanceID();
         lpEntry.secondAssetBalance = mLPSecondBalance->getBalanceID();
         lpEntry.lpTokenAssetCode = mLPTokenAssetCode;
@@ -332,11 +346,11 @@ namespace stellar
         entry.data.liquidityPool() = lpEntry;
         sh.getLiquidityPoolHelper().storeAdd(entry);
 
-        mFromFirstAssetAmount = mAddLiquidity.firstAssetDesiredAmount;
-        mFromSecondAssetAmount = mAddLiquidity.secondAssetDesiredAmount;
+        mFromFirstAssetAmount = mSorted.firstAssetDesiredAmount;
+        mFromSecondAssetAmount = mSorted.secondAssetDesiredAmount;
 
-        mLPTokensAmountToIssue = std::sqrt(mAddLiquidity.firstAssetDesiredAmount *
-            mAddLiquidity.secondAssetDesiredAmount);
+        mLPTokensAmountToIssue = std::sqrt(mSorted.firstAssetDesiredAmount *
+                                           mSorted.secondAssetDesiredAmount);
 
         return std::make_shared<LiquidityPoolFrame>(entry);
     }
@@ -363,8 +377,8 @@ namespace stellar
     void LiquidityPoolAddLiquidityOpFrame::mustCreateLiquidityPoolBalances(Application& app, StorageHelper& sh)
     {
         auto& balanceHelper = sh.getBalanceHelper();
-        auto sourceFirstBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.firstAssetBalance);
-        auto sourceSecondBalanceFrame = balanceHelper.loadBalance(mAddLiquidity.secondAssetBalance);
+        auto sourceFirstBalanceFrame = balanceHelper.mustLoadBalance(mSorted.firstAssetBalanceID);
+        auto sourceSecondBalanceFrame = balanceHelper.mustLoadBalance(mSorted.secondAssetBalanceID);
 
         auto& assetHelper = sh.getAssetHelper();
         auto firstAssetFrame = assetHelper.mustLoadAsset(sourceFirstBalanceFrame->getAsset());
@@ -380,9 +394,10 @@ namespace stellar
         assetEntry.details = R"({"name":"LP:)"+firstAssetFrame->getCode()+":"+secondAssetFrame->getCode()+R"("})";
         assetEntry.trailingDigitsCount = AssetFrame::kMaximumTrailingDigits;
         assetEntry.owner = mLPAccountID;
-        assetEntry.maxIssuanceAmount = UINT64_MAX;
-        assetEntry.availableForIssueance = UINT64_MAX;
+        assetEntry.maxIssuanceAmount = INT64_MAX;
+        assetEntry.availableForIssueance = INT64_MAX;
         assetEntry.preissuedAssetSigner = mLPAccountID;
+        assetEntry.policies = static_cast<uint32>(AssetPolicy::TRANSFERABLE);
 
         AssetFrame::ensureValid(assetEntry);
 
@@ -404,7 +419,7 @@ namespace stellar
         auto lpPoolAccountID = mPoolFrame->getAccountID();
 
         auto& accountHelper = sh.getAccountHelper();
-        auto lpAccountFrame = accountHelper.loadAccount(lpPoolAccountID);
+        auto lpAccountFrame = accountHelper.mustLoadAccount(lpPoolAccountID);
 
         uint32_t allTasks = 0;
         const auto lpTokensIssuanceRequestOp = CreateIssuanceRequestOpFrame::build(mSourceLPTokensBalance->getAsset(),

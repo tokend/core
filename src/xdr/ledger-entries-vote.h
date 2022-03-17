@@ -45,18 +45,21 @@ private:
   _xdr_case_type pollType_;
   union {
     SingleChoiceVote single_;
+    longstring custom_;
   };
 
 public:
   static constexpr const bool _xdr_has_default_case = false;
   static const std::vector<PollType> &_xdr_case_values() {
     static const std::vector<PollType> _xdr_disc_vec {
-      PollType::SINGLE_CHOICE
+      PollType::SINGLE_CHOICE,
+      PollType::CUSTOM_CHOICE
     };
     return _xdr_disc_vec;
   }
   static constexpr int _xdr_field_number(_xdr_case_type which) {
     return which == (int32_t)PollType::SINGLE_CHOICE ? 1
+      : which == (int32_t)PollType::CUSTOM_CHOICE ? 2
       : -1;
   }
   template<typename _F, typename..._A> static bool
@@ -64,6 +67,9 @@ public:
     switch (_which) {
     case (int32_t)PollType::SINGLE_CHOICE:
       _f(&VoteData::single_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+      _f(&VoteData::custom_, std::forward<_A>(_a)...);
       return true;
     }
     return false;
@@ -81,6 +87,9 @@ public:
       case (int32_t)PollType::SINGLE_CHOICE:
 new(&single_) SingleChoiceVote{};
 break;
+      case (int32_t)PollType::CUSTOM_CHOICE:
+new(&custom_) longstring{};
+break;
 }
 
     }
@@ -93,6 +102,9 @@ break;
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&single_) SingleChoiceVote{};
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&custom_) longstring{};
+break;
 }
 
   }
@@ -101,6 +113,9 @@ break;
 {
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&single_) SingleChoiceVote(source.single_);
+break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&custom_) longstring(source.custom_);
 break;
 }
 
@@ -111,6 +126,9 @@ break;
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&single_) SingleChoiceVote(std::move(source.single_));
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&custom_) longstring(std::move(source.custom_));
+break;
 }
 
   }
@@ -119,6 +137,9 @@ switch (pollType_)
 {
   case (int32_t)PollType::SINGLE_CHOICE:
 single_.~SingleChoiceVote();
+break;
+  case (int32_t)PollType::CUSTOM_CHOICE:
+custom_.~longstring();
 break;
 }
 }
@@ -131,6 +152,9 @@ switch (pollType_)
     case (int32_t)PollType::SINGLE_CHOICE:
 single_ = source.single_;
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+custom_ = source.custom_;
+break;
 }
 }
 else {this->~VoteData();
@@ -139,6 +163,9 @@ switch (pollType_)
 {
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&single_) SingleChoiceVote(source.single_);
+break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&custom_) longstring(source.custom_);
 break;
 }
 }
@@ -152,6 +179,9 @@ switch (pollType_)
     case (int32_t)PollType::SINGLE_CHOICE:
 single_ = std::move(source.single_);
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+custom_ = std::move(source.custom_);
+break;
 }
 }
 else {this->~VoteData();
@@ -160,6 +190,9 @@ switch (pollType_)
 {
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&single_) SingleChoiceVote(std::move(source.single_));
+break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&custom_) longstring(std::move(source.custom_));
 break;
 }
 }
@@ -181,6 +214,16 @@ break;
     if (_xdr_field_number(pollType_) == 1)
       return single_;
     throw xdr::xdr_wrong_union("VoteData: single accessed when not selected");
+  }
+  longstring &custom() {
+    if (_xdr_field_number(pollType_) == 2)
+      return custom_;
+    throw xdr::xdr_wrong_union("VoteData: custom accessed when not selected");
+  }
+  const longstring &custom() const {
+    if (_xdr_field_number(pollType_) == 2)
+      return custom_;
+    throw xdr::xdr_wrong_union("VoteData: custom accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

@@ -13,6 +13,7 @@ namespace stellar {
 
 enum class PollType : std::int32_t {
   SINGLE_CHOICE = 0,
+  CUSTOM_CHOICE = 1,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::PollType>
@@ -24,13 +25,16 @@ template<> struct xdr_traits<::stellar::PollType>
     switch (val) {
     case ::stellar::PollType::SINGLE_CHOICE:
       return "SINGLE_CHOICE";
+    case ::stellar::PollType::CUSTOM_CHOICE:
+      return "CUSTOM_CHOICE";
     default:
       return nullptr;
     }
   }
   static const std::vector<int32_t> &enum_values() {
     static const std::vector<int32_t> _xdr_enum_vec = {
-      (int32_t)::stellar::PollType::SINGLE_CHOICE
+      (int32_t)::stellar::PollType::SINGLE_CHOICE,
+      (int32_t)::stellar::PollType::CUSTOM_CHOICE
     };
     return _xdr_enum_vec;
   }
@@ -43,18 +47,21 @@ private:
   _xdr_case_type type_;
   union {
     EmptyExt ext_;
+    EmptyExt customChoiceExt_;
   };
 
 public:
   static constexpr const bool _xdr_has_default_case = false;
   static const std::vector<PollType> &_xdr_case_values() {
     static const std::vector<PollType> _xdr_disc_vec {
-      PollType::SINGLE_CHOICE
+      PollType::SINGLE_CHOICE,
+      PollType::CUSTOM_CHOICE
     };
     return _xdr_disc_vec;
   }
   static constexpr int _xdr_field_number(_xdr_case_type which) {
     return which == (int32_t)PollType::SINGLE_CHOICE ? 1
+      : which == (int32_t)PollType::CUSTOM_CHOICE ? 2
       : -1;
   }
   template<typename _F, typename..._A> static bool
@@ -62,6 +69,9 @@ public:
     switch (_which) {
     case (int32_t)PollType::SINGLE_CHOICE:
       _f(&PollData::ext_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+      _f(&PollData::customChoiceExt_, std::forward<_A>(_a)...);
       return true;
     }
     return false;
@@ -79,6 +89,9 @@ public:
       case (int32_t)PollType::SINGLE_CHOICE:
 new(&ext_) EmptyExt{};
 break;
+      case (int32_t)PollType::CUSTOM_CHOICE:
+new(&customChoiceExt_) EmptyExt{};
+break;
 }
 
     }
@@ -91,6 +104,9 @@ break;
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&ext_) EmptyExt{};
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&customChoiceExt_) EmptyExt{};
+break;
 }
 
   }
@@ -99,6 +115,9 @@ break;
 {
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&ext_) EmptyExt(source.ext_);
+break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&customChoiceExt_) EmptyExt(source.customChoiceExt_);
 break;
 }
 
@@ -109,6 +128,9 @@ break;
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&customChoiceExt_) EmptyExt(std::move(source.customChoiceExt_));
+break;
 }
 
   }
@@ -117,6 +139,9 @@ switch (type_)
 {
   case (int32_t)PollType::SINGLE_CHOICE:
 ext_.~EmptyExt();
+break;
+  case (int32_t)PollType::CUSTOM_CHOICE:
+customChoiceExt_.~EmptyExt();
 break;
 }
 }
@@ -129,6 +154,9 @@ switch (type_)
     case (int32_t)PollType::SINGLE_CHOICE:
 ext_ = source.ext_;
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+customChoiceExt_ = source.customChoiceExt_;
+break;
 }
 }
 else {this->~PollData();
@@ -137,6 +165,9 @@ switch (type_)
 {
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&ext_) EmptyExt(source.ext_);
+break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&customChoiceExt_) EmptyExt(source.customChoiceExt_);
 break;
 }
 }
@@ -150,6 +181,9 @@ switch (type_)
     case (int32_t)PollType::SINGLE_CHOICE:
 ext_ = std::move(source.ext_);
 break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+customChoiceExt_ = std::move(source.customChoiceExt_);
+break;
 }
 }
 else {this->~PollData();
@@ -158,6 +192,9 @@ switch (type_)
 {
     case (int32_t)PollType::SINGLE_CHOICE:
 new(&ext_) EmptyExt(std::move(source.ext_));
+break;
+    case (int32_t)PollType::CUSTOM_CHOICE:
+new(&customChoiceExt_) EmptyExt(std::move(source.customChoiceExt_));
 break;
 }
 }
@@ -179,6 +216,16 @@ break;
     if (_xdr_field_number(type_) == 1)
       return ext_;
     throw xdr::xdr_wrong_union("PollData: ext accessed when not selected");
+  }
+  EmptyExt &customChoiceExt() {
+    if (_xdr_field_number(type_) == 2)
+      return customChoiceExt_;
+    throw xdr::xdr_wrong_union("PollData: customChoiceExt accessed when not selected");
+  }
+  const EmptyExt &customChoiceExt() const {
+    if (_xdr_field_number(type_) == 2)
+      return customChoiceExt_;
+    throw xdr::xdr_wrong_union("PollData: customChoiceExt accessed when not selected");
   }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

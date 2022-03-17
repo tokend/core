@@ -37,8 +37,8 @@ LPAddLiquidityTestHelper::createAddLiquidityPoolTx(Account& from, BalanceID& fir
     Operation op;
     op.body.type(OperationType::LP_ADD_LIQUIDITY);
     auto& addLiquidity = op.body.lpAddLiquidityOp();
-    addLiquidity.firstAssetBalance = firstBalance;
-    addLiquidity.secondAssetBalance = secondBalance;
+    addLiquidity.firstAssetBalanceID = firstBalance;
+    addLiquidity.secondAssetBalanceID = secondBalance;
     addLiquidity.firstAssetDesiredAmount = firstDesiredAmount;
     addLiquidity.secondAssetDesiredAmount = secondDesiredAmount;
     addLiquidity.firstAssetMinAmount = firstMinAmount;

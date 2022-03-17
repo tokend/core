@@ -124,8 +124,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceInBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceOutBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -151,8 +151,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceInBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceOutBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -178,8 +178,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceInBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceOutBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());
@@ -205,8 +205,8 @@ TEST_CASE("LP swap", "[tx][liquidity_pool][swap]")
         REQUIRE(pool->getFirstReserve() == lpFirstBalance->getAmount());
         REQUIRE(pool->getSecondReserve() == lpSecondBalance->getAmount());
 
-        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceBalanceID, accountID);
-        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().targetBalanceID, accountID);
+        auto sourceFromBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceInBalanceID, accountID);
+        auto sourceToBalanceAfterSwap = balanceHelper.loadBalance(swapResult.success().sourceOutBalanceID, accountID);
 
         REQUIRE(sourceFromBalanceBeforeSwap->getAmount() - swapResult.success().swapInAmount ==
                 sourceFromBalanceAfterSwap->getAmount());

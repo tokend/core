@@ -42,7 +42,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, AccountRuleAction::LIQUIDITY_POOL_SWAP, mSourceAccount);
+        result.emplace_back(resource, AccountRuleAction::LP_SWAP, mSourceAccount);
 
         return true;
     }
@@ -71,7 +71,7 @@ namespace stellar
         resource.liquidityPool().secondAsset = secondAssetFrame->getCode();
         resource.liquidityPool().secondAssetType = secondAssetFrame->getType();
 
-        result.emplace_back(resource, SignerRuleAction::LIQUIDITY_POOL_SWAP);
+        result.emplace_back(resource, SignerRuleAction::LP_SWAP);
 
         return true;
     }
@@ -154,7 +154,7 @@ namespace stellar
             return false;
         }
 
-        auto lpFirstBalance = balanceHelper.loadBalance(mLiquidityPoolFrame->getFirstAssetBalance());
+        auto lpFirstBalance = balanceHelper.mustLoadBalance(mLiquidityPoolFrame->getFirstAssetBalance());
         auto lpFirstAsset = lpFirstBalance->getAsset();
 
         bool assetsSorted = lpFirstAsset == mFromAsset;
@@ -175,8 +175,10 @@ namespace stellar
         innerResult().code(LPSwapResultCode::SUCCESS);
         innerResult().success().liquidityPoolID = mLiquidityPoolFrame->getPoolID();
         innerResult().success().poolAccount = mLiquidityPoolFrame->getAccountID();
-        innerResult().success().sourceBalanceID = sourceFromBalance->getBalanceID();
-        innerResult().success().targetBalanceID = sourceToBalance->getBalanceID();
+        innerResult().success().sourceInBalanceID = sourceFromBalance->getBalanceID();
+        innerResult().success().sourceOutBalanceID = sourceToBalance->getBalanceID();
+        innerResult().success().lpInBalanceID = lpToBalance->getBalanceID();
+        innerResult().success().lpOutBalanceID = lpFromBalance->getBalanceID();
         innerResult().success().swapInAmount = amounts[0];
         innerResult().success().swapOutAmount = amounts[1];
 
@@ -321,8 +323,8 @@ namespace stellar
     {
         auto lpEntry = mLiquidityPoolFrame->getLiquidityPoolEntry();
 
-        auto firstBalance = balanceHelper.loadBalance(lpEntry.firstAssetBalance);
-        auto secondBalance = balanceHelper.loadBalance(lpEntry.secondAssetBalance);
+        auto firstBalance = balanceHelper.mustLoadBalance(lpEntry.firstAssetBalance);
+        auto secondBalance = balanceHelper.mustLoadBalance(lpEntry.secondAssetBalance);
 
         lpEntry.firstReserve = firstBalance->getAmount();
         lpEntry.secondReserve = secondBalance->getAmount();
