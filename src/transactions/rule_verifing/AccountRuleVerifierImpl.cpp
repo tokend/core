@@ -258,6 +258,15 @@ AccountRuleVerifierImpl::isResourceMatches(
     case LedgerEntryType::DATA:
         return isTypeMatches(conditionResource.data().type,
                              actualResource.data().type);
+    case LedgerEntryType::LIQUIDITY_POOL:
+        isTypeMatches(conditionResource.liquidityPool().firstAssetType,
+                      actualResource.liquidityPool().firstAssetType) &&
+        isStringMatches(conditionResource.liquidityPool().firstAsset,
+                        actualResource.liquidityPool().firstAsset) &&
+        isTypeMatches(conditionResource.liquidityPool().secondAssetType,
+                      actualResource.liquidityPool().secondAssetType) &&
+        isStringMatches(conditionResource.liquidityPool().secondAsset,
+                        actualResource.liquidityPool().secondAsset);
     case LedgerEntryType::ACCOUNT_KYC:
     case LedgerEntryType::ACCOUNT:
     case LedgerEntryType::ACCOUNT_RULE:
