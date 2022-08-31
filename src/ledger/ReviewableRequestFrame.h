@@ -38,15 +38,16 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureASwapAskValid(CreateAtomicSwapAskRequest const& request);
 	static void ensureASwapBidValid(CreateAtomicSwapBidRequest const& request);
 	static void ensurePollCreationValid(CreatePollRequest const& request);
-        static void ensureKYCRecoveryValid(KYCRecoveryRequest const& request);
+    static void ensureKYCRecoveryValid(KYCRecoveryRequest const& request);
 	static void ensureManageOfferValid(ManageOfferRequest const& request);
 	static void ensureCreatePaymentValid(CreatePaymentRequest const& request);
 	static void ensureRedemptionValid(RedemptionRequest const &request);
 	static void ensureCreateDataValid(DataCreationRequest const &request);
 	static void ensureUpdateDataValid(DataUpdateRequest const &request);
 	static void ensureRemoveDataValid(DataRemoveRequest const &request);
-        static void ensureCreateDeferredPaymentValid(CreateDeferredPaymentRequest const &request);
-        static void ensureCloseDeferredPaymentValid(CloseDeferredPaymentRequest const &request);
+    static void ensureCreateDeferredPaymentValid(CreateDeferredPaymentRequest const &request);
+    static void ensureCloseDeferredPaymentValid(CloseDeferredPaymentRequest const &request);
+	static void ensureUpdateDataOwnerValid(DataOwnerUpdateRequest const &request);
 
   public:
     typedef std::shared_ptr<ReviewableRequestFrame> pointer;

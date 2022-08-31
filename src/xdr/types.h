@@ -1033,6 +1033,9 @@ enum class OperationType : std::int32_t {
   CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST = 67,
   CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST = 68,
   CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST = 69,
+  UPDATE_DATA_OWNER = 70,
+  CREATE_DATA_OWNER_UPDATE_REQUEST = 71,
+  CANCEL_DATA_OWNER_UPDATE_REQUEST = 72,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1168,6 +1171,12 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST";
     case ::stellar::OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
       return "CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST";
+    case ::stellar::OperationType::UPDATE_DATA_OWNER:
+      return "UPDATE_DATA_OWNER";
+    case ::stellar::OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+      return "CREATE_DATA_OWNER_UPDATE_REQUEST";
+    case ::stellar::OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+      return "CANCEL_DATA_OWNER_UPDATE_REQUEST";
     default:
       return nullptr;
     }
@@ -1236,7 +1245,10 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CREATE_DEFERRED_PAYMENT_CREATION_REQUEST,
       (int32_t)::stellar::OperationType::CANCEL_DEFERRED_PAYMENT_CREATION_REQUEST,
       (int32_t)::stellar::OperationType::CREATE_CLOSE_DEFERRED_PAYMENT_REQUEST,
-      (int32_t)::stellar::OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST
+      (int32_t)::stellar::OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST,
+      (int32_t)::stellar::OperationType::UPDATE_DATA_OWNER,
+      (int32_t)::stellar::OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST,
+      (int32_t)::stellar::OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST
     };
     return _xdr_enum_vec;
   }

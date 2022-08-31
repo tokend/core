@@ -117,6 +117,8 @@ public:
         makeCreateDeferredPaymentCreationTasksKey(AssetCode const& code);
     static longstring
         makeCreateDeferredPaymentCloseTasksKey(AssetCode const& code);
+    static longstring makeCreateDataOwnerUpdateRequestTasksKey(std::string type);
+
     static const char * changeRoleTasks;
     static const char * externalSystemPrefix;
     static const char * issuanceTasksPrefix;
@@ -155,5 +157,6 @@ public:
     static char const * createDataRemoveRequestTasks;
     static char const * createDeferredPaymentCreationTasks;
     static char const * createDeferredPaymentCloseTasks;
+    static char const * createDataOwnerUpdateRequestTasks;
 };
 }

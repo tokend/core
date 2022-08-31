@@ -48,6 +48,7 @@ namespace stellar
     char const* ManageKeyValueOpFrame::createDataRemoveRequestTasks = "create_data_remove_request_tasks";
     char const* ManageKeyValueOpFrame::createDeferredPaymentCreationTasks = "create_deferred_payment_creation_tasks";
     char const* ManageKeyValueOpFrame::createDeferredPaymentCloseTasks = "create_deferred_payment_close_tasks";
+    char const* ManageKeyValueOpFrame::createDataOwnerUpdateRequestTasks = "create_data_owner_update_request_tasks";
 
 ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stellar::OperationResult &res,
                                              stellar::TransactionFrame &parentTx)
@@ -89,6 +90,7 @@ ManageKeyValueOpFrame::ManageKeyValueOpFrame(const stellar::Operation &op, stell
         {createDataRemoveRequestTasks, KeyValueEntryType::UINT32},
         {createDeferredPaymentCreationTasks, KeyValueEntryType::UINT32},
         {createDeferredPaymentCloseTasks, KeyValueEntryType::UINT32},
+        {createDataOwnerUpdateRequestTasks, KeyValueEntryType::UINT32},
 
     };
 }
@@ -392,5 +394,11 @@ ManageKeyValueOpFrame::makeKYCRecoveryKey()
     ManageKeyValueOpFrame::makeCreateDeferredPaymentCloseTasksKey(AssetCode const& code)
     {
         return string(createDeferredPaymentCloseTasks) + ":" + code;
+    }
+
+    longstring
+    ManageKeyValueOpFrame::makeCreateDataOwnerUpdateRequestTasksKey(string type)
+    {
+        return string(createDataOwnerUpdateRequestTasks) + ":" + type;
     }
 }

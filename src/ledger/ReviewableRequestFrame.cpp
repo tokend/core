@@ -332,6 +332,15 @@ ReviewableRequestFrame::ensureRemoveDataValid(DataRemoveRequest const &request)
     }
 }
 
+void
+ReviewableRequestFrame::ensureUpdateDataOwnerValid(DataOwnerUpdateRequest const &request)
+{
+    if (!isValidJson(request.creatorDetails))
+    {
+        throw runtime_error("creator details are invalid");
+    }
+}
+
 uint256 ReviewableRequestFrame::calculateHash(ReviewableRequestEntry::_body_t const & body)
 {
 	return sha256(xdr::xdr_to_opaque(body));
@@ -403,6 +412,8 @@ void ReviewableRequestFrame::ensureValid(ReviewableRequestEntry const& oe)
             return ensureCreateDeferredPaymentValid(oe.body.createDeferredPaymentRequest());
         case ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
             return ensureCloseDeferredPaymentValid(oe.body.closeDeferredPaymentRequest());
+        case ReviewableRequestType::DATA_OWNER_UPDATE:
+            return ensureUpdateDataOwnerValid(oe.body.dataOwnerUpdateRequest());
         default:
             throw runtime_error("Unexpected reviewable request type");
         }

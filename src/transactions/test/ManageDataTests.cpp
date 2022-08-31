@@ -8,6 +8,7 @@
 #include "test_helper/RemoveDataTestHelper.h"
 #include "test_helper/ManageAccountRoleTestHelper.h"
 #include "test_helper/ManageAccountRuleTestHelper.h"
+#include "test_helper/UpdateDataOwnerTestHelper.h"
 
 using namespace stellar;
 using namespace stellar::txtest;
@@ -32,12 +33,25 @@ TEST_CASE("Data", "[tx][data]")
     // set up world
     auto master = Account{getRoot(), Salt(1)};
 
+
     CreateAccountTestHelper createAccountTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleHelper(testManager);
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
     CreateDataTestHelper createDataTestHelper(testManager);
     UpdateDataTestHelper updateDataTestHelper(testManager);
     RemoveDataTestHelper removeDataTestHelper(testManager);
+    UpdateDataOwnerTestHelper updateDataOwnerTestHelper(testManager);
+
+    // a new owner
+    auto roleID = manageAccountRoleHelper.createTxSenderRole(master);
+    auto dataManager = Account{SecretKey::random(), 228};
+    auto newOwner = dataManager.key.getPublicKey();
+    auto createAccountBuilder = CreateAccountTestBuilder()
+                                        .setSource(master)
+                                        .setRoleID(roleID);
+    createAccountTestHelper.applyTx(createAccountBuilder
+                                        .setToPublicKey(newOwner)
+                                        .addBasicSigner());
 
     SECTION("master: successful creation")
     {
@@ -47,6 +61,11 @@ TEST_CASE("Data", "[tx][data]")
         SECTION("successful update") 
         {
             updateDataTestHelper.applyUpdateData(master, id, R"({"data":"new_signature"})");
+        }
+
+        SECTION("successful update owner") 
+        {
+            updateDataOwnerTestHelper.applyUpdateDataOwner(master, id, newOwner);
         }
 
         SECTION("successful delete") 
@@ -62,7 +81,7 @@ TEST_CASE("Data", "[tx][data]")
 
         AccountRuleResource dataResource(LedgerEntryType::DATA);
         dataResource.data().type = dataType;
-        auto actions = {AccountRuleAction::CREATE, AccountRuleAction::UPDATE, AccountRuleAction::REMOVE};
+        auto actions = {AccountRuleAction::CREATE, AccountRuleAction::UPDATE, AccountRuleAction::REMOVE, AccountRuleAction::TRANSFER_OWNERSHIP};
         std::vector<uint64_t> ruleIDs = {2}; // 2 - rule for send tx
         for (auto action : actions) 
         {
@@ -97,6 +116,11 @@ TEST_CASE("Data", "[tx][data]")
                 updateDataTestHelper.applyUpdateData(dataManager, id, R"({"data":"new_signature"})");
             }
 
+            SECTION("successful update owner") 
+            {
+                updateDataOwnerTestHelper.applyUpdateDataOwner(master, id, newOwner);
+            }
+
             SECTION("successful delete") 
             {
                 removeDataTestHelper.applyRemoveData(dataManager, id);
@@ -120,6 +144,13 @@ TEST_CASE("Data", "[tx][data]")
     {
         auto result = updateDataTestHelper.applyUpdateData(master, 228, R"({"not":"found"})",
                                                            UpdateDataResultCode::NOT_FOUND, 
+                                                           OperationResultCode::opNO_ENTRY);
+    }
+
+    SECTION("not found (update owner)")
+    {
+        auto result = updateDataOwnerTestHelper.applyUpdateDataOwner(master, 228, newOwner,
+                                                           UpdateDataOwnerResultCode::NOT_FOUND, 
                                                            OperationResultCode::opNO_ENTRY);
     }
 
