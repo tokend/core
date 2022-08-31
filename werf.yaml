@@ -1,0 +1,63 @@
+configVersion: 1
+project: 'core'
+---
+image: core              # Название собираемого образа.
+from: registry.gitlab.com/tokend/devops/docker-containers:core-latest               # Базовый образ.
+docker:
+  WORKDIR: /build
+git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
+- add: /                    # Исходный путь в репозитории.
+  to: /build                  # Путь назначения в образе.
+  stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
+    setup:                  # Для стадии Setup.
+    - "**/*"
+shell:                      # Shell сборочные инструкции.
+  setup:                    # Для стадии Setup.
+  - cd build
+  - export CORE_REVISION={{ env "CI_COMMIT_SHA" }}
+  - export VERSION={{ env "CI_COMMIT_SHA" }}
+  - export XDR_REVISION={{ env "CI_COMMIT_SHA" }}
+  - cmake CMakeLists.txt -DPostgreSQL_INCLUDE_DIRS=/usr/include/postgresql/ -DPostgreSQL_LIBRARIES=/usr/lib/x86_64-linux-gnu/libpq.so
+  - make -j6
+
+---
+image: corepg              # Название собираемого образа.
+from: postgres:14              # Базовый образ.
+docker:
+  ENTRYPOINT: core-entrypoint.sh
+  VOLUME: /data
+  ENV: {CONFIG: /config.ini}
+git:                        # Секция с директивами для добавления исходных файлов из git-репозитория.
+- add: /entrypoint.sh                    # Исходный путь в репозитории.
+  to: /usr/local/bin/core-entrypoint.sh                 # Путь назначения в образе.
+  stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
+    setup:                  # Для стадии Setup.
+    - "**/*"
+- add: /pg-entrypoint.sh                    # Исходный путь в репозитории.
+  to: /usr/local/bin/pg-entrypoint.sh                 # Путь назначения в образе.
+  stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
+    setup:                  # Для стадии Setup.
+    - "**/*"
+- add: /pg-entrypoint.sh                    # Исходный путь в репозитории.
+  to: /usr/local/bin/entrypoint.sh                 # Путь назначения в образе.
+  stageDependencies:        # Настройка перевыполнения сборочных инструкций при изменениях определённых файлов в репозитории.
+    setup:                  # Для стадии Setup.
+    - "**/*"
+shell:                      # Shell сборочные инструкции.
+  setup:                    # Для стадии Setup.
+  - apt-get update
+  - apt-get install -y --no-install-recommends libpq5 libssl1.1 awscli s3cmd dumb-init libcurl4 curl
+  - rm -rf /var/lib/apt/lists/* /var/log/*.log /var/log/*/*.log
+  - mkdir /data
+  - chmod +x /usr/local/bin/core-entrypoint.sh
+  - chmod +x /usr/local/bin/entrypoint.sh
+  - chmod +x /usr/local/bin/pg-entrypoint.sh
+import:
+- image: core
+  add: /build/src/core
+  to: /usr/local/bin/core
+  after: setup
+- image: core
+  add: /usr/local/bin/healthcheck
+  to: /usr/local/bin/healthcheck
+  after: setup
