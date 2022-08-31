@@ -6,6 +6,7 @@
 
 * Ability to set custom rule and action in permissions
 * Reviewable requests for create, update and remove data operations
+* Operation to update owner of the data entry and corresponding reviewable request (create/cancel operations)
 
 ## 3.6.5
 
