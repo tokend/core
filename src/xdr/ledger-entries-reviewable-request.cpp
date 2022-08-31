@@ -230,6 +230,8 @@ return u.from_bytes(dataRemoveRequest_);
 return u.from_bytes(createDeferredPaymentRequest_);
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
 return u.from_bytes(closeDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+return u.from_bytes(dataOwnerUpdateRequest_);
 }
 return false;
 }
@@ -292,6 +294,8 @@ return m.to_bytes(dataRemoveRequest_);
 return m.to_bytes(createDeferredPaymentRequest_);
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
 return m.to_bytes(closeDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+return m.to_bytes(dataOwnerUpdateRequest_);
 }
 return false;
 }
@@ -350,6 +354,8 @@ return m.count_size(dataRemoveRequest_);
 return m.count_size(createDeferredPaymentRequest_);
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
 return m.count_size(closeDeferredPaymentRequest_);
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+return m.count_size(dataOwnerUpdateRequest_);
 }
 }
 bool
@@ -411,6 +417,8 @@ return dataRemoveRequest_ == other.dataRemoveRequest_;
 return createDeferredPaymentRequest_ == other.createDeferredPaymentRequest_;
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
 return closeDeferredPaymentRequest_ == other.closeDeferredPaymentRequest_;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+return dataOwnerUpdateRequest_ == other.dataOwnerUpdateRequest_;
 }
 return false;
 }
@@ -474,6 +482,8 @@ return dataRemoveRequest_ < other.dataRemoveRequest_;
 return createDeferredPaymentRequest_ < other.createDeferredPaymentRequest_;
     case (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT:
 return closeDeferredPaymentRequest_ < other.closeDeferredPaymentRequest_;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+return dataOwnerUpdateRequest_ < other.dataOwnerUpdateRequest_;
 }
 return false;
 }

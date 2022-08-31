@@ -17,6 +17,7 @@
 #include "transactions/manage_data/CreateDataOpFrame.h"
 #include "transactions/manage_data/UpdateDataOpFrame.h"
 #include "transactions/manage_data/RemoveDataOpFrame.h"
+#include "transactions/manage_data/UpdateDataOwnerOpFrame.h"
 #include "ledger/LedgerDelta.h"
 #include "ledger/ReferenceFrame.h"
 #include "ledger/AccountHelper.h"
@@ -77,6 +78,8 @@
 #include "payment/CancelDeferredPaymentCreationRequestOpFrame.h"
 #include "payment/CreateCloseDeferredPaymentRequestOpFrame.h"
 #include "payment/CreateDeferredPaymentCreationRequestOpFrame.h"
+#include "transactions/manage_data/CreateDataOwnerUpdateRequestOpFrame.h"
+#include "transactions/manage_data/CancelDataOwnerUpdateRequestOpFrame.h"
 
 namespace stellar
 {
@@ -215,6 +218,12 @@ OperationFrame::makeHelper(Operation const& op, OperationResult& res,
             return make_shared<CreateCloseDeferredPaymentRequestOpFrame>(op, res, tx);
         case OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST:
             return make_shared<CancelCloseDeferredPaymentRequestOpFrame>(op, res, tx);
+        case OperationType::UPDATE_DATA_OWNER:
+            return make_shared<UpdateDataOwnerOpFrame>(op, res, tx);
+        case OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+            return make_shared<CreateDataOwnerUpdateRequestOpFrame>(op, res, tx);
+        case OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+            return make_shared<CancelDataOwnerUpdateRequestOpFrame>(op, res, tx);
     default:
             ostringstream err;
             err << "Unknown Tx type: " << static_cast<int32_t >(op.body.type());

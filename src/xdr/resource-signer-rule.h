@@ -1514,6 +1514,7 @@ enum class SignerRuleAction : std::int32_t {
   EXCHANGE = 20,
   UPDATE_FOR_OTHER = 21,
   CUSTOM = 22,
+  TRANSFER_OWNERSHIP = 23,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SignerRuleAction>
@@ -1567,6 +1568,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       return "UPDATE_FOR_OTHER";
     case ::stellar::SignerRuleAction::CUSTOM:
       return "CUSTOM";
+    case ::stellar::SignerRuleAction::TRANSFER_OWNERSHIP:
+      return "TRANSFER_OWNERSHIP";
     default:
       return nullptr;
     }
@@ -1594,7 +1597,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       (int32_t)::stellar::SignerRuleAction::REMOVE_FOR_OTHER,
       (int32_t)::stellar::SignerRuleAction::EXCHANGE,
       (int32_t)::stellar::SignerRuleAction::UPDATE_FOR_OTHER,
-      (int32_t)::stellar::SignerRuleAction::CUSTOM
+      (int32_t)::stellar::SignerRuleAction::CUSTOM,
+      (int32_t)::stellar::SignerRuleAction::TRANSFER_OWNERSHIP
     };
     return _xdr_enum_vec;
   }
