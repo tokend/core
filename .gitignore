@@ -85,6 +85,3 @@ Builds/VisualStudio2015/stellar-core.cfg
 src/core
 src/stellar-core.cfg
 .vscode/
-
-# Docker
-Dockerfile

@@ -121,6 +121,7 @@ PublicKey fromStr(std::string const& s, uint8_t& keyType);
 namespace HashUtils
 {
 Hash random();
+Hash fromStr(std::string const& s);
 }
 }
 

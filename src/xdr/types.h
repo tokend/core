@@ -561,6 +561,7 @@ enum class LedgerEntryType : std::int32_t {
   DATA = 39,
   CUSTOM = 40,
   DEFERRED_PAYMENT = 41,
+  LIQUIDITY_POOL = 42,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::LedgerEntryType>
@@ -648,6 +649,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       return "CUSTOM";
     case ::stellar::LedgerEntryType::DEFERRED_PAYMENT:
       return "DEFERRED_PAYMENT";
+    case ::stellar::LedgerEntryType::LIQUIDITY_POOL:
+      return "LIQUIDITY_POOL";
     default:
       return nullptr;
     }
@@ -692,7 +695,8 @@ template<> struct xdr_traits<::stellar::LedgerEntryType>
       (int32_t)::stellar::LedgerEntryType::SWAP,
       (int32_t)::stellar::LedgerEntryType::DATA,
       (int32_t)::stellar::LedgerEntryType::CUSTOM,
-      (int32_t)::stellar::LedgerEntryType::DEFERRED_PAYMENT
+      (int32_t)::stellar::LedgerEntryType::DEFERRED_PAYMENT,
+      (int32_t)::stellar::LedgerEntryType::LIQUIDITY_POOL
     };
     return _xdr_enum_vec;
   }
@@ -1036,6 +1040,9 @@ enum class OperationType : std::int32_t {
   UPDATE_DATA_OWNER = 70,
   CREATE_DATA_OWNER_UPDATE_REQUEST = 71,
   CANCEL_DATA_OWNER_UPDATE_REQUEST = 72,
+  LP_SWAP = 73,
+  LP_ADD_LIQUIDITY = 74,
+  LP_REMOVE_LIQUIDITY = 75,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::OperationType>
@@ -1177,6 +1184,12 @@ template<> struct xdr_traits<::stellar::OperationType>
       return "CREATE_DATA_OWNER_UPDATE_REQUEST";
     case ::stellar::OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
       return "CANCEL_DATA_OWNER_UPDATE_REQUEST";
+    case ::stellar::OperationType::LP_SWAP:
+      return "LP_SWAP";
+    case ::stellar::OperationType::LP_ADD_LIQUIDITY:
+      return "LP_ADD_LIQUIDITY";
+    case ::stellar::OperationType::LP_REMOVE_LIQUIDITY:
+      return "LP_REMOVE_LIQUIDITY";
     default:
       return nullptr;
     }
@@ -1248,7 +1261,10 @@ template<> struct xdr_traits<::stellar::OperationType>
       (int32_t)::stellar::OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST,
       (int32_t)::stellar::OperationType::UPDATE_DATA_OWNER,
       (int32_t)::stellar::OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST,
-      (int32_t)::stellar::OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST
+      (int32_t)::stellar::OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST,
+      (int32_t)::stellar::OperationType::LP_SWAP,
+      (int32_t)::stellar::OperationType::LP_ADD_LIQUIDITY,
+      (int32_t)::stellar::OperationType::LP_REMOVE_LIQUIDITY
     };
     return _xdr_enum_vec;
   }

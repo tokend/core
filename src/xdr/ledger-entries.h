@@ -40,6 +40,7 @@
 #include "xdr/ledger-entries-swap.h"
 #include "xdr/ledger-entries-data.h"
 #include "xdr/ledger-entries-deferred-payment.h"
+#include "xdr/ledger-entries-liquidity-pool.h"
 
 namespace stellar {
 
@@ -120,6 +121,7 @@ struct LedgerEntry  : xdr::xdr_abstract {
       SwapEntry swap_;
       DataEntry data_;
       DeferredPaymentEntry deferredPayment_;
+      LiquidityPoolEntry liquidityPool_;
     };
 
   public:
@@ -158,7 +160,8 @@ struct LedgerEntry  : xdr::xdr_abstract {
         LedgerEntryType::ACCOUNT_SPECIFIC_RULE,
         LedgerEntryType::SWAP,
         LedgerEntryType::DATA,
-        LedgerEntryType::DEFERRED_PAYMENT
+        LedgerEntryType::DEFERRED_PAYMENT,
+        LedgerEntryType::LIQUIDITY_POOL
       };
       return _xdr_disc_vec;
     }
@@ -196,6 +199,7 @@ struct LedgerEntry  : xdr::xdr_abstract {
         : which == (int32_t)LedgerEntryType::SWAP ? 31
         : which == (int32_t)LedgerEntryType::DATA ? 32
         : which == (int32_t)LedgerEntryType::DEFERRED_PAYMENT ? 33
+        : which == (int32_t)LedgerEntryType::LIQUIDITY_POOL ? 34
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -299,6 +303,9 @@ struct LedgerEntry  : xdr::xdr_abstract {
         return true;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
         _f(&_data_t::deferredPayment_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+        _f(&_data_t::liquidityPool_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -412,6 +419,9 @@ break;
         case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 new(&deferredPayment_) DeferredPaymentEntry{};
 break;
+        case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) LiquidityPoolEntry{};
+break;
 }
 
       }
@@ -520,6 +530,9 @@ break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 new(&deferredPayment_) DeferredPaymentEntry{};
 break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) LiquidityPoolEntry{};
+break;
 }
 
     }
@@ -624,6 +637,9 @@ new(&data_) DataEntry(source.data_);
 break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 new(&deferredPayment_) DeferredPaymentEntry(source.deferredPayment_);
+break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) LiquidityPoolEntry(source.liquidityPool_);
 break;
 }
 
@@ -730,6 +746,9 @@ break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 new(&deferredPayment_) DeferredPaymentEntry(std::move(source.deferredPayment_));
 break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) LiquidityPoolEntry(std::move(source.liquidityPool_));
+break;
 }
 
     }
@@ -834,6 +853,9 @@ data_.~DataEntry();
 break;
     case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 deferredPayment_.~DeferredPaymentEntry();
+break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+liquidityPool_.~LiquidityPoolEntry();
 break;
 }
 }
@@ -942,6 +964,9 @@ break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 deferredPayment_ = source.deferredPayment_;
 break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+liquidityPool_ = source.liquidityPool_;
+break;
 }
 }
 else {this->~_data_t();
@@ -1046,6 +1071,9 @@ new(&data_) DataEntry(source.data_);
 break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 new(&deferredPayment_) DeferredPaymentEntry(source.deferredPayment_);
+break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) LiquidityPoolEntry(source.liquidityPool_);
 break;
 }
 }
@@ -1155,6 +1183,9 @@ break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 deferredPayment_ = std::move(source.deferredPayment_);
 break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+liquidityPool_ = std::move(source.liquidityPool_);
+break;
 }
 }
 else {this->~_data_t();
@@ -1259,6 +1290,9 @@ new(&data_) DataEntry(std::move(source.data_));
 break;
       case (int32_t)LedgerEntryType::DEFERRED_PAYMENT:
 new(&deferredPayment_) DeferredPaymentEntry(std::move(source.deferredPayment_));
+break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) LiquidityPoolEntry(std::move(source.liquidityPool_));
 break;
 }
 }
@@ -1600,6 +1634,16 @@ break;
       if (_xdr_field_number(type_) == 33)
         return deferredPayment_;
       throw xdr::xdr_wrong_union("_data_t: deferredPayment accessed when not selected");
+    }
+    LiquidityPoolEntry &liquidityPool() {
+      if (_xdr_field_number(type_) == 34)
+        return liquidityPool_;
+      throw xdr::xdr_wrong_union("_data_t: liquidityPool accessed when not selected");
+    }
+    const LiquidityPoolEntry &liquidityPool() const {
+      if (_xdr_field_number(type_) == 34)
+        return liquidityPool_;
+      throw xdr::xdr_wrong_union("_data_t: liquidityPool accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

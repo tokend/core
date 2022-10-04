@@ -2184,6 +2184,47 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _liquidityPool_t  : xdr::xdr_abstract {
+    AssetCode firstAsset{};
+    uint64 firstAssetType{};
+    AssetCode secondAsset{};
+    uint64 secondAssetType{};
+    EmptyExt ext{};
+
+    _liquidityPool_t() = default;
+    template<typename _firstAsset_T,
+             typename _firstAssetType_T,
+             typename _secondAsset_T,
+             typename _secondAssetType_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<AssetCode, _firstAsset_T>::value
+                            && std::is_constructible<uint64, _firstAssetType_T>::value
+                            && std::is_constructible<AssetCode, _secondAsset_T>::value
+                            && std::is_constructible<uint64, _secondAssetType_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _liquidityPool_t(_firstAsset_T &&_firstAsset,
+                              _firstAssetType_T &&_firstAssetType,
+                              _secondAsset_T &&_secondAsset,
+                              _secondAssetType_T &&_secondAssetType,
+                              _ext_T &&_ext)
+      : firstAsset(std::forward<_firstAsset_T>(_firstAsset)),
+        firstAssetType(std::forward<_firstAssetType_T>(_firstAssetType)),
+        secondAsset(std::forward<_secondAsset_T>(_secondAsset)),
+        secondAssetType(std::forward<_secondAssetType_T>(_secondAssetType)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
 
   using _xdr_case_type = xdr::xdr_traits<LedgerEntryType>::case_type;
 private:
@@ -2202,6 +2243,7 @@ private:
     _swap_t swap_;
     _data_t data_;
     CustomRuleResource custom_;
+    _liquidityPool_t liquidityPool_;
     EmptyExt ext_;
   };
 
@@ -2226,7 +2268,8 @@ public:
       : which == (int32_t)LedgerEntryType::SWAP ? 11
       : which == (int32_t)LedgerEntryType::DATA ? 12
       : which == (int32_t)LedgerEntryType::CUSTOM ? 13
-      : 14;
+      : which == (int32_t)LedgerEntryType::LIQUIDITY_POOL ? 14
+      : 15;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -2271,6 +2314,9 @@ public:
       return true;
     case (int32_t)LedgerEntryType::CUSTOM:
       _f(&AccountRuleResource::custom_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+      _f(&AccountRuleResource::liquidityPool_, std::forward<_A>(_a)...);
       return true;
     default:
       _f(&AccountRuleResource::ext_, std::forward<_A>(_a)...);
@@ -2328,6 +2374,9 @@ break;
       case (int32_t)LedgerEntryType::CUSTOM:
 new(&custom_) CustomRuleResource{};
 break;
+      case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) _liquidityPool_t{};
+break;
       default:
 new(&ext_) EmptyExt{};
 break;
@@ -2381,6 +2430,9 @@ break;
     case (int32_t)LedgerEntryType::CUSTOM:
 new(&custom_) CustomRuleResource{};
 break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) _liquidityPool_t{};
+break;
     default:
 new(&ext_) EmptyExt{};
 break;
@@ -2430,6 +2482,9 @@ new(&data_) _data_t(source.data_);
 break;
     case (int32_t)LedgerEntryType::CUSTOM:
 new(&custom_) CustomRuleResource(source.custom_);
+break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) _liquidityPool_t(source.liquidityPool_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -2481,6 +2536,9 @@ break;
     case (int32_t)LedgerEntryType::CUSTOM:
 new(&custom_) CustomRuleResource(std::move(source.custom_));
 break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) _liquidityPool_t(std::move(source.liquidityPool_));
+break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
 break;
@@ -2530,6 +2588,9 @@ data_.~_data_t();
 break;
   case (int32_t)LedgerEntryType::CUSTOM:
 custom_.~CustomRuleResource();
+break;
+  case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+liquidityPool_.~_liquidityPool_t();
 break;
   default:
 ext_.~EmptyExt();
@@ -2583,6 +2644,9 @@ break;
     case (int32_t)LedgerEntryType::CUSTOM:
 custom_ = source.custom_;
 break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+liquidityPool_ = source.liquidityPool_;
+break;
     default:
 ext_ = source.ext_;
 break;
@@ -2632,6 +2696,9 @@ new(&data_) _data_t(source.data_);
 break;
     case (int32_t)LedgerEntryType::CUSTOM:
 new(&custom_) CustomRuleResource(source.custom_);
+break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) _liquidityPool_t(source.liquidityPool_);
 break;
     default:
 new(&ext_) EmptyExt(source.ext_);
@@ -2686,6 +2753,9 @@ break;
     case (int32_t)LedgerEntryType::CUSTOM:
 custom_ = std::move(source.custom_);
 break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+liquidityPool_ = std::move(source.liquidityPool_);
+break;
     default:
 ext_ = std::move(source.ext_);
 break;
@@ -2735,6 +2805,9 @@ new(&data_) _data_t(std::move(source.data_));
 break;
     case (int32_t)LedgerEntryType::CUSTOM:
 new(&custom_) CustomRuleResource(std::move(source.custom_));
+break;
+    case (int32_t)LedgerEntryType::LIQUIDITY_POOL:
+new(&liquidityPool_) _liquidityPool_t(std::move(source.liquidityPool_));
 break;
     default:
 new(&ext_) EmptyExt(std::move(source.ext_));
@@ -2880,13 +2953,23 @@ break;
       return custom_;
     throw xdr::xdr_wrong_union("AccountRuleResource: custom accessed when not selected");
   }
-  EmptyExt &ext() {
+  _liquidityPool_t &liquidityPool() {
     if (_xdr_field_number(type_) == 14)
+      return liquidityPool_;
+    throw xdr::xdr_wrong_union("AccountRuleResource: liquidityPool accessed when not selected");
+  }
+  const _liquidityPool_t &liquidityPool() const {
+    if (_xdr_field_number(type_) == 14)
+      return liquidityPool_;
+    throw xdr::xdr_wrong_union("AccountRuleResource: liquidityPool accessed when not selected");
+  }
+  EmptyExt &ext() {
+    if (_xdr_field_number(type_) == 15)
       return ext_;
     throw xdr::xdr_wrong_union("AccountRuleResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(type_) == 14)
+    if (_xdr_field_number(type_) == 15)
       return ext_;
     throw xdr::xdr_wrong_union("AccountRuleResource: ext accessed when not selected");
   }bool
@@ -2930,6 +3013,9 @@ enum class AccountRuleAction : std::int32_t {
   UPDATE_FOR_OTHER = 24,
   CUSTOM = 25,
   TRANSFER_OWNERSHIP = 26,
+  LP_ADD_LIQUIDITY = 27,
+  LP_REMOVE_LIQUIDITY = 28,
+  LP_SWAP = 29,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::AccountRuleAction>
@@ -2991,6 +3077,12 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       return "CUSTOM";
     case ::stellar::AccountRuleAction::TRANSFER_OWNERSHIP:
       return "TRANSFER_OWNERSHIP";
+    case ::stellar::AccountRuleAction::LP_ADD_LIQUIDITY:
+      return "LP_ADD_LIQUIDITY";
+    case ::stellar::AccountRuleAction::LP_REMOVE_LIQUIDITY:
+      return "LP_REMOVE_LIQUIDITY";
+    case ::stellar::AccountRuleAction::LP_SWAP:
+      return "LP_SWAP";
     default:
       return nullptr;
     }
@@ -3022,7 +3114,10 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       (int32_t)::stellar::AccountRuleAction::UPDATE,
       (int32_t)::stellar::AccountRuleAction::UPDATE_FOR_OTHER,
       (int32_t)::stellar::AccountRuleAction::CUSTOM,
-      (int32_t)::stellar::AccountRuleAction::TRANSFER_OWNERSHIP
+      (int32_t)::stellar::AccountRuleAction::TRANSFER_OWNERSHIP,
+      (int32_t)::stellar::AccountRuleAction::LP_ADD_LIQUIDITY,
+      (int32_t)::stellar::AccountRuleAction::LP_REMOVE_LIQUIDITY,
+      (int32_t)::stellar::AccountRuleAction::LP_SWAP
     };
     return _xdr_enum_vec;
   }

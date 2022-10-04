@@ -47,7 +47,7 @@ Build and Publish:
     - tokend
   services:
       - docker:18-dind
-  image: 
+  image:
     name: "registry.gitlab.com/tokend/devops/werf-dind:8588e38f423bc5cc35c68e57e0c0dd57eb920e5d"
     entrypoint: [""]
   <<: *before_script_templ
@@ -68,7 +68,7 @@ Build and Publish DH:
     - tokend
   services:
       - docker:18-dind
-  image: 
+  image:
     name: "registry.gitlab.com/tokend/devops/werf-dind:8588e38f423bc5cc35c68e57e0c0dd57eb920e5d"
     entrypoint: [""]
   only:
@@ -123,7 +123,7 @@ Cleanup:
     - tokend
   services:
       - docker:18-dind
-  image: 
+  image:
     name: "registry.gitlab.com/tokend/devops/werf-dind:8588e38f423bc5cc35c68e57e0c0dd57eb920e5d"
     entrypoint: [""]
   <<: *before_script_templ
