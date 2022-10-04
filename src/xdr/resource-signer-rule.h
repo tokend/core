@@ -1597,9 +1597,10 @@ enum class SignerRuleAction : std::int32_t {
   EXCHANGE = 20,
   UPDATE_FOR_OTHER = 21,
   CUSTOM = 22,
-  LP_ADD_LIQUIDITY = 23,
-  LP_REMOVE_LIQUIDITY = 24,
-  LP_SWAP = 25,
+  TRANSFER_OWNERSHIP = 23,
+  LP_ADD_LIQUIDITY = 24,
+  LP_REMOVE_LIQUIDITY = 25,
+  LP_SWAP = 26,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::SignerRuleAction>
@@ -1653,6 +1654,8 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       return "UPDATE_FOR_OTHER";
     case ::stellar::SignerRuleAction::CUSTOM:
       return "CUSTOM";
+    case ::stellar::SignerRuleAction::TRANSFER_OWNERSHIP:
+      return "TRANSFER_OWNERSHIP";
     case ::stellar::SignerRuleAction::LP_ADD_LIQUIDITY:
       return "LP_ADD_LIQUIDITY";
     case ::stellar::SignerRuleAction::LP_REMOVE_LIQUIDITY:
@@ -1687,6 +1690,7 @@ template<> struct xdr_traits<::stellar::SignerRuleAction>
       (int32_t)::stellar::SignerRuleAction::EXCHANGE,
       (int32_t)::stellar::SignerRuleAction::UPDATE_FOR_OTHER,
       (int32_t)::stellar::SignerRuleAction::CUSTOM,
+      (int32_t)::stellar::SignerRuleAction::TRANSFER_OWNERSHIP,
       (int32_t)::stellar::SignerRuleAction::LP_ADD_LIQUIDITY,
       (int32_t)::stellar::SignerRuleAction::LP_REMOVE_LIQUIDITY,
       (int32_t)::stellar::SignerRuleAction::LP_SWAP

@@ -715,6 +715,32 @@ void
 count_size(xdr::measurer& m) const override;
 
   };
+  struct _dataOwnerUpdate_t  : xdr::xdr_abstract {
+    uint64 type{};
+    EmptyExt ext{};
+
+    _dataOwnerUpdate_t() = default;
+    template<typename _type_T,
+             typename _ext_T,
+             typename = typename
+             std::enable_if<std::is_constructible<uint64, _type_T>::value
+                            && std::is_constructible<EmptyExt, _ext_T>::value
+                           >::type>
+    explicit _dataOwnerUpdate_t(_type_T &&_type,
+                                _ext_T &&_ext)
+      : type(std::forward<_type_T>(_type)),
+        ext(std::forward<_ext_T>(_ext)) {}
+    bool
+operator==(xdr::xdr_abstract const& other) const override;bool
+operator<(xdr::xdr_abstract const& other) const override;private:
+    bool
+from_bytes(xdr::unmarshaler& u) override;
+bool
+to_bytes(xdr::marshaler& m) const override;
+void
+count_size(xdr::measurer& m) const override;
+
+  };
   struct _dataRemove_t  : xdr::xdr_abstract {
     uint64 type{};
     EmptyExt ext{};
@@ -819,6 +845,7 @@ private:
     _performRedemption_t performRedemption_;
     _dataCreation_t dataCreation_;
     _dataUpdate_t dataUpdate_;
+    _dataOwnerUpdate_t dataOwnerUpdate_;
     _dataRemove_t dataRemove_;
     _createDeferredPayment_t createDeferredPayment_;
     _closeDeferredPayment_t closeDeferredPayment_;
@@ -843,10 +870,11 @@ public:
       : which == (int32_t)ReviewableRequestType::PERFORM_REDEMPTION ? 9
       : which == (int32_t)ReviewableRequestType::DATA_CREATION ? 10
       : which == (int32_t)ReviewableRequestType::DATA_UPDATE ? 11
-      : which == (int32_t)ReviewableRequestType::DATA_REMOVE ? 12
-      : which == (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT ? 13
-      : which == (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT ? 14
-      : 15;
+      : which == (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE ? 12
+      : which == (int32_t)ReviewableRequestType::DATA_REMOVE ? 13
+      : which == (int32_t)ReviewableRequestType::CREATE_DEFERRED_PAYMENT ? 14
+      : which == (int32_t)ReviewableRequestType::CLOSE_DEFERRED_PAYMENT ? 15
+      : 16;
   }
   template<typename _F, typename..._A> static bool
   _xdr_with_mem_ptr(_F &_f, _xdr_case_type _which, _A&&..._a) {
@@ -883,6 +911,9 @@ public:
       return true;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
       _f(&ReviewableRequestResource::dataUpdate_, std::forward<_A>(_a)...);
+      return true;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+      _f(&ReviewableRequestResource::dataOwnerUpdate_, std::forward<_A>(_a)...);
       return true;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
       _f(&ReviewableRequestResource::dataRemove_, std::forward<_A>(_a)...);
@@ -941,6 +972,9 @@ break;
       case (int32_t)ReviewableRequestType::DATA_UPDATE:
 new(&dataUpdate_) _dataUpdate_t{};
 break;
+      case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+new(&dataOwnerUpdate_) _dataOwnerUpdate_t{};
+break;
       case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t{};
 break;
@@ -995,6 +1029,9 @@ break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 new(&dataUpdate_) _dataUpdate_t{};
 break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+new(&dataOwnerUpdate_) _dataOwnerUpdate_t{};
+break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t{};
 break;
@@ -1045,6 +1082,9 @@ new(&dataCreation_) _dataCreation_t(source.dataCreation_);
 break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 new(&dataUpdate_) _dataUpdate_t(source.dataUpdate_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+new(&dataOwnerUpdate_) _dataOwnerUpdate_t(source.dataOwnerUpdate_);
 break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(source.dataRemove_);
@@ -1097,6 +1137,9 @@ break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 new(&dataUpdate_) _dataUpdate_t(std::move(source.dataUpdate_));
 break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+new(&dataOwnerUpdate_) _dataOwnerUpdate_t(std::move(source.dataOwnerUpdate_));
+break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(std::move(source.dataRemove_));
 break;
@@ -1147,6 +1190,9 @@ dataCreation_.~_dataCreation_t();
 break;
   case (int32_t)ReviewableRequestType::DATA_UPDATE:
 dataUpdate_.~_dataUpdate_t();
+break;
+  case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+dataOwnerUpdate_.~_dataOwnerUpdate_t();
 break;
   case (int32_t)ReviewableRequestType::DATA_REMOVE:
 dataRemove_.~_dataRemove_t();
@@ -1201,6 +1247,9 @@ break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 dataUpdate_ = source.dataUpdate_;
 break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+dataOwnerUpdate_ = source.dataOwnerUpdate_;
+break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 dataRemove_ = source.dataRemove_;
 break;
@@ -1251,6 +1300,9 @@ new(&dataCreation_) _dataCreation_t(source.dataCreation_);
 break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 new(&dataUpdate_) _dataUpdate_t(source.dataUpdate_);
+break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+new(&dataOwnerUpdate_) _dataOwnerUpdate_t(source.dataOwnerUpdate_);
 break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(source.dataRemove_);
@@ -1306,6 +1358,9 @@ break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 dataUpdate_ = std::move(source.dataUpdate_);
 break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+dataOwnerUpdate_ = std::move(source.dataOwnerUpdate_);
+break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 dataRemove_ = std::move(source.dataRemove_);
 break;
@@ -1356,6 +1411,9 @@ new(&dataCreation_) _dataCreation_t(std::move(source.dataCreation_));
 break;
     case (int32_t)ReviewableRequestType::DATA_UPDATE:
 new(&dataUpdate_) _dataUpdate_t(std::move(source.dataUpdate_));
+break;
+    case (int32_t)ReviewableRequestType::DATA_OWNER_UPDATE:
+new(&dataOwnerUpdate_) _dataOwnerUpdate_t(std::move(source.dataOwnerUpdate_));
 break;
     case (int32_t)ReviewableRequestType::DATA_REMOVE:
 new(&dataRemove_) _dataRemove_t(std::move(source.dataRemove_));
@@ -1490,43 +1548,53 @@ break;
       return dataUpdate_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: dataUpdate accessed when not selected");
   }
-  _dataRemove_t &dataRemove() {
+  _dataOwnerUpdate_t &dataOwnerUpdate() {
     if (_xdr_field_number(requestType_) == 12)
+      return dataOwnerUpdate_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataOwnerUpdate accessed when not selected");
+  }
+  const _dataOwnerUpdate_t &dataOwnerUpdate() const {
+    if (_xdr_field_number(requestType_) == 12)
+      return dataOwnerUpdate_;
+    throw xdr::xdr_wrong_union("ReviewableRequestResource: dataOwnerUpdate accessed when not selected");
+  }
+  _dataRemove_t &dataRemove() {
+    if (_xdr_field_number(requestType_) == 13)
       return dataRemove_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: dataRemove accessed when not selected");
   }
   const _dataRemove_t &dataRemove() const {
-    if (_xdr_field_number(requestType_) == 12)
+    if (_xdr_field_number(requestType_) == 13)
       return dataRemove_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: dataRemove accessed when not selected");
   }
   _createDeferredPayment_t &createDeferredPayment() {
-    if (_xdr_field_number(requestType_) == 13)
+    if (_xdr_field_number(requestType_) == 14)
       return createDeferredPayment_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: createDeferredPayment accessed when not selected");
   }
   const _createDeferredPayment_t &createDeferredPayment() const {
-    if (_xdr_field_number(requestType_) == 13)
+    if (_xdr_field_number(requestType_) == 14)
       return createDeferredPayment_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: createDeferredPayment accessed when not selected");
   }
   _closeDeferredPayment_t &closeDeferredPayment() {
-    if (_xdr_field_number(requestType_) == 14)
+    if (_xdr_field_number(requestType_) == 15)
       return closeDeferredPayment_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: closeDeferredPayment accessed when not selected");
   }
   const _closeDeferredPayment_t &closeDeferredPayment() const {
-    if (_xdr_field_number(requestType_) == 14)
+    if (_xdr_field_number(requestType_) == 15)
       return closeDeferredPayment_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: closeDeferredPayment accessed when not selected");
   }
   EmptyExt &ext() {
-    if (_xdr_field_number(requestType_) == 15)
+    if (_xdr_field_number(requestType_) == 16)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }
   const EmptyExt &ext() const {
-    if (_xdr_field_number(requestType_) == 15)
+    if (_xdr_field_number(requestType_) == 16)
       return ext_;
     throw xdr::xdr_wrong_union("ReviewableRequestResource: ext accessed when not selected");
   }bool
@@ -2944,9 +3012,10 @@ enum class AccountRuleAction : std::int32_t {
   UPDATE = 23,
   UPDATE_FOR_OTHER = 24,
   CUSTOM = 25,
-  LP_ADD_LIQUIDITY = 26,
-  LP_REMOVE_LIQUIDITY = 27,
-  LP_SWAP = 28,
+  TRANSFER_OWNERSHIP = 26,
+  LP_ADD_LIQUIDITY = 27,
+  LP_REMOVE_LIQUIDITY = 28,
+  LP_SWAP = 29,
 };
 } namespace xdr {
 template<> struct xdr_traits<::stellar::AccountRuleAction>
@@ -3006,6 +3075,8 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       return "UPDATE_FOR_OTHER";
     case ::stellar::AccountRuleAction::CUSTOM:
       return "CUSTOM";
+    case ::stellar::AccountRuleAction::TRANSFER_OWNERSHIP:
+      return "TRANSFER_OWNERSHIP";
     case ::stellar::AccountRuleAction::LP_ADD_LIQUIDITY:
       return "LP_ADD_LIQUIDITY";
     case ::stellar::AccountRuleAction::LP_REMOVE_LIQUIDITY:
@@ -3043,6 +3114,7 @@ template<> struct xdr_traits<::stellar::AccountRuleAction>
       (int32_t)::stellar::AccountRuleAction::UPDATE,
       (int32_t)::stellar::AccountRuleAction::UPDATE_FOR_OTHER,
       (int32_t)::stellar::AccountRuleAction::CUSTOM,
+      (int32_t)::stellar::AccountRuleAction::TRANSFER_OWNERSHIP,
       (int32_t)::stellar::AccountRuleAction::LP_ADD_LIQUIDITY,
       (int32_t)::stellar::AccountRuleAction::LP_REMOVE_LIQUIDITY,
       (int32_t)::stellar::AccountRuleAction::LP_SWAP

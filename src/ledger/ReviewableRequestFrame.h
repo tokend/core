@@ -47,6 +47,7 @@ class ReviewableRequestFrame : public EntryFrame
 	static void ensureRemoveDataValid(DataRemoveRequest const &request);
         static void ensureCreateDeferredPaymentValid(CreateDeferredPaymentRequest const &request);
         static void ensureCloseDeferredPaymentValid(CloseDeferredPaymentRequest const &request);
+	static void ensureUpdateDataOwnerValid(DataOwnerUpdateRequest const &request);
 
   public:
     typedef std::shared_ptr<ReviewableRequestFrame> pointer;

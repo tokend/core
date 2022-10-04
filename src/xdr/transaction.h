@@ -60,6 +60,7 @@
 #include "xdr/operation-close-swap.h"
 #include "xdr/operation-create-data.h"
 #include "xdr/operation-update-data.h"
+#include "xdr/operation-update-data-owner.h"
 #include "xdr/operation-remove-data.h"
 #include "xdr/operation-create-data-creation-request.h"
 #include "xdr/operation-cancel-data-creation-request.h"
@@ -74,6 +75,8 @@
 #include "xdr/operation-lp-swap.h"
 #include "xdr/operation-lp-add-liquidity.h"
 #include "xdr/operation-lp-remove-liquidity.h"
+#include "xdr/operation-create-data-owner-update-request.h"
+#include "xdr/operation-cancel-data-owner-update-request.h"
 
 namespace stellar {
 
@@ -149,6 +152,9 @@ struct Operation  : xdr::xdr_abstract {
       LPSwapOp lpSwapOp_;
       LPAddLiquidityOp lpAddLiquidityOp_;
       LPRemoveLiquidityOp lpRemoveLiquidityOp_;
+      UpdateDataOwnerOp updateDataOwnerOp_;
+      CreateDataOwnerUpdateRequestOp createDataOwnerUpdateRequestOp_;
+      CancelDataOwnerUpdateRequestOp cancelDataOwnerUpdateRequestOp_;
     };
 
   public:
@@ -220,7 +226,10 @@ struct Operation  : xdr::xdr_abstract {
         OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST,
         OperationType::LP_SWAP,
         OperationType::LP_ADD_LIQUIDITY,
-        OperationType::LP_REMOVE_LIQUIDITY
+        OperationType::LP_REMOVE_LIQUIDITY,
+        OperationType::UPDATE_DATA_OWNER,
+        OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST,
+        OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -291,6 +300,9 @@ struct Operation  : xdr::xdr_abstract {
         : which == (int32_t)OperationType::LP_SWAP ? 64
         : which == (int32_t)OperationType::LP_ADD_LIQUIDITY ? 65
         : which == (int32_t)OperationType::LP_REMOVE_LIQUIDITY ? 66
+        : which == (int32_t)OperationType::UPDATE_DATA_OWNER ? 67
+        : which == (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST ? 68
+        : which == (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST ? 69
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -493,6 +505,15 @@ struct Operation  : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
         _f(&_body_t::lpRemoveLiquidityOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+        _f(&_body_t::updateDataOwnerOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+        _f(&_body_t::createDataOwnerUpdateRequestOp_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+        _f(&_body_t::cancelDataOwnerUpdateRequestOp_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -705,6 +726,15 @@ break;
         case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp{};
 break;
+        case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerOp_) UpdateDataOwnerOp{};
+break;
+        case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestOp_) CreateDataOwnerUpdateRequestOp{};
+break;
+        case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestOp_) CancelDataOwnerUpdateRequestOp{};
+break;
 }
 
       }
@@ -912,6 +942,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp{};
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerOp_) UpdateDataOwnerOp{};
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestOp_) CreateDataOwnerUpdateRequestOp{};
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestOp_) CancelDataOwnerUpdateRequestOp{};
+break;
 }
 
     }
@@ -1115,6 +1154,15 @@ new(&lpAddLiquidityOp_) LPAddLiquidityOp(source.lpAddLiquidityOp_);
 break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(source.lpRemoveLiquidityOp_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerOp_) UpdateDataOwnerOp(source.updateDataOwnerOp_);
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestOp_) CreateDataOwnerUpdateRequestOp(source.createDataOwnerUpdateRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestOp_) CancelDataOwnerUpdateRequestOp(source.cancelDataOwnerUpdateRequestOp_);
 break;
 }
 
@@ -1320,6 +1368,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(std::move(source.lpRemoveLiquidityOp_));
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerOp_) UpdateDataOwnerOp(std::move(source.updateDataOwnerOp_));
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestOp_) CreateDataOwnerUpdateRequestOp(std::move(source.createDataOwnerUpdateRequestOp_));
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestOp_) CancelDataOwnerUpdateRequestOp(std::move(source.cancelDataOwnerUpdateRequestOp_));
+break;
 }
 
     }
@@ -1523,6 +1580,15 @@ lpAddLiquidityOp_.~LPAddLiquidityOp();
 break;
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 lpRemoveLiquidityOp_.~LPRemoveLiquidityOp();
+break;
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+updateDataOwnerOp_.~UpdateDataOwnerOp();
+break;
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+createDataOwnerUpdateRequestOp_.~CreateDataOwnerUpdateRequestOp();
+break;
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+cancelDataOwnerUpdateRequestOp_.~CancelDataOwnerUpdateRequestOp();
 break;
 }
 }
@@ -1730,6 +1796,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 lpRemoveLiquidityOp_ = source.lpRemoveLiquidityOp_;
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+updateDataOwnerOp_ = source.updateDataOwnerOp_;
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+createDataOwnerUpdateRequestOp_ = source.createDataOwnerUpdateRequestOp_;
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+cancelDataOwnerUpdateRequestOp_ = source.cancelDataOwnerUpdateRequestOp_;
+break;
 }
 }
 else {this->~_body_t();
@@ -1933,6 +2008,15 @@ new(&lpAddLiquidityOp_) LPAddLiquidityOp(source.lpAddLiquidityOp_);
 break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(source.lpRemoveLiquidityOp_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerOp_) UpdateDataOwnerOp(source.updateDataOwnerOp_);
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestOp_) CreateDataOwnerUpdateRequestOp(source.createDataOwnerUpdateRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestOp_) CancelDataOwnerUpdateRequestOp(source.cancelDataOwnerUpdateRequestOp_);
 break;
 }
 }
@@ -2141,6 +2225,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 lpRemoveLiquidityOp_ = std::move(source.lpRemoveLiquidityOp_);
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+updateDataOwnerOp_ = std::move(source.updateDataOwnerOp_);
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+createDataOwnerUpdateRequestOp_ = std::move(source.createDataOwnerUpdateRequestOp_);
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+cancelDataOwnerUpdateRequestOp_ = std::move(source.cancelDataOwnerUpdateRequestOp_);
+break;
 }
 }
 else {this->~_body_t();
@@ -2344,6 +2437,15 @@ new(&lpAddLiquidityOp_) LPAddLiquidityOp(std::move(source.lpAddLiquidityOp_));
 break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityOp_) LPRemoveLiquidityOp(std::move(source.lpRemoveLiquidityOp_));
+break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerOp_) UpdateDataOwnerOp(std::move(source.updateDataOwnerOp_));
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestOp_) CreateDataOwnerUpdateRequestOp(std::move(source.createDataOwnerUpdateRequestOp_));
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestOp_) CancelDataOwnerUpdateRequestOp(std::move(source.cancelDataOwnerUpdateRequestOp_));
 break;
 }
 }
@@ -3015,6 +3117,36 @@ break;
       if (_xdr_field_number(type_) == 66)
         return lpRemoveLiquidityOp_;
       throw xdr::xdr_wrong_union("_body_t: lpRemoveLiquidityOp accessed when not selected");
+    }
+    UpdateDataOwnerOp &updateDataOwnerOp() {
+      if (_xdr_field_number(type_) == 67)
+        return updateDataOwnerOp_;
+      throw xdr::xdr_wrong_union("_body_t: updateDataOwnerOp accessed when not selected");
+    }
+    const UpdateDataOwnerOp &updateDataOwnerOp() const {
+      if (_xdr_field_number(type_) == 67)
+        return updateDataOwnerOp_;
+      throw xdr::xdr_wrong_union("_body_t: updateDataOwnerOp accessed when not selected");
+    }
+    CreateDataOwnerUpdateRequestOp &createDataOwnerUpdateRequestOp() {
+      if (_xdr_field_number(type_) == 68)
+        return createDataOwnerUpdateRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createDataOwnerUpdateRequestOp accessed when not selected");
+    }
+    const CreateDataOwnerUpdateRequestOp &createDataOwnerUpdateRequestOp() const {
+      if (_xdr_field_number(type_) == 68)
+        return createDataOwnerUpdateRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: createDataOwnerUpdateRequestOp accessed when not selected");
+    }
+    CancelDataOwnerUpdateRequestOp &cancelDataOwnerUpdateRequestOp() {
+      if (_xdr_field_number(type_) == 69)
+        return cancelDataOwnerUpdateRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: cancelDataOwnerUpdateRequestOp accessed when not selected");
+    }
+    const CancelDataOwnerUpdateRequestOp &cancelDataOwnerUpdateRequestOp() const {
+      if (_xdr_field_number(type_) == 69)
+        return cancelDataOwnerUpdateRequestOp_;
+      throw xdr::xdr_wrong_union("_body_t: cancelDataOwnerUpdateRequestOp accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool
@@ -3827,6 +3959,9 @@ struct OperationResult : xdr::xdr_abstract {
       LPSwapResult lpSwapResult_;
       LPAddLiquidityResult lpAddLiquidityResult_;
       LPRemoveLiquidityResult lpRemoveLiquidityResult_;
+      UpdateDataOwnerResult updateDataOwnerResult_;
+      CreateDataOwnerUpdateRequestResult createDataOwnerUpdateRequestResult_;
+      CancelDataOwnerUpdateRequestResult cancelDataOwnerUpdateRequestResult_;
     };
 
   public:
@@ -3898,7 +4033,10 @@ struct OperationResult : xdr::xdr_abstract {
         OperationType::CANCEL_CLOSE_DEFERRED_PAYMENT_REQUEST,
         OperationType::LP_SWAP,
         OperationType::LP_ADD_LIQUIDITY,
-        OperationType::LP_REMOVE_LIQUIDITY
+        OperationType::LP_REMOVE_LIQUIDITY,
+        OperationType::UPDATE_DATA_OWNER,
+        OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST,
+        OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST
       };
       return _xdr_disc_vec;
     }
@@ -3969,6 +4107,9 @@ struct OperationResult : xdr::xdr_abstract {
         : which == (int32_t)OperationType::LP_SWAP ? 64
         : which == (int32_t)OperationType::LP_ADD_LIQUIDITY ? 65
         : which == (int32_t)OperationType::LP_REMOVE_LIQUIDITY ? 66
+        : which == (int32_t)OperationType::UPDATE_DATA_OWNER ? 67
+        : which == (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST ? 68
+        : which == (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST ? 69
         : -1;
     }
     template<typename _F, typename..._A> static bool
@@ -4171,6 +4312,15 @@ struct OperationResult : xdr::xdr_abstract {
         return true;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
         _f(&_tr_t::lpRemoveLiquidityResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+        _f(&_tr_t::updateDataOwnerResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+        _f(&_tr_t::createDataOwnerUpdateRequestResult_, std::forward<_A>(_a)...);
+        return true;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+        _f(&_tr_t::cancelDataOwnerUpdateRequestResult_, std::forward<_A>(_a)...);
         return true;
       }
       return false;
@@ -4383,6 +4533,15 @@ break;
         case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult{};
 break;
+        case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerResult_) UpdateDataOwnerResult{};
+break;
+        case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestResult_) CreateDataOwnerUpdateRequestResult{};
+break;
+        case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestResult_) CancelDataOwnerUpdateRequestResult{};
+break;
 }
 
       }
@@ -4590,6 +4749,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult{};
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerResult_) UpdateDataOwnerResult{};
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestResult_) CreateDataOwnerUpdateRequestResult{};
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestResult_) CancelDataOwnerUpdateRequestResult{};
+break;
 }
 
     }
@@ -4793,6 +4961,15 @@ new(&lpAddLiquidityResult_) LPAddLiquidityResult(source.lpAddLiquidityResult_);
 break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(source.lpRemoveLiquidityResult_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerResult_) UpdateDataOwnerResult(source.updateDataOwnerResult_);
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestResult_) CreateDataOwnerUpdateRequestResult(source.createDataOwnerUpdateRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestResult_) CancelDataOwnerUpdateRequestResult(source.cancelDataOwnerUpdateRequestResult_);
 break;
 }
 
@@ -4998,6 +5175,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(std::move(source.lpRemoveLiquidityResult_));
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerResult_) UpdateDataOwnerResult(std::move(source.updateDataOwnerResult_));
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestResult_) CreateDataOwnerUpdateRequestResult(std::move(source.createDataOwnerUpdateRequestResult_));
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestResult_) CancelDataOwnerUpdateRequestResult(std::move(source.cancelDataOwnerUpdateRequestResult_));
+break;
 }
 
     }
@@ -5201,6 +5387,15 @@ lpAddLiquidityResult_.~LPAddLiquidityResult();
 break;
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 lpRemoveLiquidityResult_.~LPRemoveLiquidityResult();
+break;
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+updateDataOwnerResult_.~UpdateDataOwnerResult();
+break;
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+createDataOwnerUpdateRequestResult_.~CreateDataOwnerUpdateRequestResult();
+break;
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+cancelDataOwnerUpdateRequestResult_.~CancelDataOwnerUpdateRequestResult();
 break;
 }
 }
@@ -5408,6 +5603,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 lpRemoveLiquidityResult_ = source.lpRemoveLiquidityResult_;
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+updateDataOwnerResult_ = source.updateDataOwnerResult_;
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+createDataOwnerUpdateRequestResult_ = source.createDataOwnerUpdateRequestResult_;
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+cancelDataOwnerUpdateRequestResult_ = source.cancelDataOwnerUpdateRequestResult_;
+break;
 }
 }
 else {this->~_tr_t();
@@ -5611,6 +5815,15 @@ new(&lpAddLiquidityResult_) LPAddLiquidityResult(source.lpAddLiquidityResult_);
 break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(source.lpRemoveLiquidityResult_);
+break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerResult_) UpdateDataOwnerResult(source.updateDataOwnerResult_);
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestResult_) CreateDataOwnerUpdateRequestResult(source.createDataOwnerUpdateRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestResult_) CancelDataOwnerUpdateRequestResult(source.cancelDataOwnerUpdateRequestResult_);
 break;
 }
 }
@@ -5819,6 +6032,15 @@ break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 lpRemoveLiquidityResult_ = std::move(source.lpRemoveLiquidityResult_);
 break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+updateDataOwnerResult_ = std::move(source.updateDataOwnerResult_);
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+createDataOwnerUpdateRequestResult_ = std::move(source.createDataOwnerUpdateRequestResult_);
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+cancelDataOwnerUpdateRequestResult_ = std::move(source.cancelDataOwnerUpdateRequestResult_);
+break;
 }
 }
 else {this->~_tr_t();
@@ -6022,6 +6244,15 @@ new(&lpAddLiquidityResult_) LPAddLiquidityResult(std::move(source.lpAddLiquidity
 break;
       case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 new(&lpRemoveLiquidityResult_) LPRemoveLiquidityResult(std::move(source.lpRemoveLiquidityResult_));
+break;
+      case (int32_t)OperationType::UPDATE_DATA_OWNER:
+new(&updateDataOwnerResult_) UpdateDataOwnerResult(std::move(source.updateDataOwnerResult_));
+break;
+      case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+new(&createDataOwnerUpdateRequestResult_) CreateDataOwnerUpdateRequestResult(std::move(source.createDataOwnerUpdateRequestResult_));
+break;
+      case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+new(&cancelDataOwnerUpdateRequestResult_) CancelDataOwnerUpdateRequestResult(std::move(source.cancelDataOwnerUpdateRequestResult_));
 break;
 }
 }
@@ -6693,6 +6924,36 @@ break;
       if (_xdr_field_number(type_) == 66)
         return lpRemoveLiquidityResult_;
       throw xdr::xdr_wrong_union("_tr_t: lpRemoveLiquidityResult accessed when not selected");
+    }
+    UpdateDataOwnerResult &updateDataOwnerResult() {
+      if (_xdr_field_number(type_) == 67)
+        return updateDataOwnerResult_;
+      throw xdr::xdr_wrong_union("_tr_t: updateDataOwnerResult accessed when not selected");
+    }
+    const UpdateDataOwnerResult &updateDataOwnerResult() const {
+      if (_xdr_field_number(type_) == 67)
+        return updateDataOwnerResult_;
+      throw xdr::xdr_wrong_union("_tr_t: updateDataOwnerResult accessed when not selected");
+    }
+    CreateDataOwnerUpdateRequestResult &createDataOwnerUpdateRequestResult() {
+      if (_xdr_field_number(type_) == 68)
+        return createDataOwnerUpdateRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createDataOwnerUpdateRequestResult accessed when not selected");
+    }
+    const CreateDataOwnerUpdateRequestResult &createDataOwnerUpdateRequestResult() const {
+      if (_xdr_field_number(type_) == 68)
+        return createDataOwnerUpdateRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: createDataOwnerUpdateRequestResult accessed when not selected");
+    }
+    CancelDataOwnerUpdateRequestResult &cancelDataOwnerUpdateRequestResult() {
+      if (_xdr_field_number(type_) == 69)
+        return cancelDataOwnerUpdateRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: cancelDataOwnerUpdateRequestResult accessed when not selected");
+    }
+    const CancelDataOwnerUpdateRequestResult &cancelDataOwnerUpdateRequestResult() const {
+      if (_xdr_field_number(type_) == 69)
+        return cancelDataOwnerUpdateRequestResult_;
+      throw xdr::xdr_wrong_union("_tr_t: cancelDataOwnerUpdateRequestResult accessed when not selected");
     }bool
 operator==(xdr::xdr_abstract const& other) const override;
 bool

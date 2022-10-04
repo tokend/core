@@ -149,6 +149,12 @@ return u.from_bytes(lpSwapOp_);
 return u.from_bytes(lpAddLiquidityOp_);
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return u.from_bytes(lpRemoveLiquidityOp_);
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return u.from_bytes(updateDataOwnerOp_);
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return u.from_bytes(createDataOwnerUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return u.from_bytes(cancelDataOwnerUpdateRequestOp_);
 }
 return false;
 }
@@ -295,6 +301,12 @@ return m.to_bytes(lpSwapOp_);
 return m.to_bytes(lpAddLiquidityOp_);
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return m.to_bytes(lpRemoveLiquidityOp_);
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return m.to_bytes(updateDataOwnerOp_);
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return m.to_bytes(createDataOwnerUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return m.to_bytes(cancelDataOwnerUpdateRequestOp_);
 }
 return false;
 }
@@ -437,6 +449,12 @@ return m.count_size(lpSwapOp_);
 return m.count_size(lpAddLiquidityOp_);
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return m.count_size(lpRemoveLiquidityOp_);
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return m.count_size(updateDataOwnerOp_);
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return m.count_size(createDataOwnerUpdateRequestOp_);
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return m.count_size(cancelDataOwnerUpdateRequestOp_);
 }
 }
 bool
@@ -582,6 +600,12 @@ return lpSwapOp_ == other.lpSwapOp_;
 return lpAddLiquidityOp_ == other.lpAddLiquidityOp_;
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return lpRemoveLiquidityOp_ == other.lpRemoveLiquidityOp_;
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return updateDataOwnerOp_ == other.updateDataOwnerOp_;
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return createDataOwnerUpdateRequestOp_ == other.createDataOwnerUpdateRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return cancelDataOwnerUpdateRequestOp_ == other.cancelDataOwnerUpdateRequestOp_;
 }
 return false;
 }
@@ -729,6 +753,12 @@ return lpSwapOp_ < other.lpSwapOp_;
 return lpAddLiquidityOp_ < other.lpAddLiquidityOp_;
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return lpRemoveLiquidityOp_ < other.lpRemoveLiquidityOp_;
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return updateDataOwnerOp_ < other.updateDataOwnerOp_;
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return createDataOwnerUpdateRequestOp_ < other.createDataOwnerUpdateRequestOp_;
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return cancelDataOwnerUpdateRequestOp_ < other.cancelDataOwnerUpdateRequestOp_;
 }
 return false;
 }
@@ -1449,6 +1479,12 @@ return u.from_bytes(lpSwapResult_);
 return u.from_bytes(lpAddLiquidityResult_);
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return u.from_bytes(lpRemoveLiquidityResult_);
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return u.from_bytes(updateDataOwnerResult_);
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return u.from_bytes(createDataOwnerUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return u.from_bytes(cancelDataOwnerUpdateRequestResult_);
 }
 return false;
 }
@@ -1595,6 +1631,12 @@ return m.to_bytes(lpSwapResult_);
 return m.to_bytes(lpAddLiquidityResult_);
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return m.to_bytes(lpRemoveLiquidityResult_);
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return m.to_bytes(updateDataOwnerResult_);
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return m.to_bytes(createDataOwnerUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return m.to_bytes(cancelDataOwnerUpdateRequestResult_);
 }
 return false;
 }
@@ -1737,6 +1779,12 @@ return m.count_size(lpSwapResult_);
 return m.count_size(lpAddLiquidityResult_);
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return m.count_size(lpRemoveLiquidityResult_);
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return m.count_size(updateDataOwnerResult_);
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return m.count_size(createDataOwnerUpdateRequestResult_);
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return m.count_size(cancelDataOwnerUpdateRequestResult_);
 }
 }
 bool
@@ -1882,6 +1930,12 @@ return lpSwapResult_ == other.lpSwapResult_;
 return lpAddLiquidityResult_ == other.lpAddLiquidityResult_;
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return lpRemoveLiquidityResult_ == other.lpRemoveLiquidityResult_;
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return updateDataOwnerResult_ == other.updateDataOwnerResult_;
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return createDataOwnerUpdateRequestResult_ == other.createDataOwnerUpdateRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return cancelDataOwnerUpdateRequestResult_ == other.cancelDataOwnerUpdateRequestResult_;
 }
 return false;
 }
@@ -2029,6 +2083,12 @@ return lpSwapResult_ < other.lpSwapResult_;
 return lpAddLiquidityResult_ < other.lpAddLiquidityResult_;
     case (int32_t)OperationType::LP_REMOVE_LIQUIDITY:
 return lpRemoveLiquidityResult_ < other.lpRemoveLiquidityResult_;
+    case (int32_t)OperationType::UPDATE_DATA_OWNER:
+return updateDataOwnerResult_ < other.updateDataOwnerResult_;
+    case (int32_t)OperationType::CREATE_DATA_OWNER_UPDATE_REQUEST:
+return createDataOwnerUpdateRequestResult_ < other.createDataOwnerUpdateRequestResult_;
+    case (int32_t)OperationType::CANCEL_DATA_OWNER_UPDATE_REQUEST:
+return cancelDataOwnerUpdateRequestResult_ < other.cancelDataOwnerUpdateRequestResult_;
 }
 return false;
 }
