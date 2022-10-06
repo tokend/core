@@ -33,7 +33,6 @@ TEST_CASE("Data", "[tx][data]")
     // set up world
     auto master = Account{getRoot(), Salt(1)};
 
-
     CreateAccountTestHelper createAccountTestHelper(testManager);
     ManageAccountRoleTestHelper manageAccountRoleHelper(testManager);
     ManageAccountRuleTestHelper manageAccountRuleTestHelper(testManager);
@@ -118,7 +117,7 @@ TEST_CASE("Data", "[tx][data]")
 
             SECTION("successful update owner") 
             {
-                updateDataOwnerTestHelper.applyUpdateDataOwner(master, id, newOwner);
+                updateDataOwnerTestHelper.applyUpdateDataOwner(dataManager, id, newOwner);
             }
 
             SECTION("successful delete") 

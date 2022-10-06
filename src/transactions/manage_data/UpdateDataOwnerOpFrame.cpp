@@ -72,7 +72,15 @@ UpdateDataOwnerOpFrame::doApply(Application& app, StorageHelper& storageHelper,
     }
 
     auto& data = dataFrame->getData();
-    
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_DATA_OWNERSHIP_TRANSFER_OWNER_CHECK))
+    {
+        if (!(mSourceAccount->getID() == data.owner))
+        {
+            innerResult().code(UpdateDataOwnerResultCode::NOT_AUTHORIZED);
+            return false;
+        }
+    }
+
     if (data.owner == mUpdateDataOwner.newOwner)
     {
         innerResult().code(UpdateDataOwnerResultCode::OLD_AND_NEW_USERS_ARE_SAME);
@@ -95,10 +103,13 @@ UpdateDataOwnerOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 bool
 UpdateDataOwnerOpFrame::doCheckValid(Application& app)
 {
-    if (!(mSourceAccount->getID() == mUpdateDataOwner.newOwner))
+    if (!app.getLedgerManager().shouldUse(LedgerVersion::FIX_DATA_OWNERSHIP_TRANSFER_OWNER_CHECK))
     {
-        innerResult().code(UpdateDataOwnerResultCode::NOT_AUTHORIZED);
-        return false;
+        if (!(mSourceAccount->getID() == mUpdateDataOwner.newOwner))
+        {
+            innerResult().code(UpdateDataOwnerResultCode::NOT_AUTHORIZED);
+            return false;
+        }
     }
 
     if (mUpdateDataOwner.dataID == 0)
