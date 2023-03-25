@@ -1,11 +1,47 @@
 # Changelog
 
-## Unreleased 
+## 3.8.0 
 
 ### Added
 
+Liquidity pools support, based on Uniswap v2:
+* `LpAddLiquidityOp`, `LpRemoveLiquidityOp`, and `LpSwapOp` operations
+* Account and signer rules for liquidity pools operations
+* Ledger entry `LiquidityPool` to store information about a liquidity pool
+
+## 3.7.3
+
+### Added
+
+* Added new poll type `CUSTOM_CHOICE` for custom polls
+* Update data owner operation for transferring data ownership
 * Ability to set custom rule and action in permissions
 * Reviewable requests for create, update and remove data operations
+
+## 3.7.1
+
+### Added
+
+* Action `ManageSaleAction::UPDATE_TIME` for sale start time update
+* Ledger version `FIX_UNORDERED_FEE_DESTINATION`
+
+### Fixed
+
+* Fixed balances order
+
+## 3.7.0
+
+### Added
+
+Deferred payments:
+* Create/close deferred payment requests 
+* Review create/close deferred payment requests
+* Ledger entry `DEFERRED_PAYMENT`
+* Account and signer rule resources for deferred payments
+
+### Fixed
+
+* Change role request requester
 
 ## 3.6.5
 
