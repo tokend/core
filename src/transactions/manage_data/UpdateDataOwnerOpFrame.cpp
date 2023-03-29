@@ -97,6 +97,11 @@ UpdateDataOwnerOpFrame::doApply(Application& app, StorageHelper& storageHelper,
 
     helper.storeChange(dataFrame->mEntry);
 
+    if (ledgerManager.shouldUse(LedgerVersion::FIX_UPDATE_DATA_OWNER_RESULT))
+    {
+        innerResult().success().owner = mUpdateDataOwner.newOwner;
+    }
+
     return true;
 }
 
